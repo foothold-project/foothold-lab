@@ -1,0 +1,7046 @@
+[
+  {
+    "source": "/home/jay/data/foothold/s2_lab/hipan_g1_20261112/m2000seg/hipan_g1b_L0/map_modes.json",
+    "seed": 42,
+    "level": 0,
+    "checkpoint_sha256": "3937df92866b79581f7b27e8b8c9fbde1f7733a85fe5179388fcfd78aa83c4bb",
+    "source_sha256": {
+      "foothold_s2.eval.eval_map_modes": "e5ba2e3d42ffd65a",
+      "foothold_s2": "0cd4c55a3cd0334d",
+      "foothold_s2.eval": "0aafcef576d0d448",
+      "foothold_s2.eval.map_mode_cells": "25ed4c5ebaf2260f",
+      "foothold_s2.curriculum": "48c49d99f7f76b53",
+      "foothold_s2.curriculum.ex40_dr": "84c37bcea378af3e",
+      "foothold_s2.eval.eval_dr_mode": "6f87345ebd9206af",
+      "foothold_s2.eval.n21_dr_record": "189774ea6022d614",
+      "foothold_s2.eval.ex42_friction": "80edc977a16ac551",
+      "foothold_s2.tasks": "76759049cde532f0",
+      "foothold_s2.x23_tasks": "3a638e71fc357a85",
+      "foothold_s2.x23f_tasks": "3f97a3994a38c335",
+      "foothold_s2.g0b_tasks": "6c7ed302ed636830",
+      "foothold_s2.sb_tasks": "8e9d8d91d4a84170",
+      "foothold_s2.eval.adapters": "46ad7e6f439ff700",
+      "foothold_s2.eval.ex41_eval_loader": "04e0c134c16cb703",
+      "foothold_s2.eval.fixed_terrain": "004a2221833f2bab",
+      "foothold_s2.eval.map_error": "9f51c8502304e04e",
+      "foothold_s2.terrains": "3adcf140393008ad",
+      "foothold_s2.terrains.columns": "a1dc682849135cb9",
+      "foothold_s2.curriculum.rules": "bd0e3c7e806391a6",
+      "foothold_s2.commands": "54b977d152ca0012",
+      "foothold_s2.commands.mixed_core": "74b878a8238f27b5",
+      "foothold_s2.terrains.progression": "518dcb904f8437e7",
+      "foothold_s2.terrains.s2_layout": "4a0cf9e363aa584e",
+      "foothold_s2.terrains.s2_runtime": "bcfa21a9fab726bc",
+      "foothold_s2.curriculum.terrain_levels_mixed": "a11af86437c3c2b7",
+      "foothold_s2.rewards": "0f9bc2c241fd8b34",
+      "foothold_s2.rewards.mgdp_core": "2027fd1d8d35c127",
+      "foothold_s2.rewards.mgdp_terms": "1aec285df7c917ca",
+      "foothold_s2.commands.mixed_command": "0ee4ad3807ce2f78",
+      "foothold_s2.rewards.penalty_log": "fcb5e0a08d877a4b",
+      "foothold_s2.rewards.core": "af3fb8547a76a117",
+      "foothold_s2.rewards.start_rewards": "cb8bdefa6c66ce98",
+      "foothold_s2.robots": "4bd9543141c62d73",
+      "foothold_s2.robots.go2_params": "babda6f593fd9ea2",
+      "foothold_s2.robots.go2_cfg": "ad160114ee729505",
+      "foothold_s2.tasks.mdp_extra": "203317441f44f89d",
+      "foothold_s2.tasks.delayed_action": "a670ca01325c563d",
+      "foothold_s2.terrains.rough_go2_cfg": "cb2541ccc1148e12",
+      "foothold_s2.tasks.s1_env_cfg": "cc43ffd3ff2201c6",
+      "foothold_s2.tasks.s2_env_cfg": "3b1ca9bae23634f5",
+      "foothold_s2.tasks.s2_x23_cfg": "fa91abd89f71ea38",
+      "foothold_s2.tasks.s2_23f_b_cfg": "a68021c7b471d413",
+      "foothold_s2.tasks.s2_sb_cfg": "26cd26be1716a516",
+      "foothold_s2.sensors.depth_aug": "7084ae69f4142546",
+      "foothold_s2.sensors.depth_cam_cfg": "d98c631d108a16f1",
+      "foothold_s2.sensors.start_obs": "d64f8299648b4ef5",
+      "foothold_s2.tasks.agents": "e4d93c4fd17d89b2",
+      "foothold_s2.tasks.agents.s2_ppo_cfg": "2175f7644616a5c9",
+      "foothold_s2.tasks.agents.s2_x23_ppo_cfg": "8c286222e4e887f7",
+      "foothold_s2.tasks.agents.s2_23f_b_ppo_cfg": "0f5646a08eeb970a",
+      "foothold_s2.tasks.agents.s2_sb_ppo_cfg": "3da547f7e10e53e0",
+      "foothold_s2.runners.manifest": "4e64859b27902f0a",
+      "foothold_s2.eval.start_sheet": "15e830bda3fc5ed7",
+      "foothold_s2.terrains.sparse_terrains": "5f296cf750609b83",
+      "foothold_s2.models.start_perception": "b756c646469beeb5",
+      "foothold_s2.models.start_policy": "e9320c38ae758749",
+      "foothold_s2.runners.kl_probe": "70ea4b0e376ecbcf",
+      "foothold_s2.runners.contracts": "84d08118d1958a03",
+      "foothold_s2.runners.action_stats": "0c2b903bac0cd53b",
+      "foothold_s2.runners.map_switch": "383ce09b445b8bca",
+      "foothold_s2.runners.perception_replay": "a6d850cc51afa79a",
+      "foothold_s2.runners.reward_split": "0bb31c6e08496962",
+      "foothold_s2.runners.status": "39b429e47da2c8a4",
+      "foothold_s2.terrains.generator_columns": "4702069eb1f61278",
+      "foothold_s2.runners.start_runner": "947bd72e338ca2ff",
+      "foothold_s2.runners.ex41_valid_storage": "822ddd0d66c3edef",
+      "foothold_s2.runners.ex41_critic_mirror": "3cc1db5cbb4911de"
+    },
+    "run_identity": {
+      "device": "cuda:0",
+      "checkpoint_sha256": "3937df92866b79581f7b27e8b8c9fbde1f7733a85fe5179388fcfd78aa83c4bb",
+      "eval_seed": 42,
+      "torch": "2.7.0+cu128",
+      "torch_cuda": "12.8",
+      "gpu_name": "NVIDIA GeForce RTX 5080",
+      "gpu_total_mem_mib": 15839,
+      "gpu_index": 0,
+      "gpu_uuid": "c08e23b0-62b6-a4f2-8eb2-11151c6a8c7b",
+      "code_head": "130bfc21a08ae05eef43d750383f8e6cc648de9a",
+      "code_dirty_files": 0
+    },
+    "terrain_tiles": [
+      {
+        "env": 0,
+        "kind": "pyramid_stairs",
+        "level": 0,
+        "column": 0
+      },
+      {
+        "env": 1,
+        "kind": "pyramid_stairs",
+        "level": 0,
+        "column": 1
+      },
+      {
+        "env": 2,
+        "kind": "pyramid_stairs",
+        "level": 0,
+        "column": 2
+      },
+      {
+        "env": 3,
+        "kind": "pyramid_stairs",
+        "level": 0,
+        "column": 3
+      },
+      {
+        "env": 4,
+        "kind": "pyramid_stairs",
+        "level": 0,
+        "column": 4
+      },
+      {
+        "env": 5,
+        "kind": "pyramid_stairs_inv",
+        "level": 0,
+        "column": 5
+      },
+      {
+        "env": 6,
+        "kind": "pyramid_stairs_inv",
+        "level": 0,
+        "column": 6
+      },
+      {
+        "env": 7,
+        "kind": "pyramid_stairs_inv",
+        "level": 0,
+        "column": 7
+      },
+      {
+        "env": 8,
+        "kind": "pyramid_stairs_inv",
+        "level": 0,
+        "column": 8
+      },
+      {
+        "env": 9,
+        "kind": "pyramid_stairs_inv",
+        "level": 0,
+        "column": 9
+      },
+      {
+        "env": 10,
+        "kind": "boxes",
+        "level": 0,
+        "column": 10
+      },
+      {
+        "env": 11,
+        "kind": "boxes",
+        "level": 0,
+        "column": 11
+      },
+      {
+        "env": 12,
+        "kind": "boxes",
+        "level": 0,
+        "column": 12
+      },
+      {
+        "env": 13,
+        "kind": "boxes",
+        "level": 0,
+        "column": 13
+      },
+      {
+        "env": 14,
+        "kind": "random_rough",
+        "level": 0,
+        "column": 14
+      },
+      {
+        "env": 15,
+        "kind": "random_rough",
+        "level": 0,
+        "column": 15
+      },
+      {
+        "env": 16,
+        "kind": "random_rough",
+        "level": 0,
+        "column": 16
+      },
+      {
+        "env": 17,
+        "kind": "random_rough",
+        "level": 0,
+        "column": 17
+      },
+      {
+        "env": 18,
+        "kind": "hf_pyramid_slope",
+        "level": 0,
+        "column": 18
+      },
+      {
+        "env": 19,
+        "kind": "hf_pyramid_slope",
+        "level": 0,
+        "column": 19
+      },
+      {
+        "env": 20,
+        "kind": "hf_pyramid_slope_inv",
+        "level": 0,
+        "column": 20
+      },
+      {
+        "env": 21,
+        "kind": "hf_pyramid_slope_inv",
+        "level": 0,
+        "column": 21
+      },
+      {
+        "env": 22,
+        "kind": "stage_stairs",
+        "level": 0,
+        "column": 22
+      },
+      {
+        "env": 23,
+        "kind": "pyramid_stairs",
+        "level": 0,
+        "column": 0
+      },
+      {
+        "env": 24,
+        "kind": "pyramid_stairs",
+        "level": 0,
+        "column": 1
+      },
+      {
+        "env": 25,
+        "kind": "pyramid_stairs",
+        "level": 0,
+        "column": 2
+      },
+      {
+        "env": 26,
+        "kind": "pyramid_stairs",
+        "level": 0,
+        "column": 3
+      },
+      {
+        "env": 27,
+        "kind": "pyramid_stairs",
+        "level": 0,
+        "column": 4
+      },
+      {
+        "env": 28,
+        "kind": "pyramid_stairs_inv",
+        "level": 0,
+        "column": 5
+      },
+      {
+        "env": 29,
+        "kind": "pyramid_stairs_inv",
+        "level": 0,
+        "column": 6
+      },
+      {
+        "env": 30,
+        "kind": "pyramid_stairs_inv",
+        "level": 0,
+        "column": 7
+      },
+      {
+        "env": 31,
+        "kind": "pyramid_stairs_inv",
+        "level": 0,
+        "column": 8
+      },
+      {
+        "env": 32,
+        "kind": "pyramid_stairs_inv",
+        "level": 0,
+        "column": 9
+      },
+      {
+        "env": 33,
+        "kind": "boxes",
+        "level": 0,
+        "column": 10
+      },
+      {
+        "env": 34,
+        "kind": "boxes",
+        "level": 0,
+        "column": 11
+      },
+      {
+        "env": 35,
+        "kind": "boxes",
+        "level": 0,
+        "column": 12
+      },
+      {
+        "env": 36,
+        "kind": "boxes",
+        "level": 0,
+        "column": 13
+      },
+      {
+        "env": 37,
+        "kind": "random_rough",
+        "level": 0,
+        "column": 14
+      },
+      {
+        "env": 38,
+        "kind": "random_rough",
+        "level": 0,
+        "column": 15
+      },
+      {
+        "env": 39,
+        "kind": "random_rough",
+        "level": 0,
+        "column": 16
+      },
+      {
+        "env": 40,
+        "kind": "random_rough",
+        "level": 0,
+        "column": 17
+      },
+      {
+        "env": 41,
+        "kind": "hf_pyramid_slope",
+        "level": 0,
+        "column": 18
+      },
+      {
+        "env": 42,
+        "kind": "hf_pyramid_slope",
+        "level": 0,
+        "column": 19
+      },
+      {
+        "env": 43,
+        "kind": "hf_pyramid_slope_inv",
+        "level": 0,
+        "column": 20
+      },
+      {
+        "env": 44,
+        "kind": "hf_pyramid_slope_inv",
+        "level": 0,
+        "column": 21
+      },
+      {
+        "env": 45,
+        "kind": "stage_stairs",
+        "level": 0,
+        "column": 22
+      },
+      {
+        "env": 46,
+        "kind": "pyramid_stairs",
+        "level": 0,
+        "column": 0
+      },
+      {
+        "env": 47,
+        "kind": "pyramid_stairs",
+        "level": 0,
+        "column": 1
+      },
+      {
+        "env": 48,
+        "kind": "pyramid_stairs",
+        "level": 0,
+        "column": 2
+      },
+      {
+        "env": 49,
+        "kind": "pyramid_stairs",
+        "level": 0,
+        "column": 3
+      },
+      {
+        "env": 50,
+        "kind": "pyramid_stairs",
+        "level": 0,
+        "column": 4
+      },
+      {
+        "env": 51,
+        "kind": "pyramid_stairs_inv",
+        "level": 0,
+        "column": 5
+      },
+      {
+        "env": 52,
+        "kind": "pyramid_stairs_inv",
+        "level": 0,
+        "column": 6
+      },
+      {
+        "env": 53,
+        "kind": "pyramid_stairs_inv",
+        "level": 0,
+        "column": 7
+      },
+      {
+        "env": 54,
+        "kind": "pyramid_stairs_inv",
+        "level": 0,
+        "column": 8
+      },
+      {
+        "env": 55,
+        "kind": "pyramid_stairs_inv",
+        "level": 0,
+        "column": 9
+      },
+      {
+        "env": 56,
+        "kind": "boxes",
+        "level": 0,
+        "column": 10
+      },
+      {
+        "env": 57,
+        "kind": "boxes",
+        "level": 0,
+        "column": 11
+      },
+      {
+        "env": 58,
+        "kind": "boxes",
+        "level": 0,
+        "column": 12
+      },
+      {
+        "env": 59,
+        "kind": "boxes",
+        "level": 0,
+        "column": 13
+      },
+      {
+        "env": 60,
+        "kind": "random_rough",
+        "level": 0,
+        "column": 14
+      },
+      {
+        "env": 61,
+        "kind": "random_rough",
+        "level": 0,
+        "column": 15
+      },
+      {
+        "env": 62,
+        "kind": "random_rough",
+        "level": 0,
+        "column": 16
+      },
+      {
+        "env": 63,
+        "kind": "random_rough",
+        "level": 0,
+        "column": 17
+      }
+    ],
+    "ex42_mesh": null,
+    "evaluation_friction": {
+      "plan_path": "/home/jay/mai/wt/foothold-lab/lead-g1-1112/foothold_s2/curriculum/ex42-prep.yaml",
+      "plan_sha256": "f9a79aabad685e792c59f2d66697dc2fc335c82e61a22ddf3e4175ad5baea9e7",
+      "decision": "teamlead-2026-11-11-0150-71a3d51f",
+      "static": 0.8,
+      "dynamic": 0.6,
+      "combine_mode": "average",
+      "state": "verified",
+      "robot": {
+        "source": "root_physx_view.get_material_properties",
+        "shape": [
+          64,
+          27,
+          3
+        ],
+        "static_min": 0.800000011920929,
+        "static_max": 0.800000011920929,
+        "dynamic_min": 0.6000000238418579,
+        "dynamic_max": 0.6000000238418579,
+        "material_sha256": "6fe7b9e1e987a0a20911c6a3d8ab98d38bf49458c7e69ee4c1c30d181412a92a"
+      },
+      "terrain": [
+        {
+          "collision_path": "/World/ground/terrain/mesh",
+          "material_path": "/World/ground/terrain/physicsMaterial",
+          "static": 0.800000011920929,
+          "dynamic": 0.6000000238418579,
+          "combine_mode": "average"
+        }
+      ]
+    }
+  },
+  {
+    "source": "/home/jay/data/foothold/s2_lab/hipan_g1_20261112/m2000rep_s7/hipan_g1b_L0/map_modes.json",
+    "seed": 7,
+    "level": 0,
+    "checkpoint_sha256": "3937df92866b79581f7b27e8b8c9fbde1f7733a85fe5179388fcfd78aa83c4bb",
+    "source_sha256": {
+      "foothold_s2.eval.eval_map_modes": "e5ba2e3d42ffd65a",
+      "foothold_s2": "0cd4c55a3cd0334d",
+      "foothold_s2.eval": "0aafcef576d0d448",
+      "foothold_s2.eval.map_mode_cells": "25ed4c5ebaf2260f",
+      "foothold_s2.curriculum": "48c49d99f7f76b53",
+      "foothold_s2.curriculum.ex40_dr": "84c37bcea378af3e",
+      "foothold_s2.eval.eval_dr_mode": "6f87345ebd9206af",
+      "foothold_s2.eval.n21_dr_record": "189774ea6022d614",
+      "foothold_s2.eval.ex42_friction": "80edc977a16ac551",
+      "foothold_s2.tasks": "76759049cde532f0",
+      "foothold_s2.x23_tasks": "3a638e71fc357a85",
+      "foothold_s2.x23f_tasks": "3f97a3994a38c335",
+      "foothold_s2.g0b_tasks": "6c7ed302ed636830",
+      "foothold_s2.sb_tasks": "8e9d8d91d4a84170",
+      "foothold_s2.eval.adapters": "46ad7e6f439ff700",
+      "foothold_s2.eval.ex41_eval_loader": "04e0c134c16cb703",
+      "foothold_s2.eval.fixed_terrain": "004a2221833f2bab",
+      "foothold_s2.eval.map_error": "9f51c8502304e04e",
+      "foothold_s2.terrains": "3adcf140393008ad",
+      "foothold_s2.terrains.columns": "a1dc682849135cb9",
+      "foothold_s2.curriculum.rules": "bd0e3c7e806391a6",
+      "foothold_s2.commands": "54b977d152ca0012",
+      "foothold_s2.commands.mixed_core": "74b878a8238f27b5",
+      "foothold_s2.terrains.progression": "518dcb904f8437e7",
+      "foothold_s2.terrains.s2_layout": "4a0cf9e363aa584e",
+      "foothold_s2.terrains.s2_runtime": "bcfa21a9fab726bc",
+      "foothold_s2.curriculum.terrain_levels_mixed": "a11af86437c3c2b7",
+      "foothold_s2.rewards": "0f9bc2c241fd8b34",
+      "foothold_s2.rewards.mgdp_core": "2027fd1d8d35c127",
+      "foothold_s2.rewards.mgdp_terms": "1aec285df7c917ca",
+      "foothold_s2.commands.mixed_command": "0ee4ad3807ce2f78",
+      "foothold_s2.rewards.penalty_log": "fcb5e0a08d877a4b",
+      "foothold_s2.rewards.core": "af3fb8547a76a117",
+      "foothold_s2.rewards.start_rewards": "cb8bdefa6c66ce98",
+      "foothold_s2.robots": "4bd9543141c62d73",
+      "foothold_s2.robots.go2_params": "babda6f593fd9ea2",
+      "foothold_s2.robots.go2_cfg": "ad160114ee729505",
+      "foothold_s2.tasks.mdp_extra": "203317441f44f89d",
+      "foothold_s2.tasks.delayed_action": "a670ca01325c563d",
+      "foothold_s2.terrains.rough_go2_cfg": "cb2541ccc1148e12",
+      "foothold_s2.tasks.s1_env_cfg": "cc43ffd3ff2201c6",
+      "foothold_s2.tasks.s2_env_cfg": "3b1ca9bae23634f5",
+      "foothold_s2.tasks.s2_x23_cfg": "fa91abd89f71ea38",
+      "foothold_s2.tasks.s2_23f_b_cfg": "a68021c7b471d413",
+      "foothold_s2.tasks.s2_sb_cfg": "26cd26be1716a516",
+      "foothold_s2.sensors.depth_aug": "7084ae69f4142546",
+      "foothold_s2.sensors.depth_cam_cfg": "d98c631d108a16f1",
+      "foothold_s2.sensors.start_obs": "d64f8299648b4ef5",
+      "foothold_s2.tasks.agents": "e4d93c4fd17d89b2",
+      "foothold_s2.tasks.agents.s2_ppo_cfg": "2175f7644616a5c9",
+      "foothold_s2.tasks.agents.s2_x23_ppo_cfg": "8c286222e4e887f7",
+      "foothold_s2.tasks.agents.s2_23f_b_ppo_cfg": "0f5646a08eeb970a",
+      "foothold_s2.tasks.agents.s2_sb_ppo_cfg": "3da547f7e10e53e0",
+      "foothold_s2.runners.manifest": "4e64859b27902f0a",
+      "foothold_s2.eval.start_sheet": "15e830bda3fc5ed7",
+      "foothold_s2.terrains.sparse_terrains": "5f296cf750609b83",
+      "foothold_s2.models.start_perception": "b756c646469beeb5",
+      "foothold_s2.models.start_policy": "e9320c38ae758749",
+      "foothold_s2.runners.kl_probe": "70ea4b0e376ecbcf",
+      "foothold_s2.runners.contracts": "84d08118d1958a03",
+      "foothold_s2.runners.action_stats": "0c2b903bac0cd53b",
+      "foothold_s2.runners.map_switch": "383ce09b445b8bca",
+      "foothold_s2.runners.perception_replay": "a6d850cc51afa79a",
+      "foothold_s2.runners.reward_split": "0bb31c6e08496962",
+      "foothold_s2.runners.status": "39b429e47da2c8a4",
+      "foothold_s2.terrains.generator_columns": "4702069eb1f61278",
+      "foothold_s2.runners.start_runner": "947bd72e338ca2ff",
+      "foothold_s2.runners.ex41_valid_storage": "822ddd0d66c3edef",
+      "foothold_s2.runners.ex41_critic_mirror": "3cc1db5cbb4911de"
+    },
+    "run_identity": {
+      "device": "cuda:0",
+      "checkpoint_sha256": "3937df92866b79581f7b27e8b8c9fbde1f7733a85fe5179388fcfd78aa83c4bb",
+      "eval_seed": 7,
+      "torch": "2.7.0+cu128",
+      "torch_cuda": "12.8",
+      "gpu_name": "NVIDIA GeForce RTX 5080",
+      "gpu_total_mem_mib": 15839,
+      "gpu_index": 0,
+      "gpu_uuid": "c08e23b0-62b6-a4f2-8eb2-11151c6a8c7b",
+      "code_head": "130bfc21a08ae05eef43d750383f8e6cc648de9a",
+      "code_dirty_files": 0
+    },
+    "terrain_tiles": [
+      {
+        "env": 0,
+        "kind": "pyramid_stairs",
+        "level": 0,
+        "column": 0
+      },
+      {
+        "env": 1,
+        "kind": "pyramid_stairs",
+        "level": 0,
+        "column": 1
+      },
+      {
+        "env": 2,
+        "kind": "pyramid_stairs",
+        "level": 0,
+        "column": 2
+      },
+      {
+        "env": 3,
+        "kind": "pyramid_stairs",
+        "level": 0,
+        "column": 3
+      },
+      {
+        "env": 4,
+        "kind": "pyramid_stairs",
+        "level": 0,
+        "column": 4
+      },
+      {
+        "env": 5,
+        "kind": "pyramid_stairs_inv",
+        "level": 0,
+        "column": 5
+      },
+      {
+        "env": 6,
+        "kind": "pyramid_stairs_inv",
+        "level": 0,
+        "column": 6
+      },
+      {
+        "env": 7,
+        "kind": "pyramid_stairs_inv",
+        "level": 0,
+        "column": 7
+      },
+      {
+        "env": 8,
+        "kind": "pyramid_stairs_inv",
+        "level": 0,
+        "column": 8
+      },
+      {
+        "env": 9,
+        "kind": "pyramid_stairs_inv",
+        "level": 0,
+        "column": 9
+      },
+      {
+        "env": 10,
+        "kind": "boxes",
+        "level": 0,
+        "column": 10
+      },
+      {
+        "env": 11,
+        "kind": "boxes",
+        "level": 0,
+        "column": 11
+      },
+      {
+        "env": 12,
+        "kind": "boxes",
+        "level": 0,
+        "column": 12
+      },
+      {
+        "env": 13,
+        "kind": "boxes",
+        "level": 0,
+        "column": 13
+      },
+      {
+        "env": 14,
+        "kind": "random_rough",
+        "level": 0,
+        "column": 14
+      },
+      {
+        "env": 15,
+        "kind": "random_rough",
+        "level": 0,
+        "column": 15
+      },
+      {
+        "env": 16,
+        "kind": "random_rough",
+        "level": 0,
+        "column": 16
+      },
+      {
+        "env": 17,
+        "kind": "random_rough",
+        "level": 0,
+        "column": 17
+      },
+      {
+        "env": 18,
+        "kind": "hf_pyramid_slope",
+        "level": 0,
+        "column": 18
+      },
+      {
+        "env": 19,
+        "kind": "hf_pyramid_slope",
+        "level": 0,
+        "column": 19
+      },
+      {
+        "env": 20,
+        "kind": "hf_pyramid_slope_inv",
+        "level": 0,
+        "column": 20
+      },
+      {
+        "env": 21,
+        "kind": "hf_pyramid_slope_inv",
+        "level": 0,
+        "column": 21
+      },
+      {
+        "env": 22,
+        "kind": "stage_stairs",
+        "level": 0,
+        "column": 22
+      },
+      {
+        "env": 23,
+        "kind": "pyramid_stairs",
+        "level": 0,
+        "column": 0
+      },
+      {
+        "env": 24,
+        "kind": "pyramid_stairs",
+        "level": 0,
+        "column": 1
+      },
+      {
+        "env": 25,
+        "kind": "pyramid_stairs",
+        "level": 0,
+        "column": 2
+      },
+      {
+        "env": 26,
+        "kind": "pyramid_stairs",
+        "level": 0,
+        "column": 3
+      },
+      {
+        "env": 27,
+        "kind": "pyramid_stairs",
+        "level": 0,
+        "column": 4
+      },
+      {
+        "env": 28,
+        "kind": "pyramid_stairs_inv",
+        "level": 0,
+        "column": 5
+      },
+      {
+        "env": 29,
+        "kind": "pyramid_stairs_inv",
+        "level": 0,
+        "column": 6
+      },
+      {
+        "env": 30,
+        "kind": "pyramid_stairs_inv",
+        "level": 0,
+        "column": 7
+      },
+      {
+        "env": 31,
+        "kind": "pyramid_stairs_inv",
+        "level": 0,
+        "column": 8
+      },
+      {
+        "env": 32,
+        "kind": "pyramid_stairs_inv",
+        "level": 0,
+        "column": 9
+      },
+      {
+        "env": 33,
+        "kind": "boxes",
+        "level": 0,
+        "column": 10
+      },
+      {
+        "env": 34,
+        "kind": "boxes",
+        "level": 0,
+        "column": 11
+      },
+      {
+        "env": 35,
+        "kind": "boxes",
+        "level": 0,
+        "column": 12
+      },
+      {
+        "env": 36,
+        "kind": "boxes",
+        "level": 0,
+        "column": 13
+      },
+      {
+        "env": 37,
+        "kind": "random_rough",
+        "level": 0,
+        "column": 14
+      },
+      {
+        "env": 38,
+        "kind": "random_rough",
+        "level": 0,
+        "column": 15
+      },
+      {
+        "env": 39,
+        "kind": "random_rough",
+        "level": 0,
+        "column": 16
+      },
+      {
+        "env": 40,
+        "kind": "random_rough",
+        "level": 0,
+        "column": 17
+      },
+      {
+        "env": 41,
+        "kind": "hf_pyramid_slope",
+        "level": 0,
+        "column": 18
+      },
+      {
+        "env": 42,
+        "kind": "hf_pyramid_slope",
+        "level": 0,
+        "column": 19
+      },
+      {
+        "env": 43,
+        "kind": "hf_pyramid_slope_inv",
+        "level": 0,
+        "column": 20
+      },
+      {
+        "env": 44,
+        "kind": "hf_pyramid_slope_inv",
+        "level": 0,
+        "column": 21
+      },
+      {
+        "env": 45,
+        "kind": "stage_stairs",
+        "level": 0,
+        "column": 22
+      },
+      {
+        "env": 46,
+        "kind": "pyramid_stairs",
+        "level": 0,
+        "column": 0
+      },
+      {
+        "env": 47,
+        "kind": "pyramid_stairs",
+        "level": 0,
+        "column": 1
+      },
+      {
+        "env": 48,
+        "kind": "pyramid_stairs",
+        "level": 0,
+        "column": 2
+      },
+      {
+        "env": 49,
+        "kind": "pyramid_stairs",
+        "level": 0,
+        "column": 3
+      },
+      {
+        "env": 50,
+        "kind": "pyramid_stairs",
+        "level": 0,
+        "column": 4
+      },
+      {
+        "env": 51,
+        "kind": "pyramid_stairs_inv",
+        "level": 0,
+        "column": 5
+      },
+      {
+        "env": 52,
+        "kind": "pyramid_stairs_inv",
+        "level": 0,
+        "column": 6
+      },
+      {
+        "env": 53,
+        "kind": "pyramid_stairs_inv",
+        "level": 0,
+        "column": 7
+      },
+      {
+        "env": 54,
+        "kind": "pyramid_stairs_inv",
+        "level": 0,
+        "column": 8
+      },
+      {
+        "env": 55,
+        "kind": "pyramid_stairs_inv",
+        "level": 0,
+        "column": 9
+      },
+      {
+        "env": 56,
+        "kind": "boxes",
+        "level": 0,
+        "column": 10
+      },
+      {
+        "env": 57,
+        "kind": "boxes",
+        "level": 0,
+        "column": 11
+      },
+      {
+        "env": 58,
+        "kind": "boxes",
+        "level": 0,
+        "column": 12
+      },
+      {
+        "env": 59,
+        "kind": "boxes",
+        "level": 0,
+        "column": 13
+      },
+      {
+        "env": 60,
+        "kind": "random_rough",
+        "level": 0,
+        "column": 14
+      },
+      {
+        "env": 61,
+        "kind": "random_rough",
+        "level": 0,
+        "column": 15
+      },
+      {
+        "env": 62,
+        "kind": "random_rough",
+        "level": 0,
+        "column": 16
+      },
+      {
+        "env": 63,
+        "kind": "random_rough",
+        "level": 0,
+        "column": 17
+      }
+    ],
+    "ex42_mesh": null,
+    "evaluation_friction": {
+      "plan_path": "/home/jay/mai/wt/foothold-lab/lead-g1-1112/foothold_s2/curriculum/ex42-prep.yaml",
+      "plan_sha256": "f9a79aabad685e792c59f2d66697dc2fc335c82e61a22ddf3e4175ad5baea9e7",
+      "decision": "teamlead-2026-11-11-0150-71a3d51f",
+      "static": 0.8,
+      "dynamic": 0.6,
+      "combine_mode": "average",
+      "state": "verified",
+      "robot": {
+        "source": "root_physx_view.get_material_properties",
+        "shape": [
+          64,
+          27,
+          3
+        ],
+        "static_min": 0.800000011920929,
+        "static_max": 0.800000011920929,
+        "dynamic_min": 0.6000000238418579,
+        "dynamic_max": 0.6000000238418579,
+        "material_sha256": "6fe7b9e1e987a0a20911c6a3d8ab98d38bf49458c7e69ee4c1c30d181412a92a"
+      },
+      "terrain": [
+        {
+          "collision_path": "/World/ground/terrain/mesh",
+          "material_path": "/World/ground/terrain/physicsMaterial",
+          "static": 0.800000011920929,
+          "dynamic": 0.6000000238418579,
+          "combine_mode": "average"
+        }
+      ]
+    }
+  },
+  {
+    "source": "/home/jay/data/foothold/s2_lab/hipan_g1_20261112/m2000rep_s13/hipan_g1b_L0/map_modes.json",
+    "seed": 13,
+    "level": 0,
+    "checkpoint_sha256": "3937df92866b79581f7b27e8b8c9fbde1f7733a85fe5179388fcfd78aa83c4bb",
+    "source_sha256": {
+      "foothold_s2.eval.eval_map_modes": "e5ba2e3d42ffd65a",
+      "foothold_s2": "0cd4c55a3cd0334d",
+      "foothold_s2.eval": "0aafcef576d0d448",
+      "foothold_s2.eval.map_mode_cells": "25ed4c5ebaf2260f",
+      "foothold_s2.curriculum": "48c49d99f7f76b53",
+      "foothold_s2.curriculum.ex40_dr": "84c37bcea378af3e",
+      "foothold_s2.eval.eval_dr_mode": "6f87345ebd9206af",
+      "foothold_s2.eval.n21_dr_record": "189774ea6022d614",
+      "foothold_s2.eval.ex42_friction": "80edc977a16ac551",
+      "foothold_s2.tasks": "76759049cde532f0",
+      "foothold_s2.x23_tasks": "3a638e71fc357a85",
+      "foothold_s2.x23f_tasks": "3f97a3994a38c335",
+      "foothold_s2.g0b_tasks": "6c7ed302ed636830",
+      "foothold_s2.sb_tasks": "8e9d8d91d4a84170",
+      "foothold_s2.eval.adapters": "46ad7e6f439ff700",
+      "foothold_s2.eval.ex41_eval_loader": "04e0c134c16cb703",
+      "foothold_s2.eval.fixed_terrain": "004a2221833f2bab",
+      "foothold_s2.eval.map_error": "9f51c8502304e04e",
+      "foothold_s2.terrains": "3adcf140393008ad",
+      "foothold_s2.terrains.columns": "a1dc682849135cb9",
+      "foothold_s2.curriculum.rules": "bd0e3c7e806391a6",
+      "foothold_s2.commands": "54b977d152ca0012",
+      "foothold_s2.commands.mixed_core": "74b878a8238f27b5",
+      "foothold_s2.terrains.progression": "518dcb904f8437e7",
+      "foothold_s2.terrains.s2_layout": "4a0cf9e363aa584e",
+      "foothold_s2.terrains.s2_runtime": "bcfa21a9fab726bc",
+      "foothold_s2.curriculum.terrain_levels_mixed": "a11af86437c3c2b7",
+      "foothold_s2.rewards": "0f9bc2c241fd8b34",
+      "foothold_s2.rewards.mgdp_core": "2027fd1d8d35c127",
+      "foothold_s2.rewards.mgdp_terms": "1aec285df7c917ca",
+      "foothold_s2.commands.mixed_command": "0ee4ad3807ce2f78",
+      "foothold_s2.rewards.penalty_log": "fcb5e0a08d877a4b",
+      "foothold_s2.rewards.core": "af3fb8547a76a117",
+      "foothold_s2.rewards.start_rewards": "cb8bdefa6c66ce98",
+      "foothold_s2.robots": "4bd9543141c62d73",
+      "foothold_s2.robots.go2_params": "babda6f593fd9ea2",
+      "foothold_s2.robots.go2_cfg": "ad160114ee729505",
+      "foothold_s2.tasks.mdp_extra": "203317441f44f89d",
+      "foothold_s2.tasks.delayed_action": "a670ca01325c563d",
+      "foothold_s2.terrains.rough_go2_cfg": "cb2541ccc1148e12",
+      "foothold_s2.tasks.s1_env_cfg": "cc43ffd3ff2201c6",
+      "foothold_s2.tasks.s2_env_cfg": "3b1ca9bae23634f5",
+      "foothold_s2.tasks.s2_x23_cfg": "fa91abd89f71ea38",
+      "foothold_s2.tasks.s2_23f_b_cfg": "a68021c7b471d413",
+      "foothold_s2.tasks.s2_sb_cfg": "26cd26be1716a516",
+      "foothold_s2.sensors.depth_aug": "7084ae69f4142546",
+      "foothold_s2.sensors.depth_cam_cfg": "d98c631d108a16f1",
+      "foothold_s2.sensors.start_obs": "d64f8299648b4ef5",
+      "foothold_s2.tasks.agents": "e4d93c4fd17d89b2",
+      "foothold_s2.tasks.agents.s2_ppo_cfg": "2175f7644616a5c9",
+      "foothold_s2.tasks.agents.s2_x23_ppo_cfg": "8c286222e4e887f7",
+      "foothold_s2.tasks.agents.s2_23f_b_ppo_cfg": "0f5646a08eeb970a",
+      "foothold_s2.tasks.agents.s2_sb_ppo_cfg": "3da547f7e10e53e0",
+      "foothold_s2.runners.manifest": "4e64859b27902f0a",
+      "foothold_s2.eval.start_sheet": "15e830bda3fc5ed7",
+      "foothold_s2.terrains.sparse_terrains": "5f296cf750609b83",
+      "foothold_s2.models.start_perception": "b756c646469beeb5",
+      "foothold_s2.models.start_policy": "e9320c38ae758749",
+      "foothold_s2.runners.kl_probe": "70ea4b0e376ecbcf",
+      "foothold_s2.runners.contracts": "84d08118d1958a03",
+      "foothold_s2.runners.action_stats": "0c2b903bac0cd53b",
+      "foothold_s2.runners.map_switch": "383ce09b445b8bca",
+      "foothold_s2.runners.perception_replay": "a6d850cc51afa79a",
+      "foothold_s2.runners.reward_split": "0bb31c6e08496962",
+      "foothold_s2.runners.status": "39b429e47da2c8a4",
+      "foothold_s2.terrains.generator_columns": "4702069eb1f61278",
+      "foothold_s2.runners.start_runner": "947bd72e338ca2ff",
+      "foothold_s2.runners.ex41_valid_storage": "822ddd0d66c3edef",
+      "foothold_s2.runners.ex41_critic_mirror": "3cc1db5cbb4911de"
+    },
+    "run_identity": {
+      "device": "cuda:0",
+      "checkpoint_sha256": "3937df92866b79581f7b27e8b8c9fbde1f7733a85fe5179388fcfd78aa83c4bb",
+      "eval_seed": 13,
+      "torch": "2.7.0+cu128",
+      "torch_cuda": "12.8",
+      "gpu_name": "NVIDIA GeForce RTX 5080",
+      "gpu_total_mem_mib": 15839,
+      "gpu_index": 0,
+      "gpu_uuid": "c08e23b0-62b6-a4f2-8eb2-11151c6a8c7b",
+      "code_head": "130bfc21a08ae05eef43d750383f8e6cc648de9a",
+      "code_dirty_files": 0
+    },
+    "terrain_tiles": [
+      {
+        "env": 0,
+        "kind": "pyramid_stairs",
+        "level": 0,
+        "column": 0
+      },
+      {
+        "env": 1,
+        "kind": "pyramid_stairs",
+        "level": 0,
+        "column": 1
+      },
+      {
+        "env": 2,
+        "kind": "pyramid_stairs",
+        "level": 0,
+        "column": 2
+      },
+      {
+        "env": 3,
+        "kind": "pyramid_stairs",
+        "level": 0,
+        "column": 3
+      },
+      {
+        "env": 4,
+        "kind": "pyramid_stairs",
+        "level": 0,
+        "column": 4
+      },
+      {
+        "env": 5,
+        "kind": "pyramid_stairs_inv",
+        "level": 0,
+        "column": 5
+      },
+      {
+        "env": 6,
+        "kind": "pyramid_stairs_inv",
+        "level": 0,
+        "column": 6
+      },
+      {
+        "env": 7,
+        "kind": "pyramid_stairs_inv",
+        "level": 0,
+        "column": 7
+      },
+      {
+        "env": 8,
+        "kind": "pyramid_stairs_inv",
+        "level": 0,
+        "column": 8
+      },
+      {
+        "env": 9,
+        "kind": "pyramid_stairs_inv",
+        "level": 0,
+        "column": 9
+      },
+      {
+        "env": 10,
+        "kind": "boxes",
+        "level": 0,
+        "column": 10
+      },
+      {
+        "env": 11,
+        "kind": "boxes",
+        "level": 0,
+        "column": 11
+      },
+      {
+        "env": 12,
+        "kind": "boxes",
+        "level": 0,
+        "column": 12
+      },
+      {
+        "env": 13,
+        "kind": "boxes",
+        "level": 0,
+        "column": 13
+      },
+      {
+        "env": 14,
+        "kind": "random_rough",
+        "level": 0,
+        "column": 14
+      },
+      {
+        "env": 15,
+        "kind": "random_rough",
+        "level": 0,
+        "column": 15
+      },
+      {
+        "env": 16,
+        "kind": "random_rough",
+        "level": 0,
+        "column": 16
+      },
+      {
+        "env": 17,
+        "kind": "random_rough",
+        "level": 0,
+        "column": 17
+      },
+      {
+        "env": 18,
+        "kind": "hf_pyramid_slope",
+        "level": 0,
+        "column": 18
+      },
+      {
+        "env": 19,
+        "kind": "hf_pyramid_slope",
+        "level": 0,
+        "column": 19
+      },
+      {
+        "env": 20,
+        "kind": "hf_pyramid_slope_inv",
+        "level": 0,
+        "column": 20
+      },
+      {
+        "env": 21,
+        "kind": "hf_pyramid_slope_inv",
+        "level": 0,
+        "column": 21
+      },
+      {
+        "env": 22,
+        "kind": "stage_stairs",
+        "level": 0,
+        "column": 22
+      },
+      {
+        "env": 23,
+        "kind": "pyramid_stairs",
+        "level": 0,
+        "column": 0
+      },
+      {
+        "env": 24,
+        "kind": "pyramid_stairs",
+        "level": 0,
+        "column": 1
+      },
+      {
+        "env": 25,
+        "kind": "pyramid_stairs",
+        "level": 0,
+        "column": 2
+      },
+      {
+        "env": 26,
+        "kind": "pyramid_stairs",
+        "level": 0,
+        "column": 3
+      },
+      {
+        "env": 27,
+        "kind": "pyramid_stairs",
+        "level": 0,
+        "column": 4
+      },
+      {
+        "env": 28,
+        "kind": "pyramid_stairs_inv",
+        "level": 0,
+        "column": 5
+      },
+      {
+        "env": 29,
+        "kind": "pyramid_stairs_inv",
+        "level": 0,
+        "column": 6
+      },
+      {
+        "env": 30,
+        "kind": "pyramid_stairs_inv",
+        "level": 0,
+        "column": 7
+      },
+      {
+        "env": 31,
+        "kind": "pyramid_stairs_inv",
+        "level": 0,
+        "column": 8
+      },
+      {
+        "env": 32,
+        "kind": "pyramid_stairs_inv",
+        "level": 0,
+        "column": 9
+      },
+      {
+        "env": 33,
+        "kind": "boxes",
+        "level": 0,
+        "column": 10
+      },
+      {
+        "env": 34,
+        "kind": "boxes",
+        "level": 0,
+        "column": 11
+      },
+      {
+        "env": 35,
+        "kind": "boxes",
+        "level": 0,
+        "column": 12
+      },
+      {
+        "env": 36,
+        "kind": "boxes",
+        "level": 0,
+        "column": 13
+      },
+      {
+        "env": 37,
+        "kind": "random_rough",
+        "level": 0,
+        "column": 14
+      },
+      {
+        "env": 38,
+        "kind": "random_rough",
+        "level": 0,
+        "column": 15
+      },
+      {
+        "env": 39,
+        "kind": "random_rough",
+        "level": 0,
+        "column": 16
+      },
+      {
+        "env": 40,
+        "kind": "random_rough",
+        "level": 0,
+        "column": 17
+      },
+      {
+        "env": 41,
+        "kind": "hf_pyramid_slope",
+        "level": 0,
+        "column": 18
+      },
+      {
+        "env": 42,
+        "kind": "hf_pyramid_slope",
+        "level": 0,
+        "column": 19
+      },
+      {
+        "env": 43,
+        "kind": "hf_pyramid_slope_inv",
+        "level": 0,
+        "column": 20
+      },
+      {
+        "env": 44,
+        "kind": "hf_pyramid_slope_inv",
+        "level": 0,
+        "column": 21
+      },
+      {
+        "env": 45,
+        "kind": "stage_stairs",
+        "level": 0,
+        "column": 22
+      },
+      {
+        "env": 46,
+        "kind": "pyramid_stairs",
+        "level": 0,
+        "column": 0
+      },
+      {
+        "env": 47,
+        "kind": "pyramid_stairs",
+        "level": 0,
+        "column": 1
+      },
+      {
+        "env": 48,
+        "kind": "pyramid_stairs",
+        "level": 0,
+        "column": 2
+      },
+      {
+        "env": 49,
+        "kind": "pyramid_stairs",
+        "level": 0,
+        "column": 3
+      },
+      {
+        "env": 50,
+        "kind": "pyramid_stairs",
+        "level": 0,
+        "column": 4
+      },
+      {
+        "env": 51,
+        "kind": "pyramid_stairs_inv",
+        "level": 0,
+        "column": 5
+      },
+      {
+        "env": 52,
+        "kind": "pyramid_stairs_inv",
+        "level": 0,
+        "column": 6
+      },
+      {
+        "env": 53,
+        "kind": "pyramid_stairs_inv",
+        "level": 0,
+        "column": 7
+      },
+      {
+        "env": 54,
+        "kind": "pyramid_stairs_inv",
+        "level": 0,
+        "column": 8
+      },
+      {
+        "env": 55,
+        "kind": "pyramid_stairs_inv",
+        "level": 0,
+        "column": 9
+      },
+      {
+        "env": 56,
+        "kind": "boxes",
+        "level": 0,
+        "column": 10
+      },
+      {
+        "env": 57,
+        "kind": "boxes",
+        "level": 0,
+        "column": 11
+      },
+      {
+        "env": 58,
+        "kind": "boxes",
+        "level": 0,
+        "column": 12
+      },
+      {
+        "env": 59,
+        "kind": "boxes",
+        "level": 0,
+        "column": 13
+      },
+      {
+        "env": 60,
+        "kind": "random_rough",
+        "level": 0,
+        "column": 14
+      },
+      {
+        "env": 61,
+        "kind": "random_rough",
+        "level": 0,
+        "column": 15
+      },
+      {
+        "env": 62,
+        "kind": "random_rough",
+        "level": 0,
+        "column": 16
+      },
+      {
+        "env": 63,
+        "kind": "random_rough",
+        "level": 0,
+        "column": 17
+      }
+    ],
+    "ex42_mesh": null,
+    "evaluation_friction": {
+      "plan_path": "/home/jay/mai/wt/foothold-lab/lead-g1-1112/foothold_s2/curriculum/ex42-prep.yaml",
+      "plan_sha256": "f9a79aabad685e792c59f2d66697dc2fc335c82e61a22ddf3e4175ad5baea9e7",
+      "decision": "teamlead-2026-11-11-0150-71a3d51f",
+      "static": 0.8,
+      "dynamic": 0.6,
+      "combine_mode": "average",
+      "state": "verified",
+      "robot": {
+        "source": "root_physx_view.get_material_properties",
+        "shape": [
+          64,
+          27,
+          3
+        ],
+        "static_min": 0.800000011920929,
+        "static_max": 0.800000011920929,
+        "dynamic_min": 0.6000000238418579,
+        "dynamic_max": 0.6000000238418579,
+        "material_sha256": "6fe7b9e1e987a0a20911c6a3d8ab98d38bf49458c7e69ee4c1c30d181412a92a"
+      },
+      "terrain": [
+        {
+          "collision_path": "/World/ground/terrain/mesh",
+          "material_path": "/World/ground/terrain/physicsMaterial",
+          "static": 0.800000011920929,
+          "dynamic": 0.6000000238418579,
+          "combine_mode": "average"
+        }
+      ]
+    }
+  },
+  {
+    "source": "/home/jay/data/foothold/s2_lab/hipan_g1_20261112/m2000seg/hipan_g1b_L5/map_modes.json",
+    "seed": 42,
+    "level": 5,
+    "checkpoint_sha256": "3937df92866b79581f7b27e8b8c9fbde1f7733a85fe5179388fcfd78aa83c4bb",
+    "source_sha256": {
+      "foothold_s2.eval.eval_map_modes": "e5ba2e3d42ffd65a",
+      "foothold_s2": "0cd4c55a3cd0334d",
+      "foothold_s2.eval": "0aafcef576d0d448",
+      "foothold_s2.eval.map_mode_cells": "25ed4c5ebaf2260f",
+      "foothold_s2.curriculum": "48c49d99f7f76b53",
+      "foothold_s2.curriculum.ex40_dr": "84c37bcea378af3e",
+      "foothold_s2.eval.eval_dr_mode": "6f87345ebd9206af",
+      "foothold_s2.eval.n21_dr_record": "189774ea6022d614",
+      "foothold_s2.eval.ex42_friction": "80edc977a16ac551",
+      "foothold_s2.tasks": "76759049cde532f0",
+      "foothold_s2.x23_tasks": "3a638e71fc357a85",
+      "foothold_s2.x23f_tasks": "3f97a3994a38c335",
+      "foothold_s2.g0b_tasks": "6c7ed302ed636830",
+      "foothold_s2.sb_tasks": "8e9d8d91d4a84170",
+      "foothold_s2.eval.adapters": "46ad7e6f439ff700",
+      "foothold_s2.eval.ex41_eval_loader": "04e0c134c16cb703",
+      "foothold_s2.eval.fixed_terrain": "004a2221833f2bab",
+      "foothold_s2.eval.map_error": "9f51c8502304e04e",
+      "foothold_s2.terrains": "3adcf140393008ad",
+      "foothold_s2.terrains.columns": "a1dc682849135cb9",
+      "foothold_s2.curriculum.rules": "bd0e3c7e806391a6",
+      "foothold_s2.commands": "54b977d152ca0012",
+      "foothold_s2.commands.mixed_core": "74b878a8238f27b5",
+      "foothold_s2.terrains.progression": "518dcb904f8437e7",
+      "foothold_s2.terrains.s2_layout": "4a0cf9e363aa584e",
+      "foothold_s2.terrains.s2_runtime": "bcfa21a9fab726bc",
+      "foothold_s2.curriculum.terrain_levels_mixed": "a11af86437c3c2b7",
+      "foothold_s2.rewards": "0f9bc2c241fd8b34",
+      "foothold_s2.rewards.mgdp_core": "2027fd1d8d35c127",
+      "foothold_s2.rewards.mgdp_terms": "1aec285df7c917ca",
+      "foothold_s2.commands.mixed_command": "0ee4ad3807ce2f78",
+      "foothold_s2.rewards.penalty_log": "fcb5e0a08d877a4b",
+      "foothold_s2.rewards.core": "af3fb8547a76a117",
+      "foothold_s2.rewards.start_rewards": "cb8bdefa6c66ce98",
+      "foothold_s2.robots": "4bd9543141c62d73",
+      "foothold_s2.robots.go2_params": "babda6f593fd9ea2",
+      "foothold_s2.robots.go2_cfg": "ad160114ee729505",
+      "foothold_s2.tasks.mdp_extra": "203317441f44f89d",
+      "foothold_s2.tasks.delayed_action": "a670ca01325c563d",
+      "foothold_s2.terrains.rough_go2_cfg": "cb2541ccc1148e12",
+      "foothold_s2.tasks.s1_env_cfg": "cc43ffd3ff2201c6",
+      "foothold_s2.tasks.s2_env_cfg": "3b1ca9bae23634f5",
+      "foothold_s2.tasks.s2_x23_cfg": "fa91abd89f71ea38",
+      "foothold_s2.tasks.s2_23f_b_cfg": "a68021c7b471d413",
+      "foothold_s2.tasks.s2_sb_cfg": "26cd26be1716a516",
+      "foothold_s2.sensors.depth_aug": "7084ae69f4142546",
+      "foothold_s2.sensors.depth_cam_cfg": "d98c631d108a16f1",
+      "foothold_s2.sensors.start_obs": "d64f8299648b4ef5",
+      "foothold_s2.tasks.agents": "e4d93c4fd17d89b2",
+      "foothold_s2.tasks.agents.s2_ppo_cfg": "2175f7644616a5c9",
+      "foothold_s2.tasks.agents.s2_x23_ppo_cfg": "8c286222e4e887f7",
+      "foothold_s2.tasks.agents.s2_23f_b_ppo_cfg": "0f5646a08eeb970a",
+      "foothold_s2.tasks.agents.s2_sb_ppo_cfg": "3da547f7e10e53e0",
+      "foothold_s2.runners.manifest": "4e64859b27902f0a",
+      "foothold_s2.eval.start_sheet": "15e830bda3fc5ed7",
+      "foothold_s2.terrains.sparse_terrains": "5f296cf750609b83",
+      "foothold_s2.models.start_perception": "b756c646469beeb5",
+      "foothold_s2.models.start_policy": "e9320c38ae758749",
+      "foothold_s2.runners.kl_probe": "70ea4b0e376ecbcf",
+      "foothold_s2.runners.contracts": "84d08118d1958a03",
+      "foothold_s2.runners.action_stats": "0c2b903bac0cd53b",
+      "foothold_s2.runners.map_switch": "383ce09b445b8bca",
+      "foothold_s2.runners.perception_replay": "a6d850cc51afa79a",
+      "foothold_s2.runners.reward_split": "0bb31c6e08496962",
+      "foothold_s2.runners.status": "39b429e47da2c8a4",
+      "foothold_s2.terrains.generator_columns": "4702069eb1f61278",
+      "foothold_s2.runners.start_runner": "947bd72e338ca2ff",
+      "foothold_s2.runners.ex41_valid_storage": "822ddd0d66c3edef",
+      "foothold_s2.runners.ex41_critic_mirror": "3cc1db5cbb4911de"
+    },
+    "run_identity": {
+      "device": "cuda:1",
+      "checkpoint_sha256": "3937df92866b79581f7b27e8b8c9fbde1f7733a85fe5179388fcfd78aa83c4bb",
+      "eval_seed": 42,
+      "torch": "2.7.0+cu128",
+      "torch_cuda": "12.8",
+      "gpu_name": "NVIDIA GeForce RTX 5080",
+      "gpu_total_mem_mib": 15831,
+      "gpu_index": 1,
+      "gpu_uuid": "315d098f-5fe0-26a0-0d2e-26e2d4c1ae4f",
+      "code_head": "130bfc21a08ae05eef43d750383f8e6cc648de9a",
+      "code_dirty_files": 0
+    },
+    "terrain_tiles": [
+      {
+        "env": 0,
+        "kind": "pyramid_stairs",
+        "level": 5,
+        "column": 0
+      },
+      {
+        "env": 1,
+        "kind": "pyramid_stairs",
+        "level": 5,
+        "column": 1
+      },
+      {
+        "env": 2,
+        "kind": "pyramid_stairs",
+        "level": 5,
+        "column": 2
+      },
+      {
+        "env": 3,
+        "kind": "pyramid_stairs",
+        "level": 5,
+        "column": 3
+      },
+      {
+        "env": 4,
+        "kind": "pyramid_stairs",
+        "level": 5,
+        "column": 4
+      },
+      {
+        "env": 5,
+        "kind": "pyramid_stairs_inv",
+        "level": 5,
+        "column": 5
+      },
+      {
+        "env": 6,
+        "kind": "pyramid_stairs_inv",
+        "level": 5,
+        "column": 6
+      },
+      {
+        "env": 7,
+        "kind": "pyramid_stairs_inv",
+        "level": 5,
+        "column": 7
+      },
+      {
+        "env": 8,
+        "kind": "pyramid_stairs_inv",
+        "level": 5,
+        "column": 8
+      },
+      {
+        "env": 9,
+        "kind": "pyramid_stairs_inv",
+        "level": 5,
+        "column": 9
+      },
+      {
+        "env": 10,
+        "kind": "boxes",
+        "level": 5,
+        "column": 10
+      },
+      {
+        "env": 11,
+        "kind": "boxes",
+        "level": 5,
+        "column": 11
+      },
+      {
+        "env": 12,
+        "kind": "boxes",
+        "level": 5,
+        "column": 12
+      },
+      {
+        "env": 13,
+        "kind": "boxes",
+        "level": 5,
+        "column": 13
+      },
+      {
+        "env": 14,
+        "kind": "random_rough",
+        "level": 5,
+        "column": 14
+      },
+      {
+        "env": 15,
+        "kind": "random_rough",
+        "level": 5,
+        "column": 15
+      },
+      {
+        "env": 16,
+        "kind": "random_rough",
+        "level": 5,
+        "column": 16
+      },
+      {
+        "env": 17,
+        "kind": "random_rough",
+        "level": 5,
+        "column": 17
+      },
+      {
+        "env": 18,
+        "kind": "hf_pyramid_slope",
+        "level": 5,
+        "column": 18
+      },
+      {
+        "env": 19,
+        "kind": "hf_pyramid_slope",
+        "level": 5,
+        "column": 19
+      },
+      {
+        "env": 20,
+        "kind": "hf_pyramid_slope_inv",
+        "level": 5,
+        "column": 20
+      },
+      {
+        "env": 21,
+        "kind": "hf_pyramid_slope_inv",
+        "level": 5,
+        "column": 21
+      },
+      {
+        "env": 22,
+        "kind": "stage_stairs",
+        "level": 5,
+        "column": 22
+      },
+      {
+        "env": 23,
+        "kind": "pyramid_stairs",
+        "level": 5,
+        "column": 0
+      },
+      {
+        "env": 24,
+        "kind": "pyramid_stairs",
+        "level": 5,
+        "column": 1
+      },
+      {
+        "env": 25,
+        "kind": "pyramid_stairs",
+        "level": 5,
+        "column": 2
+      },
+      {
+        "env": 26,
+        "kind": "pyramid_stairs",
+        "level": 5,
+        "column": 3
+      },
+      {
+        "env": 27,
+        "kind": "pyramid_stairs",
+        "level": 5,
+        "column": 4
+      },
+      {
+        "env": 28,
+        "kind": "pyramid_stairs_inv",
+        "level": 5,
+        "column": 5
+      },
+      {
+        "env": 29,
+        "kind": "pyramid_stairs_inv",
+        "level": 5,
+        "column": 6
+      },
+      {
+        "env": 30,
+        "kind": "pyramid_stairs_inv",
+        "level": 5,
+        "column": 7
+      },
+      {
+        "env": 31,
+        "kind": "pyramid_stairs_inv",
+        "level": 5,
+        "column": 8
+      },
+      {
+        "env": 32,
+        "kind": "pyramid_stairs_inv",
+        "level": 5,
+        "column": 9
+      },
+      {
+        "env": 33,
+        "kind": "boxes",
+        "level": 5,
+        "column": 10
+      },
+      {
+        "env": 34,
+        "kind": "boxes",
+        "level": 5,
+        "column": 11
+      },
+      {
+        "env": 35,
+        "kind": "boxes",
+        "level": 5,
+        "column": 12
+      },
+      {
+        "env": 36,
+        "kind": "boxes",
+        "level": 5,
+        "column": 13
+      },
+      {
+        "env": 37,
+        "kind": "random_rough",
+        "level": 5,
+        "column": 14
+      },
+      {
+        "env": 38,
+        "kind": "random_rough",
+        "level": 5,
+        "column": 15
+      },
+      {
+        "env": 39,
+        "kind": "random_rough",
+        "level": 5,
+        "column": 16
+      },
+      {
+        "env": 40,
+        "kind": "random_rough",
+        "level": 5,
+        "column": 17
+      },
+      {
+        "env": 41,
+        "kind": "hf_pyramid_slope",
+        "level": 5,
+        "column": 18
+      },
+      {
+        "env": 42,
+        "kind": "hf_pyramid_slope",
+        "level": 5,
+        "column": 19
+      },
+      {
+        "env": 43,
+        "kind": "hf_pyramid_slope_inv",
+        "level": 5,
+        "column": 20
+      },
+      {
+        "env": 44,
+        "kind": "hf_pyramid_slope_inv",
+        "level": 5,
+        "column": 21
+      },
+      {
+        "env": 45,
+        "kind": "stage_stairs",
+        "level": 5,
+        "column": 22
+      },
+      {
+        "env": 46,
+        "kind": "pyramid_stairs",
+        "level": 5,
+        "column": 0
+      },
+      {
+        "env": 47,
+        "kind": "pyramid_stairs",
+        "level": 5,
+        "column": 1
+      },
+      {
+        "env": 48,
+        "kind": "pyramid_stairs",
+        "level": 5,
+        "column": 2
+      },
+      {
+        "env": 49,
+        "kind": "pyramid_stairs",
+        "level": 5,
+        "column": 3
+      },
+      {
+        "env": 50,
+        "kind": "pyramid_stairs",
+        "level": 5,
+        "column": 4
+      },
+      {
+        "env": 51,
+        "kind": "pyramid_stairs_inv",
+        "level": 5,
+        "column": 5
+      },
+      {
+        "env": 52,
+        "kind": "pyramid_stairs_inv",
+        "level": 5,
+        "column": 6
+      },
+      {
+        "env": 53,
+        "kind": "pyramid_stairs_inv",
+        "level": 5,
+        "column": 7
+      },
+      {
+        "env": 54,
+        "kind": "pyramid_stairs_inv",
+        "level": 5,
+        "column": 8
+      },
+      {
+        "env": 55,
+        "kind": "pyramid_stairs_inv",
+        "level": 5,
+        "column": 9
+      },
+      {
+        "env": 56,
+        "kind": "boxes",
+        "level": 5,
+        "column": 10
+      },
+      {
+        "env": 57,
+        "kind": "boxes",
+        "level": 5,
+        "column": 11
+      },
+      {
+        "env": 58,
+        "kind": "boxes",
+        "level": 5,
+        "column": 12
+      },
+      {
+        "env": 59,
+        "kind": "boxes",
+        "level": 5,
+        "column": 13
+      },
+      {
+        "env": 60,
+        "kind": "random_rough",
+        "level": 5,
+        "column": 14
+      },
+      {
+        "env": 61,
+        "kind": "random_rough",
+        "level": 5,
+        "column": 15
+      },
+      {
+        "env": 62,
+        "kind": "random_rough",
+        "level": 5,
+        "column": 16
+      },
+      {
+        "env": 63,
+        "kind": "random_rough",
+        "level": 5,
+        "column": 17
+      }
+    ],
+    "ex42_mesh": null,
+    "evaluation_friction": {
+      "plan_path": "/home/jay/mai/wt/foothold-lab/lead-g1-1112/foothold_s2/curriculum/ex42-prep.yaml",
+      "plan_sha256": "f9a79aabad685e792c59f2d66697dc2fc335c82e61a22ddf3e4175ad5baea9e7",
+      "decision": "teamlead-2026-11-11-0150-71a3d51f",
+      "static": 0.8,
+      "dynamic": 0.6,
+      "combine_mode": "average",
+      "state": "verified",
+      "robot": {
+        "source": "root_physx_view.get_material_properties",
+        "shape": [
+          64,
+          27,
+          3
+        ],
+        "static_min": 0.800000011920929,
+        "static_max": 0.800000011920929,
+        "dynamic_min": 0.6000000238418579,
+        "dynamic_max": 0.6000000238418579,
+        "material_sha256": "6fe7b9e1e987a0a20911c6a3d8ab98d38bf49458c7e69ee4c1c30d181412a92a"
+      },
+      "terrain": [
+        {
+          "collision_path": "/World/ground/terrain/mesh",
+          "material_path": "/World/ground/terrain/physicsMaterial",
+          "static": 0.800000011920929,
+          "dynamic": 0.6000000238418579,
+          "combine_mode": "average"
+        }
+      ]
+    }
+  },
+  {
+    "source": "/home/jay/data/foothold/s2_lab/hipan_g1_20261112/m2000rep_s7/hipan_g1b_L5/map_modes.json",
+    "seed": 7,
+    "level": 5,
+    "checkpoint_sha256": "3937df92866b79581f7b27e8b8c9fbde1f7733a85fe5179388fcfd78aa83c4bb",
+    "source_sha256": {
+      "foothold_s2.eval.eval_map_modes": "e5ba2e3d42ffd65a",
+      "foothold_s2": "0cd4c55a3cd0334d",
+      "foothold_s2.eval": "0aafcef576d0d448",
+      "foothold_s2.eval.map_mode_cells": "25ed4c5ebaf2260f",
+      "foothold_s2.curriculum": "48c49d99f7f76b53",
+      "foothold_s2.curriculum.ex40_dr": "84c37bcea378af3e",
+      "foothold_s2.eval.eval_dr_mode": "6f87345ebd9206af",
+      "foothold_s2.eval.n21_dr_record": "189774ea6022d614",
+      "foothold_s2.eval.ex42_friction": "80edc977a16ac551",
+      "foothold_s2.tasks": "76759049cde532f0",
+      "foothold_s2.x23_tasks": "3a638e71fc357a85",
+      "foothold_s2.x23f_tasks": "3f97a3994a38c335",
+      "foothold_s2.g0b_tasks": "6c7ed302ed636830",
+      "foothold_s2.sb_tasks": "8e9d8d91d4a84170",
+      "foothold_s2.eval.adapters": "46ad7e6f439ff700",
+      "foothold_s2.eval.ex41_eval_loader": "04e0c134c16cb703",
+      "foothold_s2.eval.fixed_terrain": "004a2221833f2bab",
+      "foothold_s2.eval.map_error": "9f51c8502304e04e",
+      "foothold_s2.terrains": "3adcf140393008ad",
+      "foothold_s2.terrains.columns": "a1dc682849135cb9",
+      "foothold_s2.curriculum.rules": "bd0e3c7e806391a6",
+      "foothold_s2.commands": "54b977d152ca0012",
+      "foothold_s2.commands.mixed_core": "74b878a8238f27b5",
+      "foothold_s2.terrains.progression": "518dcb904f8437e7",
+      "foothold_s2.terrains.s2_layout": "4a0cf9e363aa584e",
+      "foothold_s2.terrains.s2_runtime": "bcfa21a9fab726bc",
+      "foothold_s2.curriculum.terrain_levels_mixed": "a11af86437c3c2b7",
+      "foothold_s2.rewards": "0f9bc2c241fd8b34",
+      "foothold_s2.rewards.mgdp_core": "2027fd1d8d35c127",
+      "foothold_s2.rewards.mgdp_terms": "1aec285df7c917ca",
+      "foothold_s2.commands.mixed_command": "0ee4ad3807ce2f78",
+      "foothold_s2.rewards.penalty_log": "fcb5e0a08d877a4b",
+      "foothold_s2.rewards.core": "af3fb8547a76a117",
+      "foothold_s2.rewards.start_rewards": "cb8bdefa6c66ce98",
+      "foothold_s2.robots": "4bd9543141c62d73",
+      "foothold_s2.robots.go2_params": "babda6f593fd9ea2",
+      "foothold_s2.robots.go2_cfg": "ad160114ee729505",
+      "foothold_s2.tasks.mdp_extra": "203317441f44f89d",
+      "foothold_s2.tasks.delayed_action": "a670ca01325c563d",
+      "foothold_s2.terrains.rough_go2_cfg": "cb2541ccc1148e12",
+      "foothold_s2.tasks.s1_env_cfg": "cc43ffd3ff2201c6",
+      "foothold_s2.tasks.s2_env_cfg": "3b1ca9bae23634f5",
+      "foothold_s2.tasks.s2_x23_cfg": "fa91abd89f71ea38",
+      "foothold_s2.tasks.s2_23f_b_cfg": "a68021c7b471d413",
+      "foothold_s2.tasks.s2_sb_cfg": "26cd26be1716a516",
+      "foothold_s2.sensors.depth_aug": "7084ae69f4142546",
+      "foothold_s2.sensors.depth_cam_cfg": "d98c631d108a16f1",
+      "foothold_s2.sensors.start_obs": "d64f8299648b4ef5",
+      "foothold_s2.tasks.agents": "e4d93c4fd17d89b2",
+      "foothold_s2.tasks.agents.s2_ppo_cfg": "2175f7644616a5c9",
+      "foothold_s2.tasks.agents.s2_x23_ppo_cfg": "8c286222e4e887f7",
+      "foothold_s2.tasks.agents.s2_23f_b_ppo_cfg": "0f5646a08eeb970a",
+      "foothold_s2.tasks.agents.s2_sb_ppo_cfg": "3da547f7e10e53e0",
+      "foothold_s2.runners.manifest": "4e64859b27902f0a",
+      "foothold_s2.eval.start_sheet": "15e830bda3fc5ed7",
+      "foothold_s2.terrains.sparse_terrains": "5f296cf750609b83",
+      "foothold_s2.models.start_perception": "b756c646469beeb5",
+      "foothold_s2.models.start_policy": "e9320c38ae758749",
+      "foothold_s2.runners.kl_probe": "70ea4b0e376ecbcf",
+      "foothold_s2.runners.contracts": "84d08118d1958a03",
+      "foothold_s2.runners.action_stats": "0c2b903bac0cd53b",
+      "foothold_s2.runners.map_switch": "383ce09b445b8bca",
+      "foothold_s2.runners.perception_replay": "a6d850cc51afa79a",
+      "foothold_s2.runners.reward_split": "0bb31c6e08496962",
+      "foothold_s2.runners.status": "39b429e47da2c8a4",
+      "foothold_s2.terrains.generator_columns": "4702069eb1f61278",
+      "foothold_s2.runners.start_runner": "947bd72e338ca2ff",
+      "foothold_s2.runners.ex41_valid_storage": "822ddd0d66c3edef",
+      "foothold_s2.runners.ex41_critic_mirror": "3cc1db5cbb4911de"
+    },
+    "run_identity": {
+      "device": "cuda:1",
+      "checkpoint_sha256": "3937df92866b79581f7b27e8b8c9fbde1f7733a85fe5179388fcfd78aa83c4bb",
+      "eval_seed": 7,
+      "torch": "2.7.0+cu128",
+      "torch_cuda": "12.8",
+      "gpu_name": "NVIDIA GeForce RTX 5080",
+      "gpu_total_mem_mib": 15831,
+      "gpu_index": 1,
+      "gpu_uuid": "315d098f-5fe0-26a0-0d2e-26e2d4c1ae4f",
+      "code_head": "130bfc21a08ae05eef43d750383f8e6cc648de9a",
+      "code_dirty_files": 0
+    },
+    "terrain_tiles": [
+      {
+        "env": 0,
+        "kind": "pyramid_stairs",
+        "level": 5,
+        "column": 0
+      },
+      {
+        "env": 1,
+        "kind": "pyramid_stairs",
+        "level": 5,
+        "column": 1
+      },
+      {
+        "env": 2,
+        "kind": "pyramid_stairs",
+        "level": 5,
+        "column": 2
+      },
+      {
+        "env": 3,
+        "kind": "pyramid_stairs",
+        "level": 5,
+        "column": 3
+      },
+      {
+        "env": 4,
+        "kind": "pyramid_stairs",
+        "level": 5,
+        "column": 4
+      },
+      {
+        "env": 5,
+        "kind": "pyramid_stairs_inv",
+        "level": 5,
+        "column": 5
+      },
+      {
+        "env": 6,
+        "kind": "pyramid_stairs_inv",
+        "level": 5,
+        "column": 6
+      },
+      {
+        "env": 7,
+        "kind": "pyramid_stairs_inv",
+        "level": 5,
+        "column": 7
+      },
+      {
+        "env": 8,
+        "kind": "pyramid_stairs_inv",
+        "level": 5,
+        "column": 8
+      },
+      {
+        "env": 9,
+        "kind": "pyramid_stairs_inv",
+        "level": 5,
+        "column": 9
+      },
+      {
+        "env": 10,
+        "kind": "boxes",
+        "level": 5,
+        "column": 10
+      },
+      {
+        "env": 11,
+        "kind": "boxes",
+        "level": 5,
+        "column": 11
+      },
+      {
+        "env": 12,
+        "kind": "boxes",
+        "level": 5,
+        "column": 12
+      },
+      {
+        "env": 13,
+        "kind": "boxes",
+        "level": 5,
+        "column": 13
+      },
+      {
+        "env": 14,
+        "kind": "random_rough",
+        "level": 5,
+        "column": 14
+      },
+      {
+        "env": 15,
+        "kind": "random_rough",
+        "level": 5,
+        "column": 15
+      },
+      {
+        "env": 16,
+        "kind": "random_rough",
+        "level": 5,
+        "column": 16
+      },
+      {
+        "env": 17,
+        "kind": "random_rough",
+        "level": 5,
+        "column": 17
+      },
+      {
+        "env": 18,
+        "kind": "hf_pyramid_slope",
+        "level": 5,
+        "column": 18
+      },
+      {
+        "env": 19,
+        "kind": "hf_pyramid_slope",
+        "level": 5,
+        "column": 19
+      },
+      {
+        "env": 20,
+        "kind": "hf_pyramid_slope_inv",
+        "level": 5,
+        "column": 20
+      },
+      {
+        "env": 21,
+        "kind": "hf_pyramid_slope_inv",
+        "level": 5,
+        "column": 21
+      },
+      {
+        "env": 22,
+        "kind": "stage_stairs",
+        "level": 5,
+        "column": 22
+      },
+      {
+        "env": 23,
+        "kind": "pyramid_stairs",
+        "level": 5,
+        "column": 0
+      },
+      {
+        "env": 24,
+        "kind": "pyramid_stairs",
+        "level": 5,
+        "column": 1
+      },
+      {
+        "env": 25,
+        "kind": "pyramid_stairs",
+        "level": 5,
+        "column": 2
+      },
+      {
+        "env": 26,
+        "kind": "pyramid_stairs",
+        "level": 5,
+        "column": 3
+      },
+      {
+        "env": 27,
+        "kind": "pyramid_stairs",
+        "level": 5,
+        "column": 4
+      },
+      {
+        "env": 28,
+        "kind": "pyramid_stairs_inv",
+        "level": 5,
+        "column": 5
+      },
+      {
+        "env": 29,
+        "kind": "pyramid_stairs_inv",
+        "level": 5,
+        "column": 6
+      },
+      {
+        "env": 30,
+        "kind": "pyramid_stairs_inv",
+        "level": 5,
+        "column": 7
+      },
+      {
+        "env": 31,
+        "kind": "pyramid_stairs_inv",
+        "level": 5,
+        "column": 8
+      },
+      {
+        "env": 32,
+        "kind": "pyramid_stairs_inv",
+        "level": 5,
+        "column": 9
+      },
+      {
+        "env": 33,
+        "kind": "boxes",
+        "level": 5,
+        "column": 10
+      },
+      {
+        "env": 34,
+        "kind": "boxes",
+        "level": 5,
+        "column": 11
+      },
+      {
+        "env": 35,
+        "kind": "boxes",
+        "level": 5,
+        "column": 12
+      },
+      {
+        "env": 36,
+        "kind": "boxes",
+        "level": 5,
+        "column": 13
+      },
+      {
+        "env": 37,
+        "kind": "random_rough",
+        "level": 5,
+        "column": 14
+      },
+      {
+        "env": 38,
+        "kind": "random_rough",
+        "level": 5,
+        "column": 15
+      },
+      {
+        "env": 39,
+        "kind": "random_rough",
+        "level": 5,
+        "column": 16
+      },
+      {
+        "env": 40,
+        "kind": "random_rough",
+        "level": 5,
+        "column": 17
+      },
+      {
+        "env": 41,
+        "kind": "hf_pyramid_slope",
+        "level": 5,
+        "column": 18
+      },
+      {
+        "env": 42,
+        "kind": "hf_pyramid_slope",
+        "level": 5,
+        "column": 19
+      },
+      {
+        "env": 43,
+        "kind": "hf_pyramid_slope_inv",
+        "level": 5,
+        "column": 20
+      },
+      {
+        "env": 44,
+        "kind": "hf_pyramid_slope_inv",
+        "level": 5,
+        "column": 21
+      },
+      {
+        "env": 45,
+        "kind": "stage_stairs",
+        "level": 5,
+        "column": 22
+      },
+      {
+        "env": 46,
+        "kind": "pyramid_stairs",
+        "level": 5,
+        "column": 0
+      },
+      {
+        "env": 47,
+        "kind": "pyramid_stairs",
+        "level": 5,
+        "column": 1
+      },
+      {
+        "env": 48,
+        "kind": "pyramid_stairs",
+        "level": 5,
+        "column": 2
+      },
+      {
+        "env": 49,
+        "kind": "pyramid_stairs",
+        "level": 5,
+        "column": 3
+      },
+      {
+        "env": 50,
+        "kind": "pyramid_stairs",
+        "level": 5,
+        "column": 4
+      },
+      {
+        "env": 51,
+        "kind": "pyramid_stairs_inv",
+        "level": 5,
+        "column": 5
+      },
+      {
+        "env": 52,
+        "kind": "pyramid_stairs_inv",
+        "level": 5,
+        "column": 6
+      },
+      {
+        "env": 53,
+        "kind": "pyramid_stairs_inv",
+        "level": 5,
+        "column": 7
+      },
+      {
+        "env": 54,
+        "kind": "pyramid_stairs_inv",
+        "level": 5,
+        "column": 8
+      },
+      {
+        "env": 55,
+        "kind": "pyramid_stairs_inv",
+        "level": 5,
+        "column": 9
+      },
+      {
+        "env": 56,
+        "kind": "boxes",
+        "level": 5,
+        "column": 10
+      },
+      {
+        "env": 57,
+        "kind": "boxes",
+        "level": 5,
+        "column": 11
+      },
+      {
+        "env": 58,
+        "kind": "boxes",
+        "level": 5,
+        "column": 12
+      },
+      {
+        "env": 59,
+        "kind": "boxes",
+        "level": 5,
+        "column": 13
+      },
+      {
+        "env": 60,
+        "kind": "random_rough",
+        "level": 5,
+        "column": 14
+      },
+      {
+        "env": 61,
+        "kind": "random_rough",
+        "level": 5,
+        "column": 15
+      },
+      {
+        "env": 62,
+        "kind": "random_rough",
+        "level": 5,
+        "column": 16
+      },
+      {
+        "env": 63,
+        "kind": "random_rough",
+        "level": 5,
+        "column": 17
+      }
+    ],
+    "ex42_mesh": null,
+    "evaluation_friction": {
+      "plan_path": "/home/jay/mai/wt/foothold-lab/lead-g1-1112/foothold_s2/curriculum/ex42-prep.yaml",
+      "plan_sha256": "f9a79aabad685e792c59f2d66697dc2fc335c82e61a22ddf3e4175ad5baea9e7",
+      "decision": "teamlead-2026-11-11-0150-71a3d51f",
+      "static": 0.8,
+      "dynamic": 0.6,
+      "combine_mode": "average",
+      "state": "verified",
+      "robot": {
+        "source": "root_physx_view.get_material_properties",
+        "shape": [
+          64,
+          27,
+          3
+        ],
+        "static_min": 0.800000011920929,
+        "static_max": 0.800000011920929,
+        "dynamic_min": 0.6000000238418579,
+        "dynamic_max": 0.6000000238418579,
+        "material_sha256": "6fe7b9e1e987a0a20911c6a3d8ab98d38bf49458c7e69ee4c1c30d181412a92a"
+      },
+      "terrain": [
+        {
+          "collision_path": "/World/ground/terrain/mesh",
+          "material_path": "/World/ground/terrain/physicsMaterial",
+          "static": 0.800000011920929,
+          "dynamic": 0.6000000238418579,
+          "combine_mode": "average"
+        }
+      ]
+    }
+  },
+  {
+    "source": "/home/jay/data/foothold/s2_lab/hipan_g1_20261112/m2000rep_s13/hipan_g1b_L5/map_modes.json",
+    "seed": 13,
+    "level": 5,
+    "checkpoint_sha256": "3937df92866b79581f7b27e8b8c9fbde1f7733a85fe5179388fcfd78aa83c4bb",
+    "source_sha256": {
+      "foothold_s2.eval.eval_map_modes": "e5ba2e3d42ffd65a",
+      "foothold_s2": "0cd4c55a3cd0334d",
+      "foothold_s2.eval": "0aafcef576d0d448",
+      "foothold_s2.eval.map_mode_cells": "25ed4c5ebaf2260f",
+      "foothold_s2.curriculum": "48c49d99f7f76b53",
+      "foothold_s2.curriculum.ex40_dr": "84c37bcea378af3e",
+      "foothold_s2.eval.eval_dr_mode": "6f87345ebd9206af",
+      "foothold_s2.eval.n21_dr_record": "189774ea6022d614",
+      "foothold_s2.eval.ex42_friction": "80edc977a16ac551",
+      "foothold_s2.tasks": "76759049cde532f0",
+      "foothold_s2.x23_tasks": "3a638e71fc357a85",
+      "foothold_s2.x23f_tasks": "3f97a3994a38c335",
+      "foothold_s2.g0b_tasks": "6c7ed302ed636830",
+      "foothold_s2.sb_tasks": "8e9d8d91d4a84170",
+      "foothold_s2.eval.adapters": "46ad7e6f439ff700",
+      "foothold_s2.eval.ex41_eval_loader": "04e0c134c16cb703",
+      "foothold_s2.eval.fixed_terrain": "004a2221833f2bab",
+      "foothold_s2.eval.map_error": "9f51c8502304e04e",
+      "foothold_s2.terrains": "3adcf140393008ad",
+      "foothold_s2.terrains.columns": "a1dc682849135cb9",
+      "foothold_s2.curriculum.rules": "bd0e3c7e806391a6",
+      "foothold_s2.commands": "54b977d152ca0012",
+      "foothold_s2.commands.mixed_core": "74b878a8238f27b5",
+      "foothold_s2.terrains.progression": "518dcb904f8437e7",
+      "foothold_s2.terrains.s2_layout": "4a0cf9e363aa584e",
+      "foothold_s2.terrains.s2_runtime": "bcfa21a9fab726bc",
+      "foothold_s2.curriculum.terrain_levels_mixed": "a11af86437c3c2b7",
+      "foothold_s2.rewards": "0f9bc2c241fd8b34",
+      "foothold_s2.rewards.mgdp_core": "2027fd1d8d35c127",
+      "foothold_s2.rewards.mgdp_terms": "1aec285df7c917ca",
+      "foothold_s2.commands.mixed_command": "0ee4ad3807ce2f78",
+      "foothold_s2.rewards.penalty_log": "fcb5e0a08d877a4b",
+      "foothold_s2.rewards.core": "af3fb8547a76a117",
+      "foothold_s2.rewards.start_rewards": "cb8bdefa6c66ce98",
+      "foothold_s2.robots": "4bd9543141c62d73",
+      "foothold_s2.robots.go2_params": "babda6f593fd9ea2",
+      "foothold_s2.robots.go2_cfg": "ad160114ee729505",
+      "foothold_s2.tasks.mdp_extra": "203317441f44f89d",
+      "foothold_s2.tasks.delayed_action": "a670ca01325c563d",
+      "foothold_s2.terrains.rough_go2_cfg": "cb2541ccc1148e12",
+      "foothold_s2.tasks.s1_env_cfg": "cc43ffd3ff2201c6",
+      "foothold_s2.tasks.s2_env_cfg": "3b1ca9bae23634f5",
+      "foothold_s2.tasks.s2_x23_cfg": "fa91abd89f71ea38",
+      "foothold_s2.tasks.s2_23f_b_cfg": "a68021c7b471d413",
+      "foothold_s2.tasks.s2_sb_cfg": "26cd26be1716a516",
+      "foothold_s2.sensors.depth_aug": "7084ae69f4142546",
+      "foothold_s2.sensors.depth_cam_cfg": "d98c631d108a16f1",
+      "foothold_s2.sensors.start_obs": "d64f8299648b4ef5",
+      "foothold_s2.tasks.agents": "e4d93c4fd17d89b2",
+      "foothold_s2.tasks.agents.s2_ppo_cfg": "2175f7644616a5c9",
+      "foothold_s2.tasks.agents.s2_x23_ppo_cfg": "8c286222e4e887f7",
+      "foothold_s2.tasks.agents.s2_23f_b_ppo_cfg": "0f5646a08eeb970a",
+      "foothold_s2.tasks.agents.s2_sb_ppo_cfg": "3da547f7e10e53e0",
+      "foothold_s2.runners.manifest": "4e64859b27902f0a",
+      "foothold_s2.eval.start_sheet": "15e830bda3fc5ed7",
+      "foothold_s2.terrains.sparse_terrains": "5f296cf750609b83",
+      "foothold_s2.models.start_perception": "b756c646469beeb5",
+      "foothold_s2.models.start_policy": "e9320c38ae758749",
+      "foothold_s2.runners.kl_probe": "70ea4b0e376ecbcf",
+      "foothold_s2.runners.contracts": "84d08118d1958a03",
+      "foothold_s2.runners.action_stats": "0c2b903bac0cd53b",
+      "foothold_s2.runners.map_switch": "383ce09b445b8bca",
+      "foothold_s2.runners.perception_replay": "a6d850cc51afa79a",
+      "foothold_s2.runners.reward_split": "0bb31c6e08496962",
+      "foothold_s2.runners.status": "39b429e47da2c8a4",
+      "foothold_s2.terrains.generator_columns": "4702069eb1f61278",
+      "foothold_s2.runners.start_runner": "947bd72e338ca2ff",
+      "foothold_s2.runners.ex41_valid_storage": "822ddd0d66c3edef",
+      "foothold_s2.runners.ex41_critic_mirror": "3cc1db5cbb4911de"
+    },
+    "run_identity": {
+      "device": "cuda:1",
+      "checkpoint_sha256": "3937df92866b79581f7b27e8b8c9fbde1f7733a85fe5179388fcfd78aa83c4bb",
+      "eval_seed": 13,
+      "torch": "2.7.0+cu128",
+      "torch_cuda": "12.8",
+      "gpu_name": "NVIDIA GeForce RTX 5080",
+      "gpu_total_mem_mib": 15831,
+      "gpu_index": 1,
+      "gpu_uuid": "315d098f-5fe0-26a0-0d2e-26e2d4c1ae4f",
+      "code_head": "130bfc21a08ae05eef43d750383f8e6cc648de9a",
+      "code_dirty_files": 0
+    },
+    "terrain_tiles": [
+      {
+        "env": 0,
+        "kind": "pyramid_stairs",
+        "level": 5,
+        "column": 0
+      },
+      {
+        "env": 1,
+        "kind": "pyramid_stairs",
+        "level": 5,
+        "column": 1
+      },
+      {
+        "env": 2,
+        "kind": "pyramid_stairs",
+        "level": 5,
+        "column": 2
+      },
+      {
+        "env": 3,
+        "kind": "pyramid_stairs",
+        "level": 5,
+        "column": 3
+      },
+      {
+        "env": 4,
+        "kind": "pyramid_stairs",
+        "level": 5,
+        "column": 4
+      },
+      {
+        "env": 5,
+        "kind": "pyramid_stairs_inv",
+        "level": 5,
+        "column": 5
+      },
+      {
+        "env": 6,
+        "kind": "pyramid_stairs_inv",
+        "level": 5,
+        "column": 6
+      },
+      {
+        "env": 7,
+        "kind": "pyramid_stairs_inv",
+        "level": 5,
+        "column": 7
+      },
+      {
+        "env": 8,
+        "kind": "pyramid_stairs_inv",
+        "level": 5,
+        "column": 8
+      },
+      {
+        "env": 9,
+        "kind": "pyramid_stairs_inv",
+        "level": 5,
+        "column": 9
+      },
+      {
+        "env": 10,
+        "kind": "boxes",
+        "level": 5,
+        "column": 10
+      },
+      {
+        "env": 11,
+        "kind": "boxes",
+        "level": 5,
+        "column": 11
+      },
+      {
+        "env": 12,
+        "kind": "boxes",
+        "level": 5,
+        "column": 12
+      },
+      {
+        "env": 13,
+        "kind": "boxes",
+        "level": 5,
+        "column": 13
+      },
+      {
+        "env": 14,
+        "kind": "random_rough",
+        "level": 5,
+        "column": 14
+      },
+      {
+        "env": 15,
+        "kind": "random_rough",
+        "level": 5,
+        "column": 15
+      },
+      {
+        "env": 16,
+        "kind": "random_rough",
+        "level": 5,
+        "column": 16
+      },
+      {
+        "env": 17,
+        "kind": "random_rough",
+        "level": 5,
+        "column": 17
+      },
+      {
+        "env": 18,
+        "kind": "hf_pyramid_slope",
+        "level": 5,
+        "column": 18
+      },
+      {
+        "env": 19,
+        "kind": "hf_pyramid_slope",
+        "level": 5,
+        "column": 19
+      },
+      {
+        "env": 20,
+        "kind": "hf_pyramid_slope_inv",
+        "level": 5,
+        "column": 20
+      },
+      {
+        "env": 21,
+        "kind": "hf_pyramid_slope_inv",
+        "level": 5,
+        "column": 21
+      },
+      {
+        "env": 22,
+        "kind": "stage_stairs",
+        "level": 5,
+        "column": 22
+      },
+      {
+        "env": 23,
+        "kind": "pyramid_stairs",
+        "level": 5,
+        "column": 0
+      },
+      {
+        "env": 24,
+        "kind": "pyramid_stairs",
+        "level": 5,
+        "column": 1
+      },
+      {
+        "env": 25,
+        "kind": "pyramid_stairs",
+        "level": 5,
+        "column": 2
+      },
+      {
+        "env": 26,
+        "kind": "pyramid_stairs",
+        "level": 5,
+        "column": 3
+      },
+      {
+        "env": 27,
+        "kind": "pyramid_stairs",
+        "level": 5,
+        "column": 4
+      },
+      {
+        "env": 28,
+        "kind": "pyramid_stairs_inv",
+        "level": 5,
+        "column": 5
+      },
+      {
+        "env": 29,
+        "kind": "pyramid_stairs_inv",
+        "level": 5,
+        "column": 6
+      },
+      {
+        "env": 30,
+        "kind": "pyramid_stairs_inv",
+        "level": 5,
+        "column": 7
+      },
+      {
+        "env": 31,
+        "kind": "pyramid_stairs_inv",
+        "level": 5,
+        "column": 8
+      },
+      {
+        "env": 32,
+        "kind": "pyramid_stairs_inv",
+        "level": 5,
+        "column": 9
+      },
+      {
+        "env": 33,
+        "kind": "boxes",
+        "level": 5,
+        "column": 10
+      },
+      {
+        "env": 34,
+        "kind": "boxes",
+        "level": 5,
+        "column": 11
+      },
+      {
+        "env": 35,
+        "kind": "boxes",
+        "level": 5,
+        "column": 12
+      },
+      {
+        "env": 36,
+        "kind": "boxes",
+        "level": 5,
+        "column": 13
+      },
+      {
+        "env": 37,
+        "kind": "random_rough",
+        "level": 5,
+        "column": 14
+      },
+      {
+        "env": 38,
+        "kind": "random_rough",
+        "level": 5,
+        "column": 15
+      },
+      {
+        "env": 39,
+        "kind": "random_rough",
+        "level": 5,
+        "column": 16
+      },
+      {
+        "env": 40,
+        "kind": "random_rough",
+        "level": 5,
+        "column": 17
+      },
+      {
+        "env": 41,
+        "kind": "hf_pyramid_slope",
+        "level": 5,
+        "column": 18
+      },
+      {
+        "env": 42,
+        "kind": "hf_pyramid_slope",
+        "level": 5,
+        "column": 19
+      },
+      {
+        "env": 43,
+        "kind": "hf_pyramid_slope_inv",
+        "level": 5,
+        "column": 20
+      },
+      {
+        "env": 44,
+        "kind": "hf_pyramid_slope_inv",
+        "level": 5,
+        "column": 21
+      },
+      {
+        "env": 45,
+        "kind": "stage_stairs",
+        "level": 5,
+        "column": 22
+      },
+      {
+        "env": 46,
+        "kind": "pyramid_stairs",
+        "level": 5,
+        "column": 0
+      },
+      {
+        "env": 47,
+        "kind": "pyramid_stairs",
+        "level": 5,
+        "column": 1
+      },
+      {
+        "env": 48,
+        "kind": "pyramid_stairs",
+        "level": 5,
+        "column": 2
+      },
+      {
+        "env": 49,
+        "kind": "pyramid_stairs",
+        "level": 5,
+        "column": 3
+      },
+      {
+        "env": 50,
+        "kind": "pyramid_stairs",
+        "level": 5,
+        "column": 4
+      },
+      {
+        "env": 51,
+        "kind": "pyramid_stairs_inv",
+        "level": 5,
+        "column": 5
+      },
+      {
+        "env": 52,
+        "kind": "pyramid_stairs_inv",
+        "level": 5,
+        "column": 6
+      },
+      {
+        "env": 53,
+        "kind": "pyramid_stairs_inv",
+        "level": 5,
+        "column": 7
+      },
+      {
+        "env": 54,
+        "kind": "pyramid_stairs_inv",
+        "level": 5,
+        "column": 8
+      },
+      {
+        "env": 55,
+        "kind": "pyramid_stairs_inv",
+        "level": 5,
+        "column": 9
+      },
+      {
+        "env": 56,
+        "kind": "boxes",
+        "level": 5,
+        "column": 10
+      },
+      {
+        "env": 57,
+        "kind": "boxes",
+        "level": 5,
+        "column": 11
+      },
+      {
+        "env": 58,
+        "kind": "boxes",
+        "level": 5,
+        "column": 12
+      },
+      {
+        "env": 59,
+        "kind": "boxes",
+        "level": 5,
+        "column": 13
+      },
+      {
+        "env": 60,
+        "kind": "random_rough",
+        "level": 5,
+        "column": 14
+      },
+      {
+        "env": 61,
+        "kind": "random_rough",
+        "level": 5,
+        "column": 15
+      },
+      {
+        "env": 62,
+        "kind": "random_rough",
+        "level": 5,
+        "column": 16
+      },
+      {
+        "env": 63,
+        "kind": "random_rough",
+        "level": 5,
+        "column": 17
+      }
+    ],
+    "ex42_mesh": null,
+    "evaluation_friction": {
+      "plan_path": "/home/jay/mai/wt/foothold-lab/lead-g1-1112/foothold_s2/curriculum/ex42-prep.yaml",
+      "plan_sha256": "f9a79aabad685e792c59f2d66697dc2fc335c82e61a22ddf3e4175ad5baea9e7",
+      "decision": "teamlead-2026-11-11-0150-71a3d51f",
+      "static": 0.8,
+      "dynamic": 0.6,
+      "combine_mode": "average",
+      "state": "verified",
+      "robot": {
+        "source": "root_physx_view.get_material_properties",
+        "shape": [
+          64,
+          27,
+          3
+        ],
+        "static_min": 0.800000011920929,
+        "static_max": 0.800000011920929,
+        "dynamic_min": 0.6000000238418579,
+        "dynamic_max": 0.6000000238418579,
+        "material_sha256": "6fe7b9e1e987a0a20911c6a3d8ab98d38bf49458c7e69ee4c1c30d181412a92a"
+      },
+      "terrain": [
+        {
+          "collision_path": "/World/ground/terrain/mesh",
+          "material_path": "/World/ground/terrain/physicsMaterial",
+          "static": 0.800000011920929,
+          "dynamic": 0.6000000238418579,
+          "combine_mode": "average"
+        }
+      ]
+    }
+  },
+  {
+    "source": "/home/jay/data/foothold/s2_lab/ex42_main_20261112_164150/main/EX-42-B-E1-cmd7seg_20261112_164150/eval/scores/m2000/axis_v2/axis_v2.json",
+    "seed": 42,
+    "level": 2,
+    "checkpoint_sha256": "3937df92866b79581f7b27e8b8c9fbde1f7733a85fe5179388fcfd78aa83c4bb",
+    "source_sha256": {
+      "axis_v2_run.py": "da189e1ae7898eaac5b46180033cb983aae24bf50e5f19db242bd0efaadd5d6d",
+      "axis_v2_cells.py": "23b22d6ca2cf5faeb955286cdf57f100c154b815e77d30df578e056817e24ac0",
+      "eval_map_modes.py": "d02510ca26fbd6eaea228580f5d1bf4633dcf2a58c424a66ce5dfdf2d92a7702",
+      "adapters.py": "46ad7e6f439ff7004d6e2515d91d51f4f3826bc710a4177b3f11daa9f5b1cc0a",
+      "fixed_terrain.py": "004a2221833f2babc5c06bf2bfdac95ccb31629135faed73171725418e6a0a7b"
+    },
+    "run_identity": {
+      "device": "cuda:1",
+      "checkpoint_sha256": "3937df92866b79581f7b27e8b8c9fbde1f7733a85fe5179388fcfd78aa83c4bb",
+      "eval_seed": 42,
+      "torch": "2.7.0+cu128",
+      "torch_cuda": "12.8",
+      "gpu_name": "NVIDIA GeForce RTX 5080",
+      "gpu_total_mem_mib": 15831,
+      "gpu_index": 1,
+      "gpu_uuid": "315d098f-5fe0-26a0-0d2e-26e2d4c1ae4f",
+      "code_head": "c7692789eb7ce1d61d6530b1aa83be4f3ba6ab67",
+      "code_dirty_files": 0
+    },
+    "terrain_tiles": [
+      {
+        "env": 0,
+        "kind": "pyramid_stairs",
+        "level": 2,
+        "column": 0
+      },
+      {
+        "env": 1,
+        "kind": "pyramid_stairs",
+        "level": 2,
+        "column": 1
+      },
+      {
+        "env": 2,
+        "kind": "pyramid_stairs",
+        "level": 2,
+        "column": 2
+      },
+      {
+        "env": 3,
+        "kind": "pyramid_stairs",
+        "level": 2,
+        "column": 3
+      },
+      {
+        "env": 4,
+        "kind": "pyramid_stairs",
+        "level": 2,
+        "column": 4
+      },
+      {
+        "env": 5,
+        "kind": "pyramid_stairs_inv",
+        "level": 2,
+        "column": 5
+      },
+      {
+        "env": 6,
+        "kind": "pyramid_stairs_inv",
+        "level": 2,
+        "column": 6
+      },
+      {
+        "env": 7,
+        "kind": "pyramid_stairs_inv",
+        "level": 2,
+        "column": 7
+      },
+      {
+        "env": 8,
+        "kind": "pyramid_stairs_inv",
+        "level": 2,
+        "column": 8
+      },
+      {
+        "env": 9,
+        "kind": "pyramid_stairs_inv",
+        "level": 2,
+        "column": 9
+      },
+      {
+        "env": 10,
+        "kind": "boxes",
+        "level": 2,
+        "column": 10
+      },
+      {
+        "env": 11,
+        "kind": "boxes",
+        "level": 2,
+        "column": 11
+      },
+      {
+        "env": 12,
+        "kind": "boxes",
+        "level": 2,
+        "column": 12
+      },
+      {
+        "env": 13,
+        "kind": "boxes",
+        "level": 2,
+        "column": 13
+      },
+      {
+        "env": 14,
+        "kind": "random_rough",
+        "level": 2,
+        "column": 14
+      },
+      {
+        "env": 15,
+        "kind": "random_rough",
+        "level": 2,
+        "column": 15
+      },
+      {
+        "env": 16,
+        "kind": "random_rough",
+        "level": 2,
+        "column": 16
+      },
+      {
+        "env": 17,
+        "kind": "random_rough",
+        "level": 2,
+        "column": 17
+      },
+      {
+        "env": 18,
+        "kind": "hf_pyramid_slope",
+        "level": 2,
+        "column": 18
+      },
+      {
+        "env": 19,
+        "kind": "hf_pyramid_slope",
+        "level": 2,
+        "column": 19
+      },
+      {
+        "env": 20,
+        "kind": "hf_pyramid_slope_inv",
+        "level": 2,
+        "column": 20
+      },
+      {
+        "env": 21,
+        "kind": "hf_pyramid_slope_inv",
+        "level": 2,
+        "column": 21
+      },
+      {
+        "env": 22,
+        "kind": "stage_stairs",
+        "level": 2,
+        "column": 22
+      },
+      {
+        "env": 23,
+        "kind": "pyramid_stairs",
+        "level": 2,
+        "column": 0
+      },
+      {
+        "env": 24,
+        "kind": "pyramid_stairs",
+        "level": 2,
+        "column": 1
+      },
+      {
+        "env": 25,
+        "kind": "pyramid_stairs",
+        "level": 2,
+        "column": 2
+      },
+      {
+        "env": 26,
+        "kind": "pyramid_stairs",
+        "level": 2,
+        "column": 3
+      },
+      {
+        "env": 27,
+        "kind": "pyramid_stairs",
+        "level": 2,
+        "column": 4
+      },
+      {
+        "env": 28,
+        "kind": "pyramid_stairs_inv",
+        "level": 2,
+        "column": 5
+      },
+      {
+        "env": 29,
+        "kind": "pyramid_stairs_inv",
+        "level": 2,
+        "column": 6
+      },
+      {
+        "env": 30,
+        "kind": "pyramid_stairs_inv",
+        "level": 2,
+        "column": 7
+      },
+      {
+        "env": 31,
+        "kind": "pyramid_stairs_inv",
+        "level": 2,
+        "column": 8
+      },
+      {
+        "env": 32,
+        "kind": "pyramid_stairs_inv",
+        "level": 2,
+        "column": 9
+      },
+      {
+        "env": 33,
+        "kind": "boxes",
+        "level": 2,
+        "column": 10
+      },
+      {
+        "env": 34,
+        "kind": "boxes",
+        "level": 2,
+        "column": 11
+      },
+      {
+        "env": 35,
+        "kind": "boxes",
+        "level": 2,
+        "column": 12
+      },
+      {
+        "env": 36,
+        "kind": "boxes",
+        "level": 2,
+        "column": 13
+      },
+      {
+        "env": 37,
+        "kind": "random_rough",
+        "level": 2,
+        "column": 14
+      },
+      {
+        "env": 38,
+        "kind": "random_rough",
+        "level": 2,
+        "column": 15
+      },
+      {
+        "env": 39,
+        "kind": "random_rough",
+        "level": 2,
+        "column": 16
+      },
+      {
+        "env": 40,
+        "kind": "random_rough",
+        "level": 2,
+        "column": 17
+      },
+      {
+        "env": 41,
+        "kind": "hf_pyramid_slope",
+        "level": 2,
+        "column": 18
+      },
+      {
+        "env": 42,
+        "kind": "hf_pyramid_slope",
+        "level": 2,
+        "column": 19
+      },
+      {
+        "env": 43,
+        "kind": "hf_pyramid_slope_inv",
+        "level": 2,
+        "column": 20
+      },
+      {
+        "env": 44,
+        "kind": "hf_pyramid_slope_inv",
+        "level": 2,
+        "column": 21
+      },
+      {
+        "env": 45,
+        "kind": "stage_stairs",
+        "level": 2,
+        "column": 22
+      },
+      {
+        "env": 46,
+        "kind": "pyramid_stairs",
+        "level": 2,
+        "column": 0
+      },
+      {
+        "env": 47,
+        "kind": "pyramid_stairs",
+        "level": 2,
+        "column": 1
+      },
+      {
+        "env": 48,
+        "kind": "pyramid_stairs",
+        "level": 2,
+        "column": 2
+      },
+      {
+        "env": 49,
+        "kind": "pyramid_stairs",
+        "level": 2,
+        "column": 3
+      },
+      {
+        "env": 50,
+        "kind": "pyramid_stairs",
+        "level": 2,
+        "column": 4
+      },
+      {
+        "env": 51,
+        "kind": "pyramid_stairs_inv",
+        "level": 2,
+        "column": 5
+      },
+      {
+        "env": 52,
+        "kind": "pyramid_stairs_inv",
+        "level": 2,
+        "column": 6
+      },
+      {
+        "env": 53,
+        "kind": "pyramid_stairs_inv",
+        "level": 2,
+        "column": 7
+      },
+      {
+        "env": 54,
+        "kind": "pyramid_stairs_inv",
+        "level": 2,
+        "column": 8
+      },
+      {
+        "env": 55,
+        "kind": "pyramid_stairs_inv",
+        "level": 2,
+        "column": 9
+      },
+      {
+        "env": 56,
+        "kind": "boxes",
+        "level": 2,
+        "column": 10
+      },
+      {
+        "env": 57,
+        "kind": "boxes",
+        "level": 2,
+        "column": 11
+      },
+      {
+        "env": 58,
+        "kind": "boxes",
+        "level": 2,
+        "column": 12
+      },
+      {
+        "env": 59,
+        "kind": "boxes",
+        "level": 2,
+        "column": 13
+      },
+      {
+        "env": 60,
+        "kind": "random_rough",
+        "level": 2,
+        "column": 14
+      },
+      {
+        "env": 61,
+        "kind": "random_rough",
+        "level": 2,
+        "column": 15
+      },
+      {
+        "env": 62,
+        "kind": "random_rough",
+        "level": 2,
+        "column": 16
+      },
+      {
+        "env": 63,
+        "kind": "random_rough",
+        "level": 2,
+        "column": 17
+      }
+    ],
+    "ex42_mesh": {
+      "mesh_npz": "/mnt/win-d/mai/data/foothold/s2_lab/ex42_mesh_1111/seed42_E0_c333/terrain_mesh.npz",
+      "manifest": "/mnt/win-d/mai/data/foothold/s2_lab/ex42_mesh_1111/seed42_E0_c333/mesh_manifest.json",
+      "mesh_sha256": "88197b3adfdde327edc633c025c6ad9aa690ea59aa7df5d51d548f7f56c12a95",
+      "columns": [
+        "pyramid_stairs",
+        "pyramid_stairs",
+        "pyramid_stairs",
+        "pyramid_stairs",
+        "pyramid_stairs",
+        "pyramid_stairs_inv",
+        "pyramid_stairs_inv",
+        "pyramid_stairs_inv",
+        "pyramid_stairs_inv",
+        "pyramid_stairs_inv",
+        "boxes",
+        "boxes",
+        "boxes",
+        "boxes",
+        "random_rough",
+        "random_rough",
+        "random_rough",
+        "random_rough",
+        "hf_pyramid_slope",
+        "hf_pyramid_slope",
+        "hf_pyramid_slope_inv",
+        "hf_pyramid_slope_inv",
+        "stage_stairs",
+        "stepping_stones_low",
+        "stepping_stones_low",
+        "stepping_stones_low",
+        "stepping_stones_low",
+        "stepping_stones_low",
+        "stepping_stones_low",
+        "stepping_stones_low",
+        "stepping_stones_high",
+        "stepping_stones_high",
+        "stepping_stones_high",
+        "stepping_stones_high",
+        "stepping_stones_high",
+        "balance_beams",
+        "balance_beams",
+        "balance_beams",
+        "balance_beams",
+        "balance_beams",
+        "stepping_beams",
+        "stepping_beams",
+        "stepping_beams",
+        "stepping_beams",
+        "stepping_beams",
+        "gaps",
+        "gaps",
+        "gaps",
+        "flat",
+        "flat",
+        "stair_up",
+        "stair_down",
+        "rough",
+        "boxes",
+        "climb_up",
+        "climb_down",
+        "gap",
+        "pallets",
+        "stones",
+        "beam",
+        "consecutive",
+        "obstacles",
+        "gap",
+        "flat",
+        "box",
+        "discrete_obstacles",
+        "discrete_grid",
+        "pyramid_stairs",
+        "inverted_pyramid_stairs",
+        "high_ledge",
+        "wall",
+        "crawl",
+        "slope_steep",
+        "slope_steep_inv",
+        "stairs_high",
+        "stairs_high_inv"
+      ],
+      "column_family": [
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "B",
+        "B",
+        "B",
+        "B",
+        "B",
+        "B",
+        "B",
+        "B",
+        "B",
+        "B",
+        "B",
+        "B",
+        "C",
+        "C",
+        "C",
+        "C",
+        "C",
+        "C",
+        "C",
+        "D",
+        "D",
+        "D",
+        "E",
+        "E",
+        "E",
+        "E"
+      ],
+      "eval_cols": 23,
+      "eval_columns": [
+        "pyramid_stairs",
+        "pyramid_stairs",
+        "pyramid_stairs",
+        "pyramid_stairs",
+        "pyramid_stairs",
+        "pyramid_stairs_inv",
+        "pyramid_stairs_inv",
+        "pyramid_stairs_inv",
+        "pyramid_stairs_inv",
+        "pyramid_stairs_inv",
+        "boxes",
+        "boxes",
+        "boxes",
+        "boxes",
+        "random_rough",
+        "random_rough",
+        "random_rough",
+        "random_rough",
+        "hf_pyramid_slope",
+        "hf_pyramid_slope",
+        "hf_pyramid_slope_inv",
+        "hf_pyramid_slope_inv",
+        "stage_stairs"
+      ]
+    },
+    "evaluation_friction": {
+      "plan_path": "/home/jay/mai/wt/foothold-lab/ex42-launch-e1-v6/foothold_s2/curriculum/ex42-prep.yaml",
+      "plan_sha256": "c23a2325b70cb97ecf3c7f819b66967d19d0b3e271221d38431580b4f0699e61",
+      "decision": "teamlead-2026-11-11-0150-71a3d51f",
+      "static": 0.8,
+      "dynamic": 0.6,
+      "combine_mode": "average",
+      "state": "verified",
+      "robot": {
+        "source": "root_physx_view.get_material_properties",
+        "shape": [
+          64,
+          27,
+          3
+        ],
+        "static_min": 0.800000011920929,
+        "static_max": 0.800000011920929,
+        "dynamic_min": 0.6000000238418579,
+        "dynamic_max": 0.6000000238418579,
+        "material_sha256": "6fe7b9e1e987a0a20911c6a3d8ab98d38bf49458c7e69ee4c1c30d181412a92a"
+      },
+      "terrain": [
+        {
+          "collision_path": "/World/ground/terrain/mesh",
+          "material_path": "/World/ground/terrain/physicsMaterial",
+          "static": 0.800000011920929,
+          "dynamic": 0.6000000238418579,
+          "combine_mode": "average"
+        }
+      ]
+    }
+  },
+  {
+    "source": "/home/jay/data/foothold/s2_lab/e1_yaw_repeat_20261113/m2000_20261113_104730/seed7/axis_v2.json",
+    "seed": 7,
+    "level": 2,
+    "checkpoint_sha256": "3937df92866b79581f7b27e8b8c9fbde1f7733a85fe5179388fcfd78aa83c4bb",
+    "source_sha256": {
+      "axis_v2_run.py": "da189e1ae7898eaac5b46180033cb983aae24bf50e5f19db242bd0efaadd5d6d",
+      "axis_v2_cells.py": "23b22d6ca2cf5faeb955286cdf57f100c154b815e77d30df578e056817e24ac0",
+      "eval_map_modes.py": "d02510ca26fbd6eaea228580f5d1bf4633dcf2a58c424a66ce5dfdf2d92a7702",
+      "adapters.py": "46ad7e6f439ff7004d6e2515d91d51f4f3826bc710a4177b3f11daa9f5b1cc0a",
+      "fixed_terrain.py": "004a2221833f2babc5c06bf2bfdac95ccb31629135faed73171725418e6a0a7b"
+    },
+    "run_identity": {
+      "device": "cuda:0",
+      "checkpoint_sha256": "3937df92866b79581f7b27e8b8c9fbde1f7733a85fe5179388fcfd78aa83c4bb",
+      "eval_seed": 7,
+      "torch": "2.7.0+cu128",
+      "torch_cuda": "12.8",
+      "gpu_name": "NVIDIA GeForce RTX 5080",
+      "gpu_total_mem_mib": 15839,
+      "gpu_index": 0,
+      "gpu_uuid": "c08e23b0-62b6-a4f2-8eb2-11151c6a8c7b",
+      "code_head": "c7692789eb7ce1d61d6530b1aa83be4f3ba6ab67",
+      "code_dirty_files": 0
+    },
+    "terrain_tiles": [
+      {
+        "env": 0,
+        "kind": "pyramid_stairs",
+        "level": 2,
+        "column": 0
+      },
+      {
+        "env": 1,
+        "kind": "pyramid_stairs",
+        "level": 2,
+        "column": 1
+      },
+      {
+        "env": 2,
+        "kind": "pyramid_stairs",
+        "level": 2,
+        "column": 2
+      },
+      {
+        "env": 3,
+        "kind": "pyramid_stairs",
+        "level": 2,
+        "column": 3
+      },
+      {
+        "env": 4,
+        "kind": "pyramid_stairs",
+        "level": 2,
+        "column": 4
+      },
+      {
+        "env": 5,
+        "kind": "pyramid_stairs_inv",
+        "level": 2,
+        "column": 5
+      },
+      {
+        "env": 6,
+        "kind": "pyramid_stairs_inv",
+        "level": 2,
+        "column": 6
+      },
+      {
+        "env": 7,
+        "kind": "pyramid_stairs_inv",
+        "level": 2,
+        "column": 7
+      },
+      {
+        "env": 8,
+        "kind": "pyramid_stairs_inv",
+        "level": 2,
+        "column": 8
+      },
+      {
+        "env": 9,
+        "kind": "pyramid_stairs_inv",
+        "level": 2,
+        "column": 9
+      },
+      {
+        "env": 10,
+        "kind": "boxes",
+        "level": 2,
+        "column": 10
+      },
+      {
+        "env": 11,
+        "kind": "boxes",
+        "level": 2,
+        "column": 11
+      },
+      {
+        "env": 12,
+        "kind": "boxes",
+        "level": 2,
+        "column": 12
+      },
+      {
+        "env": 13,
+        "kind": "boxes",
+        "level": 2,
+        "column": 13
+      },
+      {
+        "env": 14,
+        "kind": "random_rough",
+        "level": 2,
+        "column": 14
+      },
+      {
+        "env": 15,
+        "kind": "random_rough",
+        "level": 2,
+        "column": 15
+      },
+      {
+        "env": 16,
+        "kind": "random_rough",
+        "level": 2,
+        "column": 16
+      },
+      {
+        "env": 17,
+        "kind": "random_rough",
+        "level": 2,
+        "column": 17
+      },
+      {
+        "env": 18,
+        "kind": "hf_pyramid_slope",
+        "level": 2,
+        "column": 18
+      },
+      {
+        "env": 19,
+        "kind": "hf_pyramid_slope",
+        "level": 2,
+        "column": 19
+      },
+      {
+        "env": 20,
+        "kind": "hf_pyramid_slope_inv",
+        "level": 2,
+        "column": 20
+      },
+      {
+        "env": 21,
+        "kind": "hf_pyramid_slope_inv",
+        "level": 2,
+        "column": 21
+      },
+      {
+        "env": 22,
+        "kind": "stage_stairs",
+        "level": 2,
+        "column": 22
+      },
+      {
+        "env": 23,
+        "kind": "pyramid_stairs",
+        "level": 2,
+        "column": 0
+      },
+      {
+        "env": 24,
+        "kind": "pyramid_stairs",
+        "level": 2,
+        "column": 1
+      },
+      {
+        "env": 25,
+        "kind": "pyramid_stairs",
+        "level": 2,
+        "column": 2
+      },
+      {
+        "env": 26,
+        "kind": "pyramid_stairs",
+        "level": 2,
+        "column": 3
+      },
+      {
+        "env": 27,
+        "kind": "pyramid_stairs",
+        "level": 2,
+        "column": 4
+      },
+      {
+        "env": 28,
+        "kind": "pyramid_stairs_inv",
+        "level": 2,
+        "column": 5
+      },
+      {
+        "env": 29,
+        "kind": "pyramid_stairs_inv",
+        "level": 2,
+        "column": 6
+      },
+      {
+        "env": 30,
+        "kind": "pyramid_stairs_inv",
+        "level": 2,
+        "column": 7
+      },
+      {
+        "env": 31,
+        "kind": "pyramid_stairs_inv",
+        "level": 2,
+        "column": 8
+      },
+      {
+        "env": 32,
+        "kind": "pyramid_stairs_inv",
+        "level": 2,
+        "column": 9
+      },
+      {
+        "env": 33,
+        "kind": "boxes",
+        "level": 2,
+        "column": 10
+      },
+      {
+        "env": 34,
+        "kind": "boxes",
+        "level": 2,
+        "column": 11
+      },
+      {
+        "env": 35,
+        "kind": "boxes",
+        "level": 2,
+        "column": 12
+      },
+      {
+        "env": 36,
+        "kind": "boxes",
+        "level": 2,
+        "column": 13
+      },
+      {
+        "env": 37,
+        "kind": "random_rough",
+        "level": 2,
+        "column": 14
+      },
+      {
+        "env": 38,
+        "kind": "random_rough",
+        "level": 2,
+        "column": 15
+      },
+      {
+        "env": 39,
+        "kind": "random_rough",
+        "level": 2,
+        "column": 16
+      },
+      {
+        "env": 40,
+        "kind": "random_rough",
+        "level": 2,
+        "column": 17
+      },
+      {
+        "env": 41,
+        "kind": "hf_pyramid_slope",
+        "level": 2,
+        "column": 18
+      },
+      {
+        "env": 42,
+        "kind": "hf_pyramid_slope",
+        "level": 2,
+        "column": 19
+      },
+      {
+        "env": 43,
+        "kind": "hf_pyramid_slope_inv",
+        "level": 2,
+        "column": 20
+      },
+      {
+        "env": 44,
+        "kind": "hf_pyramid_slope_inv",
+        "level": 2,
+        "column": 21
+      },
+      {
+        "env": 45,
+        "kind": "stage_stairs",
+        "level": 2,
+        "column": 22
+      },
+      {
+        "env": 46,
+        "kind": "pyramid_stairs",
+        "level": 2,
+        "column": 0
+      },
+      {
+        "env": 47,
+        "kind": "pyramid_stairs",
+        "level": 2,
+        "column": 1
+      },
+      {
+        "env": 48,
+        "kind": "pyramid_stairs",
+        "level": 2,
+        "column": 2
+      },
+      {
+        "env": 49,
+        "kind": "pyramid_stairs",
+        "level": 2,
+        "column": 3
+      },
+      {
+        "env": 50,
+        "kind": "pyramid_stairs",
+        "level": 2,
+        "column": 4
+      },
+      {
+        "env": 51,
+        "kind": "pyramid_stairs_inv",
+        "level": 2,
+        "column": 5
+      },
+      {
+        "env": 52,
+        "kind": "pyramid_stairs_inv",
+        "level": 2,
+        "column": 6
+      },
+      {
+        "env": 53,
+        "kind": "pyramid_stairs_inv",
+        "level": 2,
+        "column": 7
+      },
+      {
+        "env": 54,
+        "kind": "pyramid_stairs_inv",
+        "level": 2,
+        "column": 8
+      },
+      {
+        "env": 55,
+        "kind": "pyramid_stairs_inv",
+        "level": 2,
+        "column": 9
+      },
+      {
+        "env": 56,
+        "kind": "boxes",
+        "level": 2,
+        "column": 10
+      },
+      {
+        "env": 57,
+        "kind": "boxes",
+        "level": 2,
+        "column": 11
+      },
+      {
+        "env": 58,
+        "kind": "boxes",
+        "level": 2,
+        "column": 12
+      },
+      {
+        "env": 59,
+        "kind": "boxes",
+        "level": 2,
+        "column": 13
+      },
+      {
+        "env": 60,
+        "kind": "random_rough",
+        "level": 2,
+        "column": 14
+      },
+      {
+        "env": 61,
+        "kind": "random_rough",
+        "level": 2,
+        "column": 15
+      },
+      {
+        "env": 62,
+        "kind": "random_rough",
+        "level": 2,
+        "column": 16
+      },
+      {
+        "env": 63,
+        "kind": "random_rough",
+        "level": 2,
+        "column": 17
+      }
+    ],
+    "ex42_mesh": {
+      "mesh_npz": "/mnt/win-d/mai/data/foothold/s2_lab/ex42_mesh_1111/seed42_E0_c333/terrain_mesh.npz",
+      "manifest": "/mnt/win-d/mai/data/foothold/s2_lab/ex42_mesh_1111/seed42_E0_c333/mesh_manifest.json",
+      "mesh_sha256": "88197b3adfdde327edc633c025c6ad9aa690ea59aa7df5d51d548f7f56c12a95",
+      "columns": [
+        "pyramid_stairs",
+        "pyramid_stairs",
+        "pyramid_stairs",
+        "pyramid_stairs",
+        "pyramid_stairs",
+        "pyramid_stairs_inv",
+        "pyramid_stairs_inv",
+        "pyramid_stairs_inv",
+        "pyramid_stairs_inv",
+        "pyramid_stairs_inv",
+        "boxes",
+        "boxes",
+        "boxes",
+        "boxes",
+        "random_rough",
+        "random_rough",
+        "random_rough",
+        "random_rough",
+        "hf_pyramid_slope",
+        "hf_pyramid_slope",
+        "hf_pyramid_slope_inv",
+        "hf_pyramid_slope_inv",
+        "stage_stairs",
+        "stepping_stones_low",
+        "stepping_stones_low",
+        "stepping_stones_low",
+        "stepping_stones_low",
+        "stepping_stones_low",
+        "stepping_stones_low",
+        "stepping_stones_low",
+        "stepping_stones_high",
+        "stepping_stones_high",
+        "stepping_stones_high",
+        "stepping_stones_high",
+        "stepping_stones_high",
+        "balance_beams",
+        "balance_beams",
+        "balance_beams",
+        "balance_beams",
+        "balance_beams",
+        "stepping_beams",
+        "stepping_beams",
+        "stepping_beams",
+        "stepping_beams",
+        "stepping_beams",
+        "gaps",
+        "gaps",
+        "gaps",
+        "flat",
+        "flat",
+        "stair_up",
+        "stair_down",
+        "rough",
+        "boxes",
+        "climb_up",
+        "climb_down",
+        "gap",
+        "pallets",
+        "stones",
+        "beam",
+        "consecutive",
+        "obstacles",
+        "gap",
+        "flat",
+        "box",
+        "discrete_obstacles",
+        "discrete_grid",
+        "pyramid_stairs",
+        "inverted_pyramid_stairs",
+        "high_ledge",
+        "wall",
+        "crawl",
+        "slope_steep",
+        "slope_steep_inv",
+        "stairs_high",
+        "stairs_high_inv"
+      ],
+      "column_family": [
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "B",
+        "B",
+        "B",
+        "B",
+        "B",
+        "B",
+        "B",
+        "B",
+        "B",
+        "B",
+        "B",
+        "B",
+        "C",
+        "C",
+        "C",
+        "C",
+        "C",
+        "C",
+        "C",
+        "D",
+        "D",
+        "D",
+        "E",
+        "E",
+        "E",
+        "E"
+      ],
+      "eval_cols": 23,
+      "eval_columns": [
+        "pyramid_stairs",
+        "pyramid_stairs",
+        "pyramid_stairs",
+        "pyramid_stairs",
+        "pyramid_stairs",
+        "pyramid_stairs_inv",
+        "pyramid_stairs_inv",
+        "pyramid_stairs_inv",
+        "pyramid_stairs_inv",
+        "pyramid_stairs_inv",
+        "boxes",
+        "boxes",
+        "boxes",
+        "boxes",
+        "random_rough",
+        "random_rough",
+        "random_rough",
+        "random_rough",
+        "hf_pyramid_slope",
+        "hf_pyramid_slope",
+        "hf_pyramid_slope_inv",
+        "hf_pyramid_slope_inv",
+        "stage_stairs"
+      ]
+    },
+    "evaluation_friction": {
+      "plan_path": "/home/jay/mai/wt/foothold-lab/ex42-launch-e1-v6/foothold_s2/curriculum/ex42-prep.yaml",
+      "plan_sha256": "c23a2325b70cb97ecf3c7f819b66967d19d0b3e271221d38431580b4f0699e61",
+      "decision": "teamlead-2026-11-11-0150-71a3d51f",
+      "static": 0.8,
+      "dynamic": 0.6,
+      "combine_mode": "average",
+      "state": "verified",
+      "robot": {
+        "source": "root_physx_view.get_material_properties",
+        "shape": [
+          64,
+          27,
+          3
+        ],
+        "static_min": 0.800000011920929,
+        "static_max": 0.800000011920929,
+        "dynamic_min": 0.6000000238418579,
+        "dynamic_max": 0.6000000238418579,
+        "material_sha256": "6fe7b9e1e987a0a20911c6a3d8ab98d38bf49458c7e69ee4c1c30d181412a92a"
+      },
+      "terrain": [
+        {
+          "collision_path": "/World/ground/terrain/mesh",
+          "material_path": "/World/ground/terrain/physicsMaterial",
+          "static": 0.800000011920929,
+          "dynamic": 0.6000000238418579,
+          "combine_mode": "average"
+        }
+      ]
+    }
+  },
+  {
+    "source": "/home/jay/data/foothold/s2_lab/e1_yaw_repeat_20261113/m2000_20261113_104730/seed13/axis_v2.json",
+    "seed": 13,
+    "level": 2,
+    "checkpoint_sha256": "3937df92866b79581f7b27e8b8c9fbde1f7733a85fe5179388fcfd78aa83c4bb",
+    "source_sha256": {
+      "axis_v2_run.py": "da189e1ae7898eaac5b46180033cb983aae24bf50e5f19db242bd0efaadd5d6d",
+      "axis_v2_cells.py": "23b22d6ca2cf5faeb955286cdf57f100c154b815e77d30df578e056817e24ac0",
+      "eval_map_modes.py": "d02510ca26fbd6eaea228580f5d1bf4633dcf2a58c424a66ce5dfdf2d92a7702",
+      "adapters.py": "46ad7e6f439ff7004d6e2515d91d51f4f3826bc710a4177b3f11daa9f5b1cc0a",
+      "fixed_terrain.py": "004a2221833f2babc5c06bf2bfdac95ccb31629135faed73171725418e6a0a7b"
+    },
+    "run_identity": {
+      "device": "cuda:1",
+      "checkpoint_sha256": "3937df92866b79581f7b27e8b8c9fbde1f7733a85fe5179388fcfd78aa83c4bb",
+      "eval_seed": 13,
+      "torch": "2.7.0+cu128",
+      "torch_cuda": "12.8",
+      "gpu_name": "NVIDIA GeForce RTX 5080",
+      "gpu_total_mem_mib": 15831,
+      "gpu_index": 1,
+      "gpu_uuid": "315d098f-5fe0-26a0-0d2e-26e2d4c1ae4f",
+      "code_head": "c7692789eb7ce1d61d6530b1aa83be4f3ba6ab67",
+      "code_dirty_files": 0
+    },
+    "terrain_tiles": [
+      {
+        "env": 0,
+        "kind": "pyramid_stairs",
+        "level": 2,
+        "column": 0
+      },
+      {
+        "env": 1,
+        "kind": "pyramid_stairs",
+        "level": 2,
+        "column": 1
+      },
+      {
+        "env": 2,
+        "kind": "pyramid_stairs",
+        "level": 2,
+        "column": 2
+      },
+      {
+        "env": 3,
+        "kind": "pyramid_stairs",
+        "level": 2,
+        "column": 3
+      },
+      {
+        "env": 4,
+        "kind": "pyramid_stairs",
+        "level": 2,
+        "column": 4
+      },
+      {
+        "env": 5,
+        "kind": "pyramid_stairs_inv",
+        "level": 2,
+        "column": 5
+      },
+      {
+        "env": 6,
+        "kind": "pyramid_stairs_inv",
+        "level": 2,
+        "column": 6
+      },
+      {
+        "env": 7,
+        "kind": "pyramid_stairs_inv",
+        "level": 2,
+        "column": 7
+      },
+      {
+        "env": 8,
+        "kind": "pyramid_stairs_inv",
+        "level": 2,
+        "column": 8
+      },
+      {
+        "env": 9,
+        "kind": "pyramid_stairs_inv",
+        "level": 2,
+        "column": 9
+      },
+      {
+        "env": 10,
+        "kind": "boxes",
+        "level": 2,
+        "column": 10
+      },
+      {
+        "env": 11,
+        "kind": "boxes",
+        "level": 2,
+        "column": 11
+      },
+      {
+        "env": 12,
+        "kind": "boxes",
+        "level": 2,
+        "column": 12
+      },
+      {
+        "env": 13,
+        "kind": "boxes",
+        "level": 2,
+        "column": 13
+      },
+      {
+        "env": 14,
+        "kind": "random_rough",
+        "level": 2,
+        "column": 14
+      },
+      {
+        "env": 15,
+        "kind": "random_rough",
+        "level": 2,
+        "column": 15
+      },
+      {
+        "env": 16,
+        "kind": "random_rough",
+        "level": 2,
+        "column": 16
+      },
+      {
+        "env": 17,
+        "kind": "random_rough",
+        "level": 2,
+        "column": 17
+      },
+      {
+        "env": 18,
+        "kind": "hf_pyramid_slope",
+        "level": 2,
+        "column": 18
+      },
+      {
+        "env": 19,
+        "kind": "hf_pyramid_slope",
+        "level": 2,
+        "column": 19
+      },
+      {
+        "env": 20,
+        "kind": "hf_pyramid_slope_inv",
+        "level": 2,
+        "column": 20
+      },
+      {
+        "env": 21,
+        "kind": "hf_pyramid_slope_inv",
+        "level": 2,
+        "column": 21
+      },
+      {
+        "env": 22,
+        "kind": "stage_stairs",
+        "level": 2,
+        "column": 22
+      },
+      {
+        "env": 23,
+        "kind": "pyramid_stairs",
+        "level": 2,
+        "column": 0
+      },
+      {
+        "env": 24,
+        "kind": "pyramid_stairs",
+        "level": 2,
+        "column": 1
+      },
+      {
+        "env": 25,
+        "kind": "pyramid_stairs",
+        "level": 2,
+        "column": 2
+      },
+      {
+        "env": 26,
+        "kind": "pyramid_stairs",
+        "level": 2,
+        "column": 3
+      },
+      {
+        "env": 27,
+        "kind": "pyramid_stairs",
+        "level": 2,
+        "column": 4
+      },
+      {
+        "env": 28,
+        "kind": "pyramid_stairs_inv",
+        "level": 2,
+        "column": 5
+      },
+      {
+        "env": 29,
+        "kind": "pyramid_stairs_inv",
+        "level": 2,
+        "column": 6
+      },
+      {
+        "env": 30,
+        "kind": "pyramid_stairs_inv",
+        "level": 2,
+        "column": 7
+      },
+      {
+        "env": 31,
+        "kind": "pyramid_stairs_inv",
+        "level": 2,
+        "column": 8
+      },
+      {
+        "env": 32,
+        "kind": "pyramid_stairs_inv",
+        "level": 2,
+        "column": 9
+      },
+      {
+        "env": 33,
+        "kind": "boxes",
+        "level": 2,
+        "column": 10
+      },
+      {
+        "env": 34,
+        "kind": "boxes",
+        "level": 2,
+        "column": 11
+      },
+      {
+        "env": 35,
+        "kind": "boxes",
+        "level": 2,
+        "column": 12
+      },
+      {
+        "env": 36,
+        "kind": "boxes",
+        "level": 2,
+        "column": 13
+      },
+      {
+        "env": 37,
+        "kind": "random_rough",
+        "level": 2,
+        "column": 14
+      },
+      {
+        "env": 38,
+        "kind": "random_rough",
+        "level": 2,
+        "column": 15
+      },
+      {
+        "env": 39,
+        "kind": "random_rough",
+        "level": 2,
+        "column": 16
+      },
+      {
+        "env": 40,
+        "kind": "random_rough",
+        "level": 2,
+        "column": 17
+      },
+      {
+        "env": 41,
+        "kind": "hf_pyramid_slope",
+        "level": 2,
+        "column": 18
+      },
+      {
+        "env": 42,
+        "kind": "hf_pyramid_slope",
+        "level": 2,
+        "column": 19
+      },
+      {
+        "env": 43,
+        "kind": "hf_pyramid_slope_inv",
+        "level": 2,
+        "column": 20
+      },
+      {
+        "env": 44,
+        "kind": "hf_pyramid_slope_inv",
+        "level": 2,
+        "column": 21
+      },
+      {
+        "env": 45,
+        "kind": "stage_stairs",
+        "level": 2,
+        "column": 22
+      },
+      {
+        "env": 46,
+        "kind": "pyramid_stairs",
+        "level": 2,
+        "column": 0
+      },
+      {
+        "env": 47,
+        "kind": "pyramid_stairs",
+        "level": 2,
+        "column": 1
+      },
+      {
+        "env": 48,
+        "kind": "pyramid_stairs",
+        "level": 2,
+        "column": 2
+      },
+      {
+        "env": 49,
+        "kind": "pyramid_stairs",
+        "level": 2,
+        "column": 3
+      },
+      {
+        "env": 50,
+        "kind": "pyramid_stairs",
+        "level": 2,
+        "column": 4
+      },
+      {
+        "env": 51,
+        "kind": "pyramid_stairs_inv",
+        "level": 2,
+        "column": 5
+      },
+      {
+        "env": 52,
+        "kind": "pyramid_stairs_inv",
+        "level": 2,
+        "column": 6
+      },
+      {
+        "env": 53,
+        "kind": "pyramid_stairs_inv",
+        "level": 2,
+        "column": 7
+      },
+      {
+        "env": 54,
+        "kind": "pyramid_stairs_inv",
+        "level": 2,
+        "column": 8
+      },
+      {
+        "env": 55,
+        "kind": "pyramid_stairs_inv",
+        "level": 2,
+        "column": 9
+      },
+      {
+        "env": 56,
+        "kind": "boxes",
+        "level": 2,
+        "column": 10
+      },
+      {
+        "env": 57,
+        "kind": "boxes",
+        "level": 2,
+        "column": 11
+      },
+      {
+        "env": 58,
+        "kind": "boxes",
+        "level": 2,
+        "column": 12
+      },
+      {
+        "env": 59,
+        "kind": "boxes",
+        "level": 2,
+        "column": 13
+      },
+      {
+        "env": 60,
+        "kind": "random_rough",
+        "level": 2,
+        "column": 14
+      },
+      {
+        "env": 61,
+        "kind": "random_rough",
+        "level": 2,
+        "column": 15
+      },
+      {
+        "env": 62,
+        "kind": "random_rough",
+        "level": 2,
+        "column": 16
+      },
+      {
+        "env": 63,
+        "kind": "random_rough",
+        "level": 2,
+        "column": 17
+      }
+    ],
+    "ex42_mesh": {
+      "mesh_npz": "/mnt/win-d/mai/data/foothold/s2_lab/ex42_mesh_1111/seed42_E0_c333/terrain_mesh.npz",
+      "manifest": "/mnt/win-d/mai/data/foothold/s2_lab/ex42_mesh_1111/seed42_E0_c333/mesh_manifest.json",
+      "mesh_sha256": "88197b3adfdde327edc633c025c6ad9aa690ea59aa7df5d51d548f7f56c12a95",
+      "columns": [
+        "pyramid_stairs",
+        "pyramid_stairs",
+        "pyramid_stairs",
+        "pyramid_stairs",
+        "pyramid_stairs",
+        "pyramid_stairs_inv",
+        "pyramid_stairs_inv",
+        "pyramid_stairs_inv",
+        "pyramid_stairs_inv",
+        "pyramid_stairs_inv",
+        "boxes",
+        "boxes",
+        "boxes",
+        "boxes",
+        "random_rough",
+        "random_rough",
+        "random_rough",
+        "random_rough",
+        "hf_pyramid_slope",
+        "hf_pyramid_slope",
+        "hf_pyramid_slope_inv",
+        "hf_pyramid_slope_inv",
+        "stage_stairs",
+        "stepping_stones_low",
+        "stepping_stones_low",
+        "stepping_stones_low",
+        "stepping_stones_low",
+        "stepping_stones_low",
+        "stepping_stones_low",
+        "stepping_stones_low",
+        "stepping_stones_high",
+        "stepping_stones_high",
+        "stepping_stones_high",
+        "stepping_stones_high",
+        "stepping_stones_high",
+        "balance_beams",
+        "balance_beams",
+        "balance_beams",
+        "balance_beams",
+        "balance_beams",
+        "stepping_beams",
+        "stepping_beams",
+        "stepping_beams",
+        "stepping_beams",
+        "stepping_beams",
+        "gaps",
+        "gaps",
+        "gaps",
+        "flat",
+        "flat",
+        "stair_up",
+        "stair_down",
+        "rough",
+        "boxes",
+        "climb_up",
+        "climb_down",
+        "gap",
+        "pallets",
+        "stones",
+        "beam",
+        "consecutive",
+        "obstacles",
+        "gap",
+        "flat",
+        "box",
+        "discrete_obstacles",
+        "discrete_grid",
+        "pyramid_stairs",
+        "inverted_pyramid_stairs",
+        "high_ledge",
+        "wall",
+        "crawl",
+        "slope_steep",
+        "slope_steep_inv",
+        "stairs_high",
+        "stairs_high_inv"
+      ],
+      "column_family": [
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "B",
+        "B",
+        "B",
+        "B",
+        "B",
+        "B",
+        "B",
+        "B",
+        "B",
+        "B",
+        "B",
+        "B",
+        "C",
+        "C",
+        "C",
+        "C",
+        "C",
+        "C",
+        "C",
+        "D",
+        "D",
+        "D",
+        "E",
+        "E",
+        "E",
+        "E"
+      ],
+      "eval_cols": 23,
+      "eval_columns": [
+        "pyramid_stairs",
+        "pyramid_stairs",
+        "pyramid_stairs",
+        "pyramid_stairs",
+        "pyramid_stairs",
+        "pyramid_stairs_inv",
+        "pyramid_stairs_inv",
+        "pyramid_stairs_inv",
+        "pyramid_stairs_inv",
+        "pyramid_stairs_inv",
+        "boxes",
+        "boxes",
+        "boxes",
+        "boxes",
+        "random_rough",
+        "random_rough",
+        "random_rough",
+        "random_rough",
+        "hf_pyramid_slope",
+        "hf_pyramid_slope",
+        "hf_pyramid_slope_inv",
+        "hf_pyramid_slope_inv",
+        "stage_stairs"
+      ]
+    },
+    "evaluation_friction": {
+      "plan_path": "/home/jay/mai/wt/foothold-lab/ex42-launch-e1-v6/foothold_s2/curriculum/ex42-prep.yaml",
+      "plan_sha256": "c23a2325b70cb97ecf3c7f819b66967d19d0b3e271221d38431580b4f0699e61",
+      "decision": "teamlead-2026-11-11-0150-71a3d51f",
+      "static": 0.8,
+      "dynamic": 0.6,
+      "combine_mode": "average",
+      "state": "verified",
+      "robot": {
+        "source": "root_physx_view.get_material_properties",
+        "shape": [
+          64,
+          27,
+          3
+        ],
+        "static_min": 0.800000011920929,
+        "static_max": 0.800000011920929,
+        "dynamic_min": 0.6000000238418579,
+        "dynamic_max": 0.6000000238418579,
+        "material_sha256": "6fe7b9e1e987a0a20911c6a3d8ab98d38bf49458c7e69ee4c1c30d181412a92a"
+      },
+      "terrain": [
+        {
+          "collision_path": "/World/ground/terrain/mesh",
+          "material_path": "/World/ground/terrain/physicsMaterial",
+          "static": 0.800000011920929,
+          "dynamic": 0.6000000238418579,
+          "combine_mode": "average"
+        }
+      ]
+    }
+  },
+  {
+    "source": "/home/jay/data/foothold/s2_lab/ex42_main_20261112_164150/main/EX-42-B-E1-cmd7seg_20261112_164150/eval/scores/m2000/map64/map_modes.json",
+    "seed": 42,
+    "level": "mixed012",
+    "checkpoint_sha256": "3937df92866b79581f7b27e8b8c9fbde1f7733a85fe5179388fcfd78aa83c4bb",
+    "source_sha256": {
+      "foothold_s2.eval.eval_map_modes": "d02510ca26fbd6ea",
+      "foothold_s2": "0cd4c55a3cd0334d",
+      "foothold_s2.eval": "0aafcef576d0d448",
+      "foothold_s2.eval.map_mode_cells": "f75f401d1c3979c7",
+      "foothold_s2.curriculum": "48c49d99f7f76b53",
+      "foothold_s2.curriculum.ex40_dr": "84c37bcea378af3e",
+      "foothold_s2.eval.eval_dr_mode": "6f87345ebd9206af",
+      "foothold_s2.eval.n21_dr_record": "189774ea6022d614",
+      "foothold_s2.eval.ex42_friction": "80edc977a16ac551",
+      "foothold_s2.tasks": "76759049cde532f0",
+      "foothold_s2.x23_tasks": "3a638e71fc357a85",
+      "foothold_s2.x23f_tasks": "3f97a3994a38c335",
+      "foothold_s2.g0b_tasks": "6c7ed302ed636830",
+      "foothold_s2.sb_tasks": "8e9d8d91d4a84170",
+      "foothold_s2.eval.adapters": "46ad7e6f439ff700",
+      "foothold_s2.eval.ex41_eval_loader": "04e0c134c16cb703",
+      "foothold_s2.eval.fixed_terrain": "004a2221833f2bab",
+      "foothold_s2.eval.map_error": "9f51c8502304e04e",
+      "foothold_s2.terrains": "3adcf140393008ad",
+      "foothold_s2.terrains.columns": "a1dc682849135cb9",
+      "foothold_s2.curriculum.rules": "bd0e3c7e806391a6",
+      "foothold_s2.commands": "54b977d152ca0012",
+      "foothold_s2.commands.mixed_core": "bd84fa0fee3ce138",
+      "foothold_s2.terrains.progression": "518dcb904f8437e7",
+      "foothold_s2.terrains.s2_layout": "4a0cf9e363aa584e",
+      "foothold_s2.terrains.s2_runtime": "bcfa21a9fab726bc",
+      "foothold_s2.curriculum.terrain_levels_mixed": "a11af86437c3c2b7",
+      "foothold_s2.rewards": "0f9bc2c241fd8b34",
+      "foothold_s2.rewards.mgdp_core": "2027fd1d8d35c127",
+      "foothold_s2.rewards.mgdp_terms": "1aec285df7c917ca",
+      "foothold_s2.commands.mixed_command": "0ee4ad3807ce2f78",
+      "foothold_s2.rewards.penalty_log": "fcb5e0a08d877a4b",
+      "foothold_s2.rewards.core": "af3fb8547a76a117",
+      "foothold_s2.rewards.start_rewards": "cb8bdefa6c66ce98",
+      "foothold_s2.robots": "4bd9543141c62d73",
+      "foothold_s2.robots.go2_params": "babda6f593fd9ea2",
+      "foothold_s2.robots.go2_cfg": "ad160114ee729505",
+      "foothold_s2.tasks.mdp_extra": "203317441f44f89d",
+      "foothold_s2.tasks.delayed_action": "a670ca01325c563d",
+      "foothold_s2.terrains.rough_go2_cfg": "cb2541ccc1148e12",
+      "foothold_s2.tasks.s1_env_cfg": "cc43ffd3ff2201c6",
+      "foothold_s2.tasks.s2_env_cfg": "3b1ca9bae23634f5",
+      "foothold_s2.tasks.s2_x23_cfg": "fa91abd89f71ea38",
+      "foothold_s2.tasks.s2_23f_b_cfg": "a68021c7b471d413",
+      "foothold_s2.tasks.s2_sb_cfg": "26cd26be1716a516",
+      "foothold_s2.sensors.depth_aug": "7084ae69f4142546",
+      "foothold_s2.sensors.depth_cam_cfg": "d98c631d108a16f1",
+      "foothold_s2.sensors.start_obs": "d64f8299648b4ef5",
+      "foothold_s2.tasks.agents": "e4d93c4fd17d89b2",
+      "foothold_s2.tasks.agents.s2_ppo_cfg": "2175f7644616a5c9",
+      "foothold_s2.tasks.agents.s2_x23_ppo_cfg": "8c286222e4e887f7",
+      "foothold_s2.tasks.agents.s2_23f_b_ppo_cfg": "0f5646a08eeb970a",
+      "foothold_s2.tasks.agents.s2_sb_ppo_cfg": "3da547f7e10e53e0",
+      "foothold_s2.terrains.ex42_mesh_mount": "8d8a534d1a7fe175",
+      "foothold_s2.terrains.ex42_column_reset": "c4fdc22109fee081",
+      "foothold_s2.eval.ex42_mesh_eval": "a4daf4f42facdf8d",
+      "foothold_s2.eval.start_sheet": "15e830bda3fc5ed7",
+      "foothold_s2.terrains.sparse_terrains": "5f296cf750609b83",
+      "foothold_s2.terrains.start_go2_v2": "c0c7b07647f7c08b",
+      "foothold_s2.terrains.ame2_preset": "a01f741132326822",
+      "foothold_s2.terrains.jeplo_preset": "7ece631f660e2d41",
+      "foothold_s2.terrains.hipan_posture": "37e6550d53931df9",
+      "foothold_s2.terrains.ex42": "7a1ff5c4b4e29a9c",
+      "foothold_s2.runners.manifest": "4e64859b27902f0a",
+      "foothold_s2.models.start_perception": "b756c646469beeb5",
+      "foothold_s2.models.start_policy": "e9320c38ae758749",
+      "foothold_s2.runners.kl_probe": "70ea4b0e376ecbcf",
+      "foothold_s2.runners.contracts": "84d08118d1958a03",
+      "foothold_s2.runners.action_stats": "0c2b903bac0cd53b",
+      "foothold_s2.runners.map_switch": "383ce09b445b8bca",
+      "foothold_s2.runners.perception_replay": "a6d850cc51afa79a",
+      "foothold_s2.runners.reward_split": "0bb31c6e08496962",
+      "foothold_s2.runners.status": "39b429e47da2c8a4",
+      "foothold_s2.terrains.generator_columns": "4702069eb1f61278",
+      "foothold_s2.runners.start_runner": "b63be59e74e86a02",
+      "foothold_s2.runners.ex41_valid_storage": "822ddd0d66c3edef",
+      "foothold_s2.runners.ex41_critic_mirror": "3cc1db5cbb4911de"
+    },
+    "run_identity": {
+      "device": "cuda:1",
+      "checkpoint_sha256": "3937df92866b79581f7b27e8b8c9fbde1f7733a85fe5179388fcfd78aa83c4bb",
+      "eval_seed": 42,
+      "torch": "2.7.0+cu128",
+      "torch_cuda": "12.8",
+      "gpu_name": "NVIDIA GeForce RTX 5080",
+      "gpu_total_mem_mib": 15831,
+      "gpu_index": 1,
+      "gpu_uuid": "315d098f-5fe0-26a0-0d2e-26e2d4c1ae4f",
+      "code_head": "c7692789eb7ce1d61d6530b1aa83be4f3ba6ab67",
+      "code_dirty_files": 0
+    },
+    "terrain_tiles": [
+      {
+        "env": 0,
+        "kind": "pyramid_stairs",
+        "level": 0,
+        "column": 0
+      },
+      {
+        "env": 1,
+        "kind": "pyramid_stairs",
+        "level": 0,
+        "column": 1
+      },
+      {
+        "env": 2,
+        "kind": "pyramid_stairs",
+        "level": 0,
+        "column": 2
+      },
+      {
+        "env": 3,
+        "kind": "pyramid_stairs",
+        "level": 0,
+        "column": 3
+      },
+      {
+        "env": 4,
+        "kind": "pyramid_stairs",
+        "level": 0,
+        "column": 4
+      },
+      {
+        "env": 5,
+        "kind": "pyramid_stairs_inv",
+        "level": 0,
+        "column": 5
+      },
+      {
+        "env": 6,
+        "kind": "pyramid_stairs_inv",
+        "level": 0,
+        "column": 6
+      },
+      {
+        "env": 7,
+        "kind": "pyramid_stairs_inv",
+        "level": 0,
+        "column": 7
+      },
+      {
+        "env": 8,
+        "kind": "pyramid_stairs_inv",
+        "level": 0,
+        "column": 8
+      },
+      {
+        "env": 9,
+        "kind": "pyramid_stairs_inv",
+        "level": 0,
+        "column": 9
+      },
+      {
+        "env": 10,
+        "kind": "boxes",
+        "level": 0,
+        "column": 10
+      },
+      {
+        "env": 11,
+        "kind": "boxes",
+        "level": 0,
+        "column": 11
+      },
+      {
+        "env": 12,
+        "kind": "boxes",
+        "level": 0,
+        "column": 12
+      },
+      {
+        "env": 13,
+        "kind": "boxes",
+        "level": 0,
+        "column": 13
+      },
+      {
+        "env": 14,
+        "kind": "random_rough",
+        "level": 0,
+        "column": 14
+      },
+      {
+        "env": 15,
+        "kind": "random_rough",
+        "level": 0,
+        "column": 15
+      },
+      {
+        "env": 16,
+        "kind": "random_rough",
+        "level": 0,
+        "column": 16
+      },
+      {
+        "env": 17,
+        "kind": "random_rough",
+        "level": 0,
+        "column": 17
+      },
+      {
+        "env": 18,
+        "kind": "hf_pyramid_slope",
+        "level": 0,
+        "column": 18
+      },
+      {
+        "env": 19,
+        "kind": "hf_pyramid_slope",
+        "level": 0,
+        "column": 19
+      },
+      {
+        "env": 20,
+        "kind": "hf_pyramid_slope_inv",
+        "level": 0,
+        "column": 20
+      },
+      {
+        "env": 21,
+        "kind": "hf_pyramid_slope_inv",
+        "level": 0,
+        "column": 21
+      },
+      {
+        "env": 22,
+        "kind": "stage_stairs",
+        "level": 0,
+        "column": 22
+      },
+      {
+        "env": 23,
+        "kind": "pyramid_stairs",
+        "level": 1,
+        "column": 0
+      },
+      {
+        "env": 24,
+        "kind": "pyramid_stairs",
+        "level": 1,
+        "column": 1
+      },
+      {
+        "env": 25,
+        "kind": "pyramid_stairs",
+        "level": 1,
+        "column": 2
+      },
+      {
+        "env": 26,
+        "kind": "pyramid_stairs",
+        "level": 1,
+        "column": 3
+      },
+      {
+        "env": 27,
+        "kind": "pyramid_stairs",
+        "level": 1,
+        "column": 4
+      },
+      {
+        "env": 28,
+        "kind": "pyramid_stairs_inv",
+        "level": 1,
+        "column": 5
+      },
+      {
+        "env": 29,
+        "kind": "pyramid_stairs_inv",
+        "level": 1,
+        "column": 6
+      },
+      {
+        "env": 30,
+        "kind": "pyramid_stairs_inv",
+        "level": 1,
+        "column": 7
+      },
+      {
+        "env": 31,
+        "kind": "pyramid_stairs_inv",
+        "level": 1,
+        "column": 8
+      },
+      {
+        "env": 32,
+        "kind": "pyramid_stairs_inv",
+        "level": 1,
+        "column": 9
+      },
+      {
+        "env": 33,
+        "kind": "boxes",
+        "level": 1,
+        "column": 10
+      },
+      {
+        "env": 34,
+        "kind": "boxes",
+        "level": 1,
+        "column": 11
+      },
+      {
+        "env": 35,
+        "kind": "boxes",
+        "level": 1,
+        "column": 12
+      },
+      {
+        "env": 36,
+        "kind": "boxes",
+        "level": 1,
+        "column": 13
+      },
+      {
+        "env": 37,
+        "kind": "random_rough",
+        "level": 1,
+        "column": 14
+      },
+      {
+        "env": 38,
+        "kind": "random_rough",
+        "level": 1,
+        "column": 15
+      },
+      {
+        "env": 39,
+        "kind": "random_rough",
+        "level": 1,
+        "column": 16
+      },
+      {
+        "env": 40,
+        "kind": "random_rough",
+        "level": 1,
+        "column": 17
+      },
+      {
+        "env": 41,
+        "kind": "hf_pyramid_slope",
+        "level": 1,
+        "column": 18
+      },
+      {
+        "env": 42,
+        "kind": "hf_pyramid_slope",
+        "level": 1,
+        "column": 19
+      },
+      {
+        "env": 43,
+        "kind": "hf_pyramid_slope_inv",
+        "level": 1,
+        "column": 20
+      },
+      {
+        "env": 44,
+        "kind": "hf_pyramid_slope_inv",
+        "level": 1,
+        "column": 21
+      },
+      {
+        "env": 45,
+        "kind": "stage_stairs",
+        "level": 1,
+        "column": 22
+      },
+      {
+        "env": 46,
+        "kind": "pyramid_stairs",
+        "level": 2,
+        "column": 0
+      },
+      {
+        "env": 47,
+        "kind": "pyramid_stairs",
+        "level": 2,
+        "column": 1
+      },
+      {
+        "env": 48,
+        "kind": "pyramid_stairs",
+        "level": 2,
+        "column": 2
+      },
+      {
+        "env": 49,
+        "kind": "pyramid_stairs",
+        "level": 2,
+        "column": 3
+      },
+      {
+        "env": 50,
+        "kind": "pyramid_stairs",
+        "level": 2,
+        "column": 4
+      },
+      {
+        "env": 51,
+        "kind": "pyramid_stairs_inv",
+        "level": 2,
+        "column": 5
+      },
+      {
+        "env": 52,
+        "kind": "pyramid_stairs_inv",
+        "level": 2,
+        "column": 6
+      },
+      {
+        "env": 53,
+        "kind": "pyramid_stairs_inv",
+        "level": 2,
+        "column": 7
+      },
+      {
+        "env": 54,
+        "kind": "pyramid_stairs_inv",
+        "level": 2,
+        "column": 8
+      },
+      {
+        "env": 55,
+        "kind": "pyramid_stairs_inv",
+        "level": 2,
+        "column": 9
+      },
+      {
+        "env": 56,
+        "kind": "boxes",
+        "level": 2,
+        "column": 10
+      },
+      {
+        "env": 57,
+        "kind": "boxes",
+        "level": 2,
+        "column": 11
+      },
+      {
+        "env": 58,
+        "kind": "boxes",
+        "level": 2,
+        "column": 12
+      },
+      {
+        "env": 59,
+        "kind": "boxes",
+        "level": 2,
+        "column": 13
+      },
+      {
+        "env": 60,
+        "kind": "random_rough",
+        "level": 2,
+        "column": 14
+      },
+      {
+        "env": 61,
+        "kind": "random_rough",
+        "level": 2,
+        "column": 15
+      },
+      {
+        "env": 62,
+        "kind": "random_rough",
+        "level": 2,
+        "column": 16
+      },
+      {
+        "env": 63,
+        "kind": "random_rough",
+        "level": 2,
+        "column": 17
+      }
+    ],
+    "ex42_mesh": {
+      "mesh_npz": "/mnt/win-d/mai/data/foothold/s2_lab/ex42_mesh_1111/seed42_E0_c333/terrain_mesh.npz",
+      "manifest": "/mnt/win-d/mai/data/foothold/s2_lab/ex42_mesh_1111/seed42_E0_c333/mesh_manifest.json",
+      "mesh_sha256": "88197b3adfdde327edc633c025c6ad9aa690ea59aa7df5d51d548f7f56c12a95",
+      "columns": [
+        "pyramid_stairs",
+        "pyramid_stairs",
+        "pyramid_stairs",
+        "pyramid_stairs",
+        "pyramid_stairs",
+        "pyramid_stairs_inv",
+        "pyramid_stairs_inv",
+        "pyramid_stairs_inv",
+        "pyramid_stairs_inv",
+        "pyramid_stairs_inv",
+        "boxes",
+        "boxes",
+        "boxes",
+        "boxes",
+        "random_rough",
+        "random_rough",
+        "random_rough",
+        "random_rough",
+        "hf_pyramid_slope",
+        "hf_pyramid_slope",
+        "hf_pyramid_slope_inv",
+        "hf_pyramid_slope_inv",
+        "stage_stairs",
+        "stepping_stones_low",
+        "stepping_stones_low",
+        "stepping_stones_low",
+        "stepping_stones_low",
+        "stepping_stones_low",
+        "stepping_stones_low",
+        "stepping_stones_low",
+        "stepping_stones_high",
+        "stepping_stones_high",
+        "stepping_stones_high",
+        "stepping_stones_high",
+        "stepping_stones_high",
+        "balance_beams",
+        "balance_beams",
+        "balance_beams",
+        "balance_beams",
+        "balance_beams",
+        "stepping_beams",
+        "stepping_beams",
+        "stepping_beams",
+        "stepping_beams",
+        "stepping_beams",
+        "gaps",
+        "gaps",
+        "gaps",
+        "flat",
+        "flat",
+        "stair_up",
+        "stair_down",
+        "rough",
+        "boxes",
+        "climb_up",
+        "climb_down",
+        "gap",
+        "pallets",
+        "stones",
+        "beam",
+        "consecutive",
+        "obstacles",
+        "gap",
+        "flat",
+        "box",
+        "discrete_obstacles",
+        "discrete_grid",
+        "pyramid_stairs",
+        "inverted_pyramid_stairs",
+        "high_ledge",
+        "wall",
+        "crawl",
+        "slope_steep",
+        "slope_steep_inv",
+        "stairs_high",
+        "stairs_high_inv"
+      ],
+      "column_family": [
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "B",
+        "B",
+        "B",
+        "B",
+        "B",
+        "B",
+        "B",
+        "B",
+        "B",
+        "B",
+        "B",
+        "B",
+        "C",
+        "C",
+        "C",
+        "C",
+        "C",
+        "C",
+        "C",
+        "D",
+        "D",
+        "D",
+        "E",
+        "E",
+        "E",
+        "E"
+      ],
+      "eval_cols": 23,
+      "eval_columns": [
+        "pyramid_stairs",
+        "pyramid_stairs",
+        "pyramid_stairs",
+        "pyramid_stairs",
+        "pyramid_stairs",
+        "pyramid_stairs_inv",
+        "pyramid_stairs_inv",
+        "pyramid_stairs_inv",
+        "pyramid_stairs_inv",
+        "pyramid_stairs_inv",
+        "boxes",
+        "boxes",
+        "boxes",
+        "boxes",
+        "random_rough",
+        "random_rough",
+        "random_rough",
+        "random_rough",
+        "hf_pyramid_slope",
+        "hf_pyramid_slope",
+        "hf_pyramid_slope_inv",
+        "hf_pyramid_slope_inv",
+        "stage_stairs"
+      ]
+    },
+    "evaluation_friction": {
+      "plan_path": "/home/jay/mai/wt/foothold-lab/ex42-launch-e1-v6/foothold_s2/curriculum/ex42-prep.yaml",
+      "plan_sha256": "c23a2325b70cb97ecf3c7f819b66967d19d0b3e271221d38431580b4f0699e61",
+      "decision": "teamlead-2026-11-11-0150-71a3d51f",
+      "static": 0.8,
+      "dynamic": 0.6,
+      "combine_mode": "average",
+      "state": "verified",
+      "robot": {
+        "source": "root_physx_view.get_material_properties",
+        "shape": [
+          64,
+          27,
+          3
+        ],
+        "static_min": 0.800000011920929,
+        "static_max": 0.800000011920929,
+        "dynamic_min": 0.6000000238418579,
+        "dynamic_max": 0.6000000238418579,
+        "material_sha256": "6fe7b9e1e987a0a20911c6a3d8ab98d38bf49458c7e69ee4c1c30d181412a92a"
+      },
+      "terrain": [
+        {
+          "collision_path": "/World/ground/terrain/mesh",
+          "material_path": "/World/ground/terrain/physicsMaterial",
+          "static": 0.800000011920929,
+          "dynamic": 0.6000000238418579,
+          "combine_mode": "average"
+        }
+      ]
+    }
+  },
+  {
+    "source": "/home/jay/data/foothold/s2_lab/e1_sides_repeat_20261113/m2000_mixed012_20261113_105838/seed7/map_modes.json",
+    "seed": 7,
+    "level": "mixed012",
+    "checkpoint_sha256": "3937df92866b79581f7b27e8b8c9fbde1f7733a85fe5179388fcfd78aa83c4bb",
+    "source_sha256": {
+      "foothold_s2.eval.eval_map_modes": "d02510ca26fbd6ea",
+      "foothold_s2": "0cd4c55a3cd0334d",
+      "foothold_s2.eval": "0aafcef576d0d448",
+      "foothold_s2.eval.map_mode_cells": "f75f401d1c3979c7",
+      "foothold_s2.curriculum": "48c49d99f7f76b53",
+      "foothold_s2.curriculum.ex40_dr": "84c37bcea378af3e",
+      "foothold_s2.eval.eval_dr_mode": "6f87345ebd9206af",
+      "foothold_s2.eval.n21_dr_record": "189774ea6022d614",
+      "foothold_s2.eval.ex42_friction": "80edc977a16ac551",
+      "foothold_s2.tasks": "76759049cde532f0",
+      "foothold_s2.x23_tasks": "3a638e71fc357a85",
+      "foothold_s2.x23f_tasks": "3f97a3994a38c335",
+      "foothold_s2.g0b_tasks": "6c7ed302ed636830",
+      "foothold_s2.sb_tasks": "8e9d8d91d4a84170",
+      "foothold_s2.eval.adapters": "46ad7e6f439ff700",
+      "foothold_s2.eval.ex41_eval_loader": "04e0c134c16cb703",
+      "foothold_s2.eval.fixed_terrain": "004a2221833f2bab",
+      "foothold_s2.eval.map_error": "9f51c8502304e04e",
+      "foothold_s2.terrains": "3adcf140393008ad",
+      "foothold_s2.terrains.columns": "a1dc682849135cb9",
+      "foothold_s2.curriculum.rules": "bd0e3c7e806391a6",
+      "foothold_s2.commands": "54b977d152ca0012",
+      "foothold_s2.commands.mixed_core": "bd84fa0fee3ce138",
+      "foothold_s2.terrains.progression": "518dcb904f8437e7",
+      "foothold_s2.terrains.s2_layout": "4a0cf9e363aa584e",
+      "foothold_s2.terrains.s2_runtime": "bcfa21a9fab726bc",
+      "foothold_s2.curriculum.terrain_levels_mixed": "a11af86437c3c2b7",
+      "foothold_s2.rewards": "0f9bc2c241fd8b34",
+      "foothold_s2.rewards.mgdp_core": "2027fd1d8d35c127",
+      "foothold_s2.rewards.mgdp_terms": "1aec285df7c917ca",
+      "foothold_s2.commands.mixed_command": "0ee4ad3807ce2f78",
+      "foothold_s2.rewards.penalty_log": "fcb5e0a08d877a4b",
+      "foothold_s2.rewards.core": "af3fb8547a76a117",
+      "foothold_s2.rewards.start_rewards": "cb8bdefa6c66ce98",
+      "foothold_s2.robots": "4bd9543141c62d73",
+      "foothold_s2.robots.go2_params": "babda6f593fd9ea2",
+      "foothold_s2.robots.go2_cfg": "ad160114ee729505",
+      "foothold_s2.tasks.mdp_extra": "203317441f44f89d",
+      "foothold_s2.tasks.delayed_action": "a670ca01325c563d",
+      "foothold_s2.terrains.rough_go2_cfg": "cb2541ccc1148e12",
+      "foothold_s2.tasks.s1_env_cfg": "cc43ffd3ff2201c6",
+      "foothold_s2.tasks.s2_env_cfg": "3b1ca9bae23634f5",
+      "foothold_s2.tasks.s2_x23_cfg": "fa91abd89f71ea38",
+      "foothold_s2.tasks.s2_23f_b_cfg": "a68021c7b471d413",
+      "foothold_s2.tasks.s2_sb_cfg": "26cd26be1716a516",
+      "foothold_s2.sensors.depth_aug": "7084ae69f4142546",
+      "foothold_s2.sensors.depth_cam_cfg": "d98c631d108a16f1",
+      "foothold_s2.sensors.start_obs": "d64f8299648b4ef5",
+      "foothold_s2.tasks.agents": "e4d93c4fd17d89b2",
+      "foothold_s2.tasks.agents.s2_ppo_cfg": "2175f7644616a5c9",
+      "foothold_s2.tasks.agents.s2_x23_ppo_cfg": "8c286222e4e887f7",
+      "foothold_s2.tasks.agents.s2_23f_b_ppo_cfg": "0f5646a08eeb970a",
+      "foothold_s2.tasks.agents.s2_sb_ppo_cfg": "3da547f7e10e53e0",
+      "foothold_s2.terrains.ex42_mesh_mount": "8d8a534d1a7fe175",
+      "foothold_s2.terrains.ex42_column_reset": "c4fdc22109fee081",
+      "foothold_s2.eval.ex42_mesh_eval": "a4daf4f42facdf8d",
+      "foothold_s2.eval.start_sheet": "15e830bda3fc5ed7",
+      "foothold_s2.terrains.sparse_terrains": "5f296cf750609b83",
+      "foothold_s2.terrains.start_go2_v2": "c0c7b07647f7c08b",
+      "foothold_s2.terrains.ame2_preset": "a01f741132326822",
+      "foothold_s2.terrains.jeplo_preset": "7ece631f660e2d41",
+      "foothold_s2.terrains.hipan_posture": "37e6550d53931df9",
+      "foothold_s2.terrains.ex42": "7a1ff5c4b4e29a9c",
+      "foothold_s2.runners.manifest": "4e64859b27902f0a",
+      "foothold_s2.models.start_perception": "b756c646469beeb5",
+      "foothold_s2.models.start_policy": "e9320c38ae758749",
+      "foothold_s2.runners.kl_probe": "70ea4b0e376ecbcf",
+      "foothold_s2.runners.contracts": "84d08118d1958a03",
+      "foothold_s2.runners.action_stats": "0c2b903bac0cd53b",
+      "foothold_s2.runners.map_switch": "383ce09b445b8bca",
+      "foothold_s2.runners.perception_replay": "a6d850cc51afa79a",
+      "foothold_s2.runners.reward_split": "0bb31c6e08496962",
+      "foothold_s2.runners.status": "39b429e47da2c8a4",
+      "foothold_s2.terrains.generator_columns": "4702069eb1f61278",
+      "foothold_s2.runners.start_runner": "b63be59e74e86a02",
+      "foothold_s2.runners.ex41_valid_storage": "822ddd0d66c3edef",
+      "foothold_s2.runners.ex41_critic_mirror": "3cc1db5cbb4911de"
+    },
+    "run_identity": {
+      "device": "cuda:0",
+      "checkpoint_sha256": "3937df92866b79581f7b27e8b8c9fbde1f7733a85fe5179388fcfd78aa83c4bb",
+      "eval_seed": 7,
+      "torch": "2.7.0+cu128",
+      "torch_cuda": "12.8",
+      "gpu_name": "NVIDIA GeForce RTX 5080",
+      "gpu_total_mem_mib": 15839,
+      "gpu_index": 0,
+      "gpu_uuid": "c08e23b0-62b6-a4f2-8eb2-11151c6a8c7b",
+      "code_head": "c7692789eb7ce1d61d6530b1aa83be4f3ba6ab67",
+      "code_dirty_files": 0
+    },
+    "terrain_tiles": [
+      {
+        "env": 0,
+        "kind": "pyramid_stairs",
+        "level": 0,
+        "column": 0
+      },
+      {
+        "env": 1,
+        "kind": "pyramid_stairs",
+        "level": 0,
+        "column": 1
+      },
+      {
+        "env": 2,
+        "kind": "pyramid_stairs",
+        "level": 0,
+        "column": 2
+      },
+      {
+        "env": 3,
+        "kind": "pyramid_stairs",
+        "level": 0,
+        "column": 3
+      },
+      {
+        "env": 4,
+        "kind": "pyramid_stairs",
+        "level": 0,
+        "column": 4
+      },
+      {
+        "env": 5,
+        "kind": "pyramid_stairs_inv",
+        "level": 0,
+        "column": 5
+      },
+      {
+        "env": 6,
+        "kind": "pyramid_stairs_inv",
+        "level": 0,
+        "column": 6
+      },
+      {
+        "env": 7,
+        "kind": "pyramid_stairs_inv",
+        "level": 0,
+        "column": 7
+      },
+      {
+        "env": 8,
+        "kind": "pyramid_stairs_inv",
+        "level": 0,
+        "column": 8
+      },
+      {
+        "env": 9,
+        "kind": "pyramid_stairs_inv",
+        "level": 0,
+        "column": 9
+      },
+      {
+        "env": 10,
+        "kind": "boxes",
+        "level": 0,
+        "column": 10
+      },
+      {
+        "env": 11,
+        "kind": "boxes",
+        "level": 0,
+        "column": 11
+      },
+      {
+        "env": 12,
+        "kind": "boxes",
+        "level": 0,
+        "column": 12
+      },
+      {
+        "env": 13,
+        "kind": "boxes",
+        "level": 0,
+        "column": 13
+      },
+      {
+        "env": 14,
+        "kind": "random_rough",
+        "level": 0,
+        "column": 14
+      },
+      {
+        "env": 15,
+        "kind": "random_rough",
+        "level": 0,
+        "column": 15
+      },
+      {
+        "env": 16,
+        "kind": "random_rough",
+        "level": 0,
+        "column": 16
+      },
+      {
+        "env": 17,
+        "kind": "random_rough",
+        "level": 0,
+        "column": 17
+      },
+      {
+        "env": 18,
+        "kind": "hf_pyramid_slope",
+        "level": 0,
+        "column": 18
+      },
+      {
+        "env": 19,
+        "kind": "hf_pyramid_slope",
+        "level": 0,
+        "column": 19
+      },
+      {
+        "env": 20,
+        "kind": "hf_pyramid_slope_inv",
+        "level": 0,
+        "column": 20
+      },
+      {
+        "env": 21,
+        "kind": "hf_pyramid_slope_inv",
+        "level": 0,
+        "column": 21
+      },
+      {
+        "env": 22,
+        "kind": "stage_stairs",
+        "level": 0,
+        "column": 22
+      },
+      {
+        "env": 23,
+        "kind": "pyramid_stairs",
+        "level": 1,
+        "column": 0
+      },
+      {
+        "env": 24,
+        "kind": "pyramid_stairs",
+        "level": 1,
+        "column": 1
+      },
+      {
+        "env": 25,
+        "kind": "pyramid_stairs",
+        "level": 1,
+        "column": 2
+      },
+      {
+        "env": 26,
+        "kind": "pyramid_stairs",
+        "level": 1,
+        "column": 3
+      },
+      {
+        "env": 27,
+        "kind": "pyramid_stairs",
+        "level": 1,
+        "column": 4
+      },
+      {
+        "env": 28,
+        "kind": "pyramid_stairs_inv",
+        "level": 1,
+        "column": 5
+      },
+      {
+        "env": 29,
+        "kind": "pyramid_stairs_inv",
+        "level": 1,
+        "column": 6
+      },
+      {
+        "env": 30,
+        "kind": "pyramid_stairs_inv",
+        "level": 1,
+        "column": 7
+      },
+      {
+        "env": 31,
+        "kind": "pyramid_stairs_inv",
+        "level": 1,
+        "column": 8
+      },
+      {
+        "env": 32,
+        "kind": "pyramid_stairs_inv",
+        "level": 1,
+        "column": 9
+      },
+      {
+        "env": 33,
+        "kind": "boxes",
+        "level": 1,
+        "column": 10
+      },
+      {
+        "env": 34,
+        "kind": "boxes",
+        "level": 1,
+        "column": 11
+      },
+      {
+        "env": 35,
+        "kind": "boxes",
+        "level": 1,
+        "column": 12
+      },
+      {
+        "env": 36,
+        "kind": "boxes",
+        "level": 1,
+        "column": 13
+      },
+      {
+        "env": 37,
+        "kind": "random_rough",
+        "level": 1,
+        "column": 14
+      },
+      {
+        "env": 38,
+        "kind": "random_rough",
+        "level": 1,
+        "column": 15
+      },
+      {
+        "env": 39,
+        "kind": "random_rough",
+        "level": 1,
+        "column": 16
+      },
+      {
+        "env": 40,
+        "kind": "random_rough",
+        "level": 1,
+        "column": 17
+      },
+      {
+        "env": 41,
+        "kind": "hf_pyramid_slope",
+        "level": 1,
+        "column": 18
+      },
+      {
+        "env": 42,
+        "kind": "hf_pyramid_slope",
+        "level": 1,
+        "column": 19
+      },
+      {
+        "env": 43,
+        "kind": "hf_pyramid_slope_inv",
+        "level": 1,
+        "column": 20
+      },
+      {
+        "env": 44,
+        "kind": "hf_pyramid_slope_inv",
+        "level": 1,
+        "column": 21
+      },
+      {
+        "env": 45,
+        "kind": "stage_stairs",
+        "level": 1,
+        "column": 22
+      },
+      {
+        "env": 46,
+        "kind": "pyramid_stairs",
+        "level": 2,
+        "column": 0
+      },
+      {
+        "env": 47,
+        "kind": "pyramid_stairs",
+        "level": 2,
+        "column": 1
+      },
+      {
+        "env": 48,
+        "kind": "pyramid_stairs",
+        "level": 2,
+        "column": 2
+      },
+      {
+        "env": 49,
+        "kind": "pyramid_stairs",
+        "level": 2,
+        "column": 3
+      },
+      {
+        "env": 50,
+        "kind": "pyramid_stairs",
+        "level": 2,
+        "column": 4
+      },
+      {
+        "env": 51,
+        "kind": "pyramid_stairs_inv",
+        "level": 2,
+        "column": 5
+      },
+      {
+        "env": 52,
+        "kind": "pyramid_stairs_inv",
+        "level": 2,
+        "column": 6
+      },
+      {
+        "env": 53,
+        "kind": "pyramid_stairs_inv",
+        "level": 2,
+        "column": 7
+      },
+      {
+        "env": 54,
+        "kind": "pyramid_stairs_inv",
+        "level": 2,
+        "column": 8
+      },
+      {
+        "env": 55,
+        "kind": "pyramid_stairs_inv",
+        "level": 2,
+        "column": 9
+      },
+      {
+        "env": 56,
+        "kind": "boxes",
+        "level": 2,
+        "column": 10
+      },
+      {
+        "env": 57,
+        "kind": "boxes",
+        "level": 2,
+        "column": 11
+      },
+      {
+        "env": 58,
+        "kind": "boxes",
+        "level": 2,
+        "column": 12
+      },
+      {
+        "env": 59,
+        "kind": "boxes",
+        "level": 2,
+        "column": 13
+      },
+      {
+        "env": 60,
+        "kind": "random_rough",
+        "level": 2,
+        "column": 14
+      },
+      {
+        "env": 61,
+        "kind": "random_rough",
+        "level": 2,
+        "column": 15
+      },
+      {
+        "env": 62,
+        "kind": "random_rough",
+        "level": 2,
+        "column": 16
+      },
+      {
+        "env": 63,
+        "kind": "random_rough",
+        "level": 2,
+        "column": 17
+      }
+    ],
+    "ex42_mesh": {
+      "mesh_npz": "/mnt/win-d/mai/data/foothold/s2_lab/ex42_mesh_1111/seed42_E0_c333/terrain_mesh.npz",
+      "manifest": "/mnt/win-d/mai/data/foothold/s2_lab/ex42_mesh_1111/seed42_E0_c333/mesh_manifest.json",
+      "mesh_sha256": "88197b3adfdde327edc633c025c6ad9aa690ea59aa7df5d51d548f7f56c12a95",
+      "columns": [
+        "pyramid_stairs",
+        "pyramid_stairs",
+        "pyramid_stairs",
+        "pyramid_stairs",
+        "pyramid_stairs",
+        "pyramid_stairs_inv",
+        "pyramid_stairs_inv",
+        "pyramid_stairs_inv",
+        "pyramid_stairs_inv",
+        "pyramid_stairs_inv",
+        "boxes",
+        "boxes",
+        "boxes",
+        "boxes",
+        "random_rough",
+        "random_rough",
+        "random_rough",
+        "random_rough",
+        "hf_pyramid_slope",
+        "hf_pyramid_slope",
+        "hf_pyramid_slope_inv",
+        "hf_pyramid_slope_inv",
+        "stage_stairs",
+        "stepping_stones_low",
+        "stepping_stones_low",
+        "stepping_stones_low",
+        "stepping_stones_low",
+        "stepping_stones_low",
+        "stepping_stones_low",
+        "stepping_stones_low",
+        "stepping_stones_high",
+        "stepping_stones_high",
+        "stepping_stones_high",
+        "stepping_stones_high",
+        "stepping_stones_high",
+        "balance_beams",
+        "balance_beams",
+        "balance_beams",
+        "balance_beams",
+        "balance_beams",
+        "stepping_beams",
+        "stepping_beams",
+        "stepping_beams",
+        "stepping_beams",
+        "stepping_beams",
+        "gaps",
+        "gaps",
+        "gaps",
+        "flat",
+        "flat",
+        "stair_up",
+        "stair_down",
+        "rough",
+        "boxes",
+        "climb_up",
+        "climb_down",
+        "gap",
+        "pallets",
+        "stones",
+        "beam",
+        "consecutive",
+        "obstacles",
+        "gap",
+        "flat",
+        "box",
+        "discrete_obstacles",
+        "discrete_grid",
+        "pyramid_stairs",
+        "inverted_pyramid_stairs",
+        "high_ledge",
+        "wall",
+        "crawl",
+        "slope_steep",
+        "slope_steep_inv",
+        "stairs_high",
+        "stairs_high_inv"
+      ],
+      "column_family": [
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "B",
+        "B",
+        "B",
+        "B",
+        "B",
+        "B",
+        "B",
+        "B",
+        "B",
+        "B",
+        "B",
+        "B",
+        "C",
+        "C",
+        "C",
+        "C",
+        "C",
+        "C",
+        "C",
+        "D",
+        "D",
+        "D",
+        "E",
+        "E",
+        "E",
+        "E"
+      ],
+      "eval_cols": 23,
+      "eval_columns": [
+        "pyramid_stairs",
+        "pyramid_stairs",
+        "pyramid_stairs",
+        "pyramid_stairs",
+        "pyramid_stairs",
+        "pyramid_stairs_inv",
+        "pyramid_stairs_inv",
+        "pyramid_stairs_inv",
+        "pyramid_stairs_inv",
+        "pyramid_stairs_inv",
+        "boxes",
+        "boxes",
+        "boxes",
+        "boxes",
+        "random_rough",
+        "random_rough",
+        "random_rough",
+        "random_rough",
+        "hf_pyramid_slope",
+        "hf_pyramid_slope",
+        "hf_pyramid_slope_inv",
+        "hf_pyramid_slope_inv",
+        "stage_stairs"
+      ]
+    },
+    "evaluation_friction": {
+      "plan_path": "/home/jay/mai/wt/foothold-lab/ex42-launch-e1-v6/foothold_s2/curriculum/ex42-prep.yaml",
+      "plan_sha256": "c23a2325b70cb97ecf3c7f819b66967d19d0b3e271221d38431580b4f0699e61",
+      "decision": "teamlead-2026-11-11-0150-71a3d51f",
+      "static": 0.8,
+      "dynamic": 0.6,
+      "combine_mode": "average",
+      "state": "verified",
+      "robot": {
+        "source": "root_physx_view.get_material_properties",
+        "shape": [
+          64,
+          27,
+          3
+        ],
+        "static_min": 0.800000011920929,
+        "static_max": 0.800000011920929,
+        "dynamic_min": 0.6000000238418579,
+        "dynamic_max": 0.6000000238418579,
+        "material_sha256": "6fe7b9e1e987a0a20911c6a3d8ab98d38bf49458c7e69ee4c1c30d181412a92a"
+      },
+      "terrain": [
+        {
+          "collision_path": "/World/ground/terrain/mesh",
+          "material_path": "/World/ground/terrain/physicsMaterial",
+          "static": 0.800000011920929,
+          "dynamic": 0.6000000238418579,
+          "combine_mode": "average"
+        }
+      ]
+    }
+  },
+  {
+    "source": "/home/jay/data/foothold/s2_lab/e1_sides_repeat_20261113/m2000_mixed012_20261113_105838/seed13/map_modes.json",
+    "seed": 13,
+    "level": "mixed012",
+    "checkpoint_sha256": "3937df92866b79581f7b27e8b8c9fbde1f7733a85fe5179388fcfd78aa83c4bb",
+    "source_sha256": {
+      "foothold_s2.eval.eval_map_modes": "d02510ca26fbd6ea",
+      "foothold_s2": "0cd4c55a3cd0334d",
+      "foothold_s2.eval": "0aafcef576d0d448",
+      "foothold_s2.eval.map_mode_cells": "f75f401d1c3979c7",
+      "foothold_s2.curriculum": "48c49d99f7f76b53",
+      "foothold_s2.curriculum.ex40_dr": "84c37bcea378af3e",
+      "foothold_s2.eval.eval_dr_mode": "6f87345ebd9206af",
+      "foothold_s2.eval.n21_dr_record": "189774ea6022d614",
+      "foothold_s2.eval.ex42_friction": "80edc977a16ac551",
+      "foothold_s2.tasks": "76759049cde532f0",
+      "foothold_s2.x23_tasks": "3a638e71fc357a85",
+      "foothold_s2.x23f_tasks": "3f97a3994a38c335",
+      "foothold_s2.g0b_tasks": "6c7ed302ed636830",
+      "foothold_s2.sb_tasks": "8e9d8d91d4a84170",
+      "foothold_s2.eval.adapters": "46ad7e6f439ff700",
+      "foothold_s2.eval.ex41_eval_loader": "04e0c134c16cb703",
+      "foothold_s2.eval.fixed_terrain": "004a2221833f2bab",
+      "foothold_s2.eval.map_error": "9f51c8502304e04e",
+      "foothold_s2.terrains": "3adcf140393008ad",
+      "foothold_s2.terrains.columns": "a1dc682849135cb9",
+      "foothold_s2.curriculum.rules": "bd0e3c7e806391a6",
+      "foothold_s2.commands": "54b977d152ca0012",
+      "foothold_s2.commands.mixed_core": "bd84fa0fee3ce138",
+      "foothold_s2.terrains.progression": "518dcb904f8437e7",
+      "foothold_s2.terrains.s2_layout": "4a0cf9e363aa584e",
+      "foothold_s2.terrains.s2_runtime": "bcfa21a9fab726bc",
+      "foothold_s2.curriculum.terrain_levels_mixed": "a11af86437c3c2b7",
+      "foothold_s2.rewards": "0f9bc2c241fd8b34",
+      "foothold_s2.rewards.mgdp_core": "2027fd1d8d35c127",
+      "foothold_s2.rewards.mgdp_terms": "1aec285df7c917ca",
+      "foothold_s2.commands.mixed_command": "0ee4ad3807ce2f78",
+      "foothold_s2.rewards.penalty_log": "fcb5e0a08d877a4b",
+      "foothold_s2.rewards.core": "af3fb8547a76a117",
+      "foothold_s2.rewards.start_rewards": "cb8bdefa6c66ce98",
+      "foothold_s2.robots": "4bd9543141c62d73",
+      "foothold_s2.robots.go2_params": "babda6f593fd9ea2",
+      "foothold_s2.robots.go2_cfg": "ad160114ee729505",
+      "foothold_s2.tasks.mdp_extra": "203317441f44f89d",
+      "foothold_s2.tasks.delayed_action": "a670ca01325c563d",
+      "foothold_s2.terrains.rough_go2_cfg": "cb2541ccc1148e12",
+      "foothold_s2.tasks.s1_env_cfg": "cc43ffd3ff2201c6",
+      "foothold_s2.tasks.s2_env_cfg": "3b1ca9bae23634f5",
+      "foothold_s2.tasks.s2_x23_cfg": "fa91abd89f71ea38",
+      "foothold_s2.tasks.s2_23f_b_cfg": "a68021c7b471d413",
+      "foothold_s2.tasks.s2_sb_cfg": "26cd26be1716a516",
+      "foothold_s2.sensors.depth_aug": "7084ae69f4142546",
+      "foothold_s2.sensors.depth_cam_cfg": "d98c631d108a16f1",
+      "foothold_s2.sensors.start_obs": "d64f8299648b4ef5",
+      "foothold_s2.tasks.agents": "e4d93c4fd17d89b2",
+      "foothold_s2.tasks.agents.s2_ppo_cfg": "2175f7644616a5c9",
+      "foothold_s2.tasks.agents.s2_x23_ppo_cfg": "8c286222e4e887f7",
+      "foothold_s2.tasks.agents.s2_23f_b_ppo_cfg": "0f5646a08eeb970a",
+      "foothold_s2.tasks.agents.s2_sb_ppo_cfg": "3da547f7e10e53e0",
+      "foothold_s2.terrains.ex42_mesh_mount": "8d8a534d1a7fe175",
+      "foothold_s2.terrains.ex42_column_reset": "c4fdc22109fee081",
+      "foothold_s2.eval.ex42_mesh_eval": "a4daf4f42facdf8d",
+      "foothold_s2.eval.start_sheet": "15e830bda3fc5ed7",
+      "foothold_s2.terrains.sparse_terrains": "5f296cf750609b83",
+      "foothold_s2.terrains.start_go2_v2": "c0c7b07647f7c08b",
+      "foothold_s2.terrains.ame2_preset": "a01f741132326822",
+      "foothold_s2.terrains.jeplo_preset": "7ece631f660e2d41",
+      "foothold_s2.terrains.hipan_posture": "37e6550d53931df9",
+      "foothold_s2.terrains.ex42": "7a1ff5c4b4e29a9c",
+      "foothold_s2.runners.manifest": "4e64859b27902f0a",
+      "foothold_s2.models.start_perception": "b756c646469beeb5",
+      "foothold_s2.models.start_policy": "e9320c38ae758749",
+      "foothold_s2.runners.kl_probe": "70ea4b0e376ecbcf",
+      "foothold_s2.runners.contracts": "84d08118d1958a03",
+      "foothold_s2.runners.action_stats": "0c2b903bac0cd53b",
+      "foothold_s2.runners.map_switch": "383ce09b445b8bca",
+      "foothold_s2.runners.perception_replay": "a6d850cc51afa79a",
+      "foothold_s2.runners.reward_split": "0bb31c6e08496962",
+      "foothold_s2.runners.status": "39b429e47da2c8a4",
+      "foothold_s2.terrains.generator_columns": "4702069eb1f61278",
+      "foothold_s2.runners.start_runner": "b63be59e74e86a02",
+      "foothold_s2.runners.ex41_valid_storage": "822ddd0d66c3edef",
+      "foothold_s2.runners.ex41_critic_mirror": "3cc1db5cbb4911de"
+    },
+    "run_identity": {
+      "device": "cuda:1",
+      "checkpoint_sha256": "3937df92866b79581f7b27e8b8c9fbde1f7733a85fe5179388fcfd78aa83c4bb",
+      "eval_seed": 13,
+      "torch": "2.7.0+cu128",
+      "torch_cuda": "12.8",
+      "gpu_name": "NVIDIA GeForce RTX 5080",
+      "gpu_total_mem_mib": 15831,
+      "gpu_index": 1,
+      "gpu_uuid": "315d098f-5fe0-26a0-0d2e-26e2d4c1ae4f",
+      "code_head": "c7692789eb7ce1d61d6530b1aa83be4f3ba6ab67",
+      "code_dirty_files": 0
+    },
+    "terrain_tiles": [
+      {
+        "env": 0,
+        "kind": "pyramid_stairs",
+        "level": 0,
+        "column": 0
+      },
+      {
+        "env": 1,
+        "kind": "pyramid_stairs",
+        "level": 0,
+        "column": 1
+      },
+      {
+        "env": 2,
+        "kind": "pyramid_stairs",
+        "level": 0,
+        "column": 2
+      },
+      {
+        "env": 3,
+        "kind": "pyramid_stairs",
+        "level": 0,
+        "column": 3
+      },
+      {
+        "env": 4,
+        "kind": "pyramid_stairs",
+        "level": 0,
+        "column": 4
+      },
+      {
+        "env": 5,
+        "kind": "pyramid_stairs_inv",
+        "level": 0,
+        "column": 5
+      },
+      {
+        "env": 6,
+        "kind": "pyramid_stairs_inv",
+        "level": 0,
+        "column": 6
+      },
+      {
+        "env": 7,
+        "kind": "pyramid_stairs_inv",
+        "level": 0,
+        "column": 7
+      },
+      {
+        "env": 8,
+        "kind": "pyramid_stairs_inv",
+        "level": 0,
+        "column": 8
+      },
+      {
+        "env": 9,
+        "kind": "pyramid_stairs_inv",
+        "level": 0,
+        "column": 9
+      },
+      {
+        "env": 10,
+        "kind": "boxes",
+        "level": 0,
+        "column": 10
+      },
+      {
+        "env": 11,
+        "kind": "boxes",
+        "level": 0,
+        "column": 11
+      },
+      {
+        "env": 12,
+        "kind": "boxes",
+        "level": 0,
+        "column": 12
+      },
+      {
+        "env": 13,
+        "kind": "boxes",
+        "level": 0,
+        "column": 13
+      },
+      {
+        "env": 14,
+        "kind": "random_rough",
+        "level": 0,
+        "column": 14
+      },
+      {
+        "env": 15,
+        "kind": "random_rough",
+        "level": 0,
+        "column": 15
+      },
+      {
+        "env": 16,
+        "kind": "random_rough",
+        "level": 0,
+        "column": 16
+      },
+      {
+        "env": 17,
+        "kind": "random_rough",
+        "level": 0,
+        "column": 17
+      },
+      {
+        "env": 18,
+        "kind": "hf_pyramid_slope",
+        "level": 0,
+        "column": 18
+      },
+      {
+        "env": 19,
+        "kind": "hf_pyramid_slope",
+        "level": 0,
+        "column": 19
+      },
+      {
+        "env": 20,
+        "kind": "hf_pyramid_slope_inv",
+        "level": 0,
+        "column": 20
+      },
+      {
+        "env": 21,
+        "kind": "hf_pyramid_slope_inv",
+        "level": 0,
+        "column": 21
+      },
+      {
+        "env": 22,
+        "kind": "stage_stairs",
+        "level": 0,
+        "column": 22
+      },
+      {
+        "env": 23,
+        "kind": "pyramid_stairs",
+        "level": 1,
+        "column": 0
+      },
+      {
+        "env": 24,
+        "kind": "pyramid_stairs",
+        "level": 1,
+        "column": 1
+      },
+      {
+        "env": 25,
+        "kind": "pyramid_stairs",
+        "level": 1,
+        "column": 2
+      },
+      {
+        "env": 26,
+        "kind": "pyramid_stairs",
+        "level": 1,
+        "column": 3
+      },
+      {
+        "env": 27,
+        "kind": "pyramid_stairs",
+        "level": 1,
+        "column": 4
+      },
+      {
+        "env": 28,
+        "kind": "pyramid_stairs_inv",
+        "level": 1,
+        "column": 5
+      },
+      {
+        "env": 29,
+        "kind": "pyramid_stairs_inv",
+        "level": 1,
+        "column": 6
+      },
+      {
+        "env": 30,
+        "kind": "pyramid_stairs_inv",
+        "level": 1,
+        "column": 7
+      },
+      {
+        "env": 31,
+        "kind": "pyramid_stairs_inv",
+        "level": 1,
+        "column": 8
+      },
+      {
+        "env": 32,
+        "kind": "pyramid_stairs_inv",
+        "level": 1,
+        "column": 9
+      },
+      {
+        "env": 33,
+        "kind": "boxes",
+        "level": 1,
+        "column": 10
+      },
+      {
+        "env": 34,
+        "kind": "boxes",
+        "level": 1,
+        "column": 11
+      },
+      {
+        "env": 35,
+        "kind": "boxes",
+        "level": 1,
+        "column": 12
+      },
+      {
+        "env": 36,
+        "kind": "boxes",
+        "level": 1,
+        "column": 13
+      },
+      {
+        "env": 37,
+        "kind": "random_rough",
+        "level": 1,
+        "column": 14
+      },
+      {
+        "env": 38,
+        "kind": "random_rough",
+        "level": 1,
+        "column": 15
+      },
+      {
+        "env": 39,
+        "kind": "random_rough",
+        "level": 1,
+        "column": 16
+      },
+      {
+        "env": 40,
+        "kind": "random_rough",
+        "level": 1,
+        "column": 17
+      },
+      {
+        "env": 41,
+        "kind": "hf_pyramid_slope",
+        "level": 1,
+        "column": 18
+      },
+      {
+        "env": 42,
+        "kind": "hf_pyramid_slope",
+        "level": 1,
+        "column": 19
+      },
+      {
+        "env": 43,
+        "kind": "hf_pyramid_slope_inv",
+        "level": 1,
+        "column": 20
+      },
+      {
+        "env": 44,
+        "kind": "hf_pyramid_slope_inv",
+        "level": 1,
+        "column": 21
+      },
+      {
+        "env": 45,
+        "kind": "stage_stairs",
+        "level": 1,
+        "column": 22
+      },
+      {
+        "env": 46,
+        "kind": "pyramid_stairs",
+        "level": 2,
+        "column": 0
+      },
+      {
+        "env": 47,
+        "kind": "pyramid_stairs",
+        "level": 2,
+        "column": 1
+      },
+      {
+        "env": 48,
+        "kind": "pyramid_stairs",
+        "level": 2,
+        "column": 2
+      },
+      {
+        "env": 49,
+        "kind": "pyramid_stairs",
+        "level": 2,
+        "column": 3
+      },
+      {
+        "env": 50,
+        "kind": "pyramid_stairs",
+        "level": 2,
+        "column": 4
+      },
+      {
+        "env": 51,
+        "kind": "pyramid_stairs_inv",
+        "level": 2,
+        "column": 5
+      },
+      {
+        "env": 52,
+        "kind": "pyramid_stairs_inv",
+        "level": 2,
+        "column": 6
+      },
+      {
+        "env": 53,
+        "kind": "pyramid_stairs_inv",
+        "level": 2,
+        "column": 7
+      },
+      {
+        "env": 54,
+        "kind": "pyramid_stairs_inv",
+        "level": 2,
+        "column": 8
+      },
+      {
+        "env": 55,
+        "kind": "pyramid_stairs_inv",
+        "level": 2,
+        "column": 9
+      },
+      {
+        "env": 56,
+        "kind": "boxes",
+        "level": 2,
+        "column": 10
+      },
+      {
+        "env": 57,
+        "kind": "boxes",
+        "level": 2,
+        "column": 11
+      },
+      {
+        "env": 58,
+        "kind": "boxes",
+        "level": 2,
+        "column": 12
+      },
+      {
+        "env": 59,
+        "kind": "boxes",
+        "level": 2,
+        "column": 13
+      },
+      {
+        "env": 60,
+        "kind": "random_rough",
+        "level": 2,
+        "column": 14
+      },
+      {
+        "env": 61,
+        "kind": "random_rough",
+        "level": 2,
+        "column": 15
+      },
+      {
+        "env": 62,
+        "kind": "random_rough",
+        "level": 2,
+        "column": 16
+      },
+      {
+        "env": 63,
+        "kind": "random_rough",
+        "level": 2,
+        "column": 17
+      }
+    ],
+    "ex42_mesh": {
+      "mesh_npz": "/mnt/win-d/mai/data/foothold/s2_lab/ex42_mesh_1111/seed42_E0_c333/terrain_mesh.npz",
+      "manifest": "/mnt/win-d/mai/data/foothold/s2_lab/ex42_mesh_1111/seed42_E0_c333/mesh_manifest.json",
+      "mesh_sha256": "88197b3adfdde327edc633c025c6ad9aa690ea59aa7df5d51d548f7f56c12a95",
+      "columns": [
+        "pyramid_stairs",
+        "pyramid_stairs",
+        "pyramid_stairs",
+        "pyramid_stairs",
+        "pyramid_stairs",
+        "pyramid_stairs_inv",
+        "pyramid_stairs_inv",
+        "pyramid_stairs_inv",
+        "pyramid_stairs_inv",
+        "pyramid_stairs_inv",
+        "boxes",
+        "boxes",
+        "boxes",
+        "boxes",
+        "random_rough",
+        "random_rough",
+        "random_rough",
+        "random_rough",
+        "hf_pyramid_slope",
+        "hf_pyramid_slope",
+        "hf_pyramid_slope_inv",
+        "hf_pyramid_slope_inv",
+        "stage_stairs",
+        "stepping_stones_low",
+        "stepping_stones_low",
+        "stepping_stones_low",
+        "stepping_stones_low",
+        "stepping_stones_low",
+        "stepping_stones_low",
+        "stepping_stones_low",
+        "stepping_stones_high",
+        "stepping_stones_high",
+        "stepping_stones_high",
+        "stepping_stones_high",
+        "stepping_stones_high",
+        "balance_beams",
+        "balance_beams",
+        "balance_beams",
+        "balance_beams",
+        "balance_beams",
+        "stepping_beams",
+        "stepping_beams",
+        "stepping_beams",
+        "stepping_beams",
+        "stepping_beams",
+        "gaps",
+        "gaps",
+        "gaps",
+        "flat",
+        "flat",
+        "stair_up",
+        "stair_down",
+        "rough",
+        "boxes",
+        "climb_up",
+        "climb_down",
+        "gap",
+        "pallets",
+        "stones",
+        "beam",
+        "consecutive",
+        "obstacles",
+        "gap",
+        "flat",
+        "box",
+        "discrete_obstacles",
+        "discrete_grid",
+        "pyramid_stairs",
+        "inverted_pyramid_stairs",
+        "high_ledge",
+        "wall",
+        "crawl",
+        "slope_steep",
+        "slope_steep_inv",
+        "stairs_high",
+        "stairs_high_inv"
+      ],
+      "column_family": [
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "A",
+        "B",
+        "B",
+        "B",
+        "B",
+        "B",
+        "B",
+        "B",
+        "B",
+        "B",
+        "B",
+        "B",
+        "B",
+        "C",
+        "C",
+        "C",
+        "C",
+        "C",
+        "C",
+        "C",
+        "D",
+        "D",
+        "D",
+        "E",
+        "E",
+        "E",
+        "E"
+      ],
+      "eval_cols": 23,
+      "eval_columns": [
+        "pyramid_stairs",
+        "pyramid_stairs",
+        "pyramid_stairs",
+        "pyramid_stairs",
+        "pyramid_stairs",
+        "pyramid_stairs_inv",
+        "pyramid_stairs_inv",
+        "pyramid_stairs_inv",
+        "pyramid_stairs_inv",
+        "pyramid_stairs_inv",
+        "boxes",
+        "boxes",
+        "boxes",
+        "boxes",
+        "random_rough",
+        "random_rough",
+        "random_rough",
+        "random_rough",
+        "hf_pyramid_slope",
+        "hf_pyramid_slope",
+        "hf_pyramid_slope_inv",
+        "hf_pyramid_slope_inv",
+        "stage_stairs"
+      ]
+    },
+    "evaluation_friction": {
+      "plan_path": "/home/jay/mai/wt/foothold-lab/ex42-launch-e1-v6/foothold_s2/curriculum/ex42-prep.yaml",
+      "plan_sha256": "c23a2325b70cb97ecf3c7f819b66967d19d0b3e271221d38431580b4f0699e61",
+      "decision": "teamlead-2026-11-11-0150-71a3d51f",
+      "static": 0.8,
+      "dynamic": 0.6,
+      "combine_mode": "average",
+      "state": "verified",
+      "robot": {
+        "source": "root_physx_view.get_material_properties",
+        "shape": [
+          64,
+          27,
+          3
+        ],
+        "static_min": 0.800000011920929,
+        "static_max": 0.800000011920929,
+        "dynamic_min": 0.6000000238418579,
+        "dynamic_max": 0.6000000238418579,
+        "material_sha256": "6fe7b9e1e987a0a20911c6a3d8ab98d38bf49458c7e69ee4c1c30d181412a92a"
+      },
+      "terrain": [
+        {
+          "collision_path": "/World/ground/terrain/mesh",
+          "material_path": "/World/ground/terrain/physicsMaterial",
+          "static": 0.800000011920929,
+          "dynamic": 0.6000000238418579,
+          "combine_mode": "average"
+        }
+      ]
+    }
+  }
+]
