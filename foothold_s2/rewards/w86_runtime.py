@@ -243,7 +243,9 @@ class W86Runtime:
         self.mark(huge,'physical_height_out_of_bounds')
         bad |=huge
         ray_valid &= ~bad[:,None]
-        cmd=_safe(d['command']); moving=(torch.linalg.vector_norm(cmd,dim=-1)>.1) & ~bad
+        # decisions.tsv 2026-11-14 01:11: the edge is inside (>= 0.1), like the slow_track band [0.1, 0.3) and the lower end of
+        # the command sampler. With > 0.1 a command of exactly 0.1 switched feet_air_time and swing off.
+        cmd=_safe(d['command']); moving=(torch.linalg.vector_norm(cmd,dim=-1)>=.1) & ~bad
         contact=torch.linalg.vector_norm(_safe(d['forces']),dim=-1)>1.
         liftoff=self.observed & self.last_contact & ~contact & ~bad[:,None]
         touchdown=self.in_swing & contact & ~bad[:,None]

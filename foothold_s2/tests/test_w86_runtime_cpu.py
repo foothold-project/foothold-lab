@@ -253,13 +253,19 @@ def test_the_reward_term_accepts_the_threshold_argument_of_the_live_config():
     assert list(args) == ['env', 'name', 'threshold'] and args['threshold'].default is None
 
 
-def test_the_moving_gate_is_strict_at_exactly_one_tenth(tmp_path):
-    """Why the gate stays at 0.1 (decisions.tsv 2026-11-13 15:30, corrected): a command of exactly 0.1 m/s is not
-    `moving`, so the swing term is off for it. Training never draws it (forward speeds come from a continuous range
-    whose lowest recorded value was 0.10016), so every slow forward env of the training already has the gate open."""
+def test_the_moving_gate_includes_exactly_one_tenth(tmp_path):
+    """decisions.tsv 2026-11-14 01:11: the gate is `>= 0.1`, the same edge as the slow_track band [0.1, 0.3) and the
+    lower end of the command sampler. Before, a command of exactly 0.1 m/s was not `moving` and both the swing term and
+    feet_air_time were off for it."""
     def swing(speed):
         env = SimpleNamespace(num_envs=1, device='cpu', step_dt=.02, common_step_counter=1)
         d = sample(1); d['command'] = torch.tensor([[speed, 0., 0.]])
         env._ex41_w86 = wr.W86Runtime(env, tmp_path / str(speed), source=lambda: d)
         return float(wr.reward_term(env, 'swing')[0])
-    assert swing(0.1) == 0.0 and swing(0.10016) > 0.0 and swing(0.2) > 0.0
+    assert swing(0.1) > 0.0 and swing(0.1001) > 0.0 and swing(0.2) > 0.0
+    assert swing(0.0999) == 0.0 and swing(0.0) == 0.0
+    for axis in (1, 2):                                   # the norm is over the whole command: side and turn count too
+        env = SimpleNamespace(num_envs=1, device='cpu', step_dt=.02, common_step_counter=1)
+        d = sample(1); d['command'] = torch.zeros(1, 3); d['command'][0, axis] = 0.1
+        env._ex41_w86 = wr.W86Runtime(env, tmp_path / f'axis{axis}', source=lambda d=d: d)
+        assert float(wr.reward_term(env, 'swing')[0]) > 0.0
