@@ -409,7 +409,7 @@ class _Term:
         self.params = {**({"std": std, "command_name": "base_velocity"} if std is not None else {}), **params}
 
 
-def _manager(lin=0.5, ang=0.5, air=0.0, slip=-0.15, yaw=-0.5, slow=0.0, threshold=None, sigma=0.5, heading=True):
+def _manager(lin=0.5, ang=0.5, air=0.0, slip=-0.15, yaw=-0.5, slow=0.0, threshold=None, sigma=0.5, heading=True, progress=0.0):
     """The live reward manager of an E stage: the EX-41 terms as w86 registers them (feet_air_time has no `threshold`
     parameter until a segment puts one there) and ex42_slow_track as `ex42_slow_track.register` adds it."""
     air_params = {"name": "feet_air_time", **({} if threshold is None else {"threshold": threshold})}
@@ -417,7 +417,7 @@ def _manager(lin=0.5, ang=0.5, air=0.0, slip=-0.15, yaw=-0.5, slow=0.0, threshol
              "ex41_feet_air_time": _Term(air, **air_params), "ex41_foot_slip": _Term(slip), "ex41_zero_yaw": _Term(yaw),
              "ex42_slow_track": _Term(slow, command_name="base_velocity", speed_min=0.1, speed_max=0.3, sigma=sigma,
                                       **({"include_heading": True} if heading else {})),       # the shipped E1 row includes heading envs
-             "ex42_slow_progress": _Term(0.0, command_name="base_velocity", speed_min=0.1, speed_max=0.3, include_heading=True)}
+             "ex42_slow_progress": _Term(progress, command_name="base_velocity", speed_min=0.1, speed_max=0.3, include_heading=True)}
     return types.SimpleNamespace(get_term_cfg=lambda name: terms[name]), terms
 
 
@@ -580,7 +580,7 @@ def test_the_live_zero_yaw_weight_is_read_back(plan, view, tmp_path):
 # ---- the stage row's own reward cells (E1 again from m13250, 2026-11-13): in force from the first update ----
 
 ROW_REWARDS = {"track_lin_vel_std": 0.35, "track_ang_vel_std": 0.5, "feet_air_time": 0.0, "foot_slip": -0.15, "zero_yaw": -1.0,
-               **SLOW, "slow_track": 0.2}          # 2026-11-14 00:21: slow_track on from the first update; 01:21: air time stays 0          # decisions.tsv 2026-11-14 00:21: on from the first update
+               **SLOW, "slow_track": 0.2, "slow_progress": 0.2}   # v28, ledger b6024dd2: slow_progress 0.2 from the first update          # 2026-11-14 00:21: slow_track on from the first update; 01:21: air time stays 0          # decisions.tsv 2026-11-14 00:21: on from the first update
 
 
 @pytest.fixture()
@@ -613,9 +613,9 @@ def test_the_row_cells_hold_from_the_first_update_and_reach_the_stage_the_env_co
     _, terms = _manager()
     env_cfg = _env_cfg(terms)
     assert adj.apply_reward_params(env_cfg, record)["track_lin_vel_std"] == {"before": 0.5, "after": 0.35}
-    manager, _ = _manager(lin=0.35, ang=0.5, air=0.0, slip=-0.15, yaw=-1.0, slow=0.2)
+    manager, _ = _manager(lin=0.35, ang=0.5, air=0.0, slip=-0.15, yaw=-1.0, slow=0.2, progress=0.2)
     assert adj.reward_readback(types.SimpleNamespace(reward_manager=manager), record)["live"] == ROW_REWARDS
-    manager, _ = _manager(lin=0.35, ang=0.5, air=0.0, slip=-0.15, yaw=-0.5, slow=0.2)      # the env was built on the source weight
+    manager, _ = _manager(lin=0.35, ang=0.5, air=0.0, slip=-0.15, yaw=-0.5, slow=0.2, progress=0.2)      # the env was built on the source weight
     with pytest.raises(ValueError, match="the live reward manager carries"):
         adj.reward_readback(types.SimpleNamespace(reward_manager=manager), record)
 
