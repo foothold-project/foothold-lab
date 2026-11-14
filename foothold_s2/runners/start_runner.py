@@ -48,6 +48,7 @@ from foothold_s2.commands import mixed_core as mc
 from foothold_s2.models.start_perception import AdaSmpl, PerceptionCfg, StartPerception
 from foothold_s2.models.start_policy import ACTOR_KEY, CRITIC_KEY, OBS_GROUPS, StartActorCritic
 from foothold_s2.runners import kl_probe, manifest as run_manifest
+from foothold_s2.runners import weight_ema
 from foothold_s2.runners.contracts import command_sample_bad, contract_bad_fn, flag_env_command_bad
 from foothold_s2.runners.action_stats import ActionStats, phys_probe
 from foothold_s2.runners.map_switch import ELIGIBLE_NAMES, MapSwitchRecorder, OffEligibilityStats, SPARSE_NAMES, check_column_names, is_sparse_name, draw_map_off, eligible_map_off, make_generator, nearest_tile_cols
@@ -821,6 +822,7 @@ class StartRunner(OnPolicyRunner):
             if klf is not None:
                 kl_info["phi"] = self._kl_phi_after(klf)
             self._mark("4_perception_update", it)
+            self._ema_step()
             loss_dict.update({f"perception/{k}": v for k, v in ploss.items()})
             if basic_lin_vel_z_weight is not None:
                 loss_dict["basic_reward/lin_vel_z_weight"] = basic_lin_vel_z_weight
@@ -888,6 +890,7 @@ class StartRunner(OnPolicyRunner):
                 self.log(locals())
                 if it % self.save_interval == 0:
                     checkpoint_path = os.path.join(self.log_dir, f"model_{it}.pt")
+                    self._save_ema_checkpoint(it)
                     self.save(checkpoint_path)
                     self._manifest_checkpoint(it, f"model_{it}.pt", n)
                     ex42_chain = getattr(self, "ex42_training_chain", None)
@@ -917,6 +920,7 @@ class StartRunner(OnPolicyRunner):
             already_saved = (final_runtime is not None and _final_checkpoint_is_already_current(
                 final_runtime, self.current_learning_iteration, checkpoint_path))
             if not already_saved:
+                self._save_ema_checkpoint(self.current_learning_iteration)
                 self.save(checkpoint_path)
                 self._manifest_checkpoint(self.current_learning_iteration, f"model_{self.current_learning_iteration}.pt", n)
                 ex42_chain = getattr(self, "ex42_training_chain", None)
@@ -1319,7 +1323,7 @@ class StartRunner(OnPolicyRunner):
         })
         continuous = getattr(self, "continuous_curriculum", None)
         effective = getattr(continuous, "effective", {}) if continuous is not None else {}
-        return {
+        state = {
             "format": CKPT_FORMAT,
             "ex41_pose_commands": self.ex41_pose_commands,
             "ex41_critic_mirror": self.ex41_critic_mirror,
@@ -1351,6 +1355,52 @@ class StartRunner(OnPolicyRunner):
             "continuous_curriculum": (self.continuous_curriculum.state_dict()
                                       if getattr(self, "continuous_curriculum", None) is not None else None),
         }
+        ema = getattr(self, "policy_ema", None)
+        if ema is not None:                      # only while POLICY_EMA_DECAY is on: off keeps the checkpoint as it was
+            state["policy_ema"] = ema.save_state()
+        return state
+
+    def _ema_modules(self) -> dict:
+        return {"policy": self.alg.policy, "perception": self.perception}
+
+    def _ema_ensure(self):
+        """The average, built from the live weights at the first call while POLICY_EMA_DECAY is a number; None while off."""
+        decay = weight_ema.POLICY_EMA_DECAY
+        if decay is None:
+            return None
+        ema = getattr(self, "policy_ema", None)
+        if ema is None or ema.decay != float(decay):
+            ema = self.policy_ema = weight_ema.WeightEma(self._ema_modules(), decay)
+        return ema
+
+    def _ema_step(self) -> None:
+        """One average step after the PPO and perception updates of an iteration (reads weights only)."""
+        ema = self._ema_ensure()
+        if ema is not None:
+            ema.update()
+
+    def _save_ema_checkpoint(self, iteration: int) -> None:
+        """model_N_ema.pt next to model_N.pt: the checkpoint layout with the averaged policy and perception parameters."""
+        ema = self._ema_ensure()
+        if ema is None:
+            return
+        state = self.state_dict()
+        state.pop("policy_ema", None)
+        state["model_state_dict"] = ema.module_state("policy")
+        state["perception_state_dict"] = ema.module_state("perception")
+        state["policy_ema_of"] = {"decay": ema.decay, "updates": ema.updates, "skipped": ema.skipped, "iter": int(iteration)}
+        path = os.path.join(self.log_dir, weight_ema.ema_file_name(iteration))
+        tmp = f"{path}.tmp"
+        torch.save(state, tmp)
+        os.replace(tmp, path)
+        print("EX42_POLICY_EMA " + json.dumps({"saved": os.path.basename(path), "decay": ema.decay, "updates": ema.updates,
+                                               "skipped": ema.skipped}, sort_keys=True), flush=True)
+
+    def _ema_restore(self, sd: dict) -> None:
+        ema = self._ema_ensure()
+        if ema is not None:
+            print("EX42_POLICY_EMA " + json.dumps({"resume": ema.restore(sd.get("policy_ema")), "decay": ema.decay,
+                                                   "iter": int(sd["iter"])}, sort_keys=True), flush=True)
 
     def map_switch_state(self) -> dict:
         """EX-33 S-B: 끔 확률 · 시드 · 끔 전용 난수열 상태. 이어 갈 때 p 가 다르면 거절하고, 같으면 난수열을 이어 간다."""
@@ -1531,6 +1581,7 @@ class StartRunner(OnPolicyRunner):
         self._load_env_state(sd["env_state"])
         self.set_rng_state(sd["rng"])
         self.current_learning_iteration = sd["iter"]
+        self._ema_restore(sd)
         saved_use_gt_frac = sd.get("last_use_gt_frac")
         if saved_use_gt_frac is not None:
             if (not isinstance(saved_use_gt_frac, (int, float))
