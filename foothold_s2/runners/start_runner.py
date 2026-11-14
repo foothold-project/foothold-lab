@@ -45,7 +45,7 @@ from rsl_rl.utils import resolve_obs_groups, store_code_state
 
 import rsl_rl
 from foothold_s2.commands import mixed_core as mc
-from foothold_s2.models.start_perception import AdaSmpl, PerceptionCfg, StartPerception
+from foothold_s2.models.start_perception import AdaSmpl, PerceptionCfg, StartPerception, velocity_band_records
 from foothold_s2.models.start_policy import ACTOR_KEY, CRITIC_KEY, OBS_GROUPS, StartActorCritic
 from foothold_s2.runners import kl_probe, manifest as run_manifest
 from foothold_s2.runners.contracts import command_sample_bad, contract_bad_fn, flag_env_command_bad
@@ -1167,6 +1167,7 @@ class StartRunner(OnPolicyRunner):
         pc = self.pcfg
         params = [p for p in self.perception.parameters() if p.requires_grad]
         acc: dict[str, float] = {}
+        v_band_sum = None  # 속도 띠별 (추정 - 실제) 합과 표본 수 (기록만, 학습에 안 쓰임)
         n_updates = 0
         for idx in self.replay.env_batches(pc["num_mini_batches"], pc["num_learning_epochs"]):
             self.perception_optimizer.zero_grad(set_to_none=True)
@@ -1177,12 +1178,16 @@ class StartRunner(OnPolicyRunner):
                 (res["loss"] * (len(c) / len(idx))).backward()
                 for k in ("l_tr", "l_ie", "kl", "o_next", "v", "hf", "hb"):
                     acc[k] = acc.get(k, 0.0) + float(res[k]) * len(c) / len(idx)
+                if res.get("_v_band") is not None:
+                    vb = res["_v_band"].detach().float()
+                    v_band_sum = vb if v_band_sum is None else v_band_sum + vb
             if self.is_distributed:
                 self._allreduce_grads(params)
             nn.utils.clip_grad_norm_(params, pc["max_grad_norm"])
             self.perception_optimizer.step()
             n_updates += 1
         self.last_perception_losses = {k: v / n_updates for k, v in acc.items()}
+        self.last_perception_losses.update(velocity_band_records(v_band_sum, n_updates))
         return self.last_perception_losses
 
     def _autocast(self):

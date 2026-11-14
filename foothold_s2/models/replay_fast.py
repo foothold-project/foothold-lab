@@ -17,7 +17,7 @@ import torch.nn.functional as F
 from torch.func import functional_call
 from torch.nn.utils.rnn import pack_padded_sequence, pad_packed_sequence
 
-from foothold_s2.models.start_perception import MAP_X, MAP_Y, kl_standard_normal, loss_tr
+from foothold_s2.models.start_perception import MAP_X, MAP_Y, kl_standard_normal, loss_tr, velocity_band_sums, velocity_loss
 
 _GRU_CACHE: dict = {}
 
@@ -122,7 +122,8 @@ def _losses_flat(p, b, eps, H_prop, H_terr):
     out = p.ie.estimate(H_prop.flatten(0, 1), hmap, **_off_kw(b))
     z = out["mu"] + eps.flatten(0, 1) * torch.exp(0.5 * out["logvar"])
     res["kl"] = kl_standard_normal(out["mu"], out["logvar"])
-    res["v"] = F.mse_loss(out["v"], b["base_vel"].flatten(0, 1))
+    res["v"] = velocity_loss(out["v"], b["base_vel"].flatten(0, 1))
+    res["_v_band"] = velocity_band_sums(out["v"], b["base_vel"].flatten(0, 1))
     res["hb"] = F.mse_loss(p.ie.dec_b(out["zb"]), gt.flatten(1))
     res["hf"] = F.mse_loss(p.ie.dec_f(out["zf"]), b["gt_feet"].flatten(0, 1))
     o_hat = p.ie.dec_o(torch.cat([z, out["v"], out["zf"], out["zb"]], -1))
@@ -138,6 +139,7 @@ def _losses_stepwise(p, b, eps, H_prop, H_terr):
     T = b["obs"].shape[0]
     sums = {k: 0.0 for k in ("tr", "kl", "v", "hb", "hf")}
     o_sum, o_cnt, refs = 0.0, 0.0, []
+    v_band = None
     for t in range(T):
         gt = b["gt_map"][t]
         if p.trnet is not None:
@@ -150,7 +152,9 @@ def _losses_stepwise(p, b, eps, H_prop, H_terr):
         out = p.ie.estimate(H_prop[t], hmap, **_off_kw(b, t))
         z = out["mu"] + eps[t] * torch.exp(0.5 * out["logvar"])
         sums["kl"] = sums["kl"] + kl_standard_normal(out["mu"], out["logvar"])
-        sums["v"] = sums["v"] + F.mse_loss(out["v"], b["base_vel"][t])
+        sums["v"] = sums["v"] + velocity_loss(out["v"], b["base_vel"][t])
+        vb = velocity_band_sums(out["v"], b["base_vel"][t])
+        v_band = vb if v_band is None else v_band + vb
         sums["hb"] = sums["hb"] + F.mse_loss(p.ie.dec_b(out["zb"]), gt.flatten(1))
         sums["hf"] = sums["hf"] + F.mse_loss(p.ie.dec_f(out["zf"]), b["gt_feet"][t])
         o_hat = p.ie.dec_o(torch.cat([z, out["v"], out["zf"], out["zb"]], -1))
@@ -158,6 +162,7 @@ def _losses_stepwise(p, b, eps, H_prop, H_terr):
         o_sum = o_sum + (((o_hat - b["next_obs"][t]) ** 2).mean(-1) * valid).sum()
         o_cnt = o_cnt + valid.sum()
     res = {k: v / T for k, v in sums.items()}
+    res["_v_band"] = v_band
     if p.trnet is None:
         res["tr"] = torch.zeros((), device=b["obs"].device)
     res["o_next"] = o_sum / torch.clamp(torch.as_tensor(o_cnt, device=b["obs"].device), min=1.0)

@@ -191,6 +191,54 @@ def loss_tr(rough: torch.Tensor, refined: torch.Tensor, hb: torch.Tensor) -> tor
     return F.mse_loss(rough, hb) + F.l1_loss(refined, hb)
 
 
+# EX-42 v28g 후보: 속도 추정 손실의 저속 표본 가중. 1.0 = 꺼짐 (이전 동작과 비트 동일, F.mse_loss 를 그대로 부른다).
+# 켜려면 이 한 줄을 3.0 으로 (예). 정답 몸 선속도 (base_vel 의 vx vy, 몸 틀) 의 xy 노름이 THRESHOLD 미만인 표본의 손실에 곱한다.
+# 식: sum(w_i * err_i) / N (N 은 표본 수, err_i 는 3 칸 평균 제곱오차). 가중이 정규화되지 않아 저속 표본이 있는 만큼 손실이 커진다.
+PERCEPTION_V_LOWSPEED_WEIGHT = 1.0
+PERCEPTION_V_LOWSPEED_THRESHOLD = 0.3
+# 기록 (항상 켜짐, 학습에 쓰이지 않음): 정답 xy 속력 띠별 (추정 - 실제) 의 몸 틀 x · y 평균과 표본 수. 띠는 [a, b).
+PERCEPTION_V_BAND_EDGES = (0.0, 0.05, 0.15, 0.3, float("inf"))
+
+
+def velocity_loss(v_est: torch.Tensor, v_gt: torch.Tensor) -> torch.Tensor:
+    """속도 추정 손실. v_est, v_gt: (N, 3). 가중이 1.0 이면 F.mse_loss 와 같은 식 그대로."""
+    if PERCEPTION_V_LOWSPEED_WEIGHT == 1.0:
+        return F.mse_loss(v_est, v_gt)
+    err = ((v_est - v_gt) ** 2).mean(-1)
+    w = torch.where(v_gt[:, :2].norm(dim=-1) < PERCEPTION_V_LOWSPEED_THRESHOLD,
+                    torch.full_like(err, float(PERCEPTION_V_LOWSPEED_WEIGHT)), torch.ones_like(err))
+    return (w * err).mean()
+
+
+def velocity_band_sums(v_est: torch.Tensor, v_gt: torch.Tensor) -> torch.Tensor:
+    """(띠 수, 3) = [sum(est_x - gt_x), sum(est_y - gt_y), 표본 수]. 기록용이라 gradient 를 끊고 float 로 계산한다."""
+    e, g = v_est.detach().float(), v_gt.detach().float()
+    speed = g[:, :2].norm(dim=-1)
+    d = e[:, :2] - g[:, :2]
+    rows = []
+    for a, b in zip(PERCEPTION_V_BAND_EDGES[:-1], PERCEPTION_V_BAND_EDGES[1:]):
+        m = (speed >= a) & (speed < b)
+        rows.append(torch.stack([(d[:, 0] * m).sum(), (d[:, 1] * m).sum(), m.sum().to(d.dtype)]))
+    return torch.stack(rows)
+
+
+def velocity_band_records(band_sum, n_updates: int) -> dict[str, float]:
+    """update 전체에 모은 띠 합 (띠 수, 3) 으로 기록 키를 만든다. 키: v_bias_x_<a>_<b> · v_bias_y_<a>_<b> (추정 - 실제 평균, 몸 틀 m/s,
+    표본이 없으면 키를 만들지 않는다) · v_n_<a>_<b> (한 update 당 평균 표본 수). 이 키는 새로 더한 것이고 기존 키는 그대로다."""
+    if band_sum is None or n_updates <= 0:
+        return {}
+    edges = PERCEPTION_V_BAND_EDGES
+    out: dict[str, float] = {}
+    for i, (a, b) in enumerate(zip(edges[:-1], edges[1:])):
+        tag = f"{a:.2f}".replace(".", "p") + "_" + ("inf" if b == float("inf") else f"{b:.2f}".replace(".", "p"))
+        n = float(band_sum[i, 2])
+        out[f"v_n_{tag}"] = n / n_updates
+        if n > 0:
+            out[f"v_bias_x_{tag}"] = float(band_sum[i, 0]) / n
+            out[f"v_bias_y_{tag}"] = float(band_sum[i, 1]) / n
+    return out
+
+
 class AdaSmpl:
     """p_smpl = tanh(CV(R)) (논문 193 행). 창 · 분모 · 표본 단위는 12 §5 가정.
 
@@ -390,6 +438,7 @@ class StartPerception(nn.Module):
         h_prop, h_terr = batch["h_prop0"], batch["h_terr0"]
         sums = {k: 0.0 for k in ("tr", "kl", "o_next", "v", "hf", "hb")}
         o_valid_total = 0.0
+        v_band = None
         for t in range(T):
             h_prop, h_terr, out = self._advance(
                 h_prop, h_terr, batch["hist"][t], batch["depth2"][t].float(), batch["tick"][t], batch["first"][t],
@@ -399,7 +448,9 @@ class StartPerception(nn.Module):
                 sums["tr"] = sums["tr"] + loss_tr(out["rough"], out["refined"], batch["gt_map"][t])
             z = out["mu"] + eps[t] * torch.exp(0.5 * out["logvar"])
             sums["kl"] = sums["kl"] + kl_standard_normal(out["mu"], out["logvar"])
-            sums["v"] = sums["v"] + F.mse_loss(out["v"], batch["base_vel"][t])
+            sums["v"] = sums["v"] + velocity_loss(out["v"], batch["base_vel"][t])
+            vb = velocity_band_sums(out["v"], batch["base_vel"][t])
+            v_band = vb if v_band is None else v_band + vb
             sums["hb"] = sums["hb"] + F.mse_loss(self.ie.dec_b(out["zb"]), batch["gt_map"][t].flatten(1))
             sums["hf"] = sums["hf"] + F.mse_loss(self.ie.dec_f(out["zf"]), batch["gt_feet"][t])
             o_hat = self.ie.dec_o(torch.cat([z, out["v"], out["zf"], out["zb"]], -1))
@@ -411,4 +462,5 @@ class StartPerception(nn.Module):
         res["l_ie"] = res["kl"] + res["o_next"] + res["v"] + res["hf"] + res["hb"]  # 식 3, 계수 1
         res["l_tr"] = res["tr"] if self.trnet is not None else torch.zeros(())
         res["loss"] = res["l_tr"] + res["l_ie"]
+        res["_v_band"] = v_band
         return res
