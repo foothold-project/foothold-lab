@@ -60,6 +60,16 @@ def value_loss(value: torch.Tensor, old_value: torch.Tensor, returns: torch.Tens
     return (value - returns).square().mean()
 
 
+SCHEDULER_KL_CLIP = None  # off: a per-sample cap of 1.0 moved the lr path of it 0..223 in 15 % of the minibatches
+BOUNDS_LOSS_COEF = 0.1  # weight of the action-mean bounds loss (lead 11/14 16:51: about 10 to 20 % of the surrogate gradient)
+
+
+def clip_scheduler_kl(kl: torch.Tensor, clip: float | None) -> torch.Tensor:
+    """Per-sample KL as the adaptive-lr input: one sample far past the cap must not decide the mean for the batch
+    (v28 it 224: three samples of one env at KL 3,700 to 4,700 moved the mean to 0.14 and the lr to its floor)."""
+    return kl if clip is None else kl.clamp(max=clip)
+
+
 class CriticMirrorPPO(PPO):
     """Ordinary PPO while off; when enabled only the value loss gets mirrors.
 
@@ -76,6 +86,13 @@ class CriticMirrorPPO(PPO):
 
     mirror_enabled = False
     kl_audit = None
+    # Per-sample KL cap for the adaptive learning rate only (PPO loss, ratio clip and the audited KL stay raw).
+    # None restores the installed uncapped mean.
+    scheduler_kl_clip = SCHEDULER_KL_CLIP
+    # Mean actions past the env clip never reach the env (they only move the log-prob), so nothing stops them from
+    # growing. sum_dims relu(|mu| - limit)^2 is zero inside the limit. The runner sets the limit from clip_actions (None = off).
+    bounds_loss_coef = BOUNDS_LOSS_COEF
+    bounds_loss_limit = None
 
     def act(self, obs):
         if self.kl_audit is not None:
@@ -216,7 +233,7 @@ class CriticMirrorPPO(PPO):
             return result
         if self.symmetry or self.rnd or self.policy.is_recurrent:
             raise ValueError("EX-41 critic mirror supports feed-forward PPO without symmetry or RND")
-        total_v = total_m = total_combined = total_s = total_e = 0.0
+        total_v = total_m = total_combined = total_s = total_e = total_b = total_over = mu_max = 0.0
         self.storage.yield_skipped = self.is_multi_gpu
         batches = self.storage.mini_batch_generator(self.num_mini_batches, self.num_learning_epochs)
         for batch in batches:
@@ -233,9 +250,10 @@ class CriticMirrorPPO(PPO):
             mu, sigma, entropy = self.policy.action_mean, self.policy.action_std, self.policy.entropy
             if self.desired_kl is not None and self.schedule == "adaptive":
                 with torch.inference_mode():
-                    kl = torch.sum(torch.log(sigma / old_sigma + 1.0e-5)
-                                   + (old_sigma.square() + (old_mu - mu).square()) / (2.0 * sigma.square())
-                                   - 0.5, dim=-1).mean()
+                    kl = clip_scheduler_kl(torch.sum(torch.log(sigma / old_sigma + 1.0e-5)
+                                                     + (old_sigma.square() + (old_mu - mu).square())
+                                                     / (2.0 * sigma.square()) - 0.5, dim=-1),
+                                           self.scheduler_kl_clip).mean()
                     if self.is_multi_gpu:
                         torch.distributed.all_reduce(kl, op=torch.distributed.ReduceOp.SUM)
                         kl /= self.gpu_world_size
@@ -260,6 +278,13 @@ class CriticMirrorPPO(PPO):
             mirror_loss = (mirror_value - returns).square().mean()
             combined_value = 0.5 * (original_value + mirror_loss)
             base_loss = surrogate + self.value_loss_coef * original_value - self.entropy_coef * entropy.mean()
+            if self.bounds_loss_limit is not None and self.bounds_loss_coef:
+                excess = torch.relu(mu.abs() - self.bounds_loss_limit)
+                bounds = excess.square().sum(dim=-1).mean()      # sum over action dims, mean over samples (rl_games shape)
+                base_loss = base_loss + self.bounds_loss_coef * bounds
+                total_b += float(bounds.detach())
+                total_over += float((excess > 0).float().mean().detach())
+                mu_max = max(mu_max, float(mu.detach().abs().max()))
             self.optimizer.zero_grad()
             base_loss.backward(retain_graph=True)
             self._average_gradients(self.policy.parameters())
@@ -282,7 +307,10 @@ class CriticMirrorPPO(PPO):
         skipped = self.storage.skipped_batches
         self.storage.clear()
         count = max(count, 1)
-        return {"value_function": total_v / count, "value_mirror": total_m / count,
-                "value_combined": total_combined / count,
-                "surrogate": total_s / count, "entropy": total_e / count,
-                "ppo_skipped_batches": float(skipped)}
+        result = {"value_function": total_v / count, "value_mirror": total_m / count,
+                  "value_combined": total_combined / count,
+                  "surrogate": total_s / count, "entropy": total_e / count,
+                  "ppo_skipped_batches": float(skipped)}
+        if self.bounds_loss_limit is not None and self.bounds_loss_coef:
+            result.update(bounds_loss=total_b / count, mu_over_limit_frac=total_over / count, mu_abs_max=mu_max)
+        return result

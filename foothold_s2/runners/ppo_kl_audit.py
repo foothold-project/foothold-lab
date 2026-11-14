@@ -209,6 +209,7 @@ class PpoKLAudit:
 
     @torch.inference_mode()
     def _record_optimizer_step(self):
+        from foothold_s2.runners.ex41_critic_mirror import clip_scheduler_kl
         c = self.current
         if c is None or c["observed"]:
             raise ValueError("missing or duplicate minibatch at optimizer pre-step")
@@ -219,6 +220,9 @@ class PpoKLAudit:
                               self.alg.policy.action_mean, self.alg.policy.action_std)
             kl_dtype = str(kl.dtype)
             mean = _finite(kl.mean().item())
+            clip = getattr(self.alg, "scheduler_kl_clip", None)
+            clipped_mean = _finite(clip_scheduler_kl(kl, clip).mean().item())
+            clipped_count = int((kl > clip).sum()) if clip is not None else 0
             finite = torch.isfinite(kl)
             finite_values = kl[finite]
             finite_ids = torch.nonzero(finite, as_tuple=False).flatten()
@@ -233,10 +237,13 @@ class PpoKLAudit:
         else:
             # Existing mirror-DDP empty slot contributes zero to its KL collective.
             mean, max_kl, high_count, nonfinite_count, samples, bad_samples = 0.0, None, 0, 0, [], []
+            clip, clipped_mean, clipped_count = getattr(self.alg, "scheduler_kl_clip", None), 0.0, 0
             kl_dtype = str(torch.get_default_dtype())
         self._emit("minibatch", epoch=c["epoch"], minibatch=c["minibatch"], status="optimizer_step",
                    valid_count=n, scheduler_kl_local_mean=mean, scheduler_kl_local_max=max_kl,
                    kl_dtype=kl_dtype,
+                   scheduler_kl_clip=clip, scheduler_kl_clipped_local_mean=clipped_mean,
+                   scheduler_kl_clipped_count=clipped_count,
                    nonfinite_count=nonfinite_count, high_kl_count=high_count,
                    high_kl_definition="per-sample KL > 2 * desired_kl; diagnostic only",
                    metadata_status="complete" if self.complete_metadata else "incomplete",
@@ -380,7 +387,9 @@ def join_rank_records(records):
         mean_tensor = None
         if complete:
             dtype = torch.float32 if rows[0]["kl_dtype"] == "torch.float32" else torch.float64
-            means = torch.tensor([r["scheduler_kl_local_mean"] for r in sorted(rows, key=lambda r: r["rank"])], dtype=dtype)
+            # The mean the scheduler actually saw: the capped one when the record carries it (older records: raw).
+            means = torch.tensor([r.get("scheduler_kl_clipped_local_mean", r["scheduler_kl_local_mean"])
+                                  for r in sorted(rows, key=lambda r: r["rank"])], dtype=dtype)
             mean_tensor = means.sum() / world
         mean = float(mean_tensor) if complete else None
         decision = "unavailable"
