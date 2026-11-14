@@ -206,7 +206,11 @@ def test_bounds_loss_is_zero_inside_the_limit_and_the_update_is_bit_identical_to
 def test_bounds_loss_value_records_and_gradient_direction():
     alg, _, _ = _updated(None, limit=0.0, coef=1.0e-12)                # a vanishing weight: the recorded value only
     mu = alg.storage.mu.flatten(0, 1)
-    assert alg.last_losses["bounds_loss"] == pytest.approx(float(torch.relu(mu.abs() - 0.0).square().mean()), rel=1e-4)
+    excess = torch.relu(mu.abs() - 0.0).square()
+    dims = mu.shape[-1]                                                  # the action dimension, read from the data
+    assert dims > 1
+    assert alg.last_losses["bounds_loss"] == pytest.approx(float(excess.sum(dim=-1).mean()), rel=1e-4)
+    assert alg.last_losses["bounds_loss"] == pytest.approx(dims * float(excess.mean()), rel=1e-4)   # not the element mean
     assert alg.last_losses["mu_over_limit_frac"] == pytest.approx(float((mu.abs() > 0).float().mean()), abs=1e-6)
     assert alg.last_losses["mu_abs_max"] == pytest.approx(float(mu.abs().max()), rel=1e-5)
     with_bounds, _, _ = _updated(None, limit=0.0, coef=1.0e3)
@@ -220,7 +224,7 @@ def test_bounds_loss_value_records_and_gradient_direction():
 def test_default_coefficient_and_the_runner_reads_the_limit_from_clip_actions():
     import inspect
     from foothold_s2.runners.start_runner import StartRunner
-    assert BOUNDS_LOSS_COEF == 1.0e-3 and CriticMirrorPPO.bounds_loss_coef == 1.0e-3
+    assert BOUNDS_LOSS_COEF == 0.1 and CriticMirrorPPO.bounds_loss_coef == 0.1
     source = inspect.getsource(StartRunner._construct_algorithm)
     assert 'self.cfg.get("clip_actions")' in source and "17" not in source
     assert "alg.bounds_loss_limit = float(clip) if clip else None" in source

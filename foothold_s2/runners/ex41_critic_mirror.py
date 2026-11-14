@@ -61,7 +61,7 @@ def value_loss(value: torch.Tensor, old_value: torch.Tensor, returns: torch.Tens
 
 
 SCHEDULER_KL_CLIP = None  # off: a per-sample cap of 1.0 moved the lr path of it 0..223 in 15 % of the minibatches
-BOUNDS_LOSS_COEF = 1.0e-3  # weight of the action-mean bounds loss (lead 11/14 16:31, rl_games bounds_loss shape)
+BOUNDS_LOSS_COEF = 0.1  # weight of the action-mean bounds loss (lead 11/14 16:51: about 10 to 20 % of the surrogate gradient)
 
 
 def clip_scheduler_kl(kl: torch.Tensor, clip: float | None) -> torch.Tensor:
@@ -90,7 +90,7 @@ class CriticMirrorPPO(PPO):
     # None restores the installed uncapped mean.
     scheduler_kl_clip = SCHEDULER_KL_CLIP
     # Mean actions past the env clip never reach the env (they only move the log-prob), so nothing stops them from
-    # growing. relu(|mu| - limit)^2 is zero inside the limit. The runner sets the limit from clip_actions (None = off).
+    # growing. sum_dims relu(|mu| - limit)^2 is zero inside the limit. The runner sets the limit from clip_actions (None = off).
     bounds_loss_coef = BOUNDS_LOSS_COEF
     bounds_loss_limit = None
 
@@ -280,7 +280,7 @@ class CriticMirrorPPO(PPO):
             base_loss = surrogate + self.value_loss_coef * original_value - self.entropy_coef * entropy.mean()
             if self.bounds_loss_limit is not None and self.bounds_loss_coef:
                 excess = torch.relu(mu.abs() - self.bounds_loss_limit)
-                bounds = excess.square().mean()
+                bounds = excess.square().sum(dim=-1).mean()      # sum over action dims, mean over samples (rl_games shape)
                 base_loss = base_loss + self.bounds_loss_coef * bounds
                 total_b += float(bounds.detach())
                 total_over += float((excess > 0).float().mean().detach())
