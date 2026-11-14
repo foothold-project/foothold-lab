@@ -9,6 +9,9 @@
 
 from __future__ import annotations
 
+import torch
+from torch.distributions import Normal
+
 from rsl_rl.modules import ActorCritic
 
 from foothold_s2.models.start_perception import ACTOR_IN, FOOT_CELLS, MAP_CELLS, OBS_DIM
@@ -32,3 +35,13 @@ class StartActorCritic(ActorCritic):
         c = sum(obs[g].shape[-1] for g in obs_groups["critic"])
         if a != ACTOR_IN + pose_command_dim or c != CRITIC_IN + pose_command_dim:
             raise ValueError(f"actor {a} · critic {c} 이 계약값 {ACTOR_IN + pose_command_dim} · {CRITIC_IN + pose_command_dim} 과 다르다")
+
+    # Per-sample multiplier of the action std (None = off). It is part of the policy: the sampled distribution, the stored
+    # log-prob and sigma (rollout) and the re-evaluated log-prob and KL (update) all use std * noise_scale, so PPO's ratio
+    # compares the same family on both sides (the runner sets it per env, the mirror update per minibatch row).
+    noise_scale: torch.Tensor | None = None
+
+    def _update_distribution(self, obs) -> None:
+        super()._update_distribution(obs)
+        if self.noise_scale is not None:
+            self.distribution = Normal(self.distribution.mean, self.distribution.stddev * self.noise_scale)

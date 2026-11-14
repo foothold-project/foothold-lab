@@ -79,7 +79,7 @@ class LiveMetrics:
     def __init__(self, log_dir, *, rank=0, world_size=1, stage_id="E1", slow_min=0.1, slow_max=0.3,
                  slow_sigma=0.5, slow_weight=0.0, stall_mps=0.05, moving_updates=20, decline_from_peak=None,
                  off_survival_updates=50, off_survival_drop=None, initial=None, alert_run_id=None,
-                 plan_sha256=None, include_heading=False, step_dt=None):
+                 plan_sha256=None, include_heading=False, step_dt=None, noise_envs=None, noise_sigma_scale=None):
         if (type(moving_updates) is not int or moving_updates < 1
                 or type(off_survival_updates) is not int or off_survival_updates < 1
                 or (decline_from_peak is not None and not 0 < decline_from_peak < 1)
@@ -92,6 +92,9 @@ class LiveMetrics:
         self.slow_weight = slow_weight
         self.include_heading = bool(include_heading)
         self.step_dt = None if step_dt is None else float(step_dt)
+        # Record only: envs that roll out with the small action noise (bool [num_envs]), tracked apart from the rest.
+        self.noise_envs = None if noise_envs is None else torch.as_tensor(noise_envs, dtype=torch.bool)
+        self.noise_sigma_scale = noise_sigma_scale
         if self.step_dt is not None and (not math.isfinite(self.step_dt) or self.step_dt <= 0):
             raise ValueError("EX-42 stand start needs a finite positive step_dt")
         self._start_active = None  # per-env trials span PPO updates
@@ -148,6 +151,7 @@ class LiveMetrics:
         self.survival_family = torch.zeros((3, 2, 3), dtype=torch.float64, device=device)  # mode, continuous/sparse, same
         self.start_counts = torch.zeros((3, 4), dtype=torch.float64, device=device)  # starts, forward, not forward, censored
         self.invalid = torch.zeros((), dtype=torch.float64, device=device)
+        self.noise_groups = torch.zeros((2, 3), dtype=torch.float64, device=device)  # noisy / rest: samples, ratio, stalled
 
     def _record_stand_start(self, cmd, vel, slot, flag, mode, done, finite, pre_speed, reset):
         if self.step_dt is None:
@@ -250,6 +254,15 @@ class LiveMetrics:
             self.values[:, :, 0].reshape(-1).scatter_add_(0, index, torch.ones_like(ratio))
             self.values[:, :, 1].reshape(-1).scatter_add_(0, index, ratio)
             self.values[:, :, 2].reshape(-1).scatter_add_(0, index, stall[chosen].double())
+            if name == "slow_forward" and self.noise_envs is not None:
+                if self.noise_envs.numel() != len(chosen):
+                    raise ValueError("EX-42 small-noise env mask differs from the environment count")
+                noisy = self.noise_envs.to(chosen.device)
+                for group, member in enumerate((noisy, ~noisy)):
+                    pick = chosen & member
+                    self.noise_groups[group, 0] += pick.sum()
+                    self.noise_groups[group, 1] += (actual / safe_target)[pick].double().sum()
+                    self.noise_groups[group, 2] += stall[pick].double().sum()
             if name == "slow_forward":
                 for band, (_, low, high) in enumerate(SLOW_SPEED_BANDS):
                     in_band = chosen & (target >= low) & (target < high)
@@ -281,7 +294,7 @@ class LiveMetrics:
             if not dist.is_initialized() or dist.get_world_size() != self.world_size:
                 raise RuntimeError("EX-42 live metrics all ranks must participate")
             for tensor in (self.values, self.forward_bands, self.slow_slots, self.survival,
-                           self.survival_family, self.start_counts, pending, self.invalid):
+                           self.survival_family, self.start_counts, pending, self.invalid, self.noise_groups):
                 dist.all_reduce(tensor, op=dist.ReduceOp.SUM)
             rank_rows = [None] * self.world_size
             dist.all_gather_object(rank_rows, {"rank": self.rank, "slow_forward_bands": local_bands,
@@ -421,6 +434,14 @@ class LiveMetrics:
                "monitor": {"stage": self.stage.copy(), "high": self.high.copy(), "alerts": alerts,
                            "off_change": off_signal,
                            "threshold_pending": self.decline_from_peak is None or self.off_survival_drop is None}}
+        if self.noise_envs is not None:
+            (n_s, n_r, n_t), (r_s, r_r, r_t) = self.noise_groups.tolist()
+            row["small_noise"] = {
+                "env_share": float(self.noise_envs.float().mean()), "sigma_scale": self.noise_sigma_scale,
+                "slow_forward": {"noisy": {"samples": int(n_s), "tracking_ratio": n_r / n_s if n_s else None,
+                                           "stall_fraction": n_t / n_s if n_s else None},
+                                 "rest": {"samples": int(r_s), "tracking_ratio": r_r / r_s if r_s else None,
+                                          "stall_fraction": r_t / r_s if r_s else None}}}
         self.log_dir.mkdir(parents=True, exist_ok=True)
         if alerts and self.alert_run_id is not None:
             last = self.last_failed_alert_iteration

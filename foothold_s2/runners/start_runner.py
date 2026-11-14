@@ -359,6 +359,15 @@ class StartRunner(OnPolicyRunner):
         else:
             alg = PPO(policy, device=self.device, **alg_cfg, multi_gpu_cfg=self.multi_gpu_cfg)
         alg.init_storage("rl", self.env.num_envs, self.num_steps_per_env, obs, [self.env.num_actions])
+        if self.ex41_pose_commands:
+            from foothold_s2.runners import ex41_critic_mirror as mirror
+            noise = mirror.small_noise_scale(self.env.num_envs, mirror.SMALL_NOISE_ENV_SHARE,
+                                             mirror.SMALL_NOISE_SIGMA_SCALE, device=self.device)
+            if noise is not None:
+                if not self.ex41_critic_mirror:
+                    raise ValueError("small noise envs need the mirror update (the installed PPO.update re-acts on rows)")
+                alg.storage.noise_scale_env = noise
+                policy.noise_scale = noise
         return alg
 
     def _assert_ex41_joint_order(self) -> None:
