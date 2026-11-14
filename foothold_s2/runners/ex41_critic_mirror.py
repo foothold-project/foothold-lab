@@ -64,6 +64,34 @@ SCHEDULER_KL_CLIP = None  # off: a per-sample cap of 1.0 moved the lr path of it
 BOUNDS_LOSS_COEF = 0.1  # weight of the action-mean bounds loss (lead 11/14 16:51: about 10 to 20 % of the surrogate gradient)
 
 
+# ON by default since lead 11/14 19:28 (set the share to 0 to turn it off: the update is then bit-identical to before):
+# a share of the training envs rolls out with a smaller action noise so that
+# their reward sees the walk of the mean action (the v28 probe of the mean action drifted 0.10 to 0.81 while every training
+# record stayed flat). The scale is part of the policy of those envs, so PPO stays on-policy for each env group (see
+# StartActorCritic.noise_scale).
+SMALL_NOISE_ENV_SHARE = 0.25
+SMALL_NOISE_SIGMA_SCALE = 0.2
+
+
+def small_noise_mask(num_envs: int, share: float) -> torch.Tensor:
+    """Which envs roll out with the small noise: spread evenly over the env index (no rng, same on every rank).
+    Exactly floor(num_envs * share) envs; share 0 selects none."""
+    if not 0.0 <= share < 1.0:
+        raise ValueError("small noise env share must be in [0, 1)")
+    index = torch.arange(num_envs, dtype=torch.float64)
+    return torch.floor((index + 1) * share + 1e-9) > torch.floor(index * share + 1e-9)
+
+
+def small_noise_scale(num_envs: int, share: float, scale: float, device=None) -> torch.Tensor | None:
+    """[num_envs, 1] action-std multiplier, or None when the share is 0 (nothing changes)."""
+    if not share:
+        return None
+    if not 0.0 < scale < 1.0:
+        raise ValueError("small noise sigma scale must be in (0, 1)")
+    mask = small_noise_mask(num_envs, share)
+    return torch.where(mask, torch.tensor(scale), torch.tensor(1.0)).to(torch.float32).reshape(-1, 1).to(device)
+
+
 def clip_scheduler_kl(kl: torch.Tensor, clip: float | None) -> torch.Tensor:
     """Per-sample KL as the adaptive-lr input: one sample far past the cap must not decide the mean for the batch
     (v28 it 224: three samples of one env at KL 3,700 to 4,700 moved the mean to 0.14 and the lr to its floor)."""
@@ -97,6 +125,8 @@ class CriticMirrorPPO(PPO):
     def act(self, obs):
         if self.kl_audit is not None:
             self.kl_audit.observe("capture_rollout", self.storage.step)
+        if self.storage.noise_scale_env is not None:      # the update sets per-row scales; a rollout is per env
+            self.policy.noise_scale = self.storage.noise_scale_env
         return super().act(obs)
 
     def init_storage(self, training_type, num_envs, num_transitions_per_env, obs, actions_shape):
@@ -244,6 +274,8 @@ class CriticMirrorPPO(PPO):
             if self.normalize_advantage_per_mini_batch:
                 with torch.no_grad():
                     advantage = safe_minibatch_advantage(advantage)
+            if self.storage.noise_scale_env is not None:
+                self.policy.noise_scale = self.storage.batch_noise_scale
             self.policy.act(obs, masks=masks, hidden_state=hidden[0])
             logp = self.policy.get_actions_log_prob(actions)
             value = self.policy.evaluate(obs, masks=masks, hidden_state=hidden[1])
@@ -303,6 +335,8 @@ class CriticMirrorPPO(PPO):
             total_s += float(surrogate.detach())
             total_e += float(entropy.mean().detach())
         self.storage.yield_skipped = False
+        if self.storage.noise_scale_env is not None:
+            self.policy.noise_scale = self.storage.noise_scale_env
         count = self.storage.yielded_batches
         skipped = self.storage.skipped_batches
         self.storage.clear()
@@ -311,6 +345,9 @@ class CriticMirrorPPO(PPO):
                   "value_combined": total_combined / count,
                   "surrogate": total_s / count, "entropy": total_e / count,
                   "ppo_skipped_batches": float(skipped)}
+        if self.storage.noise_scale_env is not None:
+            result.update(small_noise_env_share=float((self.storage.noise_scale_env < 1).float().mean()),
+                          small_noise_sigma_scale=float(self.storage.noise_scale_env.min()))
         if self.bounds_loss_limit is not None and self.bounds_loss_coef:
             result.update(bounds_loss=total_b / count, mu_over_limit_frac=total_over / count, mu_abs_max=mu_max)
         return result

@@ -1260,7 +1260,8 @@ class EX42StageZeroRuntime:
                 moving_updates=config["moving_updates"], decline_from_peak=config["decline_from_peak"],
                 off_survival_updates=config["map_off_survival_updates"],
                 off_survival_drop=config["map_off_survival_drop_alert"], initial=config["initial"],
-                alert_run_id=os.environ[alert_env], step_dt=float(self.env.step_dt))
+                alert_run_id=os.environ[alert_env], step_dt=float(self.env.step_dt),
+                **self._small_noise_record())
             adjustment_config = getattr(self, "live_adjustment_config", None)
             if not isinstance(adjustment_config, dict) or adjustment_config.get("file_env") != "EX42_UPDATE_ADJUST":
                 raise ValueError("EX-42 E1 live adjustment must be pinned in the plan")
@@ -1483,6 +1484,28 @@ class EX42StageZeroRuntime:
             pass
         raise RuntimeError(f"EX-42 command_shares record of update {update} could not be written after "
                            f"{self.COMMAND_SHARES_ATTEMPTS} attempts; the save is blocked") from error
+
+    def refresh_small_noise(self) -> None:
+        """The runner switched the small-noise scale on or off after the live metrics were built (the mirror is granted
+        after attach_runner): hand the live metrics the same env mask and scale, or none."""
+        live = getattr(self, "live_metrics", None)
+        if live is None:
+            return
+        import torch
+        record = self._small_noise_record()
+        envs = record.get("noise_envs")
+        live.noise_envs = None if envs is None else torch.as_tensor(envs, dtype=torch.bool)
+        live.noise_sigma_scale = record.get("noise_sigma_scale")
+
+    def _small_noise_record(self) -> dict:
+        """LiveMetrics arguments for the small-noise envs: only when the runner really applied the scale (the mirror update
+        is on and the share is above 0); otherwise empty and the row stays as it was."""
+        from foothold_s2.runners import ex41_critic_mirror as mirror
+        alg = getattr(getattr(self, "runner", None), "alg", None)
+        if getattr(getattr(alg, "storage", None), "noise_scale_env", None) is None:
+            return {}
+        return {"noise_envs": mirror.small_noise_mask(int(self.env.num_envs), mirror.SMALL_NOISE_ENV_SHARE),
+                "noise_sigma_scale": mirror.SMALL_NOISE_SIGMA_SCALE}
 
     def _record_dir(self):
         return self.record_dir or getattr(self.runner, "log_dir", None)
