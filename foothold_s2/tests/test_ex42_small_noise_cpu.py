@@ -55,7 +55,7 @@ def _rollout(alg, obs, steps=2, seed=7):
 
 
 def test_mask_is_exact_even_and_reproducible_and_on_by_default_share_zero_is_off():
-    assert mirror.SMALL_NOISE_ENV_SHARE == 0.4 and mirror.SMALL_NOISE_SIGMA_SCALE == 0.05      # lead 11/15 06:23 (H1)
+    assert mirror.SMALL_NOISE_ENV_SHARE == 0.4 and mirror.SMALL_NOISE_SIGMA_SCALE == 0.2      # lead 11/15 07:20 (v28n: 0.05 made the adaptive lr drop)
     assert small_noise_scale(N, 0.0, SCALE) is None and StartActorCritic.noise_scale is None   # share 0: nothing set
     mask = small_noise_mask(N, 0.25)
     assert int(mask.sum()) == 16 and mask.tolist() == small_noise_mask(N, 0.25).tolist()

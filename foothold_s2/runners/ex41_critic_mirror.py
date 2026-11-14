@@ -70,7 +70,7 @@ BOUNDS_LOSS_COEF = 0.1  # weight of the action-mean bounds loss (lead 11/14 16:5
 # record stayed flat). The scale is part of the policy of those envs, so PPO stays on-policy for each env group (see
 # StartActorCritic.noise_scale).
 SMALL_NOISE_ENV_SHARE = 0.4
-SMALL_NOISE_SIGMA_SCALE = 0.05
+SMALL_NOISE_SIGMA_SCALE = 0.2
 # v28m (lead 11/15 07:02, ON by default; set the threshold to 0 to turn it off: the share above then applies as in v28l):
 # an env whose command has |(vx, vy)| below the threshold rolls out with the small noise for that step, decided again at
 # every step from the command it acts on (so on every command resample); the other envs keep a fixed spread share.
