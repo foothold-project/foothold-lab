@@ -55,7 +55,7 @@ def _rollout(alg, obs, steps=2, seed=7):
 
 
 def test_mask_is_exact_even_and_reproducible_and_on_by_default_share_zero_is_off():
-    assert mirror.SMALL_NOISE_ENV_SHARE == 0.25 and mirror.SMALL_NOISE_SIGMA_SCALE == 0.2      # on by default (lead 19:28)
+    assert mirror.SMALL_NOISE_ENV_SHARE == 0.4 and mirror.SMALL_NOISE_SIGMA_SCALE == 0.05      # lead 11/15 06:23 (H1)
     assert small_noise_scale(N, 0.0, SCALE) is None and StartActorCritic.noise_scale is None   # share 0: nothing set
     mask = small_noise_mask(N, 0.25)
     assert int(mask.sum()) == 16 and mask.tolist() == small_noise_mask(N, 0.25).tolist()
@@ -228,7 +228,7 @@ def test_resume_first_update_keeps_the_same_env_split_and_sigma_handling(tmp_pat
     resumed.normalize_advantage_per_mini_batch = False
     losses = resumed.update()
     assert losses["surrogate"] == pytest.approx(-float(advantage.mean()), abs=1e-5)       # ratio 1 on all rows after the load
-    assert losses["small_noise_env_share"] == pytest.approx(0.25)
+    assert losses["small_noise_env_share"] == pytest.approx(float(noisy.float().mean()))
 
 
 def test_a_call_on_another_batch_size_keeps_the_plain_std():
@@ -275,7 +275,7 @@ def test_real_e1_order_mirror_granted_after_the_runner_and_live_metrics_exist_tu
 
     scale = alg.storage.noise_scale_env
     assert scale is not None and scale.shape == (N, 1) and alg.policy.noise_scale is scale
-    assert int((scale < 1).sum()) == int(N * mirror.SMALL_NOISE_ENV_SHARE)
+    assert int((scale < 1).sum()) == int(small_noise_mask(N, mirror.SMALL_NOISE_ENV_SHARE).sum())
     assert torch.allclose(scale[scale < 1], torch.tensor(mirror.SMALL_NOISE_SIGMA_SCALE))
     live = runtime.live_metrics
     assert live.noise_envs.tolist() == small_noise_mask(N, mirror.SMALL_NOISE_ENV_SHARE).tolist()
@@ -283,7 +283,7 @@ def test_real_e1_order_mirror_granted_after_the_runner_and_live_metrics_exist_tu
     live.begin(1, device="cpu")
     assert "small_noise" in live.end()                                           # the live metrics row carries it
     _rollout(alg, _obs())
-    assert alg.update()["small_noise_env_share"] == pytest.approx(mirror.SMALL_NOISE_ENV_SHARE)   # first update key
+    assert alg.update()["small_noise_env_share"] == pytest.approx(float(small_noise_mask(N, mirror.SMALL_NOISE_ENV_SHARE).float().mean()))   # first update key
 
     runner.ex41_critic_mirror = False
     runner._apply_small_noise()

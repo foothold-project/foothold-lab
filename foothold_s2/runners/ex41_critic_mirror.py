@@ -69,8 +69,8 @@ BOUNDS_LOSS_COEF = 0.1  # weight of the action-mean bounds loss (lead 11/14 16:5
 # their reward sees the walk of the mean action (the v28 probe of the mean action drifted 0.10 to 0.81 while every training
 # record stayed flat). The scale is part of the policy of those envs, so PPO stays on-policy for each env group (see
 # StartActorCritic.noise_scale).
-SMALL_NOISE_ENV_SHARE = 0.25
-SMALL_NOISE_SIGMA_SCALE = 0.2
+SMALL_NOISE_ENV_SHARE = 0.4
+SMALL_NOISE_SIGMA_SCALE = 0.05
 
 
 def small_noise_mask(num_envs: int, share: float) -> torch.Tensor:
