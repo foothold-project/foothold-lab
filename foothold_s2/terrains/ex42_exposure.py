@@ -388,11 +388,29 @@ def apply_exposure(terrain, exposure, caps, generator=None, parent_env_state=Non
 
     terrain.update_env_origins = capped_update
     terrain.exposure_wrapped = True
+    terrain.exposure_level_caps = cap                       # the tensor `refresh` reads: raise_open_cap edits it in place
+    terrain.exposure_open_columns = torch.as_tensor([w > 0 for w in exposure], dtype=torch.bool, device=device)
     return {"exposed_columns": [c for c, w in enumerate(exposure) if w > 0],
             "level_caps": [int(c) for c in cap.tolist()], "envs": num_envs,
             "start": "parent_env_state" if inherited else "assigned",
             **({"low_level_floor": floor.receipt()} if floor is not None else {}),
             **({"rebalance": rebalance} if inherited and rebalance else {})}
+
+
+def raise_open_cap(terrain, old: int, new: int) -> dict[str, Any]:
+    """Raise the level cap of every exposed column from `old` to `new` while the run goes on (v28 live cell
+    terrain_level_cap). Only a stage whose exposed columns all sit at one cap `old` can do this; the levels already
+    placed stay, the promotion may now move them up to `new` (or the last mesh row). Never lowers."""
+    caps, opened = getattr(terrain, "exposure_level_caps", None), getattr(terrain, "exposure_open_columns", None)
+    if caps is None or opened is None:
+        raise ValueError("EX-42 terrain exposure is not applied: the level cap cannot be raised")
+    if type(old) is not int or type(new) is not int or new < old:
+        raise ValueError("EX-42 live terrain cap is raised only, between integers")
+    if not bool((caps[opened] == old).all()):
+        raise ValueError("EX-42 live terrain cap needs every exposed column at the one cap it is raised from")
+    top = int(terrain.terrain_origins.shape[0]) - 1
+    caps[opened] = min(new, top)
+    return {"from": old, "to": new, "applied": int(caps[opened][0]) if bool(opened.any()) else None}
 
 
 def level_counts(terrain) -> dict[str, Any]:

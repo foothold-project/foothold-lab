@@ -35,3 +35,12 @@ cells:
 # limit 0.4 -> 0.5. The fence is the source value and the approved value.
 command_cells:
   low_forward_fraction: [0.2, 0.5]
+# Run-time cells (decisions.tsv 2026-11-14 12:42, lead under the team lead's 12:11 delegation, planner review
+# REVIEW-V28-PLAN-1114 block 1). A run that has started cannot change the plan or this file, so the knobs the lead may
+# need are registered now, off. policy_std_cap: 0 = off (the v28 start); otherwise a ceiling on the policy action std,
+# accepted only at 0.8 x the largest current std or above (the code checks that against the live policy). terrain_level_cap:
+# the promotion cap of the continuous columns; the v28 plan holds it at the first segment's 5 and the lead raises it
+# one step at a time (an integer, never lowered).
+runtime_cells:
+  policy_std_cap: [0.0, 2.0]
+  terrain_level_cap: [5, 9]

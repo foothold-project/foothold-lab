@@ -1184,6 +1184,7 @@ class EX42StageZeroRuntime:
         from foothold_s2.commands.ex42_command_stats import CommandStats
         self.command_stats = CommandStats(self.stage_config)          # what the sampler actually drew (train_extra, record only)
         self.level_cap = STAGE_ZERO_LEVEL_CAP        # attach_environment replaces it with the segment's L+ cap
+        self.policy_std_cap = 0.0                    # v28 live cell: 0 = off; the live adjustment sets and enforces it
         self.effective = {"stage_id": self.stage_id, "dr_scale": 1.0,
                           "terrain": {"policy": "performance", "level_cap": self.level_cap}}
         self.iteration = 0

@@ -73,6 +73,10 @@ def complete_cells(cell):
         return cell
     return {**{name: default for name, default in OPTIONAL_CELLS.items() if name not in cell}, **cell}
 COMMAND_CELLS = ("low_forward_fraction",)          # command distribution cells outside the 13-slot profile
+# Run-time cells (decisions.tsv 2026-11-14 12:42, v28): off or at the first segment's value at the start of a run, changed
+# only through the update-boundary adjustment file. policy_std_cap: 0 = off, else a ceiling on the policy action std.
+# terrain_level_cap: the promotion cap of the continuous columns (an integer, raised only).
+RUNTIME_CELLS = ("policy_std_cap", "terrain_level_cap")
 
 
 def adjustable_boundaries(plan, stage_id) -> tuple[int, ...]:
@@ -105,8 +109,14 @@ def reward_limits(path=REWARD_LIMITS) -> dict | None:
             or any(not isinstance(pair, list) or len(pair) != 2 or not all(number(v) for v in pair)
                    or not 0.0 <= pair[0] <= pair[1] <= 1.0 for pair in extra.values())):
         raise ValueError(f"EX-42 adjust limits: command_cells may hold [low, high] inside 0..1 for {list(COMMAND_CELLS)} only")
+    runtime = document.get("runtime_cells")
+    if runtime is not None and (not isinstance(runtime, dict) or set(runtime) != set(RUNTIME_CELLS)
+                                or any(not isinstance(pair, list) or len(pair) != 2 or not all(number(v) for v in pair)
+                                       or not 0.0 <= pair[0] <= pair[1] for pair in runtime.values())):
+        raise ValueError(f"EX-42 adjust limits: runtime_cells must hold [low, high] (0 <= low <= high) for {list(RUNTIME_CELLS)}")
     return {"sha256": hashlib.sha256(raw).hexdigest(), "cells": {name: (float(a), float(b)) for name, (a, b) in cells.items()},
-            "command_cells": {name: (float(a), float(b)) for name, (a, b) in extra.items()}}
+            "command_cells": {name: (float(a), float(b)) for name, (a, b) in extra.items()},
+            "runtime_cells": {name: (float(a), float(b)) for name, (a, b) in (runtime or {}).items()}}
 
 
 def _plain(profile) -> dict | None:

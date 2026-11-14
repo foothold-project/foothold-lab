@@ -294,7 +294,7 @@ def inherited_rewards(source, stage, parent_manifest, iteration, limits_path):
         limits_live = limits_from_plan(row['live_adjustment'], segment_path=limits_path)
         after = body.get('after')
         check_limited_values(after, limits_live)
-        if set(after) != {'rewards', 'commands', 'monitor'}:
+        if set(after) not in ({'rewards', 'commands', 'monitor'}, {'rewards', 'commands', 'monitor', 'runtime'}):
             raise ValueError(f'{stage} last live adjustment groups differ: {path.name}')
         changed = after.get('rewards')
         if not isinstance(changed, dict):

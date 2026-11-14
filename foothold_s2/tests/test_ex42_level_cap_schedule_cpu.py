@@ -85,9 +85,9 @@ def test_the_schedule_needs_exactly_one_continuous_rule():
             ex.raise_continuous_cap(terrain, "E1", 0)
 
 
-def test_the_shipped_plan_gives_e1_three_segments_at_five_then_six_to_nine_and_no_other_stage_a_schedule():
+def test_the_shipped_plan_holds_e1_at_five_in_every_segment_and_no_other_stage_has_a_schedule():
     rows = {row["id"]: row for row in yaml.safe_load(PLAN.read_text(encoding="utf-8"))["stages"]}
-    assert [ex.raise_continuous_cap(rows["E1"]["terrain"], "E1", k)[1] for k in range(9)] == [5, 5, 5, 6, 7, 8, 9, 9, 9]
+    assert [ex.raise_continuous_cap(rows["E1"]["terrain"], "E1", k)[1] for k in range(9)] == [5] * 9      # v28: the plan holds the first value; the raise is the live cell runtime.terrain_level_cap
     assert rows["E1"]["maximum_updates"] == rows["E1"]["minimum_updates"] == 7 * 250          # seven segments, no early exit
     assert [stage for stage, row in rows.items() if "continuous_level_cap" in (row.get("terrain") or {})] == ["E1"]
 
@@ -201,7 +201,7 @@ def _contract(stage, k):
 
 
 @need_mesh
-@pytest.mark.parametrize("k,cap", [(0, 5), (2, 5), (3, 6), (4, 7), (6, 9)])
+@pytest.mark.parametrize("k,cap", [(0, 5), (2, 5), (3, 5), (4, 5), (6, 5)])      # v28: held at 5 by the plan
 def test_the_real_e1_contract_carries_the_segment_cap_on_every_continuous_column(isaac_stubs, k, cap):
     contract = _contract("E1", k)
     assert contract["continuous_level_cap"] == cap
