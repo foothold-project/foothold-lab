@@ -128,7 +128,7 @@ def test_sequence_comes_out_through_the_real_e1_path(monkeypatch):
         k = first_slow
         while k < len(w) and w[k]:
             run_len += 1; k += 1
-        assert abs(run_len * DT - mc.STAND_START_SEQ_HOLD_S) <= 0.1, run_len * DT
+        assert abs(run_len * DT - 6.0) <= 0.1, run_len * DT           # literal: the order asks for 6 s
         vx = cmd[first_slow, e, 0]
         assert (cmd[first_slow:first_slow + run_len, e, 0] == vx).all()
     # the other envs are not forced into the order: they never start with a 1~2 s stop then exactly 6 s slow
@@ -182,3 +182,30 @@ def test_resume_gives_the_same_sequence(monkeypatch):
     for k, v in gen_state.items():
         assert torch.equal(b.stand_seq.state_dict()[k], v), k
     assert torch.equal(a.stand_seq.mask, b.stand_seq.mask)
+
+
+def test_reset_restarts_the_order_at_the_stop(monkeypatch):
+    term, _, _ = build(monkeypatch, 0.15)
+    term.reset()
+    chosen = term.stand_seq.mask.nonzero().flatten()
+    run(term, int(3.5 / DT))                                   # past stop (<= 2 s): every chosen env is in the slow or later phase
+    assert term.stand_seq.phase[chosen].ne(1).any()
+    term.reset(chosen)
+    assert term.stand[chosen].all() and (term.vel_command_b[chosen] == 0).all()
+    assert (term.stand_seq.phase[chosen] == 1).all() and not term.stand_seq.slow_active[chosen].any()
+
+
+def test_tracking_window_is_two_to_six_seconds_exactly():
+    seq = mc.StandStartSequence(10, 1, share=0.5)
+    seq.slow_active[:] = True
+    vel, cmd = torch.zeros(10), torch.full((10,), 0.1)
+    for _ in range(int(1.9 / DT)):
+        seq.step(vel, cmd, DT)
+    assert seq.counts["tracked_steps"] == 0                    # first 1.9 s after the start: not recorded
+    for _ in range(int(0.3 / DT)):
+        seq.step(vel, cmd, DT)
+    assert 0 < seq.counts["tracked_steps"] <= 10 * 10          # crossed 2 s
+    seq.counts["tracked_steps"] = 0.0
+    for _ in range(int(5 / DT)):
+        seq.step(vel, cmd, DT)
+    assert seq.counts["tracked_steps"] <= 10 * int(4.0 / DT) + 10   # nothing counted after 6 s
