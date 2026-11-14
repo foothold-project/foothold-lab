@@ -60,6 +60,15 @@ def value_loss(value: torch.Tensor, old_value: torch.Tensor, returns: torch.Tens
     return (value - returns).square().mean()
 
 
+SCHEDULER_KL_CLIP = 1.0
+
+
+def clip_scheduler_kl(kl: torch.Tensor, clip: float | None) -> torch.Tensor:
+    """Per-sample KL as the adaptive-lr input: one sample far past the cap must not decide the mean for the batch
+    (v28 it 224: three samples of one env at KL 3,700 to 4,700 moved the mean to 0.14 and the lr to its floor)."""
+    return kl if clip is None else kl.clamp(max=clip)
+
+
 class CriticMirrorPPO(PPO):
     """Ordinary PPO while off; when enabled only the value loss gets mirrors.
 
@@ -76,6 +85,9 @@ class CriticMirrorPPO(PPO):
 
     mirror_enabled = False
     kl_audit = None
+    # Per-sample KL cap for the adaptive learning rate only (PPO loss, ratio clip and the audited KL stay raw).
+    # None restores the installed uncapped mean.
+    scheduler_kl_clip = SCHEDULER_KL_CLIP
 
     def act(self, obs):
         if self.kl_audit is not None:
@@ -233,9 +245,10 @@ class CriticMirrorPPO(PPO):
             mu, sigma, entropy = self.policy.action_mean, self.policy.action_std, self.policy.entropy
             if self.desired_kl is not None and self.schedule == "adaptive":
                 with torch.inference_mode():
-                    kl = torch.sum(torch.log(sigma / old_sigma + 1.0e-5)
-                                   + (old_sigma.square() + (old_mu - mu).square()) / (2.0 * sigma.square())
-                                   - 0.5, dim=-1).mean()
+                    kl = clip_scheduler_kl(torch.sum(torch.log(sigma / old_sigma + 1.0e-5)
+                                                     + (old_sigma.square() + (old_mu - mu).square())
+                                                     / (2.0 * sigma.square()) - 0.5, dim=-1),
+                                           self.scheduler_kl_clip).mean()
                     if self.is_multi_gpu:
                         torch.distributed.all_reduce(kl, op=torch.distributed.ReduceOp.SUM)
                         kl /= self.gpu_world_size
