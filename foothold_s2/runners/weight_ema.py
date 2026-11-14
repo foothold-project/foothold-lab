@@ -1,9 +1,10 @@
-"""Exponential moving average of the policy and perception weights, kept beside training (candidate, OFF by default).
+"""Exponential moving average of the policy and perception weights, kept beside training (record only, ON by default since lead 11/15 00:36).
 
 Why: the mean action at low forward speed swings by 0.2 to 0.6 between two saves (v28c m600 0.98, m650 0.40) while every
 training record stays flat. An average of the last ~100 updates (decay 0.99) is a smoother checkpoint to measure and to keep.
 
-Turn on: set POLICY_EMA_DECAY below to a number in (0, 1), e.g. 0.99 (per PPO update). Nothing else changes:
+Turn OFF: set POLICY_EMA_DECAY below to None (off = no object is built and checkpoints are exactly as before). Any number in
+(0, 1) is the decay per PPO update. While on, nothing about training changes:
   * training never reads the average (weights, optimizer, rng, rollouts are untouched; off = no object is built);
   * every save (model_N.pt) also writes model_N_ema.pt in the same folder: same format as model_N.pt (loadable by the same
     code), model_state_dict / perception_state_dict hold the averaged parameters, buffers (normalizer statistics) are the live ones;
@@ -17,7 +18,7 @@ import math
 import torch
 import torch.nn as nn
 
-POLICY_EMA_DECAY = None   # OFF. Lead 11/15 00:25 suggested 0.99 per update.
+POLICY_EMA_DECAY = 0.99   # ON (record only). Set None to turn it off. ~100 updates of memory.
 EMA_FILE_SUFFIX = "_ema"  # model_N.pt -> model_N_ema.pt (never matches the model_(\d+)\.pt patterns of the watchers)
 
 

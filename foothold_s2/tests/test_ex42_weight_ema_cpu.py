@@ -14,7 +14,7 @@ from foothold_s2.runners.start_runner import StartRunner
 from foothold_s2.runners.weight_ema import WeightEma, ema_file_name
 from foothold_s2.tests.test_ex41_b345 import pose_runner
 
-DECAY = 0.9
+DECAY = 0.9                     # the tests use a short memory; the shipped constant is checked in the first test
 
 
 @pytest.fixture(autouse=True)
@@ -24,9 +24,8 @@ def _restore_rng():
     torch.set_rng_state(state)
 
 
-def _run(tmp_path, name, iters=3, decay=None, monkeypatch=None):
-    if monkeypatch is not None:
-        monkeypatch.setattr(weight_ema, "POLICY_EMA_DECAY", decay)
+def _run(tmp_path, name, monkeypatch, decay, iters=3):
+    monkeypatch.setattr(weight_ema, "POLICY_EMA_DECAY", decay)
     torch.set_num_threads(1)
     torch.manual_seed(1234)
     folder = tmp_path / name
@@ -41,17 +40,17 @@ def _flat(module):
     return {k: v.detach().clone() for k, v in module.state_dict().items()}
 
 
-def test_constant_is_off_and_the_off_run_writes_no_ema_file_and_no_entry(tmp_path):
-    assert weight_ema.POLICY_EMA_DECAY is None
-    runner, folder = _run(tmp_path, "off")
+def test_constant_is_on_at_0_99_and_none_turns_it_off_with_no_ema_file_and_no_entry(tmp_path, monkeypatch):
+    assert weight_ema.POLICY_EMA_DECAY == 0.99
+    runner, folder = _run(tmp_path, "off", monkeypatch, None)
     assert not hasattr(runner, "policy_ema") and not list(folder.glob("*_ema.pt"))
     for name in ("model_2.pt", "latest.pt"):
         assert "policy_ema" not in torch.load(folder / name, weights_only=False)
 
 
 def test_on_training_is_bit_identical_to_off_and_only_adds_files_and_the_entry(tmp_path, monkeypatch):
-    off, off_dir = _run(tmp_path, "off")
-    on, on_dir = _run(tmp_path, "on", decay=DECAY, monkeypatch=monkeypatch)
+    off, off_dir = _run(tmp_path, "off", monkeypatch, None)
+    on, on_dir = _run(tmp_path, "on", monkeypatch, DECAY)
     a, b = torch.load(off_dir / "model_2.pt", weights_only=False), torch.load(on_dir / "model_2.pt", weights_only=False)
     assert set(b) - set(a) == {"policy_ema"} and not set(a) - set(b)
     for key in ("model_state_dict", "perception_state_dict"):
@@ -103,7 +102,7 @@ def test_the_saved_average_is_the_hand_computed_ema_and_loads_like_a_checkpoint(
 
 
 def test_resume_continues_the_average_or_starts_from_the_loaded_weights_and_says_which(tmp_path, monkeypatch, capsys):
-    runner, folder = _run(tmp_path, "src", decay=DECAY, monkeypatch=monkeypatch)
+    runner, folder = _run(tmp_path, "src", monkeypatch, DECAY)
     capsys.readouterr()
     torch.manual_seed(1234)
     again = pose_runner(log_dir=str(tmp_path / "again"))
@@ -137,7 +136,7 @@ def test_resume_continues_the_average_or_starts_from_the_loaded_weights_and_says
 def test_manifest_and_watchers_only_ever_see_model_n(tmp_path, monkeypatch):
     names = []
     monkeypatch.setattr(StartRunner, "_manifest_checkpoint", lambda self, it, name, n: names.append(name))
-    _, folder = _run(tmp_path, "gate", decay=DECAY, monkeypatch=monkeypatch)
+    _, folder = _run(tmp_path, "gate", monkeypatch, DECAY)
     assert names == ["model_0.pt", "model_2.pt"]                                # the manifest sha gate never meets model_N_ema.pt
     assert [bool(re.fullmatch(r"model_(\d+)\.pt", p.name)) for p in sorted(folder.glob("model_*"))] == [True, False, True, False]
     from foothold_s2.ex42_live_probe import next_checkpoint
@@ -177,3 +176,15 @@ def test_helper_rules_range_nonfinite_skip_and_restore_mismatch():
     other = WeightEma({"m": torch.nn.Linear(3, 2)}, 0.9)
     assert "differ" in other.restore(ema.save_state())
     assert re.fullmatch(r"model_(\d+)\.pt", ema_file_name(50)) is None and ema_file_name(50) == "model_50_ema.pt"
+
+
+def test_shipped_default_writes_model_n_ema_next_to_model_n_with_decay_0_99(tmp_path):
+    torch.set_num_threads(1)
+    torch.manual_seed(1234)
+    folder = tmp_path / "shipped"
+    folder.mkdir()
+    runner = pose_runner(log_dir=str(folder))                  # nothing patched: the constant as committed
+    runner.learn(2)
+    saved = torch.load(folder / "model_1_ema.pt", weights_only=False)
+    assert saved["policy_ema_of"]["decay"] == 0.99 and saved["policy_ema_of"]["iter"] == 1
+    assert torch.load(folder / "model_1.pt", weights_only=False)["policy_ema"]["decay"] == 0.99

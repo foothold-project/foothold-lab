@@ -9,6 +9,9 @@ probe and is never paused: it only sees a checkpoint file that it wrote anyway.
 Row cells (per mode/command): R_median (distance of the 6 s over command x 6 s, median over envs), the median forward
 speed of each second, how many envs moved less than 0.05 m/s in seconds 2 to 4 and in the last second, survivors.
 `wall_seconds` is the wall-clock time of the whole probe (decisions.tsv 2026-11-14 12:11, ledger commit b6024dd2).
+When the run also keeps a weight average (foothold_s2/runners/weight_ema.py), model_N_ema.pt sits next to model_N.pt; after the
+model_N.pt row the watcher probes that file the same way and appends a second row for N with "ema": true (its sha is the file's
+own: the average is not in the run manifest). Rows of model_N.pt carry no new key.
 The row decides nothing: the thresholds of the live adjustment stay with the lead (no new number is made here)."""
 from __future__ import annotations
 
@@ -83,19 +86,21 @@ def probe_argv(python, checkpoint, out, *, device, task, evaluation_plan, mesh_d
     return argv
 
 
-def recorded_iterations(run_dir) -> set[int]:
+def recorded_iterations(run_dir, *, ema: bool = False) -> set[int]:
+    """Updates with a row in the log: the model_N.pt rows (default) or the model_N_ema.pt rows ("ema": true)."""
     path = Path(run_dir) / LOG_NAME
     if not path.is_file():
         return set()
     rows = [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines() if line.strip()]
     if any(row.get("format") != FORMAT for row in rows):
         raise ValueError("EX-42 live probe log has another format")
-    return {row["iteration"] for row in rows}
+    return {row["iteration"] for row in rows if bool(row.get("ema")) == ema}
 
 
 def append_row(run_dir, row: dict) -> None:
-    if row["iteration"] in recorded_iterations(run_dir):
-        raise ValueError(f"EX-42 live probe already recorded m{row['iteration']}")
+    ema = bool(row.get("ema"))
+    if row["iteration"] in recorded_iterations(run_dir, ema=ema):
+        raise ValueError(f"EX-42 live probe already recorded m{row['iteration']}{'_ema' if ema else ''}")
     with (Path(run_dir) / LOG_NAME).open("a", encoding="utf-8") as stream:
         stream.write(json.dumps(row, ensure_ascii=False, sort_keys=True) + "\n")
         stream.flush()
@@ -147,14 +152,39 @@ def next_checkpoint(run_dir, done: set[int], *, manifest_sha=None):
     return None
 
 
+def next_ema_checkpoint(run_dir, done: set[int], done_ema: set[int]):
+    """The lowest N whose model_N.pt row exists, whose model_N_ema.pt is on disk (it is written whole, then renamed into place)
+    and has no ema row yet, as (N, sha of the file); None when nothing is ready."""
+    from foothold_s2.runners.manifest import sha256_file
+    from foothold_s2.runners.weight_ema import ema_file_name
+    for iteration in sorted(done):
+        path = Path(run_dir) / ema_file_name(iteration)
+        if iteration not in done_ema and path.is_file():
+            return iteration, sha256_file(path)
+    return None
+
+
 def watch(run_dir, *, python, device, task, evaluation_plan, mesh_dir, until, poll_seconds=30, stop_file=None,
           timeout=TIMEOUT_SECONDS, sleep=time.sleep, runner=run_probe, manifest_sha=None) -> list[int]:
     run_dir, probed = Path(run_dir), []
     while True:
-        done = recorded_iterations(run_dir)
-        if until in done or (stop_file is not None and Path(stop_file).exists()):
+        done, done_ema = recorded_iterations(run_dir), recorded_iterations(run_dir, ema=True)
+        ema_ready = next_ema_checkpoint(run_dir, done, done_ema)
+        if (until in done and ema_ready is None) or (stop_file is not None and Path(stop_file).exists()):
             return probed
         ready = next_checkpoint(run_dir, done, manifest_sha=manifest_sha)
+        if ema_ready is not None and (ready is None or ema_ready[0] <= ready[0]):   # an update's average right after its model_N.pt
+            from foothold_s2.runners.weight_ema import ema_file_name
+            iteration, sha = ema_ready
+            folder = run_dir / "live_probe" / f"m{iteration}_ema"
+            argv = probe_argv(python, run_dir / ema_file_name(iteration), folder, device=device, task=task,
+                              evaluation_plan=evaluation_plan, mesh_dir=mesh_dir)
+            row = runner(run_dir, iteration, sha, argv, folder, timeout=timeout)
+            row.update(ema=True, checkpoint_file=ema_file_name(iteration))
+            append_row(run_dir, row)
+            print("EX42_LIVE_PROBE " + json.dumps({"iteration": iteration, "ema": True, "state": row["state"],
+                                                  "wall_seconds": row["wall_seconds"]}), flush=True)
+            continue
         if ready is None:
             sleep(poll_seconds)
             continue

@@ -159,6 +159,9 @@ def _loader(saved_cfg, hold):
         def load_state_dict(self, *args, **kwargs):
             pass
 
+        def named_parameters(self):          # the weight average (on by default) asks the loaded modules for their parameters
+            return iter(())
+
     runner = object.__new__(start_runner.StartRunner)
     runner._resumed = False
     runner.current_learning_iteration = 0

@@ -2,11 +2,13 @@
 import json
 import sys
 import textwrap
+from pathlib import Path
 
 import numpy as np
 import pytest
 
 from foothold_s2 import ex42_live_probe as probe
+from foothold_s2.runners.manifest import sha256_file
 
 
 def _trace(speed_fn, envs=4):
@@ -185,3 +187,52 @@ def test_the_stop_file_ends_the_watcher_without_a_probe(tmp_path):
     stop.write_text("x")
     assert probe.watch(run, python="py", device="d", task="T", evaluation_plan="p", mesh_dir=None, until=1750,
                        stop_file=stop, sleep=lambda s: None, runner=lambda *a, **k: 1 / 0) == []
+
+
+def _ema_watch(run, until, calls, script):
+    """The real watcher, run_probe, summarize and append_row; only the Kit evaluation child is the script of the other tests."""
+    def runner(run_dir, iteration, sha, argv, folder, **kw):
+        calls.append((iteration, sha, Path(argv[argv.index("--checkpoint") + 1]).name))
+        return probe.run_probe(run_dir, iteration, sha, [sys.executable, str(script), str(folder)], folder)
+
+    return probe.watch(run, python="py", device="cuda:1", task="T", evaluation_plan="plan", mesh_dir=None, until=until,
+                       sleep=lambda s: None, runner=runner, manifest_sha=lambda path: (f"manifest-{path.name}", 0))
+
+
+def test_the_watcher_probes_model_n_ema_after_model_n_and_marks_only_the_ema_rows(tmp_path):
+    script = tmp_path / "child.py"
+    script.write_text(CHILD_OK)
+    run = tmp_path / "run"
+    run.mkdir()
+    for name in ("model_50.pt", "model_50_ema.pt", "model_100.pt"):               # 100 has no average (as before the candidate)
+        (run / name).write_bytes(name.encode())
+    calls = []
+    _ema_watch(run, 100, calls, script)
+    assert calls == [(50, "manifest-model_50.pt", "model_50.pt"), (50, sha256_file(run / "model_50_ema.pt"), "model_50_ema.pt"),
+                     (100, "manifest-model_100.pt", "model_100.pt")]
+    rows = [json.loads(x) for x in (run / probe.LOG_NAME).read_text().splitlines()]
+    assert [(r["iteration"], r.get("ema")) for r in rows] == [(50, None), (50, True), (100, None)]
+    assert all(r["state"] == "done" and len(r["cells"]) == 6 for r in rows)
+    assert "ema" not in rows[0] and "checkpoint_file" not in rows[0]                # the original row keeps its keys
+    assert rows[1]["checkpoint_file"] == "model_50_ema.pt" and rows[1]["folder"].endswith("m50_ema")
+    assert probe.recorded_iterations(run) == {50, 100} and probe.recorded_iterations(run, ema=True) == {50}
+    _ema_watch(run, 100, calls, script)                                               # a restart probes nothing twice
+    assert len(calls) == 3
+
+
+def test_an_ema_file_that_appears_after_the_base_row_is_still_probed_and_the_log_refuses_a_double_ema_row(tmp_path):
+    script = tmp_path / "child.py"
+    script.write_text(CHILD_OK)
+    run = tmp_path / "run"
+    run.mkdir()
+    (run / "model_50.pt").write_bytes(b"m")
+    calls = []
+    _ema_watch(run, 50, calls, script)
+    assert [c[2] for c in calls] == ["model_50.pt"]
+    (run / "model_50_ema.pt").write_bytes(b"e")
+    _ema_watch(run, 50, calls, script)
+    assert [c[2] for c in calls] == ["model_50.pt", "model_50_ema.pt"]
+    with pytest.raises(ValueError, match="already recorded m50_ema"):
+        probe.append_row(run, {"format": probe.FORMAT, "iteration": 50, "ema": True})
+    probe.append_row(run, {"format": probe.FORMAT, "iteration": 100, "ema": True})   # an ema row never blocks the base row of its update
+    probe.append_row(run, {"format": probe.FORMAT, "iteration": 100})
