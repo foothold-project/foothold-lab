@@ -1170,12 +1170,14 @@ class StartRunner(OnPolicyRunner):
         return kl_probe.summarize(kl, kl_probe.command_branch(snap["batch"]["obs"].reshape(-1, snap["batch"]["obs"].shape[-1])[:, 6:9]))
 
     def _vbias_collect(self, o: torch.Tensor, ppo_obs, vel: torch.Tensor) -> None:
-        """기록만. 명령 속력 (o[:, 6:9] 의 vx vy 노름) 이 저속 띠인 env 의 «actor 가 받은 est 앞 3 칸 - 실제 몸 속도» 를 모은다."""
+        """기록만. 명령 속력 (o[:, 6:9] 의 vx vy 노름) 이 저속 띠인 env 의 «actor 가 받은 est 의 속도 3 칸 - 실제 몸 속도» 를 모은다.
+        learned est 51 칸의 순서는 [z 0:16, v 16:19, zf 19:35, zb 35:51] (StartPerception.step) 이라 속도 추정은 est[16:19] 다 (앞 3 칸은 잠재 z).
+        est_mode oracle_vel 은 _est_in 이 앞 3 칸에 실제 속도를 넣으므로 0:3, zero 는 어느 칸이든 0."""
         lo, hi = sp.PERCEPTION_V_BIAS_LOWBAND
         cmd = o[:, 6:8].norm(dim=-1)
         m = (cmd >= lo) & (cmd < hi)
-        k = o.shape[-1]
-        est3 = ppo_obs[ACTOR_KEY][:, k:k + 3]
+        k = o.shape[-1] + (0 if self.pcfg["est_mode"] == "oracle_vel" else sp.Z_DIM)
+        est3 = ppo_obs[ACTOR_KEY][:, k:k + sp.V_DIM]
         self._vbias_samples.append((est3 - vel)[m].float())
 
     def _vbias_finish(self, it: int) -> None:
