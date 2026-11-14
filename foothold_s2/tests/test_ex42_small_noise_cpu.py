@@ -201,7 +201,7 @@ def test_training_entry_hands_the_shared_mask_to_the_live_metrics_only_when_appl
     assert EX42StageZeroRuntime._small_noise_record(SimpleNamespace(env=SimpleNamespace(num_envs=N))) == {}
     record = EX42StageZeroRuntime._small_noise_record(fake(scale))
     assert record["noise_sigma_scale"] == mirror.SMALL_NOISE_SIGMA_SCALE
-    assert record["noise_envs"].tolist() == small_noise_mask(N, mirror.SMALL_NOISE_ENV_SHARE).tolist()
+    assert record["noise_envs"].tolist() == small_noise_mask(N, mirror.small_noise_static_share()).tolist()
 
 
 def test_resume_first_update_keeps_the_same_env_split_and_sigma_handling(tmp_path):
@@ -275,15 +275,15 @@ def test_real_e1_order_mirror_granted_after_the_runner_and_live_metrics_exist_tu
 
     scale = alg.storage.noise_scale_env
     assert scale is not None and scale.shape == (N, 1) and alg.policy.noise_scale is scale
-    assert int((scale < 1).sum()) == int(small_noise_mask(N, mirror.SMALL_NOISE_ENV_SHARE).sum())
+    assert int((scale < 1).sum()) == int(small_noise_mask(N, mirror.small_noise_static_share()).sum())
     assert torch.allclose(scale[scale < 1], torch.tensor(mirror.SMALL_NOISE_SIGMA_SCALE))
     live = runtime.live_metrics
-    assert live.noise_envs.tolist() == small_noise_mask(N, mirror.SMALL_NOISE_ENV_SHARE).tolist()
+    assert live.noise_envs.tolist() == small_noise_mask(N, mirror.small_noise_static_share()).tolist()
     assert live.noise_sigma_scale == mirror.SMALL_NOISE_SIGMA_SCALE
     live.begin(1, device="cpu")
     assert "small_noise" in live.end()                                           # the live metrics row carries it
     _rollout(alg, _obs())
-    assert alg.update()["small_noise_env_share"] == pytest.approx(float(small_noise_mask(N, mirror.SMALL_NOISE_ENV_SHARE).float().mean()))   # first update key
+    assert alg.update()["small_noise_env_share"] == pytest.approx(float(small_noise_mask(N, mirror.small_noise_static_share()).float().mean()))   # first update key
 
     runner.ex41_critic_mirror = False
     runner._apply_small_noise()

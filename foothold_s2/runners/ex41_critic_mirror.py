@@ -71,6 +71,21 @@ BOUNDS_LOSS_COEF = 0.1  # weight of the action-mean bounds loss (lead 11/14 16:5
 # StartActorCritic.noise_scale).
 SMALL_NOISE_ENV_SHARE = 0.4
 SMALL_NOISE_SIGMA_SCALE = 0.05
+# v28m (lead 11/15 07:02, ON by default; set the threshold to 0 to turn it off: the share above then applies as in v28l):
+# an env whose command has |(vx, vy)| below the threshold rolls out with the small noise for that step, decided again at
+# every step from the command it acts on (so on every command resample); the other envs keep a fixed spread share.
+SMALL_NOISE_LOWSPEED_CMD = 0.3
+SMALL_NOISE_REST_SHARE = 0.25
+
+
+def small_noise_static_share() -> float:
+    """Share of the index-spread envs that are always small-noise: the rest share while the low-speed rule is on, else the v28l share."""
+    return SMALL_NOISE_REST_SHARE if SMALL_NOISE_LOWSPEED_CMD > 0 else SMALL_NOISE_ENV_SHARE
+
+
+def lowspeed_noise_mask(cmd_xy: torch.Tensor, threshold: float) -> torch.Tensor:
+    """[num_envs] bool: the command speed (vx vy norm) is below the threshold (a standing command counts); threshold 0 selects none."""
+    return cmd_xy.norm(dim=-1) < threshold
 
 
 def small_noise_mask(num_envs: int, share: float) -> torch.Tensor:
@@ -127,6 +142,8 @@ class CriticMirrorPPO(PPO):
             self.kl_audit.observe("capture_rollout", self.storage.step)
         if self.storage.noise_scale_env is not None:      # the update sets per-row scales; a rollout is per env
             self.policy.noise_scale = self.storage.noise_scale_env
+            if self.storage.noise_scale_steps is not None:   # low-speed rule: the scale of every step is kept for the update
+                self.storage.noise_scale_steps[self.storage.step] = self.storage.noise_scale_env
         return super().act(obs)
 
     def init_storage(self, training_type, num_envs, num_transitions_per_env, obs, actions_shape):
@@ -346,8 +363,9 @@ class CriticMirrorPPO(PPO):
                   "surrogate": total_s / count, "entropy": total_e / count,
                   "ppo_skipped_batches": float(skipped)}
         if self.storage.noise_scale_env is not None:
-            result.update(small_noise_env_share=float((self.storage.noise_scale_env < 1).float().mean()),
-                          small_noise_sigma_scale=float(self.storage.noise_scale_env.min()))
+            shown = self.storage.noise_scale_env if self.storage.noise_scale_steps is None else self.storage.noise_scale_steps
+            result.update(small_noise_env_share=float((shown < 1).float().mean()),
+                          small_noise_sigma_scale=float(shown.min()))
         if self.bounds_loss_limit is not None and self.bounds_loss_coef:
             result.update(bounds_loss=total_b / count, mu_over_limit_frac=total_over / count, mu_abs_max=mu_max)
         return result

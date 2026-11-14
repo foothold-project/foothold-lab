@@ -389,13 +389,55 @@ class StartRunner(OnPolicyRunner):
         from foothold_s2.runners import ex41_critic_mirror as mirror
         noise = None
         if self.ex41_critic_mirror:
-            noise = mirror.small_noise_scale(self.env.num_envs, mirror.SMALL_NOISE_ENV_SHARE,
+            noise = mirror.small_noise_scale(self.env.num_envs, mirror.small_noise_static_share(),
                                              mirror.SMALL_NOISE_SIGMA_SCALE, device=self.device)
+        self._lowspeed_noise = noise is not None and mirror.SMALL_NOISE_LOWSPEED_CMD > 0
+        alg.storage.noise_scale_steps = (torch.ones(alg.storage.num_transitions_per_env, self.env.num_envs, 1, device=self.device)
+                                         if self._lowspeed_noise else None)
+        self._noise_static = noise
         alg.storage.noise_scale_env = noise
         alg.policy.noise_scale = noise
         hear = getattr(getattr(self, "continuous_curriculum", None), "refresh_small_noise", None)
         if callable(hear):
             hear()
+
+    _noise_counts = None      # [low-speed envs, small-noise envs] summed over the steps of one rollout (device tensor)
+    _noise_steps = 0
+    _lowspeed_noise = False
+
+    def _step_small_noise(self, o: torch.Tensor) -> None:
+        """v28m: before the action of this step, the envs whose command (o[:, 6:8], as in _vbias_collect) is below
+        SMALL_NOISE_LOWSPEED_CMD join the fixed-share small-noise envs for this step. Counts are kept for the per-update line."""
+        storage = getattr(getattr(self, "alg", None), "storage", None)
+        if not getattr(self, "_lowspeed_noise", False) or storage is None or storage.noise_scale_steps is None:
+            return
+        from foothold_s2.runners import ex41_critic_mirror as mirror
+        low = mirror.lowspeed_noise_mask(o[:, 6:8], mirror.SMALL_NOISE_LOWSPEED_CMD)
+        scale = torch.where(low[:, None], torch.full_like(self._noise_static, mirror.SMALL_NOISE_SIGMA_SCALE), self._noise_static)
+        storage.noise_scale_env = scale
+        self.alg.policy.noise_scale = scale
+        noisy = scale.flatten() < 1
+        counts = torch.stack([low.sum(), noisy.sum()]).to(torch.float64)
+        self._noise_counts = counts if self._noise_counts is None else self._noise_counts + counts   # no host sync per step
+        self._noise_steps += 1
+        live = getattr(getattr(self, "continuous_curriculum", None), "live_metrics", None)
+        if live is not None and live.noise_envs is not None:
+            live.noise_envs = noisy.cpu()
+
+    def _small_noise_finish(self, it: int) -> dict:
+        """Per update: mean number of low-speed envs and of small-noise envs per step (record only), then reset the counts."""
+        from foothold_s2.runners import ex41_critic_mirror as mirror
+        steps, counts = self._noise_steps, self._noise_counts
+        self._noise_counts, self._noise_steps = None, 0
+        if not steps or counts is None:
+            return {}
+        low, noisy = counts.tolist()
+        row = {"lowspeed_envs": low / steps, "small_noise_envs": noisy / steps, "num_envs": self.env.num_envs,
+               "lowspeed_cmd": mirror.SMALL_NOISE_LOWSPEED_CMD}
+        if not self.disable_logs:
+            print("EX42_SMALL_NOISE it=%d lowspeed_envs=%.1f small_noise_envs=%.1f of=%d threshold=%.2f" % (
+                it, row["lowspeed_envs"], row["small_noise_envs"], row["num_envs"], row["lowspeed_cmd"]), flush=True)
+        return row
 
     def _assert_ex41_joint_order(self) -> None:
         from foothold_s2.runners.ex41_critic_mirror import assert_joint_order
@@ -709,6 +751,7 @@ class StartRunner(OnPolicyRunner):
             gt_steps.zero_()
             src_steps.zero_()
             self._vbias_samples = []
+            noise_row: dict = {}
             contract_fn = ((lambda c: torch.zeros(c.shape[0], dtype=torch.bool, device=c.device))
                            if continuous is not None else contract_bad_fn(self.pcfg["contract"]))
             contract_bad = torch.zeros(n, dtype=torch.bool, device=self.device) if contract_fn is not None else None
@@ -721,6 +764,7 @@ class StartRunner(OnPolicyRunner):
                     est = self.perception.step(self.pstate, inp, gmap)
                     ppo_obs = self._ppo_obs(raw, est)
                     self._vbias_collect(o, ppo_obs, vel)
+                    self._step_small_noise(o)
                     if self.replay is not None:
                         self.replay.add_pre(inp, o, gmap, gfeet, vel, self.pstate.use_gt, self.pstate.map_off)
                     gt_steps += self.pstate.use_gt.float().mean()
@@ -815,6 +859,7 @@ class StartRunner(OnPolicyRunner):
                 start = time.time()
                 self.alg.compute_returns(self._ppo_obs(raw, torch.zeros(n, 51, device=self.device)))
                 self._vbias_finish(it)
+                noise_row = self._small_noise_finish(it)
             if trace is not None:
                 trace.end_update()
             if contract_bad is not None and bool(contract_bad.any()):
@@ -855,6 +900,8 @@ class StartRunner(OnPolicyRunner):
                 extra["bounds"] = {k: loss_dict[k] for k in ("bounds_loss", "mu_over_limit_frac", "mu_abs_max")}
             if "small_noise_env_share" in loss_dict:             # keys added only when the small-noise envs are applied
                 extra["small_noise"] = {k: loss_dict[k] for k in ("small_noise_env_share", "small_noise_sigma_scale")}
+                if noise_row:
+                    extra["small_noise"].update(noise_row)
             if (continuous is not None
                     and getattr(getattr(continuous, "plan", None), "is_ex41", False)):
                 extra["use_gt_frac"] = float(gt_steps) / self.num_steps_per_env

@@ -1504,7 +1504,7 @@ class EX42StageZeroRuntime:
         alg = getattr(getattr(self, "runner", None), "alg", None)
         if getattr(getattr(alg, "storage", None), "noise_scale_env", None) is None:
             return {}
-        return {"noise_envs": mirror.small_noise_mask(int(self.env.num_envs), mirror.SMALL_NOISE_ENV_SHARE),
+        return {"noise_envs": mirror.small_noise_mask(int(self.env.num_envs), mirror.small_noise_static_share()),
                 "noise_sigma_scale": mirror.SMALL_NOISE_SIGMA_SCALE}
 
     def _record_dir(self):
