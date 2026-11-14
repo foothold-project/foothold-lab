@@ -288,3 +288,135 @@ def test_real_e1_order_mirror_granted_after_the_runner_and_live_metrics_exist_tu
     runner.ex41_critic_mirror = False
     runner._apply_small_noise()
     assert alg.storage.noise_scale_env is None and live.noise_envs is None
+
+
+def _band_batch(n):
+    """Every env gets a forward command; env i alternates 0.12 / 0.17 / 0.25. Noisy envs move at exactly the command, the rest at half of it."""
+    cmd_x = torch.tensor([.12, .17, .25]).repeat(n // 3 + 1)[:n]
+    cmd = torch.stack([cmd_x, torch.zeros(n), torch.zeros(n)], dim=1)
+    return cmd_x, cmd
+
+
+def _add_band_batch(live, noisy_mask, cmd_x, cmd, rest_factor=0.5):
+    n = len(cmd_x)
+    vel = torch.zeros(n, 3)
+    vel[:, 0] = torch.where(noisy_mask, cmd_x, cmd_x * rest_factor)
+    live.add(cmd, vel, torch.full((n,), SLOT_INDEX["forward"]), torch.zeros(n, dtype=torch.bool), torch.zeros(n, dtype=torch.bool),
+             torch.ones(n, dtype=torch.long), torch.zeros(n, dtype=torch.long), torch.zeros(n, dtype=torch.bool))
+
+
+def test_band_records_split_noisy_and_rest_through_the_real_e1_order(tmp_path):
+    """Same order as the test above (runner built mirror-off, LiveMetrics built, then the real grant); then the live metrics
+    get one batch and the two env sets must come out with different values in the 0.1-0.15 band, and nothing else moves."""
+    from types import SimpleNamespace
+
+    from foothold_s2.curriculum.ex42_prep import EX42Plan
+    from foothold_s2.curriculum.ex42_runtime import critic_mirror_proof
+    from foothold_s2.runners import start_runner
+    from foothold_s2.scripts.ex42_training_entry import EX42StageZeroRuntime
+    from foothold_s2.tests.test_ex42_e1_entry_cpu import _committed_copy
+
+    repo = _committed_copy(tmp_path)
+    plan = EX42Plan.load(repo / "curriculum" / "ex42-prep.yaml")
+    proof = critic_mirror_proof(plan, repo / "curriculum" / "ex42-approvals.yaml", "E1")
+    alg, _ = _alg(None)
+    alg.mirror_enabled = False
+    runner = object.__new__(start_runner.StartRunner)
+    runner.ex41_pose_commands, runner.ex41_critic_mirror, runner.ex41_mirror_approval = True, False, None
+    runner.alg, runner.device = alg, "cpu"
+    runner.env = SimpleNamespace(num_envs=N)
+    runner._assert_ex41_joint_order = lambda: None
+    runtime = object.__new__(EX42StageZeroRuntime)
+    runtime.env, runtime.runner = runner.env, runner
+    runtime.live_metrics = LiveMetrics(tmp_path / "live")
+    runner.continuous_curriculum = runtime
+    runner._apply_small_noise()
+    runner.set_ex41_critic_mirror(True, approval=proof)
+    live = runtime.live_metrics
+    noisy = live.noise_envs
+    assert noisy is not None and 0 < int(noisy.sum()) < N
+
+    cmd_x, cmd = _band_batch(N)
+    live.begin(1, device="cpu")
+    _add_band_batch(live, noisy, cmd_x, cmd)
+    row = live.end()
+    bands = row["small_noise"]["slow_forward_bands"]
+    first = "0.1-0.15"
+    want_noisy = int(((cmd_x < .15) & noisy).sum())
+    want_rest = int(((cmd_x < .15) & ~noisy).sum())
+    assert 0 < want_noisy and 0 < want_rest
+    assert bands["noisy"][first]["samples"] == want_noisy and bands["rest"][first]["samples"] == want_rest
+    assert bands["noisy"][first]["tracking_ratio"] == pytest.approx(1.0)
+    assert bands["rest"][first]["tracking_ratio"] == pytest.approx(0.5)
+    assert bands["noisy"][first]["mean_body_vx_mps"] == pytest.approx(0.12)
+    assert bands["rest"][first]["mean_body_vx_mps"] == pytest.approx(0.06)
+    assert bands["rest"][first]["stall_fraction"] == pytest.approx(0.0)       # 0.06 m/s is above the 0.05 stall line
+    assert bands["noisy"]["0.15-0.2"]["samples"] == int(((cmd_x == .17) & noisy).sum())
+    assert bands["rest"]["0.2-0.3"]["mean_body_vx_mps"] == pytest.approx(0.125)
+    # the keys that were there keep their names and values: the whole 0.1-0.3 slow band is still one pair of groups
+    old = row["small_noise"]["slow_forward"]
+    assert old["noisy"]["samples"] == int(noisy.sum()) and old["rest"]["samples"] == int((~noisy).sum())
+    assert old["noisy"]["tracking_ratio"] == pytest.approx(1.0) and old["rest"]["tracking_ratio"] == pytest.approx(0.5)
+
+
+def test_band_edges_stall_and_denominator(tmp_path):
+    noisy = torch.tensor([True, True, False, False])
+    live = LiveMetrics(tmp_path / "edge", noise_envs=noisy, noise_sigma_scale=SCALE)
+    cmd_x = torch.tensor([.1, .1499, .15, .1])               # .1 and .1499 are in the first band, .15 is the next band's
+    cmd = torch.stack([cmd_x, torch.zeros(4), torch.zeros(4)], dim=1)
+    vel = torch.zeros(4, 3)
+    vel[:, 0] = torch.tensor([0.0, .1499, .15, .02])        # first noisy env is stalled (0 < 0.05), last rest env too
+    live.begin(1, device="cpu")
+    live.add(cmd, vel, torch.full((4,), SLOT_INDEX["forward"]), torch.zeros(4, dtype=torch.bool), torch.zeros(4, dtype=torch.bool),
+             torch.ones(4, dtype=torch.long), torch.zeros(4, dtype=torch.long), torch.zeros(4, dtype=torch.bool))
+    bands = live.end()["small_noise"]["slow_forward_bands"]
+    n, r, first = bands["noisy"], bands["rest"], "0.1-0.15"
+    assert n[first]["samples"] == 2 and r[first]["samples"] == 1 and r["0.15-0.2"]["samples"] == 1
+    assert n[first]["stall_fraction"] == pytest.approx(0.5) and r[first]["stall_fraction"] == pytest.approx(1.0)
+    assert n[first]["tracking_ratio"] == pytest.approx((0.0 + 1.0) / 2)              # mean over the 2 samples, not over all envs
+    assert n[first]["mean_body_vx_mps"] == pytest.approx(0.1499 / 2)
+    assert r[first]["mean_body_vx_mps"] == pytest.approx(0.02)
+    empty = bands["noisy"]["0.2-0.3"]
+    assert empty == {"samples": 0, "tracking_ratio": None, "stall_fraction": None, "mean_body_vx_mps": None}
+
+
+def test_band_records_exist_whenever_the_noise_mask_does_and_not_otherwise(tmp_path):
+    plain = LiveMetrics(tmp_path / "plain")
+    plain.begin(1, device="cpu")
+    assert "small_noise" not in plain.end()
+    masked = LiveMetrics(tmp_path / "masked", noise_envs=torch.tensor([True, False]), noise_sigma_scale=SCALE)
+    masked.begin(1, device="cpu")
+    assert set(masked.end()["small_noise"]["slow_forward_bands"]) == {"noisy", "rest"}
+
+
+def _two_rank_worker(rank, port, out_dir):
+    import json
+    import os
+
+    import torch.distributed as dist
+    os.environ.update(MASTER_ADDR="127.0.0.1", MASTER_PORT=str(port))
+    dist.init_process_group("gloo", rank=rank, world_size=2)
+    noisy = torch.tensor([True, False, True, False])
+    live = LiveMetrics(os.path.join(out_dir, f"r{rank}"), rank=rank, world_size=2, noise_envs=noisy, noise_sigma_scale=SCALE)
+    cmd_x = torch.full((4,), .12)
+    cmd = torch.stack([cmd_x, torch.zeros(4), torch.zeros(4)], dim=1)
+    live.begin(1, device="cpu")
+    _add_band_batch(live, noisy, cmd_x, cmd, rest_factor=0.5)
+    row = live.end()
+    if rank == 0:
+        with open(os.path.join(out_dir, "row.json"), "w") as f:
+            json.dump(row["small_noise"]["slow_forward_bands"], f)
+    dist.destroy_process_group()
+
+
+def test_band_records_are_summed_over_ranks(tmp_path):
+    import json
+    import socket
+
+    import torch.multiprocessing as mp
+    with socket.socket() as s:
+        s.bind(("127.0.0.1", 0))
+        port = s.getsockname()[1]
+    mp.spawn(_two_rank_worker, args=(port, str(tmp_path)), nprocs=2)
+    bands = json.loads((tmp_path / "row.json").read_text())
+    assert bands["noisy"]["0.1-0.15"]["samples"] == 4 and bands["rest"]["0.1-0.15"]["samples"] == 4     # two ranks x two envs

@@ -152,6 +152,8 @@ class LiveMetrics:
         self.start_counts = torch.zeros((3, 4), dtype=torch.float64, device=device)  # starts, forward, not forward, censored
         self.invalid = torch.zeros((), dtype=torch.float64, device=device)
         self.noise_groups = torch.zeros((2, 3), dtype=torch.float64, device=device)  # noisy / rest: samples, ratio, stalled
+        # noisy / rest x forward speed band: samples, ratio sum, stalled, body vx sum (record only)
+        self.noise_bands = torch.zeros((2, len(SLOW_SPEED_BANDS), 4), dtype=torch.float64, device=device)
 
     def _record_stand_start(self, cmd, vel, slot, flag, mode, done, finite, pre_speed, reset):
         if self.step_dt is None:
@@ -272,6 +274,13 @@ class LiveMetrics:
                         0, band_index, torch.ones_like(band_ratio))
                     self.forward_bands[:, :, 1].reshape(-1).scatter_add_(0, band_index, band_ratio)
                     self.forward_bands[:, :, 2].reshape(-1).scatter_add_(0, band_index, stall[in_band].double())
+                    if self.noise_envs is not None:
+                        for group, member in enumerate((noisy, ~noisy)):
+                            pick = in_band & member
+                            self.noise_bands[group, band, 0] += pick.sum()
+                            self.noise_bands[group, band, 1] += (actual / safe_target)[pick].double().sum()
+                            self.noise_bands[group, band, 2] += stall[pick].double().sum()
+                            self.noise_bands[group, band, 3] += actual[pick].double().sum()
             reward_chosen = chosen & slow
             reward_index = mode[reward_chosen] * len(SKILLS) + k
             self.values[:, :, 3].reshape(-1).scatter_add_(0, reward_index, slow_value[reward_chosen].double())
@@ -294,7 +303,8 @@ class LiveMetrics:
             if not dist.is_initialized() or dist.get_world_size() != self.world_size:
                 raise RuntimeError("EX-42 live metrics all ranks must participate")
             for tensor in (self.values, self.forward_bands, self.slow_slots, self.survival,
-                           self.survival_family, self.start_counts, pending, self.invalid, self.noise_groups):
+                           self.survival_family, self.start_counts, pending, self.invalid, self.noise_groups,
+                           self.noise_bands):
                 dist.all_reduce(tensor, op=dist.ReduceOp.SUM)
             rank_rows = [None] * self.world_size
             dist.all_gather_object(rank_rows, {"rank": self.rank, "slow_forward_bands": local_bands,
@@ -442,6 +452,14 @@ class LiveMetrics:
                                            "stall_fraction": n_t / n_s if n_s else None},
                                  "rest": {"samples": int(r_s), "tracking_ratio": r_r / r_s if r_s else None,
                                           "stall_fraction": r_t / r_s if r_s else None}}}
+            # Added keys only: the same forward command split by speed band (0.1-0.15 is the band the policy is dead in),
+            # for the noisy envs and the rest. mean_body_vx_mps is the mean of the body forward velocity.
+            row["small_noise"]["slow_forward_bands"] = {
+                group: {label: {"samples": int(c[0]), "tracking_ratio": c[1] / c[0] if c[0] else None,
+                                "stall_fraction": c[2] / c[0] if c[0] else None,
+                                "mean_body_vx_mps": c[3] / c[0] if c[0] else None}
+                        for (label, _, _), c in zip(SLOW_SPEED_BANDS, self.noise_bands[g].tolist())}
+                for g, group in enumerate(("noisy", "rest"))}
         self.log_dir.mkdir(parents=True, exist_ok=True)
         if alerts and self.alert_run_id is not None:
             last = self.last_failed_alert_iteration
