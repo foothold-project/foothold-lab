@@ -17,7 +17,10 @@ claims:
   canon_quote: "앞 세 구간(1~750 회)은 상한 5 그대로 명령만 넓히고, 뒤 네 구간(751~1,750 회)이 상한 6 → 7 → 8 → 9 다"
   # plan: the registered schedule cell. run: the cap of the open columns in every segment-start exposure receipt.
   actual: {source: exposure_receipts, plan_path: terrain.continuous_level_cap}
-  expect: {kind: raise_per_boundary, start: 5, step: 1, end: 9, first_raise_boundary: 3}
+  # v28 (decisions.tsv 2026-11-14 12:11, lead: the cap is not raised until the slow walk holds in the mean action): the plan
+  # holds the cap at 5 (end 5) and the lead raises it through the live cell runtime.terrain_level_cap. The canon quote above
+  # is unchanged; `end` was 9. A canon schedule check of a finished run that was raised live will differ from this row.
+  expect: {kind: raise_per_boundary, start: 5, step: 1, end: 5, first_raise_boundary: 3}
   observe: {source: map_switch, field: on.terrain_level_mean}
 - id: E1.maximum_updates
   stage: E1

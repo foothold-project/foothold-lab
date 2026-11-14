@@ -297,7 +297,7 @@ stages:
     initial: {slow_forward: learning, side_left: learning, side_right: learning}
   live_adjustment:
     file_env: EX42_UPDATE_ADJUST
-    segment_reward_limits_sha256: b7a425a0336ba724da3bde831b7e803c5779183ef3b3cdbdd3005379e3d76736
+    segment_reward_limits_sha256: 15dfcdcdf464fab34db1829d82ac95048d45b686f16cb54244655458314ee04e
     # Repeated cells must equal the segment fence; this plan SHA pins that agreement.
     extra_reward_limits:
       zero_yaw: [-2.0, -0.5]
@@ -308,6 +308,14 @@ stages:
       slow_track_speed_max: [0.3, 0.3]
     command_limits:
       low_forward_fraction: [0.2, 0.5]
+    # Run-time cells, registered off at the start (decisions.tsv 2026-11-14 12:42, lead; planner review block 1): a run
+    # that has started cannot change this plan or the limits file, so the knobs the lead may need are here now. The two
+    # copies (here and `runtime_cells` of the limits file) must agree. policy_std_cap 0 = off.
+    runtime_limits:
+      policy_std_cap: [0.0, 2.0]
+      terrain_level_cap: [5, 9]
+    runtime_start:
+      policy_std_cap: 0.0
   authorization_contract:
     validator: legacy_e1
     source_stage_ids:
@@ -412,10 +420,14 @@ stages:
     # _ex41_terrain.level_cap and the per-column level_caps (terrains/ex42_exposure.py raise_continuous_cap). The
     # plan does not change between segments. Operation: when the retention table (CG E.3.1) is on HOLD the next
     # segment is not started. exposure_at_E1 holds the start value. kind_task is E0's. Registered before any result.
+    # v28 (decisions.tsv 2026-11-14 12:11 and 12:42; planner review block 1): the cap is held at the first segment's 5 by
+    # the plan (end 5); the lead raises it only through the live cell runtime.terrain_level_cap (limits [5, 9], one
+    # step at a time, after the probe shows the slow walk holds). The canon schedule 5 -> 9 from boundary 3 above is
+    # therefore NOT what this plan does; the canon claim row E1.continuous_level_cap carries the same end 5.
     continuous_level_cap:
       start: 5
       step_per_boundary: 1
-      end: 9
+      end: 5
       first_raise_boundary: 3
     exposure_at_E1:
       default: {exposure: 0.0, level_cap: 0}
