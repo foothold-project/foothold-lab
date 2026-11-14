@@ -1,5 +1,5 @@
 """v28g: every update the runner records, for envs whose velocity COMMAND magnitude is in [0.05, 0.15), the mean / p10 / p90 of
-(est front 3 columns the actor actually received - true body velocity). Record only, on by default. CPU only: the real StartRunner on the
+(the velocity columns of the est the actor actually received, est[16:19] in learned mode - true body velocity). Record only, on by default. CPU only: the real StartRunner on the
 fake env (real collection loop, real _ppo_obs, real _vbias_collect / _vbias_finish); only the all_gather collective is replaced in the 2 rank test."""
 from __future__ import annotations
 
@@ -34,9 +34,10 @@ def _crafted(runner, cmd_rows, vel_rows, est_rows=None):
         vel[i] = torch.tensor(v)
     raw["base_vel"] = vel
     est = torch.zeros(n, 51)
+    est[:, :sp.Z_DIM] = 7.0                                             # the latent z occupies est[0:16]: a record that reads the front 3 columns sees 7.0, not the velocity
     if est_rows is not None:
         for i, e in enumerate(est_rows):
-            est[i, :3] = torch.tensor(e)
+            est[i, sp.Z_DIM:sp.Z_DIM + sp.V_DIM] = torch.tensor(e)      # the velocity estimate: est[16:19]
     return raw, est, vel
 
 
@@ -82,6 +83,51 @@ def test_band_edges_use_the_command_xy_norm_lower_edge_in_upper_edge_out_and_the
     r._vbias_samples = []
     r._vbias_collect(raw["policy"], r._ppo_obs(raw, est51), torch.ones(8, 3))   # truth 1 everywhere: est - truth
     assert torch.allclose(torch.cat(r._vbias_samples), want - 1.0, atol=1e-6)
+
+
+def test_the_est_layout_is_z_then_v_and_the_record_reads_the_v_columns_of_the_real_assembled_actor_input():
+    """the real collection step (ingest -> step -> _ppo_obs -> _vbias_collect) with a spy on the real perception head output v. The truth is chosen as
+    v_est - 0.07, so the recorded est - truth is exactly 0.07 in every column when the right columns are read and not when est[:3] (z) is read."""
+    r = _runner()
+    raw = r.env.get_observations().clone()
+    pol = raw["policy"].clone()
+    pol[:, 6:9] = 0.0
+    pol[:, 6] = 0.1                                                         # every env is in the low command band
+    raw["policy"] = pol
+    seen = {}
+    orig = r.perception._advance
+
+    def spy(*a, **k):
+        out = orig(*a, **k)
+        seen["v"] = out[2]["v"].detach().clone()
+        seen["z"] = out[2]["mu"].detach().clone()
+        return out
+
+    r.perception._advance = spy
+    r.pstate = r.perception.init_state(raw.batch_size[0], r.device)               # what learn() does before the first collection step
+    o, depth, gmap, gfeet, vel, _ = r._split(raw)
+    with torch.inference_mode():
+        inp = r.perception.ingest(r.pstate, o, depth)
+        est = r.perception.step(r.pstate, inp, gmap)
+        ppo_obs = r._ppo_obs(raw, est)
+    k = o.shape[-1]
+    from foothold_s2.models.start_policy import ACTOR_KEY
+    actor_est = ppo_obs[ACTOR_KEY][:, k:k + 51]
+    assert torch.allclose(actor_est[:, sp.Z_DIM:sp.Z_DIM + 3], seen["v"], atol=1e-6)      # the velocity head output sits at est[16:19]
+    assert not torch.allclose(actor_est[:, :3], seen["v"], atol=1e-3)                    # and the front 3 columns are the latent, not the velocity
+    truth = seen["v"] - 0.07
+    r._vbias_samples = []
+    r._vbias_collect(o, ppo_obs, truth)
+    got = torch.cat(r._vbias_samples)
+    assert got.shape == (8, 3) and torch.allclose(got, torch.full((8, 3), 0.07), atol=1e-5)
+
+
+def test_oracle_vel_mode_reads_the_columns_where_that_mode_puts_the_velocity():
+    r = _runner(perception={"est_mode": "oracle_vel", "oracle_vel_noise": 0.0})
+    raw, est51, v = _crafted(r, [(0.1, 0.0, 0.0)] * 8, [(0.04, -0.02, 0.01)] * 8)
+    r._vbias_samples = []
+    r._vbias_collect(raw["policy"], r._ppo_obs(raw, est51), v)
+    assert torch.allclose(torch.cat(r._vbias_samples), torch.zeros(8, 3), atol=1e-7)      # the actor got the true velocity in est[0:3]: no bias
 
 
 def test_the_estimate_is_the_one_the_actor_received_not_the_raw_perception_output():

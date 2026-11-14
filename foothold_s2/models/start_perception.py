@@ -242,7 +242,7 @@ def velocity_band_records(band_sum, n_updates: int) -> dict[str, float]:
     return out
 
 
-# 기록 (항상 켜짐): 명령 속력 (그 env 의 현재 속도 명령 vx vy 의 노름) 이 [LOW, HIGH) 인 표본에서 «정책이 실제로 받은 est 앞 3 칸 - 실제 몸 속도».
+# 기록 (항상 켜짐): 명령 속력 (그 env 의 현재 속도 명령 vx vy 의 노름) 이 [LOW, HIGH) 인 표본에서 «정책이 실제로 받은 est 의 속도 3 칸 (learned 모드에서 est[16:19], 앞 0:16 은 잠재 z) - 실제 몸 속도».
 # 위의 정답 속력 띠 (손실 가중용) 와 기준이 다르다. HIGH (0.15) 는 포함하지 않는다: 0.15 는 죽은 띠 위의 정상 명령값이다.
 PERCEPTION_V_BIAS_LOWBAND = (0.05, 0.15)
 PERCEPTION_V_BIAS_MIN_N = 10   # 이보다 표본이 적으면 p10 · p90 은 None
