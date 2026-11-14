@@ -52,12 +52,17 @@ def test_summary_values_and_small_n_handling():
     assert r["n"] == 21 and abs(r["mean"]) < 1e-9 and abs(r["mean_y"] - 0.02) < 1e-9
     assert r["p10"] == pytest.approx(float(torch.quantile(x.double(), 0.1)), abs=1e-9) == pytest.approx(-0.08, abs=1e-6)
     assert r["p90"] == pytest.approx(0.08, abs=1e-6) and r["p10"] < r["p90"]
+    ys = torch.stack([torch.zeros(21), x * 2.0, torch.zeros(21)], -1)                                  # the side column has its own n / mean / p10 / p90
+    ry = sp.lowband_bias_summary(ys)
+    assert ry["mean_y"] == pytest.approx(0.0, abs=1e-9) and ry["p10_y"] == pytest.approx(-0.16, abs=1e-6) and ry["p90_y"] == pytest.approx(0.16, abs=1e-6)
+    assert ry["p10"] == pytest.approx(0.0, abs=1e-9) and ry["p90"] == pytest.approx(0.0, abs=1e-9)    # and the forward column is not mixed with it
     few = sp.lowband_bias_summary(s[:9])
     assert few["n"] == 9 and few["mean"] is not None and few["p10"] is None and few["p90"] is None   # n < 10: no percentiles
+    assert few["p10_y"] is None and few["p90_y"] is None and few["mean_y"] is not None
     ten = sp.lowband_bias_summary(s[:10])
     assert ten["p10"] is not None and ten["p90"] is not None                                         # n == 10: percentiles are given
     none = sp.lowband_bias_summary(torch.zeros(0, 3))
-    assert none == {"n": 0, "mean": None, "mean_y": None, "p10": None, "p90": None}
+    assert none == {"n": 0, "mean": None, "mean_y": None, "p10": None, "p90": None, "p10_y": None, "p90_y": None}
     assert sp.lowband_bias_summary(None)["n"] == 0
 
 
@@ -116,13 +121,13 @@ def test_a_real_learn_loop_records_the_line_every_update_and_every_old_key_stays
     r.learn(3)
     out = capsys.readouterr().out
     lines = [l for l in out.splitlines() if l.startswith("EX42_PERCEPTION_V_BIAS ")]
-    assert len(lines) == 3 and all("band=cmd_0.05_0.15" in l and " n=" in l and " mean=" in l and " p10=" in l and " p90=" in l for l in lines), lines
+    assert len(lines) == 3 and all("band=cmd_0.05_0.15" in l and " n=" in l and " mean=" in l and " p10=" in l and " p90=" in l and " mean_y=" in l and " p10_y=" in l and " p90_y=" in l for l in lines), lines
     rec = r.last_perception_v_bias
     assert isinstance(rec["n"], int) and rec["n"] >= 0
     assert OLD_KEYS <= set(r.last_perception_losses)
     assert not any(k.startswith("v_bias_lowband") for k in r.last_perception_losses)       # the new record lives in its own place, the old dict is only added to by the band keys
     extra = [json.loads(l) for l in (tmp_path / "train_extra.jsonl").read_text(encoding="utf-8").splitlines()]
-    assert len(extra) == 3 and all("perception_v_bias" in e and set(e["perception_v_bias"]["lowband"]) == {"n", "mean", "mean_y", "p10", "p90"} for e in extra)
+    assert len(extra) == 3 and all("perception_v_bias" in e and set(e["perception_v_bias"]["lowband"]) == {"n", "mean", "mean_y", "p10", "p90", "p10_y", "p90_y"} for e in extra)
     status = json.loads((tmp_path / "status.json").read_text(encoding="utf-8")) if (tmp_path / "status.json").is_file() else None
     if status is not None:
         assert "perception_v_bias" in status and "perception" in status

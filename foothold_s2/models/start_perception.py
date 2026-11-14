@@ -191,9 +191,11 @@ def loss_tr(rough: torch.Tensor, refined: torch.Tensor, hb: torch.Tensor) -> tor
     return F.mse_loss(rough, hb) + F.l1_loss(refined, hb)
 
 
-# EX-42 v28g 후보: 속도 추정 손실의 저속 표본 가중. 1.0 = 꺼짐 (이전 동작과 비트 동일, F.mse_loss 를 그대로 부른다).
-# 켜려면 이 한 줄을 3.0 으로 (예). 정답 몸 선속도 (base_vel 의 vx vy, 몸 틀) 의 xy 노름이 THRESHOLD 미만인 표본의 손실에 곱한다.
-# 식: sum(w_i * err_i) / N (N 은 표본 수, err_i 는 3 칸 평균 제곱오차). 가중이 정규화되지 않아 저속 표본이 있는 만큼 손실이 커진다.
+# EX-42 v28g 후보: 속도 추정 손실의 저속 가중. 1.0 = 꺼짐 (이전 동작과 비트 동일, F.mse_loss 를 그대로 부른다).
+# 켜려면 이 한 줄을 3.0 으로 (예). 축별: 정답 몸 선속도의 그 축 |v_axis| 가 THRESHOLD 미만일 때 그 축 (vx 칸 · vy 칸) 의 제곱오차에만 곱한다
+# (vx 칸은 |vx|, vy 칸은 |vy| 로 각각, vz 칸은 항상 1). 이전 판은 xy 노름 하나로 세 칸 전체에 걸었으나, 옆 (vy) 추정 치우침이 옆 명령 점수
+# (m950 옆 +0.2 = 0.596 대 옆 -0.2 = 0.877) 와 같은 방향이라 축별로 바꿨다. 식: mean_{표본, 3 칸}(w_axis * err_axis) (F.mse_loss 와 같은 평균 축).
+# 가중이 정규화되지 않아 저속 축이 있는 만큼 손실이 커진다.
 PERCEPTION_V_LOWSPEED_WEIGHT = 1.0
 PERCEPTION_V_LOWSPEED_THRESHOLD = 0.3
 # 기록 (항상 켜짐, 학습에 쓰이지 않음): 정답 xy 속력 띠별 (추정 - 실제) 의 몸 틀 x · y 평균과 표본 수. 띠는 [a, b).
@@ -201,12 +203,13 @@ PERCEPTION_V_BAND_EDGES = (0.0, 0.05, 0.15, 0.3, float("inf"))
 
 
 def velocity_loss(v_est: torch.Tensor, v_gt: torch.Tensor) -> torch.Tensor:
-    """속도 추정 손실. v_est, v_gt: (N, 3). 가중이 1.0 이면 F.mse_loss 와 같은 식 그대로."""
+    """속도 추정 손실. v_est, v_gt: (N, 3). 가중이 1.0 이면 F.mse_loss 와 같은 식 그대로. 켜면 vx 칸 · vy 칸은 그 축의 |정답| 이 임계 미만일 때 가중."""
     if PERCEPTION_V_LOWSPEED_WEIGHT == 1.0:
         return F.mse_loss(v_est, v_gt)
-    err = ((v_est - v_gt) ** 2).mean(-1)
-    w = torch.where(v_gt[:, :2].norm(dim=-1) < PERCEPTION_V_LOWSPEED_THRESHOLD,
-                    torch.full_like(err, float(PERCEPTION_V_LOWSPEED_WEIGHT)), torch.ones_like(err))
+    err = (v_est - v_gt) ** 2
+    low = v_gt[:, :2].abs() < PERCEPTION_V_LOWSPEED_THRESHOLD
+    w = torch.ones_like(err)
+    w[:, :2] = torch.where(low, torch.full_like(err[:, :2], float(PERCEPTION_V_LOWSPEED_WEIGHT)), w[:, :2])
     return (w * err).mean()
 
 
@@ -246,19 +249,22 @@ PERCEPTION_V_BIAS_MIN_N = 10   # 이보다 표본이 적으면 p10 · p90 은 No
 
 
 def lowband_bias_summary(samples: torch.Tensor | None, min_n: int | None = None) -> dict:
-    """samples (M, 3) = est - 실제 몸 속도 (몸 틀 m/s). 주 성분은 x (몸 진행 방향). 키: n · mean (x) · mean_y · p10 · p90 (x, 선형 보간).
-    n 은 항상 있고 표본이 0 이면 나머지는 None, n < min_n 이면 p10 · p90 만 None."""
+    """samples (M, 3) = est - 실제 몸 속도 (몸 틀 m/s). 키: n · mean (x, 몸 진행 방향) · mean_y (옆) · p10 · p90 (x, 선형 보간) · p10_y · p90_y (옆).
+    n 은 항상 있고 표본이 0 이면 나머지는 None, n < min_n 이면 p10 · p90 · p10_y · p90_y 만 None."""
     min_n = PERCEPTION_V_BIAS_MIN_N if min_n is None else min_n
     n = 0 if samples is None else int(samples.shape[0])
-    out = {"n": n, "mean": None, "mean_y": None, "p10": None, "p90": None}
+    out = {"n": n, "mean": None, "mean_y": None, "p10": None, "p90": None, "p10_y": None, "p90_y": None}
     if n == 0:
         return out
     x = samples.detach().double().cpu()
     out["mean"] = float(x[:, 0].mean())
     out["mean_y"] = float(x[:, 1].mean())
     if n >= min_n:
-        q = torch.quantile(x[:, 0], torch.tensor([0.1, 0.9], dtype=torch.float64))
+        qs = torch.tensor([0.1, 0.9], dtype=torch.float64)
+        q = torch.quantile(x[:, 0], qs)
         out["p10"], out["p90"] = float(q[0]), float(q[1])
+        qy = torch.quantile(x[:, 1], qs)
+        out["p10_y"], out["p90_y"] = float(qy[0]), float(qy[1])
     return out
 
 

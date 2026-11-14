@@ -1191,8 +1191,8 @@ class StartRunner(OnPolicyRunner):
         if not self.disable_logs:
             r = self.last_perception_v_bias
             f = lambda x: "null" if x is None else "%.4f" % x
-            print("EX42_PERCEPTION_V_BIAS it=%d band=cmd_%.2f_%.2f n=%d mean=%s p10=%s p90=%s mean_y=%s" % (
-                it, *sp.PERCEPTION_V_BIAS_LOWBAND, r["n"], f(r["mean"]), f(r["p10"]), f(r["p90"]), f(r["mean_y"])), flush=True)
+            print("EX42_PERCEPTION_V_BIAS it=%d band=cmd_%.2f_%.2f n=%d mean=%s p10=%s p90=%s mean_y=%s p10_y=%s p90_y=%s" % (
+                it, *sp.PERCEPTION_V_BIAS_LOWBAND, r["n"], f(r["mean"]), f(r["p10"]), f(r["p90"]), f(r["mean_y"]), f(r["p10_y"]), f(r["p90_y"])), flush=True)
 
     def update_perception(self) -> dict[str, float]:
         if not self.replay.full():

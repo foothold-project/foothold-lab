@@ -48,31 +48,59 @@ def test_defaults_are_off_and_the_records_are_on():
     assert sp.PERCEPTION_V_BAND_EDGES == (0.0, 0.05, 0.15, 0.3, float("inf"))
 
 
-def test_off_is_bit_identical_to_mse_loss_and_on_is_the_weighted_mean():
+def _want(est, gt, w):
+    """the per-axis formula written out: weight on the vx and vy squared errors only where that axis |truth| < 0.3, vz never."""
+    err = (est - gt) ** 2
+    wt = torch.ones_like(err)
+    wt[:, 0] = torch.where(gt[:, 0].abs() < 0.3, torch.tensor(w), torch.tensor(1.0))
+    wt[:, 1] = torch.where(gt[:, 1].abs() < 0.3, torch.tensor(w), torch.tensor(1.0))
+    return (wt * err).mean()
+
+
+def test_off_is_bit_identical_to_mse_loss_and_on_is_the_per_axis_weighted_mean():
     g = torch.Generator().manual_seed(1)
     est, gt = torch.randn(64, 3, generator=g), torch.randn(64, 3, generator=g) * 0.3
     assert torch.equal(sp.velocity_loss(est, gt), F.mse_loss(est, gt))
     sp.PERCEPTION_V_LOWSPEED_WEIGHT = 3.0
     try:
-        err = ((est - gt) ** 2).mean(-1)
-        low = gt[:, :2].norm(dim=-1) < 0.3
-        assert low.any() and (~low).any()
-        want = (err * torch.where(low, 3.0, 1.0)).sum() / 64
-        assert torch.allclose(sp.velocity_loss(est, gt), want, atol=1e-7)
+        assert (gt[:, 0].abs() < 0.3).any() and (gt[:, 0].abs() >= 0.3).any() and (gt[:, 1].abs() < 0.3).any() and (gt[:, 1].abs() >= 0.3).any()
+        assert torch.allclose(sp.velocity_loss(est, gt), _want(est, gt, 3.0), atol=1e-7)
     finally:
         sp.PERCEPTION_V_LOWSPEED_WEIGHT = 1.0
 
 
-def test_threshold_is_strictly_below_and_uses_the_truth_xy_norm_not_the_estimate_or_z():
+def test_each_axis_is_weighted_by_its_own_truth_small_vx_big_vy_and_the_reverse_and_both_small_and_vz_never():
     sp.PERCEPTION_V_LOWSPEED_WEIGHT = 3.0
     try:
-        gt = torch.tensor([[0.2999, 0.0, 5.0], [0.3, 0.0, 0.0], [0.21, 0.21, 0.0]])    # z is large in row 0 and must not count; row 2 has xy norm 0.297
-        est = gt + 1.0                                                                  # same error everywhere, so the weights show in the mean
-        per = ((est - gt) ** 2).mean(-1)
-        want = (per * torch.tensor([3.0, 1.0, 3.0])).sum() / 3
-        assert torch.allclose(sp.velocity_loss(est, gt), want, atol=1e-7)
-        est2 = gt + torch.tensor([[1.0, 1.0, 1.0], [0.0, 0.0, 0.0], [0.0, 0.0, 0.0]]) + 50.0 * torch.tensor([[0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [0.0, 0.0, 0.0]])
-        assert torch.allclose(sp.velocity_loss(est2, gt), (((est2 - gt) ** 2).mean(-1) * torch.tensor([3.0, 1.0, 3.0])).sum() / 3, atol=1e-5)
+        err1 = torch.ones(1, 3)                                              # unit error in every column, so the mean shows the weights: (wx + wy + wz) / 3
+        cases = [((0.1, 1.0, 0.0), (3 + 1 + 1) / 3),                         # vx small, vy big: only the vx column is weighted
+                 ((1.0, 0.1, 0.0), (1 + 3 + 1) / 3),                         # the reverse: only the vy column
+                 ((0.1, 0.1, 0.0), (3 + 3 + 1) / 3),                         # both small
+                 ((1.0, 1.0, 0.0), 1.0),                                     # neither
+                 ((1.0, 1.0, 0.05), 1.0),                                    # a small vz changes nothing
+                 ((-0.1, 0.29, 0.0), (3 + 3 + 1) / 3),                       # the sign does not matter, |v|
+                 ((0.3, 0.2999, 0.0), (1 + 3 + 1) / 3)]                      # strictly below the threshold
+        for gt, want in cases:
+            g = torch.tensor([gt])
+            assert float(sp.velocity_loss(g + err1, g)) == pytest.approx(want, abs=1e-6), gt
+        g = torch.tensor([[0.1, 1.0, 0.0]])
+        est = g + torch.tensor([[2.0, 0.0, 0.0]])                            # an error only in vx, on a sample whose vx is small and vy big
+        assert float(sp.velocity_loss(est, g)) == pytest.approx(3 * 4.0 / 3, abs=1e-6)
+        est = g + torch.tensor([[0.0, 2.0, 0.0]])                            # the same error in vy, whose truth is big: weight 1
+        assert float(sp.velocity_loss(est, g)) == pytest.approx(1 * 4.0 / 3, abs=1e-6)
+        g2 = torch.tensor([[1.0, 0.1, 0.0]])
+        assert float(sp.velocity_loss(g2 + torch.tensor([[0.0, 2.0, 0.0]]), g2)) == pytest.approx(3 * 4.0 / 3, abs=1e-6)
+        assert float(sp.velocity_loss(g2 + torch.tensor([[2.0, 0.0, 0.0]]), g2)) == pytest.approx(1 * 4.0 / 3, abs=1e-6)
+    finally:
+        sp.PERCEPTION_V_LOWSPEED_WEIGHT = 1.0
+
+
+def test_the_weight_follows_the_truth_not_the_estimate():
+    sp.PERCEPTION_V_LOWSPEED_WEIGHT = 3.0
+    try:
+        g = torch.tensor([[1.0, 1.0, 0.0]])                                  # big truth
+        est = torch.tensor([[0.05, 0.05, 0.0]])                              # a small estimate must not switch the weight on
+        assert float(sp.velocity_loss(est, g)) == pytest.approx((0.95 ** 2 * 2) / 3, abs=1e-6)
     finally:
         sp.PERCEPTION_V_LOWSPEED_WEIGHT = 1.0
 
@@ -93,29 +121,43 @@ def test_band_sums_have_the_sign_est_minus_truth_and_half_open_bands():
     assert empty["v_n_0p00_0p05"] == 0.0 and "v_bias_x_0p00_0p05" not in empty and empty["v_n_0p30_inf"] == 0.5
 
 
+def _truth(b, vx, vy):
+    out = dict(b)
+    out["base_vel"] = torch.zeros_like(b["base_vel"])
+    out["base_vel"][..., 0] = vx
+    out["base_vel"][..., 1] = vy
+    return out
+
+
 @pytest.mark.parametrize("impl", ["loop", "a1", "a2", "a3"])
-def test_real_runner_batch_the_weight_changes_the_velocity_loss_only_when_low_speed_samples_exist(impl):
+def test_real_runner_batch_the_weight_changes_the_velocity_loss_only_through_the_axis_that_is_slow(impl):
     r = _runner()
-    low = _batch(r, speed=0.1)
-    eps = _eps(low)
-    off = r.perception.sequence_loss(low, eps=eps, impl=impl)
-    sp.PERCEPTION_V_LOWSPEED_WEIGHT = 3.0
-    try:
-        on = r.perception.sequence_loss(low, eps=eps, impl=impl)
-        assert float(on["v"]) == pytest.approx(3.0 * float(off["v"]), rel=1e-4)          # every sample is low speed, so the loss is exactly 3x
-        assert float(on["l_ie"]) - float(off["l_ie"]) == pytest.approx(2.0 * float(off["v"]), rel=1e-3)
+    base = _batch(r)
+    eps = _eps(base)
+
+    def loss(batch, w):
+        sp.PERCEPTION_V_LOWSPEED_WEIGHT = w
+        try:
+            return r.perception.sequence_loss(batch, eps=eps, impl=impl)
+        finally:
+            sp.PERCEPTION_V_LOWSPEED_WEIGHT = 1.0
+
+    hh = _truth(base, 1.0, 1.0)
+    assert float(loss(hh, 3.0)["v"]) == float(loss(hh, 1.0)["v"])                         # no slow axis: the same number, bit for bit
+    for vx, vy in ((0.1, 1.0), (1.0, 0.1), (0.1, 0.1)):
+        b = _truth(base, vx, vy)
+        off, on = loss(b, 1.0), loss(b, 3.0)
+        assert float(on["v"]) > float(off["v"]), (vx, vy)
+        assert float(on["l_ie"]) - float(off["l_ie"]) == pytest.approx(float(on["v"]) - float(off["v"]), rel=1e-3)
         for k in ("kl", "o_next", "hf", "hb", "l_tr"):
             assert float(on[k]) == pytest.approx(float(off[k]), rel=1e-6)                 # nothing else moves
-        high = dict(low)
-        high["base_vel"] = torch.zeros_like(low["base_vel"])
-        high["base_vel"][..., 0] = 1.0
-        sp.PERCEPTION_V_LOWSPEED_WEIGHT = 1.0
-        off_h = r.perception.sequence_loss(high, eps=eps, impl=impl)
-        sp.PERCEPTION_V_LOWSPEED_WEIGHT = 3.0
-        on_h = r.perception.sequence_loss(high, eps=eps, impl=impl)
-        assert float(on_h["v"]) == float(off_h["v"])                                      # no low-speed sample: the same number, bit for bit
-    finally:
-        sp.PERCEPTION_V_LOWSPEED_WEIGHT = 1.0
+    # the increment is the sum of the per-axis increments: weighted vx only + weighted vy only = both, with the same estimate and truth in the other column
+    # (checked on one batch whose truth is mixed per sample, with the weight 1 -> 3 difference equal to 2 * the mean of the slow-axis errors)
+    mixed = dict(base)
+    g = torch.Generator().manual_seed(2)
+    mixed["base_vel"] = torch.randn(base["base_vel"].shape, generator=g) * 0.3
+    off, on = loss(mixed, 1.0), loss(mixed, 3.0)
+    assert float(on["v"]) > float(off["v"])
 
 
 def test_off_state_velocity_loss_is_what_the_old_code_computed_in_every_implementation():
