@@ -354,6 +354,8 @@ class StartRunner(OnPolicyRunner):
                 self._assert_ex41_joint_order()
             alg = CriticMirrorPPO(policy, device=self.device, **alg_cfg, multi_gpu_cfg=self.multi_gpu_cfg)
             alg.mirror_enabled = self.ex41_critic_mirror
+            clip = self.cfg.get("clip_actions")      # the env clip: a mean past it only moves the log-prob (bounds loss)
+            alg.bounds_loss_limit = float(clip) if clip else None
         else:
             alg = PPO(policy, device=self.device, **alg_cfg, multi_gpu_cfg=self.multi_gpu_cfg)
         alg.init_storage("rl", self.env.num_envs, self.num_steps_per_env, obs, [self.env.num_actions])
@@ -806,6 +808,8 @@ class StartRunner(OnPolicyRunner):
                 loss_dict["reward_split/frac_stalled"] = split["frac_stalled"]
             nt_stats = self._take_new_task_stats()                  # 지형 커리큘럼의 새 과제 표식 통계(JUDGE-SPEC 5.2 6). 표식을 쓰는 명령 term 이 아니면 None
             extra = {"it": it, "kl_probe": kl_info or None, "action_stats": act_stats.summary() if act_stats is not None else None, "reward_split": split}
+            if "bounds_loss" in loss_dict:                       # keys added only when the bounds loss is on
+                extra["bounds"] = {k: loss_dict[k] for k in ("bounds_loss", "mu_over_limit_frac", "mu_abs_max")}
             if (continuous is not None
                     and getattr(getattr(continuous, "plan", None), "is_ex41", False)):
                 extra["use_gt_frac"] = float(gt_steps) / self.num_steps_per_env

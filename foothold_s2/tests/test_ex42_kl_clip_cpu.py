@@ -12,7 +12,8 @@ import torch
 from tensordict import TensorDict
 
 from foothold_s2.models.start_policy import ACTOR_KEY, CRITIC_KEY, OBS_GROUPS, StartActorCritic
-from foothold_s2.runners.ex41_critic_mirror import SCHEDULER_KL_CLIP, CriticMirrorPPO, clip_scheduler_kl
+from foothold_s2.runners.ex41_critic_mirror import (
+    BOUNDS_LOSS_COEF, SCHEDULER_KL_CLIP, CriticMirrorPPO, clip_scheduler_kl)
 from foothold_s2.runners.ppo_kl_audit import PpoKLAudit, join_rank_records
 
 V28_AUDIT = Path("/home/jay/data/foothold/s2_lab/ex42_main_20261114_131028/main/"
@@ -32,7 +33,7 @@ def _obs(n):
                        CRITIC_KEY: torch.randn(n, 666, generator=g) * .1}, [n])
 
 
-def _updated(clip, bad_kl_sample=False, n=256, audit_dir=None):
+def _updated(clip, bad_kl_sample=False, n=256, audit_dir=None, limit=None, coef=None):
     """One real mirror-on update over n*2 samples; optionally one sample's stored old mean is far away."""
     torch.manual_seed(89)
     obs = _obs(n)
@@ -42,6 +43,9 @@ def _updated(clip, bad_kl_sample=False, n=256, audit_dir=None):
                          schedule="adaptive", device="cpu")
     alg.mirror_enabled = True
     alg.scheduler_kl_clip = clip
+    alg.bounds_loss_limit = limit
+    if coef is not None:
+        alg.bounds_loss_coef = coef
     alg.init_storage("rl", n, 2, obs, [12])
     audit = None
     if audit_dir is not None:
@@ -59,7 +63,7 @@ def _updated(clip, bad_kl_sample=False, n=256, audit_dir=None):
         alg.storage.mu[0, 5] += 100.0            # one sample: KL about 12 * 100^2 / 2, far past the cap
     lr_before = alg.learning_rate
     torch.manual_seed(477)
-    alg.update()
+    alg.last_losses = alg.update()
     rows = [json.loads(x) for x in audit.path.read_text().splitlines()] if audit else None
     if audit:
         audit.close()
@@ -70,7 +74,7 @@ def test_clip_helper_known_values_and_off_switch():
     kl = torch.tensor([0.003, 0.5, 1.0, 3700.0, float("inf")])
     assert torch.equal(clip_scheduler_kl(kl, 1.0), torch.tensor([0.003, 0.5, 1.0, 1.0, 1.0]))
     assert torch.equal(clip_scheduler_kl(kl, None), kl)
-    assert SCHEDULER_KL_CLIP == 1.0 and CriticMirrorPPO.scheduler_kl_clip == 1.0   # default on
+    assert SCHEDULER_KL_CLIP is None and CriticMirrorPPO.scheduler_kl_clip is None      # the cap is off by default
     nan = clip_scheduler_kl(torch.tensor([float("nan"), 0.1]), 1.0)
     assert torch.isnan(nan[0]) and nan[1] == pytest.approx(0.1)                  # a nonfinite sample stays nonfinite
 
@@ -187,3 +191,39 @@ def test_v28_replay_machinery_reproduces_the_recorded_lr_and_measures_what_the_c
     late = [k for k in raw if k[0] >= 224]
     floor = lambda path: sum(path[k] <= 1.0001e-5 for k in late) / len(late)
     assert floor(capped) < floor(raw)                    # fewer minibatches sit on the lr floor from 224 on
+
+
+def test_bounds_loss_is_zero_inside_the_limit_and_the_update_is_bit_identical_to_the_old_one():
+    off, _, _ = _updated(None)
+    inside, _, _ = _updated(None, limit=1.0e6)
+    assert inside.last_losses["bounds_loss"] == 0.0 and inside.last_losses["mu_over_limit_frac"] == 0.0
+    assert "bounds_loss" not in off.last_losses                       # no new keys while off
+    for x, y in zip(off.policy.state_dict().values(), inside.policy.state_dict().values(), strict=True):
+        assert torch.equal(x, y)
+    assert off.learning_rate == inside.learning_rate
+
+
+def test_bounds_loss_value_records_and_gradient_direction():
+    alg, _, _ = _updated(None, limit=0.0, coef=1.0e-12)                # a vanishing weight: the recorded value only
+    mu = alg.storage.mu.flatten(0, 1)
+    assert alg.last_losses["bounds_loss"] == pytest.approx(float(torch.relu(mu.abs() - 0.0).square().mean()), rel=1e-4)
+    assert alg.last_losses["mu_over_limit_frac"] == pytest.approx(float((mu.abs() > 0).float().mean()), abs=1e-6)
+    assert alg.last_losses["mu_abs_max"] == pytest.approx(float(mu.abs().max()), rel=1e-5)
+    with_bounds, _, _ = _updated(None, limit=0.0, coef=1.0e3)
+    without, _, _ = _updated(None, limit=0.0, coef=1.0e-12)
+    def shrunk(a):                                                      # the weights moved so the mean actions shrank
+        a.policy.act(_obs(256))
+        return float(a.policy.action_mean.abs().mean())
+    assert shrunk(with_bounds) < shrunk(without)
+
+
+def test_default_coefficient_and_the_runner_reads_the_limit_from_clip_actions():
+    import inspect
+    from foothold_s2.runners.start_runner import StartRunner
+    assert BOUNDS_LOSS_COEF == 1.0e-3 and CriticMirrorPPO.bounds_loss_coef == 1.0e-3
+    source = inspect.getsource(StartRunner._construct_algorithm)
+    assert 'self.cfg.get("clip_actions")' in source and "17" not in source
+    assert "alg.bounds_loss_limit = float(clip) if clip else None" in source
+    assert CriticMirrorPPO.bounds_loss_limit is None                    # the limit is never hard-coded
+    on, _, _ = _updated(None, limit=17.0)
+    assert set(("bounds_loss", "mu_over_limit_frac", "mu_abs_max")) <= set(on.last_losses)
