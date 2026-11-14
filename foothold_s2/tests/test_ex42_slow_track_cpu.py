@@ -230,7 +230,7 @@ def test_the_first_segment_registers_the_term_and_changes_nothing_else(plan, tmp
     manager = types.SimpleNamespace(get_term_cfg=lambda name: live[name])
     body = adj.reward_readback(types.SimpleNamespace(reward_manager=manager), record)
     assert body["live"] == record["rewards"]["values"] and body["live"]["slow_track"] == 0.2
-    assert body["live"]["feet_air_time"] == 0.0 and body["live"]["slow_progress"] == 0.0
+    assert body["live"]["feet_air_time"] == 0.0 and body["live"]["slow_progress"] == 0.2      # v28: on from the first update
 
 
 def test_an_opened_fence_lets_a_boundary_switch_the_term_on_and_the_read_back_checks_it(plan, tmp_path):
@@ -252,6 +252,7 @@ def test_an_opened_fence_lets_a_boundary_switch_the_term_on_and_the_read_back_ch
     assert live["ex41_feet_air_time"].params["threshold"] == 0.25
     assert out["slow_track"] == {"before": 0.0, "after": 0.5} and out["feet_air_time_threshold"] == {"before": 0.5, "after": 0.25}
     live["ex42_slow_track"] = term
+    live["ex42_slow_progress"] = env_cfg.rewards.ex42_slow_progress
     live["ex41_feet_air_time"].weight = 0.1                                             # the stage table carries that weight
     manager = types.SimpleNamespace(get_term_cfg=lambda name: live[name])
     assert adj.reward_readback(types.SimpleNamespace(reward_manager=manager), record)["live"] == asked

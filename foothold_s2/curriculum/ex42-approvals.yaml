@@ -122,8 +122,9 @@ stage_e1_authorization:
       - ca1844f593122a0f1d643fab6b3212ce064425dc
       - a76e783d7b0380115b1559aa49f6e1a6e656e955
       - 4f7e431e243bd2966f3eda1f720be2f5629997b1
+      - b6024dd2162b0147dfc269a0518cab5deb7b053f
       path: inbox/jay/20261104-ex41-restart/decisions.tsv
-    statement: E1 m13250 새 실행 · 1,750 회 일곱 구간 · actor 대칭 끔 · 느린 전진 몫 0.5 와 heading 포함 · slow_track 0.2 · feet_air_time 0 · slow_progress 시작 0 · 5 구간 조정 0.2 승인 범위 [0, 0.3] · R6 폐기 · 경계 내림 문턱은 평가 판에 별도 고정
+    statement: E1 m13250 새 실행 · 1,750 회 일곱 구간 · actor 대칭 끔 · 느린 전진 몫 0.5 와 heading 포함 · slow_track 0.2 · feet_air_time 0 · slow_progress 0.2 첫 update 부터 (v28) 승인 범위 [0, 0.3] · R6 폐기 · 경계 내림 문턱은 평가 판에 별도 고정
   prerequisites:
     e0_rejudgment:
       required_result: PASS

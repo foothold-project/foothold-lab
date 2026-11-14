@@ -143,7 +143,7 @@ stage_zero:
     cumulative_update: 12000
     manifest_local_update: 6000
     sha256: 1c6af6319c823c718af4965064f1c312b0d25177f5223a49c323aab3b6f1e613
-  approval_sha256: 5db0586d99fd13bff58ae0a8a8eea060769cdc9f5f52725c001cb69a89161748
+  approval_sha256: 80a6079b5d77f6f65e7be71c120982f8e7f1379666bc890f68e2c267a7d10696
   minimum_updates: 1000
   maximum_updates: 1000
   extension_updates: 0
@@ -376,7 +376,9 @@ stages:
   # threshold 0.5 s (its weight is 0) and ex42_slow_track at weight 0 with the constants of its draft formula.
   rewards: {track_lin_vel_std: 0.35, track_ang_vel_std: 0.5, feet_air_time: 0.0, foot_slip: -0.15, zero_yaw: -1.0,
             feet_air_time_threshold: 0.5, slow_track: 0.2, slow_track_sigma: 0.5, slow_track_speed_min: 0.1,
-            slow_track_speed_max: 0.3, slow_progress: 0.0}
+            slow_track_speed_max: 0.3, slow_progress: 0.2}
+  # slow_progress 0.2 from the first update of the E1 restart v28 from m13250 (decisions.tsv 2026-11-14 12:11, ledger
+  # commit b6024dd2; inside the limits [0, 0.3] of ledger 4f7e431e). It was 0 in v27.3.
   # feet_air_time stays 0 with threshold 0.5 (decisions.tsv 2026-11-14 01:21, ledger commit 06d4a1ae: the 0.1 / 0.04 s
   # of 01:08 was withdrawn, too small to break the standing equilibrium). slow_progress is the one-sided progress term
   # registered at weight 0 for the same reason; its limits are closed until the team lead approves them.
