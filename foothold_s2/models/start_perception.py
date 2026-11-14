@@ -239,6 +239,29 @@ def velocity_band_records(band_sum, n_updates: int) -> dict[str, float]:
     return out
 
 
+# 기록 (항상 켜짐): 명령 속력 (그 env 의 현재 속도 명령 vx vy 의 노름) 이 [LOW, HIGH) 인 표본에서 «정책이 실제로 받은 est 앞 3 칸 - 실제 몸 속도».
+# 위의 정답 속력 띠 (손실 가중용) 와 기준이 다르다. HIGH (0.15) 는 포함하지 않는다: 0.15 는 죽은 띠 위의 정상 명령값이다.
+PERCEPTION_V_BIAS_LOWBAND = (0.05, 0.15)
+PERCEPTION_V_BIAS_MIN_N = 10   # 이보다 표본이 적으면 p10 · p90 은 None
+
+
+def lowband_bias_summary(samples: torch.Tensor | None, min_n: int | None = None) -> dict:
+    """samples (M, 3) = est - 실제 몸 속도 (몸 틀 m/s). 주 성분은 x (몸 진행 방향). 키: n · mean (x) · mean_y · p10 · p90 (x, 선형 보간).
+    n 은 항상 있고 표본이 0 이면 나머지는 None, n < min_n 이면 p10 · p90 만 None."""
+    min_n = PERCEPTION_V_BIAS_MIN_N if min_n is None else min_n
+    n = 0 if samples is None else int(samples.shape[0])
+    out = {"n": n, "mean": None, "mean_y": None, "p10": None, "p90": None}
+    if n == 0:
+        return out
+    x = samples.detach().double().cpu()
+    out["mean"] = float(x[:, 0].mean())
+    out["mean_y"] = float(x[:, 1].mean())
+    if n >= min_n:
+        q = torch.quantile(x[:, 0], torch.tensor([0.1, 0.9], dtype=torch.float64))
+        out["p10"], out["p90"] = float(q[0]), float(q[1])
+    return out
+
+
 class AdaSmpl:
     """p_smpl = tanh(CV(R)) (논문 193 행). 창 · 분모 · 표본 단위는 12 §5 가정.
 

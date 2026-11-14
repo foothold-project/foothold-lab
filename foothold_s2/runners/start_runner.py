@@ -45,7 +45,8 @@ from rsl_rl.utils import resolve_obs_groups, store_code_state
 
 import rsl_rl
 from foothold_s2.commands import mixed_core as mc
-from foothold_s2.models.start_perception import AdaSmpl, PerceptionCfg, StartPerception, velocity_band_records
+from foothold_s2.models import start_perception as sp
+from foothold_s2.models.start_perception import AdaSmpl, PerceptionCfg, StartPerception, velocity_band_records, lowband_bias_summary
 from foothold_s2.models.start_policy import ACTOR_KEY, CRITIC_KEY, OBS_GROUPS, StartActorCritic
 from foothold_s2.runners import kl_probe, manifest as run_manifest
 from foothold_s2.runners.contracts import command_sample_bad, contract_bad_fn, flag_env_command_bad
@@ -253,6 +254,8 @@ class StartRunner(OnPolicyRunner):
         self._last_use_gt_frac: float | None = None
         self.git_status_repos = [rsl_rl.__file__]
         self.last_perception_losses: dict[str, float] = {}
+        self.last_perception_v_bias: dict | None = None
+        self._vbias_samples: list = []
         self._resumed = False
         self.ex41_parent_transfer = None
         self.memory_marks: dict[str, int] = {}
@@ -705,6 +708,7 @@ class StartRunner(OnPolicyRunner):
                 self.replay.start(self.pstate.h_prop, self.pstate.h_terr)
             gt_steps.zero_()
             src_steps.zero_()
+            self._vbias_samples = []
             contract_fn = ((lambda c: torch.zeros(c.shape[0], dtype=torch.bool, device=c.device))
                            if continuous is not None else contract_bad_fn(self.pcfg["contract"]))
             contract_bad = torch.zeros(n, dtype=torch.bool, device=self.device) if contract_fn is not None else None
@@ -716,6 +720,7 @@ class StartRunner(OnPolicyRunner):
                     inp = self.perception.ingest(self.pstate, o, depth)
                     est = self.perception.step(self.pstate, inp, gmap)
                     ppo_obs = self._ppo_obs(raw, est)
+                    self._vbias_collect(o, ppo_obs, vel)
                     if self.replay is not None:
                         self.replay.add_pre(inp, o, gmap, gfeet, vel, self.pstate.use_gt, self.pstate.map_off)
                     gt_steps += self.pstate.use_gt.float().mean()
@@ -809,6 +814,7 @@ class StartRunner(OnPolicyRunner):
                 collection_time = time.time() - start
                 start = time.time()
                 self.alg.compute_returns(self._ppo_obs(raw, torch.zeros(n, 51, device=self.device)))
+                self._vbias_finish(it)
             if trace is not None:
                 trace.end_update()
             if contract_bad is not None and bool(contract_bad.any()):
@@ -877,7 +883,9 @@ class StartRunner(OnPolicyRunner):
                                       "_ex40_stand_evidence", None)
             if sensor_evidence is not None:
                 extra["ex40_stand_sensor"] = sensor_evidence.summary()
-            if (kl_info or act_stats is not None or split is not None or nt_stats is not None or fc_stats is not None or slot_stats is not None or sensor_evidence is not None or ex40_dr_runtime is not None or "use_gt_frac" in extra or "small_noise" in extra or "ex42_live_metrics" in extra) and self.log_dir is not None and not self.disable_logs:
+            if getattr(self, "last_perception_v_bias", None) is not None:
+                extra["perception_v_bias"] = {"lowband": dict(self.last_perception_v_bias)}
+            if (kl_info or act_stats is not None or split is not None or nt_stats is not None or fc_stats is not None or slot_stats is not None or sensor_evidence is not None or ex40_dr_runtime is not None or "use_gt_frac" in extra or "small_noise" in extra or "ex42_live_metrics" in extra or "perception_v_bias" in extra) and self.log_dir is not None and not self.disable_logs:
                 with open(os.path.join(self.log_dir, "train_extra.jsonl"), "a", encoding="utf-8") as fh:
                     fh.write(json.dumps(extra, ensure_ascii=False) + "\n")
             # ④ AdaSmpl
@@ -1160,6 +1168,31 @@ class StartRunner(OnPolicyRunner):
         mu1, std1 = self._phi_dist(snap)
         kl = kl_probe.gaussian_kl(snap["mu"], snap["std"], mu1, std1)
         return kl_probe.summarize(kl, kl_probe.command_branch(snap["batch"]["obs"].reshape(-1, snap["batch"]["obs"].shape[-1])[:, 6:9]))
+
+    def _vbias_collect(self, o: torch.Tensor, ppo_obs, vel: torch.Tensor) -> None:
+        """기록만. 명령 속력 (o[:, 6:9] 의 vx vy 노름) 이 저속 띠인 env 의 «actor 가 받은 est 앞 3 칸 - 실제 몸 속도» 를 모은다."""
+        lo, hi = sp.PERCEPTION_V_BIAS_LOWBAND
+        cmd = o[:, 6:8].norm(dim=-1)
+        m = (cmd >= lo) & (cmd < hi)
+        k = o.shape[-1]
+        est3 = ppo_obs[ACTOR_KEY][:, k:k + 3]
+        self._vbias_samples.append((est3 - vel)[m].float())
+
+    def _vbias_finish(self, it: int) -> None:
+        """이 rollout 의 표본을 모아 (2 rank 면 표본을 합쳐서) 요약하고 매 회차 한 줄 찍는다. 모든 rank 가 같은 횟수로 부른다."""
+        parts = getattr(self, "_vbias_samples", None)
+        samples = torch.cat(parts) if parts else torch.zeros(0, 3, device=self.device)
+        if self.is_distributed:
+            gathered = [None] * self.gpu_world_size
+            torch.distributed.all_gather_object(gathered, samples.cpu())
+            samples = torch.cat(gathered)
+        self._vbias_samples = []
+        self.last_perception_v_bias = lowband_bias_summary(samples)
+        if not self.disable_logs:
+            r = self.last_perception_v_bias
+            f = lambda x: "null" if x is None else "%.4f" % x
+            print("EX42_PERCEPTION_V_BIAS it=%d band=cmd_%.2f_%.2f n=%d mean=%s p10=%s p90=%s mean_y=%s" % (
+                it, *sp.PERCEPTION_V_BIAS_LOWBAND, r["n"], f(r["mean"]), f(r["p10"]), f(r["p90"]), f(r["mean_y"])), flush=True)
 
     def update_perception(self) -> dict[str, float]:
         if not self.replay.full():
@@ -1524,6 +1557,7 @@ class StartRunner(OnPolicyRunner):
             "p_smpl": self.adasmpl.p,
             "gpu_max_allocated_GiB": (torch.cuda.max_memory_allocated(self.device) / 2**30) if self._cuda() else None,
             "perception": {k: round(v, 5) for k, v in self.last_perception_losses.items()},
+            **({"perception_v_bias": {"lowband": dict(self.last_perception_v_bias)}} if getattr(self, "last_perception_v_bias", None) is not None else {}),
             "log_dir": self.log_dir,
         })
 
