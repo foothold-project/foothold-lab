@@ -389,6 +389,7 @@ def apply_transfer(runner, result: TransferResult, spec: TransferSpec) -> None:
         runner.alg.optimizer.load_state_dict(result.optimizer_state)
         runner.alg.learning_rate = result.ppo_learning_rate
         runner.perception_optimizer.load_state_dict(result.perception_optimizer_state)
+        runner._pin_perception_lr("stage_transfer")
         runner.adasmpl.load_state_dict(dict(result.adasmpl_state))
         runner.current_learning_iteration = result.parent_iter                  # learn() 은 재개일 때 parent_iter + 1 번부터 센다
         runner._resumed = True

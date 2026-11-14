@@ -80,6 +80,9 @@ CKPT_FORMAT = "foothold-start/1"
 MODE_DEFAULTS = {"est_mode": "learned", "critic_mode": "legacy"}   # 옛 체크포인트(G0 · G1 · EX-09 · EX-10)에는 이 칸이 없다: 그때의 동작이 이 값이다
 
 # 지각 optimizer 수치: 전부 가정 (12 §6.1, START · 선행에 없음)
+# 지각 optimizer 학습률을 이 값으로 고정한다 (v28f). None 이면 PERCEPTION_DEFAULTS / train_cfg 값 그대로(이전 동작과 같음).
+# 이어받기 때 저장본의 perception_optimizer 가 param_groups lr 까지 복원하므로 복원 직후마다 다시 덮는다 (_pin_perception_lr).
+PERCEPTION_LR_OVERRIDE = 1e-4
 PERCEPTION_DEFAULTS = {
     "fast_gt_only": False,
     "learning_rate": 5e-4,
@@ -225,6 +228,7 @@ class StartRunner(OnPolicyRunner):
         self.perception_optimizer = torch.optim.Adam(
             self.perception.parameters(), lr=pcfg["learning_rate"], weight_decay=pcfg["weight_decay"]
         )
+        self._pin_perception_lr("start")
         self.adasmpl = AdaSmpl(self.perception.cfg.p_smpl_init, self.perception.cfg.cv_eps, self.perception.cfg.force_gt)
 
         raw = self.env.get_observations().to(device)
@@ -362,6 +366,15 @@ class StartRunner(OnPolicyRunner):
         self._small_noise_target = alg
         self._apply_small_noise()
         return alg
+
+    def _pin_perception_lr(self, where: str) -> None:
+        """Set the perception optimizer lr to PERCEPTION_LR_OVERRIDE (every param group; the PPO optimizer is not touched) and log the
+        value read back from the optimizer. Called after the optimizer is built and after every load_state_dict that restores it."""
+        if PERCEPTION_LR_OVERRIDE is not None:
+            for group in self.perception_optimizer.param_groups:
+                group["lr"] = float(PERCEPTION_LR_OVERRIDE)
+        print("EX42_PERCEPTION_LR where=%s lr=%s override=%s" % (
+            where, ",".join("%g" % g["lr"] for g in self.perception_optimizer.param_groups), PERCEPTION_LR_OVERRIDE), flush=True)
 
     def _apply_small_noise(self) -> None:
         """Put the small-noise env scale on the storage and the policy while the mirror update is on, take it off when it is
@@ -1527,6 +1540,7 @@ class StartRunner(OnPolicyRunner):
             self.alg.optimizer.load_state_dict(sd["optimizer_state_dict"])
             self.alg.learning_rate = sd["ppo_learning_rate"]
             self.perception_optimizer.load_state_dict(sd["perception_optimizer_state_dict"])
+            self._pin_perception_lr("load")
         self.load_map_switch_state(sd.get("map_switch"), int(sd["iter"]))
         self._load_env_state(sd["env_state"])
         self.set_rng_state(sd["rng"])
@@ -1609,6 +1623,7 @@ class StartRunner(OnPolicyRunner):
             sd["optimizer_state_dict"], self.alg.optimizer.state_dict(), names, names))
         self.alg.learning_rate = sd["ppo_learning_rate"]
         self.perception_optimizer.load_state_dict(sd["perception_optimizer_state_dict"])
+        self._pin_perception_lr("load_ex41_parent")
         self.load_map_switch_state(sd.get("map_switch"), int(sd["iter"]))
         self.set_rng_state(sd["rng"])
         self.current_learning_iteration = int(sd["iter"])
@@ -1681,6 +1696,7 @@ class StartRunner(OnPolicyRunner):
         self.alg.optimizer.load_state_dict(checkpoint["optimizer_state_dict"])
         self.alg.learning_rate = float(checkpoint["ppo_learning_rate"])
         self.perception_optimizer.load_state_dict(checkpoint["perception_optimizer_state_dict"])
+        self._pin_perception_lr("load_ex42_stage_zero_parent")
         self.load_map_switch_state(checkpoint["map_switch"], local_update)
         self.set_rng_state(checkpoint["rng"])
         use_gt_frac = checkpoint.get("last_use_gt_frac")
