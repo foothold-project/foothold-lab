@@ -148,3 +148,16 @@ def test_the_record_does_not_touch_training():
         assert torch.equal(v, b.alg.policy.state_dict()[k]), k
     for k, v in a.perception.state_dict().items():
         assert torch.equal(v, b.perception.state_dict()[k]), k
+
+
+def test_the_printed_line_carries_the_forward_and_the_side_values_each_in_its_own_field(capsys):
+    r = _runner()
+    x = torch.linspace(-0.1, 0.1, 21)
+    r._vbias_samples = [torch.stack([x, 3.0 * x + 0.5, torch.zeros(21)], -1)]
+    r._vbias_finish(7)
+    line = [l for l in capsys.readouterr().out.splitlines() if l.startswith("EX42_PERCEPTION_V_BIAS ")][0]
+    fields = dict(kv.split("=") for kv in line.split()[1:])
+    assert fields["it"] == "7" and fields["n"] == "21"
+    assert float(fields["mean"]) == pytest.approx(0.0, abs=1e-4) and float(fields["mean_y"]) == pytest.approx(0.5, abs=1e-4)
+    assert float(fields["p10"]) == pytest.approx(-0.08, abs=1e-4) and float(fields["p90"]) == pytest.approx(0.08, abs=1e-4)
+    assert float(fields["p10_y"]) == pytest.approx(0.26, abs=1e-4) and float(fields["p90_y"]) == pytest.approx(0.74, abs=1e-4)
