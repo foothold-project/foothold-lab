@@ -380,6 +380,114 @@ def resample_basic(gen, n, params):
             "heading": false, "psi_star": zeros, "slot": slot}
 
 
+# ---------------------------------------------------------------- EX-42 정지 후 느린 전진 순서 (후보, 기본 꺼짐)
+
+# v28c: the mean-action probe (stand, then 0.1 forward for 6 s) swung 0.98 -> 0.40 while every training record stayed flat,
+# because training rarely shows that order (most slow-forward samples are a command change while already walking).
+# A share of the free envs of the listed stages is given the order on purpose. The share is 0 (off) as committed;
+# the switch is the one constant below (proposed 0.15). The set is fixed by env index (no rng, same on every rank).
+STAND_START_SEQ_SHARE = 0.0
+STAND_START_SEQ_STAGES = ("E1",)
+STAND_START_SEQ_STOP_S = (1.0, 2.0)
+STAND_START_SEQ_VX = (0.1, 0.2)
+STAND_START_SEQ_HOLD_S = 6.0
+STAND_START_SEQ_TRACK_S = (2.0, 6.0)         # tracking is recorded this long after the slow command began
+STAND_START_SEQ_MOVING_MPS = 0.05            # same stillness threshold as the live metrics' stand-start trials
+
+
+def stand_start_mask(n, share):
+    """Which envs get the order: spread evenly over the REVERSED env index so the set differs from the small-noise envs
+    (which are spread over the index itself). floor(n * share) envs; share 0 selects none."""
+    share = float(share)
+    if not 0.0 <= share < 1.0:
+        raise ValueError("stand-start sequence share must be in [0, 1)")
+    index = torch.arange(n - 1, -1, -1, dtype=torch.float64)
+    return torch.floor((index + 1) * share + 1e-9) > torch.floor(index * share + 1e-9)
+
+
+class StandStartSequence:
+    """Per env cycle on the command resamples of the chosen envs: stop (1 to 2 s) -> slow forward (0.1 to 0.2, held 6 s)
+    -> one ordinary sample -> stop ... An episode reset restarts the cycle at the stop. Heading and flag envs are never
+    chosen: flag envs do not pass through the free sampler, and the two commands of the order are heading-free (heading,
+    spin off). Draws come from their own generator, so the term's own command stream is untouched whatever the share."""
+
+    def __init__(self, num_envs, seed, device="cpu", *, share=None):
+        share = STAND_START_SEQ_SHARE if share is None else share
+        self.mask = stand_start_mask(num_envs, share).to(device)
+        self.num_envs = num_envs
+        self.gen = make_generator(int(seed) + 7919, device=device)
+        self.phase = torch.zeros(num_envs, dtype=torch.long, device=device)          # next resample: 0 stop, 1 slow, 2 ordinary
+        self.slow_active = torch.zeros(num_envs, dtype=torch.bool, device=device)
+        self.age_s = torch.zeros(num_envs, device=device)
+        self.counts = {k: 0.0 for k in ("stop_starts", "slow_starts", "tracked_steps", "moving_steps", "vx_ratio_sum")}
+
+    def on_reset(self, env_ids):
+        self.phase[env_ids] = 0
+        self.slow_active[env_ids] = False
+
+    def apply(self, ids, out, time_left):
+        """Rewrite the sampled `out` (cmd, stand, spin, heading, slot) of the resampled envs `ids` in place and set their
+        next resample time. Draws are always taken for every chosen env (fixed consumption)."""
+        chosen = self.mask[ids]
+        if not bool(chosen.any()):
+            return
+        local = chosen.nonzero().flatten()
+        env = ids[local]
+        phase = self.phase[env]
+        stop, slow = phase == 0, phase == 1
+        n = len(env)
+        stop_s = _u(self.gen, (n,), *STAND_START_SEQ_STOP_S)
+        vx = _u(self.gen, (n,), *STAND_START_SEQ_VX)
+        cmd = out["cmd"]
+        rows = local[stop | slow]
+        cmd[rows] = 0.0
+        cmd[local[slow], 0] = vx[slow].to(cmd.dtype)
+        out["stand"][local] = torch.where(stop, True, out["stand"][local] & ~slow)
+        out["spin"][rows] = False
+        out["heading"][rows] = False
+        out["slot"][local[stop]] = EX39_SLOTS.index("stand")
+        out["slot"][local[slow]] = EX39_SLOTS.index("forward")
+        time_left[env[stop]] = stop_s[stop].to(time_left.dtype)
+        time_left[env[slow]] = float(STAND_START_SEQ_HOLD_S)
+        self.phase[env] = (phase + 1) % 3
+        self.slow_active[env] = slow
+        self.age_s[env[slow]] = 0.0
+        self.counts["stop_starts"] += float(stop.sum())
+        self.counts["slow_starts"] += float(slow.sum())
+
+    def step(self, vel_x, cmd_x, dt):
+        """Every env step: age the running slow commands and record the tracking 2 to 6 s after the slow command began."""
+        if not bool(self.slow_active.any()):
+            return
+        self.age_s[self.slow_active] += dt
+        low, high = STAND_START_SEQ_TRACK_S
+        watch = self.slow_active & (self.age_s >= low) & (self.age_s < high) & (cmd_x > 0)
+        if bool(watch.any()):
+            self.counts["tracked_steps"] += float(watch.sum())
+            self.counts["moving_steps"] += float((vel_x[watch] > STAND_START_SEQ_MOVING_MPS).sum())
+            self.counts["vx_ratio_sum"] += float((vel_x[watch] / cmd_x[watch]).clamp(0.0, 2.0).sum())
+
+    def take(self):
+        """One update's record (train_extra `stand_seq`) and the next update's start; None while the share is 0."""
+        if not bool(self.mask.any()):
+            return None
+        c, self.counts = self.counts, {k: 0.0 for k in self.counts}
+        steps = c["tracked_steps"]
+        return {"share": float(self.mask.float().mean()), "envs": int(self.mask.sum()),
+                "stop_starts": int(c["stop_starts"]), "slow_starts": int(c["slow_starts"]),
+                "tracked_steps_2_6s": int(steps),
+                "moving_fraction_2_6s": (c["moving_steps"] / steps) if steps else None,
+                "mean_vx_ratio_2_6s": (c["vx_ratio_sum"] / steps) if steps else None}
+
+    def state_dict(self):
+        return {"generator": self.gen.get_state().cpu(), "phase": self.phase.cpu(), "slow_active": self.slow_active.cpu(),
+                "age_s": self.age_s.cpu()}
+
+    def load_state_dict(self, state):
+        self.gen.set_state(state["generator"].cpu())
+        self.phase.copy_(state["phase"]); self.slow_active.copy_(state["slow_active"]); self.age_s.copy_(state["age_s"])
+
+
 # ---------------------------------------------------------------- 명령 시계 흩기 (EX-35)
 
 

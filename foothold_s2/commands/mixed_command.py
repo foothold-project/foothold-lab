@@ -79,6 +79,7 @@ class MixedVelocityCommand(CommandTerm):
         self.ex39_first_forward_heading_wz_detail = None
         self.scatter_receipt = None                                                          # 명령 시계 흩기 영수증(첫 env.step 전 마지막 전체 reset 의 것)
         self._stepped = False
+        self.stand_seq = mc.StandStartSequence(n, cfg.seed, device=dev)                      # 후보: 정지 -> 느린 전진 순서. 몫 0 이면 아무 것도 안 한다
         self.metrics["error_vel_xy"] = torch.zeros(n, device=dev)
         self.metrics["error_vel_yaw"] = torch.zeros(n, device=dev)
 
@@ -124,6 +125,7 @@ class MixedVelocityCommand(CommandTerm):
         return h if ids is None else h[ids]
 
     def _reset_episode_state(self, env_ids: torch.Tensor):
+        self.stand_seq.on_reset(env_ids)                      # 순서는 에피소드마다 정지부터
         self.new_task.clear(env_ids)                          # Isaac 순서가 curriculum -> command reset 이라 curriculum 이 지난 에피소드 표식을 읽은 뒤에 비운다. 재추출은 이 뒤(reset 안 super().reset)에서 다시 켠다
         pos = self.robot.data.root_pos_w[env_ids, :2]
         self.start_xy[env_ids] = pos
@@ -200,6 +202,10 @@ class MixedVelocityCommand(CommandTerm):
 
         return None if total == 0 else {"counts": dict(zip(self.slot_names, c)), "frac": {k: v / total for k, v in zip(self.slot_names, c)}}
 
+    def take_stand_seq_stats(self):
+        """이번 update 의 «정지 -> 느린 전진» 순서 기록 (몫 0 이면 None)."""
+        return self.stand_seq.take()
+
     def _resample_command(self, env_ids):
         env_ids = torch.as_tensor(env_ids, device=self.device, dtype=torch.long)
 
@@ -218,6 +224,9 @@ class MixedVelocityCommand(CommandTerm):
                        mc.resample_free_modes(self.gen, len(group), self.params, self.iteration,
                                               self.range_curriculum.vmax_x, self.range_curriculum.vmax_y,
                                               yaw=self._yaw(group)))
+                if (runtime is not None and "slot" in out
+                        and runtime.stage_id in mc.STAND_START_SEQ_STAGES):
+                    self.stand_seq.apply(group, out, self.time_left)
                 self.vel_command_b[group] = out["cmd"].to(self.device)
                 self.stand[group] = out["stand"].to(self.device)
                 if not hasattr(self, "stop_elapsed_s"):
@@ -305,6 +314,7 @@ class MixedVelocityCommand(CommandTerm):
             self.excluded_steps[self.flag_ids[sel]] += spin_or_back[sel].float()
 
         self.ep_steps += 1.0
+        self.stand_seq.step(self.robot.data.root_lin_vel_b[:, 0], self.vel_command_b[:, 0], dt)
 
         self.max_dist = torch.maximum(self.max_dist, torch.linalg.norm(pos - self.start_xy, dim=1))
         self.cmd_sum_xy += self.vel_command_b[:, :2]

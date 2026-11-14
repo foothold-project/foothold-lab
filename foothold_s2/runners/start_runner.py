@@ -847,6 +847,9 @@ class StartRunner(OnPolicyRunner):
             slot_stats = self._take_slot_stats()                    # EX-35: S2a 슬롯 실제 비율(기록)
             if slot_stats is not None:
                 extra["command_slots"] = slot_stats
+            stand_seq_stats = self._take_stand_seq_stats()          # EX-42: 정지 -> 느린 전진 순서 후보 (몫 0 이면 None)
+            if stand_seq_stats is not None:
+                extra["stand_seq"] = stand_seq_stats
             take_command_stats = getattr(continuous, "take_command_stats", None)     # EX-42: the commands actually drawn this update
             command_stats = take_command_stats() if callable(take_command_stats) else None
             if command_stats is not None:
@@ -864,7 +867,7 @@ class StartRunner(OnPolicyRunner):
                                       "_ex40_stand_evidence", None)
             if sensor_evidence is not None:
                 extra["ex40_stand_sensor"] = sensor_evidence.summary()
-            if (kl_info or act_stats is not None or split is not None or nt_stats is not None or fc_stats is not None or slot_stats is not None or sensor_evidence is not None or ex40_dr_runtime is not None or "use_gt_frac" in extra or "small_noise" in extra or "ex42_live_metrics" in extra) and self.log_dir is not None and not self.disable_logs:
+            if (kl_info or act_stats is not None or split is not None or nt_stats is not None or fc_stats is not None or slot_stats is not None or stand_seq_stats is not None or sensor_evidence is not None or ex40_dr_runtime is not None or "use_gt_frac" in extra or "small_noise" in extra or "ex42_live_metrics" in extra) and self.log_dir is not None and not self.disable_logs:
                 with open(os.path.join(self.log_dir, "train_extra.jsonl"), "a", encoding="utf-8") as fh:
                     fh.write(json.dumps(extra, ensure_ascii=False) + "\n")
             # ④ AdaSmpl
@@ -1023,6 +1026,12 @@ class StartRunner(OnPolicyRunner):
     def _take_slot_stats(self):
         term = self._command_term()
         fn = getattr(term, "take_slot_counts", None)
+
+        return fn() if fn is not None else None
+
+    def _take_stand_seq_stats(self):
+        term = self._command_term()
+        fn = getattr(term, "take_stand_seq_stats", None)
 
         return fn() if fn is not None else None
 
