@@ -196,7 +196,7 @@ def loss_tr(rough: torch.Tensor, refined: torch.Tensor, hb: torch.Tensor) -> tor
 # (vx 칸은 |vx|, vy 칸은 |vy| 로 각각, vz 칸은 항상 1). 이전 판은 xy 노름 하나로 세 칸 전체에 걸었으나, 옆 (vy) 추정 치우침이 옆 명령 점수
 # (m950 옆 +0.2 = 0.596 대 옆 -0.2 = 0.877) 와 같은 방향이라 축별로 바꿨다. 식: mean_{표본, 3 칸}(w_axis * err_axis) (F.mse_loss 와 같은 평균 축).
 # 가중이 정규화되지 않아 저속 축이 있는 만큼 손실이 커진다.
-PERCEPTION_V_LOWSPEED_WEIGHT = 3.0
+PERCEPTION_V_LOWSPEED_WEIGHT = 1.0
 PERCEPTION_V_LOWSPEED_THRESHOLD = 0.3
 # 기록 (항상 켜짐, 학습에 쓰이지 않음): 정답 xy 속력 띠별 (추정 - 실제) 의 몸 틀 x · y 평균과 표본 수. 띠는 [a, b).
 PERCEPTION_V_BAND_EDGES = (0.0, 0.05, 0.15, 0.3, float("inf"))
