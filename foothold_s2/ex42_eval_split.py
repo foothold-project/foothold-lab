@@ -216,6 +216,86 @@ def run_shards(plan, *, output, commands_for, env, physical, process, observed, 
     return failed
 
 
+# ---- the sequential single-device phases after the shards ----------------------------------------
+# D44, the two e1_v2 low-speed levels and the widened E1 cells ran one after the other on the evaluation device while
+# the split device idled (v28 m250: 14:57 to 15:06 and 15:29 to 15:43). They are independent children with their own
+# output folders, so two lanes can run them. Seconds are the child.json "seconds" of that one-GPU v28 m250 run.
+SEQUENTIAL_UNIT_SECONDS = {"d44": 118.0, "e1_v2_L": 196.0, "wide_L": 208.0, "wide_endpoints": 261.0}
+
+
+def sequential_unit_seconds(name):
+    if name in SEQUENTIAL_UNIT_SECONDS:
+        return SEQUENTIAL_UNIT_SECONDS[name]
+    for prefix in ("e1_v2_L", "wide_L"):
+        if name.startswith(prefix):
+            return SEQUENTIAL_UNIT_SECONDS[prefix]
+    raise ValueError(f"EX-42 split has no time estimate for unit {name!r}")
+
+
+def assign_units(names, devices):
+    """Greedy longest-first balance of the sequential phases over the devices. Deterministic; returns
+    ({device: [names in run order]}, {device: estimated seconds}). Every name lands on exactly one device."""
+    names, devices = list(names), list(devices)
+    if not devices or len(set(devices)) != len(devices):
+        raise ValueError("EX-42 split needs distinct devices")
+    if len(set(names)) != len(names):
+        raise ValueError("EX-42 split units must be unique")
+    load = {device: 0.0 for device in devices}
+    lanes = {device: [] for device in devices}
+    for name in sorted(names, key=lambda n: (-sequential_unit_seconds(n), names.index(n))):
+        device = min(devices, key=lambda d: (load[d], devices.index(d)))
+        lanes[device].append(name)
+        load[device] += sequential_unit_seconds(name)
+    return lanes, load
+
+
+def run_units(lanes, *, build, output, env, process, stagger_s=30, sleep=time.sleep, record=None):
+    """Run each device's units one after another in its own thread; returns {name: child}.
+
+    `build(name, device)` -> (argv, prepare_output). Every child gets its own Kit temporary directory and cache, and the
+    second lane starts `stagger_s` later, so two Kits never share USD temporary paths (the repeat-seed path does the same).
+    A failed unit never stops the other lane or the rest of its own lane: the caller judges each unit from its child.
+    The child carries `lane_device`, the device that really ran it."""
+    from foothold_s2.scripts.ex42_flag_baseline_chain import isolated_kit_argv
+    children, lock = {}, threading.Lock()
+
+    def worker(index, device, lane):
+        if index:
+            sleep(stagger_s)
+        for name in lane:
+            try:
+                argv, prepare = build(name, device)
+                if prepare:
+                    process.prepare_phase_output(argv)
+                runtime = Path(output) / "kit_runtime" / device.replace(":", "_") / name
+                temporary, cache = runtime / "tmp", runtime / "cache"
+                temporary.mkdir(mode=0o700, parents=True, exist_ok=False)
+                cache.mkdir()
+                isolated_env = dict(env, TMPDIR=str(temporary), TEMP=str(temporary), TMP=str(temporary),
+                                    XDG_CACHE_HOME=str(cache), XDG_RUNTIME_DIR=str(temporary))
+                child = dict(process.hidden_child(isolated_kit_argv(argv, output, device, name),
+                                                  Path(output) / "children" / name, env=isolated_env))
+                child["isolated_runtime"] = {"tmpdir": str(temporary), "kit_cache": str(cache)}
+            except (OSError, ValueError, KeyError, subprocess.SubprocessError) as exc:
+                child = {"state": "HOLD", "reason": f"{type(exc).__name__}: {exc}"}
+            child["lane_device"] = device
+            with lock:
+                children[name] = child
+                if record is not None:
+                    record(name, child)
+
+    threads = [threading.Thread(target=worker, args=(index, device, lane), name=f"ex42-units-{shard_tag(device)}")
+               for index, (device, lane) in enumerate(lanes.items()) if lane]
+    for thread in threads:
+        thread.start()
+    for thread in threads:
+        thread.join()
+    expected = {name for lane in lanes.values() for name in lane}
+    if set(children) != expected:
+        raise ValueError(f"EX-42 split units did not all report: {sorted(expected - set(children))}")
+    return children
+
+
 # ---- comparison with a one-GPU run -------------------------------------------------------------
 # paths differ with the output directory; maintenance_source_sha256 is the hash of a source file that moves
 # with the code head, not a measurement
