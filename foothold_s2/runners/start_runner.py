@@ -393,6 +393,12 @@ class StartRunner(OnPolicyRunner):
                                              mirror.SMALL_NOISE_SIGMA_SCALE, device=self.device)
         alg.storage.noise_scale_env = noise
         alg.policy.noise_scale = noise
+        # H2: the same rows feed the actor z = mu (off by default). The mask lives on the runner; the rollout hands it to the state.
+        self._mean_z_rows = (noise.squeeze(1) < 1) if (noise is not None and mirror.SMALL_NOISE_USE_MEAN_Z) else None
+        print("EX42_SMALL_NOISE_MEAN_Z " + json.dumps({
+            "mean_z_envs": 0 if self._mean_z_rows is None else int(self._mean_z_rows.sum()), "total_envs": int(self.env.num_envs),
+            "small_noise_envs": 0 if noise is None else int((noise < 1).sum()),
+            "applied": self._mean_z_rows is not None, "use_mean_z_constant": bool(mirror.SMALL_NOISE_USE_MEAN_Z)}, sort_keys=True), flush=True)
         hear = getattr(getattr(self, "continuous_curriculum", None), "refresh_small_noise", None)
         if callable(hear):
             hear()
@@ -718,6 +724,7 @@ class StartRunner(OnPolicyRunner):
                 for step_k in range(self.num_steps_per_env):
                     o, depth, gmap, gfeet, vel, _ = self._split(raw)
                     inp = self.perception.ingest(self.pstate, o, depth)
+                    self.pstate.mean_z = getattr(self, "_mean_z_rows", None)       # H2: None = every env samples z (unchanged)
                     est = self.perception.step(self.pstate, inp, gmap)
                     ppo_obs = self._ppo_obs(raw, est)
                     self._vbias_collect(o, ppo_obs, vel)
@@ -855,6 +862,8 @@ class StartRunner(OnPolicyRunner):
                 extra["bounds"] = {k: loss_dict[k] for k in ("bounds_loss", "mu_over_limit_frac", "mu_abs_max")}
             if "small_noise_env_share" in loss_dict:             # keys added only when the small-noise envs are applied
                 extra["small_noise"] = {k: loss_dict[k] for k in ("small_noise_env_share", "small_noise_sigma_scale")}
+                if getattr(self, "_mean_z_rows", None) is not None:
+                    extra["small_noise"]["mean_z_envs"] = int(self._mean_z_rows.sum())
             if (continuous is not None
                     and getattr(getattr(continuous, "plan", None), "is_ex41", False)):
                 extra["use_gt_frac"] = float(gt_steps) / self.num_steps_per_env

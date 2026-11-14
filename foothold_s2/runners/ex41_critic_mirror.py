@@ -71,6 +71,10 @@ BOUNDS_LOSS_COEF = 0.1  # weight of the action-mean bounds loss (lead 11/14 16:5
 # StartActorCritic.noise_scale).
 SMALL_NOISE_ENV_SHARE = 0.25
 SMALL_NOISE_SIGMA_SCALE = 0.2
+# H2 (lead-lx 11/15 06:23), OFF by default (off is bit-identical to before): the small-noise envs also feed the actor the
+# perception latent mean (z = mu) instead of a sample. Only the rollout changes: the stored actor observation already holds
+# the z the policy saw, and the update re-evaluates that stored observation, so log-prob and ratio stay consistent.
+SMALL_NOISE_USE_MEAN_Z = False
 
 
 def small_noise_mask(num_envs: int, share: float) -> torch.Tensor:

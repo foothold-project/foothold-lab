@@ -331,6 +331,7 @@ class PerceptionState:
     use_gt: torch.Tensor  # (N,) bool AdaSmpl 플래그
     extra: dict = field(default_factory=dict)
     map_off: torch.Tensor | None = None  # (N,) bool: 이 에피소드는 지도 토큰을 끈다(EX-33 S-B). None = 항상 켬(B)
+    mean_z: torch.Tensor | None = None  # (N,) bool: 이 env 는 수집 때도 z 를 표집하지 않고 평균(mu)을 actor 에 준다. None = 전부 표집(기본)
 
 
 class StartPerception(nn.Module):
@@ -428,7 +429,9 @@ class StartPerception(nn.Module):
         if deterministic or not self.cfg.sample_latent_in_rollout:
             z = out["mu"]
         else:
-            z = out["mu"] + torch.randn_like(out["mu"]) * torch.exp(0.5 * out["logvar"])
+            z = out["mu"] + torch.randn_like(out["mu"]) * torch.exp(0.5 * out["logvar"])      # the draw is made for every row
+            if st.mean_z is not None:                                               # so the other rows keep their noise
+                z = torch.where(st.mean_z[:, None], out["mu"], z)
         return torch.cat([z, out["v"], out["zf"], out["zb"]], -1)
 
     @torch.no_grad()
