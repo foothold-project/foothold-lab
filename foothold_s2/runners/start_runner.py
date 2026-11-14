@@ -363,9 +363,7 @@ class StartRunner(OnPolicyRunner):
             from foothold_s2.runners import ex41_critic_mirror as mirror
             noise = mirror.small_noise_scale(self.env.num_envs, mirror.SMALL_NOISE_ENV_SHARE,
                                              mirror.SMALL_NOISE_SIGMA_SCALE, device=self.device)
-            if noise is not None:
-                if not self.ex41_critic_mirror:
-                    raise ValueError("small noise envs need the mirror update (the installed PPO.update re-acts on rows)")
+            if noise is not None and self.ex41_critic_mirror:      # the installed PPO.update re-acts on rows: no per-row scale
                 alg.storage.noise_scale_env = noise
                 policy.noise_scale = noise
         return alg

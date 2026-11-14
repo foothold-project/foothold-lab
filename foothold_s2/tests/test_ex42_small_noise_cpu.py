@@ -140,13 +140,13 @@ def test_update_ratio_starts_at_one_for_every_row_and_records_the_share():
     assert "small_noise_env_share" not in off.update()
 
 
-def test_runner_wiring_refuses_the_installed_update_and_sets_both_sides(monkeypatch):
+def test_runner_wiring_applies_the_scale_only_with_the_mirror_update():
     import inspect
 
     from foothold_s2.runners import start_runner
     src = inspect.getsource(start_runner.StartRunner._construct_algorithm)
-    assert "small_noise_scale" in src and "noise_scale_env" in src and "policy.noise_scale" in src
-    assert "if not self.ex41_critic_mirror:" in src and "installed PPO.update" in src
+    assert "small_noise_scale" in src and "alg.storage.noise_scale_env = noise" in src and "policy.noise_scale = noise" in src
+    assert "if noise is not None and self.ex41_critic_mirror:" in src      # the installed PPO.update has no per-row scale
 
 
 def test_live_metrics_tracks_noisy_envs_apart_and_keeps_the_row_unchanged_when_off(tmp_path):
@@ -184,17 +184,20 @@ def test_rollout_returns_to_the_per_env_scale_even_after_an_interrupted_update()
     assert torch.allclose(alg.storage.sigma[0][noisy], (alg.policy.std * SCALE).expand(int(noisy.sum()), 12))
 
 
-def test_training_entry_hands_the_shared_mask_to_the_live_metrics_only_when_on(monkeypatch):
+def test_training_entry_hands_the_shared_mask_to_the_live_metrics_only_when_applied():
     from types import SimpleNamespace
 
     from foothold_s2.scripts.ex42_training_entry import EX42StageZeroRuntime
-    fake = SimpleNamespace(env=SimpleNamespace(num_envs=N))
-    monkeypatch.setattr(mirror, "SMALL_NOISE_ENV_SHARE", 0.0)
-    assert EX42StageZeroRuntime._small_noise_record(fake) == {}                   # share 0: the row stays as it was
-    monkeypatch.setattr(mirror, "SMALL_NOISE_ENV_SHARE", 0.25)
-    monkeypatch.setattr(mirror, "SMALL_NOISE_SIGMA_SCALE", SCALE)
-    record = EX42StageZeroRuntime._small_noise_record(fake)
-    assert record["noise_sigma_scale"] == SCALE and record["noise_envs"].tolist() == small_noise_mask(N, 0.25).tolist()
+    scale = small_noise_scale(N, mirror.SMALL_NOISE_ENV_SHARE, mirror.SMALL_NOISE_SIGMA_SCALE)
+
+    def fake(noise):
+        return SimpleNamespace(env=SimpleNamespace(num_envs=N),
+                               runner=SimpleNamespace(alg=SimpleNamespace(storage=SimpleNamespace(noise_scale_env=noise))))
+    assert EX42StageZeroRuntime._small_noise_record(fake(None)) == {}                  # not applied: the row stays as it was
+    assert EX42StageZeroRuntime._small_noise_record(SimpleNamespace(env=SimpleNamespace(num_envs=N))) == {}
+    record = EX42StageZeroRuntime._small_noise_record(fake(scale))
+    assert record["noise_sigma_scale"] == mirror.SMALL_NOISE_SIGMA_SCALE
+    assert record["noise_envs"].tolist() == small_noise_mask(N, mirror.SMALL_NOISE_ENV_SHARE).tolist()
 
 
 def test_resume_first_update_keeps_the_same_env_split_and_sigma_handling(tmp_path):
@@ -222,3 +225,14 @@ def test_resume_first_update_keeps_the_same_env_split_and_sigma_handling(tmp_pat
     losses = resumed.update()
     assert losses["surrogate"] == pytest.approx(-float(advantage.mean()), abs=1e-5)       # ratio 1 on all rows after the load
     assert losses["small_noise_env_share"] == pytest.approx(0.25)
+
+
+def test_a_call_on_another_batch_size_keeps_the_plain_std():
+    scale = small_noise_scale(N, 0.25, SCALE)
+    alg, obs = _alg(scale)
+    with torch.inference_mode():
+        alg.policy.act(obs[:5])
+    assert torch.allclose(alg.policy.action_std, alg.policy.std.expand(5, 12))
+    with torch.inference_mode():
+        alg.policy.act(obs)
+    assert alg.policy.action_std.shape == (N, 12) and bool((alg.policy.action_std < alg.policy.std).any())

@@ -1486,9 +1486,11 @@ class EX42StageZeroRuntime:
                            f"{self.COMMAND_SHARES_ATTEMPTS} attempts; the save is blocked") from error
 
     def _small_noise_record(self) -> dict:
-        """LiveMetrics arguments for the small-noise envs (empty while the share is 0: the row stays as it was)."""
+        """LiveMetrics arguments for the small-noise envs: only when the runner really applied the scale (the mirror update
+        is on and the share is above 0); otherwise empty and the row stays as it was."""
         from foothold_s2.runners import ex41_critic_mirror as mirror
-        if not mirror.SMALL_NOISE_ENV_SHARE:
+        alg = getattr(getattr(self, "runner", None), "alg", None)
+        if getattr(getattr(alg, "storage", None), "noise_scale_env", None) is None:
             return {}
         return {"noise_envs": mirror.small_noise_mask(int(self.env.num_envs), mirror.SMALL_NOISE_ENV_SHARE),
                 "noise_sigma_scale": mirror.SMALL_NOISE_SIGMA_SCALE}

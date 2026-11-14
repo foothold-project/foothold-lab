@@ -43,5 +43,7 @@ class StartActorCritic(ActorCritic):
 
     def _update_distribution(self, obs) -> None:
         super()._update_distribution(obs)
-        if self.noise_scale is not None:
+        # A call on another batch size (probe, test) has no per-env meaning: it keeps the plain std. Rollouts and updates always
+        # match (the runner and the mirror update set the scale for exactly their batch).
+        if self.noise_scale is not None and self.noise_scale.shape[0] == self.distribution.mean.shape[0]:
             self.distribution = Normal(self.distribution.mean, self.distribution.stddev * self.noise_scale)
