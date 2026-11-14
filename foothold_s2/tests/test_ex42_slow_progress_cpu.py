@@ -110,32 +110,32 @@ class _Cfg:
         self.func, self.weight, self.params = func, weight, dict(params or {})
 
 
-def test_the_term_is_registered_at_weight_zero_and_follows_the_slow_track_band():
+def test_the_term_is_registered_at_the_plan_weight_and_follows_the_slow_track_band():
     rewards = types.SimpleNamespace(track_lin_vel=_Cfg(weight=2.0, params={"std": 0.5}),
                                     track_ang_vel=_Cfg(weight=1.0, params={"std": 0.5}),
                                     ex41_feet_air_time=_Cfg(params={"name": "feet_air_time"}))
     env_cfg = types.SimpleNamespace(rewards=rewards)
     plan = EX42Plan.load(ROOT / "foothold_s2/curriculum/ex42-prep.yaml")
     row = adj.stage_rewards(plan, "E1")
-    assert row["slow_progress"] == 0.0 and adj.reward_limits()["cells"]["slow_progress"] == (0.0, 0.0)
+    assert row["slow_progress"] == 0.2 and adj.reward_limits()["cells"]["slow_progress"] == (0.0, 0.3)   # v28, ledger b6024dd2
     out = adj.apply_reward_params(env_cfg, {"rewards": {"values": row}}, _Cfg)
     term = env_cfg.rewards.ex42_slow_progress
-    assert term.weight == 0.0 and term.func is sp.slow_progress_term and out["slow_progress"] == {"before": 0.0, "after": 0.0}
+    assert term.weight == 0.2 and term.func is sp.slow_progress_term and out["slow_progress"] == {"before": 0.0, "after": 0.2}
     assert term.params == {"command_name": "base_velocity", "speed_min": 0.1, "speed_max": 0.3, "taper_from": 0.25,
                            "include_heading": True}
-    assert adj.apply_reward_params(env_cfg, {"rewards": {"values": row}}, _Cfg)["slow_progress"]["after"] == 0.0    # again: no second term
+    assert adj.apply_reward_params(env_cfg, {"rewards": {"values": row}}, _Cfg)["slow_progress"]["after"] == 0.2    # again: no second term
     assert sp.register(env_cfg, _Cfg) is False
 
 
-def test_the_closed_limits_refuse_a_weight_above_zero_until_they_are_opened(tmp_path):
+def test_the_fence_refuses_a_weight_above_its_upper_limit_until_it_is_opened(tmp_path):
     plan = EX42Plan.load(ROOT / "foothold_s2/curriculum/ex42-prep.yaml")
     row = adj.stage_rewards(plan, "E1")
     with pytest.raises(ValueError, match="rewards.slow_progress leaves the approved limits"):
-        adj._rewards({**row, "slow_progress": 0.1}, adj.reward_limits(), "test")
-    text = adj.REWARD_LIMITS.read_text(encoding="utf-8").replace("slow_progress: [0.0, 0.0]", "slow_progress: [0.0, 0.5]")
+        adj._rewards({**row, "slow_progress": 0.35}, adj.reward_limits(), "test")
+    text = adj.REWARD_LIMITS.read_text(encoding="utf-8").replace("slow_progress: [0.0, 0.3]", "slow_progress: [0.0, 0.5]")
     opened = tmp_path / "limits.yaml"
     opened.write_text(text, encoding="utf-8")
-    assert adj._rewards({**row, "slow_progress": 0.1}, adj.reward_limits(opened), "test")["slow_progress"] == 0.1
+    assert adj._rewards({**row, "slow_progress": 0.35}, adj.reward_limits(opened), "test")["slow_progress"] == 0.35
 
 
 def test_documents_older_than_the_cell_stay_readable_with_the_term_off(tmp_path):
@@ -143,12 +143,13 @@ def test_documents_older_than_the_cell_stay_readable_with_the_term_off(tmp_path)
     plan = EX42Plan.load(ROOT / "foothold_s2/curriculum/ex42-prep.yaml")
     row = adj.stage_rewards(plan, "E1")
     ten = {name: value for name, value in row.items() if name != "slow_progress"}
-    assert adj._rewards(ten, adj.reward_limits(), "old row") == row
+    off = {**row, "slow_progress": 0.0}                     # a row without the cell means the term off, not the plan value
+    assert adj._rewards(ten, adj.reward_limits(), "old row") == off
     old_limits = tmp_path / "old_limits.yaml"
     lines = [line for line in adj.REWARD_LIMITS.read_text(encoding="utf-8").splitlines() if not line.strip().startswith("slow_progress:")]
     old_limits.write_text("\n".join(lines) + "\n", encoding="utf-8")
     assert adj.reward_limits(old_limits)["cells"]["slow_progress"] == (0.0, 0.0)
-    assert adj.complete_cells(None) is None and adj.complete_cells(ten) == row
+    assert adj.complete_cells(None) is None and adj.complete_cells(ten) == off
     # a live manager without the term reads as weight 0; asking for more than 0 then fails the readback
     live = {"track_lin_vel": _Cfg(weight=2.0, params={"std": row["track_lin_vel_std"]}),
             "track_ang_vel": _Cfg(weight=1.0, params={"std": row["track_ang_vel_std"]}),
@@ -160,4 +161,4 @@ def test_documents_older_than_the_cell_stay_readable_with_the_term_off(tmp_path)
     assert adj.reward_readback(env, {"rewards": {"values": ten}})["live"]["slow_progress"] == 0.0
     with pytest.raises(ValueError, match="the live reward manager carries"):
         adj.reward_readback(env, {"rewards": {"values": {**row, "slow_progress": 0.1}}})
-    assert json.dumps(adj.reward_readback(env, {"rewards": {"values": row}})["live"], sort_keys=True)
+    assert json.dumps(adj.reward_readback(env, {"rewards": {"values": off}})["live"], sort_keys=True)
