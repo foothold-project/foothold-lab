@@ -239,6 +239,7 @@ def test_real_start_runner_parent_transfer_uses_strict_models_and_saved_training
     class Loader:
         def __init__(self):
             self.calls = []
+            self.param_groups = [{"lr": 5e-4}]          # the perception optimizer lr is pinned after the restore
 
         def load_state_dict(self, *args, **kwargs):
             self.calls.append((args, kwargs))

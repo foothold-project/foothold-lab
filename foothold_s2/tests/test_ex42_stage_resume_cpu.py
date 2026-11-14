@@ -156,6 +156,8 @@ def _loader(saved_cfg, hold):
     from foothold_s2.runners import start_runner
 
     class Sink:
+        param_groups = [{"lr": 5e-4}]                      # the perception optimizer lr is pinned after the restore
+
         def load_state_dict(self, *args, **kwargs):
             pass
 
