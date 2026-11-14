@@ -400,6 +400,85 @@ def d44_kit_command(checkpoint, output, device, *, task, plan_path, mesh_dir,
             f"--kit_args=--/UJITSO/datastore/localCachePath={machine_path('isaac_cache_root')}"]
 
 
+def d44_argv_builder(checkpoint, output, *, plan, plan_path, cfg, seed):
+    """Build the D44 64-tile replica once and return `device -> argv`; raises like the in-line code used to."""
+    from foothold_s2.eval.ex42_d44_cells import contract
+    from foothold_s2.eval.ex42_eval_tile_mesh import build_replicas
+    settings = contract(plan.document)
+    source_mesh = Path(settings["source_mesh_dir"]).resolve(strict=True)
+    if not settings["source_mesh_sha256"]:
+        raise ValueError("D44 source mesh SHA is absent from prep")
+    replica = build_replicas(source_mesh, output / "d44_mesh", anchor="landing_center")
+    return lambda device: d44_kit_command(checkpoint, output, device, task=cfg["task"], plan_path=plan_path,
+                                          mesh_dir=source_mesh, replica_dir=output / "d44_mesh",
+                                          replica_sha256=replica["mesh_sha256"], seed=seed)
+
+
+class SequentialPool:
+    """Results of the single-device phases (D44, e1_v2 low speed, widened E1) run on two lanes.
+
+    `children[name]` is the child of a unit that ran; `errors[group]` is the exception its group raised while it was
+    being built, re-raised by `take` where the one-device code would have raised it."""
+
+    def __init__(self, children, errors):
+        self.children, self.errors = children, errors
+
+    def take(self, group, name):
+        if group in self.errors:
+            raise self.errors[group]
+        return self.children[name]
+
+
+def run_sequential_pool(checkpoint, output, devices, cfg, *, seed, mesh_dir, policy, policy_path, p1_stage_id,
+                        evaluation_plan, retained, process, env, record):
+    """Run D44, the two e1_v2 levels and the widened E1 cells on the two evaluation GPUs instead of one after another.
+
+    Same commands, same output folders (`d44`, `e1_v2/L*`, `wide/*`), same child folders; only the device of some of
+    them differs, so `ex42_score.measure` and the cell readers see the folders they always saw. Returns a SequentialPool
+    (None when no such phase applies)."""
+    from foothold_s2 import ex42_eval_split as split
+    builders, errors = {}, {}
+    if "d44" in retained:
+        from foothold_s2.curriculum.ex42_prep import EX42Plan
+        plan = EX42Plan.load(policy_path)
+        if plan.document["evaluation"]["paper_cells"]["stairs_landing"].get("judge_cases") is not None:
+            try:
+                argv_for = d44_argv_builder(checkpoint, output, plan=plan, plan_path=policy_path, cfg=cfg, seed=seed)
+                builders["d44"] = ("d44", lambda device, _f=argv_for: (_f(device), False))
+            except (OSError, ValueError, KeyError) as exc:
+                errors["d44"] = exc
+    if p1_stage_id == "E1" and policy.document["stages"][next(
+            i for i, stage in enumerate(policy.document["stages"]) if stage["id"] == "E1")].get(
+            "exit_judge") == "map39_e1_v2_two_window":
+        try:
+            for phase, _ in e1_v2_commands(checkpoint, output, devices[0], cfg, eval_seed=seed,
+                                           mesh_dir=mesh_dir, evaluation_plan=policy_path):
+                builders[phase] = ("e1_v2", lambda device, _p=phase: (next(
+                    argv for name, argv in e1_v2_commands(checkpoint, output, device, cfg, eval_seed=seed,
+                                                          mesh_dir=mesh_dir, evaluation_plan=policy_path)
+                    if name == _p), True))
+        except (OSError, ValueError, KeyError, TypeError) as exc:
+            errors["e1_v2"] = exc
+    if (p1_stage_id == "E1" and evaluation_plan is not None
+            and policy.document["evaluation"].get("e1_widened", {}).get("active") is True):
+        from foothold_s2.ex42_e1_wide import kit_commands as wide_commands
+        try:
+            for phase, _ in wide_commands(checkpoint, output, devices[0], task=cfg["task"], plan_path=policy_path,
+                                          plan=policy.document, mesh_dir=mesh_dir, seed=seed):
+                builders[phase] = ("wide", lambda device, _p=phase: (next(
+                    argv for name, argv in wide_commands(checkpoint, output, device, task=cfg["task"],
+                                                         plan_path=policy_path, plan=policy.document,
+                                                         mesh_dir=mesh_dir, seed=seed) if name == _p), True))
+        except (OSError, ValueError, KeyError, TypeError) as exc:
+            errors["wide"] = exc
+    if not builders and not errors:
+        return None
+    lanes, _ = split.assign_units(list(builders), devices)
+    children = split.run_units(lanes, build=lambda name, device: builders[name][1](device), output=output,
+                               env=env, process=process, record=record) if builders else {}
+    return SequentialPool(children, errors)
+
+
 def manifest_checkpoint_sha(checkpoint):
     checkpoint = Path(checkpoint).resolve(strict=True)
     match = re.fullmatch(r"model_(\d+)\.pt", checkpoint.name)
@@ -651,26 +730,35 @@ def run(checkpoint, expected_sha256, output, device, *, eval_seed=None, mesh_dir
             _atomic(output / "eval_receipt.json", row)
             return 5
     retained = retained_paper_cells(policy.document, p1_stage_id) if policy_path is not None else ()
+    physical_by_device = {device: physical_gpu} if split_device is None else {device: physical_gpu,
+                                                                              split_device: split_gpu}
+    pool = None
+    if split_device is not None and policy_path is not None:
+        # D44, e1_v2 low speed and the widened E1 cells are independent children: two lanes, not one GPU idle.
+        def record_unit(name, child):          # called under run_units' lock
+            row["steps"][name] = child
+            _atomic(output / "eval_receipt.json", row)
+
+        pool = run_sequential_pool(checkpoint, output, [device, split_device], cfg, seed=seed, mesh_dir=mesh_dir,
+                                   policy=policy, policy_path=policy_path, p1_stage_id=p1_stage_id,
+                                   evaluation_plan=evaluation_plan, retained=retained, process=process, env=env,
+                                   record=record_unit)
     if "d44" in retained:
         from foothold_s2.curriculum.ex42_prep import EX42Plan
-        from foothold_s2.eval.ex42_d44_cells import contract, read_evidence
-        from foothold_s2.eval.ex42_eval_tile_mesh import build_replicas
+        from foothold_s2.eval.ex42_d44_cells import read_evidence
         plan = EX42Plan.load(policy_path)
         landing = plan.document["evaluation"]["paper_cells"]["stairs_landing"]
         if landing.get("judge_cases") is not None:
             try:
-                settings = contract(plan.document)
-                source_mesh = Path(settings["source_mesh_dir"]).resolve(strict=True)
-                if not settings["source_mesh_sha256"]:
-                    raise ValueError("D44 source mesh SHA is absent from prep")
-                replica = build_replicas(source_mesh, output / "d44_mesh", anchor="landing_center")
-                argv = d44_kit_command(checkpoint, output, device, task=cfg["task"],
-                                       plan_path=policy_path, mesh_dir=source_mesh,
-                                       replica_dir=output / "d44_mesh",
-                                       replica_sha256=replica["mesh_sha256"], seed=seed)
-                child = process.hidden_child(argv, output / "children" / "d44", env=env)
+                if pool is not None:
+                    child = pool.take("d44", "d44")
+                else:
+                    argv = d44_argv_builder(checkpoint, output, plan=plan, plan_path=policy_path, cfg=cfg,
+                                            seed=seed)(device)
+                    child = process.hidden_child(argv, output / "children" / "d44", env=env)
                 if child.get("state") == "done":
-                    child["observed_gpu"] = observed_child_identity(output, "d44", physical_gpu)
+                    child["observed_gpu"] = observed_child_identity(
+                        output, "d44", physical_by_device[child.get("lane_device", device)])
                     read_evidence(output / "d44", plan=plan.document,
                                   plan_sha256=plan.sha256, checkpoint_sha256=expected_sha256,
                                   seed=seed)
@@ -691,17 +779,21 @@ def run(checkpoint, expected_sha256, output, device, *, eval_seed=None, mesh_dir
         try:
             for phase, argv in e1_v2_commands(checkpoint, output, device, cfg, eval_seed=seed,
                                                mesh_dir=mesh_dir, evaluation_plan=policy_path):
-                process.prepare_phase_output(argv)
-                child = process.hidden_child(argv, output / "children" / phase, env=env)
+                if pool is not None:
+                    child = pool.take("e1_v2", phase)
+                else:
+                    process.prepare_phase_output(argv)
+                    child = process.hidden_child(argv, output / "children" / phase, env=env)
+                lane = child.get("lane_device", device)
                 if child.get("state") == "done":
                     path = output / "e1_v2" / phase.removeprefix("e1_v2_") / "map_modes.json"
                     source = json.loads(path.read_text(encoding="utf-8-sig"))
                     identity = source.get("run_identity") or {}
-                    if (identity.get("device") != device or not identity.get("gpu_uuid") or
+                    if (identity.get("device") != lane or not identity.get("gpu_uuid") or
                             str(identity["gpu_uuid"]).lower().removeprefix("gpu-") !=
-                            physical_gpu["gpu_uuid"].lower().removeprefix("gpu-")):
+                            physical_by_device[lane]["gpu_uuid"].lower().removeprefix("gpu-")):
                         raise ValueError("E1 v2 child physical GPU identity differs")
-                    child["observed_gpu"] = {"device": device, "gpu_uuid": identity["gpu_uuid"]}
+                    child["observed_gpu"] = {"device": lane, "gpu_uuid": identity["gpu_uuid"]}
                 row["steps"][phase] = child
                 _atomic(output / "eval_receipt.json", row)
         except (OSError, ValueError, KeyError) as exc:
@@ -772,18 +864,22 @@ def run(checkpoint, expected_sha256, output, device, *, eval_seed=None, mesh_dir
             for phase, argv in wide_commands(checkpoint, output, device, task=cfg["task"],
                                              plan_path=policy_path, plan=policy.document,
                                              mesh_dir=mesh_dir, seed=seed):
-                process.prepare_phase_output(argv)
-                child = process.hidden_child(argv, output / "children" / phase, env=env)
+                if pool is not None:
+                    child = pool.take("wide", phase)
+                else:
+                    process.prepare_phase_output(argv)
+                    child = process.hidden_child(argv, output / "children" / phase, env=env)
+                lane = child.get("lane_device", device)
                 if child.get("state") == "done":
                     source = json.loads((output / "wide" /
                                          ("endpoints" if phase == "wide_endpoints" else phase.removeprefix("wide_")) /
                                          "map_modes.json").read_text(encoding="utf-8-sig"))
                     identity = source.get("run_identity") or {}
-                    if (identity.get("device") != device or not identity.get("gpu_uuid") or
+                    if (identity.get("device") != lane or not identity.get("gpu_uuid") or
                             str(identity["gpu_uuid"]).lower().removeprefix("gpu-") !=
-                            physical_gpu["gpu_uuid"].lower().removeprefix("gpu-")):
+                            physical_by_device[lane]["gpu_uuid"].lower().removeprefix("gpu-")):
                         raise ValueError("E1 C1 child physical GPU identity differs")
-                    child["observed_gpu"] = {"device": device, "gpu_uuid": identity["gpu_uuid"]}
+                    child["observed_gpu"] = {"device": lane, "gpu_uuid": identity["gpu_uuid"]}
                 row["steps"][phase] = child
                 _atomic(output / "eval_receipt.json", row)
                 if child.get("state") != "done":
