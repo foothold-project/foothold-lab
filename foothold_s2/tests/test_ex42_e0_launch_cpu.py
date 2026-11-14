@@ -131,6 +131,7 @@ def _loader_runner(p_map_off, pcfg):
     class Loader:
         def __init__(self):
             self.calls = []
+            self.param_groups = [{"lr": 5e-4}]          # the perception optimizer lr is pinned after the restore
 
         def load_state_dict(self, *args, **kwargs):
             self.calls.append((args, kwargs))
