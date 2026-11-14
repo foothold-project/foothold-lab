@@ -235,6 +235,20 @@ def read_cells(evaluation: Path, checkpoint_sha: str, seed: int, plan: dict,
     return result
 
 
+def same_evidence(recomputed: dict, recorded: dict) -> bool:
+    """Compare C1 evidence by content, allowing the geometry file to move with a worktree."""
+    if not isinstance(recomputed, dict) or not isinstance(recorded, dict):
+        return False
+    normalized = []
+    for cells in (recomputed, recorded):
+        geometry = cells.get("geometry")
+        if (not isinstance(geometry, dict) or set(geometry) != {"path", "sha256"}
+                or not isinstance(geometry["path"], str) or not geometry["path"]):
+            return False
+        normalized.append({**cells, "geometry": {"sha256": geometry["sha256"]}})
+    return normalized[0] == normalized[1]
+
+
 def cap_from_training(checkpoint: Path, execution_sha: str, mesh_sha: str) -> int:
     """The segment-start rank receipts, not observed curriculum levels, set eligibility."""
     from foothold_s2.ex42_exposure_receipt import fold_ranks

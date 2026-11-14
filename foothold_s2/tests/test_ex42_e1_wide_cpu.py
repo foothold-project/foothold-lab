@@ -1,4 +1,5 @@
 """Known-input C1 geometry and role checks. No Kit or GPU starts here."""
+import json
 from pathlib import Path
 
 import numpy as np
@@ -255,3 +256,19 @@ def test_c1_previous_window_needs_identical_evaluation_plan_sha():
     same_policy = {"maintenance_source_sha256": "b" * 64}
     assert c1_previous_window(current, plan, same_policy) == (same_policy, False)
     assert c1_previous_window(current, plan, None) == (None, False)
+
+
+def test_c1_previous_raw_accepts_moved_geometry_file_only_with_same_sha():
+    from foothold_s2.ex42_e1_wide import same_evidence
+    previous = {"geometry": {"path": "/old/worktree/geometry.json", "sha256": "a" * 64},
+                "fixed": {"L3": {"eval_gt": {"fwd1.0": {"success_count": 52}}}},
+                "sources": {"L3": {"path": "/raw/L3/map_modes.json", "sha256": "b" * 64}}}
+    moved = json.loads(json.dumps(previous))
+    moved["geometry"]["path"] = "/new/worktree/geometry.json"
+    assert same_evidence(moved, previous)
+    changed_sha = json.loads(json.dumps(moved))
+    changed_sha["geometry"]["sha256"] = "c" * 64
+    assert not same_evidence(changed_sha, previous)
+    changed_raw = json.loads(json.dumps(moved))
+    changed_raw["sources"]["L3"]["sha256"] = "c" * 64
+    assert not same_evidence(changed_raw, previous)

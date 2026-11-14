@@ -501,7 +501,8 @@ def _judge_e1_v2(score: dict, baseline: dict, measured: dict, plan: dict,
     if wide_active(score, plan):
         current_wide = judge_wide(score["e1_wide_cells"], plan, score["e1_wide_cap"])
         if previous is not None and "e1_wide_cells" in previous:
-            from foothold_s2.ex42_e1_wide import read_cells as read_wide, cap_from_training
+            from foothold_s2.ex42_e1_wide import (read_cells as read_wide, cap_from_training,
+                                                   same_evidence as same_wide_evidence)
             prior_cells = read_wide(Path(previous["e1_wide_evaluation"]),
                                     previous["checkpoint_sha256"],
                                     previous["conditions"]["eval_seed"], plan,
@@ -509,7 +510,7 @@ def _judge_e1_v2(score: dict, baseline: dict, measured: dict, plan: dict,
             prior_cap = cap_from_training(Path(previous["checkpoint"]),
                                           previous["execution_plan_sha256"],
                                           score["e1_wide_cells"]["mesh_sha256"])
-            if prior_cells != previous["e1_wide_cells"] or prior_cap != previous["e1_wide_cap"]:
+            if not same_wide_evidence(prior_cells, previous["e1_wide_cells"]) or prior_cap != previous["e1_wide_cap"]:
                 raise ValueError("E1 C1 previous window raw or cap evidence differs")
         previous_wide = ((previous.get("e1_exit_v2") or {}).get("wide_current")
                          if previous is not None else None)
