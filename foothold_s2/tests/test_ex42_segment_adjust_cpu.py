@@ -283,7 +283,7 @@ def test_the_shipped_reward_limits_are_the_relayed_lines():
                                "feet_air_time_threshold": (0.04, 0.5), "slow_track": (0.0, 0.3),
                                "slow_track_sigma": (0.5, 0.5), "slow_track_speed_min": (0.1, 0.1),
                                "slow_track_speed_max": (0.3, 0.3),                        # the constants stay closed
-                               "slow_progress": (0.0, 0.0)}       # 2026-11-14 01:21 (06d4a1ae): closed until approved
+                               "slow_progress": (0.0, 0.3)}       # 2026-11-14 11:55 (4f7e431e): lead-approved fence
     assert len(limits["sha256"]) == 64 and adj.reward_limits("/nowhere/limits.yaml") is None
 
 

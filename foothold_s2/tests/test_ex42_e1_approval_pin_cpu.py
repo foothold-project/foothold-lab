@@ -12,6 +12,7 @@ from foothold_s2.curriculum.ex42_prep import (
 ROOT = Path(__file__).resolve().parents[2]
 TABLE = ROOT / 'foothold_s2/curriculum/ex42-prep.yaml'
 APPROVALS = ROOT / 'foothold_s2/curriculum/ex42-approvals.yaml'
+LIMITS = ROOT / 'foothold_s2/curriculum/ex42-reward-adjust-limits.yaml'
 E1_PARENT = '680c820b73646d9c11f62f184fd35e6cc096ffd04681951d542b2b4b472d779e'
 
 
@@ -25,7 +26,7 @@ def test_e1_record_is_1750_updates_from_e0_and_requires_rejudgment_pass():
         'dd3bbf88b2df7ee4e182ba230696013e80f7f233', '915dce6eede16255081577d4cfd29e57c0ed666e',
         '64de0cad0ecab1fb9d58a38e869f83fd9b5e9c8d', 'bc66f6ee63f1aea0832520f72d127e5f8698969f',
         '06d4a1aecc27885945b991e1556b9569a4c5b3e3', 'ca1844f593122a0f1d643fab6b3212ce064425dc',
-        'a76e783d7b0380115b1559aa49f6e1a6e656e955']
+        'a76e783d7b0380115b1559aa49f6e1a6e656e955', '4f7e431e243bd2966f3eda1f720be2f5629997b1']
     assert cell['scope'] == dict(stage_id='E1', start_update=0, maximum_updates=1750,
                                  parent_sha256=E1_PARENT, later_stages_authorized=False)
     assert cell['extension_authorized'] is True
@@ -54,6 +55,17 @@ def test_e1_file_repin_preserves_old_scopes_and_rejects_an_extra_line(tmp_path):
     with pytest.raises(ValueError, match='approval SHA256'):
         validate_stage_zero_authorization(plan, altered)
     assert 'explicit_lead_approval_missing' in plan.launch_blockers(APPROVALS, None, None)
+
+
+def test_e1_slow_progress_fence_is_approved_but_starts_at_zero():
+    plan = EX42Plan.load(TABLE)
+    stage = next(row for row in plan.document['stages'] if row['id'] == 'E1')
+    limits = yaml.safe_load(LIMITS.read_text())
+    approval = yaml.safe_load(APPROVALS.read_text())['stage_e1_authorization']
+    assert limits['cells']['slow_progress'] == [0.0, 0.3]
+    assert stage['rewards']['slow_progress'] == 0.0
+    assert stage['live_adjustment']['segment_reward_limits_sha256'] == hashlib.sha256(LIMITS.read_bytes()).hexdigest()
+    assert '4f7e431e243bd2966f3eda1f720be2f5629997b1' in approval['scope_amendment']['decision_source']['commits']
 
 
 def test_e1_first_check_must_fall_on_an_evaluation_boundary(tmp_path):

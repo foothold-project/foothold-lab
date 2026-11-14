@@ -95,15 +95,16 @@ def test_outside_limit_rejected_and_training_can_continue(tmp_path):
     assert (tmp_path / "ex42_update_adjust_rejected_m2.json").is_file()
 
 
-def test_slow_progress_is_pinned_at_zero_until_approved(tmp_path):
+def test_slow_progress_can_be_adjusted_inside_approved_fence(tmp_path):
     ctl, runtime, _ = _setup(tmp_path, rewards={"slow_progress": 0.0})
     record = ctl.on_update_start(2)
     assert record["after"]["rewards"]["slow_progress"] == 0.0
     assert runtime.env.reward_manager.get_term_cfg("ex42_slow_progress").weight == 0.0
     outside = tmp_path / "outside"
     outside.mkdir()
-    rejected, _, _ = _setup(outside, rewards={"slow_progress": 0.001})
-    assert rejected.on_update_start(2)["kind"] == "rejected"
+    changed, runtime2, _ = _setup(outside, rewards={"slow_progress": 0.2})
+    assert changed.on_update_start(2)["after"]["rewards"]["slow_progress"] == 0.2
+    assert runtime2.env.reward_manager.get_term_cfg("ex42_slow_progress").weight == 0.2
 
 
 def test_new_forward_share_limit_is_exactly_point_five(tmp_path):
@@ -141,7 +142,7 @@ def test_within_limit_unchanged_reward_without_receipt_stops_before_rollout(tmp_
 def test_unchanged_cell_outside_limit_stops_before_next_rollout(tmp_path):
     ctl, runtime, _ = _setup(tmp_path, rewards={"slow_track": .2})
     ctl.on_update_start(2)
-    runtime.env.reward_manager.get_term_cfg("ex42_slow_progress").weight = .25
+    runtime.env.reward_manager.get_term_cfg("ex42_slow_progress").weight = .35
     with pytest.raises(RuntimeError, match="slow_progress.*outside approved limit"):
         ctl.on_update_start(3)
 
@@ -151,7 +152,7 @@ def test_resume_rejects_out_of_limit_receipt_before_applying_it(tmp_path):
     ctl.on_update_start(2)
     path = tmp_path / "ex42_update_adjust_m2.json"
     receipt = json.loads(path.read_text())
-    receipt["after"]["rewards"]["slow_progress"] = .25
+    receipt["after"]["rewards"]["slow_progress"] = .35
     path.write_text(json.dumps(receipt))
     with pytest.raises(ValueError, match="slow_progress.*outside approved limit"):
         ctl._restore()

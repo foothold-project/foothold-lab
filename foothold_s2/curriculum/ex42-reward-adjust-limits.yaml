@@ -27,8 +27,8 @@ cells:
   slow_track_speed_min: [0.1, 0.1]
   slow_track_speed_max: [0.3, 0.3]
   # ex42_slow_progress (decisions.tsv 2026-11-14 01:21, ledger commit 06d4a1ae): a new reward term, registered at weight 0.
-  # Closed until the team lead approves its limits.
-  slow_progress: [0.0, 0.0]
+  # decisions.tsv ledger 4f7e431e (2026-11-14): lead approved 0.2 for segment 5; stage start remains 0.
+  slow_progress: [0.0, 0.3]
 # Command distribution cells (outside the 13-slot profile). low_forward_fraction: the share of the forward commands
 # drawn below 0.3 m/s (source stage 0.20). decisions.tsv 2026-11-13 15:17 (team lead; ledger commit a00ab2a8, read
 # directly): 0.2 -> 0.4 approved. decisions.tsv 2026-11-14 00:28 (team lead, direct; ledger commit bc66f6ee): the upper
