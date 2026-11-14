@@ -64,11 +64,12 @@ SCHEDULER_KL_CLIP = None  # off: a per-sample cap of 1.0 moved the lr path of it
 BOUNDS_LOSS_COEF = 0.1  # weight of the action-mean bounds loss (lead 11/14 16:51: about 10 to 20 % of the surrogate gradient)
 
 
-# Candidate (lead 11/14 19:22, off by default): a share of the training envs rolls out with a smaller action noise so that
+# ON by default since lead 11/14 19:28 (set the share to 0 to turn it off: the update is then bit-identical to before):
+# a share of the training envs rolls out with a smaller action noise so that
 # their reward sees the walk of the mean action (the v28 probe of the mean action drifted 0.10 to 0.81 while every training
 # record stayed flat). The scale is part of the policy of those envs, so PPO stays on-policy for each env group (see
-# StartActorCritic.noise_scale). Turn on by setting the share, for example 0.25 with scale 0.2.
-SMALL_NOISE_ENV_SHARE = 0.0
+# StartActorCritic.noise_scale).
+SMALL_NOISE_ENV_SHARE = 0.25
 SMALL_NOISE_SIGMA_SCALE = 0.2
 
 

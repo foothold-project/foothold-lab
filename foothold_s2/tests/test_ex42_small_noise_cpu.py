@@ -54,9 +54,9 @@ def _rollout(alg, obs, steps=2, seed=7):
     alg.compute_returns(obs)
 
 
-def test_mask_is_exact_even_and_reproducible_and_off_by_default():
-    assert mirror.SMALL_NOISE_ENV_SHARE == 0.0 and mirror.SMALL_NOISE_SIGMA_SCALE == 0.2
-    assert small_noise_scale(N, 0.0, SCALE) is None and StartActorCritic.noise_scale is None
+def test_mask_is_exact_even_and_reproducible_and_on_by_default_share_zero_is_off():
+    assert mirror.SMALL_NOISE_ENV_SHARE == 0.25 and mirror.SMALL_NOISE_SIGMA_SCALE == 0.2      # on by default (lead 19:28)
+    assert small_noise_scale(N, 0.0, SCALE) is None and StartActorCritic.noise_scale is None   # share 0: nothing set
     mask = small_noise_mask(N, 0.25)
     assert int(mask.sum()) == 16 and mask.tolist() == small_noise_mask(N, 0.25).tolist()
     assert all(int(mask[i:i + 4].sum()) == 1 for i in range(0, N, 4))            # spread over the index, one in four
@@ -146,7 +146,7 @@ def test_runner_wiring_refuses_the_installed_update_and_sets_both_sides(monkeypa
     from foothold_s2.runners import start_runner
     src = inspect.getsource(start_runner.StartRunner._construct_algorithm)
     assert "small_noise_scale" in src and "noise_scale_env" in src and "policy.noise_scale" in src
-    assert "ex41_critic_mirror" in src and "installed PPO.update" in src
+    assert "if not self.ex41_critic_mirror:" in src and "installed PPO.update" in src
 
 
 def test_live_metrics_tracks_noisy_envs_apart_and_keeps_the_row_unchanged_when_off(tmp_path):
@@ -172,3 +172,53 @@ def test_live_metrics_tracks_noisy_envs_apart_and_keeps_the_row_unchanged_when_o
     wrong.begin(1, device="cpu")
     with pytest.raises(ValueError, match="mask differs"):
         wrong.add(*args)
+
+
+def test_rollout_returns_to_the_per_env_scale_even_after_an_interrupted_update():
+    scale = small_noise_scale(N, 0.25, SCALE)
+    alg, obs = _alg(scale)
+    alg.policy.noise_scale = torch.full((5, 1), 0.5)            # what an update interrupted mid-minibatch would leave
+    _rollout(alg, obs, steps=1)
+    assert alg.policy.noise_scale is alg.storage.noise_scale_env
+    noisy = small_noise_mask(N, 0.25)
+    assert torch.allclose(alg.storage.sigma[0][noisy], (alg.policy.std * SCALE).expand(int(noisy.sum()), 12))
+
+
+def test_training_entry_hands_the_shared_mask_to_the_live_metrics_only_when_on(monkeypatch):
+    from types import SimpleNamespace
+
+    from foothold_s2.scripts.ex42_training_entry import EX42StageZeroRuntime
+    fake = SimpleNamespace(env=SimpleNamespace(num_envs=N))
+    monkeypatch.setattr(mirror, "SMALL_NOISE_ENV_SHARE", 0.0)
+    assert EX42StageZeroRuntime._small_noise_record(fake) == {}                   # share 0: the row stays as it was
+    monkeypatch.setattr(mirror, "SMALL_NOISE_ENV_SHARE", 0.25)
+    monkeypatch.setattr(mirror, "SMALL_NOISE_SIGMA_SCALE", SCALE)
+    record = EX42StageZeroRuntime._small_noise_record(fake)
+    assert record["noise_sigma_scale"] == SCALE and record["noise_envs"].tolist() == small_noise_mask(N, 0.25).tolist()
+
+
+def test_resume_first_update_keeps_the_same_env_split_and_sigma_handling(tmp_path):
+    """A checkpoint holds weights and optimizer only; the split is a pure function of the env index, so a resumed run rebuilds
+    the same scale and its first update (ratio 1 for every row) behaves like any other update."""
+    scale = small_noise_scale(N, mirror.SMALL_NOISE_ENV_SHARE, mirror.SMALL_NOISE_SIGMA_SCALE)
+    first, obs = _alg(scale)
+    _rollout(first, obs)
+    first.update()
+    state = {"model": first.policy.state_dict(), "optimizer": first.optimizer.state_dict()}
+    assert "noise_scale" not in "".join(state["model"].keys())
+    torch.save(state, tmp_path / "model_250.pt")
+    resumed, obs = _alg(small_noise_scale(N, mirror.SMALL_NOISE_ENV_SHARE, mirror.SMALL_NOISE_SIGMA_SCALE))
+    loaded = torch.load(tmp_path / "model_250.pt")
+    resumed.policy.load_state_dict(loaded["model"])
+    resumed.optimizer.load_state_dict(loaded["optimizer"])
+    assert torch.equal(resumed.storage.noise_scale_env, first.storage.noise_scale_env)
+    assert resumed.policy.noise_scale is resumed.storage.noise_scale_env
+    _rollout(resumed, obs, seed=11)
+    noisy = small_noise_mask(N, mirror.SMALL_NOISE_ENV_SHARE)
+    assert torch.allclose(resumed.storage.sigma[0][noisy],
+                          (resumed.policy.std * mirror.SMALL_NOISE_SIGMA_SCALE).expand(int(noisy.sum()), 12))
+    advantage = resumed.storage.advantages.flatten(0, 1).flatten().clone()
+    resumed.normalize_advantage_per_mini_batch = False
+    losses = resumed.update()
+    assert losses["surrogate"] == pytest.approx(-float(advantage.mean()), abs=1e-5)       # ratio 1 on all rows after the load
+    assert losses["small_noise_env_share"] == pytest.approx(0.25)
