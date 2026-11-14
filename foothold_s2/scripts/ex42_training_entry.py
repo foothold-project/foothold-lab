@@ -1485,6 +1485,18 @@ class EX42StageZeroRuntime:
         raise RuntimeError(f"EX-42 command_shares record of update {update} could not be written after "
                            f"{self.COMMAND_SHARES_ATTEMPTS} attempts; the save is blocked") from error
 
+    def refresh_small_noise(self) -> None:
+        """The runner switched the small-noise scale on or off after the live metrics were built (the mirror is granted
+        after attach_runner): hand the live metrics the same env mask and scale, or none."""
+        live = getattr(self, "live_metrics", None)
+        if live is None:
+            return
+        import torch
+        record = self._small_noise_record()
+        envs = record.get("noise_envs")
+        live.noise_envs = None if envs is None else torch.as_tensor(envs, dtype=torch.bool)
+        live.noise_sigma_scale = record.get("noise_sigma_scale")
+
     def _small_noise_record(self) -> dict:
         """LiveMetrics arguments for the small-noise envs: only when the runner really applied the scale (the mirror update
         is on and the share is above 0); otherwise empty and the row stays as it was."""

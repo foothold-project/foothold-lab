@@ -145,8 +145,12 @@ def test_runner_wiring_applies_the_scale_only_with_the_mirror_update():
 
     from foothold_s2.runners import start_runner
     src = inspect.getsource(start_runner.StartRunner._construct_algorithm)
-    assert "small_noise_scale" in src and "alg.storage.noise_scale_env = noise" in src and "policy.noise_scale = noise" in src
-    assert "if noise is not None and self.ex41_critic_mirror:" in src      # the installed PPO.update has no per-row scale
+    assert "self._apply_small_noise()" in src                           # the build calls the one installer ...
+    helper = inspect.getsource(start_runner.StartRunner._apply_small_noise)
+    assert "small_noise_scale" in helper and "alg.storage.noise_scale_env = noise" in helper
+    assert "if self.ex41_critic_mirror:" in helper                       # ... which gives no scale without the mirror update
+    for name in ("set_ex41_critic_mirror", "_hold_ex41_mirror_resume"):  # and every place that flips the mirror calls it too
+        assert "self._apply_small_noise()" in inspect.getsource(getattr(start_runner.StartRunner, name))
 
 
 def test_live_metrics_tracks_noisy_envs_apart_and_keeps_the_row_unchanged_when_off(tmp_path):
@@ -236,3 +240,51 @@ def test_a_call_on_another_batch_size_keeps_the_plain_std():
     with torch.inference_mode():
         alg.policy.act(obs)
     assert alg.policy.action_std.shape == (N, 12) and bool((alg.policy.action_std < alg.policy.std).any())
+
+
+def test_real_e1_order_mirror_granted_after_the_runner_and_live_metrics_exist_turns_the_small_noise_on(tmp_path):
+    """Why the first tests missed it: they built the algorithm with the mirror already on. In the real E1 process the runner
+    is built with the mirror OFF (parent saved without it), LiveMetrics is built in attach_runner, and only then
+    set_ex41_critic_mirror(True) is granted from the real plan + approval bytes. This follows that order."""
+    from types import SimpleNamespace
+
+    from foothold_s2.curriculum.ex42_prep import EX42Plan
+    from foothold_s2.curriculum.ex42_runtime import critic_mirror_proof
+    from foothold_s2.runners import start_runner
+    from foothold_s2.scripts.ex42_training_entry import EX42StageZeroRuntime
+    from foothold_s2.tests.test_ex42_e1_entry_cpu import _committed_copy
+
+    repo = _committed_copy(tmp_path)
+    plan = EX42Plan.load(repo / "curriculum" / "ex42-prep.yaml")
+    proof = critic_mirror_proof(plan, repo / "curriculum" / "ex42-approvals.yaml", "E1")
+    alg, _ = _alg(None)
+    alg.mirror_enabled = False
+    runner = object.__new__(start_runner.StartRunner)
+    runner.ex41_pose_commands, runner.ex41_critic_mirror, runner.ex41_mirror_approval = True, False, None
+    runner.alg, runner.device = alg, "cpu"
+    runner.env = SimpleNamespace(num_envs=N)
+    runner._assert_ex41_joint_order = lambda: None
+    runtime = object.__new__(EX42StageZeroRuntime)
+    runtime.env, runtime.runner = runner.env, runner
+    runtime.live_metrics = LiveMetrics(tmp_path / "live")                      # built in attach_runner, before the grant
+    runner.continuous_curriculum = runtime
+    runner._apply_small_noise()
+    assert alg.storage.noise_scale_env is None and runtime.live_metrics.noise_envs is None     # mirror off: nothing
+
+    runner.set_ex41_critic_mirror(True, approval=proof)                         # the real grant
+
+    scale = alg.storage.noise_scale_env
+    assert scale is not None and scale.shape == (N, 1) and alg.policy.noise_scale is scale
+    assert int((scale < 1).sum()) == int(N * mirror.SMALL_NOISE_ENV_SHARE)
+    assert torch.allclose(scale[scale < 1], torch.tensor(mirror.SMALL_NOISE_SIGMA_SCALE))
+    live = runtime.live_metrics
+    assert live.noise_envs.tolist() == small_noise_mask(N, mirror.SMALL_NOISE_ENV_SHARE).tolist()
+    assert live.noise_sigma_scale == mirror.SMALL_NOISE_SIGMA_SCALE
+    live.begin(1, device="cpu")
+    assert "small_noise" in live.end()                                           # the live metrics row carries it
+    _rollout(alg, _obs())
+    assert alg.update()["small_noise_env_share"] == pytest.approx(mirror.SMALL_NOISE_ENV_SHARE)   # first update key
+
+    runner.ex41_critic_mirror = False
+    runner._apply_small_noise()
+    assert alg.storage.noise_scale_env is None and live.noise_envs is None

@@ -359,14 +359,27 @@ class StartRunner(OnPolicyRunner):
         else:
             alg = PPO(policy, device=self.device, **alg_cfg, multi_gpu_cfg=self.multi_gpu_cfg)
         alg.init_storage("rl", self.env.num_envs, self.num_steps_per_env, obs, [self.env.num_actions])
-        if self.ex41_pose_commands:
-            from foothold_s2.runners import ex41_critic_mirror as mirror
+        self._small_noise_target = alg
+        self._apply_small_noise()
+        return alg
+
+    def _apply_small_noise(self) -> None:
+        """Put the small-noise env scale on the storage and the policy while the mirror update is on, take it off when it is
+        not (the installed PPO.update re-acts on rows: no per-row scale). The mirror can be switched on after the algorithm
+        is built (set_ex41_critic_mirror), so every place that flips it calls this; the live metrics hear about it too."""
+        alg = getattr(self, "alg", None) or getattr(self, "_small_noise_target", None)
+        if alg is None or not self.ex41_pose_commands or getattr(alg, "storage", None) is None:
+            return
+        from foothold_s2.runners import ex41_critic_mirror as mirror
+        noise = None
+        if self.ex41_critic_mirror:
             noise = mirror.small_noise_scale(self.env.num_envs, mirror.SMALL_NOISE_ENV_SHARE,
                                              mirror.SMALL_NOISE_SIGMA_SCALE, device=self.device)
-            if noise is not None and self.ex41_critic_mirror:      # the installed PPO.update re-acts on rows: no per-row scale
-                alg.storage.noise_scale_env = noise
-                policy.noise_scale = noise
-        return alg
+        alg.storage.noise_scale_env = noise
+        alg.policy.noise_scale = noise
+        hear = getattr(getattr(self, "continuous_curriculum", None), "refresh_small_noise", None)
+        if callable(hear):
+            hear()
 
     def _assert_ex41_joint_order(self) -> None:
         from foothold_s2.runners.ex41_critic_mirror import assert_joint_order
@@ -484,6 +497,7 @@ class StartRunner(OnPolicyRunner):
             self.ex41_critic_mirror = False
             self.ex41_mirror_approval = None
             self.alg.mirror_enabled = False
+            self._apply_small_noise()
             raise ValueError("EX-41 W72 HOLD: committed approval files or SHA256 differ; critic mirror is off")
         if enabled:
             try:
@@ -492,10 +506,12 @@ class StartRunner(OnPolicyRunner):
                 self.ex41_critic_mirror = False
                 self.ex41_mirror_approval = None
                 self.alg.mirror_enabled = False
+                self._apply_small_noise()
                 raise
         self.ex41_critic_mirror = enabled
         self.ex41_mirror_approval = approval if enabled else None
         self.alg.mirror_enabled = enabled
+        self._apply_small_noise()
 
     def _hold_ex41_mirror_resume(self, checkpoint: str, iteration: int, reason: str) -> None:
         """Keep a valid policy resume running with the optional mirror off."""
@@ -503,6 +519,7 @@ class StartRunner(OnPolicyRunner):
         self.ex41_mirror_approval = None
         self.alg.mirror_enabled = False
         self.ex41_mirror_hold_reason = reason
+        self._apply_small_noise()
         warnings.warn(reason, RuntimeWarning, stacklevel=2)
         if self.log_dir is None:
             return
@@ -817,6 +834,8 @@ class StartRunner(OnPolicyRunner):
             extra = {"it": it, "kl_probe": kl_info or None, "action_stats": act_stats.summary() if act_stats is not None else None, "reward_split": split}
             if "bounds_loss" in loss_dict:                       # keys added only when the bounds loss is on
                 extra["bounds"] = {k: loss_dict[k] for k in ("bounds_loss", "mu_over_limit_frac", "mu_abs_max")}
+            if "small_noise_env_share" in loss_dict:             # keys added only when the small-noise envs are applied
+                extra["small_noise"] = {k: loss_dict[k] for k in ("small_noise_env_share", "small_noise_sigma_scale")}
             if (continuous is not None
                     and getattr(getattr(continuous, "plan", None), "is_ex41", False)):
                 extra["use_gt_frac"] = float(gt_steps) / self.num_steps_per_env
@@ -845,7 +864,7 @@ class StartRunner(OnPolicyRunner):
                                       "_ex40_stand_evidence", None)
             if sensor_evidence is not None:
                 extra["ex40_stand_sensor"] = sensor_evidence.summary()
-            if (kl_info or act_stats is not None or split is not None or nt_stats is not None or fc_stats is not None or slot_stats is not None or sensor_evidence is not None or ex40_dr_runtime is not None or "use_gt_frac" in extra or "ex42_live_metrics" in extra) and self.log_dir is not None and not self.disable_logs:
+            if (kl_info or act_stats is not None or split is not None or nt_stats is not None or fc_stats is not None or slot_stats is not None or sensor_evidence is not None or ex40_dr_runtime is not None or "use_gt_frac" in extra or "small_noise" in extra or "ex42_live_metrics" in extra) and self.log_dir is not None and not self.disable_logs:
                 with open(os.path.join(self.log_dir, "train_extra.jsonl"), "a", encoding="utf-8") as fh:
                     fh.write(json.dumps(extra, ensure_ascii=False) + "\n")
             # ④ AdaSmpl
