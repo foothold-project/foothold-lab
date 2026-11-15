@@ -229,7 +229,7 @@ def main(argv=None) -> int:
     try:
         print(json.dumps({"state": "ready", "evidence": str(Path(out).absolute()),
                           "record": write_evidence(out_path=out, **{
-                              key.replace("-", "_"): value for key, value in args.items()})},
+                              key.replace("-", "_") + "_path": value for key, value in args.items()})},
                          ensure_ascii=False, sort_keys=True))
         return 0
     except (OSError, ValueError, KeyError, TypeError) as exc:

@@ -155,3 +155,32 @@ def test_e1f_evidence_rejects_nonpass_measurement_even_if_gate_says_pass(tmp_pat
         build_evidence(source_plan_path=PLAN, parent_manifest_path=run / "manifest.json",
                        gate_receipt_path=gate, training_log_path=log,
                        evaluation_mesh_path=mesh, w09_baseline_path=baseline)
+
+
+def _cli_argv(run, gate, log, mesh, baseline, out):
+    return ["--source-plan", str(PLAN), "--parent-manifest", str(run / "manifest.json"), "--gate-receipt", str(gate),
+            "--training-log", str(log), "--evaluation-mesh", str(mesh), "--w09-baseline", str(baseline),
+            "--out", str(out)]
+
+
+def test_cli_main_writes_the_evidence_the_library_builds_and_refuses_an_existing_out(tmp_path, capsys):
+    """main(argv) hands build_evidence its *_path keywords (a TypeError here used to turn every CLI call into rc 2)."""
+    from foothold_s2.scripts.ex42_e1_materialize_evidence import main
+    plan, run, gate, log, mesh, baseline, cp_sha = _fixture(tmp_path)
+    out = tmp_path / "out" / "evidence.json"
+    assert main(_cli_argv(run, gate, log, mesh, baseline, out)) == 0
+    printed = json.loads(capsys.readouterr().out)
+    assert printed["state"] == "ready" and printed["evidence"] == str(out)
+    written = json.loads(out.read_text(encoding="utf-8"))
+    expected = build_evidence(source_plan_path=PLAN, parent_manifest_path=run / "manifest.json",
+                              gate_receipt_path=gate, training_log_path=log,
+                              evaluation_mesh_path=mesh, w09_baseline_path=baseline)
+    assert written == expected and written["checkpoint_sha256"] == cp_sha
+    assert main(_cli_argv(run, gate, log, mesh, baseline, out)) == 2          # an existing out is never replaced
+    refused = json.loads(capsys.readouterr().out)
+    assert refused["state"] == "blocked" and "FileExistsError" in refused["reason"]
+    assert json.loads(out.read_text(encoding="utf-8")) == expected
+    # the optional --evaluation-plan option reaches evaluation_plan_path too
+    out2 = tmp_path / "out" / "evidence2.json"
+    assert main(_cli_argv(run, gate, log, mesh, baseline, out2) + ["--evaluation-plan", str(PLAN)]) == 0
+    assert json.loads(out2.read_text(encoding="utf-8")) == expected
