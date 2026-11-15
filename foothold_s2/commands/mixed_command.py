@@ -24,6 +24,14 @@ if TYPE_CHECKING:
     from isaaclab.envs import ManagerBasedRLEnv
 
 
+# v29-5 (lead 11/15 17:23): a free-speed env that draws a slow forward command (0.1 <= |v_xy| < 0.3, no rotation) keeps it for
+# U(lo, hi) s instead of the base period (4 s), so the 0.1 command reaches its steady state. None or 0 turns it off.
+# It only ever lengthens the hold: it does nothing when the base period is already >= lo (evaluation uses 1e9) or when fixed_cmd is set.
+SLOW_HOLD_RANGE_S = (8.0, 12.0)
+SLOW_HOLD_V_LO = 0.1
+SLOW_HOLD_V_HI = 0.3
+
+
 class MixedVelocityCommand(CommandTerm):
     cfg: "MixedVelocityCommandCfg"
 
@@ -52,6 +60,7 @@ class MixedVelocityCommand(CommandTerm):
             self._flag_row[self.flag_ids] = torch.arange(len(self.flag_ids), device=dev)
 
         self.stand = torch.zeros(n, dtype=torch.bool, device=dev)
+        self.slow_hold = torch.zeros_like(self.stand)         # v29-5: envs whose current command got the long hold (record only)
         self.spin = torch.zeros_like(self.stand)
         self.heading = torch.zeros_like(self.stand)
         self.psi_star = torch.zeros(n, device=dev)
@@ -243,6 +252,8 @@ class MixedVelocityCommand(CommandTerm):
                     runtime.record_command_sample(group, self.vel_command_b[group],
                                                   self.slot_current[group], self.heading[group])
 
+        self._apply_slow_hold(free)
+
         flag = env_ids[self.is_flag_env[env_ids]]
 
         if len(flag) > 0:
@@ -258,6 +269,33 @@ class MixedVelocityCommand(CommandTerm):
             # the command of an earlier free episode: a reset outside env.step (the start-up resets) has no
             # compute after it, and the first action would follow that stale command.
             self.vel_command_b[flag] = 0.0
+
+    def _apply_slow_hold(self, ids):
+        """v29-5: after the free envs drew their command, envs on the slow band (0.1 <= |v_xy| < 0.3, wz == 0, no heading / spin / stand)
+        get time_left = U(lo, hi) s. Other envs keep the base time_left. Off (None or 0) draws nothing from the generator."""
+        hold_range = SLOW_HOLD_RANGE_S
+        if len(ids) == 0:
+            return
+        self.slow_hold[ids] = False
+        if (not hold_range or self.cfg.fixed_cmd is not None
+                or float(self.cfg.resampling_time_range[1]) >= float(hold_range[0])):
+            return
+        cmd = self.vel_command_b[ids]
+        speed = torch.linalg.norm(cmd[:, :2], dim=1)
+        hold = ((speed >= SLOW_HOLD_V_LO) & (speed < SLOW_HOLD_V_HI) & (cmd[:, 2].abs() <= 1e-6)
+                & ~self.heading[ids] & ~self.spin[ids] & ~self.stand[ids])
+        if hold.any():
+            sel = ids[hold]
+            lo, hi = float(hold_range[0]), float(hold_range[1])
+            u = torch.rand(len(sel), generator=self.gen, device=self.device)
+            self.time_left[sel] = lo + (hi - lo) * u
+            self.slow_hold[sel] = True
+
+    def slow_hold_summary(self):
+        """Record only: (number of envs now holding a slow command, their mean time_left in s)."""
+        n = int(self.slow_hold.sum().item())
+
+        return n, (float(self.time_left[self.slow_hold].mean().item()) if n else 0.0)
 
     def _update_command(self):
         self._stepped = True                                  # 흩기는 학습(첫 step) 시작 뒤에는 다시 하지 않는다
