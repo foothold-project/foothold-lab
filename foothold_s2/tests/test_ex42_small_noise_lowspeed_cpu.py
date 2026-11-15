@@ -17,8 +17,15 @@ from foothold_s2.tests.test_ex42_small_noise_cpu import N, _alg, _obs
 SIGMA = mirror.SMALL_NOISE_SIGMA_SCALE
 
 
+@pytest.fixture(autouse=True)
+def _rule_on_and_no_mean_envs(monkeypatch):
+    """v28p ships the low-speed rule OFF (threshold 0) and 12 % mean-action envs; these tests are about the rule, so they switch it on."""
+    monkeypatch.setattr(mirror, "SMALL_NOISE_LOWSPEED_CMD", 0.3)
+    monkeypatch.setattr(mirror, "MEAN_ACTION_PERCEPTION_SHARE", 0.0)
+
+
 def test_constants_and_the_threshold_rule():
-    assert mirror.SMALL_NOISE_LOWSPEED_CMD == 0.3 and mirror.SMALL_NOISE_REST_SHARE == 0.25 and mirror.SMALL_NOISE_ENV_SHARE == 0.4
+    assert mirror.SMALL_NOISE_LOWSPEED_CMD == 0.3 and mirror.SMALL_NOISE_REST_SHARE == 0.25 and mirror.SMALL_NOISE_ENV_SHARE == 0.25
     assert mirror.small_noise_static_share() == 0.25                                  # rule on: the rest share
     cmd = torch.tensor([[0.0, 0.0], [0.29, 0.0], [0.3, 0.0], [0.2, 0.2], [0.0, -0.25], [0.25, 0.25], [1.0, 0.0]])
     assert mirror.lowspeed_noise_mask(cmd, 0.3).tolist() == [True, True, False, True, True, False, False]   # norm, strict, standing counts

@@ -69,13 +69,19 @@ BOUNDS_LOSS_COEF = 0.1  # weight of the action-mean bounds loss (lead 11/14 16:5
 # their reward sees the walk of the mean action (the v28 probe of the mean action drifted 0.10 to 0.81 while every training
 # record stayed flat). The scale is part of the policy of those envs, so PPO stays on-policy for each env group (see
 # StartActorCritic.noise_scale).
-SMALL_NOISE_ENV_SHARE = 0.4
+SMALL_NOISE_ENV_SHARE = 0.25     # v28p (lead 11/15 09:26): back to the v28f share while the low-speed rule below is off
 SMALL_NOISE_SIGMA_SCALE = 0.2
 # v28m (lead 11/15 07:02, ON by default; set the threshold to 0 to turn it off: the share above then applies as in v28l):
 # an env whose command has |(vx, vy)| below the threshold rolls out with the small noise for that step, decided again at
 # every step from the command it acts on (so on every command resample); the other envs keep a fixed spread share.
-SMALL_NOISE_LOWSPEED_CMD = 0.3
+SMALL_NOISE_LOWSPEED_CMD = 0.0   # v28p: OFF (v28n had 0.3); set 0.3 to bring the v28n rule back (then the rest share below applies)
 SMALL_NOISE_REST_SHARE = 0.25
+# v28p (lead 11/15 09:26, ON by default; set the share to 0 to turn it off: nothing below changes then, bit-identical to v28n/v28f):
+# this share of the envs (spread evenly over the env index, same on every rank) acts with the MEAN action (noise exactly 0).
+# Their rows are marked invalid for PPO (the existing quarantine mask): no surrogate, value, entropy, bounds, scheduler KL
+# and no advantage normalisation statistics. The perception replay is filled for every env, so the perception loss
+# (velocity head included) still sees them: the velocity estimate is trained on the walk the noise-free evaluation shows.
+MEAN_ACTION_PERCEPTION_SHARE = 0.12
 
 
 def small_noise_static_share() -> float:
@@ -95,6 +101,13 @@ def small_noise_mask(num_envs: int, share: float) -> torch.Tensor:
         raise ValueError("small noise env share must be in [0, 1)")
     index = torch.arange(num_envs, dtype=torch.float64)
     return torch.floor((index + 1) * share + 1e-9) > torch.floor(index * share + 1e-9)
+
+
+def mean_action_mask(num_envs: int, share: float, device=None) -> torch.Tensor | None:
+    """[num_envs] bool: the envs that act with the mean action (and stay out of PPO), or None when the share is 0."""
+    if not share:
+        return None
+    return small_noise_mask(num_envs, share).to(device)
 
 
 def small_noise_scale(num_envs: int, share: float, scale: float, device=None) -> torch.Tensor | None:
@@ -136,6 +149,7 @@ class CriticMirrorPPO(PPO):
     # growing. sum_dims relu(|mu| - limit)^2 is zero inside the limit. The runner sets the limit from clip_actions (None = off).
     bounds_loss_coef = BOUNDS_LOSS_COEF
     bounds_loss_limit = None
+    mean_action_mask = None      # [num_envs] bool set by the runner: these envs act with the mean action and are not PPO samples
 
     def act(self, obs):
         if self.kl_audit is not None:
@@ -144,7 +158,10 @@ class CriticMirrorPPO(PPO):
             self.policy.noise_scale = self.storage.noise_scale_env
             if self.storage.noise_scale_steps is not None:   # low-speed rule: the scale of every step is kept for the update
                 self.storage.noise_scale_steps[self.storage.step] = self.storage.noise_scale_env
-        return super().act(obs)
+        actions = super().act(obs)
+        if self.mean_action_mask is not None:             # noise exactly 0: the policy mean; the rows are invalid for PPO (see process_env_step)
+            actions[self.mean_action_mask] = self.transition.action_mean[self.mean_action_mask]
+        return actions
 
     def init_storage(self, training_type, num_envs, num_transitions_per_env, obs, actions_shape):
         self.storage = ValidRolloutStorage(training_type, num_envs, num_transitions_per_env,
@@ -157,6 +174,8 @@ class CriticMirrorPPO(PPO):
         valid = torch.as_tensor(valid, device=self.storage.valid.device, dtype=torch.bool).flatten()
         if valid.shape != (self.storage.num_envs,):
             raise ValueError("EX-41 PPO validity mask shape differs from env count")
+        if self.mean_action_mask is not None:
+            valid = valid & ~self.mean_action_mask.to(valid.device)
         step = self.storage.step
         self.storage.valid[step].copy_(valid)
         super().process_env_step(obs, rewards, dones, extras)

@@ -392,6 +392,11 @@ class StartRunner(OnPolicyRunner):
             noise = mirror.small_noise_scale(self.env.num_envs, mirror.small_noise_static_share(),
                                              mirror.SMALL_NOISE_SIGMA_SCALE, device=self.device)
         self._lowspeed_noise = noise is not None and mirror.SMALL_NOISE_LOWSPEED_CMD > 0
+        mean = (mirror.mean_action_mask(self.env.num_envs, mirror.MEAN_ACTION_PERCEPTION_SHARE, device=self.device)
+                if self.ex41_critic_mirror else None)             # v28p: mean-action envs, outside PPO, inside the perception loss
+        self._mean_action = mean
+        if hasattr(alg, "mean_action_mask"):
+            alg.mean_action_mask = mean
         alg.storage.noise_scale_steps = (torch.ones(alg.storage.num_transitions_per_env, self.env.num_envs, 1, device=self.device)
                                          if self._lowspeed_noise else None)
         self._noise_static = noise
@@ -400,6 +405,10 @@ class StartRunner(OnPolicyRunner):
         hear = getattr(getattr(self, "continuous_curriculum", None), "refresh_small_noise", None)
         if callable(hear):
             hear()
+
+    _mean_action = None       # [num_envs] bool: envs acting with the mean action (v28p), None = off
+    _vbias_mean_samples = None
+    last_perception_v_bias_mean_action: dict | None = None
 
     _noise_counts = None      # [low-speed envs, small-noise envs] summed over the steps of one rollout (device tensor)
     _noise_steps = 0
@@ -751,6 +760,7 @@ class StartRunner(OnPolicyRunner):
             gt_steps.zero_()
             src_steps.zero_()
             self._vbias_samples = []
+            self._vbias_mean_samples = []
             noise_row: dict = {}
             contract_fn = ((lambda c: torch.zeros(c.shape[0], dtype=torch.bool, device=c.device))
                            if continuous is not None else contract_bad_fn(self.pcfg["contract"]))
@@ -931,7 +941,7 @@ class StartRunner(OnPolicyRunner):
             if sensor_evidence is not None:
                 extra["ex40_stand_sensor"] = sensor_evidence.summary()
             if getattr(self, "last_perception_v_bias", None) is not None:
-                extra["perception_v_bias"] = {"lowband": dict(self.last_perception_v_bias)}
+                extra["perception_v_bias"] = self._v_bias_record()
             if (kl_info or act_stats is not None or split is not None or nt_stats is not None or fc_stats is not None or slot_stats is not None or sensor_evidence is not None or ex40_dr_runtime is not None or "use_gt_frac" in extra or "small_noise" in extra or "ex42_live_metrics" in extra or "perception_v_bias" in extra) and self.log_dir is not None and not self.disable_logs:
                 with open(os.path.join(self.log_dir, "train_extra.jsonl"), "a", encoding="utf-8") as fh:
                     fh.write(json.dumps(extra, ensure_ascii=False) + "\n")
@@ -1226,6 +1236,10 @@ class StartRunner(OnPolicyRunner):
         k = o.shape[-1] + (0 if self.pcfg["est_mode"] == "oracle_vel" else sp.Z_DIM)
         est3 = ppo_obs[ACTOR_KEY][:, k:k + sp.V_DIM]
         self._vbias_samples.append((est3 - vel)[m].float())
+        if self._mean_action is not None:
+            if self._vbias_mean_samples is None:
+                self._vbias_mean_samples = []
+            self._vbias_mean_samples.append((est3 - vel)[m & self._mean_action].float())
 
     def _vbias_finish(self, it: int) -> None:
         """이 rollout 의 표본을 모아 (2 rank 면 표본을 합쳐서) 요약하고 매 회차 한 줄 찍는다. 모든 rank 가 같은 횟수로 부른다."""
@@ -1242,6 +1256,26 @@ class StartRunner(OnPolicyRunner):
             f = lambda x: "null" if x is None else "%.4f" % x
             print("EX42_PERCEPTION_V_BIAS it=%d band=cmd_%.2f_%.2f n=%d mean=%s p10=%s p90=%s mean_y=%s p10_y=%s p90_y=%s" % (
                 it, *sp.PERCEPTION_V_BIAS_LOWBAND, r["n"], f(r["mean"]), f(r["p10"]), f(r["p90"]), f(r["mean_y"]), f(r["p10_y"]), f(r["p90_y"])), flush=True)
+        if self._mean_action is not None:                     # v28p: the same record for the mean-action envs only (every rank calls this)
+            parts = self._vbias_mean_samples or []
+            samples = torch.cat(parts) if parts else torch.zeros(0, 3, device=self.device)
+            if self.is_distributed:
+                gathered = [None] * self.gpu_world_size
+                torch.distributed.all_gather_object(gathered, samples.cpu())
+                samples = torch.cat(gathered)
+            self._vbias_mean_samples = []
+            self.last_perception_v_bias_mean_action = r = lowband_bias_summary(samples)
+            if not self.disable_logs:
+                print("EX42_MEAN_ACTION it=%d envs=%d of=%d share=%.2f" % (
+                    it, int(self._mean_action.sum()), self.env.num_envs, float(self._mean_action.float().mean())), flush=True)
+                print("EX42_PERCEPTION_V_BIAS_MEAN_ACTION it=%d band=cmd_%.2f_%.2f n=%d mean=%s p10=%s p90=%s mean_y=%s p10_y=%s p90_y=%s" % (
+                    it, *sp.PERCEPTION_V_BIAS_LOWBAND, r["n"], f(r["mean"]), f(r["p10"]), f(r["p90"]), f(r["mean_y"]), f(r["p10_y"]), f(r["p90_y"])), flush=True)
+
+    def _v_bias_record(self) -> dict:
+        record = {"lowband": dict(self.last_perception_v_bias)}
+        if self.last_perception_v_bias_mean_action is not None:
+            record["mean_action_lowband"] = dict(self.last_perception_v_bias_mean_action)
+        return record
 
     def update_perception(self) -> dict[str, float]:
         if not self.replay.full():
@@ -1606,7 +1640,7 @@ class StartRunner(OnPolicyRunner):
             "p_smpl": self.adasmpl.p,
             "gpu_max_allocated_GiB": (torch.cuda.max_memory_allocated(self.device) / 2**30) if self._cuda() else None,
             "perception": {k: round(v, 5) for k, v in self.last_perception_losses.items()},
-            **({"perception_v_bias": {"lowband": dict(self.last_perception_v_bias)}} if getattr(self, "last_perception_v_bias", None) is not None else {}),
+            **({"perception_v_bias": self._v_bias_record()} if getattr(self, "last_perception_v_bias", None) is not None else {}),
             "log_dir": self.log_dir,
         })
 
