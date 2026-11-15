@@ -43,6 +43,23 @@ def _brief(row: dict) -> dict:
 
 def rejudge_chain(src_scores: Path, dst_root: Path, *, plan_path: Path, training_plan: Path, approvals: Path,
                   iterations: list[int]) -> dict:
+    """Run the chain with the graduation plan's record_cells applied on top of judge_cells (which stays untouched)."""
+    from foothold_s2 import ex42_e1_v2
+    original = ex42_e1_v2.judge_cells
+
+    def graduated(cells, plan, **kw):
+        return ex42_e1_v2.apply_record_cells(original(cells, plan, **kw), plan)
+
+    ex42_e1_v2.judge_cells = graduated
+    try:
+        return _rejudge_chain(src_scores, dst_root, plan_path=plan_path, training_plan=training_plan,
+                              approvals=approvals, iterations=iterations)
+    finally:
+        ex42_e1_v2.judge_cells = original
+
+
+def _rejudge_chain(src_scores: Path, dst_root: Path, *, plan_path: Path, training_plan: Path, approvals: Path,
+                   iterations: list[int]) -> dict:
     from foothold_s2.curriculum.ex42_prep import EX42Plan
     from foothold_s2.ex42_eval_once import p1_score_from_measure
     from foothold_s2.ex42_score import digest, measure

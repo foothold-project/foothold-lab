@@ -23,7 +23,9 @@ YAW_CASES = ("fwd0.5", "fwd1.0")
 MAE_WINDOW_S = None
 # Graduation evaluation plan (team lead 2026-11-15 22:12): the same decisions travel inside the evaluation plan itself,
 # evaluation.e1_widened.graduation, so the plan sha pins them. No block = the plan judges exactly as before.
-GRADUATION_KEYS = {"mae_window_s", "near_R_0p1", "l3_fwd10_role", "fixed_fwd10_rule", "parent_evaluation_plan_sha256"}
+GRADUATION_KEYS = {"mae_window_s", "near_R_0p1", "l3_fwd10_role", "fixed_fwd10_rule", "parent_evaluation_plan_sha256",
+                   "record_cells"}
+RECORD_CELL_RE = re.compile(r"low/L5/(eval_gt|eval_pred)/side[+-]0\.4")
 
 
 def graduation(plan: dict) -> dict:
@@ -46,10 +48,32 @@ def check_graduation(block) -> dict:
             or ("near_R_0p1" in block and not (num(block["near_R_0p1"]) and 0 < block["near_R_0p1"] < .5))
             or block.get("l3_fwd10_role", "judge_if_exposed") not in ("judge_if_exposed", "record_only")
             or block.get("fixed_fwd10_rule", "heading_forward") not in ("heading_forward", "exit_line")
+            or ("record_cells" in block and not (
+                isinstance(block["record_cells"], list) and len(set(block["record_cells"])) == len(block["record_cells"])
+                and all(isinstance(k, str) and RECORD_CELL_RE.fullmatch(k) for k in block["record_cells"])))
             or ("parent_evaluation_plan_sha256" in block and
                 re.fullmatch(r"[0-9a-f]{64}", str(block["parent_evaluation_plan_sha256"])) is None)):
         raise ValueError("E1 graduation block has an unapproved key or value")
     return block
+
+
+def apply_record_cells(result: dict, plan: dict) -> dict:
+    """Graduation plan only: the listed judged cells become record cells (value kept, not in any verdict).
+
+    judge_cells itself is untouched; the rejudge tool applies this to its result. A plan without the field is a no-op."""
+    keys = graduation(plan).get("record_cells") or []
+    if not keys:
+        return result
+    items = dict(result["items"])
+    for key in keys:
+        row = items[key]
+        if row.get("role") == "record":
+            continue
+        items[key] = {"role": "record", "judgement_if_judged": row.get("judgement"),
+                      **{k: v for k, v in row.items() if k not in ("judgement", "near_threshold", "reason")}}
+    states = [r["judgement"] for r in items.values() if r.get("role") != "record"]
+    verdict = "FAIL" if "FAIL" in states else "HOLD" if "HOLD" in states or not states else "PASS"
+    return {**result, "judgement": verdict, "items": items}
 
 
 def window_mae_per_env(vx, alive, command_v: float, dt: float, window_s: float):

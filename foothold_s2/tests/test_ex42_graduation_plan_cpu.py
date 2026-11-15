@@ -110,3 +110,56 @@ def test_near_threshold_comes_from_the_graduation_block():
     graduated = copy.deepcopy(plan)
     graduated["evaluation"].setdefault("e1_widened", {})["graduation"] = {"near_R_0p1": 0.06}
     assert row(graduated)["near_threshold"] is True
+
+
+RECORDS = [f"low/L5/{m}/side{s}0.4" for m in ("eval_gt", "eval_pred") for s in ("+", "-")]
+
+
+def _clean_cells():
+    base = {"R": 0.95, "survival": 64, "envs": 64, "command_mps": 0.1, "mae_mps": 0.0, "success": 64,
+            "per_env_R": [0.95] * 64, "per_env_mae_mps": [0.0] * 64, "per_env_alive_end": [True] * 64}
+    modes = ("eval_gt", "eval_pred", "probe_prop_only")
+    yaw = {"median_abs_rad": .04, "p90_abs_rad": .08, "survival": 64, "envs": 64}
+    speed = lambda c: .1 if c == "fwd0.1" else .2 if c == "fwd0.2" else float(c[4:]) if c.startswith("fwd") else abs(float(c[4:]))
+    low = {lv: {m: {c: {**base, "command_mps": speed(c)} for c in ex42_e1_v2.LOW_CASES} for m in modes}
+           for lv in ("L0", "L5")}
+    return {"low": low,
+            "side05": {m: {c: {**base, "command_mps": .5} for c in ("side+0.5", "side-0.5")} for m in modes},
+            "yaw": {m: {c: yaw.copy() for c in ("fwd0.5", "fwd1.0")} for m in modes}}
+
+
+def _fail_cell(cells, key):
+    _, level, mode, case = key.split("/")
+    row = cells["low"][level][mode][case]
+    row.update({"success": 10, "per_env_alive_end": [True] * 10 + [False] * 54, "survival": 10})
+    row["per_env_R"] = [0.95] * 10 + [0.1] * 54
+
+
+def test_record_cells_leave_the_verdict_and_other_cells_alone_but_keep_values():
+    plan = yaml.safe_load(SOURCE.read_text())
+    graduated = copy.deepcopy(plan)
+    graduated["evaluation"].setdefault("e1_widened", {})["graduation"] = {"record_cells": list(RECORDS)}
+    assert check_graduation({"record_cells": list(RECORDS)})["record_cells"] == RECORDS
+    cells = _clean_cells()
+    assert judge_cells(cells, plan)["judgement"] == "PASS"             # the clean fixture really passes
+    for key in RECORDS:
+        _fail_cell(cells, key)
+    raw = judge_cells(cells, graduated)
+    assert raw["judgement"] == "FAIL" and all(raw["items"][k]["judgement"] == "FAIL" for k in RECORDS)
+    out = ex42_e1_v2.apply_record_cells(raw, graduated)
+    assert out["judgement"] == "PASS"                                   # the four FAIL cells no longer reach the verdict
+    for key in RECORDS:
+        row = out["items"][key]
+        assert row["role"] == "record" and row["judgement_if_judged"] == "FAIL" and "judgement" not in row
+        assert row["success"] == 10 and row["R"] == raw["items"][key]["R"]   # the values stay in the report
+    assert {k: v for k, v in out["items"].items() if k not in RECORDS} == {k: v for k, v in raw["items"].items() if k not in RECORDS}
+    assert ex42_e1_v2.apply_record_cells(raw, plan) is raw              # no field: nothing happens
+    _fail_cell(cells, "low/L5/eval_gt/fwd0.1")                          # a judged cell outside the list still fails the verdict
+    assert ex42_e1_v2.apply_record_cells(judge_cells(cells, graduated), graduated)["judgement"] == "FAIL"
+
+
+def test_record_cells_accept_only_the_four_l5_side_04_cells():
+    for bad in (["low/L0/eval_gt/side+0.4"], ["low/L5/eval_gt/fwd0.1"], ["low/L5/probe_prop_only/side+0.4"],
+                [RECORDS[0], RECORDS[0]], "low/L5/eval_gt/side+0.4", [1]):
+        with pytest.raises(ValueError, match="unapproved"):
+            check_graduation({"record_cells": bad})
