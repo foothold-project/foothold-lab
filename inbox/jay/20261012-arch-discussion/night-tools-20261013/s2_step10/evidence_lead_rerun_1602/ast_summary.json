@@ -1,0 +1,23 @@
+{
+  "clean_copy": true,
+  "cuda_visible_devices": "-1",
+  "normal_before_mutants": true,
+  "passed": true,
+  "python_isolated": true,
+  "records": [
+    {
+      "caught_first_fail_matches_want": true,
+      "caught_labels": 0,
+      "exit_code": 0,
+      "name": "test_s2_step10_source.py",
+      "pass_labels": 1
+    },
+    {
+      "caught_first_fail_matches_want": true,
+      "caught_labels": 2,
+      "exit_code": 0,
+      "name": "test_s2_step10_mutants.py",
+      "pass_labels": 0
+    }
+  ]
+}

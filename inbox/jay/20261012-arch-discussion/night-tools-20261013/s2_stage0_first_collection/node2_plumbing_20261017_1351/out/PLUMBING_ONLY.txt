@@ -1,0 +1,2 @@
+PLUMBING_ONLY: This checkpoint must not be used for A/B performance, map effect, or as a starting point for later training.
+manifest_sha256=3938a5e3440155a8ecd6748cfee56552b3c29bbf0e4fcad6c7f00e8e32d843e7

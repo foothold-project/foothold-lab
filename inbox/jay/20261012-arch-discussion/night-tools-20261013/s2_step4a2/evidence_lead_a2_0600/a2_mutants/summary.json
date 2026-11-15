@@ -1,0 +1,69 @@
+{
+  "cases": [
+    {
+      "name": "nan_height",
+      "source": "s2_connect_check_17v.py",
+      "want": "height_nan_height_nonfinite",
+      "normal_exit": 0,
+      "mutant_exit": 1,
+      "first_fail": "FAIL height_nan_height_nonfinite",
+      "result": "CAUGHT"
+    },
+    {
+      "name": "fixed_one",
+      "source": "s2_connect_check_17v.py",
+      "want": "fixed_one_fixed_schedule",
+      "normal_exit": 0,
+      "mutant_exit": 1,
+      "first_fail": "FAIL fixed_one_fixed_schedule",
+      "result": "CAUGHT"
+    },
+    {
+      "name": "root_100m",
+      "source": "s2_connect_check_17v.py",
+      "want": "root_100m_root_sensor_transform",
+      "normal_exit": 0,
+      "mutant_exit": 1,
+      "first_fail": "FAIL root_100m_root_sensor_transform",
+      "result": "CAUGHT"
+    },
+    {
+      "name": "step90",
+      "source": "s2_connect_check_17v.py",
+      "want": "marker_step90_scene_hit_z",
+      "normal_exit": 0,
+      "mutant_exit": 1,
+      "first_fail": "FAIL marker_step90_scene_hit_z",
+      "result": "CAUGHT"
+    },
+    {
+      "name": "disk1",
+      "source": "s2_stage0_contract_a2.py",
+      "want": "disk1_rejected",
+      "normal_exit": 0,
+      "mutant_exit": 1,
+      "first_fail": "FAIL disk1_rejected",
+      "result": "CAUGHT"
+    },
+    {
+      "name": "raw_before_map",
+      "source": "s2_connect_diag_17v.py",
+      "want": "raw_row_before_map_error",
+      "normal_exit": 0,
+      "mutant_exit": 1,
+      "first_fail": "FAIL raw_row_before_map_error",
+      "result": "CAUGHT"
+    },
+    {
+      "name": "torch_bus",
+      "source": "s2_device_binding_a2.py",
+      "want": "torch_bus_mismatch_rejected",
+      "normal_exit": 0,
+      "mutant_exit": 1,
+      "first_fail": "FAIL torch_bus_mismatch_rejected",
+      "result": "CAUGHT"
+    }
+  ],
+  "caught": 7,
+  "total": 7
+}

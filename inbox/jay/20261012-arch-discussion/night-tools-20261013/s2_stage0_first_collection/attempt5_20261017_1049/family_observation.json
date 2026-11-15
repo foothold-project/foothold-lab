@@ -1,0 +1,120 @@
+{
+  "baseline_sha256": "701e487bee0317f73b7410614817a482756b4c681d234af3ee160a0fa4ffe16a",
+  "first": {
+    "epoch": 1792201840.916,
+    "gpu": {
+      "limits": [
+        "an empty NVML list on WDDM can mean 'not reported', not 'none'"
+      ],
+      "nvml": [
+        126692
+      ],
+      "nvml_error": null,
+      "smi": [
+        126692
+      ]
+    },
+    "locks": {
+      "gpu_lease": "acquired_and_released",
+      "usd_lock": "acquired_and_released"
+    },
+    "process_list_unreadable_count": 0,
+    "processes": [
+      {
+        "cmd_head": "c:/users/ai-ws01/anaconda3/envs/isaac311-moects/python.exe -b c:/users/ai-ws01/s2_lab/night-tools-20261013/s2_step4a3_launch/s2_family_observer.py verify --run c:/users/ai-ws01/s2_lab/night-tools-2026",
+        "create_time": 1792201832.001,
+        "exe": "C:\\Users\\AI-WS01\\anaconda3\\envs\\isaac311-moects\\python.exe",
+        "name": "python.exe",
+        "pid": 79508
+      },
+      {
+        "cmd_head": "c:/program files/git/bin/../usr/bin/bash.exe -c source /c/users/ai-ws01/.claude/shell-snapshots/snapshot-bash-1791280199645-j8ld65.sh 2>/dev/null || true && export temp='c:/users/ai-ws01/appdata/local",
+        "create_time": 1792201797.911,
+        "exe": "C:\\Program Files\\Git\\usr\\bin\\bash.exe",
+        "name": "bash.exe",
+        "pid": 159512
+      },
+      {
+        "cmd_head": "c:/program files/git/bin/bash.exe -c source /c/users/ai-ws01/.claude/shell-snapshots/snapshot-bash-1791280199645-j8ld65.sh 2>/dev/null || true && export temp='c:/users/ai-ws01/appdata/local/temp' tmp=",
+        "create_time": 1792201797.898,
+        "exe": "C:\\Program Files\\Git\\bin\\bash.exe",
+        "name": "bash.exe",
+        "pid": 185832
+      }
+    ],
+    "time": "2026-10-17 10:50:40"
+  },
+  "gap_s": 4.0,
+  "gpu_uuid": "GPU-c08e23b0-62b6-a4f2-8eb2-11151c6a8c7b",
+  "known_pids": {
+    "156656": 1792201785.95429,
+    "176684": 1792201785.549683
+  },
+  "limits": [
+    "PASS means no residual OS process, no listed GPU compute pid of this attempt and both locks acquirable; it does not prove NVML compute 0 on WDDM",
+    "a process list the observer could not read is UNKNOWN, not none"
+  ],
+  "mode": "verify",
+  "reasons": [
+    "os_residual_first:[(159512, 'bash.exe'), (185832, 'bash.exe')]",
+    "os_residual_second:[(159512, 'bash.exe'), (185832, 'bash.exe')]"
+  ],
+  "receipts": {
+    "out/launch.json": {
+      "sha256": "65d913c576dcae88f6a6c22c77881181b1fcbdceb5aad10616d06c499e1757c3",
+      "size": 2353
+    },
+    "summary.json": {
+      "sha256": "1ada67e7bf2f8ff4d74a0081ab29c100eaccd804a2417f8a924915a24ff7be2d",
+      "size": 7971,
+      "supervisor_rc": 42
+    }
+  },
+  "run": "C:\\Users\\AI-WS01\\s2_lab\\night-tools-20261013\\s2_runs\\live-20261017-104934",
+  "second": {
+    "epoch": 1792201845.218,
+    "gpu": {
+      "limits": [
+        "an empty NVML list on WDDM can mean 'not reported', not 'none'"
+      ],
+      "nvml": [
+        126692
+      ],
+      "nvml_error": null,
+      "smi": [
+        126692
+      ]
+    },
+    "locks": {
+      "gpu_lease": "acquired_and_released",
+      "usd_lock": "acquired_and_released"
+    },
+    "process_list_unreadable_count": 0,
+    "processes": [
+      {
+        "cmd_head": "c:/users/ai-ws01/anaconda3/envs/isaac311-moects/python.exe -b c:/users/ai-ws01/s2_lab/night-tools-20261013/s2_step4a3_launch/s2_family_observer.py verify --run c:/users/ai-ws01/s2_lab/night-tools-2026",
+        "create_time": 1792201832.001,
+        "exe": "C:\\Users\\AI-WS01\\anaconda3\\envs\\isaac311-moects\\python.exe",
+        "name": "python.exe",
+        "pid": 79508
+      },
+      {
+        "cmd_head": "c:/program files/git/bin/../usr/bin/bash.exe -c source /c/users/ai-ws01/.claude/shell-snapshots/snapshot-bash-1791280199645-j8ld65.sh 2>/dev/null || true && export temp='c:/users/ai-ws01/appdata/local",
+        "create_time": 1792201797.911,
+        "exe": "C:\\Program Files\\Git\\usr\\bin\\bash.exe",
+        "name": "bash.exe",
+        "pid": 159512
+      },
+      {
+        "cmd_head": "c:/program files/git/bin/bash.exe -c source /c/users/ai-ws01/.claude/shell-snapshots/snapshot-bash-1791280199645-j8ld65.sh 2>/dev/null || true && export temp='c:/users/ai-ws01/appdata/local/temp' tmp=",
+        "create_time": 1792201797.898,
+        "exe": "C:\\Program Files\\Git\\bin\\bash.exe",
+        "name": "bash.exe",
+        "pid": 185832
+      }
+    ],
+    "time": "2026-10-17 10:50:45"
+  },
+  "unknown": [],
+  "verdict": "HOLD"
+}

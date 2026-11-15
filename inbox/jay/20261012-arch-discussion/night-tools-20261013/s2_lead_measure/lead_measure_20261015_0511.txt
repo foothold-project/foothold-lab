@@ -1,0 +1,65 @@
+== time
+2026-10-15 05:11:31
+== gpus
+0, GPU-c08e23b0-62b6-a4f2-8eb2-11151c6a8c7b, NVIDIA GeForce RTX 5080, 591.86, 16303 MiB, 15 MiB, 00000000:41:00.0
+1, GPU-315d098f-5fe0-26a0-0d2e-26e2d4c1ae4f, NVIDIA GeForce RTX 5080, 591.86, 16303 MiB, 5887 MiB, 00000000:81:00.0
+== python/torch/numpy
+C:\Users\AI-WS01\anaconda3\envs\isaac311-moects\python.exe 3.11.15
+numpy 1.26.0
+torch 2.7.0+cu128 12.8
+psutil 7.2.2
+== IsaacLab commit
+37ddf626871758333d6ed89cf64ad702aef127d0
+== go2_rl_robotlab commit
+28b4516d22617b11aeaf8ead63cc00b0c0bcd1bd
+== parent checkpoint
+c8951b797dbe41570009e9de35589d56b7ea1d10092728af17761d46a2df47e8
+== slot files
+total 24
+-rw-r--r-- 1 AI-WS01 197609     0 10-13_18:51 isaac_convert.lock
+-rw-r--r-- 1 AI-WS01 197609  2770 10-14_05:45 isaac_usd_registry.json
+-rw-r--r-- 1 AI-WS01 197609 19647 10-14_08:31 isaac_usd_registry_v3.json
+-rw-r--r-- 1 AI-WS01 197609     0 10-14_00:25 isaac_usd_registry_v3.json.lock
+974919b0717b684fb9f0a57a0282aeb5a0b321f4bc7d4131aedcc461e2d3945a*C:/isaac/ext/go2_rl_robotlab/_eval/isaac_slot_v3.py
+7fabec30704830a410878e4244190a4e62c60f3828ad5908fbf9ee264c30cbd4*C:/isaac/ext/go2_rl_robotlab/_eval/gpu_guard.py
+30dc2ea930f400948474b11c648aa389ff495d2a1bd764b4b9b984b931d11efb*C:/isaac/ext/go2_rl_robotlab/_eval/usd_isolate_run_v3.py
+== scheduled/other isaac runners
+
+TaskName          State
+--------          -----
+MAI-RL-Backup-1-2 Ready
+
+
+
+
+ProcessId Name              
+--------- ----              
+    23560 msedgewebview2.exe
+    24136 msedgewebview2.exe
+    24164 msedgewebview2.exe
+    24240 msedgewebview2.exe
+    24840 msedgewebview2.exe
+   175860 tail.exe          
+    96604 tail.exe          
+   160476 tail.exe          
+    19560 tail.exe          
+    98176 tail.exe          
+    59600 tail.exe          
+   130780 msedgewebview2.exe
+   115740 tail.exe          
+   120876 tail.exe          
+    62088 tail.exe          
+    76872 tail.exe          
+   122368 tail.exe          
+   153888 tail.exe          
+   167956 tail.exe          
+    49180 tail.exe          
+   113728 tail.exe          
+    83864 tail.exe          
+   117504 bash.exe          
+   171692 bash.exe          
+   137092 bash.exe          
+    76316 powershell.exe    
+
+
+

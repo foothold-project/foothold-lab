@@ -1,0 +1,10 @@
+[
+ {
+  "key": "fr_m20499_stairs_up/stairs_up_stop03_ep001",
+  "video": "out/video_hud_src/fr_m20499_stairs_up/stairs_up_stop03_ep001_kinreplay.mp4",
+  "parquet": "_mut/hud_preview/legacy/fr_m20499_stairs_up/timeseries/stairs_up_stop03_ep001.parquet",
+  "hud": "out/video_hud/fr_m20499_stairs_up/stairs_up_stop03_ep001_kinreplay_hud.mp4",
+  "web": "out/web/fr_m20499_stairs_up/stairs_up_stop03_ep001_kinreplay_hud_web.mp4",
+  "title": "E1 20499 stairs_up stop03 ep1"
+ }
+]

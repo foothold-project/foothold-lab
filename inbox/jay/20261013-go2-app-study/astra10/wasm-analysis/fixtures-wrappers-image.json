@@ -1,0 +1,52 @@
+{
+  "mode": "image",
+  "node": "v24.13.0",
+  "worker": "slam.worker-B9-NnJ09.js",
+  "sha256": "7be29eece06e43d4edbab276911f02e50c1134aa37d07dce4ec9731ead9066ef",
+  "manifest_matches": true,
+  "wasm": null,
+  "wasm_sha256": null,
+  "source_changed": false,
+  "fetches": [],
+  "allocations": [],
+  "generate_calls": [],
+  "reset_calls": 0,
+  "events": [],
+  "tests": [
+    {
+      "name": "base64-decoded-result-discarded",
+      "input_bytes": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "width": 2,
+      "height": 1,
+      "output": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "wasm_calls": 0
+    }
+  ],
+  "assertions_passed": true,
+  "snippets": [
+    {
+      "anchor": "function $(t)",
+      "char_offset": 3960,
+      "text": "function $(t){const e=t.image_,r=e.data_,o=e.width_,a=e.height_;q(r);const s=new Uint8ClampedArray(o*a*3);return console.log(\"解压后应该长度\",s.length),s}function q(t){const e=W.atob(t),r=e.length,o=new Uint8Array(r);for(let a="
+    },
+    {
+      "anchor": "function q(t)",
+      "char_offset": 4107,
+      "text": "function q(t){const e=W.atob(t),r=e.length,o=new Uint8Array(r);for(let a=0;a<r;a++)o[a]=e.charCodeAt(a);return console.log(\"解压钱\",o.length),o}})();\n"
+    }
+  ]
+}

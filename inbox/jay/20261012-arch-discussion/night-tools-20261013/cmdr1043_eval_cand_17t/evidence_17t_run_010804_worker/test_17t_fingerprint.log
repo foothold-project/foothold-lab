@@ -1,0 +1,7 @@
+PASS original meta copy SHA256
+PASS copied original validate
+PASS original fingerprint valid
+PASS validate unaffected by missing fingerprint file
+PASS missing fingerprint held
+PASS repeat missing fingerprint held
+PASS restored fingerprint valid

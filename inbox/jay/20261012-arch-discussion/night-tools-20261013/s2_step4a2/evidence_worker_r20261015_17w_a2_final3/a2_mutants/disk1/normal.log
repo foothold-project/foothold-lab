@@ -1,0 +1,11 @@
+PASS exact_bundle_and_all_diag_args
+PASS cuda1_rejected
+PASS disk1_rejected
+PASS seed_missing_rejected
+PASS dependency_missing_rejected
+PASS uuid_swap_rejected
+PASS vram_running_floor
+PASS output_budget_watch
+PASS fake_prelaunch_go
+PASS fake_information_only_never_pass
+PASS fake_receipt_and_child_log

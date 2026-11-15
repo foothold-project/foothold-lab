@@ -1,0 +1,722 @@
+--- cmdr_eval_driver_v37.py
++++ cmdr_eval_driver_s1043.py
+@@ -169,25 +169,18 @@
+ import numpy as np
+ import psutil
+ 
++from s1043_manifest import ROOT as CAND_ROOT, UNDECIDED, assert_isolated, check_inputs, inside, launch_errors, load
++
+ HERE = os.path.dirname(os.path.abspath(__file__))
+-ROOT = os.path.dirname(HERE)
+ PY = sys.executable
+-OUT = os.path.join(HERE, "out")
+-B = os.path.join(OUT, "branch")
+-E1 = "C:/isaac/ext/go2_rl_robotlab/logs/rsl_rl/go2_moe_cts/2026-10-10_12-47-48_e1_seed42_n8192"
+-E2 = "C:/isaac/ext/go2_rl_robotlab/logs/rsl_rl/go2_moe_cts/2026-10-11_12-39-32_e2_seed43_n8192"
+-E1_YAML = f"{E1}/params/env.yaml"
+-MODELS = {"p20000": (f"{E1}/model_20000.pt", 20000),
+-          "off22000": (f"{B}/cmdr_s1042_off_u4000/model_22000.pt", 22000),
+-          "off24000": (f"{B}/cmdr_s1042_off_u4000/model_24000.pt", 24000),
+-          "on22000": (f"{B}/cmdr_s1042_on_u4000/model_22000.pt", 22000),
+-          "on24000": (f"{B}/cmdr_s1042_on_u4000/model_24000.pt", 24000)}
++ROOT = "C:/isaac/ext/go2_rl_robotlab"
+ CELLS = ["stop03", "fwd01", "fwd02", "stand", "fwd03", "fwd05", "back03", "left03", "right03", "yawL05", "yawR05"]
+ TARGETS = ["stop03", "fwd01", "fwd02"]
+ FAMILIES = ["flat", "obstacles", "rough_slope", "slope_up", "slope_down", "stairs_up", "stairs_down", "wave"]
+ EXT_SEEDS = [1001, 1002, 1003, 1004]
+ CKPT_BYTES = 26367183
+-PIN_FILES = ["q_eval_cmdr.py", "q_metrics.py", "q_post.py", "gpu_guard.py", "cmdr_bundle_compare.py"]
++PIN_FILES = ["q_eval_cmdr.py", "q_eval.py", "q_metrics.py", "q_post.py", "gpu_guard.py",
++             "isaac_slot_v3.py", "usd_isolate_run_v3.py"]
+ # the evaluator keeps its own ALL_CELLS order whatever order --cells gives (q_eval_cmdr.py ALL_CELLS)
+ EVAL_ORDER = ["stand", "stop03", "fwd01", "fwd02", "fwd03", "fwd05", "fwd10", "back03", "left03", "right03", "yawL05", "yawR05"]
+ DUR_S = {"stand": 10.0, "stop03": 10.0}  # every other cell 20 s (q_eval_cmdr.py ALL_CELLS)
+@@ -197,25 +190,38 @@
+ def in_eval_order(cells):
+     return [c for c in EVAL_ORDER if c in cells]
+ ap = argparse.ArgumentParser(allow_abbrev=False)
+-ap.add_argument("--until", default="2026-10-13 14:00")
+-ap.add_argument("--gpu", type=int, choices=(0, 1), default=1)
+-ap.add_argument("--plan", choices=("base", "remeasure"), default="base")
++ap.add_argument("--manifest", required=True)
++ap.add_argument("--expect_self_sha", required=True)
++ap.add_argument("--gpu", type=int, choices=(0, 1))
++ap.add_argument("--plan", choices=("A", "B", "remeasure"), default="A")
++ap.add_argument("--cpu_plan", action="store_true", help="print registered A jobs without launching a child")
+ ap.add_argument("--order", choices=("orig", "24first"), default="24first")
+-ap.add_argument("--log", default="cmdr_eval_driver", help="log name in out/ (no .json)")
+-ap.add_argument("--base_log", default="cmdr_eval_driver", help="the base instance's log, read by --plan remeasure")
++ap.add_argument("--log", default="s1043A_base", help="log name in registered data root")
++ap.add_argument("--base_log", default="s1043A_base")
+ args = ap.parse_args()
+-GPU = str(args.gpu)
+-GPU_UUID = {"0": "c08e23b0-62b6-a4f2-8eb2-11151c6a8c7b", "1": "315d098f-5fe0-26a0-0d2e-26e2d4c1ae4f"}[GPU]
++MANIFEST = load(args.manifest)
++CONTRACT = MANIFEST["contract"]
++OUT = CONTRACT["paths"]["data"]
++B = os.path.dirname(os.path.dirname(CONTRACT["inputs"][CONTRACT["branches"]["off"]["result"]]["path"]))
++E1 = os.path.dirname(CONTRACT["parent"]["path"])
++E1_YAML = CONTRACT["inputs"]["parent_env_yaml"]["path"]
++MODELS = {"p20000": (CONTRACT["parent"]["path"], 20000)}
++for _arm in ("off", "on"):
++    for _it in (22000, 24000):
++        _name = CONTRACT["branches"][_arm][f"model_{_it}"]
++        MODELS[f"{_arm}{_it}"] = (CONTRACT["inputs"][_name]["path"], _it)
++GPU = str(args.gpu if args.gpu is not None else CONTRACT["device"]["gpu_index"])
++GPU_UUID = str(CONTRACT["device"]["gpu_uuid"]).removeprefix("GPU-")
+ ENV = dict(os.environ, CUDA_DEVICE_ORDER="PCI_BUS_ID", CUDA_VISIBLE_DEVICES=GPU, OMNI_KIT_ACCEPT_EULA="YES", PYTHONUNBUFFERED="1")
+ LOGF = os.path.join(OUT, f"{args.log}.json")
+ BASEF = os.path.join(OUT, f"{args.base_log}.json")
+-VERSION = "3.7"
+-EXPERIMENT = "cmdr_s1042_pair_eval"
++VERSION = "1043-A1"
++EXPERIMENT = CONTRACT["experiment"]
+ ATTEMPT = f"g{GPU}-{os.getpid()}-{time.strftime('%m%d%H%M%S')}"
+ JOBN = [0]
+ OUT_FILES = ("meta.json", "cells.json", "episodes.csv", "traj.npz")
+-NIGHT_OUT = os.path.join(OUT, "branch", "night_20261012_cmdr.out")
+ LOG = {"started": time.strftime("%Y-%m-%d %H:%M:%S"), "version": VERSION, "experiment": EXPERIMENT, "args": vars(args), "attempt": ATTEMPT,
++       "contract_sha256": MANIFEST["contract_sha256"], "stage": "A",
+        "pins": {}, "tests": {}, "runs": [], "skipped": [], "pair_fail": [], "ckpt": {}, "matrix": {}}
+ PENDING = [[]]   # the live job queue, for the exit record
+ TRIES = {}       # name -> list of guard tries (k, rc, seconds, archived log)
+@@ -271,12 +277,17 @@
+ 
+ 
+ def pins():
+-    p = {f: sha(os.path.join(HERE, f)) for f in PIN_FILES}
+-    code = json.load(open(os.path.join(B, "cmdr_s1042_off_u4000", "bundle.json"), encoding="utf-8"))["meta"]["code"]["files_sha256"]
+-    for rel, recorded in code.items():
+-        now = sha(os.path.join(ROOT, rel))
+-        assert now == recorded, f"source {rel} differs from the branch bundle record"
+-        p[rel] = now
++    p = {}
++    for name, rec in CONTRACT["inputs"].items():
++        if name.startswith(("source_", "config_")):
++            now = sha(rec["path"])
++            assert now == rec["sha256"], f"registered code changed: {name}"
++            p[name.removeprefix("source_").removeprefix("config_")] = now
++    for filename in ("s1043_manifest.py", "cmdr_bundle_compare_s1043.py",
++                     "cmdr_eval_driver_s1043.py", "cmdr_post_s1043.py", "frozen_exec_s1043.py"):
++        path = os.path.join(HERE, filename)
++        p[filename] = sha(path)
++    p["manifest_s1043.json"] = sha(args.manifest)
+     return p
+ 
+ 
+@@ -294,34 +305,22 @@
+ 
+ 
+ def training_done():
+-    """'' when the CMD-R pair has explicitly ended, else what is still missing (VERIFY-astra-16 6.1)."""
+-    on = os.path.join(B, "cmdr_s1042_on_u4000")
++    """Both 1043 branches and their registered end evidence must still match."""
++    errors = check_inputs(MANIFEST)
++    if errors:
++        return "; ".join(errors[:5])
+     try:
+-        r = json.load(open(os.path.join(on, "result.json"), encoding="utf-8"))
+-    except FileNotFoundError:
+-        return "on arm has no result.json"
+-    except (json.JSONDecodeError, UnicodeDecodeError):
+-        return "on arm result.json unreadable"
+-    a, f = r.get("meta", {}).get("args", {}), r.get("final_state", {})
+-    if a.get("tag") != "cmdr_s1042_on_u4000" or a.get("cmdr") != "on" or f.get("where") != "end" or f.get("label_next") != 24000:
+-        return f"on arm result.json is not the finished on arm (tag {a.get('tag')} cmdr {a.get('cmdr')} where {f.get('where')} label_next {f.get('label_next')})"
+-    ck = MODELS["on24000"][0]
+-    if not os.path.exists(ck):
+-        return "no model_24000.pt"
+-    if os.path.getsize(ck) != CKPT_BYTES:
+-        return f"model_24000.pt size {os.path.getsize(ck)}"
+-    try:
+-        night = open(NIGHT_OUT, encoding="utf-8", errors="replace").read()
+-    except FileNotFoundError:
+-        return "no night log"
+-    e = night.rfind("cmdr_s1042_on_u4000 EXIT 0")
+-    if e < 0 or "NIGHT DONE" not in night[e:]:
+-        return "night log has no NIGHT DONE after the on arm's EXIT 0"
++        rep = json.load(open(CONTRACT["paths"]["compare_report"], encoding="utf-8"))
++        if rep.get("verdict") != "SAME" or rep.get("contract_sha256") != MANIFEST["contract_sha256"]:
++            return "1043 bundle comparison not SAME for registered contract"
++        expected = {f"{arm}_{fn}": CONTRACT["inputs"][CONTRACT["branches"][arm]["bundle_json" if fn == "bundle.json" else "bundle_npz"]]["sha256"]
++                    for arm in ("off", "on") for fn in ("bundle.json", "bundle.npz")}
++        if rep.get("bundle_sha256") != expected:
++            return "1043 bundle comparison bytes mismatch"
++    except (OSError, ValueError, KeyError, TypeError):
++        return "1043 bundle comparison unreadable"
+     if training_running():
+         return "branch_run.py still running"
+-    used = gpu_used_mib(GPU)
+-    if used is None or used >= 3000:
+-        return f"GPU {GPU} memory used {used} MiB"
+     return ""
+ 
+ 
+@@ -329,8 +328,8 @@
+     """the --log value another cmdr_eval_driver*.py process was started with, parsed the way argparse would
+     (--log X, --log=X, a unique prefix of --log); None when absent (v3.2: always cmdr_eval_driver)."""
+     p = argparse.ArgumentParser(add_help=False)
+-    p.add_argument("--log", default="cmdr_eval_driver")
+-    p.add_argument("--base_log", default="cmdr_eval_driver")
++    p.add_argument("--log", default="s1043A_base")
++    p.add_argument("--base_log", default="s1043A_base")
+     try:
+         known, _ = p.parse_known_args(argv)
+     except SystemExit:
+@@ -450,21 +449,15 @@
+         return False
+     if st.st_size != CKPT_BYTES or time.time() - first[1] < 120:
+         return False
+-    if m.startswith("on"):
+-        rep = os.path.join(B, "cmdr_bundle_compare__cmdr_s1042_off_u4000__cmdr_s1042_on_u4000.json")
+-        if not os.path.exists(rep):
+-            return False
+-        r = json.load(open(rep, encoding="utf-8"))
+-        d = os.path.join(B, "cmdr_s1042_on_u4000")
+-        do = os.path.join(B, "cmdr_s1042_off_u4000")
+-        now = {"off_json": sha(os.path.join(do, "bundle.json")), "off_npz": sha(os.path.join(do, "bundle.npz")),
+-               "on_json": sha(os.path.join(d, "bundle.json")), "on_npz": sha(os.path.join(d, "bundle.npz"))}
+-        con = r.get("contract", {})
+-        if r.get("verdict") != "SAME" or r.get("bundle_sha256") != now or con.get("envs") != 8192 or con.get("updates") != 4000 \
+-                or con.get("gate") is not False or r.get("tool_sha256") != P0["cmdr_bundle_compare.py"]:
+-            LOG["ckpt"].setdefault(m, {})["blocked"] = "bundle comparison not SAME for the current on bundle"
+-            save()
+-            return False
++    input_name = "parent_model" if m == "p20000" else CONTRACT["branches"][m[:3] if m.startswith("off") else "on"][f"model_{m[-5:]}"]
++    if sha(p) != CONTRACT["inputs"][input_name]["sha256"]:
++        LOG["ckpt"].setdefault(m, {})["blocked"] = "registered checkpoint hash mismatch"
++        save()
++        return False
++    if m != "p20000" and training_done():
++        LOG["ckpt"].setdefault(m, {})["blocked"] = "both 1043 branches or comparison incomplete"
++        save()
++        return False
+     if "sha256" not in LOG["ckpt"].get(m, {}):
+         LOG["ckpt"][m] = {"path": p, "sha256": sha(p), "pinned_at": time.strftime("%Y-%m-%d %H:%M:%S")}
+         save()
+@@ -497,7 +490,7 @@
+     return ""
+ 
+ 
+-PARTICIPANT = "cmdr_eval_driver_v37.py"
++PARTICIPANT = "cmdr_eval_driver_s1043.py"
+ # 16h 3.1: a participant is this very file (same real path, so the same HERE/out/isaac_convert.lock), not any copy with
+ # the same name in another folder, which would hold a different lock.
+ SELF_PATH = os.path.normcase(os.path.realpath(os.path.abspath(__file__)))
+@@ -603,6 +596,12 @@
+         save()
+         say(f"STOP FILE before {where}")
+         sys.exit(7)
++    problems = launch_errors(MANIFEST)
++    if problems:
++        LOG["stopped"] = f"contract or input changed before {where}: {problems[:3]}"
++        save()
++        say(f"FROZEN INPUT before {where}: {problems[:3]}")
++        sys.exit(4)
+     if pins() != P0:
+         LOG["stopped"] = f"pins changed before {where}"
+         save()
+@@ -615,13 +614,24 @@
+         sys.exit(5)
+ 
+ 
+-def convert_slot(where, ck=None, sleep=time.sleep):
+-    """(v) returns the open, locked out/isaac_convert.lock once no foreign Isaac process is alive; gate() on every pass."""
++def release_run_lease(f):
+     import msvcrt
+-    note = None
++    try:
++        f.seek(0)
++        msvcrt.locking(f.fileno(), msvcrt.LK_UNLCK, 1)
++    except OSError:
++        pass
++    f.close()
++
++
++def run_lease(where, ck=None, sleep=time.sleep):
++    """Separate global Isaac lease, held until the slot child tree has exited."""
++    import msvcrt
++    path = CONTRACT["paths"]["run_lease"]
++    os.makedirs(os.path.dirname(path), exist_ok=True)
+     while True:
+         gate(where, ck)
+-        f = open(os.path.join(OUT, CONVERT_LOCK), "a+b")
++        f = open(path, "a+b")
+         f.seek(0)
+         try:
+             msvcrt.locking(f.fileno(), msvcrt.LK_NBLCK, 1)
+@@ -629,42 +639,28 @@
+             f.close()
+             sleep(2)
+             continue
+-        fo = foreign_isaac()
+-        if not fo:
+-            return f
+-        release_slot(f)
+-        if note is None or time.time() - note >= 300:
+-            note = time.time()
+-            LOG["slot_wait"] = {"t": time.strftime("%H:%M:%S"), "where": where, "foreign": fo[:8]}
+-            save()
+-            say(f"SLOT WAIT {where}: foreign Isaac processes {fo[:4]}")
+-        sleep(5)
+-
+-
+-def release_slot(f):
+-    import msvcrt
+-    try:
+-        f.seek(0)
+-        msvcrt.locking(f.fileno(), msvcrt.LK_UNLCK, 1)
+-    except OSError:
+-        pass
+-    f.close()
+-
+-
+-def hold_until_converted(name, p, sleep=time.sleep):
+-    """(v) ('marker' | 'exit', seconds): wait until the child's log has the scene-creation line or the child has exited."""
+-    t0 = time.time()
+-    lp = os.path.join(OUT, f"{name}.log")
+-    while True:
+-        if p.poll() is not None:
+-            return "exit", round(time.time() - t0, 1)
+-        try:
+-            with open(lp, encoding="utf-8", errors="replace") as fh:
+-                if CONVERT_DONE in fh.read():
+-                    return "marker", round(time.time() - t0, 1)
+-        except FileNotFoundError:
+-            pass
+-        sleep(1)
++        foreign = foreign_isaac()
++        if foreign:
++            release_run_lease(f)
++            raise RuntimeError(f"unregistered or unknown Isaac process: {foreign[:8]}")
++        return f
++
++
++def gpu_preflight():
++    """Read physical index, UUID and free memory immediately before an Isaac child."""
++    result = subprocess.run(["nvidia-smi", "--query-gpu=index,uuid,memory.free", "--format=csv,noheader,nounits"],
++                            capture_output=True, text=True, timeout=20)
++    if result.returncode:
++        raise RuntimeError("GPU probe failed")
++    rows = [list(map(str.strip, line.split(","))) for line in result.stdout.splitlines()]
++    row = next((r for r in rows if len(r) == 3 and r[0] == GPU), None)
++    if row is None or row[1].removeprefix("GPU-") != GPU_UUID:
++        raise RuntimeError("physical GPU index or UUID mismatch")
++    if int(row[2]) < CONTRACT["device"]["min_free_mib"]:
++        raise RuntimeError(f"GPU free {row[2]} MiB below floor")
++    if ENV.get("CUDA_DEVICE_ORDER") != "PCI_BUS_ID" or ENV.get("CUDA_VISIBLE_DEVICES") != GPU:
++        raise RuntimeError("child CUDA environment mismatch")
++    return {"gpu_index": GPU, "uuid": row[1], "free_mib": int(row[2])}
+ 
+ 
+ def _log_text(name):
+@@ -782,20 +778,57 @@
+                 dst = _free(os.path.join(OUT, "attempts", f"{name}{ext}.{time.strftime('%m%d%H%M%S', time.localtime(os.path.getmtime(src)))}.{os.getpid()}"))
+                 os.replace(src, dst)
+                 kept.append(os.path.relpath(dst, OUT))
+-        lk = convert_slot(f"{name} try {k}", ck)
++        lease = run_lease(f"{name} try {k}", ck)
++        p = None
++        t0 = time.time()
+         try:
+-            gate(f"{name} try {k} launch", ck)  # with the slot held, right before the child starts
+-            t0 = time.time()
+-            p = POPEN([PY, "gpu_guard.py", "--gpu", GPU, "--min_free_mib", "4096", "--log", f"out/{name}.log",
+-                       "--summary", f"out/{name}.guard.json", "--"] + cmd, cwd=HERE, env=ENV)
+-            rel = hold_until_converted(name, p)
++            gate(f"{name} try {k} lease held", ck)
++            preflight = gpu_preflight()
++            attempt_name = f"{ATTEMPT}-{name}-try{k}"
++            usd_root = os.path.join(CONTRACT["paths"]["work"], "usd", attempt_name)
++            log_file = os.path.join(OUT, name + ".log")
++            guard_file = os.path.join(OUT, name + ".guard.json")
++            slot_file = os.path.join(OUT, name + ".slot.json")
++            for target in (usd_root, log_file, guard_file, slot_file):
++                if not inside(target):
++                    raise RuntimeError(f"write path outside codexE: {target}")
++            source_eval = os.path.join(ROOT, "_eval")
++            isolated = [PY, os.path.join(source_eval, "usd_isolate_run_v3.py")] + cmd[1:]
++            guard = [PY, os.path.join(source_eval, "gpu_guard.py"), "--gpu", GPU,
++                     "--min_free_mib", str(CONTRACT["device"]["min_free_mib"]),
++                     "--log", log_file, "--summary", guard_file, "--"] + isolated
++            frozen = [PY, os.path.join(HERE, "frozen_exec_s1043.py"), "--manifest", args.manifest,
++                      "--checkpoint_label", ck or "p20000", "--expect_self_sha",
++                      MANIFEST["execution"]["candidate_hashes"]["frozen_exec_s1043.py"], "--"] + guard
++            scan = [OUT, B, os.path.join(source_eval, "out"), os.path.join(source_eval, "out_branch"),
++                    os.path.join(source_eval, "out_uncr"), os.path.join(source_eval, "out_uncr_v6"),
++                    os.path.join(source_eval, "out_ce12", "native"), os.path.join(source_eval, "out_rand")]
++            slot_cmd = [PY, os.path.join(source_eval, "isaac_slot_v3.py"), "--watch_log", log_file,
++                        "--record", slot_file, "--usd_root", usd_root, "--attempt", attempt_name,
++                        "--lock", CONTRACT["paths"]["convert_lock"],
++                        "--registry", CONTRACT["paths"]["registry"],
++                        "--scan_dirs", ",".join(scan), "--stop_file", CONTRACT["paths"]["stop"],
++                        "--deadline", str(DEADLINE), "--expect_conversions", CONTRACT["device"]["expect_conversions"],
++                        "--"] + frozen
++            os.makedirs(OUT, exist_ok=True)
++            os.makedirs(os.path.dirname(CONTRACT["paths"]["registry"]), exist_ok=True)
++            os.makedirs(usd_root, exist_ok=False)
++            gate(f"{name} try {k} launch", ck)
++            p = POPEN(slot_cmd, cwd=source_eval, env=ENV)
++            rc = p.wait()
+         finally:
+-            release_slot(lk)
+-        rc = p.wait()
++            if p is not None and p.poll() is None:
++                p.wait()  # never release the Isaac run lease while its child tree is live
++            release_run_lease(lease)
++        try:
++            slot_record = json.load(open(slot_file, encoding="utf-8"))
++        except (OSError, ValueError):
++            slot_record = {"slot_rc": rc, "state_at_release": "missing slot record"}
+         tr = {"try": k, "rc": rc, "s": round(time.time() - t0), "earlier_moved": kept,
+-              "slot": {"released_by": rel[0], "held_s": rel[1]}, "usd_dir": usd_dirs_of(name)}
++              "slot": {"state": slot_record.get("state_at_release"), "held_s": slot_record.get("hold_s"),
++                       "rc": slot_record.get("slot_rc")}, "gpu_preflight": preflight, "usd_dir": usd_dirs_of(name)}
+         TRIES.setdefault(name, []).append(tr)
+-        say(f"RUN {name} try {k} EXIT {rc} {time.time() - t0:.0f}s · slot {rel[0]} {rel[1]}s · usd {tr['usd_dir']}")
++        say(f"RUN {name} try {k} EXIT {rc} {time.time() - t0:.0f}s · slot {tr['slot']} · usd {tr['usd_dir']}")
+         if rc == 0 and py_traceback(name):
+             say(f"  {name}: exit 0 but a Python Traceback is in the log; counted as error 1 (Isaac Kit exits 0 after an uncaught exception)")
+             rc = 1
+@@ -819,13 +852,15 @@
+ 
+ 
+ def q(script, tag, model_path, fam, cells, episodes, noise, seed, train_yaml=None, small=True):
+-    cmd = [PY, script, "--headless", "--tag", tag, "--policy", "student", "--checkpoint", model_path,
+-           "--families", fam, "--cells", cells, "--episodes", str(episodes), "--eval_seed", str(seed)]
++    cmd = [PY, os.path.join(ROOT, "_eval", script), "--headless", "--tag", tag, "--policy", "student",
++           "--checkpoint", model_path, "--outdir", OUT, "--families", fam, "--cells", cells,
++           "--episodes", str(episodes), "--eval_seed", str(seed), "--difficulty", "0.5",
++           "--terrain_set", "train", "--heading_hold", "0", "--spawn_offset", ""]
+     if small:
+         cmd.append("--physx_small_buffers")
+     if noise:
+         cmd.append("--obs_noise")
+-    if not model_path.startswith(E1):
++    if os.path.normcase(os.path.abspath(model_path)) != os.path.normcase(os.path.abspath(MODELS["p20000"][0])):
+         cmd += ["--train_yaml", train_yaml or E1_YAML]
+     return cmd
+ 
+@@ -846,6 +881,14 @@
+         g = json.load(open(os.path.join(OUT, f"{tag}.guard.json"), encoding="utf-8"))
+         if g.get("exit_code") != 0 or g.get("stopped_by_guard"):
+             return f"guard exit {g.get('exit_code')} stopped {g.get('stopped_by_guard')}"
++        if str(g.get("gpu_index")) != GPU or str(g.get("gpu_uuid", "")).removeprefix("GPU-") != GPU_UUID:
++            return "guard physical GPU identity"
++        slot = json.load(open(os.path.join(OUT, f"{tag}.slot.json"), encoding="utf-8"))
++        if (slot.get("slot_rc") != 0 or slot.get("registry") != CONTRACT["paths"]["registry"] or
++                slot.get("lock") != CONTRACT["paths"]["convert_lock"] or
++                slot.get("expect_conversions") != CONTRACT["device"]["expect_conversions"] or
++                not inside(slot.get("usd_root", ""))):
++            return "slot v3 registry, lock, USD root or exit"
+         if py_traceback(tag):
+             return "Python Traceback in log"
+         why = log_done(tag, len(cells) * episodes)
+@@ -861,7 +904,8 @@
+         a = m["args"]
+         n = len(cells) * episodes
+         want = {"families": fam, "cells": ",".join(cells), "episodes": episodes, "eval_seed": seed, "obs_noise": noise,
+-                "difficulty": 0.5, "terrain_set": "train", "heading_hold": 0.0, "spawn_offset": "", "policy": "student"}
++                "difficulty": 0.5, "terrain_set": "train", "heading_hold": 0.0, "spawn_offset": "", "policy": "student",
++                "outdir": OUT}
+         for k, v in want.items():
+             if a.get(k) != v:
+                 return f"arg {k}={a.get(k)!r} want {v!r}"
+@@ -891,6 +935,11 @@
+             if os.path.normcase(os.path.abspath(s.get("train_yaml", ""))) != os.path.normcase(os.path.abspath(E1_YAML)) \
+                     or "bundle_json_sha256" not in s:
+                 return "train_yaml_source"
++            arm = next((arm for arm in ("off", "on") if ckpt_sha in
++                        (CONTRACT["inputs"][CONTRACT["branches"][arm][f"model_{it}"]]["sha256"],)), None)
++            if arm is None or s["bundle_json_sha256"] != CONTRACT["inputs"][CONTRACT["branches"][arm]["bundle_json"]]["sha256"] \
++                    or s.get("bundle_npz_sha256") != CONTRACT["inputs"][CONTRACT["branches"][arm]["bundle_npz"]]["sha256"]:
++                return "branch bundle differs from registration"
+         if len(c) != len(cells) or any(x["n"] != episodes for x in c):
+             return "cells.json n"
+         if len(rows) != n:
+@@ -951,26 +1000,26 @@
+ 
+ 
+ def stamp_ok(tag, P):
+-    """The stamp has the current pins; a stamp from v3.3 on (stamp_version or hashes present) must carry the output
+-    hashes and they must still match. A v3.2 stamp (neither) is accepted here and validate() decides."""
++    """Reuse only a prior new 1043 collection under this exact contract and pins."""
+     st = old_stamp(tag)
+-    if not st or st.get("pins") != P:
++    if (not st or st.get("pins") != P or st.get("stamp_version") != VERSION or
++            st.get("experiment") != EXPERIMENT or st.get("contract_sha256") != MANIFEST["contract_sha256"] or
++            st.get("stage") != "A" or st.get("origin") != "hashed-at-collection" or not st.get("attempt")):
+         return False
+-    if "stamp_version" in st or "out_sha256" in st:
+-        if not isinstance(st.get("out_sha256"), dict):
+-            return False
+-        try:
+-            return st["out_sha256"] == outhash(tag)
+-        except FileNotFoundError:
+-            return False
+-    return True
++    if not isinstance(st.get("out_sha256"), dict):
++        return False
++    try:
++        return st["out_sha256"] == outhash(tag)
++    except FileNotFoundError:
++        return False
+ 
+ 
+ def write_stamp(tag, P, extra):
+     p = os.path.join(OUT, tag, "driver_stamp.json")
+     tmp = p + f".{os.getpid()}.tmp"
+     with open(tmp, "w", encoding="utf-8") as f:
+-        json.dump({"pins": P, "t": time.strftime("%Y-%m-%d %H:%M:%S"), "stamp_version": VERSION, **extra}, f, indent=1)
++        json.dump({"pins": P, "t": time.strftime("%Y-%m-%d %H:%M:%S"), "stamp_version": VERSION,
++                   "experiment": EXPERIMENT, "contract_sha256": MANIFEST["contract_sha256"], "stage": "A", **extra}, f, indent=1)
+     for _ in range(40):
+         try:
+             os.replace(tmp, p)
+@@ -986,7 +1035,7 @@
+     # 1. smoke: parent, flat, 11 cells x 10 = 110 envs, validated like a real run
+     t = f"cq_test_{pin8}_smoke"
+     sc = in_eval_order(CELLS)
+-    rc, _ = guarded(t, q("q_eval_cmdr.py", t, MODELS["p20000"][0], "flat", ",".join(sc), 10, True, 1000))
++    rc, _ = guarded(t, q("q_eval_cmdr.py", t, MODELS["p20000"][0], "flat", ",".join(sc), 10, True, 1000), ck="p20000")
+     why = validate(t, psha, 20000, "flat", sc, 10, True, 1000, False) if rc == 0 else f"exit {rc}"
+     LOG["tests"]["smoke"] = why or "ok"
+     save()
+@@ -997,7 +1046,7 @@
+     LOG["tests"]["q_eval_py_sha256"] = sha(os.path.join(HERE, "q_eval.py"))
+     a, b = f"cq_test_{pin8}_ka_orig", f"cq_test_{pin8}_ka_copy"
+     for tag, script in ((a, "q_eval.py"), (b, "q_eval_cmdr.py")):
+-        rc, _ = guarded(tag, q(script, tag, MODELS["p20000"][0], "flat", "stop03", 100, True, 1000))
++        rc, _ = guarded(tag, q(script, tag, MODELS["p20000"][0], "flat", "stop03", 100, True, 1000), ck="p20000")
+         if rc != 0:
+             LOG["tests"]["known_answer"] = f"{tag} exit {rc}"
+             save()
+@@ -1008,25 +1057,26 @@
+     LOG["tests"]["known_answer"] = {"orig_vs_copy_same": ok}
+     if not ok:
+         a2 = f"cq_test_{pin8}_ka_orig2"
+-        guarded(a2, q("q_eval.py", a2, MODELS["p20000"][0], "flat", "stop03", 100, True, 1000))
++        guarded(a2, q("q_eval.py", a2, MODELS["p20000"][0], "flat", "stop03", 100, True, 1000), ck="p20000")
+         LOG["tests"]["known_answer"]["orig_vs_orig_same"] = same(a, a2)
+         save()
+         return False
+     save()
+     # 2b. small PhysX buffers must not change the physics on the flat training terrain (copy, default buffers vs small)
+     c2 = f"cq_test_{pin8}_ka_copy_default_buffers"
+-    rc, _ = guarded(c2, q("q_eval_cmdr.py", c2, MODELS["p20000"][0], "flat", "stop03", 100, True, 1000, small=False))
++    rc, _ = guarded(c2, q("q_eval_cmdr.py", c2, MODELS["p20000"][0], "flat", "stop03", 100, True, 1000, small=False), ck="p20000")
+     ok2 = rc == 0 and same(b, c2)
+     LOG["tests"]["small_buffers_vs_default_same"] = ok2
+     save()
+     if not ok2:
+         return False
+     # 3. branch path must refuse a wrong train_yaml: another run's env.yaml, and a sibling file of the right folder
+-    g = f"{B}/gate_c1/model_20002.pt"
++    g = MODELS["off24000"][0]
+     gsha = sha(g)
+-    for name, bad in (("other_run", f"{E2}/params/env.yaml"), ("sibling", f"{E1}/params/agent.yaml")):
++    other_yaml = os.path.join(ROOT, "logs", "rsl_rl", "go2_moe_cts", "2026-10-11_12-39-32_e2_seed43_n8192", "params", "env.yaml")
++    for name, bad in (("other_run", other_yaml), ("sibling", CONTRACT["inputs"]["parent_agent_yaml"]["path"])):
+         t = f"cq_test_{pin8}_wrong_yaml_{name}"
+-        rc, _ = guarded(t, q("q_eval_cmdr.py", t, g, "flat", "stop03", 10, True, 1000, train_yaml=bad), tries=1)
++        rc, _ = guarded(t, q("q_eval_cmdr.py", t, g, "flat", "stop03", 10, True, 1000, train_yaml=bad), tries=1, ck="off24000")
+         log = open(os.path.join(OUT, f"{t}.log"), encoding="utf-8", errors="replace").read()
+         wrote = os.path.exists(os.path.join(OUT, t, "cells.json")) or os.path.exists(os.path.join(OUT, t, "traj.npz"))
+         refused = rc != 0 and "AssertionError: train_yaml is not the parent run's" in log and not wrote
+@@ -1034,32 +1084,27 @@
+         save()
+         if not refused:
+             return False
+-    # 4. branch checkpoint passes and is read as iteration 20002 with the exact parent yaml and bundle hashes
+-    t = f"cq_test_{pin8}_branch_20002"
+-    rc, _ = guarded(t, q("q_eval_cmdr.py", t, g, "flat", "stop03", 10, True, 1000))
+-    why = validate(t, gsha, 20002, "flat", ["stop03"], 10, True, 1000, True) if rc == 0 else f"exit {rc}"
+-    LOG["tests"]["branch_pass"] = why or "ok"
++    # 4. registered 1043 off and on checkpoints pass with the exact parent yaml and bundle hashes
++    t = f"cq_test_{pin8}_branch_off24000"
++    rc, _ = guarded(t, q("q_eval_cmdr.py", t, g, "flat", "stop03", 10, True, 1000), ck="off24000")
++    why = validate(t, gsha, 24000, "flat", ["stop03"], 10, True, 1000, True) if rc == 0 else f"exit {rc}"
++    LOG["tests"]["branch_off_pass"] = why or "ok"
++    save()
++    if why:
++        return False
++    t_on = f"cq_test_{pin8}_branch_on24000"
++    rc, _ = guarded(t_on, q("q_eval_cmdr.py", t_on, MODELS["on24000"][0], "flat", "stop03", 10, True, 1000), ck="on24000")
++    why = validate(t_on, sha(MODELS["on24000"][0]), 24000, "flat", ["stop03"], 10, True, 1000, True) if rc == 0 else f"exit {rc}"
++    if not why and fingerprint(t) != fingerprint(t_on):
++        why = "1043 off/on startup fingerprint mismatch"
++    LOG["tests"]["branch_on_pass"] = why or "ok"
+     save()
+     return not why
+ 
+ 
+ def jobs():
+-    out = []
+-    for m in MODELS:  # (A)
+-        for cell in CELLS:
+-            out.append((m, "flat", cell, True, 1000))
+-    for m in MODELS:  # (B)
+-        for s in EXT_SEEDS:
+-            for cell in TARGETS:
+-                out.append((m, "flat", cell, True, s))
+-    for fam in FAMILIES[1:]:  # (C)
+-        for m in MODELS:
+-            for cell in CELLS:
+-                out.append((m, fam, cell, True, 1000))
+-    for m in MODELS:  # (D)
+-        for cell in CELLS:
+-            out.append((m, "flat", cell, False, 1000))
+-    return out
++    """First release owns exactly the 45 registered A jobs."""
++    return [(m, fam, cell, noise == "on", seed) for m, fam, cell, noise, seed in CONTRACT["plan"]["A"]]
+ 
+ 
+ def order24(js):
+@@ -1076,7 +1121,7 @@
+ def screen_universe():
+     """the planned screen cells: every (family, cell, noise) of the base plan with seed 1000, minus the flat noise-on
+     targets (measured at n=500 by (B))."""
+-    u = sorted({(fam, cell, noise) for (m, fam, cell, noise, seed) in jobs() if seed == 1000})
++    u = sorted({(fam, cell, noise == "on") for (m, fam, cell, noise, seed) in CONTRACT["plan"]["base"] if seed == 1000})
+     return [k for k in u if not (k[0] == "flat" and k[2] and k[1] in TARGETS)]
+ 
+ 
+@@ -1112,7 +1157,7 @@
+ 
+ 
+ def stop_requested():
+-    return os.path.exists(os.path.join(OUT, f"{args.log}.stop"))
++    return os.path.exists(CONTRACT["paths"]["stop"])
+ 
+ 
+ def read_attempt(name):
+@@ -1135,15 +1180,16 @@
+     return f"cq_{m}_{fam}_{cell}_{'on' if noise else 'off'}_s{seed}"
+ 
+ 
+-DEADLINE = time.mktime(time.strptime(args.until, "%Y-%m-%d %H:%M"))
++DEADLINE = (float(MANIFEST["execution"]["deadline_epoch"])
++            if isinstance(MANIFEST["execution"].get("deadline_epoch"), (int, float)) else 0.0)
+ 
+ 
+ def start():
+     """checks before any run; sets P0. Exits (non-zero) instead of risking a second writer."""
+     global P0
+-    if args.plan == "remeasure" and os.path.normcase(os.path.abspath(LOGF)) == os.path.normcase(os.path.abspath(BASEF)):
+-        say("--log must differ from --base_log for --plan remeasure")
+-        sys.exit(6)
++    if args.plan != "A":
++        say("B and remeasure are disabled in this candidate")
++        sys.exit(8)
+     w = driver_writers(args.log)
+     if w:
+         say(f"another driver writes out/{args.log}.json (pids {w}): not starting")
+@@ -1154,30 +1200,29 @@
+     OWNED[0] = True
+     if args.plan == "remeasure":
+         PUBLISH[0] = True
+-    set_attempt("revalidating" if args.plan == "base" else "running")
++    set_attempt("revalidating")
+     P0 = pins()
+     LOG["pins"] = P0
+     LOG["code_sha256"] = {"driver": sha(os.path.abspath(__file__))}
+     save()
+     say(f"pins {len(P0)} files · q_eval_cmdr {P0['q_eval_cmdr.py'][:16]} · attempt {ATTEMPT}")
+-    mine = {tagof(*j) for j in jobs()} if args.plan == "base" else remeasure_tags()
++    mine = {tagof(*j) for j in jobs()}
+     while unseen_running() or live_runs(mine):
+         if time.time() > DEADLINE:
+             say("deadline while waiting for the unseen driver or a live run of this plan")
+             sys.exit(2)
+         say(f"waiting: unseen {unseen_running()} · live runs of this plan {live_runs(mine)[:3]}")
+         time.sleep(30)
+-    if GPU == "0":
+-        ok = 0
+-        while ok < 2:  # (d) two looks 60 s apart
+-            why = training_done()
+-            ok = ok + 1 if not why else 0
+-            if why:
+-                if time.time() > DEADLINE:
+-                    say(f"deadline while waiting for GPU 0: {why}")
+-                    sys.exit(2)
+-                say(f"GPU 0 not handed over yet: {why}")
+-            time.sleep(60)
++    ok = 0
++    while ok < 2:  # both branches and their bytes stable at two observations
++        why = training_done()
++        ok = ok + 1 if not why else 0
++        if why:
++            if time.time() > DEADLINE:
++                say(f"deadline while waiting for registered 1043 pair: {why}")
++                sys.exit(2)
++            say(f"1043 pair not handed over yet: {why}")
++        time.sleep(60)
+     LOG[f"gpu{GPU}_from"] = time.strftime("%Y-%m-%d %H:%M:%S")
+     say(f"GPU {GPU} is ours")
+     while not all([ready(m) for m in MODELS][:1]):  # look at every model each pass, wait for the parent
+@@ -1214,14 +1259,14 @@
+         save()
+         say(f"CHECKPOINT CHANGED {m}: stop")
+         sys.exit(5)
+-    branch = not path.startswith(E1)
++    branch = m != "p20000"
+     prev = old_stamp(tag)
+     moved = None
+     sp_ = os.path.join(OUT, tag, "driver_stamp.json")
+     prev_sha = sha(sp_) if os.path.exists(sp_) else None  # (o2) the stamp this run had before, kept by hash
+     if stamp_ok(tag, P0) and not validate(tag, LOG["ckpt"][m]["sha256"], it, fam, [cell], 100, noise, seed, branch):
+         why, reused = "", True
+-        attempt = prev.get("attempt", "v3.2 or earlier")
++        attempt = prev["attempt"]
+     elif reuse_only:
+         ACTIVE[0] = None
+         return False
+@@ -1432,13 +1477,43 @@
+ 
+ 
+ def main():
++    print("sys.executable", sys.executable)
++    print("candidate.__file__", __file__)
++    print("candidate.sha256", sha(__file__))
++    if (sha(__file__) != args.expect_self_sha or
++            os.path.normcase(os.path.abspath(__file__)) != os.path.normcase(os.path.join(CAND_ROOT, "cand", "cmdr_eval_driver_s1043.py")) or
++            os.path.normcase(os.path.abspath(sys.executable)) != os.path.normcase(os.path.abspath(CONTRACT["runtime"]["python"]))):
++        say("환경 불일치")
++        sys.exit(3)
++    print("ISOLATION", assert_isolated(MANIFEST))
++    if not re.fullmatch(r"[A-Za-z0-9_-]{1,50}", args.log):
++        say("unsafe log name")
++        sys.exit(3)
++    if args.plan != "A":
++        say("B and remeasure disabled in first release")
++        sys.exit(8)
++    if args.cpu_plan:
++        if os.environ.get("CUDA_VISIBLE_DEVICES") != "-1":
++            say("CPU plan requires CUDA_VISIBLE_DEVICES=-1")
++            sys.exit(3)
++        structural = check_inputs(MANIFEST, require_files=False)
++        if structural:
++            say(f"registered plan rejected: {structural[:5]}")
++            sys.exit(4)
++        plan = {"experiment": EXPERIMENT, "stage": "A", "contract_sha256": MANIFEST["contract_sha256"],
++                "A_count": len(jobs()), "A_tags": [tagof(*j) for j in jobs()],
++                "B_remaining": len(CONTRACT["plan"]["B_remaining"]), "B_enabled": False,
++                "write_paths": CONTRACT["paths"]}
++        print(json.dumps(plan, ensure_ascii=False))
++        return
++    problems = launch_errors(MANIFEST)
++    if problems:
++        say(f"launch blocked: {problems[:8]}")
++        sys.exit(4)
++    os.makedirs(OUT, exist_ok=True)
+     try:
+         start()
+-        if args.plan == "base":
+-            main_base()
+-        else:
+-            run_tests()
+-            main_remeasure()
++        main_base()
+     except SystemExit as e:
+         code = e.code if isinstance(e.code, int) else 1
+         if code != 0:

@@ -1,0 +1,170 @@
+{
+  "scope": "Synthetic offline function tests only. No robot, official app, firmware or live packets executed. No timing measurement.",
+  "raw_input_nonzero_bytes": {
+    "0": 129,
+    "15": 1,
+    "16": 128,
+    "2048": 128
+  },
+  "origin": [
+    1,
+    2,
+    3
+  ],
+  "resolution": 0.05,
+  "results": [
+    {
+      "repo": "legion1581",
+      "known_nonempty_fixture": "PASS",
+      "point_count": 5,
+      "actual_points": [
+        [
+          1.0,
+          2.0,
+          3.0
+        ],
+        [
+          1.35,
+          2.0,
+          3.0
+        ],
+        [
+          7.3500000000000005,
+          2.0,
+          3.0
+        ],
+        [
+          1.0,
+          2.05,
+          3.0
+        ],
+        [
+          1.0,
+          2.0,
+          3.05
+        ]
+      ],
+      "empty_fixture": {
+        "result": "returned",
+        "shape": [
+          0,
+          3
+        ]
+      }
+    },
+    {
+      "repo": "VectorRobotics",
+      "known_nonempty_fixture": "PASS",
+      "point_count": 5,
+      "actual_points": [
+        [
+          1.0,
+          2.0,
+          3.0
+        ],
+        [
+          1.35,
+          2.0,
+          3.0
+        ],
+        [
+          7.3500000000000005,
+          2.0,
+          3.0
+        ],
+        [
+          1.0,
+          2.05,
+          3.0
+        ],
+        [
+          1.0,
+          2.0,
+          3.05
+        ]
+      ],
+      "empty_fixture": {
+        "result": "raised",
+        "exception": "ValueError",
+        "message": "operands could not be broadcast together with shapes (0,) (3,) "
+      }
+    },
+    {
+      "repo": "phospho-app",
+      "known_nonempty_fixture": "PASS",
+      "point_count": 5,
+      "actual_points": [
+        [
+          1.0,
+          2.0,
+          3.0
+        ],
+        [
+          1.35,
+          2.0,
+          3.0
+        ],
+        [
+          7.3500000000000005,
+          2.0,
+          3.0
+        ],
+        [
+          1.0,
+          2.05,
+          3.0
+        ],
+        [
+          1.0,
+          2.0,
+          3.05
+        ]
+      ],
+      "empty_fixture": {
+        "result": "raised",
+        "exception": "ValueError",
+        "message": "operands could not be broadcast together with shapes (0,) (3,) "
+      }
+    },
+    {
+      "repo": "abizovnuralem",
+      "isolated_update_meshes_for_cloud2_fixture": "PASS",
+      "actual_points_xyzi": [
+        [
+          1.0499999523162842,
+          2.0999999046325684,
+          3.1500000953674316,
+          2.0
+        ]
+      ],
+      "interpretation": "UV minimum labeled intensity; zero is removed and identical XYZI duplicates are removed."
+    }
+  ],
+  "expected_points": [
+    [
+      1,
+      2,
+      3
+    ],
+    [
+      1.35,
+      2,
+      3
+    ],
+    [
+      7.35,
+      2,
+      3
+    ],
+    [
+      1,
+      2.05,
+      3
+    ],
+    [
+      1,
+      2,
+      3.05
+    ]
+  ]
+}

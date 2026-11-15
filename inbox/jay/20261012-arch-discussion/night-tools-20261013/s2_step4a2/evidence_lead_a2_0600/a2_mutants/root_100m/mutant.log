@@ -1,0 +1,12 @@
+PASS analytic_static_world_8x256
+PASS height_nan_height_nonfinite
+PASS fixed_one_fixed_schedule
+FAIL root_100m_root_sensor_transform
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+  File "C:\Users\AI-WS01\.claude\jobs\09bbf294\tmp\codexw\leadA2\frozen_copy\test_s2_connect_a2.py", line 93, in main
+    check(name+"_"+want,got["verdict"]=="HOLD" and want in got["reasons"])
+  File "C:\Users\AI-WS01\.claude\jobs\09bbf294\tmp\codexw\leadA2\frozen_copy\test_s2_connect_a2.py", line 73, in check
+    assert good,name
+           ^^^^
+AssertionError: root_100m_root_sensor_transform

@@ -1,0 +1,28 @@
+[
+ {
+  "key": "flat_yawL05_ep000",
+  "hud": "_mut/hud_test/flat_yawL05_ep000_hud.mp4",
+  "hud_bytes": 3192308,
+  "frames": 1001,
+  "trace_rows": 1001,
+  "video_fps": 50.0,
+  "stills": [
+   "_mut/hud_test\\stills\\flat_yawL05_ep000_hud_f0100.png",
+   "_mut/hud_test\\stills\\flat_yawL05_ep000_hud_f0400.png",
+   "_mut/hud_test\\stills\\flat_yawL05_ep000_hud_f0700.png",
+   "_mut/hud_test\\stills\\flat_yawL05_ep000_hud_f0950.png"
+  ],
+  "web": "_mut/hud_test/web/flat_yawL05_ep000.mp4",
+  "web_bytes": 1015529,
+  "web_crf": 28,
+  "web_height": 720,
+  "web_tried": [
+   {
+    "crf": 28,
+    "height": 720,
+    "bytes": 1015529
+   }
+  ],
+  "wall_s": 35.4
+ }
+]

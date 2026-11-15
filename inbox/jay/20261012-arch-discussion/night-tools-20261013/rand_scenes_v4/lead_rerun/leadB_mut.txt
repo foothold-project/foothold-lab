@@ -1,0 +1,12 @@
+03:57:58 start
+CAUGHT   M22 free memory not checked before launch
+CAUGHT   M42 request and order not checked
+CAUGHT   M65 scan only out_rand
+CAUGHT   M73 v3 registry shares legacy file
+CAUGHT   M74 legacy registry read failure hidden
+CAUGHT   M75 event heading not linked to trajectory
+CAUGHT   M76 missing request accepted
+CAUGHT   M77 unknown GPU free launches
+CAUGHT   M78 no main deadline required
+{"caught": 9, "total": 9, "report": "C:\\Users\\AI-WS01\\.claude\\jobs\\09bbf294\\tmp\\codexB\\mutations_20261014-035758.json"}
+mut exit 0

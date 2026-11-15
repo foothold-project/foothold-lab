@@ -1,0 +1,8 @@
+CAUGHT device_uuid_compare_removed baseline_rc=0 want=[other_gpu_uuid_rejected] first_fail=[other_gpu_uuid_rejected] mutant_rc=1
+CAUGHT stage_failure_not_recorded baseline_rc=0 want=[step_failure_note_exists] first_fail=[step_failure_note_exists] mutant_rc=1
+CAUGHT ray_index_not_collapsed baseline_rc=0 want=[capture_shapes_match_fixture] first_fail=[capture_shapes_match_fixture] mutant_rc=1
+CAUGHT scene_step_height_precheck_removed baseline_rc=0 want=[step_height_manifest_differs_from_answer_rejected] first_fail=[step_height_manifest_differs_from_answer_rejected] mutant_rc=1
+CAUGHT usd_root_env_not_passed baseline_rc=0 want=[usd_isolation_env_and_wrapper_reach_child] first_fail=[usd_isolation_env_and_wrapper_reach_child] mutant_rc=1
+CAUGHT nested_output_counted_twice baseline_rc=0 want=[non_overlapping_counts_nested_once] first_fail=[non_overlapping_counts_nested_once] mutant_rc=1
+CAUGHT python_isaac_scan_removed baseline_rc=0 want=[python_branch_run_found] first_fail=[python_branch_run_found] mutant_rc=1
+SUMMARY 7/7 CAUGHT

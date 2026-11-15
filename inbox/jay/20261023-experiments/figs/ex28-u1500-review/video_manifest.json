@@ -1,0 +1,33 @@
+{
+  "sources": [
+    {
+      "folder": "C:\\Users\\AI-WS01\\s2_lab\\run_20261024\\ex23_model1500_flat_guarded24i",
+      "receipt_sha256": "80db5a6cbf695aef38c8d0c432fe7719ac61e04f7d06de30c1ba142ecd83ab4a"
+    },
+    {
+      "folder": "C:\\Users\\AI-WS01\\s2_lab\\run_20261024\\b_model1500_flat_guarded24i",
+      "receipt_sha256": "2cd1850f0261cdb822fdc10d3b29db9a58970f7ee5ac204058d80d9f05d2d56b"
+    },
+    {
+      "folder": "C:\\Users\\AI-WS01\\s2_lab\\run_20261024\\ex23_model1500_rough_guarded24i",
+      "receipt_sha256": "af10ab066d5f38216c91b8b030d882fe05599f2e602b67ff7330678f3ed93382"
+    },
+    {
+      "folder": "C:\\Users\\AI-WS01\\s2_lab\\run_20261024\\b_model1500_rough_guarded24i",
+      "receipt_sha256": "c51ebd680621fc7d6cf1ff5a1fc9bdcb26229cfae42f084780cde922dc8727c5"
+    }
+  ],
+  "outputs": [
+    {
+      "file": "C:\\Users\\AI-WS01\\s2_lab\\run_20261024\\b1500_matched_review\\comparison_1x.mp4",
+      "sha256": "46e17af7dac289b74c8306a98a9fb341a1805b8e3528ad5f011e61844683bdc6",
+      "decoded_frames": 300
+    },
+    {
+      "file": "C:\\Users\\AI-WS01\\s2_lab\\run_20261024\\b1500_matched_review\\comparison_05x.mp4",
+      "sha256": "07baa4782e30d11baa3f6f2b61f06a895eba58fe65f049a5f053e5b6339689cf",
+      "decoded_frames": 600
+    }
+  ],
+  "slow_motion": "0.5x playback repeats source frames; no generated motion; final frame held to 24s"
+}

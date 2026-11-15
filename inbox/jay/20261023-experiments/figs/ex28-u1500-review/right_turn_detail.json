@@ -1,0 +1,82 @@
+{
+  "EX-23 flat": {
+    "window_s": [
+      11,
+      12
+    ],
+    "n": 50,
+    "FL_calf_actual_range_deg": [
+      -90.4732894897461,
+      -66.71556854248047
+    ],
+    "FL_calf_target_range_deg": [
+      -93.58816528320312,
+      -44.88217544555664
+    ],
+    "FL_calf_torque_last_substep_range_nm": [
+      -2.6349732875823975,
+      15.714835166931152
+    ],
+    "hard_joint_limits_measured": false
+  },
+  "B flat": {
+    "window_s": [
+      11,
+      12
+    ],
+    "n": 50,
+    "FL_calf_actual_range_deg": [
+      -48.72576904296875,
+      -47.90862274169922
+    ],
+    "FL_calf_target_range_deg": [
+      -51.6922492980957,
+      -9.137788772583008
+    ],
+    "FL_calf_torque_last_substep_range_nm": [
+      -1.9255479574203491,
+      17.265993118286133
+    ],
+    "hard_joint_limits_measured": false
+  },
+  "EX-23 rough": {
+    "window_s": [
+      11,
+      12
+    ],
+    "n": 50,
+    "FL_calf_actual_range_deg": [
+      -92.83611297607422,
+      -66.02631378173828
+    ],
+    "FL_calf_target_range_deg": [
+      -96.93175506591797,
+      -39.52363204956055
+    ],
+    "FL_calf_torque_last_substep_range_nm": [
+      -4.358983039855957,
+      22.92292594909668
+    ],
+    "hard_joint_limits_measured": false
+  },
+  "B rough": {
+    "window_s": [
+      11,
+      12
+    ],
+    "n": 50,
+    "FL_calf_actual_range_deg": [
+      -48.506351470947266,
+      -47.90372085571289
+    ],
+    "FL_calf_target_range_deg": [
+      -40.79546356201172,
+      -13.366618156433105
+    ],
+    "FL_calf_torque_last_substep_range_nm": [
+      3.106050729751587,
+      15.571592330932617
+    ],
+    "hard_joint_limits_measured": false
+  }
+}

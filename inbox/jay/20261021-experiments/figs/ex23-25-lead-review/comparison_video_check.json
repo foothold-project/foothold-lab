@@ -1,0 +1,78 @@
+[
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\luna-23b\\inbox\\jay\\20261021-experiments\\figs\\ex23-25-luna-23b\\ex23-ex25-flat-1500-0.5x.mp4",
+    "sha256": "55f051a57e5f7fb92b6f383d02f8c920ed90307a60f9ad29028883dbc3f3f418",
+    "probe": {
+      "programs": [],
+      "stream_groups": [],
+      "streams": [
+        {
+          "width": 1920,
+          "height": 600,
+          "r_frame_rate": "25/1",
+          "duration": "24.000000",
+          "nb_read_frames": "600"
+        }
+      ]
+    },
+    "decode_rc": 0,
+    "stderr": ""
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\luna-23b\\inbox\\jay\\20261021-experiments\\figs\\ex23-25-luna-23b\\ex23-ex25-flat-1500-1x.mp4",
+    "sha256": "70fc8bcece9e59157a2c5d0989dd7e42ca8a10461e96a5480a24274201252638",
+    "probe": {
+      "programs": [],
+      "stream_groups": [],
+      "streams": [
+        {
+          "width": 1920,
+          "height": 600,
+          "r_frame_rate": "25/1",
+          "duration": "12.000000",
+          "nb_read_frames": "300"
+        }
+      ]
+    },
+    "decode_rc": 0,
+    "stderr": ""
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\luna-23b\\inbox\\jay\\20261021-experiments\\figs\\ex23-25-luna-23b\\ex23-ex25-rough-1500-0.5x.mp4",
+    "sha256": "1b978afcf5c3c006d5beaf4695b2e2fe7ede80679414a451650c93252e4692f1",
+    "probe": {
+      "programs": [],
+      "stream_groups": [],
+      "streams": [
+        {
+          "width": 1920,
+          "height": 600,
+          "r_frame_rate": "25/1",
+          "duration": "24.000000",
+          "nb_read_frames": "600"
+        }
+      ]
+    },
+    "decode_rc": 0,
+    "stderr": ""
+  },
+  {
+    "path": "C:\\mai\\wt\\foothold-lab\\luna-23b\\inbox\\jay\\20261021-experiments\\figs\\ex23-25-luna-23b\\ex23-ex25-rough-1500-1x.mp4",
+    "sha256": "c61e2d616e75d0faf0ffff931b0b7718a50a5e5e5c8e956dfb49fd7c4f65a6b3",
+    "probe": {
+      "programs": [],
+      "stream_groups": [],
+      "streams": [
+        {
+          "width": 1920,
+          "height": 600,
+          "r_frame_rate": "25/1",
+          "duration": "12.000000",
+          "nb_read_frames": "300"
+        }
+      ]
+    },
+    "decode_rc": 0,
+    "stderr": ""
+  }
+]

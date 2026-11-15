@@ -1,0 +1,142 @@
+"""EX41 numeric score contract from original map64 and three flat-stand files.
+
+No Kit imports. The EX40 per-env stance definition is reused, while EX41's
+restoration threshold remains 61/64 in its runtime. map64_b3 is not a substitute.
+"""
+from pathlib import Path
+import copy
+import json
+import hashlib
+import math
+
+from foothold_s2.curriculum.ex41_fixed import CASES, build_maintenance_counts, baseline_counts, maintenance
+from foothold_s2.ex40_score import config, sha256, _map_rows, _stand_rows, _stand_pass
+from foothold_s2.eval.eval_dr_mode import require_dr_off_document
+
+MODES=('eval_gt','probe_prop_only','eval_pred')
+DEFAULT_CONFIG=Path(__file__).with_name('ex40_score_config.json')
+
+
+def enrich_training_metrics(draft, w86_metrics_path, *, snapshot_dir):
+    """U10 record-only score fields; copy evidence out of a growing training log.
+
+    Runner calls after enrich_score_metrics, before publishing the score. A
+    missing or incomplete same-iteration record is missing evidence, never 0.
+    This function changes no maintenance/stage verdict and no reward weight.
+    """
+    from foothold_s2.rewards.w86_runtime import KNEES
+    iteration=draft.get('iteration')
+    if type(iteration) is not int or not isinstance(draft.get('metrics'),dict) or not isinstance(draft.get('evidence'),list):
+        raise ValueError('EX41 training metrics draft invalid')
+    path=Path(w86_metrics_path).resolve(strict=True); raw=path.read_bytes()
+    records=[json.loads(line) for line in raw.decode('utf-8-sig').splitlines() if line.strip()]
+    selected=[r for r in records if isinstance(r,dict) and type(r.get('iteration')) is int and r['iteration']==iteration]
+    if len(selected)!=1: raise ValueError('EX41 training metric missing or duplicate iteration')
+    row=selected[0]; data=row.get('knee_effort')
+    if (row.get('format')!='ex41-w86-metrics/1' or not isinstance(data,dict)
+        or data.get('threshold_fraction')!=.9 or data.get('record_only') is not True
+        or not isinstance(data.get('joints'),dict) or set(data['joints'])!=set(KNEES)):
+        raise ValueError('EX41 knee metric contract differs')
+    for name,item in data['joints'].items():
+        if not isinstance(item,dict): raise ValueError('EX41 knee row invalid: '+name)
+        num,den,ratio=(item.get(k) for k in ('near_limit_frames','valid_frames','ratio'))
+        if type(num) is not int or type(den) is not int or not 0<=num<=den:
+            raise ValueError('EX41 knee counts invalid: '+name)
+        if (den==0 and ratio is not None) or (den>0 and (type(ratio) not in (int,float)
+            or not math.isfinite(ratio) or not math.isclose(ratio,num/den,abs_tol=1e-12))):
+            raise ValueError('EX41 knee ratio/count mismatch: '+name)
+    payload={'format':'ex41-training-metrics-evidence/1','source_path':str(path),
+             'source_prefix_sha256':hashlib.sha256(raw).hexdigest(),'source_byte_count':len(raw),'record':row}
+    content=(json.dumps(payload,ensure_ascii=False,sort_keys=True,allow_nan=False)+'\n').encode('utf-8')
+    digest=hashlib.sha256(content).hexdigest()
+    folder=Path(snapshot_dir).resolve(); folder.mkdir(parents=True,exist_ok=True)
+    dest=folder/f'w86_{iteration}_{digest[:12]}.json'
+    try:
+        with dest.open('xb') as out: out.write(content)
+    except FileExistsError:
+        if dest.read_bytes()!=content: raise ValueError('EX41 training snapshot hash/name collision')
+    result=copy.deepcopy(draft);result['metrics']['training_knee_effort']=copy.deepcopy(data)
+    evidence={'path':str(dest),'sha256':digest}
+    if evidence not in result['evidence']:result['evidence'].append(evidence)
+    return result
+
+
+def maintenance_counts_from_map_modes(map_modes, baseline):
+    """Exact numeric producer used by the runner, not a second set of rules."""
+    if (not isinstance(map_modes,dict) or type(map_modes.get('envs')) is not int
+        or map_modes['envs']!=64 or map_modes.get('command_suite')!='extended'
+        or not isinstance(map_modes.get('modes'),dict) or set(map_modes['modes'])!=set(MODES)):
+        raise ValueError('EX41 needs map64 extended and all three 64-env modes')
+    cells={}
+    for mode in MODES:
+        cases=map_modes['modes'][mode]
+        if not isinstance(cases,dict) or not set(CASES)<=set(cases):
+            raise ValueError('EX41 map64 cases incomplete: '+mode)
+        for case in CASES:
+            row=cases[case]
+            per=row.get('per_env') if isinstance(row,dict) else None
+            if (not isinstance(per,list) or len(per)!=64 or type(row.get('env_count')) is not int
+                or row['env_count']!=64 or any(not isinstance(e,dict) or type(e.get('env')) is not int
+                    or type(e.get('alive_at_end')) is not bool for e in per)
+                or sorted(e['env'] for e in per)!=list(range(64))
+                or type(row.get('alive_envs_at_end')) is not int
+                or row['alive_envs_at_end']!=sum(e['alive_at_end'] for e in per)):
+                raise ValueError('EX41 per-env survival/count mismatch: '+mode+'/'+case)
+            key=f'{mode}/{case}'+('_record_only' if mode=='eval_pred' else '')
+            cells[key]={'alive_envs_at_end':row['alive_envs_at_end']}
+    return build_maintenance_counts({'cells':cells},baseline,total_envs=64)
+
+
+def measurement_bundle(map_modes_path, stand_paths, checkpoint_path, baseline, *, score_config_path=DEFAULT_CONFIG):
+    """Read raw files and return metrics plus their exact evidence hashes.
+
+    stand_paths is a mapping with all MODES, each pointing to stand.json.
+    Missing/NaN/invalid stand evidence raises; it is never replaced with 64.
+    """
+    if not isinstance(stand_paths,dict) or set(stand_paths)!=set(MODES):
+        raise ValueError('EX41 stand evidence requires all three modes')
+    cp=Path(checkpoint_path).resolve(strict=True)
+    map_path=Path(map_modes_path).resolve(strict=True)
+    cfg_path=Path(score_config_path).resolve(strict=True); cfg=config(cfg_path)
+    data=_map_rows(map_path,cp,cfg)
+    counts=maintenance_counts_from_map_modes(data,baseline)
+    stands={}; evidence=[map_path,cfg_path]
+    for mode in MODES:
+        path=Path(stand_paths[mode]).resolve(strict=True)
+        rows=_stand_rows(path,cp,mode,cfg)
+        if any(type(row.get('alive_at_end')) is not bool for row in rows):
+            raise ValueError('EX41 stand alive flag must be boolean')
+        passed=sum(bool(_stand_pass(row,cfg['stand'])) for row in rows)
+        stands[mode]={'passed':passed,'total':64}
+        evidence.extend((path,path.parent/'stand_raw.npz'))
+    return {'metrics':{'record_counts':counts,'stand_counts':stands,
+                       'stand_min_passed':min(r['passed'] for r in stands.values())},
+            'checkpoint_iteration':data['checkpoint_iter'],'checkpoint_sha256':data['checkpoint_sha256'],
+            'evidence':[{'path':str(p),'sha256':sha256(p)} for p in evidence]}
+
+
+def enrich_score_metrics(draft, map_modes_path, stand_paths, plan, *, score_config_path=DEFAULT_CONFIG):
+    """Runner's one score/1 enrichment entry; existing stage verdict is preserved."""
+    require_dr_off_document(json.loads(Path(map_modes_path).read_text(encoding='utf-8-sig')),
+                            where=str(map_modes_path))
+    if (not isinstance(draft,dict) or draft.get('format')!='foothold-ex41-score/1'
+        or type(draft.get('iteration')) is not int or not isinstance(draft.get('metrics'),dict)
+        or not isinstance(draft.get('evidence'),list)
+        or any(type(draft.get(k)) is not bool for k in ('maintenance_pass','stage_pass','safety_stop'))
+        or draft.get('schedule_sha256')!=plan.effective_sha256
+        or draft.get('parent_sha256')!=plan.parent_sha256
+        or draft.get('baseline_checkpoint_sha256')!=plan.parent_sha256):
+        raise ValueError('EX41 score draft identity/fields differ')
+    baseline=baseline_counts(plan,include_record_only=True)  # D133 records all 39
+    bundle=measurement_bundle(map_modes_path,stand_paths,draft['checkpoint_path'],baseline,
+                              score_config_path=score_config_path)
+    if (bundle['checkpoint_iteration']!=draft['iteration'] or bundle['checkpoint_sha256']!=draft.get('checkpoint_sha256')):
+        raise ValueError('EX41 measured checkpoint differs from draft')
+    result=copy.deepcopy(draft); result['metrics'].update(bundle['metrics'])
+    judged=baseline_counts(plan)
+    result['metrics']['maintenance_counts']={k:copy.deepcopy(bundle['metrics']['record_counts'][k]) for k in judged}
+    result['maintenance_pass']=maintenance(result['metrics']['maintenance_counts'],judged)==[]
+    for row in bundle['evidence']:
+        if row not in result['evidence']:result['evidence'].append(row)
+    json.dumps(result,allow_nan=False)
+    return result

@@ -1,0 +1,29 @@
+{
+  "schema": "sol24a-consumer/1",
+  "deadline": "2026-10-24T22:30:00+09:00",
+  "fixed_root": "C:/mai/wt/foothold-lab/lead-tmp-start-b",
+  "expected_head": "REPLACE_WITH_ROOT_FROZEN_COMMIT_SHA",
+  "python": "C:/Users/AI-WS01/anaconda3/envs/isaac311/python.exe",
+  "state": "C:/Users/AI-WS01/s2_lab/run_20261024/consumer/review_state.json",
+  "status": "C:/Users/AI-WS01/s2_lab/run_20261024/consumer/consumer_status.json",
+  "capture_root": "C:/Users/AI-WS01/s2_lab/run_20261024/consumer/captures",
+  "metrics_root": "C:/Users/AI-WS01/s2_lab/run_20261024/consumer/metrics",
+  "metrics_every": 100,
+  "poll_s": 30,
+  "min_capture_window_s": 1800,
+  "min_free_mib": 4096,
+  "max_attempts": 4,
+  "runs": [
+    {
+      "name": "B",
+      "run_dir": "REPLACE_WITH_B_MAIN_RUN_DIRECTORY",
+      "process_file": "C:/Users/AI-WS01/s2_lab/run_20261024/b_main/process.json",
+      "launch_config": "C:/Users/AI-WS01/s2_lab/run_20261024/b_main.json",
+      "training_device": "cuda:0",
+      "capture_device": "cuda:1",
+      "scene": "rough",
+      "label": "B serial review",
+      "policy": {"experiment": "B", "terrain": "rough", "map_mode": "saved", "seed": 42}
+    }
+  ]
+}

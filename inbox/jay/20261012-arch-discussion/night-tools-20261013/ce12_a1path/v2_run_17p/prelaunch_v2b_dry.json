@@ -1,0 +1,91 @@
+{
+ "t": "2026-10-14 09:38:59",
+ "epoch": 1791938339,
+ "tag": "v2_native_a1path_20261014_093859",
+ "env_overrides": [],
+ "gpus": [
+  {
+   "index": 0,
+   "uuid": "GPU-c08e23b0-62b6-a4f2-8eb2-11151c6a8c7b",
+   "total_mib": 16303,
+   "used_mib": 15,
+   "free_mib": 16288
+  },
+  {
+   "index": 1,
+   "uuid": "GPU-315d098f-5fe0-26a0-0d2e-26e2d4c1ae4f",
+   "total_mib": 16303,
+   "used_mib": 5686,
+   "free_mib": 10617
+  }
+ ],
+ "compute_apps_python_or_kit": [],
+ "counterparty_processes": [],
+ "python_processes": [
+  "8164|python|10/14/2026 5:01:20 AM",
+  "9576|python|10/14/2026 5:01:20 AM",
+  "30516|python|10/14/2026 5:01:20 AM",
+  "43248|python|10/14/2026 5:01:20 AM",
+  "166632|python|10/14/2026 9:38:59 AM"
+ ],
+ "legacy_registry": {
+  "n": 27,
+  "exists": 27,
+  "readable": 27,
+  "missing": [],
+  "unreadable": []
+ },
+ "v3_registry": {
+  "n": 80,
+  "exists": 80,
+  "readable": 80,
+  "missing": [],
+  "unreadable": []
+ },
+ "stop_files": [],
+ "tag_collision": [],
+ "ce12_same_as_17p": {
+  "adapters.py": true,
+  "cells.py": true,
+  "compare_native.py": true,
+  "dump_native_cts.py": true,
+  "dump_native_v2.py": true,
+  "mutate_adapters.py": true,
+  "mutate_run_dump.py": true,
+  "run_dump.py": true,
+  "test_adapters.py": true,
+  "test_run_dump.py": true,
+  "test_v2_load_device.py": true,
+  "validate_dump.py": true,
+  "README-ce12-step1.md": true
+ },
+ "ce12_missing_in_eval": [],
+ "v2_checkpoint": {
+  "path": "C:/Users/AI-WS01/Desktop/jay/인공지능사관학교/foothold-lab/models/foothold-v2.pt",
+  "exists": true,
+  "sha256": "e5c213219b4529464b7d3f3cce8f7a61c78fa4f2f7df7c64cfe12944c5ab2fee"
+ },
+ "isaac311_runner": {
+  "path": "C:/Users/AI-WS01/anaconda3/envs/isaac311/Lib/site-packages/rsl_rl/runners/on_policy_runner.py",
+  "exists": true,
+  "sha256": "6ffaee7e154a49ae55eebf53a7b1549f0461a1742d92dd34af5bb4b785d19cf2"
+ },
+ "moects_source_runner": {
+  "path": "C:/isaac/ext/go2_rl_robotlab/source/rsl_rl/rsl_rl/runners/on_policy_runner.py",
+  "exists": true,
+  "sha256": "bc79dd28613c7f8cc587fcbdf7274ade148cbec15ac2df22b4fecd5827f83782"
+ },
+ "bundle_lines": [
+  "39c1a2930a5992a65229529c49d8e5c278b202c12c534461f24c7ec26dea00c6 *ce12/adapters.py",
+  "6d9f61bb9d472505ea59c7b7b43bbc7e2f2f9142bb7886b2394bd77f558c48e4 *ce12/cells.py",
+  "c71ad42c7b55f0dde68889ab20a0478722868632348b7352f2b2637bb319c007 *ce12/compare_native.py",
+  "a8ada54e2bc06eabc4abd2ca38a95035cfeb4b67268318b790b237781d92df71 *ce12/dump_native_cts.py",
+  "a3da62b8185f4a28aa8623997094c245f603f8cdec7820efaa57ba194ff97c16 *ce12/dump_native_v2.py",
+  "b9438e984a3df78f9ea7ae364271fe6bd1311af4747d6295d84d3e31d3e08dda *ce12/run_dump.py",
+  "dae3d93d6827903549043a58fdf20ee0ee2e7ad31780ff6e05ef36382421240e *ce12/validate_dump.py",
+  "974919b0717b684fb9f0a57a0282aeb5a0b321f4bc7d4131aedcc461e2d3945a *isaac_slot_v3.py",
+  "30dc2ea930f400948474b11c648aa389ff495d2a1bd764b4b9b984b931d11efb *usd_isolate_run_v3.py",
+  "7fabec30704830a410878e4244190a4e62c60f3828ad5908fbf9ee264c30cbd4 *gpu_guard.py"
+ ],
+ "bundle_sha256_of_text": "46fc5d31569928f80909afa9ef6156e7ea0f55a8abc737c91036cbe4e34f2d16"
+}

@@ -1,0 +1,12 @@
+01:50:04 UNOWNED UNKNOWN child identity: hold lease and hand off to operator
+PASS PID reuse child never signalled
+PASS PID reuse child not registered
+PASS PID reuse holds lease as unowned_unknown
+PASS normal parent descendant registered
+PASS normal tree cleanup retained
+01:50:04 UNOWNED UNKNOWN child identity: hold lease and hand off to operator
+PASS access denied child never signalled
+PASS access denied holds lease
+01:50:04 UNOWNED UNKNOWN child identity: hold lease and hand off to operator
+PASS missing parent child never signalled
+PASS missing parent holds lease

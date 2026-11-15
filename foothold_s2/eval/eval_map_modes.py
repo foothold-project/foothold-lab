@@ -1,0 +1,852 @@
+"""B1500 같은 모델을 지도 모드 셋(eval_gt · eval_pred · probe_prop_only)으로 평가 (SONNET-X25 T4/준비). 학습 · 저장 없음.
+
+    python -m foothold_s2.eval.eval_map_modes --task FootholdS2-Go2-S2-23f-B-v0 --checkpoint <model_1500.pt> --out <폴더> --headless --device cuda:0
+
+diag_z_action 과 같은 틀: 학습 env 그대로 64 env 300 스텝, DR(게인 · 세기 · 마찰 · 질량 · 무게중심 · 밀기 · 지연)만 끔, z mean · action mean.
+명령 전진 0.5 · 1.0 → 제자리 회전 +1.2 · -1.2 를 매 스텝 고정값으로 덮어쓴다(순차 영상 촬영과 같은 명령 넷이되 명령마다 리셋하는 독립 시험).
+모드마다 정책 입력 지도에 실제로 GT 가 몇 번 들어갔는지 지각의 _advance 를 감싸 센다: eval_pred · probe_prop_only 는 0, eval_gt 는 전부여야 하고 어긋나면 그 자리에서 멈춘다.
+산출: 모드 x 명령별 몸 좌표 vx 적분 · 요 추종 · 멈춤 비율 · 몸 기울기(roll/pitch 절댓값 평균) · 살아남은 env 수 · GT 사용 횟수.
+"""
+
+import argparse
+import hashlib
+import json
+import os
+import sys
+from pathlib import Path
+
+import h5py  # noqa: F401
+import tensordict  # noqa: F401
+import torch
+import rsl_rl.runners  # noqa: F401
+
+from isaaclab.app import AppLauncher
+from foothold_s2.eval import map_mode_cells as _command_cells
+from foothold_s2.eval import eval_dr_mode
+from foothold_s2.eval import n21_dr_record
+from foothold_s2.eval import ex42_gait_contact
+
+from foothold_s2.eval import ex42_friction
+parser = argparse.ArgumentParser()
+parser.add_argument("--ex42-evaluation-plan", type=Path)
+parser.add_argument("--task", required=True)
+parser.add_argument("--checkpoint", required=True)
+parser.add_argument("--envs", type=int, default=64)
+parser.add_argument("--steps", type=int, default=300)
+parser.add_argument("--modes", default="eval_gt,eval_pred,probe_prop_only")
+parser.add_argument("--command-suite", choices=("core", "extended", "ex40_b3", "n21", "hipan_g1", "hipan_g1b", "e1_v2", "e1_wide_fixed", "e1_wide_endpoint", "gait_speeds"), default="core")
+parser.add_argument("--fixed-terrain", action="store_true", help="reset 뒤 terrain_levels/types 를 env 번호로 정해진 배열로 덮어쓴다(task 가 달라도 같은 칸 -> 같은 해시)")
+parser.add_argument("--fixed-level", type=int, default=None, help="--fixed-terrain 의 레벨을 이 값 하나로(종류 열 배열은 그대로). 생략 = 기존(레벨 0~2 를 번갈아, 칸 해시 c3884d68). 바꾸면 해시도 바뀐다")
+parser.add_argument("--terrain-set", choices=["default", "sparse50", "n21-continuous", "n21-flat"], default="default", help="sparse50: 듬성 지형 선택. N21: 연속 7종 또는 flat 단독의 고정 L2 selector")
+parser.add_argument("--mesh-dir", default=None, help="EX-42 calibration: pinned full ABCDE combined mesh directory")
+parser.add_argument("--ex42-kind-family", choices=("A", "B", "C", "D", "E"))
+parser.add_argument("--ex42-kind-name")
+parser.add_argument("--n21-record-only", action="store_true", help="N21 stage-end/parent E0 DR-on 측정, 별도 record-only receipt")
+parser.add_argument("--n21-stage", default=None, help="N21 approved EX-42 stage id")
+parser.add_argument("--n21-point", choices=("parent_e0", "stage_end"), default=None)
+parser.add_argument("--n21-approval", default=str(n21_dr_record.DEFAULT_APPROVAL), help="EX-42 DR approval file, fingerprinted in the receipt")
+eval_dr_mode.add_arguments(parser)
+parser.add_argument("--commands", default="all", help="명령 이름을 쉼표로(fwd0.5,fwd1.0,spin+1.2,spin-1.2). 기본 all = 넷. 짧은 확인 실행용")
+parser.add_argument("--ex39-heading-smoke-guard", action="store_true", help="EX-39 Kit smoke: registry heading off and fixed command after every step")
+parser.add_argument("--axis-v2", action="store_true", help="W57 yaw, goal-stop and four-foot contact suite; separate from W15")
+parser.add_argument("--ex42-maintenance", action="store_true", help="W57 plus EX-42 foot-center XY speed for contact duty and drag recording")
+parser.add_argument("--gait-contact-sweep", action="store_true", help="Record-only flat L0 gait; report both force-norm and Fz contact thresholds")
+parser.add_argument("--terrain-skill", action="store_true", help="W78 stairs sideways/backwards/turn-return and slope suite; separate from W15 and W57")
+parser.add_argument("--terrain-skill-v2", action="store_true", help="EX-41 W78 L2/L5 x four start angles x three map modes; separate receipt")
+parser.add_argument("--terrain-skill-v2-cases", default="all", help="W78 v2 cases: all or stairs_side_left,stairs_side_right")
+parser.add_argument("--terrain-skill-v2-modes", default="all", help="W78 v2 modes: all or one of the three map modes")
+parser.add_argument("--terrain-skill-v2-resume", action="store_true", help="resume only a matching W78 v2 partial receipt")
+parser.add_argument("--terrain-levels", default="2,5", help="W78 v2 requires the exact L2,L5 pair")
+parser.add_argument("--stair-start-angles-deg", default="0,30,60,90", help="W78 v2 requires the exact four start yaws")
+parser.add_argument("--push-ladder", action="store_true", help="Fixed-velocity EX-41 push ladder")
+parser.add_argument("--push-ladder-profile", choices=("full", "push250"), default="full",
+                    help="push250: D171 GT-only walking check with 1.0/1.5/2.0 m/s at 64 envs per direction cell")
+parser.add_argument("--push-ladder-terrain", choices=("flat", "random_rough", "pyramid_stairs"))
+parser.add_argument("--push-ladder-map-mode", choices=("eval_gt", "eval_pred", "probe_prop_only"))
+parser.add_argument("--push-ladder-command", choices=("walk_0.5", "walk_1.0", "walk_1.5", "stand_turn_1.2", "stand"), default="walk_0.5")
+parser.add_argument("--push-ladder-directions", choices=("full", "cardinal"), default="full")
+parser.add_argument("--eval-seed", type=int, default=42, help="명령마다 env.reset 앞에서 torch.manual_seed 에 주는 값(시작 위치 · 관측 잡음, 행동은 평균). 기본 42 = 기존과 같음. 지형 기하 시드(SPARSE_GEOMETRY_SEED)는 따로 고정이라 안 바뀐다")
+parser.add_argument("--out", required=True)
+AppLauncher.add_app_launcher_args(parser)
+args = parser.parse_args()
+friction_policy = ex42_friction.map_policy(args)
+kind_cell = args.ex42_kind_family is not None or args.ex42_kind_name is not None
+if kind_cell and (not args.ex42_kind_family or not args.ex42_kind_name or not args.mesh_dir
+                  or not args.fixed_terrain or args.fixed_level is None or args.envs != 64
+                  or args.terrain_set != "default" or args.axis_v2 or args.terrain_skill
+                  or args.terrain_skill_v2 or args.push_ladder):
+    parser.error("EX-42 kind cell needs family, kind, mesh, fixed level and 64 env without other suites")
+if args.mesh_dir and (args.terrain_set != "default" or args.push_ladder or args.terrain_skill
+                      or args.terrain_skill_v2 or not args.fixed_terrain):
+    parser.error("--mesh-dir needs fixed default terrain without other terrain suites")
+parser_sparse = args.terrain_set == "sparse50"
+parser_n21 = bool(args.n21_record_only)
+parser_gait = bool(args.gait_contact_sweep)
+if parser_gait and (args.command_suite != "gait_speeds"
+                    or args.terrain_set != "n21-flat" or not args.fixed_terrain or args.fixed_level != 0
+                    or args.envs != 64 or args.steps != 300 or args.modes not in ("eval_gt", "eval_pred")
+                    or args.eval_seed != 42 or args.dr_mode != "off" or args.axis_v2 or args.ex42_maintenance
+                    or args.terrain_skill or args.terrain_skill_v2 or args.push_ladder):
+    parser.error("gait contact sweep requires gait_speeds/all, n21-flat fixed L0, 64 env, 300 steps, eval_gt or eval_pred, DR off, and no other suite")
+if parser_gait:
+    try:
+        ex42_gait_contact.validate_map_mode(args.modes)
+    except ValueError as exc:
+        parser.error(str(exc))
+if parser_n21:
+    try:
+        n21_dr_record.validate_entrypoint(args)
+        n21_approval = n21_dr_record.approval_record(
+            args.n21_approval, args.n21_stage, args.dr_scale if args.dr_mode == "on" else None,
+            dr_table_path=args.dr_table)
+        n21_table_fingerprint = eval_dr_mode.load_table(args.dr_table)["sha256"]
+        if n21_table_fingerprint != n21_approval["range_source"]["sha256"]:
+            raise ValueError("N21 DR range table changed after the EX-42 plan pin")
+    except (ValueError, OSError) as exc:
+        parser.error(str(exc))
+else:
+    n21_approval = None
+    if not parser_gait:
+        try:
+            n21_dr_record.validate_entrypoint(args)
+        except ValueError as exc:
+            parser.error(str(exc))
+dr_error = eval_dr_mode.validate_args(args)
+if dr_error:
+    parser.error(dr_error)
+if parser_sparse and (not args.fixed_terrain or args.fixed_level is None):
+    parser.error("--terrain-set sparse50 은 --fixed-terrain 과 --fixed-level N 을 같이 준다(Kit 기동 전 거절)")
+if args.fixed_level is not None and not args.fixed_terrain:
+    parser.error("--fixed-level 은 --fixed-terrain 과 같이만 쓴다")                                  # Kit 기동 전에 거절(조용히 무시하면 기본 칸으로 돈다)
+if args.fixed_level is not None and not 0 <= args.fixed_level <= 9:
+    parser.error("--fixed-level 은 0..9 정수(지형 레벨 행 수 10)")                                  # 행 수 대조는 apply 에서 한 번 더
+if args.eval_seed < 0:
+    parser.error("--eval-seed 는 0 이상 정수(Kit 기동 전 거절)")
+CMD_NAMES = tuple(_command_cells.commands(args.command_suite))
+WANT_CMDS = CMD_NAMES if args.commands == "all" else tuple(args.commands.split(","))
+
+if not set(WANT_CMDS) <= set(CMD_NAMES):
+    parser.error("--commands 는 %s 중에서 (Kit 기동 전 거절)" % (CMD_NAMES,))
+if args.axis_v2 and (not args.fixed_terrain or args.fixed_level is None or args.commands != "all"
+                     or args.command_suite != "core" or args.ex39_heading_smoke_guard):
+    parser.error("--axis-v2 requires --fixed-terrain --fixed-level N, core/all commands and no EX-39 smoke guard")
+if args.axis_v2 and args.steps < 4:
+    parser.error("--axis-v2 requires at least four steps")
+if args.ex42_maintenance and not args.axis_v2:
+    parser.error("--ex42-maintenance requires --axis-v2")
+if args.terrain_skill and (args.axis_v2 or args.terrain_skill_v2 or not args.fixed_terrain or args.fixed_level is None or args.terrain_set != "default"):
+    parser.error("--terrain-skill requires --fixed-terrain --fixed-level N on the default set, without --axis-v2 or --terrain-skill-v2")
+if args.terrain_skill_v2:
+    from foothold_s2.eval.terrain_skill_v2_run import validate_request
+
+    try:
+        validate_request(args)
+    except ValueError as exc:
+        parser.error(str(exc))
+if args.push_ladder:
+    if (args.terrain_skill or args.terrain_skill_v2 or args.axis_v2 or args.ex39_heading_smoke_guard
+            or not args.fixed_terrain or args.fixed_level != 0 or args.terrain_set != "default"
+            or not args.push_ladder_terrain or not args.push_ladder_map_mode):
+        parser.error("--push-ladder requires one terrain/map mode, fixed L0, and no other suite")
+    if args.push_ladder_command == "stand" and args.push_ladder_terrain != "flat":
+        parser.error("supplementary stand ladder is flat only")
+    if args.push_ladder_command == "stand" and args.push_ladder_directions != "cardinal":
+        parser.error("supplementary stand ladder uses cardinal directions")
+    profile_magnitudes = (3 if args.push_ladder_profile == "push250" else 6)
+    expected_envs = profile_magnitudes * (8 if args.push_ladder_directions == "full" else 4) * 64
+    if args.envs != expected_envs or args.steps != 350 or args.modes != args.push_ladder_map_mode:
+        parser.error(f"push ladder requires --envs {expected_envs} --steps 350 --modes {args.push_ladder_map_mode}")
+    if args.push_ladder_profile == "push250" and (
+            args.push_ladder_map_mode != "eval_gt" or args.push_ladder_command != "walk_1.0"
+            or args.push_ladder_directions != "full" or args.push_ladder_terrain is None):
+        parser.error("push250 requires one terrain, eval_gt, walk_1.0 and eight fixed directions")
+elif args.push_ladder_terrain or args.push_ladder_map_mode:
+    parser.error("push-ladder selectors require --push-ladder")
+# Create the destination before Kit and before _save_env_arrays writes NPZ files.
+os.makedirs(args.out, exist_ok=True)
+app = AppLauncher(args).app
+REPO = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+if REPO not in sys.path:
+    sys.path.insert(0, REPO)
+
+import gymnasium as gym  # noqa: E402
+import numpy as np  # noqa: E402
+from isaaclab_rl.rsl_rl import RslRlVecEnvWrapper  # noqa: E402
+from isaaclab_tasks.utils import load_cfg_from_registry  # noqa: E402
+
+import isaaclab_tasks  # noqa: E402,F401
+
+import foothold_s2.tasks  # noqa: E402,F401
+import foothold_s2.x23_tasks  # noqa: E402,F401           (EX-25 G0 의 task FootholdS2-Go2-S2-X23-v0)
+import foothold_s2.x23f_tasks  # noqa: E402,F401
+import foothold_s2.g0b_tasks  # noqa: E402,F401           (G0-B: B 환경 + 지도 없음, task FootholdS2-Go2-S2-G0B-v0)
+import foothold_s2.sb_tasks  # noqa: E402,F401            (EX-33 S-B: B 환경, 지도 켬 · 끔을 섞어 학습, task FootholdS2-Go2-S2-SB-v0)
+from foothold_s2.eval import adapters, ex41_eval_loader, fixed_terrain, map_error as ME, map_mode_cells  # noqa: E402
+from foothold_s2.terrains import columns  # noqa: E402
+
+env_cfg = load_cfg_from_registry(args.task, "env_cfg_entry_point")
+agent_cfg = load_cfg_from_registry(args.task, "rsl_rl_cfg_entry_point")
+env_cfg.scene.num_envs = args.envs
+env_cfg.sim.device = args.device
+agent_cfg.device = args.device
+if parser_n21 or parser_gait:
+    n21_dr_record.configure_terrain(env_cfg, args.terrain_set, args.eval_seed)
+    env_cfg.seed = args.eval_seed
+    agent_cfg.seed = args.eval_seed
+args.ex41_env_preparation = None
+if args.terrain_skill_v2:
+    from foothold_s2.eval.terrain_skill_v2_run import prepare_ex41_environment
+
+    plan, preparation = prepare_ex41_environment(env_cfg)
+    env_cfg.seed = args.eval_seed
+    agent_cfg.seed = args.eval_seed
+    args.ex41_env_preparation = {
+        "plan_path": str(plan.path), "plan_sha256": plan.sha256,
+        "parent_update": plan.parent_update, "parent_sha256": plan.parent_sha256,
+        "initial_dr_scale": plan.initial_dr_scale, "receipt": preparation,
+    }
+if args.ex39_heading_smoke_guard:
+    cmd_cfg = env_cfg.commands.base_velocity
+    cmd_cfg.params = {**dict(cmd_cfg.params or {}), "basic_mode": True, "ex39_arm": "B"}
+    cmd_cfg.seed = 42
+dr_mode = eval_dr_mode.DRMode.from_args(args, env_cfg, capture_per_env=parser_n21)
+if parser_n21 and args.dr_mode == "on" and dr_mode.table["sha256"] != n21_approval["range_source"]["sha256"]:
+    raise RuntimeError("N21 DR range table differs from the pre-Kit approval fingerprint")
+dr_off = adapters.disable_eval_randomization(env_cfg) if args.dr_mode == "off" else []
+
+START_OFFSET_MAX_M = 0.5
+EXPECTED_DR_OFF = ["physics_material", "add_base_mass"]                     # B env 에 실제 있는 DR 이벤트(부모 params/env.yaml). 이름이 바뀌어 DR 이 켜진 채 「DR 끔」 평가가 되는 일을 막는다
+if args.dr_mode == "off" and sorted(dr_off) != sorted(EXPECTED_DR_OFF):
+    raise RuntimeError("꺼진 DR 목록 %r 이 기대 %r 와 다르다" % (dr_off, EXPECTED_DR_OFF))
+
+curriculum_off = []
+
+for name in ("terrain_levels", "command_range"):                      # 부모 B 의 curriculum 이 켜져 있으면 reset 마다 지형 행이 직전 성적으로 오르내려 모드끼리 다른 지형에서 평가된다
+    if getattr(env_cfg.curriculum, name, None) is not None:
+        setattr(env_cfg.curriculum, name, None)
+        curriculum_off.append(name)
+
+env_cfg.commands.base_velocity.resampling_time_range = (1.0e9, 1.0e9)
+
+if parser_sparse:                                                                                   # 평가 지형만 바꾼다. 관측 · 행동 · 보상 · 명령 cfg 는 그대로(깃발 명령 · 깃발 보상 없음)
+    from foothold_s2.terrains import columns
+    from foothold_s2.terrains.rough_go2_cfg import build_generator, continuous_subterrains
+    from foothold_s2.terrains import sparse_terrains
+
+    from foothold_s2.eval import geometry_hash
+
+    sparse_terrains.SIDE_TABLE.__init__()                                                              # 이 프로세스에서 만든 칸만 기록에 남게
+    env_cfg.scene.terrain.terrain_generator = build_generator({**continuous_subterrains(), **sparse_terrains.sparse_subterrains()}, columns.FULL_COLS,
+                                                              seed=geometry_hash.SPARSE_GEOMETRY_SEED)      # 징검돌 위치 · 빔 폭을 실행마다 같게(seed None 이면 numpy 전역 상태에서 뽑힌다)
+args.ex42_mesh = None
+if args.mesh_dir:
+    from foothold_s2.eval.ex42_mesh_eval import attach as _attach_ex42_mesh
+    args.ex42_mesh = _attach_ex42_mesh(env_cfg, args.mesh_dir)
+if args.push_ladder:
+    from foothold_s2.eval.ex41_push_ladder import configure_single_terrain
+
+    configure_single_terrain(env_cfg, args.push_ladder_terrain, seed=args.eval_seed)
+    env_cfg.seed = args.eval_seed
+    agent_cfg.seed = args.eval_seed
+ex42_friction.configure(env_cfg, friction_policy)
+checkpoint_state, checkpoint_preparation = ex41_eval_loader.load_checkpoint_for_eval(env_cfg, args.checkpoint)
+args.ex41_checkpoint_state = checkpoint_state
+args.ex41_checkpoint_preparation = checkpoint_preparation
+env, raw = eval_dr_mode.make_wrapped_env_after_dr_ready(
+    gym.make, RslRlVecEnvWrapper, args.task, env_cfg, agent_cfg.clip_actions, dr_mode)
+friction_receipt = ex42_friction.install_and_verify(raw, friction_policy)
+args.ex42_friction_policy = friction_policy
+args.ex41_w86_attachment = None
+args.ex41_runtime_attachment = None
+if args.terrain_skill_v2:
+    from foothold_s2.eval.terrain_skill_v2_run import attach_ex41_eval_runtime
+
+    args.ex41_runtime_attachment = attach_ex41_eval_runtime(env, plan, args.out)
+    args.ex41_w86_attachment = args.ex41_runtime_attachment["w86"]
+dev = raw.device
+robot = raw.scene["robot"]
+term = raw.command_manager.get_term("base_velocity")
+if args.ex39_heading_smoke_guard:
+    if term.params.ex39_arm != "B":
+        raise RuntimeError("EX-39 smoke evaluation did not construct a B command term")
+    term.heading.fill_(True)
+map_mode_cells.disable_heading_for_fixed_eval(term)
+dt = raw.step_dt
+if parser_gait and abs(float(dt) - ex42_gait_contact.R5_DT_S) > 1e-9:
+    raise RuntimeError("R5 gait contact sweep requires policy dt=0.02 s")
+sha = __import__("foothold_s2.runners.manifest", fromlist=["x"]).sha256_file(args.checkpoint)
+CMDS = map_mode_cells.commands(args.command_suite)
+S = args.steps
+import foothold_s2.eval.fixed_terrain as _ft, foothold_s2.terrains.sparse_terrains as _sp                      # 실제 읽은 파일의 해시(출처 섞임 확인용)
+SOURCE_SHA256 = {os.path.basename(m.__file__): hashlib.sha256(open(m.__file__, "rb").read()).hexdigest()[:16] for m in (sys.modules[__name__], _ft, _sp, adapters)}
+if parser_sparse:
+    from foothold_s2.eval import kind_stats as _ks
+    SOURCE_SHA256["kind_stats.py"] = hashlib.sha256(open(_ks.__file__, "rb").read()).hexdigest()[:16]
+def _run_identity():
+    """X27j: 이 실행이 어느 장치 · 코드 · 저장본 · 시드로 돌았는지(실행 계열 대조용). 못 알아낸 칸은 None 과 까닭."""
+    import subprocess
+
+    out = {"device": str(args.device), "checkpoint_sha256": sha, "eval_seed": args.eval_seed, "torch": torch.__version__, "torch_cuda": torch.version.cuda}
+
+    try:
+        d = torch.device(args.device)
+        pr = torch.cuda.get_device_properties(d)
+        out.update({"gpu_name": pr.name, "gpu_total_mem_mib": int(pr.total_memory // (1 << 20)), "gpu_index": d.index, "gpu_uuid": str(getattr(pr, "uuid", None))})
+    except Exception as e:                                                             # noqa: BLE001
+        out["gpu_error"] = repr(e)
+
+    try:
+        root = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+        out["code_head"] = subprocess.run(["git", "-C", root, "rev-parse", "HEAD"], capture_output=True, text=True, timeout=20).stdout.strip() or None
+        out["code_dirty_files"] = len([ln for ln in subprocess.run(["git", "-C", root, "status", "--short", "foothold_s2"], capture_output=True, text=True, timeout=20).stdout.splitlines() if ln.strip()])
+    except Exception as e:                                                             # noqa: BLE001
+        out["code_error"] = repr(e)
+
+    return out
+
+
+def _save_env_arrays(mode, cname, vx, fw, al, dn, dt, start_xy, row, map_err=None,
+                     kind_foot_arrays=None):
+    """X27j: env 별 기록 npz(env_arrays_<mode>_<cmd>.npz). 지형 종류 이름 · 열(terrain_types) · 레벨 행(terrain_levels) · 시작 위치 · 종료 사유 · 전진 거리 · 생존.
+    종류 이름은 지형 생성기의 sub_terrain 비율과 열 수로 만든 열 -> 종류 표(columns.column_types)에서 계산한다(계산 근거는 map_modes.json 의 env_array_basis)."""
+    terrain = raw.scene.terrain
+    lev, col = terrain.terrain_levels.cpu().numpy().astype(np.int64), terrain.terrain_types.cpu().numpy().astype(np.int64)
+    names, err = None, None
+
+    try:
+        from foothold_s2.terrains import columns as _c2
+
+        _g2 = terrain.cfg.terrain_generator
+        names = (args.ex42_mesh["columns" if kind_cell else "eval_columns"] if args.ex42_mesh else
+                 _c2.column_types({k: float(v.proportion) for k, v in _g2.sub_terrains.items()}, int(_g2.num_cols)))
+    except Exception as e:                                                             # noqa: BLE001  (이름 표를 못 만들어도 열 번호 · 레벨은 남긴다)
+        err = repr(e)
+
+    kind = np.array([names[int(c)] if names else "unknown" for c in col])
+    done_any = dn.any(0)
+    first_done = np.where(done_any, dn.argmax(0), -1)
+    dist = (vx * al).sum(0) * dt
+    reason = np.where(done_any, "terminated", "survived")                                # 종료 사유: 정책 종료 조건이 걸렸는가(걸리면 step 번호가 first_done_step)
+    extra = {}
+
+    if map_err is not None:                                                            # X27m: 복원 지도 오차(cm). 지도 없는 체크포인트(G0)는 None 이라 키가 없다
+        from foothold_s2.eval import map_error as _me
+
+        ser = {nm: np.asarray(map_err[i], dtype=np.float32) for i, nm in enumerate(_me.SERIES)}                    # (S,N) 다섯 계열
+        extra = dict(_me.env_aggregate(ser, al), **{"map_err_series_" + nm: v for nm, v in ser.items()})
+        row["restoration_error_record_only"] = _me.record_only_summary(
+            extra["map_err_all_mean_cm"], extra["map_err_all_cellmax_cm"],
+            source=f"env_arrays_{mode}_{cname}.npz:map_err_all_*_cm",
+        )
+        res["env_array_basis"] = dict(res.get("env_array_basis") or {}, map_err=_me.DEFINITION)
+    else:
+        row["restoration_error_record_only"] = {
+            "schema": "foothold-map-error-record-only/1",
+            "decision_use": "none_record_only",
+            "source": f"env_arrays_{mode}_{cname}.npz",
+            "state": "unavailable",
+            "reason": "checkpoint has no reconstructed map output",
+            "mean_of_env_step_means_cm": None,
+            "maximum_env_step_cellmax_cm": None,
+            "valid_envs": 0,
+        }
+
+    if kind_foot_arrays is not None:
+        contact, foot_local = kind_foot_arrays
+        fixed_terrain.verify_kind_foot_arrays(contact, foot_local, al)
+        extra.update(foot_contact=contact, foot_pos_local=foot_local,
+                     root_x_local_m=fw)
+        row["kind_foot_evidence"] = {"foot_order": ["FL_foot", "FR_foot", "RL_foot", "RR_foot"],
+                                     "contact_threshold_n": 1.0,
+                                     "valid_mask": "alive excludes post-reset samples",
+                                     "completion": "unjudged_raw_only"}
+    if args.command_suite == "e1_wide_fixed":
+        extra["root_x_local_m"] = fw
+        extra["root_y_local_m"] = POS[:, :, 1].cpu().numpy()
+    np.savez(os.path.join(args.out, "env_arrays_%s_%s.npz" % (mode, cname)), env=np.arange(len(col)), terrain_level=lev, terrain_col=col, kind=kind, start_xy=start_xy,
+             fwd_end_m=fw[-1], body_vx_integral_m=dist, alive_end=al[-1], alive_steps=al.sum(0), first_done_step=first_done, end_reason=reason,
+             vx=vx, alive=al, dones=dn, dt=dt, assignment_sha256=fixed_terrain.assignment_sha256(lev, col),
+             run_identity=json.dumps(res.get("run_identity"), ensure_ascii=False, sort_keys=True), **extra)
+    res.setdefault("env_arrays", {})["%s/%s" % (mode, cname)] = "env_arrays_%s_%s.npz" % (mode, cname)
+    res["env_array_basis"] = dict(res.get("env_array_basis") or {}, **{"kind_names": ("EX-42 pinned mesh column_family/kind table" if args.ex42_mesh else "columns.column_types(sub_terrains 비율, num_cols)[terrain_types]") if names else None, "kind_error": err,
+                              "dist": "sum(vx_body * alive) * dt (row.body_vx_integral_median_m 의 env 별 값)", "alive_end": "마지막 step 까지 종료 조건 없음"})
+
+
+res = {"evaluation_friction": friction_receipt, "source_sha256": SOURCE_SHA256, "task": args.task, "checkpoint": args.checkpoint, "checkpoint_sha256": sha, "ex41_checkpoint_preparation": checkpoint_preparation, "envs": args.envs, "steps": S, "command_suite": args.command_suite, "commands": CMDS, "dr_off": dr_off, "curriculum_off": curriculum_off, "fixed_terrain": None, "terrain_set": args.terrain_set, "eval_seed": args.eval_seed, "ex42_mesh": args.ex42_mesh, "terrain_hash": {}, "modes": {}, "run_identity": _run_identity()}
+r5_contact_sources = []
+if args.dr_mode == "on":
+    res["dr_mode"] = {"mode": "on", "scale": float(args.dr_scale), "table_path": dr_mode.table["path"],
+                       "table_sha256": dr_mode.table["sha256"], "approval": n21_approval}
+elif parser_n21:
+    res["dr_mode"] = n21_dr_record.off_mode_record(dr_off)
+if parser_n21:
+    res["n21_point"] = args.n21_point
+    res["n21_stage"] = args.n21_stage
+res["policy_dt_s"] = float(dt)
+if args.ex39_heading_smoke_guard:
+    res["ex39_heading_smoke_guard"] = {"constructed_arm_b": True,
+                                        "forced_heading_before_disable": True,
+                                        "fixed_command_step_checks": 0}
+terrain_gen = raw.scene.terrain.cfg.terrain_generator
+terrain_names = (args.ex42_mesh["columns" if kind_cell else "eval_columns"] if args.ex42_mesh else
+                 columns.column_types({name: float(sub.proportion) for name, sub in terrain_gen.sub_terrains.items()}, int(terrain_gen.num_cols)))
+res["terrain_columns"] = terrain_names
+gait_contact_foot_ids = None
+gait_contact_body_ids = None
+if parser_gait:
+    sensor = raw.scene.sensors["contact_forces"]
+    robot_feet = ("FL_foot", "FR_foot", "RL_foot", "RR_foot")
+    gait_feet = ("FL_foot", "FR_foot", "RL_foot", "RR_foot")
+    if (any(sensor.body_names.count(name) != 1 for name in gait_feet)
+            or any(robot.body_names.count(name) != 1 for name in robot_feet)):
+        raise RuntimeError("gait contact sweep needs exactly one robot and sensor body for each named foot")
+    gait_contact_foot_ids = [sensor.body_names.index(name) for name in gait_feet]
+    gait_contact_body_ids = [robot.body_names.index(name) for name in robot_feet]
+    res["gait_contact_sweep"] = {"terrain": "n21-flat", "fixed_level": 0, "seed": args.eval_seed,
+                                  "map_mode": args.modes,
+                                  "envs": args.envs, "steps": args.steps, "policy_dt_s": float(dt),
+                                  "foot_order": list(gait_feet),
+                                  "contact_thresholds": ["norm(net_forces_w) > 1 N", "net_forces_w[..., z] > 1 N"],
+                                  "commands": list(WANT_CMDS)}
+kind_foot_ids = None
+if kind_cell:
+    feet = ("FL_foot", "FR_foot", "RL_foot", "RR_foot")
+    sensor = raw.scene.sensors["contact_forces"]
+    if any(robot.body_names.count(name) != 1 or sensor.body_names.count(name) != 1 for name in feet):
+        raise RuntimeError("EX-42 kind cell requires four uniquely named robot and sensor feet")
+    kind_foot_ids = ([robot.body_names.index(name) for name in feet],
+                     [sensor.body_names.index(name) for name in feet])
+
+if args.push_ladder:
+    from foothold_s2.eval.ex41_push_ladder import run_isaac_cell
+
+    args.push_ladder_out = os.path.join(args.out, "push_ladder.json")
+    result = run_isaac_cell(args, env, raw, robot, term, agent_cfg, adapters,
+                            fixed_terrain, terrain_names, checkpoint_state)
+    print("EX41_PUSH_LADDER_DONE", json.dumps(result["summary"], ensure_ascii=False, allow_nan=False), flush=True)
+    os._exit(0)
+
+if args.axis_v2:
+    from foothold_s2.eval.axis_v2_run import run_suite
+
+    run_suite(args, env, raw, robot, term, agent_cfg, adapters, fixed_terrain,
+              terrain_names, dr_off, curriculum_off, _run_identity())
+    os._exit(0)
+
+if args.terrain_skill:
+    from foothold_s2.eval.terrain_skill_run import run_suite as run_terrain_skill
+
+    run_terrain_skill(args, env, raw, robot, term, agent_cfg, adapters, fixed_terrain,
+                      terrain_names, dr_off, curriculum_off, _run_identity())
+    os._exit(0)
+
+if args.terrain_skill_v2:
+    from foothold_s2.eval.terrain_skill_v2_run import run_suite as run_terrain_skill_v2
+
+    run_terrain_skill_v2(args, env, raw, robot, term, agent_cfg, adapters, fixed_terrain,
+                         terrain_names, dr_off, curriculum_off, _run_identity())
+    os._exit(0)
+for mode in args.modes.split(","):
+    runner, sd = adapters.load_s2_runner(
+        env, agent_cfg.to_dict(), args.checkpoint, args.device,
+        checkpoint_state=checkpoint_state)       # 모드마다 새 runner: probe_prop_only 의 mask 가 다른 모드로 새지 않는다
+    res["checkpoint_iter"] = int(sd.get("iter", -1))
+    saved_map_input = runner.pcfg.get("map_input")
+    res["map_input"] = saved_map_input
+
+    if (saved_map_input == "none") != (mode == "none"):                                    # 지도 없는 체크포인트(G0)는 모드 'none' 하나만, 지도 있는 체크포인트에는 'none' 모드를 주지 않는다
+        raise RuntimeError("map_input=%r 인 체크포인트에 모드 %r 는 쓸 수 없다(G0 는 --modes none)" % (saved_map_input, mode))
+    res["restored_modes"] = {"est_mode": runner.pcfg["est_mode"], "critic_mode": runner.pcfg["critic_mode"], "map_input": runner.pcfg.get("map_input"), "force_gt_saved": runner.perception.cfg.force_gt}
+    counts = {"gt": 0, "total": 0}
+    last_err = {"e": None, "rebuild_maxdiff": 0.0}                                                                 # X27m: 이번 policy step 의 복원 오차 다섯 값(map_error.SERIES) 각 (N,)
+    orig_adv = runner.perception._advance
+
+    def tapped(h_prop, h_terr, hist, depth2, tick, first, use_gt, gt_map, _orig=orig_adv, _c=counts):
+        _c["gt"] += int(use_gt.sum())
+        _c["total"] += int(use_gt.numel())
+
+        result = _orig(h_prop, h_terr, hist, depth2, tick, first, use_gt, gt_map)
+        try:                                                                                 # 센서 원자료(z_hit - z_base): 정답 -1.0 이 «광선 못 맞힘» 인지 «1 m 아래 clip» 인지 가른다
+            rel = raw.scene.sensors["gt_map_scan"].data.ray_hits_w[..., 2] - raw.scene["robot"].data.root_pos_w[:, 2:3]
+        except Exception as _e:                                                              # noqa: BLE001
+            rel = None
+            last_err["rel_error"] = repr(_e)
+
+        ME.record(last_err, result, gt_map, rel)
+
+        return result
+
+    runner.perception._advance = tapped
+    res["modes"][mode] = {}
+
+    for cname, cmd in ((c, v) for c, v in CMDS.items() if c in WANT_CMDS):
+        rollout_key = "%s/%s" % (mode, cname)
+        torch.manual_seed(args.eval_seed)
+        if args.ex39_heading_smoke_guard:
+            term.params.ex39_arm = "B"
+        dr_mode.begin(raw, rollout_key, S, env.num_envs, dt)
+        env.reset()
+        terrain = raw.scene.terrain
+
+        if args.fixed_terrain:
+            if kind_cell:
+                kind_table = [{"family": f, "kind": k} for f, k in zip(
+                    args.ex42_mesh["column_family"], args.ex42_mesh["columns"])]
+                res["fixed_terrain"] = fixed_terrain.apply_kind(
+                    raw, kind_table, args.ex42_kind_family, args.ex42_kind_name, args.fixed_level)
+            else:
+                res["fixed_terrain"] = fixed_terrain.apply_sparse(raw, args.fixed_level) if parser_sparse else fixed_terrain.apply(
+                    raw, args.fixed_level, cols=args.ex42_mesh["eval_cols"] if args.ex42_mesh else None)
+            env.reset()                                                                  # 고정한 칸의 원점에서 다시 시작(curriculum 은 꺼져 있다)
+            if kind_cell or parser_sparse:
+                lv, ty = np.array([t["level"] for t in res["fixed_terrain"]["tiles"]]), np.array([t["col"] for t in res["fixed_terrain"]["tiles"]])
+            else:
+                lv, ty = fixed_terrain.fixed_assignment(env.num_envs, res["fixed_terrain"]["rows"], res["fixed_terrain"]["cols"], args.fixed_level)
+
+            if not (np.array_equal(terrain.terrain_levels.cpu().numpy(), lv) and np.array_equal(terrain.terrain_types.cpu().numpy(), ty)):
+                raise RuntimeError("고정 지형 칸이 reset 뒤에 바뀌었다")
+        if parser_sparse:                                                                # 듬성 띠는 +x 방향이다. reset 이 뽑는 무작위 yaw(+-3.14)로는 «전진» 이 띠 밖을 향한다: 시작 yaw 를 0 으로 맞춘다(위치 · 관절은 그대로)
+            st = robot.data.root_state_w.clone()
+            st[:, 3:7] = torch.tensor([1.0, 0.0, 0.0, 0.0], device=dev)               # 쿼터니언 w x y z
+            st[:, 7:] = 0.0
+            robot.write_root_pose_to_sim(st[:, :7])
+            robot.write_root_velocity_to_sim(st[:, 7:])
+            q = robot.data.root_quat_w
+            yaw0 = torch.atan2(2.0 * (q[:, 0] * q[:, 3] + q[:, 1] * q[:, 2]), 1.0 - 2.0 * (q[:, 2] ** 2 + q[:, 3] ** 2))
+
+            if yaw0.abs().max().item() > 1.0e-3:
+                raise RuntimeError("듬성 평가: 시작 yaw 를 0 으로 맞추지 못했다(최대 %.4f rad)" % yaw0.abs().max().item())
+            res["start_yaw_override"] = 0.0
+            from foothold_s2.eval import geometry_hash as _gh
+            from foothold_s2.terrains import columns as _cols
+            from foothold_s2.terrains import sparse_terrains as _sp2
+
+            _gen = raw.scene.terrain.cfg.terrain_generator
+            _names = _cols.column_types({k: float(v.proportion) for k, v in _gen.sub_terrains.items()}, int(_gen.num_cols))
+            START_SUPPORT = _gh.start_support(_sp2.SIDE_TABLE, _names, int(_gen.num_rows), res["fixed_terrain"]["tiles"],
+                                              (robot.data.root_pos_w[:, :2] - raw.scene.env_origins[:, :2]).cpu().numpy())      # 시작 자리가 발판 위인가(빔 밖 · 구덩이 시작 판별): reset · yaw 맞춤 뒤 이 명령의 실제 시작 xy(아래 offset 과 같은 값)
+            res["terrain_geometry_sha256"] = _gh.geometry_record(_sp2.SIDE_TABLE, _names, int(_gen.num_rows), [(t["level"], t["col"]) for t in res["fixed_terrain"]["tiles"]])
+        offset = (robot.data.root_pos_w[:, :2] - raw.scene.env_origins[:, :2]).abs().max().item()      # 로봇이 (고정한) 새 원점 근처에서 시작했는지: B 의 reset 은 원점 기준 x · y ±0.5 m
+
+        if offset > START_OFFSET_MAX_M + 1.0e-3:
+            raise RuntimeError("%s/%s: reset 뒤 로봇 root 가 env 원점에서 %.3f m 벗어났다(허용 %.1f m): 원점이 바뀌지 않았거나 다른 칸에서 시작" % (mode, cname, offset, START_OFFSET_MAX_M))
+        res.setdefault("start_offset_max_m", {})["%s/%s" % (mode, cname)] = offset
+        th = hashlib.sha256(terrain.terrain_levels.cpu().numpy().tobytes() + terrain.terrain_types.cpu().numpy().tobytes()).hexdigest()
+        res["terrain_hash"]["%s/%s" % (mode, cname)] = th
+        ref = res["terrain_hash"][next(iter(res["terrain_hash"]))]
+
+        if th != ref:
+            raise RuntimeError("%s/%s 의 지형 칸 해시가 첫 실행과 다르다: 모드끼리 같은 지형에서 평가되지 않는다" % (mode, cname))
+
+        tiles = map_mode_cells.terrain_rows(terrain.terrain_levels.cpu().numpy(),
+                                            terrain.terrain_types.cpu().numpy(), terrain_names)
+        if len(tiles) != args.envs:
+            raise RuntimeError("terrain tile receipt count does not match env count")
+        if "terrain_tiles" not in res:
+            res["terrain_tiles"] = tiles
+        elif tiles != res["terrain_tiles"]:
+            raise RuntimeError("terrain kind/level assignment changed between commands")
+
+        term.vel_command_b[:, :3] = torch.tensor(cmd, device=dev)                       # reset 이 뽑은 무작위 명령을 고정 명령으로 덮어쓴다
+        if args.ex39_heading_smoke_guard:
+            if term.params.ex39_arm != "B":
+                raise RuntimeError("EX-39 B term disappeared before fixed-command test")
+            term.heading.fill_(True)
+        map_mode_cells.disable_heading_for_fixed_eval(term)
+        counts["gt"] = counts["total"] = 0
+        policy = adapters.S2Policy(runner, env.num_envs, z_mode="mean", act_mode="mean", map_mode=None if mode == "none" else mode)
+        obs = env.get_observations()                                                   # 덮어쓴 뒤 observation_manager.compute() 로 다시 계산한다: 첫 step 도 고정 명령을 받는다(vecenv_wrapper.get_observations)
+        if checkpoint_preparation["checkpoint_pose_commands"]:
+            ex41_eval_loader.verify_ex41_pose_observation(obs)
+        alive = torch.ones(env.num_envs, dtype=torch.bool, device=dev)
+        root_xy_start = robot.data.root_pos_w[:, :2].clone()
+        VX, VY, WZ, TILT = (torch.zeros(S, env.num_envs, device=dev) for _ in range(4))
+        XY = torch.zeros(S, env.num_envs, 2, device=dev)
+        AL = torch.zeros(S, env.num_envs, dtype=torch.bool, device=dev)
+        last_err["rebuild_maxdiff"] = 0.0
+        ERR = torch.full((len(ME.SERIES), S, env.num_envs), float("nan"), device=dev)                  # X27m: step 별 복원 오차 다섯 계열
+        FW = torch.zeros(S, env.num_envs, device=dev)                                  # 듬성 집계용: 칸 원점에서 전진(+x) 거리
+        POS = torch.zeros(S, env.num_envs, 3, device=dev)                              # 듬성 원자료: 칸 원점 기준 월드 위치 · yaw · 종료 여부
+        YAW = torch.zeros(S, env.num_envs, device=dev)
+        DN = torch.zeros(S, env.num_envs, dtype=torch.bool, device=dev)
+        FOOT_CONTACT = torch.zeros(S, env.num_envs, 4, dtype=torch.bool, device=dev) if kind_cell else None
+        FOOT_POS = torch.zeros(S, env.num_envs, 4, 3, device=dev) if kind_cell else None
+        GAIT_FORCE_XYZ = torch.zeros(S, env.num_envs, 4, 3, device=dev) if parser_gait else None
+        GAIT_FOOT_POS_W = torch.zeros(S, env.num_envs, 4, 3, device=dev) if parser_gait else None
+        GAIT_FOOT_QUAT_W = torch.zeros(S, env.num_envs, 4, 4, device=dev) if parser_gait else None
+        GAIT_FOOT_SPEED_XY = torch.zeros(S, env.num_envs, 4, device=dev) if parser_gait else None
+
+        START_XY0 = (robot.data.root_pos_w[:, :2] - raw.scene.env_origins[:, :2]).cpu().numpy()          # X27j: 이 명령의 첫 step 직전 시작 자리(칸 원점 기준 xy)
+
+        for k in range(S):
+            term.vel_command_b[:, :3] = torch.tensor(cmd, device=dev)
+            map_mode_cells.assert_heading_off_for_fixed_eval(term)
+            dr_mode.step(raw, k)
+            last_err["e"] = None
+            a = policy(obs)
+
+            if last_err["e"] is not None:
+                ERR[:, k] = torch.stack(last_err["e"])
+
+            obs, _r, dones, _x = env.step(a)
+            map_mode_cells.assert_heading_off_for_fixed_eval(term)
+            if args.ex39_heading_smoke_guard:
+                expected_command = torch.tensor(cmd, device=dev).expand(env.num_envs, 3)
+                active = ~dones.bool()
+                if active.any() and not torch.allclose(term.vel_command_b[active, :3],
+                                                       expected_command[active], atol=1e-6, rtol=0):
+                    raise RuntimeError("EX-39 fixed evaluation command changed after step")
+                res["ex39_heading_smoke_guard"]["fixed_command_step_checks"] += 1
+            policy.reset(dones)
+            AL[k] = alive & ~dones.bool()  # env.step may already have reset done envs
+            VX[k] = robot.data.root_lin_vel_b[:, 0]
+            FW[k] = robot.data.root_pos_w[:, 0] - raw.scene.env_origins[:, 0]
+            POS[k] = robot.data.root_pos_w - raw.scene.env_origins
+            q = robot.data.root_quat_w
+            YAW[k] = torch.atan2(2.0 * (q[:, 0] * q[:, 3] + q[:, 1] * q[:, 2]), 1.0 - 2.0 * (q[:, 2] ** 2 + q[:, 3] ** 2))
+            DN[k] = dones.bool()
+            if parser_gait:
+                GAIT_FORCE_XYZ[k] = sensor.data.net_forces_w[:, gait_contact_foot_ids, :]
+                GAIT_FOOT_POS_W[k] = robot.data.body_pos_w[:, gait_contact_body_ids, :]
+                GAIT_FOOT_QUAT_W[k] = robot.data.body_quat_w[:, gait_contact_body_ids, :]
+                GAIT_FOOT_SPEED_XY[k] = robot.data.body_lin_vel_w[:, gait_contact_body_ids, :2].norm(dim=-1)
+            if kind_cell:
+                body_ids, sensor_ids = kind_foot_ids
+                FOOT_CONTACT[k] = sensor.data.net_forces_w[:, sensor_ids].norm(dim=-1) > 1.0
+                FOOT_POS[k] = robot.data.body_pos_w[:, body_ids] - raw.scene.env_origins[:, None, :]
+            VY[k] = robot.data.root_lin_vel_b[:, 1]
+            WZ[k] = robot.data.root_ang_vel_b[:, 2]
+            g = robot.data.projected_gravity_b
+            TILT[k] = torch.atan2(g[:, :2].norm(dim=1), -g[:, 2]).abs()
+            XY[k] = robot.data.root_pos_w[:, :2]
+            alive = alive & ~dones.bool()
+
+        if mode in ("eval_pred", "probe_prop_only", "none") and counts["gt"] != 0:
+            raise RuntimeError("%s 인데 정책 입력에 GT 가 %d 번 들어갔다" % (mode, counts["gt"]))
+        if mode == "eval_gt" and counts["gt"] != counts["total"]:
+            raise RuntimeError("eval_gt 인데 GT 가 %d/%d 번만 들어갔다" % (counts["gt"], counts["total"]))
+
+        vx, vy, wz, al, tilt = VX.cpu().numpy(), VY.cpu().numpy(), WZ.cpu().numpy(), AL.cpu().numpy(), TILT.cpu().numpy()
+        sl = slice(int(2.0 / dt), int(4.0 / dt))
+        dist = (vx * al).sum(0) * dt                                  # 몸 좌표 vx 의 적분(월드 이동 거리가 아님)
+        nalive = np.maximum(al.sum(0), 1)
+        spin = abs(cmd[2]) > 0
+        follow = (wz * al).sum(0) / nalive / (cmd[2] if spin else 1.0)
+        used = al[sl].any(0)
+
+        window_count = al[sl].sum(0)
+        if used.any():
+            if spin:
+                turn = np.abs((wz[sl] * al[sl]).sum(0) / np.maximum(window_count, 1))
+                stall = float(np.mean(turn[used] < 0.1 * abs(cmd[2])))
+            elif np.hypot(cmd[0], cmd[1]) > 0:
+                projected = (vx[sl] * cmd[0] + vy[sl] * cmd[1]) / np.hypot(cmd[0], cmd[1])
+                followed = (projected * al[sl]).sum(0) / np.maximum(window_count, 1)
+                stall = float(np.mean(followed[used] < 0.05))
+            else:
+                stall = None
+            speed = np.hypot(vx[sl], vy[sl])
+            mean_speed = (speed * al[sl]).sum(0) / np.maximum(window_count, 1)
+            mean_abs_yaw = (np.abs(wz[sl]) * al[sl]).sum(0) / np.maximum(window_count, 1)
+            stationary = map_mode_cells.stationary_fraction(mean_speed, mean_abs_yaw, used) if cmd == (0.0, 0.0, 0.0) else None
+        else:
+            stall, stationary = None, None
+
+        row = {"body_vx_integral_median_m": float(np.median(dist)), "yaw_follow_median": float(np.median(follow)), "stalled_fraction_2to4s": stall,
+               "stationary_fraction_2to4s": stationary,
+               "stationary_measurement_definition": {
+                   "body_xy_speed_mps_lt": map_mode_cells.STOP_LINEAR_MPS,
+                   "body_abs_yaw_rate_radps_lt": map_mode_cells.STOP_YAW_RADPS,
+               } if stationary is not None else None,
+               "tilt_rad_mean_alive": float((tilt * al).sum() / max(al.sum(), 1)), "alive_envs_at_end": int(al[-1].sum()), "gt_used": counts["gt"], "policy_steps_x_envs": counts["total"]}
+        row.update(map_mode_cells.summarize(cmd, tiles, vx, vy, wz, al,
+                                           alive.cpu().numpy(), dt,
+                                           root_xy_start.cpu().numpy(), robot.data.root_pos_w[:, :2].cpu().numpy(),
+                                           XY.cpu().numpy()))
+        if parser_gait:
+            from foothold_s2.eval import ex42_gait_contact
+
+            force_xyz = GAIT_FORCE_XYZ.cpu().numpy()
+            gait_metrics = ex42_gait_contact.summarize_both(force_xyz, al, vx, dt, body_vy=vy)
+            foot_height = ex42_gait_contact.foot_sole_height_m(
+                GAIT_FOOT_POS_W.cpu().numpy(), GAIT_FOOT_QUAT_W.cpu().numpy(),
+                raw.scene.env_origins[:, 2].cpu().numpy())
+            foot_speed_xy = GAIT_FOOT_SPEED_XY.cpu().numpy()
+            csv_path = os.path.join(args.out, "gait_raw_%s.csv" % cname)
+            ex42_gait_contact.write_csv(csv_path, [cname], [force_xyz], [al], [vx], dt,
+                                        body_vy=[VY.cpu().numpy()])
+            row["gait_contact"] = gait_metrics["fz_gt_1n"]
+            row["gait_contact"]["raw_csv"] = csv_path
+            row["gait_contact_norm_gt_1n"] = gait_metrics["force_norm_gt_1n"]
+            row["gait_contact_norm_gt_1n"]["raw_csv"] = csv_path
+            res["gait_contact_sweep"][cname] = gait_metrics
+            command_array = np.asarray(cmd, dtype=np.float64)
+            if (command_array[2] == 0 and 0.1 <= np.linalg.norm(command_array[:2]) <= 0.3):
+                run_identity = res["run_identity"]
+                raw_path = os.path.join(args.out, "r5_contact_raw_%s_%s.npz" % (mode, cname))
+                raw_path, raw_sha = ex42_gait_contact.write_r5_raw_npz(
+                    raw_path, force_xyz_n=force_xyz, foot_height_m=foot_height,
+                    foot_xy_speed_mps=foot_speed_xy, alive=al, command=command_array,
+                    checkpoint_sha256=sha, eval_seed=args.eval_seed, mode=mode,
+                    code_head=run_identity.get("code_head"), dt=dt)
+                raw_path = os.path.abspath(raw_path)
+                r5_contact_sources.append({
+                    "path": raw_path, "sha256": raw_sha,
+                })
+                row["r5_contact_source"] = {"path": raw_path, "sha256": raw_sha}
+            for criterion, gait in gait_metrics.items():
+                print("GAIT_CONTACT", cname, criterion,
+                      json.dumps(gait, ensure_ascii=False, allow_nan=False), flush=True)
+        _save_env_arrays(mode, cname, vx, FW.cpu().numpy(), al, DN.cpu().numpy(), dt, START_XY0, row,
+                         map_err=None if mode == "none" else ERR.cpu().numpy(),
+                         kind_foot_arrays=(FOOT_CONTACT.cpu().numpy(), FOOT_POS.cpu().numpy())
+                         if kind_cell else None)  # EX-42 kind completion remains unjudged.
+        if parser_sparse:                                                                # 새 키 · 새 파일만 더한다. 기존 키 · 기존 칸은 그대로
+            from foothold_s2.eval import kind_stats
+
+            tile_len = float(raw.scene.terrain.cfg.terrain_generator.size[0])           # 칸 길이는 지형 cfg 에서
+            kinds = [t["kind"] for t in res["fixed_terrain"]["tiles"]]
+            row["by_kind"] = kind_stats.by_kind(kinds, vx, FW.cpu().numpy(), al, dt, pos=POS.cpu().numpy(), start_support=START_SUPPORT)
+            os.makedirs(args.out, exist_ok=True)
+            np.savez(os.path.join(args.out, "arrays_%s_%s.npz" % (mode, cname)), vx=vx, fwd=FW.cpu().numpy(), alive=al, dt=dt, tile_len_m=tile_len,
+                     pos=POS.cpu().numpy(), yaw=YAW.cpu().numpy(), dones=DN.cpu().numpy(), start_support=START_SUPPORT)
+        res.setdefault("map_err_gt_rebuild_max_abs_m", {})["%s/%s" % (mode, cname)] = last_err.get("rebuild_maxdiff")           # 센서 원자료로 다시 만든 정답 지도와 obs 의 정답 지도의 최대 차이(0 이어야 분류가 믿을 만하다)
+        if last_err.get("rel_error"):
+            res.setdefault("map_err_rel_error", {})["%s/%s" % (mode, cname)] = last_err["rel_error"]
+        dr_mode.collect(raw, rollout_key, res, row, arrays={
+            "alive": al, "dones": DN.cpu().numpy(), "vx": vx, "vy": vy,
+            "wz": wz, "tilt": tilt, "xy": XY.cpu().numpy(), "cmd": cmd,
+        })
+        res["modes"][mode][cname] = row
+        print("MAPMODE", mode, cname, json.dumps(row), flush=True)
+
+    if args.command_suite in ("extended", "ex40_b3"):
+        res.setdefault("sequences", {})[mode] = {}
+        for seq_name, seq_commands in map_mode_cells.SEQUENCES.items():
+            torch.manual_seed(args.eval_seed)
+            rollout_key = "%s/%s" % (mode, seq_name)
+            dr_mode.begin(raw, rollout_key, S, env.num_envs, dt)
+            env.reset()
+            if args.fixed_terrain:
+                if kind_cell:
+                    fixed_terrain.apply_kind(raw, kind_table, args.ex42_kind_family,
+                                             args.ex42_kind_name, args.fixed_level)
+                else:
+                    fixed_terrain.apply(raw, cols=args.ex42_mesh["eval_cols"] if args.ex42_mesh else None)
+                env.reset()
+            seq_tiles = map_mode_cells.terrain_rows(terrain.terrain_levels.cpu().numpy(),
+                                                    terrain.terrain_types.cpu().numpy(), terrain_names)
+            if seq_tiles != res["terrain_tiles"]:
+                raise RuntimeError("sequence terrain assignment changed")
+            policy = adapters.S2Policy(runner, env.num_envs, z_mode="mean", act_mode="mean",
+                                       map_mode=None if mode == "none" else mode)
+            alive = torch.ones(env.num_envs, dtype=torch.bool, device=dev)
+            counts["gt"] = counts["total"] = 0
+            seq_row = {"total_steps": S, "phase_steps": map_mode_cells.phase_steps(S, len(seq_commands)),
+                       "phases": [], "independent_reset": True}
+            global_step = 0
+            for phase_index, (phase_cmd, nsteps) in enumerate(zip(seq_commands, seq_row["phase_steps"])):
+                term.vel_command_b[:, :3] = torch.tensor(phase_cmd, device=dev)
+                map_mode_cells.disable_heading_for_fixed_eval(term)
+                obs = env.get_observations()
+                if checkpoint_preparation["checkpoint_pose_commands"]:
+                    ex41_eval_loader.verify_ex41_pose_observation(obs)
+                xy_start = robot.data.root_pos_w[:, :2].clone()
+                vx_t, vy_t, wz_t = (torch.zeros(nsteps, env.num_envs, device=dev) for _ in range(3))
+                xy_t = torch.zeros(nsteps, env.num_envs, 2, device=dev)
+                alive_t = torch.zeros(nsteps, env.num_envs, dtype=torch.bool, device=dev)
+                for step in range(nsteps):
+                    term.vel_command_b[:, :3] = torch.tensor(phase_cmd, device=dev)
+                    map_mode_cells.assert_heading_off_for_fixed_eval(term)
+                    dr_mode.step(raw, global_step)
+                    action = policy(obs)
+                    obs, _reward, dones, _extra = env.step(action)
+                    map_mode_cells.assert_heading_off_for_fixed_eval(term)
+                    policy.reset(dones)
+                    alive_t[step] = alive & ~dones.bool()  # exclude possible post-reset sample
+                    vx_t[step] = robot.data.root_lin_vel_b[:, 0]
+                    vy_t[step] = robot.data.root_lin_vel_b[:, 1]
+                    wz_t[step] = robot.data.root_ang_vel_b[:, 2]
+                    xy_t[step] = robot.data.root_pos_w[:, :2]
+                    alive = alive & ~dones.bool()
+                    global_step += 1
+                phase_vx, phase_vy, phase_wz, phase_alive = (
+                    vx_t.cpu().numpy(), vy_t.cpu().numpy(), wz_t.cpu().numpy(), alive_t.cpu().numpy())
+                phase = map_mode_cells.summarize(
+                    phase_cmd, seq_tiles, phase_vx, phase_vy, phase_wz, phase_alive,
+                    alive.cpu().numpy(), dt, xy_start.cpu().numpy(), robot.data.root_pos_w[:, :2].cpu().numpy(),
+                    xy_t.cpu().numpy())
+                for env_row, response in zip(phase["per_env"], map_mode_cells.response_times(
+                        phase_cmd, phase_vx, phase_vy, phase_wz, phase_alive, dt)):
+                    env_row.update(response)
+                phase.update({"phase_index": phase_index, "steps": nsteps,
+                              "start_step": sum(seq_row["phase_steps"][:phase_index])})
+                seq_row["phases"].append(phase)
+            if mode in ("eval_pred", "probe_prop_only", "none") and counts["gt"] != 0:
+                raise RuntimeError("sequence policy input unexpectedly used GT")
+            if mode == "eval_gt" and counts["gt"] != counts["total"]:
+                raise RuntimeError("sequence eval_gt policy input did not use GT for every sample")
+            seq_row["gt_used"] = counts["gt"]
+            seq_row["policy_steps_x_envs"] = counts["total"]
+            dr_mode.collect(raw, rollout_key, res, seq_row)
+            res["sequences"][mode][seq_name] = seq_row
+            print("MAPMODE_SEQUENCE", mode, seq_name, json.dumps({
+                "alive_at_end": [p["by_kind"] for p in seq_row["phases"]],
+                "gt_used": counts["gt"]}), flush=True)
+
+    tokens = int(getattr(runner.perception.ie, "last_num_map_tokens", -1))                  # 마지막 정책 호출의 지도 토큰 수(G0 계열은 0 이어야 한다)
+    res.setdefault("last_num_map_tokens", {})[mode] = tokens
+    if saved_map_input == "none" and tokens != 0:
+        raise RuntimeError("map_input=none 인데 지도 토큰이 %d 개다" % tokens)
+    runner.perception.ie.mask_map_tokens = False                                          # 모드가 끝나면 진단 마스크를 되돌린다
+
+
+def _module_key(m):                                                                    # python -m 로 돌면 이 스크립트 자신이 __main__ 이라 __spec__.name 으로 이름을 되찾는다
+    spec = getattr(m, "__spec__", None)
+
+    return getattr(spec, "name", None) or getattr(m, "__name__", "")
+
+
+res["source_sha256"] = {}                                                              # 끝에서 다시: adapters 가 늦게 import 하는 runners/* 와 __main__ 까지, 실제 불린 foothold_s2 파일 전부
+for _m in list(sys.modules.values()):
+    _key, _file = _module_key(_m), getattr(_m, "__file__", None)
+    if _key.startswith("foothold_s2") and _file and os.path.isfile(_file):
+        res["source_sha256"][_key] = hashlib.sha256(open(_file, "rb").read()).hexdigest()[:16]
+if parser_gait and r5_contact_sources:
+    try:
+        r5_doc = ex42_gait_contact.build_r5_contact_evidence(
+            r5_contact_sources, checkpoint_sha256=sha, dt=dt)
+    except ValueError as exc:
+        if "complete per-foot intervals or height samples absent" not in str(exc):
+            raise
+        res["r5_contact_evidence_status"] = {
+            "state": "incomplete_raw_recorded_not_R5_eligible",
+            "reason": str(exc), "sources": r5_contact_sources,
+        }
+    else:
+        r5_path = os.path.abspath(os.path.join(args.out, "r5_contact_evidence.json"))
+        ex42_gait_contact.write_r5_evidence_json(r5_path, r5_doc)
+        res["r5_contact_evidence_path"] = r5_path
+        res["r5_contact_evidence"] = r5_doc
+out_json = os.path.join(args.out, "map_modes.json")
+if kind_cell:
+    from foothold_s2.eval.ex42_mesh_eval import validate_kind_cell
+    validate_kind_cell(res, args.ex42_mesh, family=args.ex42_kind_family,
+                       kind=args.ex42_kind_name, level=args.fixed_level)
+with open(out_json + ".tmp", "w", encoding="utf-8") as stream:
+    res["evaluation_friction"] = ex42_friction.verify(raw, friction_policy)
+    json.dump(res, stream, ensure_ascii=False, indent=1, allow_nan=False)
+    stream.flush()
+    os.fsync(stream.fileno())
+os.replace(out_json + ".tmp", out_json)
+if parser_n21:
+    n21_doc = n21_dr_record.receipt(res, approval=n21_approval, terrain_set=args.terrain_set)
+    n21_json = os.path.join(args.out, "n21_record_only.json")
+    with open(n21_json + ".tmp", "w", encoding="utf-8") as stream:
+        json.dump(n21_doc, stream, ensure_ascii=False, indent=1, allow_nan=False)
+        stream.flush()
+        os.fsync(stream.fileno())
+    os.replace(n21_json + ".tmp", n21_json)
+    print("N21_RECORD_ONLY", n21_json, flush=True)
+print("MAPMODE_DONE", flush=True)
+os._exit(0)

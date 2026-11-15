@@ -1,0 +1,99 @@
+{
+  "baseline_sha256": "14696735d67fee0a821fcffeac766d95fd745b6f3c46a3fc68389618060022af",
+  "first": {
+    "epoch": 1792214832.219,
+    "gpu": {
+      "limits": [
+        "an empty NVML list on WDDM can mean 'not reported', not 'none'"
+      ],
+      "nvml": [
+        126692
+      ],
+      "nvml_error": null,
+      "smi": [
+        126692
+      ]
+    },
+    "locks": {
+      "gpu_lease": "acquired_and_released",
+      "usd_lock": "acquired_and_released"
+    },
+    "process_list_unreadable_count": 0,
+    "processes": [
+      {
+        "cmd_head": "c:/users/ai-ws01/anaconda3/envs/isaac311-moects/python.exe -b c:/users/ai-ws01/s2_lab/s2_step21_run/launch/s2_family_observer.py verify --run c:/users/ai-ws01/s2_lab/s2_step21_run/runs/plumba-live-202",
+        "create_time": 1792214823.347,
+        "exe": "C:\\Users\\AI-WS01\\anaconda3\\envs\\isaac311-moects\\python.exe",
+        "name": "python.exe",
+        "pid": 91484
+      }
+    ],
+    "time": "2026-10-17 14:27:12"
+  },
+  "gap_s": 4.0,
+  "gpu_uuid": "GPU-c08e23b0-62b6-a4f2-8eb2-11151c6a8c7b",
+  "known_pids": {
+    "127452": 1792214794.193988
+  },
+  "limits": [
+    "PASS means no residual OS process, no listed GPU compute pid of this attempt and both locks acquirable; it does not prove NVML compute 0 on WDDM",
+    "a process list the observer could not read is UNKNOWN, not none"
+  ],
+  "mode": "verify",
+  "reasons": [],
+  "receipts": {
+    "ctl/prelaunch.json": {
+      "sha256": "8cc59f5abde5140c56739382f721c64c74f5faf645a026ffd2620aa61cd46608",
+      "size": 2559
+    },
+    "in/approval.json": {
+      "sha256": "fca44663e9373e1d84e4a03ea83a677b9f09db65cea020bceaab273eb9c30faa",
+      "size": 1905
+    },
+    "in/manifest.json": {
+      "sha256": "9f01a013fe108e2683c00b4ad4a2913e39ef6bec6b2a90c9a23ea57d18d0ef52",
+      "size": 7812
+    },
+    "in/request.json": {
+      "sha256": "dfcd56dc7b9fa46a026223a8f47665a2c877fee4dba9448ab58305da0f43ef03",
+      "size": 3474
+    },
+    "summary.json": {
+      "sha256": "535a2c8d802cdc590ccf99660a300462a4df9ec3b4f46783c3def5d7c7748b49",
+      "size": 3782
+    }
+  },
+  "run": "C:\\Users\\AI-WS01\\s2_lab\\s2_step21_run\\runs\\plumbA-live-20261017-142618-677a0cd3",
+  "second": {
+    "epoch": 1792214836.537,
+    "gpu": {
+      "limits": [
+        "an empty NVML list on WDDM can mean 'not reported', not 'none'"
+      ],
+      "nvml": [
+        126692
+      ],
+      "nvml_error": null,
+      "smi": [
+        126692
+      ]
+    },
+    "locks": {
+      "gpu_lease": "acquired_and_released",
+      "usd_lock": "acquired_and_released"
+    },
+    "process_list_unreadable_count": 0,
+    "processes": [
+      {
+        "cmd_head": "c:/users/ai-ws01/anaconda3/envs/isaac311-moects/python.exe -b c:/users/ai-ws01/s2_lab/s2_step21_run/launch/s2_family_observer.py verify --run c:/users/ai-ws01/s2_lab/s2_step21_run/runs/plumba-live-202",
+        "create_time": 1792214823.347,
+        "exe": "C:\\Users\\AI-WS01\\anaconda3\\envs\\isaac311-moects\\python.exe",
+        "name": "python.exe",
+        "pid": 91484
+      }
+    ],
+    "time": "2026-10-17 14:27:16"
+  },
+  "unknown": [],
+  "verdict": "PASS"
+}

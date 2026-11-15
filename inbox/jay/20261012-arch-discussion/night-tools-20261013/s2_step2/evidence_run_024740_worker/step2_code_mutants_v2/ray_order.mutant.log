@@ -1,0 +1,12 @@
+PASS ray index x-fast and no 20m re-add
+PASS yaw 90 ray geometry
+FAIL ray order mismatch rejected
+Traceback (most recent call last):
+  File "C:\Users\AI-WS01\.claude\jobs\09bbf294\tmp\codexE\evidence_s2_step2\run_20261015_024740_59720\step2_code_mutants_v2\mutants\ray_order\test_s2_step2.py", line 287, in <module>
+    tests()
+  File "C:\Users\AI-WS01\.claude\jobs\09bbf294\tmp\codexE\evidence_s2_step2\run_20261015_024740_59720\step2_code_mutants_v2\mutants\ray_order\test_s2_step2.py", line 164, in tests
+    else: check("ray order mismatch rejected", False)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\AI-WS01\.claude\jobs\09bbf294\tmp\codexE\evidence_s2_step2\run_20261015_024740_59720\step2_code_mutants_v2\mutants\ray_order\test_s2_step2.py", line 32, in check
+    raise AssertionError(label)
+AssertionError: ray order mismatch rejected

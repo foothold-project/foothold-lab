@@ -1,0 +1,49 @@
+{
+  "results": [
+    {
+      "id": "000e10a8-969b-4936-9611-db98371a471e",
+      "type": "video",
+      "status": "pending",
+      "model": "seedance_2_5",
+      "params": {
+        "prompt": "E5pre, one continuous five-second FIRST-PERSON walking shot to connect directly between the supplied E4 crossing and E5 climbing clips. Use the START IMAGE as the exact empty approach and framing. The viewer is the invisible quadruped's low front camera. ONLY terrain, existing target cabinet, room and scan are visible. No robot, body, legs, paws, feet, people, shoes, hands or camera housing anywhere, including the lower corners. No external shot or third-person reveal.\n\nREFERENCE PRIORITY: video 1 is E4, the preceding shot; match its final cautious forward-walking pace and contact/servo sound character. Video 2 is E5, the following shot; match its threshold and target direction and arrive at the pre-climb position. Those two videos are CONTINUITY references, NOT a request to show their robot or camera angle. Video 3 is O6; use ONLY its small green terrain-conforming sample points and thin subdued grid. Audio reference is the preceding E4 room and foot sounds; carry that sound world across the cut.\n\nContinue forward already moving, with the same deliberate pace as E4's final supported steps. Do not sprint, accelerate, coast, or cover the approach with an artificial push-in. Use short alternating steps with discernible weight transfers, organic vertical head movement and small pitch/roll reactions tied to contacts. Preserve the distinction between an unstabilized walking sensor and a smooth wheeled dolly, but avoid violent repetitive screen shaking, rhythmic zoom, large uniform sinusoidal bobbing, or rubbery warping. The motion should come from locomotion through the physical scene, not a floating camera. Keep the low approximately 40-cm viewpoint and stable rigid room geometry. The existing low curb approaches slowly. During the last second reduce forward speed, settle immediately before the curb, and hold the pre-climb view briefly so the following E5 cut can begin the climb. Do not climb in this shot. Do not change the layout or invent a new obstacle.\n\nThe sparse green surface scan starts on the near floor and progressively refreshes over the curb face and upper landing. Match O6's points plus thin mesh, not a single sweeping line or a screen-locked overlay. Anchor points to visible solid surfaces in perspective, occluded at edges; never bridge empty gaps or water with a solid grid. Keep the cabinet and curb readable. No peripheral HUD, text, numbers or whole-screen green tint.\n\nAUDIO IS CRITICAL: retain a continuous, clearly audible low industrial room bed for the ENTIRE shot, before, between and after foot contacts: broad hollow hall resonance, distant ventilation/pipe rumble, intermittent faint water drips and water movement. Match the neighboring E4/E5 acoustic distance and room reverb. Gentle rubber contacts and short servos occur within this room bed, never isolated dry taps against silence. Do not gate the ambience between steps, change noise-floor abruptly, or replace it with loud scan beeps. Use understated scan ticks. No musical score, speech, heavy metallic stomps, human heels or exaggerated splashes. Leave this consistent environmental audio available for the later full-film mix.\n\nPreserve restrained low contrast, diffuse concrete, irregular dry/damp areas, dull rust, soft highlights and subtle haze. No HDR crunch, glitter, glossy plastic, exposure pumping or newly bright ceiling lamps. Existing red beacon pulses gently. One continuous shot, no internal cuts.",
+        "aspect_ratio": "16:9",
+        "duration": 5,
+        "reference_images": [
+          "6af8dc4d-6188-488d-b067-39adddcaadb4",
+          "2e241d00-5897-43dc-a4e1-bb91dfbc70f8",
+          "66633ecd-c928-4165-b344-9b001b894dd6",
+          "9099bc74-bb12-404c-bb78-39d18c2d0dcb",
+          "567dae6b-c111-4e54-a0c6-80a241851d0f"
+        ],
+        "mode": "omni_reference",
+        "resolution": "480p",
+        "generate_audio": true,
+        "bitrate_mode": "standard",
+        "draft": false
+      }
+    }
+  ],
+  "adjustments": {
+    "medias[1].role": {
+      "requested": "video",
+      "used": "video_references",
+      "reason": "Seedance 2.5 backend expects schema-key media roles"
+    },
+    "medias[2].role": {
+      "requested": "video",
+      "used": "video_references",
+      "reason": "Seedance 2.5 backend expects schema-key media roles"
+    },
+    "medias[3].role": {
+      "requested": "video",
+      "used": "video_references",
+      "reason": "Seedance 2.5 backend expects schema-key media roles"
+    },
+    "medias[4].role": {
+      "requested": "audio",
+      "used": "audio_references",
+      "reason": "Seedance 2.5 backend expects schema-key media roles"
+    }
+  }
+}

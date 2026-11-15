@@ -1,0 +1,90 @@
+{
+  "asset_closure_sha256": "175ccdda9af57db35fc04d00c08f380cc288c9e1e1e91c0f71922d2809dcdad4",
+  "asset_snapshot": {
+    "meshes": [
+      {
+        "path": "C:\\isaac\\ext\\go2_rl_robotlab\\resources\\go2\\meshes\\base.dae",
+        "reference": "package://go2/meshes/base.dae",
+        "sha256": "f777940215d5072dfb047726282455dff00c58655675148c21c79b3e606bfd7a"
+      },
+      {
+        "path": "C:\\isaac\\ext\\go2_rl_robotlab\\resources\\go2\\meshes\\calf.dae",
+        "reference": "package://go2/meshes/calf.dae",
+        "sha256": "a875e0e2bb2433d8433faadafc9bfae4f3b0c6a5d64ba8eb75821239c091f3dc"
+      },
+      {
+        "path": "C:\\isaac\\ext\\go2_rl_robotlab\\resources\\go2\\meshes\\calf_mirror.dae",
+        "reference": "package://go2/meshes/calf_mirror.dae",
+        "sha256": "c65ac56ddfca59b6edfcb68654d2863855707098aa188d338f9b80b1ac11cd54"
+      },
+      {
+        "path": "C:\\isaac\\ext\\go2_rl_robotlab\\resources\\go2\\meshes\\foot.dae",
+        "reference": "package://go2/meshes/foot.dae",
+        "sha256": "f37a2d16dd2e6975297c5ec26b4d1f2ce2052c4d64715e25e7ea8f8476268e86"
+      },
+      {
+        "path": "C:\\isaac\\ext\\go2_rl_robotlab\\resources\\go2\\meshes\\hip.dae",
+        "reference": "package://go2/meshes/hip.dae",
+        "sha256": "1f1a020683056677d73682c6783907bb13c8a9c14b2736c7cce2a630523e0597"
+      },
+      {
+        "path": "C:\\isaac\\ext\\go2_rl_robotlab\\resources\\go2\\meshes\\thigh.dae",
+        "reference": "package://go2/meshes/thigh.dae",
+        "sha256": "167a6c6545f792f9e7ea53abe7e66dae4d72b53e0ef532ae9903a1f7907b384f"
+      },
+      {
+        "path": "C:\\isaac\\ext\\go2_rl_robotlab\\resources\\go2\\meshes\\thigh_mirror.dae",
+        "reference": "package://go2/meshes/thigh_mirror.dae",
+        "sha256": "ab1d3b0ef1184735e79bd53c011c4f668a731a23b532d37e07ef74e65201bce2"
+      }
+    ],
+    "sources": {
+      "converter": {
+        "path": "C:\\isaac\\IsaacLab\\source\\isaaclab\\isaaclab\\sim\\converters\\asset_converter_base.py",
+        "sha256": "0e344851d2df3d946d2cb95cf612e3da010ff164b01a902a19cf9ceebef8d587"
+      },
+      "robotlab_asset_cfg": {
+        "path": "C:\\isaac\\ext\\go2_rl_robotlab\\source\\robot_lab\\robot_lab\\assets\\unitree.py",
+        "sha256": "d055e8239b41b03208de7c5ace46eff5d313009f53b971efdae8da8b809d99ae"
+      },
+      "robotlab_env_cfg": {
+        "path": "C:\\isaac\\ext\\go2_rl_robotlab\\source\\robot_lab\\robot_lab\\tasks\\go2\\env_cfg.py",
+        "sha256": "f01e93a8f0afc7dfb7772a9b12dd99160686513d64498321d07fc664dd2ae0aa"
+      }
+    },
+    "urdf": {
+      "path": "C:\\isaac\\ext\\go2_rl_robotlab\\resources\\go2\\urdf\\go2.urdf",
+      "sha256": "f130b1d2cc61f3c1e54dab8f8b9ad27b0b54f85c968d89ea242c6d70ab2a5810"
+    }
+  },
+  "code_hashes": {
+    "s2_a34_probe.py": "77362946f716478c0667156f9e20eab8a9b28a43e2a50619c00567ccfa366e71",
+    "s2_a34_provenance.py": "bcfa02e36b81e258732c96faf5b88ce2864cfb3ae6de89df03be778893cf8d95",
+    "s2_capture_journal_a2.py": "faf7d91fa994e09ae91124b3360661818024ec5c2d3341ff354f628ca53fef36",
+    "s2_connect_check_17v.py": "c0bc62e407da907fcf493fe1f571fc4889a83764bc69f493d4b3c46534c7d6bd",
+    "s2_connect_diag_17v.py": "c97daab6956b3c52e77468f4ed829ff8660ed0e2766b2ab72b19bc797993ba42",
+    "s2_device_binding_a2.py": "a2cf1187fb69feaa38e11baca637c1a433ee66b16910a3cd7081950dbc4a7d3b",
+    "s2_env_adapter_17v.py": "ebac0f1e2225959da1cacf0fc63aeef6a441e9fd5a08c0d11b7a899fdec496a7",
+    "s2_env_config_17v.py": "9c3cb8cba4f91cf36018e870332aa3d2a435d73b228914f4fed303153e6a5a9d",
+    "s2_job_owner.py": "0c258a6101bf6c7804967b99e307e42d3032a7d2387cb09c75c695ff86db1ac2",
+    "s2_known_scene_a2.py": "9a4a38bfbcc530e8e8f28b7ecbf1c2f4ecaeae3dcd9b217ae8fe73f1bf7aac07",
+    "s2_map_obs.py": "cf05528619052c73facba9268cc8823156f3106d9ce65ddacf16be30961f348b",
+    "s2_mesh_probe_a2.py": "d6b3a95aa824053b14190628ddc315401705326d37f25ba7d46ab3e5e0d76daa",
+    "s2_packet_17v.py": "7ffe1d2ba6b77fb538b8cc087ed957d5878f2ffec93161b25d87d4e4d12d691b",
+    "s2_physx_probe_diag.py": "b774208c2954abf3b41626462e61ae74d2be6869694c15885690043852f60bca",
+    "s2_physx_probe_live.py": "81b6fa50e7929426da78b5a3fa2b82da278380e69b721c05c3de2337477fc3d2",
+    "s2_policy.py": "01e57d10843c086fd78b026fa579d78224f10de44ae210edd8829b590257308d",
+    "s2_ppo_17v.py": "bdeef4fb0167f01bdb33c9f6f595caf533226ade646e819f2988fbc3901ab8df",
+    "s2_resource_lease.py": "4acf6fc6aa9c76ba2cd6feea376a973c71c7d7630187fea540c5aa2732fd9add",
+    "s2_runner_17v.py": "7d1158df2923dffe72436f43b5e4673167ced611afec4912ccaef782035b4ddc",
+    "s2_scene_answer_a2.json": "b3a9c5be54e4e16856249c2426d39640f450b18778e24e979fc1a1f1d18a4296",
+    "s2_sensor_tracker_17v.py": "5bca01b9f4755299d45d1c47e98d22aa06212243fc796c9e36da25c4c654fe02",
+    "s2_stage0_contract_a2.py": "8a953e8b65cd5f6b0c239c2ede2c1d434a4883fa2d9f0d7e752fde28e54ad42a",
+    "s2_stage0_prelaunch.py": "f0a34c1197e5121019e254560013da23f20ec1527033706aeaa7114daaa1fc47",
+    "s2_stage0_resources_a2.py": "29de9914707bb463baef3c449bfed873b3bb9d134efda86fac041eb9422db1d4",
+    "s2_stage_gate_17v.py": "296cfcda1ca2d7ed4c4122878c8ef344fde836c99d18e2950bbdbe899a2f144e",
+    "s2_terrain_overlay_17v.py": "04db8a09f090bea00097bac6f5bb262d6d9ac0c2ffe81cfa3d38e5f3bf6c9bca",
+    "s2_zero_supervisor.py": "bf07656f50e9a0f06d2340c160b3a643f96b678692b4ef48b2b3da91ad7e80a9"
+  },
+  "status": "PROPOSAL_UNDECIDED_NO_APPROVAL"
+}

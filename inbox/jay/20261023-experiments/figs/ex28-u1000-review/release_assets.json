@@ -1,0 +1,17 @@
+[
+  {
+    "file": "ex23-b1000-comparison-05x.mp4",
+    "bytes": 3167488,
+    "sha256": "31461d1da976a5076921262488eb6e09952aff4055e3356624846a35885dbc7e"
+  },
+  {
+    "file": "ex23-b1000-comparison-1x.mp4",
+    "bytes": 2180632,
+    "sha256": "c540a95bdddb0a9311971cfe85609de6429e3cc8efc9cc00b4385f65ecdd3931"
+  },
+  {
+    "file": "ex23-b1000-evidence.zip",
+    "bytes": 12298531,
+    "sha256": "14607dc4b665ce153e5f7d52190f63a2acd17fae782050ba8f319fc79b28a7af"
+  }
+]

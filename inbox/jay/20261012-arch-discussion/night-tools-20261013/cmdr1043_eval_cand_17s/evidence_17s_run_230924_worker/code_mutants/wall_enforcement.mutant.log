@@ -1,0 +1,19 @@
+PASS normal approval binding
+PASS attempt-only mutation rejected
+PASS retry zero approved
+PASS retry -1 rejected
+PASS retry '0' rejected
+PASS retry False rejected
+23:10:20 RUN retry_zero try 1 EXIT 99 0s · slot {'state': 'missing slot record', 'held_s': None, 'rc': 99} · usd []
+23:10:20 GUARD STOP retry_zero: free < 4096 MiB on GPU UNDECIDED, waiting 0s
+PASS retry zero makes exactly one launch
+23:10:24 RUN wall_guarded try 1 EXIT 0 4s · slot {'state': 'missing slot record', 'held_s': None, 'rc': 0} · usd []
+FAIL guarded wall returns nonzero held result
+Traceback (most recent call last):
+  File "C:\Users\AI-WS01\.claude\jobs\09bbf294\tmp\codexE\cand\test_17s_runtime.py", line 217, in <module>
+    main()
+  File "C:\Users\AI-WS01\.claude\jobs\09bbf294\tmp\codexE\cand\test_17s_runtime.py", line 121, in main
+    check("guarded wall returns nonzero held result", rc == 124 and tries == 1 and
+  File "C:\Users\AI-WS01\.claude\jobs\09bbf294\tmp\codexE\cand\test_17s_runtime.py", line 32, in check
+    raise AssertionError(label)
+AssertionError: guarded wall returns nonzero held result

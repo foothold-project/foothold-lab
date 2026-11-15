@@ -1,0 +1,76 @@
+{
+  "S-B10": {
+    "card_numeric_candidate": true,
+    "final_interpretation": "lead 8·9절 참조 · 회전 같음/다름은 판정 관문 아님",
+    "off": {
+      "alive": 64,
+      "distance": 5.4405694007873535,
+      "pass": true,
+      "threshold": 4.591956329345703
+    },
+    "on": {
+      "alive": 64,
+      "distance": 5.42772912979126,
+      "pass": true,
+      "threshold": 5.096461057662964
+    },
+    "run": "S-B10",
+    "turn_mode_delta": {
+      "fwd_then_left": 0.12065282930417642,
+      "fwd_then_right": 0.051548140129386244,
+      "indep_left": 0.049787293084252726,
+      "indep_right": 0.0653638559091761,
+      "left_then_right": 0.027941788701405124,
+      "right_then_left": 0.07498362687404203
+    },
+    "turn_mode_similarity": {
+      "fwd_then_left": "다름",
+      "fwd_then_right": "같음",
+      "indep_left": "같음",
+      "indep_right": "같음",
+      "left_then_right": "같음",
+      "right_then_left": "같음"
+    },
+    "turn_mode_similarity_counts": {
+      "같음": 5,
+      "다름": 1
+    }
+  },
+  "S-B50": {
+    "card_numeric_candidate": true,
+    "final_interpretation": "lead 8·9절 참조 · 회전 같음/다름은 판정 관문 아님",
+    "off": {
+      "alive": 63,
+      "distance": 5.314908027648926,
+      "pass": true,
+      "threshold": 4.591956329345703
+    },
+    "on": {
+      "alive": 64,
+      "distance": 5.316680908203125,
+      "pass": true,
+      "threshold": 5.096461057662964
+    },
+    "run": "S-B50",
+    "turn_mode_delta": {
+      "fwd_then_left": 0.0792697222828537,
+      "fwd_then_right": 0.07698045861023844,
+      "indep_left": 0.032649119549293726,
+      "indep_right": 0.08572342627518426,
+      "left_then_right": 0.12094937639198267,
+      "right_then_left": 0.041237814711750254
+    },
+    "turn_mode_similarity": {
+      "fwd_then_left": "같음",
+      "fwd_then_right": "같음",
+      "indep_left": "같음",
+      "indep_right": "같음",
+      "left_then_right": "다름",
+      "right_then_left": "같음"
+    },
+    "turn_mode_similarity_counts": {
+      "같음": 5,
+      "다름": 1
+    }
+  }
+}

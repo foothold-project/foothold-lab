@@ -1,0 +1,14 @@
+{
+  "state": "FINISHED_OK",
+  "reason": "gate_wrote_DONE",
+  "launched_epoch": 1792028418.210965,
+  "chain_id": "s2-stage0-a3-urehearse-20261015-104017",
+  "gate_pid": 124152,
+  "gate_create_time": 1792028417.1831446,
+  "watchdog_pid": 165436,
+  "gate_sha256": "6f5ea7eae2a7b41630c63c0e9482d08cc5b46d1bd40a8ff21cef1d565d74f602",
+  "watchdog_sha256": "e613828071950a2afa4e253595c796a044e30c7e1108994829cded70bbf87b5c",
+  "launcher_sha256": "e47d2e34f742329886c2c43b59d7a4147d3e58fbf029ea16a56ab3252af14967",
+  "manifest_sha256": "8223af99547c1ef842672e2cff80c5376dd3bf12a12aa0919ab68576aa21cad1",
+  "watchdog_create_time": 1792028417.1969907
+}

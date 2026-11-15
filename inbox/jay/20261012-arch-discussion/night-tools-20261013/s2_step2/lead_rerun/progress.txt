@@ -1,0 +1,3 @@
+START 03:48:44
+END run_all_s2_step2 rc=0 03:56:41
+ALLDONE

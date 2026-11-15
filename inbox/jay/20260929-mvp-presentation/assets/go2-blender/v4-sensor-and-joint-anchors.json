@@ -1,0 +1,133 @@
+{
+  "front": {
+    "resolution": [
+      1600,
+      1600
+    ],
+    "sensors": {
+      "front_camera": {
+        "point": [
+          0.329,
+          0,
+          0.04
+        ],
+        "label": "전면 카메라",
+        "basis": "USD visual surface anchor; not an authored Camera prim",
+        "calibrated": false,
+        "screen": {
+          "x": 0.49999961256980896,
+          "y": 0.23452413082122803,
+          "depth": 2.6676714420318604
+        }
+      },
+      "front_lidar": {
+        "point": [
+          0.2894499897956848,
+          0.0,
+          -0.046824999153614044
+        ],
+        "label": "전면 LiDAR",
+        "basis": "USD /go2_description/base/radar transform",
+        "calibrated": false,
+        "screen": {
+          "x": 0.49999961256980896,
+          "y": 0.3911142349243164,
+          "depth": 2.713326930999756
+        },
+        "usd_authored_transform": true
+      },
+      "imu": {
+        "point": [
+          -0.02556999959051609,
+          0.0,
+          0.042319998145103455
+        ],
+        "label": "IMU",
+        "basis": "USD /go2_description/base/imu transform; inside body, not visible exterior hardware",
+        "calibrated": false,
+        "screen": {
+          "x": 0.4999995827674866,
+          "y": 0.18282335996627808,
+          "depth": 3.0211684703826904
+        },
+        "usd_authored_transform": true
+      }
+    }
+  },
+  "three_axes": {
+    "resolution": [
+      1280,
+      960
+    ],
+    "joints": {
+      "FL_hip_joint": {
+        "x": 0.34313440322875977,
+        "y": 0.39827191829681396,
+        "depth": 2.8481218814849854,
+        "axis_parent": [
+          1.0,
+          0.0,
+          0.0
+        ]
+      },
+      "FL_thigh_joint": {
+        "x": 0.3972826302051544,
+        "y": 0.4091823101043701,
+        "depth": 2.771059274673462,
+        "axis_parent": [
+          0.0,
+          0.9999999403953552,
+          0.0
+        ]
+      },
+      "FL_calf_joint": {
+        "x": 0.5258308053016663,
+        "y": 0.5720472931861877,
+        "depth": 2.880645275115967,
+        "axis_parent": [
+          0.0,
+          0.9999999403953552,
+          0.0
+        ]
+      }
+    }
+  },
+  "single_leg": {
+    "resolution": [
+      1280,
+      960
+    ],
+    "joints": {
+      "FL_hip_joint": {
+        "x": 0.29795753955841064,
+        "y": 0.23992085456848145,
+        "depth": 2.8798277378082275,
+        "axis_parent": [
+          1.0,
+          0.0,
+          0.0
+        ]
+      },
+      "FL_thigh_joint": {
+        "x": 0.43166887760162354,
+        "y": 0.23783737421035767,
+        "depth": 2.837446928024292,
+        "axis_parent": [
+          0.0,
+          0.9999999403953552,
+          0.0
+        ]
+      },
+      "FL_calf_joint": {
+        "x": 0.5562986731529236,
+        "y": 0.483966588973999,
+        "depth": 2.9957165718078613,
+        "axis_parent": [
+          0.0,
+          0.9999999403953552,
+          0.0
+        ]
+      }
+    }
+  }
+}

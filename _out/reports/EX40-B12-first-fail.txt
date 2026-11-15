@@ -1,0 +1,127 @@
+﻿FF                                                                       [100%]
+================================== FAILURES ===================================
+________ test_b12_two_actuators_partial_reset_and_actual_gain_readback ________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001C1D6E962D0>
+
+    def test_b12_two_actuators_partial_reset_and_actual_gain_readback(monkeypatch):
+        env, cfg, asset = _asset(monkeypatch)
+        rows = torch.tensor([0, 2], dtype=torch.long)
+        target = {"stiffness_scale": [.9, 1.1], "damping_scale": [.9, 1.1]}
+>       reset_actuator_gains(env, rows, cfg, target)
+
+foothold_s2\tests\test_ex40_b12_actuator_width_cpu.py:88: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+env = namespace(scene={'robot': <foothold_s2.tests.test_ex40_b12_actuator_width_cpu._asset.<locals>.Asset object at 0x000001...dr_gain_event=<foothold_s2.tests.test_ex40_b12_actuator_width_cpu._asset.<locals>.Helper object at 0x000001C1D696F990>)
+env_ids = tensor([0, 2])
+asset_cfg = namespace(name='robot', joint_ids=slice(None, None, None))
+target_range = {'stiffness_scale': [0.9, 1.1], 'damping_scale': [0.9, 1.1]}
+
+    def reset_actuator_gains(env, env_ids, asset_cfg, target_range):
+        """Use the installed ManagerTermBase gain randomizer for reset rows."""
+        import torch
+    
+        asset = env.scene[asset_cfg.name]
+        _require_all_joints(asset_cfg, asset, "actuator-gain adapter")
+        from isaaclab.envs.mdp import events
+        from isaaclab.managers import EventTermCfg
+    
+        scale = float(getattr(env, "_ex40_dr_scale", 0.0))
+        stiffness = _scaled_interval(tuple(target_range["stiffness_scale"]), scale, 1.0)
+        damping = _scaled_interval(tuple(target_range["damping_scale"]), scale, 1.0)
+        helper = getattr(env, "_ex40_dr_gain_event", None)
+        if helper is None:
+            helper_cfg = EventTermCfg(func=events.randomize_actuator_gains, mode="reset",
+                                      params={"asset_cfg": asset_cfg, "operation": "scale"})
+            helper = events.randomize_actuator_gains(helper_cfg, env)
+            env._ex40_dr_gain_event = helper
+        helper(env, env_ids, asset_cfg, stiffness_distribution_params=stiffness,
+               damping_distribution_params=damping, operation="scale", distribution="uniform")
+        rows = _rows(env_ids, env.scene.num_envs, asset.device)
+        samples = []
+        for actuator in asset.actuators.values():
+            joints = actuator.joint_indices
+            if isinstance(joints, slice):
+                nominal_stiffness = asset.data.default_joint_stiffness[rows]
+                nominal_damping = asset.data.default_joint_damping[rows]
+            else:
+                joints = joints.to(device=asset.device, dtype=torch.long)
+                nominal_stiffness = asset.data.default_joint_stiffness[rows][:, joints]
+                nominal_damping = asset.data.default_joint_damping[rows][:, joints]
+            actual_stiffness = actuator.stiffness[rows]
+            actual_damping = actuator.damping[rows]
+            if bool((nominal_stiffness == 0).any()) or bool((nominal_damping == 0).any()):
+                raise ValueError("EX-40 cannot measure actuator gain scale against zero nominal gain")
+            samples.extend((actual_stiffness / nominal_stiffness, actual_damping / nominal_damping))
+>       _record(env, "actuator_gains", torch.cat(samples), len(rows))
+                                       ^^^^^^^^^^^^^^^^^^
+E       RuntimeError: Sizes of tensors must match except in dimension 0. Expected size 8 but got size 4 for tensor number 2 in the list.
+
+foothold_s2\curriculum\ex40_dr_runtime.py:141: RuntimeError
+______________________ test_b12_nonfinite_gain_rejected _______________________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001C1D6B2F950>
+
+    def test_b12_nonfinite_gain_rejected(monkeypatch):
+        env, cfg, asset = _asset(monkeypatch)
+        rows = torch.tensor([0], dtype=torch.long)
+        env._ex40_dr_gain_event = lambda *_args, **_kwargs: None
+        asset.actuators["calf"].stiffness[0, 0] = float("nan")
+        with pytest.raises(ValueError, match="nonfinite realized sample"):
+>           reset_actuator_gains(env, rows, cfg, {
+                "stiffness_scale": [1.0, 1.0], "damping_scale": [1.0, 1.0]})
+
+foothold_s2\tests\test_ex40_b12_actuator_width_cpu.py:113: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+env = namespace(scene={'robot': <foothold_s2.tests.test_ex40_b12_actuator_width_cpu._asset.<locals>.Asset object at 0x000001..._dr_scale=1.0, _ex40_dr_gain_event=<function test_b12_nonfinite_gain_rejected.<locals>.<lambda> at 0x000001C1D6F8A700>)
+env_ids = tensor([0])
+asset_cfg = namespace(name='robot', joint_ids=slice(None, None, None))
+target_range = {'stiffness_scale': [1.0, 1.0], 'damping_scale': [1.0, 1.0]}
+
+    def reset_actuator_gains(env, env_ids, asset_cfg, target_range):
+        """Use the installed ManagerTermBase gain randomizer for reset rows."""
+        import torch
+    
+        asset = env.scene[asset_cfg.name]
+        _require_all_joints(asset_cfg, asset, "actuator-gain adapter")
+        from isaaclab.envs.mdp import events
+        from isaaclab.managers import EventTermCfg
+    
+        scale = float(getattr(env, "_ex40_dr_scale", 0.0))
+        stiffness = _scaled_interval(tuple(target_range["stiffness_scale"]), scale, 1.0)
+        damping = _scaled_interval(tuple(target_range["damping_scale"]), scale, 1.0)
+        helper = getattr(env, "_ex40_dr_gain_event", None)
+        if helper is None:
+            helper_cfg = EventTermCfg(func=events.randomize_actuator_gains, mode="reset",
+                                      params={"asset_cfg": asset_cfg, "operation": "scale"})
+            helper = events.randomize_actuator_gains(helper_cfg, env)
+            env._ex40_dr_gain_event = helper
+        helper(env, env_ids, asset_cfg, stiffness_distribution_params=stiffness,
+               damping_distribution_params=damping, operation="scale", distribution="uniform")
+        rows = _rows(env_ids, env.scene.num_envs, asset.device)
+        samples = []
+        for actuator in asset.actuators.values():
+            joints = actuator.joint_indices
+            if isinstance(joints, slice):
+                nominal_stiffness = asset.data.default_joint_stiffness[rows]
+                nominal_damping = asset.data.default_joint_damping[rows]
+            else:
+                joints = joints.to(device=asset.device, dtype=torch.long)
+                nominal_stiffness = asset.data.default_joint_stiffness[rows][:, joints]
+                nominal_damping = asset.data.default_joint_damping[rows][:, joints]
+            actual_stiffness = actuator.stiffness[rows]
+            actual_damping = actuator.damping[rows]
+            if bool((nominal_stiffness == 0).any()) or bool((nominal_damping == 0).any()):
+                raise ValueError("EX-40 cannot measure actuator gain scale against zero nominal gain")
+            samples.extend((actual_stiffness / nominal_stiffness, actual_damping / nominal_damping))
+>       _record(env, "actuator_gains", torch.cat(samples), len(rows))
+                                       ^^^^^^^^^^^^^^^^^^
+E       RuntimeError: Sizes of tensors must match except in dimension 0. Expected size 8 but got size 4 for tensor number 2 in the list.
+
+foothold_s2\curriculum\ex40_dr_runtime.py:141: RuntimeError
+=========================== short test summary info ===========================
+FAILED foothold_s2/tests/test_ex40_b12_actuator_width_cpu.py::test_b12_two_actuators_partial_reset_and_actual_gain_readback
+FAILED foothold_s2/tests/test_ex40_b12_actuator_width_cpu.py::test_b12_nonfinite_gain_rejected
+2 failed in 2.16s

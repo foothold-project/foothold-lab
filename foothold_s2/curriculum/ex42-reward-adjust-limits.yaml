@@ -1,0 +1,46 @@
+# EX-42 segment reward adjustment: the lines a boundary adjustment may not cross.
+# Outside the plan and approval SHA on purpose: a run that has already started (E1) resumes on the same plan, yet may
+# change these cells at a boundary through the segment adjustment file (EX42_SEGMENT_ADJUST, `rewards`).
+# The start of every cell is whatever the stage's plan gives (nothing changes until an entry asks for it).
+# Values: decisions.tsv 2026-11-12 20:37 (team lead; ledger commit 3e746a19, read directly). The limits are a fence:
+# the values inside them are chosen from the boundary evaluation. The stop threshold is not a cell (in EX-42 a stop is
+# the stand slot, so it has no effect).
+schema: ex42-reward-adjust-limits/1
+decision: {ledger: "decisions.tsv 2026-11-12 20:37", commit: "3e746a19"}     # zero_yaw: 2026-11-13 09:52, c2032256
+cells:
+  track_lin_vel_std: [0.25, 0.5]     # rewards.track_lin_vel.params.std (plan value 0.5)
+  track_ang_vel_std: [0.25, 0.5]     # rewards.track_ang_vel.params.std (plan value 0.5)
+  feet_air_time: [0.0, 0.5]          # weight of ex41_feet_air_time (plan value 0.0)
+  foot_slip: [-0.25, -0.05]          # weight of ex41_foot_slip (plan value -0.15)
+  # zero_yaw: decisions.tsv 2026-11-13 09:52 (team lead; ledger commit c2032256, read directly): the cell and its
+  # limits approved first, first value -1.0. The yaw rate while the turn command is zero (heading drift).
+  zero_yaw: [-2.0, -0.5]             # weight of ex41_zero_yaw (plan value -0.5)
+  # Slow forward cells (decisions.tsv 2026-11-13 15:30, lead: registered). feet_air_time_threshold: seconds a foot
+  # must stay in the air for ex41_feet_air_time to pay (stage start 0.5). slow_track: weight of ex42_slow_track (stage
+  # start 0 = the reward manager skips the term). decisions.tsv 2026-11-13 17:31 (lead under the team lead's 15:22;
+  # ledger commit 73abb340, read directly; analyst-lx #779 985ce6ab): slow_track [0, 0.3] (rule R6: 0 -> 0.2, once to
+  # 0.3) and feet_air_time_threshold [0.04, 0.5] (new rule R5: 0.04 s). The three constants of ex42_slow_track stay
+  # closed on the value the stage starts with (sigma 0.5, speeds 0.1 to 0.3: the values rule R6 names).
+  feet_air_time_threshold: [0.04, 0.5]
+  slow_track: [0.0, 0.3]
+  slow_track_sigma: [0.5, 0.5]
+  slow_track_speed_min: [0.1, 0.1]
+  slow_track_speed_max: [0.3, 0.3]
+  # ex42_slow_progress (decisions.tsv 2026-11-14 01:21, ledger commit 06d4a1ae): a new reward term, registered at weight 0.
+  # decisions.tsv ledger 4f7e431e (2026-11-14): lead approved 0.2 for segment 5; stage start remains 0.
+  slow_progress: [0.0, 0.3]
+# Command distribution cells (outside the 13-slot profile). low_forward_fraction: the share of the forward commands
+# drawn below 0.3 m/s (source stage 0.20). decisions.tsv 2026-11-13 15:17 (team lead; ledger commit a00ab2a8, read
+# directly): 0.2 -> 0.4 approved. decisions.tsv 2026-11-14 00:28 (team lead, direct; ledger commit bc66f6ee): the upper
+# limit 0.4 -> 0.5. The fence is the source value and the approved value.
+command_cells:
+  low_forward_fraction: [0.2, 0.5]
+# Run-time cells (decisions.tsv 2026-11-14 12:42, lead under the team lead's 12:11 delegation, planner review
+# REVIEW-V28-PLAN-1114 block 1). A run that has started cannot change the plan or this file, so the knobs the lead may
+# need are registered now, off. policy_std_cap: 0 = off (the v28 start); otherwise a ceiling on the policy action std,
+# accepted only at 0.8 x the largest current std or above (the code checks that against the live policy). terrain_level_cap:
+# the promotion cap of the continuous columns; the v28 plan holds it at the first segment's 5 and the lead raises it
+# one step at a time (an integer, never lowered).
+runtime_cells:
+  policy_std_cap: [0.0, 2.0]
+  terrain_level_cap: [5, 9]

@@ -1,0 +1,433 @@
+[USD-ISOLATE] root c:/users/ai-ws01/s2_lab/night-tools-20261013/s2_runs/live-20261017-104934/usd (v3) expect_conversions 1
+[INFO][AppLauncher]: Using device: cuda:0
+[INFO][AppLauncher]: Loading experience file: C:\isaac\IsaacLab\apps\isaaclab.python.headless.kit
+Loading user config located at: 'c:/users/ai-ws01/anaconda3/envs/isaac311-moects/lib/site-packages/isaacsim/kit/data/Kit/Isaac-Sim/5.1/user.config.json'
+[Info] [carb] Logging to file: c:/users/ai-ws01/anaconda3/envs/isaac311-moects/lib/site-packages/isaacsim/kit/logs/Kit/Isaac-Sim/5.1/kit_20261017_104950.log
+2026-10-17T01:49:51Z [14ms] [Warning] [carb.crashreporter-breakpad.plugin] [previous crash] preventing upload of minidump due to user opt-out: 'c:/users/ai-ws01/anaconda3/envs/isaac311-moects/lib/site-packages/isaacsim/kit/data/Kit/Isaac-Sim/5.1\1a97aa08-6b02-488a-80c4-4d53e420025b.dmp'
+2026-10-17T01:49:51Z [16ms] [Warning] [carb.crashreporter-breakpad.plugin] [previous crash] preventing upload of minidump due to user opt-out: 'c:/users/ai-ws01/anaconda3/envs/isaac311-moects/lib/site-packages/isaacsim/kit/data/Kit/Isaac-Sim/5.1\3b5ab0f0-06f1-40eb-a902-8a38d9dcc781.dmp'
+2026-10-17T01:49:51Z [18ms] [Warning] [carb.crashreporter-breakpad.plugin] [previous crash] preventing upload of minidump due to user opt-out: 'c:/users/ai-ws01/anaconda3/envs/isaac311-moects/lib/site-packages/isaacsim/kit/data/Kit/Isaac-Sim/5.1\84d72a8a-76bb-49a8-9729-7f12643b4a45.dmp'
+2026-10-17T01:49:51Z [20ms] [Warning] [carb.crashreporter-breakpad.plugin] [previous crash] preventing upload of minidump due to user opt-out: 'c:/users/ai-ws01/anaconda3/envs/isaac311-moects/lib/site-packages/isaacsim/kit/data/Kit/Isaac-Sim/5.1\9ec8a88e-93cb-4ec5-9ee1-c9c38fd37743.dmp'
+2026-10-17T01:49:51Z [24ms] [Warning] [carb.crashreporter-breakpad.plugin] [previous crash] preventing upload of minidump due to user opt-out: 'c:/users/ai-ws01/anaconda3/envs/isaac311-moects/lib/site-packages/isaacsim/kit/data/Kit/Isaac-Sim/5.1\42713cf2-04e6-4cab-8ee0-52a307d1a3fb.dmp'
+2026-10-17T01:49:51Z [27ms] [Warning] [carb.crashreporter-breakpad.plugin] [previous crash] preventing upload of minidump due to user opt-out: 'c:/users/ai-ws01/anaconda3/envs/isaac311-moects/lib/site-packages/isaacsim/kit/data/Kit/Isaac-Sim/5.1\9b5064a0-cf97-4665-b563-43e8d076db78.dmp'
+2026-10-17T01:49:51Z [31ms] [Warning] [carb.crashreporter-breakpad.plugin] [previous crash] preventing upload of minidump due to user opt-out: 'c:/users/ai-ws01/anaconda3/envs/isaac311-moects/lib/site-packages/isaacsim/kit/data/Kit/Isaac-Sim/5.1\b6b03a5d-072c-44dd-b365-83ad831d3e91.dmp'
+2026-10-17T01:49:51Z [436ms] [Warning] [omni.usd_config.extension] Enable omni.materialx.libs extension to use MaterialX
+2026-10-17T01:49:52Z [1,508ms] [Warning] [carb] Acquiring non optional plugin interface which is not listed as dependency: [omni::physx::IPhysxBenchmarks v1.0] (plugin: <default plugin>), by client: omni.physics.physx.plugin. Add it to CARB_PLUGIN_IMPL_DEPS() macro of a client.
+2026-10-17T01:49:52Z [1,541ms] [Warning] [omni.isaac.dynamic_control] omni.isaac.dynamic_control is deprecated as of Isaac Sim 4.5. No action is needed from end-users.
+2026-10-17T01:49:56Z [5,469ms] [Warning] [carb.cudainterop.plugin] CUDA_VISIBLE_DEVICES environment variable is set.
+2026-10-17T01:49:56Z [5,469ms] [Warning] [carb.cudainterop.plugin] Note CUDA device enumeration and Omniverse device enumeration are different.
+2026-10-17T01:49:56Z [5,470ms] [Warning] [carb.cudainterop.plugin] Setting CUDA_VISIBLE_DEVICES can lead to undesired behavior or crashes.
+2026-10-17T01:49:56Z [5,471ms] [Warning] [gpu.foundation.plugin] Skipping NVIDIA GPU due CUDA being in bad state: NVIDIA GeForce RTX 5080
+2026-10-17T01:49:56Z [5,471ms] [Warning] [gpu.foundation.plugin] Please restart your system if CUDA is known to work in your system.
+2026-10-17T01:49:56Z [5,472ms] [Warning] [gpu.foundation.plugin] Skipping NVIDIA GPU due CUDA being in bad state: NVIDIA GeForce RTX 5080
+2026-10-17T01:49:56Z [5,472ms] [Warning] [gpu.foundation.plugin] Please restart your system if CUDA is known to work in your system.
+
+|---------------------------------------------------------------------------------------------|
+| Driver Version: 591.86        | Graphics API: D3D12
+|=============================================================================================|
+| GPU | Name                             | Active | LDA | GPU Memory | Vendor-ID | LUID       |
+|     |                                  |        |     |            | Device-ID | UUID       |
+|     |                                  |        |     |            | Bus-ID    |            |
+|---------------------------------------------------------------------------------------------|
+| 0   | NVIDIA GeForce RTX 5080          |        |     | 15979   MB | 10de      | 5fce0100.. |
+|     |                                  |        |     |            | 2c02      | 0          |
+|     |                                  |        |     |            | 81        |            |
+|---------------------------------------------------------------------------------------------|
+| 1   | NVIDIA GeForce RTX 5080          | Yes: 0 |     | 15979   MB | 10de      | 5de30100.. |
+|     |                                  |        |     |            | 2c02      | 0          |
+|     |                                  |        |     |            | 41        |            |
+|=============================================================================================|
+| OS: Windows 11 Pro, Version: 10.0 (25H2), Build: 26200, Kernel: 10.0.26100.9444
+| Processor: AMD Ryzen Threadripper 7970X 32-Cores          
+| Cores: 32 | Logical Cores: 64
+|---------------------------------------------------------------------------------------------|
+| Total Memory (MB): 261641 | Free Memory: 138074
+| Total Page/Swap (MB): 278025 | Free Page/Swap: 55702
+|---------------------------------------------------------------------------------------------|
+[INFO]: Parsing configuration from: robot_lab.tasks.go2.env_cfg:Go2EnvCfg
+
+[36m=====================================================================================================================[0m
+[36m[1m[INFO][IsaacLab]: Logging to file: C:\Users\AI-WS01\AppData\Local\Temp\isaaclab\logs\isaaclab_2026-10-17_10-49-58.log[0m
+[36m=====================================================================================================================[0m
+
+[INFO]: Base environment:
+	Environment device    : cuda:0
+	Environment seed      : 42
+	Physics step-size     : 0.005
+	Rendering step-size   : 0.02
+	Environment step-size : 0.02
+2026-10-17T01:49:59Z [8,028ms] [Error] [gpu.foundation.plugin] DriverShaderCacheManager::init() called with a different graphics interface, without a shutdown()!
+2026-10-17T01:50:00Z [9,713ms] [Warning] [gpu.foundation.plugin] Skipping NVIDIA GPU due CUDA being in bad state: NVIDIA GeForce RTX 5080
+2026-10-17T01:50:00Z [9,713ms] [Warning] [gpu.foundation.plugin] Please restart your system if CUDA is known to work in your system.
+2026-10-17T01:50:00Z [9,714ms] [Warning] [gpu.foundation.plugin] Skipping NVIDIA GPU due CUDA being in bad state: NVIDIA GeForce RTX 5080
+2026-10-17T01:50:00Z [9,714ms] [Warning] [gpu.foundation.plugin] Please restart your system if CUDA is known to work in your system.
+2026-10-17T01:50:00Z [9,721ms] [Warning] [carb.graphics-vulkan.plugin] Aftermath Error 0xbad00009
+
+|---------------------------------------------------------------------------------------------|
+| Driver Version: 591.86        | Graphics API: Vulkan
+|=============================================================================================|
+| GPU | Name                             | Active | LDA | GPU Memory | Vendor-ID | LUID       |
+|     |                                  |        |     |            | Device-ID | UUID       |
+|     |                                  |        |     |            | Bus-ID    |            |
+|---------------------------------------------------------------------------------------------|
+| 0   | NVIDIA GeForce RTX 5080          |        |     | 16193   MB | 10de      | 5fce0100.. |
+|     |                                  |        |     |            | 2c02      | 315d098f.. |
+|     |                                  |        |     |            | 81        |            |
+|---------------------------------------------------------------------------------------------|
+| 1   | NVIDIA GeForce RTX 5080          | Yes: 0 |     | 16193   MB | 10de      | 5de30100.. |
+|     |                                  |        |     |            | 2c02      | c08e23b0.. |
+|     |                                  |        |     |            | 41        |            |
+|=============================================================================================|
+| OS: Windows 11 Pro, Version: 10.0 (25H2), Build: 26200, Kernel: 10.0.26100.9444
+| Processor: AMD Ryzen Threadripper 7970X 32-Cores          
+| Cores: 32 | Logical Cores: 64
+|---------------------------------------------------------------------------------------------|
+| Total Memory (MB): 261641 | Free Memory: 137527
+| Total Page/Swap (MB): 278025 | Free Page/Swap: 54851
+|---------------------------------------------------------------------------------------------|
+2026-10-17T01:50:01Z [10,977ms] [Warning] [omni.graph.visualization.nodes._impl.extension] No Viewport Window to add omni.graph.visualization.nodes-2.1.4 scene to
+2026-10-17T01:50:02Z [11,474ms] [Warning] [isaacsim.asset.importer.urdf] The path 深色橡胶_001-effect is not a valid usd path, modifying to a_____________001_effect
+2026-10-17T01:50:02Z [11,474ms] [Warning] [isaacsim.asset.importer.urdf] The path 深色橡胶_001-effect is not a valid usd path, modifying to a_____________001_effect
+2026-10-17T01:50:02Z [11,474ms] [Warning] [isaacsim.asset.importer.urdf] The path 深色橡胶_003-effect is not a valid usd path, modifying to a_____________003_effect
+2026-10-17T01:50:02Z [11,474ms] [Warning] [isaacsim.asset.importer.urdf] The path 黑色足端_005-effect is not a valid usd path, modifying to a_____________005_effect
+2026-10-17T01:50:02Z [11,474ms] [Warning] [isaacsim.asset.importer.urdf] The path 黑色足端_007-effect is not a valid usd path, modifying to a_____________007_effect
+2026-10-17T01:50:02Z [11,474ms] [Warning] [isaacsim.asset.importer.urdf] The path 深色橡胶_001-effect is not a valid usd path, modifying to a_____________001_effect
+2026-10-17T01:50:02Z [11,474ms] [Warning] [isaacsim.asset.importer.urdf] The path 深色橡胶_012-effect is not a valid usd path, modifying to a_____________012_effect
+2026-10-17T01:50:02Z [11,474ms] [Warning] [isaacsim.asset.importer.urdf] The path 黑色足端_006-effect is not a valid usd path, modifying to a_____________006_effect
+2026-10-17T01:50:02Z [11,474ms] [Warning] [isaacsim.asset.importer.urdf] The path 黑色足端_007-effect is not a valid usd path, modifying to a_____________007_effect
+2026-10-17T01:50:02Z [11,474ms] [Warning] [isaacsim.asset.importer.urdf] The path 深色橡胶_001-effect is not a valid usd path, modifying to a_____________001_effect
+2026-10-17T01:50:02Z [11,474ms] [Warning] [isaacsim.asset.importer.urdf] The path 深色橡胶_003-effect is not a valid usd path, modifying to a_____________003_effect
+2026-10-17T01:50:02Z [11,474ms] [Warning] [isaacsim.asset.importer.urdf] The path 黑色足端_005-effect is not a valid usd path, modifying to a_____________005_effect
+2026-10-17T01:50:02Z [11,474ms] [Warning] [isaacsim.asset.importer.urdf] The path 黑色足端_007-effect is not a valid usd path, modifying to a_____________007_effect
+2026-10-17T01:50:02Z [11,474ms] [Warning] [isaacsim.asset.importer.urdf] The path 深色橡胶_001-effect is not a valid usd path, modifying to a_____________001_effect
+2026-10-17T01:50:02Z [11,475ms] [Warning] [isaacsim.asset.importer.urdf] The path 深色橡胶_012-effect is not a valid usd path, modifying to a_____________012_effect
+2026-10-17T01:50:02Z [11,475ms] [Warning] [isaacsim.asset.importer.urdf] The path 黑色足端_006-effect is not a valid usd path, modifying to a_____________006_effect
+2026-10-17T01:50:02Z [11,475ms] [Warning] [isaacsim.asset.importer.urdf] The path 黑色足端_007-effect is not a valid usd path, modifying to a_____________007_effect
+2026-10-17T01:50:02Z [11,475ms] [Warning] [isaacsim.asset.importer.urdf] DEPRECATION WARNING: Merging bodies with inertia is deprecated. This will be removed in a future release.
+2026-10-17T01:50:02Z [11,475ms] [Warning] [isaacsim.asset.importer.urdf] link FL_calflower1 has body properties (mass, inertia, or collisions) and is being merged into FL_calflower
+2026-10-17T01:50:02Z [11,476ms] [Warning] [isaacsim.asset.importer.urdf] DEPRECATION WARNING: Merging bodies with inertia is deprecated. This will be removed in a future release.
+2026-10-17T01:50:02Z [11,476ms] [Warning] [isaacsim.asset.importer.urdf] link FL_calflower has body properties (mass, inertia, or collisions) and is being merged into FL_calf
+2026-10-17T01:50:02Z [11,476ms] [Warning] [isaacsim.asset.importer.urdf] DEPRECATION WARNING: Merging bodies with inertia is deprecated. This will be removed in a future release.
+2026-10-17T01:50:02Z [11,476ms] [Warning] [isaacsim.asset.importer.urdf] link FL_calf_rotor has body properties (mass, inertia, or collisions) and is being merged into FL_thigh
+2026-10-17T01:50:02Z [11,476ms] [Warning] [isaacsim.asset.importer.urdf] DEPRECATION WARNING: Merging bodies with inertia is deprecated. This will be removed in a future release.
+2026-10-17T01:50:02Z [11,476ms] [Warning] [isaacsim.asset.importer.urdf] link FL_thigh_rotor has body properties (mass, inertia, or collisions) and is being merged into FL_hip
+2026-10-17T01:50:02Z [11,476ms] [Warning] [isaacsim.asset.importer.urdf] DEPRECATION WARNING: Merging bodies with inertia is deprecated. This will be removed in a future release.
+2026-10-17T01:50:02Z [11,476ms] [Warning] [isaacsim.asset.importer.urdf] link FL_hip_rotor has body properties (mass, inertia, or collisions) and is being merged into base
+2026-10-17T01:50:02Z [11,476ms] [Warning] [isaacsim.asset.importer.urdf] DEPRECATION WARNING: Merging bodies with inertia is deprecated. This will be removed in a future release.
+2026-10-17T01:50:02Z [11,476ms] [Warning] [isaacsim.asset.importer.urdf] link FR_calflower1 has body properties (mass, inertia, or collisions) and is being merged into FR_calflower
+2026-10-17T01:50:02Z [11,476ms] [Warning] [isaacsim.asset.importer.urdf] DEPRECATION WARNING: Merging bodies with inertia is deprecated. This will be removed in a future release.
+2026-10-17T01:50:02Z [11,476ms] [Warning] [isaacsim.asset.importer.urdf] link FR_calflower has body properties (mass, inertia, or collisions) and is being merged into FR_calf
+2026-10-17T01:50:02Z [11,476ms] [Warning] [isaacsim.asset.importer.urdf] DEPRECATION WARNING: Merging bodies with inertia is deprecated. This will be removed in a future release.
+2026-10-17T01:50:02Z [11,476ms] [Warning] [isaacsim.asset.importer.urdf] link FR_calf_rotor has body properties (mass, inertia, or collisions) and is being merged into FR_thigh
+2026-10-17T01:50:02Z [11,476ms] [Warning] [isaacsim.asset.importer.urdf] DEPRECATION WARNING: Merging bodies with inertia is deprecated. This will be removed in a future release.
+2026-10-17T01:50:02Z [11,476ms] [Warning] [isaacsim.asset.importer.urdf] link FR_thigh_rotor has body properties (mass, inertia, or collisions) and is being merged into FR_hip
+2026-10-17T01:50:02Z [11,476ms] [Warning] [isaacsim.asset.importer.urdf] DEPRECATION WARNING: Merging bodies with inertia is deprecated. This will be removed in a future release.
+2026-10-17T01:50:02Z [11,476ms] [Warning] [isaacsim.asset.importer.urdf] link FR_hip_rotor has body properties (mass, inertia, or collisions) and is being merged into base
+2026-10-17T01:50:02Z [11,476ms] [Warning] [isaacsim.asset.importer.urdf] DEPRECATION WARNING: Merging bodies with inertia is deprecated. This will be removed in a future release.
+2026-10-17T01:50:02Z [11,476ms] [Warning] [isaacsim.asset.importer.urdf] link RL_calflower1 has body properties (mass, inertia, or collisions) and is being merged into RL_calflower
+2026-10-17T01:50:02Z [11,476ms] [Warning] [isaacsim.asset.importer.urdf] DEPRECATION WARNING: Merging bodies with inertia is deprecated. This will be removed in a future release.
+2026-10-17T01:50:02Z [11,476ms] [Warning] [isaacsim.asset.importer.urdf] link RL_calflower has body properties (mass, inertia, or collisions) and is being merged into RL_calf
+2026-10-17T01:50:02Z [11,476ms] [Warning] [isaacsim.asset.importer.urdf] DEPRECATION WARNING: Merging bodies with inertia is deprecated. This will be removed in a future release.
+2026-10-17T01:50:02Z [11,476ms] [Warning] [isaacsim.asset.importer.urdf] link RL_calf_rotor has body properties (mass, inertia, or collisions) and is being merged into RL_thigh
+2026-10-17T01:50:02Z [11,476ms] [Warning] [isaacsim.asset.importer.urdf] DEPRECATION WARNING: Merging bodies with inertia is deprecated. This will be removed in a future release.
+2026-10-17T01:50:02Z [11,476ms] [Warning] [isaacsim.asset.importer.urdf] link RL_thigh_rotor has body properties (mass, inertia, or collisions) and is being merged into RL_hip
+2026-10-17T01:50:02Z [11,476ms] [Warning] [isaacsim.asset.importer.urdf] DEPRECATION WARNING: Merging bodies with inertia is deprecated. This will be removed in a future release.
+2026-10-17T01:50:02Z [11,477ms] [Warning] [isaacsim.asset.importer.urdf] link RL_hip_rotor has body properties (mass, inertia, or collisions) and is being merged into base
+2026-10-17T01:50:02Z [11,477ms] [Warning] [isaacsim.asset.importer.urdf] DEPRECATION WARNING: Merging bodies with inertia is deprecated. This will be removed in a future release.
+2026-10-17T01:50:02Z [11,477ms] [Warning] [isaacsim.asset.importer.urdf] link RR_calflower1 has body properties (mass, inertia, or collisions) and is being merged into RR_calflower
+2026-10-17T01:50:02Z [11,477ms] [Warning] [isaacsim.asset.importer.urdf] DEPRECATION WARNING: Merging bodies with inertia is deprecated. This will be removed in a future release.
+2026-10-17T01:50:02Z [11,477ms] [Warning] [isaacsim.asset.importer.urdf] link RR_calflower has body properties (mass, inertia, or collisions) and is being merged into RR_calf
+2026-10-17T01:50:02Z [11,477ms] [Warning] [isaacsim.asset.importer.urdf] DEPRECATION WARNING: Merging bodies with inertia is deprecated. This will be removed in a future release.
+2026-10-17T01:50:02Z [11,477ms] [Warning] [isaacsim.asset.importer.urdf] link RR_calf_rotor has body properties (mass, inertia, or collisions) and is being merged into RR_thigh
+2026-10-17T01:50:02Z [11,477ms] [Warning] [isaacsim.asset.importer.urdf] DEPRECATION WARNING: Merging bodies with inertia is deprecated. This will be removed in a future release.
+2026-10-17T01:50:02Z [11,477ms] [Warning] [isaacsim.asset.importer.urdf] link RR_thigh_rotor has body properties (mass, inertia, or collisions) and is being merged into RR_hip
+2026-10-17T01:50:02Z [11,477ms] [Warning] [isaacsim.asset.importer.urdf] DEPRECATION WARNING: Merging bodies with inertia is deprecated. This will be removed in a future release.
+2026-10-17T01:50:02Z [11,477ms] [Warning] [isaacsim.asset.importer.urdf] link RR_hip_rotor has body properties (mass, inertia, or collisions) and is being merged into base
+2026-10-17T01:50:02Z [11,477ms] [Warning] [isaacsim.asset.importer.urdf] DEPRECATION WARNING: Merging bodies with inertia is deprecated. This will be removed in a future release.
+2026-10-17T01:50:02Z [11,477ms] [Warning] [isaacsim.asset.importer.urdf] link front_camera has body properties (mass, inertia, or collisions) and is being merged into base
+2026-10-17T01:50:02Z [11,477ms] [Warning] [isaacsim.asset.importer.urdf] DEPRECATION WARNING: Merging bodies with inertia is deprecated. This will be removed in a future release.
+2026-10-17T01:50:02Z [11,477ms] [Warning] [isaacsim.asset.importer.urdf] link imu has body properties (mass, inertia, or collisions) and is being merged into base
+2026-10-17T01:50:02Z [11,477ms] [Warning] [isaacsim.asset.importer.urdf] DEPRECATION WARNING: Merging bodies with inertia is deprecated. This will be removed in a future release.
+2026-10-17T01:50:02Z [11,477ms] [Warning] [isaacsim.asset.importer.urdf] link radar has body properties (mass, inertia, or collisions) and is being merged into base
+2026-10-17T01:50:03Z [12,023ms] [Warning] [isaacsim.asset.importer.urdf] FL_foot_joint: Joint Axis is not body aligned with X, Y or Z primary axis. Adjusting PhysX joint alignment to Axis X and reorienting bodies.
+2026-10-17T01:50:03Z [12,185ms] [Warning] [isaacsim.asset.importer.urdf] FR_foot_joint: Joint Axis is not body aligned with X, Y or Z primary axis. Adjusting PhysX joint alignment to Axis X and reorienting bodies.
+2026-10-17T01:50:03Z [12,189ms] [Warning] [omni.usd] Warning: in _ReportErrors at line 3172 of C:\g\201060795\USD\pxr\usd\usd\stage.cpp -- In </go2/Head_upper/visuals>: Unresolved reference prim path @C:/users/ai-ws01/s2_lab/night-tools-20261013/s2_runs/live-20261017-104934/usd/IsaacLab/usd_20261017_105002_1824/configuration/go2_physics.usd@</visuals/Head_upper> introduced by @C:/users/ai-ws01/s2_lab/night-tools-20261013/s2_runs/live-20261017-104934/usd/IsaacLab/usd_20261017_105002_1824/configuration/go2_base.usd@</go2/Head_upper/visuals> (recomposing stage on stage @C:/users/ai-ws01/s2_lab/night-tools-20261013/s2_runs/live-20261017-104934/usd/IsaacLab/usd_20261017_105002_1824/configuration/go2_physics.usd@ <0000023B854E43F0>)
+
+2026-10-17T01:50:03Z [12,189ms] [Warning] [omni.usd] Warning: in _ReportErrors at line 3172 of C:\g\201060795\USD\pxr\usd\usd\stage.cpp -- In </go2/Head_upper/visuals>: Unresolved reference prim path @C:/users/ai-ws01/s2_lab/night-tools-20261013/s2_runs/live-20261017-104934/usd/IsaacLab/usd_20261017_105002_1824/go2.usd@</visuals/Head_upper> introduced by @C:/users/ai-ws01/s2_lab/night-tools-20261013/s2_runs/live-20261017-104934/usd/IsaacLab/usd_20261017_105002_1824/configuration/go2_base.usd@</go2/Head_upper/visuals> (recomposing stage on stage @C:/users/ai-ws01/s2_lab/night-tools-20261013/s2_runs/live-20261017-104934/usd/IsaacLab/usd_20261017_105002_1824/go2.usd@ <0000023B854E2FB0>)
+
+2026-10-17T01:50:03Z [12,189ms] [Warning] [omni.usd] Warning: in _ReportErrors at line 3172 of C:\g\201060795\USD\pxr\usd\usd\stage.cpp -- In </go2/Head_upper/visuals>: Unresolved reference prim path @C:/users/ai-ws01/s2_lab/night-tools-20261013/s2_runs/live-20261017-104934/usd/IsaacLab/usd_20261017_105002_1824/go2.usd@</visuals/Head_upper> introduced by @C:/users/ai-ws01/s2_lab/night-tools-20261013/s2_runs/live-20261017-104934/usd/IsaacLab/usd_20261017_105002_1824/configuration/go2_base.usd@</go2/Head_upper/visuals> (recomposing stage on stage @C:/users/ai-ws01/s2_lab/night-tools-20261013/s2_runs/live-20261017-104934/usd/IsaacLab/usd_20261017_105002_1824/go2.usd@ <0000023B854E5830>)
+
+2026-10-17T01:50:03Z [12,190ms] [Warning] [omni.usd] Warning: in _ReportErrors at line 3172 of C:\g\201060795\USD\pxr\usd\usd\stage.cpp -- In </go2/Head_upper/visuals>: Unresolved reference prim path @C:/users/ai-ws01/s2_lab/night-tools-20261013/s2_runs/live-20261017-104934/usd/IsaacLab/usd_20261017_105002_1824/configuration/go2_base.usd@</visuals/Head_upper> introduced by @C:/users/ai-ws01/s2_lab/night-tools-20261013/s2_runs/live-20261017-104934/usd/IsaacLab/usd_20261017_105002_1824/configuration/go2_base.usd@</go2/Head_upper/visuals> (recomposing stage on stage @C:/users/ai-ws01/s2_lab/night-tools-20261013/s2_runs/live-20261017-104934/usd/IsaacLab/usd_20261017_105002_1824/configuration/go2_base.usd@ <0000023B854E2080>)
+
+2026-10-17T01:50:03Z [12,190ms] [Warning] [omni.usd] Warning: in _ReportErrors at line 3172 of C:\g\201060795\USD\pxr\usd\usd\stage.cpp -- In </go2/Head_upper/visuals>: Unresolved reference prim path @C:/users/ai-ws01/s2_lab/night-tools-20261013/s2_runs/live-20261017-104934/usd/IsaacLab/usd_20261017_105002_1824/configuration/go2_physics.usd@</visuals/Head_upper> introduced by @C:/users/ai-ws01/s2_lab/night-tools-20261013/s2_runs/live-20261017-104934/usd/IsaacLab/usd_20261017_105002_1824/configuration/go2_base.usd@</go2/Head_upper/visuals> (recomposing stage on stage @C:/users/ai-ws01/s2_lab/night-tools-20261013/s2_runs/live-20261017-104934/usd/IsaacLab/usd_20261017_105002_1824/configuration/go2_physics.usd@ <0000023B854E43F0>)
+
+2026-10-17T01:50:03Z [12,190ms] [Warning] [omni.usd] Warning: in _ReportErrors at line 3172 of C:\g\201060795\USD\pxr\usd\usd\stage.cpp -- In </go2/Head_upper/visuals>: Unresolved reference prim path @C:/users/ai-ws01/s2_lab/night-tools-20261013/s2_runs/live-20261017-104934/usd/IsaacLab/usd_20261017_105002_1824/go2.usd@</visuals/Head_upper> introduced by @C:/users/ai-ws01/s2_lab/night-tools-20261013/s2_runs/live-20261017-104934/usd/IsaacLab/usd_20261017_105002_1824/configuration/go2_base.usd@</go2/Head_upper/visuals> (recomposing stage on stage @C:/users/ai-ws01/s2_lab/night-tools-20261013/s2_runs/live-20261017-104934/usd/IsaacLab/usd_20261017_105002_1824/go2.usd@ <0000023B854E2FB0>)
+
+2026-10-17T01:50:03Z [12,191ms] [Warning] [omni.usd] Warning: in _ReportErrors at line 3172 of C:\g\201060795\USD\pxr\usd\usd\stage.cpp -- In </go2/Head_upper/visuals>: Unresolved reference prim path @C:/users/ai-ws01/s2_lab/night-tools-20261013/s2_runs/live-20261017-104934/usd/IsaacLab/usd_20261017_105002_1824/go2.usd@</visuals/Head_upper> introduced by @C:/users/ai-ws01/s2_lab/night-tools-20261013/s2_runs/live-20261017-104934/usd/IsaacLab/usd_20261017_105002_1824/configuration/go2_base.usd@</go2/Head_upper/visuals> (recomposing stage on stage @C:/users/ai-ws01/s2_lab/night-tools-20261013/s2_runs/live-20261017-104934/usd/IsaacLab/usd_20261017_105002_1824/go2.usd@ <0000023B854E5830>)
+
+2026-10-17T01:50:03Z [12,191ms] [Warning] [omni.usd] Warning: in _ReportErrors at line 3172 of C:\g\201060795\USD\pxr\usd\usd\stage.cpp -- In </go2/Head_upper/visuals>: Unresolved reference prim path @C:/users/ai-ws01/s2_lab/night-tools-20261013/s2_runs/live-20261017-104934/usd/IsaacLab/usd_20261017_105002_1824/configuration/go2_base.usd@</visuals/Head_upper> introduced by @C:/users/ai-ws01/s2_lab/night-tools-20261013/s2_runs/live-20261017-104934/usd/IsaacLab/usd_20261017_105002_1824/configuration/go2_base.usd@</go2/Head_upper/visuals> (recomposing stage on stage @C:/users/ai-ws01/s2_lab/night-tools-20261013/s2_runs/live-20261017-104934/usd/IsaacLab/usd_20261017_105002_1824/configuration/go2_base.usd@ <0000023B854E2080>)
+
+2026-10-17T01:50:03Z [12,195ms] [Warning] [isaacsim.asset.importer.urdf] Head_upper_joint: Joint Axis is not body aligned with X, Y or Z primary axis. Adjusting PhysX joint alignment to Axis X and reorienting bodies.
+2026-10-17T01:50:03Z [12,198ms] [Warning] [omni.usd] Warning: in _ReportErrors at line 3172 of C:\g\201060795\USD\pxr\usd\usd\stage.cpp -- In </go2/Head_lower/visuals>: Unresolved reference prim path @C:/users/ai-ws01/s2_lab/night-tools-20261013/s2_runs/live-20261017-104934/usd/IsaacLab/usd_20261017_105002_1824/configuration/go2_physics.usd@</visuals/Head_lower> introduced by @C:/users/ai-ws01/s2_lab/night-tools-20261013/s2_runs/live-20261017-104934/usd/IsaacLab/usd_20261017_105002_1824/configuration/go2_base.usd@</go2/Head_lower/visuals> (recomposing stage on stage @C:/users/ai-ws01/s2_lab/night-tools-20261013/s2_runs/live-20261017-104934/usd/IsaacLab/usd_20261017_105002_1824/configuration/go2_physics.usd@ <0000023B854E43F0>)
+
+2026-10-17T01:50:03Z [12,198ms] [Warning] [omni.usd] Warning: in _ReportErrors at line 3172 of C:\g\201060795\USD\pxr\usd\usd\stage.cpp -- In </go2/Head_lower/visuals>: Unresolved reference prim path @C:/users/ai-ws01/s2_lab/night-tools-20261013/s2_runs/live-20261017-104934/usd/IsaacLab/usd_20261017_105002_1824/go2.usd@</visuals/Head_lower> introduced by @C:/users/ai-ws01/s2_lab/night-tools-20261013/s2_runs/live-20261017-104934/usd/IsaacLab/usd_20261017_105002_1824/configuration/go2_base.usd@</go2/Head_lower/visuals> (recomposing stage on stage @C:/users/ai-ws01/s2_lab/night-tools-20261013/s2_runs/live-20261017-104934/usd/IsaacLab/usd_20261017_105002_1824/go2.usd@ <0000023B854E2FB0>)
+
+2026-10-17T01:50:03Z [12,198ms] [Warning] [omni.usd] Warning: in _ReportErrors at line 3172 of C:\g\201060795\USD\pxr\usd\usd\stage.cpp -- In </go2/Head_lower/visuals>: Unresolved reference prim path @C:/users/ai-ws01/s2_lab/night-tools-20261013/s2_runs/live-20261017-104934/usd/IsaacLab/usd_20261017_105002_1824/go2.usd@</visuals/Head_lower> introduced by @C:/users/ai-ws01/s2_lab/night-tools-20261013/s2_runs/live-20261017-104934/usd/IsaacLab/usd_20261017_105002_1824/configuration/go2_base.usd@</go2/Head_lower/visuals> (recomposing stage on stage @C:/users/ai-ws01/s2_lab/night-tools-20261013/s2_runs/live-20261017-104934/usd/IsaacLab/usd_20261017_105002_1824/go2.usd@ <0000023B854E5830>)
+
+2026-10-17T01:50:03Z [12,198ms] [Warning] [omni.usd] Warning: in _ReportErrors at line 3172 of C:\g\201060795\USD\pxr\usd\usd\stage.cpp -- In </go2/Head_lower/visuals>: Unresolved reference prim path @C:/users/ai-ws01/s2_lab/night-tools-20261013/s2_runs/live-20261017-104934/usd/IsaacLab/usd_20261017_105002_1824/configuration/go2_base.usd@</visuals/Head_lower> introduced by @C:/users/ai-ws01/s2_lab/night-tools-20261013/s2_runs/live-20261017-104934/usd/IsaacLab/usd_20261017_105002_1824/configuration/go2_base.usd@</go2/Head_lower/visuals> (recomposing stage on stage @C:/users/ai-ws01/s2_lab/night-tools-20261013/s2_runs/live-20261017-104934/usd/IsaacLab/usd_20261017_105002_1824/configuration/go2_base.usd@ <0000023B854E2080>)
+
+2026-10-17T01:50:03Z [12,199ms] [Warning] [omni.usd] Warning: in _ReportErrors at line 3172 of C:\g\201060795\USD\pxr\usd\usd\stage.cpp -- In </go2/Head_lower/visuals>: Unresolved reference prim path @C:/users/ai-ws01/s2_lab/night-tools-20261013/s2_runs/live-20261017-104934/usd/IsaacLab/usd_20261017_105002_1824/configuration/go2_physics.usd@</visuals/Head_lower> introduced by @C:/users/ai-ws01/s2_lab/night-tools-20261013/s2_runs/live-20261017-104934/usd/IsaacLab/usd_20261017_105002_1824/configuration/go2_base.usd@</go2/Head_lower/visuals> (recomposing stage on stage @C:/users/ai-ws01/s2_lab/night-tools-20261013/s2_runs/live-20261017-104934/usd/IsaacLab/usd_20261017_105002_1824/configuration/go2_physics.usd@ <0000023B854E43F0>)
+
+2026-10-17T01:50:03Z [12,199ms] [Warning] [omni.usd] Warning: in _ReportErrors at line 3172 of C:\g\201060795\USD\pxr\usd\usd\stage.cpp -- In </go2/Head_lower/visuals>: Unresolved reference prim path @C:/users/ai-ws01/s2_lab/night-tools-20261013/s2_runs/live-20261017-104934/usd/IsaacLab/usd_20261017_105002_1824/go2.usd@</visuals/Head_lower> introduced by @C:/users/ai-ws01/s2_lab/night-tools-20261013/s2_runs/live-20261017-104934/usd/IsaacLab/usd_20261017_105002_1824/configuration/go2_base.usd@</go2/Head_lower/visuals> (recomposing stage on stage @C:/users/ai-ws01/s2_lab/night-tools-20261013/s2_runs/live-20261017-104934/usd/IsaacLab/usd_20261017_105002_1824/go2.usd@ <0000023B854E2FB0>)
+
+2026-10-17T01:50:03Z [12,199ms] [Warning] [omni.usd] Warning: in _ReportErrors at line 3172 of C:\g\201060795\USD\pxr\usd\usd\stage.cpp -- In </go2/Head_lower/visuals>: Unresolved reference prim path @C:/users/ai-ws01/s2_lab/night-tools-20261013/s2_runs/live-20261017-104934/usd/IsaacLab/usd_20261017_105002_1824/go2.usd@</visuals/Head_lower> introduced by @C:/users/ai-ws01/s2_lab/night-tools-20261013/s2_runs/live-20261017-104934/usd/IsaacLab/usd_20261017_105002_1824/configuration/go2_base.usd@</go2/Head_lower/visuals> (recomposing stage on stage @C:/users/ai-ws01/s2_lab/night-tools-20261013/s2_runs/live-20261017-104934/usd/IsaacLab/usd_20261017_105002_1824/go2.usd@ <0000023B854E5830>)
+
+2026-10-17T01:50:03Z [12,199ms] [Warning] [omni.usd] Warning: in _ReportErrors at line 3172 of C:\g\201060795\USD\pxr\usd\usd\stage.cpp -- In </go2/Head_lower/visuals>: Unresolved reference prim path @C:/users/ai-ws01/s2_lab/night-tools-20261013/s2_runs/live-20261017-104934/usd/IsaacLab/usd_20261017_105002_1824/configuration/go2_base.usd@</visuals/Head_lower> introduced by @C:/users/ai-ws01/s2_lab/night-tools-20261013/s2_runs/live-20261017-104934/usd/IsaacLab/usd_20261017_105002_1824/configuration/go2_base.usd@</go2/Head_lower/visuals> (recomposing stage on stage @C:/users/ai-ws01/s2_lab/night-tools-20261013/s2_runs/live-20261017-104934/usd/IsaacLab/usd_20261017_105002_1824/configuration/go2_base.usd@ <0000023B854E2080>)
+
+2026-10-17T01:50:03Z [12,203ms] [Warning] [isaacsim.asset.importer.urdf] Head_lower_joint: Joint Axis is not body aligned with X, Y or Z primary axis. Adjusting PhysX joint alignment to Axis X and reorienting bodies.
+2026-10-17T01:50:03Z [12,251ms] [Warning] [isaacsim.asset.importer.urdf] RL_foot_joint: Joint Axis is not body aligned with X, Y or Z primary axis. Adjusting PhysX joint alignment to Axis X and reorienting bodies.
+2026-10-17T01:50:03Z [12,302ms] [Warning] [isaacsim.asset.importer.urdf] RR_foot_joint: Joint Axis is not body aligned with X, Y or Z primary axis. Adjusting PhysX joint alignment to Axis X and reorienting bodies.
+2026-10-17T01:50:03Z [12,382ms] [Warning] [omni.usd] Warning: in _ReportErrors at line 3172 of C:\g\201060795\USD\pxr\usd\usd\stage.cpp -- In </go2/Head_upper/visuals>: Unresolved reference prim path @C:/users/ai-ws01/s2_lab/night-tools-20261013/s2_runs/live-20261017-104934/usd/IsaacLab/usd_20261017_105002_1824/configuration/go2_base.usd@</visuals/Head_upper> introduced by @C:/users/ai-ws01/s2_lab/night-tools-20261013/s2_runs/live-20261017-104934/usd/IsaacLab/usd_20261017_105002_1824/configuration/go2_base.usd@</go2/Head_upper/visuals> (recomposing stage on stage @C:/users/ai-ws01/s2_lab/night-tools-20261013/s2_runs/live-20261017-104934/usd/IsaacLab/usd_20261017_105002_1824/go2.usd@ <0000023B854E2FB0>)
+
+2026-10-17T01:50:03Z [12,382ms] [Warning] [omni.usd] Warning: in _ReportErrors at line 3172 of C:\g\201060795\USD\pxr\usd\usd\stage.cpp -- In </go2/Head_lower/visuals>: Unresolved reference prim path @C:/users/ai-ws01/s2_lab/night-tools-20261013/s2_runs/live-20261017-104934/usd/IsaacLab/usd_20261017_105002_1824/configuration/go2_base.usd@</visuals/Head_lower> introduced by @C:/users/ai-ws01/s2_lab/night-tools-20261013/s2_runs/live-20261017-104934/usd/IsaacLab/usd_20261017_105002_1824/configuration/go2_base.usd@</go2/Head_lower/visuals> (recomposing stage on stage @C:/users/ai-ws01/s2_lab/night-tools-20261013/s2_runs/live-20261017-104934/usd/IsaacLab/usd_20261017_105002_1824/go2.usd@ <0000023B854E2FB0>)
+
+2026-10-17T01:50:03Z [12,384ms] [Warning] [omni.usd] Warning: in _ReportErrors at line 3172 of C:\g\201060795\USD\pxr\usd\usd\stage.cpp -- In </go2/Head_lower/visuals>: Unresolved reference prim path @C:/users/ai-ws01/s2_lab/night-tools-20261013/s2_runs/live-20261017-104934/usd/IsaacLab/usd_20261017_105002_1824/configuration/go2_base.usd@</visuals/Head_lower> introduced by @C:/users/ai-ws01/s2_lab/night-tools-20261013/s2_runs/live-20261017-104934/usd/IsaacLab/usd_20261017_105002_1824/configuration/go2_base.usd@</go2/Head_lower/visuals> (recomposing stage on stage @C:/users/ai-ws01/s2_lab/night-tools-20261013/s2_runs/live-20261017-104934/usd/IsaacLab/usd_20261017_105002_1824/go2.usd@ <0000023B854E5830>)
+
+2026-10-17T01:50:03Z [12,384ms] [Warning] [omni.usd] Warning: in _ReportErrors at line 3172 of C:\g\201060795\USD\pxr\usd\usd\stage.cpp -- In </go2/Head_upper/visuals>: Unresolved reference prim path @C:/users/ai-ws01/s2_lab/night-tools-20261013/s2_runs/live-20261017-104934/usd/IsaacLab/usd_20261017_105002_1824/configuration/go2_base.usd@</visuals/Head_upper> introduced by @C:/users/ai-ws01/s2_lab/night-tools-20261013/s2_runs/live-20261017-104934/usd/IsaacLab/usd_20261017_105002_1824/configuration/go2_base.usd@</go2/Head_upper/visuals> (recomposing stage on stage @C:/users/ai-ws01/s2_lab/night-tools-20261013/s2_runs/live-20261017-104934/usd/IsaacLab/usd_20261017_105002_1824/go2.usd@ <0000023B854E5830>)
+
+2026-10-17T01:50:03Z [12,386ms] [Warning] [omni.usd] Warning: in _ReportErrors at line 3172 of C:\g\201060795\USD\pxr\usd\usd\stage.cpp -- In </go2/Head_lower/visuals>: Unresolved reference prim path @C:/users/ai-ws01/s2_lab/night-tools-20261013/s2_runs/live-20261017-104934/usd/IsaacLab/usd_20261017_105002_1824/configuration/go2_physics.usd@</visuals/Head_lower> introduced by @C:/users/ai-ws01/s2_lab/night-tools-20261013/s2_runs/live-20261017-104934/usd/IsaacLab/usd_20261017_105002_1824/configuration/go2_base.usd@</go2/Head_lower/visuals> (recomposing stage on stage @C:/users/ai-ws01/s2_lab/night-tools-20261013/s2_runs/live-20261017-104934/usd/IsaacLab/usd_20261017_105002_1824/go2.usd@ <0000023B854E2FB0>)
+
+2026-10-17T01:50:03Z [12,386ms] [Warning] [omni.usd] Warning: in _ReportErrors at line 3172 of C:\g\201060795\USD\pxr\usd\usd\stage.cpp -- In </go2/Head_upper/visuals>: Unresolved reference prim path @C:/users/ai-ws01/s2_lab/night-tools-20261013/s2_runs/live-20261017-104934/usd/IsaacLab/usd_20261017_105002_1824/configuration/go2_physics.usd@</visuals/Head_upper> introduced by @C:/users/ai-ws01/s2_lab/night-tools-20261013/s2_runs/live-20261017-104934/usd/IsaacLab/usd_20261017_105002_1824/configuration/go2_base.usd@</go2/Head_upper/visuals> (recomposing stage on stage @C:/users/ai-ws01/s2_lab/night-tools-20261013/s2_runs/live-20261017-104934/usd/IsaacLab/usd_20261017_105002_1824/go2.usd@ <0000023B854E2FB0>)
+
+2026-10-17T01:50:03Z [12,388ms] [Warning] [omni.usd] Warning: in _ReportErrors at line 3172 of C:\g\201060795\USD\pxr\usd\usd\stage.cpp -- In </go2/Head_upper/visuals>: Unresolved reference prim path @C:/users/ai-ws01/s2_lab/night-tools-20261013/s2_runs/live-20261017-104934/usd/IsaacLab/usd_20261017_105002_1824/configuration/go2_physics.usd@</visuals/Head_upper> introduced by @C:/users/ai-ws01/s2_lab/night-tools-20261013/s2_runs/live-20261017-104934/usd/IsaacLab/usd_20261017_105002_1824/configuration/go2_base.usd@</go2/Head_upper/visuals> (recomposing stage on stage @C:/users/ai-ws01/s2_lab/night-tools-20261013/s2_runs/live-20261017-104934/usd/IsaacLab/usd_20261017_105002_1824/go2.usd@ <0000023B854E5830>)
+
+2026-10-17T01:50:03Z [12,388ms] [Warning] [omni.usd] Warning: in _ReportErrors at line 3172 of C:\g\201060795\USD\pxr\usd\usd\stage.cpp -- In </go2/Head_lower/visuals>: Unresolved reference prim path @C:/users/ai-ws01/s2_lab/night-tools-20261013/s2_runs/live-20261017-104934/usd/IsaacLab/usd_20261017_105002_1824/configuration/go2_physics.usd@</visuals/Head_lower> introduced by @C:/users/ai-ws01/s2_lab/night-tools-20261013/s2_runs/live-20261017-104934/usd/IsaacLab/usd_20261017_105002_1824/configuration/go2_base.usd@</go2/Head_lower/visuals> (recomposing stage on stage @C:/users/ai-ws01/s2_lab/night-tools-20261013/s2_runs/live-20261017-104934/usd/IsaacLab/usd_20261017_105002_1824/go2.usd@ <0000023B854E5830>)
+
+2026-10-17T01:50:03Z [12,390ms] [Warning] [omni.usd] Warning: in _ReportErrors at line 3172 of C:\g\201060795\USD\pxr\usd\usd\stage.cpp -- In </go2/Head_lower/visuals>: Unresolved reference prim path @C:/users/ai-ws01/s2_lab/night-tools-20261013/s2_runs/live-20261017-104934/usd/IsaacLab/usd_20261017_105002_1824/configuration/go2_physics.usd@</visuals/Head_lower> introduced by @C:/users/ai-ws01/s2_lab/night-tools-20261013/s2_runs/live-20261017-104934/usd/IsaacLab/usd_20261017_105002_1824/configuration/go2_base.usd@</go2/Head_lower/visuals> (recomposing stage on stage @C:/users/ai-ws01/s2_lab/night-tools-20261013/s2_runs/live-20261017-104934/usd/IsaacLab/usd_20261017_105002_1824/go2.usd@ <0000023B854E2FB0>)
+
+2026-10-17T01:50:03Z [12,390ms] [Warning] [omni.usd] Warning: in _ReportErrors at line 3172 of C:\g\201060795\USD\pxr\usd\usd\stage.cpp -- In </go2/Head_upper/visuals>: Unresolved reference prim path @C:/users/ai-ws01/s2_lab/night-tools-20261013/s2_runs/live-20261017-104934/usd/IsaacLab/usd_20261017_105002_1824/configuration/go2_physics.usd@</visuals/Head_upper> introduced by @C:/users/ai-ws01/s2_lab/night-tools-20261013/s2_runs/live-20261017-104934/usd/IsaacLab/usd_20261017_105002_1824/configuration/go2_base.usd@</go2/Head_upper/visuals> (recomposing stage on stage @C:/users/ai-ws01/s2_lab/night-tools-20261013/s2_runs/live-20261017-104934/usd/IsaacLab/usd_20261017_105002_1824/go2.usd@ <0000023B854E2FB0>)
+
+2026-10-17T01:50:03Z [12,391ms] [Warning] [omni.usd] Warning: in _ReportErrors at line 3172 of C:\g\201060795\USD\pxr\usd\usd\stage.cpp -- In </go2/Head_upper/visuals>: Unresolved reference prim path @C:/users/ai-ws01/s2_lab/night-tools-20261013/s2_runs/live-20261017-104934/usd/IsaacLab/usd_20261017_105002_1824/configuration/go2_physics.usd@</visuals/Head_upper> introduced by @C:/users/ai-ws01/s2_lab/night-tools-20261013/s2_runs/live-20261017-104934/usd/IsaacLab/usd_20261017_105002_1824/configuration/go2_base.usd@</go2/Head_upper/visuals> (recomposing stage on stage @C:/users/ai-ws01/s2_lab/night-tools-20261013/s2_runs/live-20261017-104934/usd/IsaacLab/usd_20261017_105002_1824/go2.usd@ <0000023B854E5830>)
+
+2026-10-17T01:50:03Z [12,391ms] [Warning] [omni.usd] Warning: in _ReportErrors at line 3172 of C:\g\201060795\USD\pxr\usd\usd\stage.cpp -- In </go2/Head_lower/visuals>: Unresolved reference prim path @C:/users/ai-ws01/s2_lab/night-tools-20261013/s2_runs/live-20261017-104934/usd/IsaacLab/usd_20261017_105002_1824/configuration/go2_physics.usd@</visuals/Head_lower> introduced by @C:/users/ai-ws01/s2_lab/night-tools-20261013/s2_runs/live-20261017-104934/usd/IsaacLab/usd_20261017_105002_1824/configuration/go2_base.usd@</go2/Head_lower/visuals> (recomposing stage on stage @C:/users/ai-ws01/s2_lab/night-tools-20261013/s2_runs/live-20261017-104934/usd/IsaacLab/usd_20261017_105002_1824/go2.usd@ <0000023B854E5830>)
+
+2026-10-17T01:50:03Z [12,393ms] [Warning] [omni.usd] Warning: in _ReportErrors at line 3172 of C:\g\201060795\USD\pxr\usd\usd\stage.cpp -- In </go2/Head_lower/visuals>: Unresolved reference prim path @C:/users/ai-ws01/s2_lab/night-tools-20261013/s2_runs/live-20261017-104934/usd/IsaacLab/usd_20261017_105002_1824/configuration/go2_physics.usd@</visuals/Head_lower> introduced by @C:/users/ai-ws01/s2_lab/night-tools-20261013/s2_runs/live-20261017-104934/usd/IsaacLab/usd_20261017_105002_1824/configuration/go2_base.usd@</go2/Head_lower/visuals> (recomposing stage on stage @C:/users/ai-ws01/s2_lab/night-tools-20261013/s2_runs/live-20261017-104934/usd/IsaacLab/usd_20261017_105002_1824/go2.usd@ <0000023B854E2FB0>)
+
+2026-10-17T01:50:03Z [12,393ms] [Warning] [omni.usd] Warning: in _ReportErrors at line 3172 of C:\g\201060795\USD\pxr\usd\usd\stage.cpp -- In </go2/Head_upper/visuals>: Unresolved reference prim path @C:/users/ai-ws01/s2_lab/night-tools-20261013/s2_runs/live-20261017-104934/usd/IsaacLab/usd_20261017_105002_1824/configuration/go2_physics.usd@</visuals/Head_upper> introduced by @C:/users/ai-ws01/s2_lab/night-tools-20261013/s2_runs/live-20261017-104934/usd/IsaacLab/usd_20261017_105002_1824/configuration/go2_base.usd@</go2/Head_upper/visuals> (recomposing stage on stage @C:/users/ai-ws01/s2_lab/night-tools-20261013/s2_runs/live-20261017-104934/usd/IsaacLab/usd_20261017_105002_1824/go2.usd@ <0000023B854E2FB0>)
+
+2026-10-17T01:50:03Z [12,395ms] [Warning] [omni.usd] Warning: in _ReportErrors at line 3172 of C:\g\201060795\USD\pxr\usd\usd\stage.cpp -- In </go2/Head_upper/visuals>: Unresolved reference prim path @C:/users/ai-ws01/s2_lab/night-tools-20261013/s2_runs/live-20261017-104934/usd/IsaacLab/usd_20261017_105002_1824/configuration/go2_physics.usd@</visuals/Head_upper> introduced by @C:/users/ai-ws01/s2_lab/night-tools-20261013/s2_runs/live-20261017-104934/usd/IsaacLab/usd_20261017_105002_1824/configuration/go2_base.usd@</go2/Head_upper/visuals> (recomposing stage on stage @C:/users/ai-ws01/s2_lab/night-tools-20261013/s2_runs/live-20261017-104934/usd/IsaacLab/usd_20261017_105002_1824/go2.usd@ <0000023B854E5830>)
+
+2026-10-17T01:50:03Z [12,395ms] [Warning] [omni.usd] Warning: in _ReportErrors at line 3172 of C:\g\201060795\USD\pxr\usd\usd\stage.cpp -- In </go2/Head_lower/visuals>: Unresolved reference prim path @C:/users/ai-ws01/s2_lab/night-tools-20261013/s2_runs/live-20261017-104934/usd/IsaacLab/usd_20261017_105002_1824/configuration/go2_physics.usd@</visuals/Head_lower> introduced by @C:/users/ai-ws01/s2_lab/night-tools-20261013/s2_runs/live-20261017-104934/usd/IsaacLab/usd_20261017_105002_1824/configuration/go2_base.usd@</go2/Head_lower/visuals> (recomposing stage on stage @C:/users/ai-ws01/s2_lab/night-tools-20261013/s2_runs/live-20261017-104934/usd/IsaacLab/usd_20261017_105002_1824/go2.usd@ <0000023B854E5830>)
+
+2026-10-17T01:50:03Z [12,397ms] [Warning] [omni.usd] Warning: in _ReportErrors at line 3172 of C:\g\201060795\USD\pxr\usd\usd\stage.cpp -- In </go2/Head_lower/visuals>: Unresolved reference prim path @C:/users/ai-ws01/s2_lab/night-tools-20261013/s2_runs/live-20261017-104934/usd/IsaacLab/usd_20261017_105002_1824/configuration/go2_physics.usd@</visuals/Head_lower> introduced by @C:/users/ai-ws01/s2_lab/night-tools-20261013/s2_runs/live-20261017-104934/usd/IsaacLab/usd_20261017_105002_1824/configuration/go2_base.usd@</go2/Head_lower/visuals> (recomposing stage on stage @C:/users/ai-ws01/s2_lab/night-tools-20261013/s2_runs/live-20261017-104934/usd/IsaacLab/usd_20261017_105002_1824/go2.usd@ <0000023B854E2FB0>)
+
+2026-10-17T01:50:03Z [12,397ms] [Warning] [omni.usd] Warning: in _ReportErrors at line 3172 of C:\g\201060795\USD\pxr\usd\usd\stage.cpp -- In </go2/Head_upper/visuals>: Unresolved reference prim path @C:/users/ai-ws01/s2_lab/night-tools-20261013/s2_runs/live-20261017-104934/usd/IsaacLab/usd_20261017_105002_1824/configuration/go2_physics.usd@</visuals/Head_upper> introduced by @C:/users/ai-ws01/s2_lab/night-tools-20261013/s2_runs/live-20261017-104934/usd/IsaacLab/usd_20261017_105002_1824/configuration/go2_base.usd@</go2/Head_upper/visuals> (recomposing stage on stage @C:/users/ai-ws01/s2_lab/night-tools-20261013/s2_runs/live-20261017-104934/usd/IsaacLab/usd_20261017_105002_1824/go2.usd@ <0000023B854E2FB0>)
+
+2026-10-17T01:50:03Z [12,399ms] [Warning] [omni.usd] Warning: in _ReportErrors at line 3172 of C:\g\201060795\USD\pxr\usd\usd\stage.cpp -- In </go2/Head_lower/visuals>: Unresolved reference prim path @C:/users/ai-ws01/s2_lab/night-tools-20261013/s2_runs/live-20261017-104934/usd/IsaacLab/usd_20261017_105002_1824/configuration/go2_physics.usd@</visuals/Head_lower> introduced by @C:/users/ai-ws01/s2_lab/night-tools-20261013/s2_runs/live-20261017-104934/usd/IsaacLab/usd_20261017_105002_1824/configuration/go2_base.usd@</go2/Head_lower/visuals> (recomposing stage on stage @C:/users/ai-ws01/s2_lab/night-tools-20261013/s2_runs/live-20261017-104934/usd/IsaacLab/usd_20261017_105002_1824/go2.usd@ <0000023B854E5830>)
+
+2026-10-17T01:50:03Z [12,399ms] [Warning] [omni.usd] Warning: in _ReportErrors at line 3172 of C:\g\201060795\USD\pxr\usd\usd\stage.cpp -- In </go2/Head_upper/visuals>: Unresolved reference prim path @C:/users/ai-ws01/s2_lab/night-tools-20261013/s2_runs/live-20261017-104934/usd/IsaacLab/usd_20261017_105002_1824/configuration/go2_physics.usd@</visuals/Head_upper> introduced by @C:/users/ai-ws01/s2_lab/night-tools-20261013/s2_runs/live-20261017-104934/usd/IsaacLab/usd_20261017_105002_1824/configuration/go2_base.usd@</go2/Head_upper/visuals> (recomposing stage on stage @C:/users/ai-ws01/s2_lab/night-tools-20261013/s2_runs/live-20261017-104934/usd/IsaacLab/usd_20261017_105002_1824/go2.usd@ <0000023B854E5830>)
+
+2026-10-17T01:50:03Z [12,401ms] [Warning] [omni.usd] Warning: in _ReportErrors at line 3172 of C:\g\201060795\USD\pxr\usd\usd\stage.cpp -- In </go2/Head_upper/visuals>: Unresolved reference prim path @C:/users/ai-ws01/s2_lab/night-tools-20261013/s2_runs/live-20261017-104934/usd/IsaacLab/usd_20261017_105002_1824/configuration/go2_physics.usd@</visuals/Head_upper> introduced by @C:/users/ai-ws01/s2_lab/night-tools-20261013/s2_runs/live-20261017-104934/usd/IsaacLab/usd_20261017_105002_1824/configuration/go2_base.usd@</go2/Head_upper/visuals> (recomposing stage on stage @C:/users/ai-ws01/s2_lab/night-tools-20261013/s2_runs/live-20261017-104934/usd/IsaacLab/usd_20261017_105002_1824/go2.usd@ <0000023B854E2FB0>)
+
+2026-10-17T01:50:03Z [12,401ms] [Warning] [omni.usd] Warning: in _ReportErrors at line 3172 of C:\g\201060795\USD\pxr\usd\usd\stage.cpp -- In </go2/Head_lower/visuals>: Unresolved reference prim path @C:/users/ai-ws01/s2_lab/night-tools-20261013/s2_runs/live-20261017-104934/usd/IsaacLab/usd_20261017_105002_1824/configuration/go2_physics.usd@</visuals/Head_lower> introduced by @C:/users/ai-ws01/s2_lab/night-tools-20261013/s2_runs/live-20261017-104934/usd/IsaacLab/usd_20261017_105002_1824/configuration/go2_base.usd@</go2/Head_lower/visuals> (recomposing stage on stage @C:/users/ai-ws01/s2_lab/night-tools-20261013/s2_runs/live-20261017-104934/usd/IsaacLab/usd_20261017_105002_1824/go2.usd@ <0000023B854E2FB0>)
+
+2026-10-17T01:50:03Z [12,402ms] [Warning] [omni.usd] Warning: in _ReportErrors at line 3172 of C:\g\201060795\USD\pxr\usd\usd\stage.cpp -- In </go2/Head_lower/visuals>: Unresolved reference prim path @C:/users/ai-ws01/s2_lab/night-tools-20261013/s2_runs/live-20261017-104934/usd/IsaacLab/usd_20261017_105002_1824/configuration/go2_physics.usd@</visuals/Head_lower> introduced by @C:/users/ai-ws01/s2_lab/night-tools-20261013/s2_runs/live-20261017-104934/usd/IsaacLab/usd_20261017_105002_1824/configuration/go2_base.usd@</go2/Head_lower/visuals> (recomposing stage on stage @C:/users/ai-ws01/s2_lab/night-tools-20261013/s2_runs/live-20261017-104934/usd/IsaacLab/usd_20261017_105002_1824/go2.usd@ <0000023B854E5830>)
+
+2026-10-17T01:50:03Z [12,402ms] [Warning] [omni.usd] Warning: in _ReportErrors at line 3172 of C:\g\201060795\USD\pxr\usd\usd\stage.cpp -- In </go2/Head_upper/visuals>: Unresolved reference prim path @C:/users/ai-ws01/s2_lab/night-tools-20261013/s2_runs/live-20261017-104934/usd/IsaacLab/usd_20261017_105002_1824/configuration/go2_physics.usd@</visuals/Head_upper> introduced by @C:/users/ai-ws01/s2_lab/night-tools-20261013/s2_runs/live-20261017-104934/usd/IsaacLab/usd_20261017_105002_1824/configuration/go2_base.usd@</go2/Head_upper/visuals> (recomposing stage on stage @C:/users/ai-ws01/s2_lab/night-tools-20261013/s2_runs/live-20261017-104934/usd/IsaacLab/usd_20261017_105002_1824/go2.usd@ <0000023B854E5830>)
+
+2026-10-17T01:50:03Z [12,404ms] [Warning] [omni.usd] Warning: in _ReportErrors at line 3172 of C:\g\201060795\USD\pxr\usd\usd\stage.cpp -- In </go2/Head_lower/visuals>: Unresolved reference prim path @C:/users/ai-ws01/s2_lab/night-tools-20261013/s2_runs/live-20261017-104934/usd/IsaacLab/usd_20261017_105002_1824/configuration/go2_physics.usd@</visuals/Head_lower> introduced by @C:/users/ai-ws01/s2_lab/night-tools-20261013/s2_runs/live-20261017-104934/usd/IsaacLab/usd_20261017_105002_1824/configuration/go2_base.usd@</go2/Head_lower/visuals> (recomposing stage on stage @C:/users/ai-ws01/s2_lab/night-tools-20261013/s2_runs/live-20261017-104934/usd/IsaacLab/usd_20261017_105002_1824/go2.usd@ <0000023B854E2FB0>)
+
+2026-10-17T01:50:03Z [12,404ms] [Warning] [omni.usd] Warning: in _ReportErrors at line 3172 of C:\g\201060795\USD\pxr\usd\usd\stage.cpp -- In </go2/Head_upper/visuals>: Unresolved reference prim path @C:/users/ai-ws01/s2_lab/night-tools-20261013/s2_runs/live-20261017-104934/usd/IsaacLab/usd_20261017_105002_1824/configuration/go2_physics.usd@</visuals/Head_upper> introduced by @C:/users/ai-ws01/s2_lab/night-tools-20261013/s2_runs/live-20261017-104934/usd/IsaacLab/usd_20261017_105002_1824/configuration/go2_base.usd@</go2/Head_upper/visuals> (recomposing stage on stage @C:/users/ai-ws01/s2_lab/night-tools-20261013/s2_runs/live-20261017-104934/usd/IsaacLab/usd_20261017_105002_1824/go2.usd@ <0000023B854E2FB0>)
+
+2026-10-17T01:50:03Z [12,406ms] [Warning] [omni.usd] Warning: in _ReportErrors at line 3172 of C:\g\201060795\USD\pxr\usd\usd\stage.cpp -- In </go2/Head_upper/visuals>: Unresolved reference prim path @C:/users/ai-ws01/s2_lab/night-tools-20261013/s2_runs/live-20261017-104934/usd/IsaacLab/usd_20261017_105002_1824/configuration/go2_physics.usd@</visuals/Head_upper> introduced by @C:/users/ai-ws01/s2_lab/night-tools-20261013/s2_runs/live-20261017-104934/usd/IsaacLab/usd_20261017_105002_1824/configuration/go2_base.usd@</go2/Head_upper/visuals> (recomposing stage on stage @C:/users/ai-ws01/s2_lab/night-tools-20261013/s2_runs/live-20261017-104934/usd/IsaacLab/usd_20261017_105002_1824/go2.usd@ <0000023B854E5830>)
+
+2026-10-17T01:50:03Z [12,406ms] [Warning] [omni.usd] Warning: in _ReportErrors at line 3172 of C:\g\201060795\USD\pxr\usd\usd\stage.cpp -- In </go2/Head_lower/visuals>: Unresolved reference prim path @C:/users/ai-ws01/s2_lab/night-tools-20261013/s2_runs/live-20261017-104934/usd/IsaacLab/usd_20261017_105002_1824/configuration/go2_physics.usd@</visuals/Head_lower> introduced by @C:/users/ai-ws01/s2_lab/night-tools-20261013/s2_runs/live-20261017-104934/usd/IsaacLab/usd_20261017_105002_1824/configuration/go2_base.usd@</go2/Head_lower/visuals> (recomposing stage on stage @C:/users/ai-ws01/s2_lab/night-tools-20261013/s2_runs/live-20261017-104934/usd/IsaacLab/usd_20261017_105002_1824/go2.usd@ <0000023B854E5830>)
+
+2026-10-17T01:50:03Z [12,408ms] [Warning] [omni.usd] Warning: in _ReportErrors at line 3172 of C:\g\201060795\USD\pxr\usd\usd\stage.cpp -- In </go2/Head_lower/visuals>: Unresolved reference prim path @C:/users/ai-ws01/s2_lab/night-tools-20261013/s2_runs/live-20261017-104934/usd/IsaacLab/usd_20261017_105002_1824/configuration/go2_physics.usd@</visuals/Head_lower> introduced by @C:/users/ai-ws01/s2_lab/night-tools-20261013/s2_runs/live-20261017-104934/usd/IsaacLab/usd_20261017_105002_1824/configuration/go2_base.usd@</go2/Head_lower/visuals> (recomposing stage on stage @C:/users/ai-ws01/s2_lab/night-tools-20261013/s2_runs/live-20261017-104934/usd/IsaacLab/usd_20261017_105002_1824/go2.usd@ <0000023B854E2FB0>)
+
+2026-10-17T01:50:03Z [12,408ms] [Warning] [omni.usd] Warning: in _ReportErrors at line 3172 of C:\g\201060795\USD\pxr\usd\usd\stage.cpp -- In </go2/Head_upper/visuals>: Unresolved reference prim path @C:/users/ai-ws01/s2_lab/night-tools-20261013/s2_runs/live-20261017-104934/usd/IsaacLab/usd_20261017_105002_1824/configuration/go2_physics.usd@</visuals/Head_upper> introduced by @C:/users/ai-ws01/s2_lab/night-tools-20261013/s2_runs/live-20261017-104934/usd/IsaacLab/usd_20261017_105002_1824/configuration/go2_base.usd@</go2/Head_upper/visuals> (recomposing stage on stage @C:/users/ai-ws01/s2_lab/night-tools-20261013/s2_runs/live-20261017-104934/usd/IsaacLab/usd_20261017_105002_1824/go2.usd@ <0000023B854E2FB0>)
+
+2026-10-17T01:50:03Z [12,410ms] [Warning] [omni.usd] Warning: in _ReportErrors at line 3172 of C:\g\201060795\USD\pxr\usd\usd\stage.cpp -- In </go2/Head_upper/visuals>: Unresolved reference prim path @C:/users/ai-ws01/s2_lab/night-tools-20261013/s2_runs/live-20261017-104934/usd/IsaacLab/usd_20261017_105002_1824/configuration/go2_physics.usd@</visuals/Head_upper> introduced by @C:/users/ai-ws01/s2_lab/night-tools-20261013/s2_runs/live-20261017-104934/usd/IsaacLab/usd_20261017_105002_1824/configuration/go2_base.usd@</go2/Head_upper/visuals> (recomposing stage on stage @C:/users/ai-ws01/s2_lab/night-tools-20261013/s2_runs/live-20261017-104934/usd/IsaacLab/usd_20261017_105002_1824/go2.usd@ <0000023B854E5830>)
+
+2026-10-17T01:50:03Z [12,410ms] [Warning] [omni.usd] Warning: in _ReportErrors at line 3172 of C:\g\201060795\USD\pxr\usd\usd\stage.cpp -- In </go2/Head_lower/visuals>: Unresolved reference prim path @C:/users/ai-ws01/s2_lab/night-tools-20261013/s2_runs/live-20261017-104934/usd/IsaacLab/usd_20261017_105002_1824/configuration/go2_physics.usd@</visuals/Head_lower> introduced by @C:/users/ai-ws01/s2_lab/night-tools-20261013/s2_runs/live-20261017-104934/usd/IsaacLab/usd_20261017_105002_1824/configuration/go2_base.usd@</go2/Head_lower/visuals> (recomposing stage on stage @C:/users/ai-ws01/s2_lab/night-tools-20261013/s2_runs/live-20261017-104934/usd/IsaacLab/usd_20261017_105002_1824/go2.usd@ <0000023B854E5830>)
+
+2026-10-17T01:50:03Z [12,535ms] [Warning] [omni.usd] Warning: in _ReportErrors at line 3172 of C:\g\201060795\USD\pxr\usd\usd\stage.cpp -- In </World/envs/env_0/Robot/Head_upper/visuals>: Unresolved reference prim path @C:/users/ai-ws01/s2_lab/night-tools-20261013/s2_runs/live-20261017-104934/usd/IsaacLab/usd_20261017_105002_1824/configuration/go2_physics.usd@</visuals/Head_upper> introduced by @C:/users/ai-ws01/s2_lab/night-tools-20261013/s2_runs/live-20261017-104934/usd/IsaacLab/usd_20261017_105002_1824/configuration/go2_base.usd@</go2/Head_upper/visuals> (recomposing stage on stage @anon:00000239226AE030:World0.usd@ <0000023BBBDE5BD0>)
+
+2026-10-17T01:50:03Z [12,535ms] [Warning] [omni.usd] Warning: in _ReportErrors at line 3172 of C:\g\201060795\USD\pxr\usd\usd\stage.cpp -- In </World/envs/env_0/Robot/Head_lower/visuals>: Unresolved reference prim path @C:/users/ai-ws01/s2_lab/night-tools-20261013/s2_runs/live-20261017-104934/usd/IsaacLab/usd_20261017_105002_1824/configuration/go2_physics.usd@</visuals/Head_lower> introduced by @C:/users/ai-ws01/s2_lab/night-tools-20261013/s2_runs/live-20261017-104934/usd/IsaacLab/usd_20261017_105002_1824/configuration/go2_base.usd@</go2/Head_lower/visuals> (recomposing stage on stage @anon:00000239226AE030:World0.usd@ <0000023BBBDE5BD0>)
+
+[INFO] Generating terrains based on curriculum took : 0.004788 seconds
+2026-10-17T01:50:03Z [12,637ms] [Warning] [omni.usd] Warning: in _ReportErrors at line 3172 of C:\g\201060795\USD\pxr\usd\usd\stage.cpp -- In </World/envs/env_5/Robot/Head_upper/visuals>: Unresolved reference prim path @C:/users/ai-ws01/s2_lab/night-tools-20261013/s2_runs/live-20261017-104934/usd/IsaacLab/usd_20261017_105002_1824/configuration/go2_physics.usd@</visuals/Head_upper> introduced by @C:/users/ai-ws01/s2_lab/night-tools-20261013/s2_runs/live-20261017-104934/usd/IsaacLab/usd_20261017_105002_1824/configuration/go2_base.usd@</go2/Head_upper/visuals> (recomposing stage on stage @anon:00000239226AE030:World0.usd@ <0000023BBBDE5BD0>)
+
+2026-10-17T01:50:03Z [12,637ms] [Warning] [omni.usd] Warning: in _ReportErrors at line 3172 of C:\g\201060795\USD\pxr\usd\usd\stage.cpp -- In </World/envs/env_5/Robot/Head_lower/visuals>: Unresolved reference prim path @C:/users/ai-ws01/s2_lab/night-tools-20261013/s2_runs/live-20261017-104934/usd/IsaacLab/usd_20261017_105002_1824/configuration/go2_physics.usd@</visuals/Head_lower> introduced by @C:/users/ai-ws01/s2_lab/night-tools-20261013/s2_runs/live-20261017-104934/usd/IsaacLab/usd_20261017_105002_1824/configuration/go2_base.usd@</go2/Head_lower/visuals> (recomposing stage on stage @anon:00000239226AE030:World0.usd@ <0000023BBBDE5BD0>)
+
+2026-10-17T01:50:03Z [12,637ms] [Warning] [omni.usd] Warning: in _ReportErrors at line 3172 of C:\g\201060795\USD\pxr\usd\usd\stage.cpp -- In </World/envs/env_3/Robot/Head_upper/visuals>: Unresolved reference prim path @C:/users/ai-ws01/s2_lab/night-tools-20261013/s2_runs/live-20261017-104934/usd/IsaacLab/usd_20261017_105002_1824/configuration/go2_physics.usd@</visuals/Head_upper> introduced by @C:/users/ai-ws01/s2_lab/night-tools-20261013/s2_runs/live-20261017-104934/usd/IsaacLab/usd_20261017_105002_1824/configuration/go2_base.usd@</go2/Head_upper/visuals> (recomposing stage on stage @anon:00000239226AE030:World0.usd@ <0000023BBBDE5BD0>)
+
+2026-10-17T01:50:03Z [12,637ms] [Warning] [omni.usd] Warning: in _ReportErrors at line 3172 of C:\g\201060795\USD\pxr\usd\usd\stage.cpp -- In </World/envs/env_3/Robot/Head_lower/visuals>: Unresolved reference prim path @C:/users/ai-ws01/s2_lab/night-tools-20261013/s2_runs/live-20261017-104934/usd/IsaacLab/usd_20261017_105002_1824/configuration/go2_physics.usd@</visuals/Head_lower> introduced by @C:/users/ai-ws01/s2_lab/night-tools-20261013/s2_runs/live-20261017-104934/usd/IsaacLab/usd_20261017_105002_1824/configuration/go2_base.usd@</go2/Head_lower/visuals> (recomposing stage on stage @anon:00000239226AE030:World0.usd@ <0000023BBBDE5BD0>)
+
+2026-10-17T01:50:03Z [12,637ms] [Warning] [omni.usd] Warning: in _ReportErrors at line 3172 of C:\g\201060795\USD\pxr\usd\usd\stage.cpp -- In </World/envs/env_4/Robot/Head_lower/visuals>: Unresolved reference prim path @C:/users/ai-ws01/s2_lab/night-tools-20261013/s2_runs/live-20261017-104934/usd/IsaacLab/usd_20261017_105002_1824/configuration/go2_physics.usd@</visuals/Head_lower> introduced by @C:/users/ai-ws01/s2_lab/night-tools-20261013/s2_runs/live-20261017-104934/usd/IsaacLab/usd_20261017_105002_1824/configuration/go2_base.usd@</go2/Head_lower/visuals> (recomposing stage on stage @anon:00000239226AE030:World0.usd@ <0000023BBBDE5BD0>)
+
+2026-10-17T01:50:03Z [12,637ms] [Warning] [omni.usd] Warning: in _ReportErrors at line 3172 of C:\g\201060795\USD\pxr\usd\usd\stage.cpp -- In </World/envs/env_7/Robot/Head_lower/visuals>: Unresolved reference prim path @C:/users/ai-ws01/s2_lab/night-tools-20261013/s2_runs/live-20261017-104934/usd/IsaacLab/usd_20261017_105002_1824/configuration/go2_physics.usd@</visuals/Head_lower> introduced by @C:/users/ai-ws01/s2_lab/night-tools-20261013/s2_runs/live-20261017-104934/usd/IsaacLab/usd_20261017_105002_1824/configuration/go2_base.usd@</go2/Head_lower/visuals> (recomposing stage on stage @anon:00000239226AE030:World0.usd@ <0000023BBBDE5BD0>)
+
+2026-10-17T01:50:03Z [12,637ms] [Warning] [omni.usd] Warning: in _ReportErrors at line 3172 of C:\g\201060795\USD\pxr\usd\usd\stage.cpp -- In </World/envs/env_7/Robot/Head_upper/visuals>: Unresolved reference prim path @C:/users/ai-ws01/s2_lab/night-tools-20261013/s2_runs/live-20261017-104934/usd/IsaacLab/usd_20261017_105002_1824/configuration/go2_physics.usd@</visuals/Head_upper> introduced by @C:/users/ai-ws01/s2_lab/night-tools-20261013/s2_runs/live-20261017-104934/usd/IsaacLab/usd_20261017_105002_1824/configuration/go2_base.usd@</go2/Head_upper/visuals> (recomposing stage on stage @anon:00000239226AE030:World0.usd@ <0000023BBBDE5BD0>)
+
+2026-10-17T01:50:03Z [12,637ms] [Warning] [omni.usd] Warning: in _ReportErrors at line 3172 of C:\g\201060795\USD\pxr\usd\usd\stage.cpp -- In </World/envs/env_4/Robot/Head_upper/visuals>: Unresolved reference prim path @C:/users/ai-ws01/s2_lab/night-tools-20261013/s2_runs/live-20261017-104934/usd/IsaacLab/usd_20261017_105002_1824/configuration/go2_physics.usd@</visuals/Head_upper> introduced by @C:/users/ai-ws01/s2_lab/night-tools-20261013/s2_runs/live-20261017-104934/usd/IsaacLab/usd_20261017_105002_1824/configuration/go2_base.usd@</go2/Head_upper/visuals> (recomposing stage on stage @anon:00000239226AE030:World0.usd@ <0000023BBBDE5BD0>)
+
+2026-10-17T01:50:03Z [12,638ms] [Warning] [omni.usd] Warning: in _ReportErrors at line 3172 of C:\g\201060795\USD\pxr\usd\usd\stage.cpp -- In </World/envs/env_1/Robot/Head_lower/visuals>: Unresolved reference prim path @C:/users/ai-ws01/s2_lab/night-tools-20261013/s2_runs/live-20261017-104934/usd/IsaacLab/usd_20261017_105002_1824/configuration/go2_physics.usd@</visuals/Head_lower> introduced by @C:/users/ai-ws01/s2_lab/night-tools-20261013/s2_runs/live-20261017-104934/usd/IsaacLab/usd_20261017_105002_1824/configuration/go2_base.usd@</go2/Head_lower/visuals> (recomposing stage on stage @anon:00000239226AE030:World0.usd@ <0000023BBBDE5BD0>)
+
+2026-10-17T01:50:03Z [12,638ms] [Warning] [omni.usd] Warning: in _ReportErrors at line 3172 of C:\g\201060795\USD\pxr\usd\usd\stage.cpp -- In </World/envs/env_6/Robot/Head_lower/visuals>: Unresolved reference prim path @C:/users/ai-ws01/s2_lab/night-tools-20261013/s2_runs/live-20261017-104934/usd/IsaacLab/usd_20261017_105002_1824/configuration/go2_physics.usd@</visuals/Head_lower> introduced by @C:/users/ai-ws01/s2_lab/night-tools-20261013/s2_runs/live-20261017-104934/usd/IsaacLab/usd_20261017_105002_1824/configuration/go2_base.usd@</go2/Head_lower/visuals> (recomposing stage on stage @anon:00000239226AE030:World0.usd@ <0000023BBBDE5BD0>)
+
+2026-10-17T01:50:03Z [12,638ms] [Warning] [omni.usd] Warning: in _ReportErrors at line 3172 of C:\g\201060795\USD\pxr\usd\usd\stage.cpp -- In </World/envs/env_1/Robot/Head_upper/visuals>: Unresolved reference prim path @C:/users/ai-ws01/s2_lab/night-tools-20261013/s2_runs/live-20261017-104934/usd/IsaacLab/usd_20261017_105002_1824/configuration/go2_physics.usd@</visuals/Head_upper> introduced by @C:/users/ai-ws01/s2_lab/night-tools-20261013/s2_runs/live-20261017-104934/usd/IsaacLab/usd_20261017_105002_1824/configuration/go2_base.usd@</go2/Head_upper/visuals> (recomposing stage on stage @anon:00000239226AE030:World0.usd@ <0000023BBBDE5BD0>)
+
+2026-10-17T01:50:03Z [12,638ms] [Warning] [omni.usd] Warning: in _ReportErrors at line 3172 of C:\g\201060795\USD\pxr\usd\usd\stage.cpp -- In </World/envs/env_2/Robot/Head_lower/visuals>: Unresolved reference prim path @C:/users/ai-ws01/s2_lab/night-tools-20261013/s2_runs/live-20261017-104934/usd/IsaacLab/usd_20261017_105002_1824/configuration/go2_physics.usd@</visuals/Head_lower> introduced by @C:/users/ai-ws01/s2_lab/night-tools-20261013/s2_runs/live-20261017-104934/usd/IsaacLab/usd_20261017_105002_1824/configuration/go2_base.usd@</go2/Head_lower/visuals> (recomposing stage on stage @anon:00000239226AE030:World0.usd@ <0000023BBBDE5BD0>)
+
+2026-10-17T01:50:03Z [12,638ms] [Warning] [omni.usd] Warning: in _ReportErrors at line 3172 of C:\g\201060795\USD\pxr\usd\usd\stage.cpp -- In </World/envs/env_2/Robot/Head_upper/visuals>: Unresolved reference prim path @C:/users/ai-ws01/s2_lab/night-tools-20261013/s2_runs/live-20261017-104934/usd/IsaacLab/usd_20261017_105002_1824/configuration/go2_physics.usd@</visuals/Head_upper> introduced by @C:/users/ai-ws01/s2_lab/night-tools-20261013/s2_runs/live-20261017-104934/usd/IsaacLab/usd_20261017_105002_1824/configuration/go2_base.usd@</go2/Head_upper/visuals> (recomposing stage on stage @anon:00000239226AE030:World0.usd@ <0000023BBBDE5BD0>)
+
+2026-10-17T01:50:03Z [12,638ms] [Warning] [omni.usd] Warning: in _ReportErrors at line 3172 of C:\g\201060795\USD\pxr\usd\usd\stage.cpp -- In </World/envs/env_6/Robot/Head_upper/visuals>: Unresolved reference prim path @C:/users/ai-ws01/s2_lab/night-tools-20261013/s2_runs/live-20261017-104934/usd/IsaacLab/usd_20261017_105002_1824/configuration/go2_physics.usd@</visuals/Head_upper> introduced by @C:/users/ai-ws01/s2_lab/night-tools-20261013/s2_runs/live-20261017-104934/usd/IsaacLab/usd_20261017_105002_1824/configuration/go2_base.usd@</go2/Head_upper/visuals> (recomposing stage on stage @anon:00000239226AE030:World0.usd@ <0000023BBBDE5BD0>)
+
+[INFO]: Time taken for scene creation : 5.025951 seconds
+[INFO]: Scene manager:  <class InteractiveScene>
+	Number of environments: 8
+	Environment spacing   : 0.5
+	Source prim name      : /World/envs/env_0
+	Global prim paths     : ['/World/ground']
+	Replicate physics     : True
+[INFO]: Starting the simulation. This may take a few seconds. Please wait...
+[INFO]: Time taken for simulation start : 0.470951 seconds
+[INFO] Command Manager:  <CommandManager> contains 1 active terms.
++-----------------------------------------+
+|           Active Command Terms          |
++-------+---------------+-----------------+
+| Index | Name          |       Type      |
++-------+---------------+-----------------+
+|   0   | base_velocity | Go2RLGymCommand |
++-------+---------------+-----------------+
+
+[INFO] Event Manager:  <EventManager> contains 1 active terms.
++-------------------------------------+
+| Active Event Terms in Mode: 'reset' |
++---------+---------------------------+
+|  Index  | Name                      |
++---------+---------------------------+
+|    0    | reset_robot_joints        |
+|    1    | reset_base                |
++---------+---------------------------+
+
+[INFO] Recorder Manager:  <RecorderManager> contains 0 active terms.
++---------------------+
+| Active Recorder Terms |
++-----------+---------+
+|   Index   | Name    |
++-----------+---------+
++-----------+---------+
+
+[INFO] Action Manager:  <ActionManager> contains 1 active terms.
++------------------------------------+
+|  Active Action Terms (shape: 12)   |
++--------+-------------+-------------+
+| Index  | Name        |   Dimension |
++--------+-------------+-------------+
+|   0    | joint_pos   |          12 |
++--------+-------------+-------------+
+
+[INFO] Observation Manager: <ObservationManager> contains 3 groups.
++----------------------------------------------------------+
+| Active Observation Terms in Group: 'policy' (shape: (450,)) |
++-----------+--------------------------------+-------------+
+|   Index   | Name                           |    Shape    |
++-----------+--------------------------------+-------------+
+|     0     | base_ang_vel                   |    (30,)    |
+|     1     | projected_gravity              |    (30,)    |
+|     2     | velocity_commands              |    (30,)    |
+|     3     | joint_pos                      |    (120,)   |
+|     4     | joint_vel                      |    (120,)   |
+|     5     | actions                        |    (120,)   |
++-----------+--------------------------------+-------------+
++----------------------------------------------------------+
+| Active Observation Terms in Group: 'critic' (shape: (275,)) |
++-----------+--------------------------------+-------------+
+|   Index   | Name                           |    Shape    |
++-----------+--------------------------------+-------------+
+|     0     | base_lin_vel                   |     (3,)    |
+|     1     | base_ang_vel                   |     (3,)    |
+|     2     | projected_gravity              |     (3,)    |
+|     3     | velocity_commands              |     (3,)    |
+|     4     | joint_pos                      |    (12,)    |
+|     5     | joint_vel                      |    (12,)    |
+|     6     | actions                        |    (12,)    |
+|     7     | joint_acc                      |    (12,)    |
+|     8     | joint_torque                   |    (12,)    |
+|     9     | contact_force                  |    (16,)    |
+|     10    | height_scan                    |    (187,)   |
++-----------+--------------------------------+-------------+
++-------------------------------------------------------------+
+| Active Observation Terms in Group: 'single_obs' (shape: (45,)) |
++------------+-----------------------------------+------------+
+|   Index    | Name                              |   Shape    |
++------------+-----------------------------------+------------+
+|     0      | base_ang_vel                      |    (3,)    |
+|     1      | projected_gravity                 |    (3,)    |
+|     2      | velocity_commands                 |    (3,)    |
+|     3      | joint_pos                         |   (12,)    |
+|     4      | joint_vel                         |   (12,)    |
+|     5      | actions                           |   (12,)    |
++------------+-----------------------------------+------------+
+
+[INFO] Termination Manager:  <TerminationManager> contains 1 active terms.
++-----------------------------+
+|   Active Termination Terms  |
++-------+----------+----------+
+| Index | Name     | Time Out |
++-------+----------+----------+
+|   0   | time_out |   True   |
++-------+----------+----------+
+
+[INFO] Reward Manager:  <RewardManager> contains 15 active terms.
++----------------------------------------+
+|          Active Reward Terms           |
++-------+----------------------+---------+
+| Index | Name                 |  Weight |
++-------+----------------------+---------+
+|   0   | track_lin_vel_xy_exp |     2.0 |
+|   1   | track_ang_vel_z_exp  |     1.0 |
+|   2   | lin_vel_z_l2         |    -2.0 |
+|   3   | ang_vel_xy_l2        |   -0.05 |
+|   4   | joint_acc_l2         |  -1e-07 |
+|   5   | joint_power          |  -2e-05 |
+|   6   | joint_torques_l2     | -0.0001 |
+|   7   | base_height_l2       |    -1.0 |
+|   8   | action_rate_l2       |   -0.01 |
+|   9   | action_smoothness_l2 |   -0.01 |
+|   10  | undesired_contacts   |    -1.0 |
+|   11  | joint_pos_limits     |    -2.0 |
+|   12  | feet_regulation      |   -0.05 |
+|   13  | hip_pos_penalty_l1   |   -0.05 |
+|   14  | joint_pos_penalty_l1 |   -0.01 |
++-------+----------------------+---------+
+
+[INFO] Curriculum Manager:  <CurriculumManager> contains 2 active terms.
++------------------------------+
+|   Active Curriculum Terms    |
++-------+----------------------+
+| Index | Name                 |
++-------+----------------------+
+|   0   | base_linear_velocity |
+|   1   | base_height_l2       |
++-------+----------------------+
+
+[Go2Env-INFO] Overriding action manager with ActionManagerGo2:  <ActionManager> contains 1 active terms.
++------------------------------------+
+|  Active Action Terms (shape: 12)   |
++--------+-------------+-------------+
+| Index  | Name        |   Dimension |
++--------+-------------+-------------+
+|   0    | joint_pos   |          12 |
++--------+-------------+-------------+
+
+[INFO]: Completed setting up the environment...
+Traceback (most recent call last):
+  File "C:\Users\AI-WS01\s2_lab\night-tools-20261013\s2_step4a34\s2_connect_diag_17v.py", line 500, in _main_capture
+    usd=usd_evidence(usd_root,a.asset_path,paths,environment_created=True)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\AI-WS01\s2_lab\night-tools-20261013\s2_step4a34\s2_a34_provenance.py", line 61, in usd_evidence
+    raise ProvenanceHold("usd_isolation_state")
+s2_a34_provenance.ProvenanceHold: usd_isolation_state
+

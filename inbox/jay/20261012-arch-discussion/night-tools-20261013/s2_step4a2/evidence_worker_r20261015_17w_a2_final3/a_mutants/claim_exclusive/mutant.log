@@ -1,0 +1,6 @@
+Traceback (most recent call last):
+  File "<string>", line 4, in <module>
+    print(('PASS' if ok else 'FAIL')+' approval_claim_once');assert ok
+                                                                    ^^
+AssertionError
+FAIL approval_claim_once

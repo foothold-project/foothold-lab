@@ -1,0 +1,14 @@
+{
+  "source": "https://d8j0ntlcm91z4.cloudfront.net/user_2vTkMQm9Kz0TWEHiovxqGSzlE6v/hf_20260930_233959_ae4a4a56-1db5-4f21-bd67-15ec33363dab.mp4",
+  "source_video_frames": 281,
+  "fps": 24,
+  "append_at": 69.5,
+  "master_seconds": 81.20833333333333,
+  "ending_seconds": 50.083333333333336,
+  "opening_unchanged": "film-opening-v1.mp4",
+  "master": "https://d2ol7oe51mr4n9.cloudfront.net/user_2vTkMQm9Kz0TWEHiovxqGSzlE6v/894ac413-67fa-45e4-9ffb-6eae98b6e637.mp4",
+  "ending": "https://d2ol7oe51mr4n9.cloudfront.net/user_2vTkMQm9Kz0TWEHiovxqGSzlE6v/5223eea0-9ad8-4b5c-bf51-9dc1652de4bb.mp4",
+  "render": "Higgsedit native composition, original audio concatenation, exact ending split",
+  "sound_status": "Existing temporary mix plus supplied closing audio. Full cinematic score and final sound mix remain incomplete.",
+  "source_text": "FIND THE NEXT STEP is in the user supplied clip. Preserved without alteration."
+}

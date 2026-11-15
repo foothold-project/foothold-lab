@@ -1,0 +1,21 @@
+{
+  "approval_id": "plumbA-live-20261017-135123-b3c8e0c2",
+  "by": "오흥재 (팀장, 채팅에서 직접 입력)",
+  "chain_id": "s2-plumbing-A-first-live-20261017-135123-b3c8e0c2",
+  "consent": {
+    "asked_by_lead_at": "위 인용은 팀장이 10/17 채팅에 직접 쓴 두 문장이다. 약관(NVIDIA Omniverse License Agreement) 동의와 「앞으로 매번 묻지 말고 설계대로 진행」은 10:4x 에, 참석은 11:3x 에 「내가 화면 앞에서 지켜본다.」로 팀장이 문구로 말했다. 참석자는 팀장(attendee=team-lead)이고 lead 세션도 함께 지킨다. 근거: ASTRA 17aj(11:30) 조건부 허용과 ASTRA 17ak(11:53)의 상시 위임 수용. 종료 시각 --end-by 값 2026-10-17 23:59 KST 는 팀장이 정한 값이 아니라 lead 가 임시 기본값으로 정해 팀장에게 알렸다(정오가 아님). 팀장이 다른 시각을 말하면 바뀐다. 6차 A3.4 정보 수집 한 번과 독립 노드 3 · 4 의 순차 단회. 이후 단계의 동의 기록도 같은 인용을 쓴다. 무인 실행 · 학습 · 재시도 · GPU 1 은 이 동의 파일의 범위 밖이다(학습은 별도 계획 단계).",
+    "attending_until_end": "yes",
+    "by": "오흥재 (팀장, 채팅에서 직접 입력)",
+    "eula_accepted": "yes",
+    "go_for_this_one_run": "yes",
+    "quote": "[10/17 10:4x 채팅] 진행해. NVIDIA 약관에 동의한다. 이 실험 GPU 실행은 앞으로 매번 묻지 말고 설계대로 진행해. [10/17 11:3x 채팅] 내가 화면 앞에서 지켜본다.",
+    "recorded_at": "2026-10-17 12:12 KST",
+    "scope": "s2_plumbing_attended_one_shot_arm_A"
+  },
+  "end_by": "2026-10-17 23:59 KST",
+  "eula_accepted": true,
+  "expires_epoch": 1792214483.217252,
+  "manifest_sha256": "3938a5e3440155a8ecd6748cfee56552b3c29bbf0e4fcad6c7f00e8e32d843e7",
+  "scope": "s2_plumbing_attended_one_shot",
+  "status": "APPROVED"
+}

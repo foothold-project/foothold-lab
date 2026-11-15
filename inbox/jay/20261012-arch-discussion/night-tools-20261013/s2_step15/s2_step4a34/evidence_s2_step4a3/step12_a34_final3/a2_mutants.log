@@ -1,0 +1,6 @@
+CAUGHT nan_height FAIL height_nan_height_nonfinite
+CAUGHT fixed_one FAIL fixed_one_fixed_schedule
+CAUGHT root_100m FAIL root_100m_root_sensor_transform
+CAUGHT step90 FAIL marker_step90_scene_hit_z
+CAUGHT disk1 FAIL disk1_rejected
+CAUGHT raw_before_map FAIL raw_row_before_map_error

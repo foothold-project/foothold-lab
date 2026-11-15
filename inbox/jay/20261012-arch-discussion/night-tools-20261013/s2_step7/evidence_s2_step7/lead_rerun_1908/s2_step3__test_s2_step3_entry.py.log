@@ -1,0 +1,8 @@
+PASS entry explicit plan and environment
+PASS schedule W r required
+PASS full freeze forbids W r
+PASS CPU dry update log checkpoint result
+PASS CPU dry resumed runner and control
+PASS CPU dry resume bit identical policy control optimizer env RNG
+PASS STOP before update holds
+PASS deadline before update holds

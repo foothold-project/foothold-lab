@@ -1,0 +1,29 @@
+PASS ray index x-fast and no 20m re-add
+PASS yaw 90 ray geometry
+PASS ray order mismatch rejected
+PASS A terrain information blocked
+PASS B terrain information changes
+PASS rollout map snapshot and bootstrap time
+PASS reset uses new episode map
+PASS runner logs assigned and encountered separately
+PASS all minibatches use saved map
+PASS fixed step count and PPO-only loss
+PASS adaptive LR parent thresholds
+PASS reset stale sensor frame invalid before update
+PASS sensor NaN holds both-arm gate
+PASS critic NaN holds before update
+PASS reward NaN gate blocks update
+PASS A and B same update plan and control rule
+PASS checkpoint during update refused
+PASS resume bit identical policy optimizer env and RNG
+PASS different arm resume rejected
+PASS different encoder rule resume rejected
+FAIL terrain geometry from CPU probe and parent untouched
+Traceback (most recent call last):
+  File "C:\Users\AI-WS01\.claude\jobs\09bbf294\tmp\codexE\evidence_s2_step2\run_20261015_034845_150772\step2_code_mutants\mutants\terrain_geometry\test_s2_step2.py", line 287, in <module>
+    tests()
+  File "C:\Users\AI-WS01\.claude\jobs\09bbf294\tmp\codexE\evidence_s2_step2\run_20261015_034845_150772\step2_code_mutants\mutants\terrain_geometry\test_s2_step2.py", line 258, in tests
+    check("terrain geometry from CPU probe and parent untouched", overlay.sub_terrains["gap"].gap_width_range == (.10,.25)
+  File "C:\Users\AI-WS01\.claude\jobs\09bbf294\tmp\codexE\evidence_s2_step2\run_20261015_034845_150772\step2_code_mutants\mutants\terrain_geometry\test_s2_step2.py", line 32, in check
+    raise AssertionError(label)
+AssertionError: terrain geometry from CPU probe and parent untouched

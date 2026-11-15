@@ -1,0 +1,27 @@
+# test_v33.py · 2026-10-13 09:58 · cmdr_eval_driver_v33.py sha256 a23699e0fd38c6c2
+PASS 1 validate real run on GPU 1 got '' want ''
+PASS 2 same run under --gpu 0 -> gpu uuid got 'gpu uuid' want 'gpu uuid'
+PASS 3 negative max_abs rejected got True want True
+PASS 3b NaN max_abs rejected got True want True
+PASS 3c restored meta passes got '' want ''
+PASS 3d restored value is the real one got 0.0 want 0.0
+PASS 4a v3.2 stamp accepted got True want True
+PASS 4b wrong pins refused got False want False
+PASS 4c v3.3 stamp accepted got True want True
+PASS 4d changed cells.json refused got False want False
+PASS 4e missing traj refused got False want False
+PASS 5a same jobs got True want True
+PASS 5b 24000 block first got True want True
+PASS 5c order kept got True want True
+PASS 5d first job got ('off24000', 'flat', 'stop03', True, 1000) want ('off24000', 'flat', 'stop03', True, 1000)
+PASS 6a keys got [('flat', 'fwd01', False), ('wave', 'back03', True), ('wave', 'fwd03', True)] want [('flat', 'fwd01', False), ('wave', 'back03', True), ('wave', 'fwd03', True)]
+PASS 6b -5 pp exact got (-5, 100) want (-5, 100)
+PASS 6c -4 pp got (-4, 100) want (-4, 100)
+PASS 6d flag rule (driver's flagged()) got [True, False, True] want [True, False, True]
+PASS 6e flagged(-6, 100) / (0, 100) / (-25, 500) / (-24, 500) got [True, False, True, False] want [True, False, True, False]
+PASS 7a v3.2-style log never counts as finished got False want False
+PASS 7b running v3.3 got False want False
+PASS 7c stopped v3.3 got True want True
+PASS 8 save got True want True
+PASS 9 attempt id form got True want True
+FAILS []

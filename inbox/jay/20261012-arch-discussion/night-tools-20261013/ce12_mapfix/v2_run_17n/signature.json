@@ -1,0 +1,246 @@
+{
+ "contract": "CE12-v1",
+ "adapter": "V2Adapter",
+ "adapter_version": "ce12-step1-adapters-v1",
+ "model": "v2",
+ "inference": "rsl_rl ActorCritic.act_inference: actor(policy 235)",
+ "joint_names": {
+  "observation": [
+   "FL_hip_joint",
+   "FR_hip_joint",
+   "RL_hip_joint",
+   "RR_hip_joint",
+   "FL_thigh_joint",
+   "FR_thigh_joint",
+   "RL_thigh_joint",
+   "RR_thigh_joint",
+   "FL_calf_joint",
+   "FR_calf_joint",
+   "RL_calf_joint",
+   "RR_calf_joint"
+  ],
+  "action": [
+   "FL_hip_joint",
+   "FR_hip_joint",
+   "RL_hip_joint",
+   "RR_hip_joint",
+   "FL_thigh_joint",
+   "FR_thigh_joint",
+   "RL_thigh_joint",
+   "RR_thigh_joint",
+   "FL_calf_joint",
+   "FR_calf_joint",
+   "RL_calf_joint",
+   "RR_calf_joint"
+  ],
+  "matching": "이름으로 맞춘다 (입력 열 순서를 믿지 않는다)"
+ },
+ "default_joint_pos": {
+  "FL_hip_joint": 0.1,
+  "FR_hip_joint": -0.1,
+  "RL_hip_joint": 0.1,
+  "RR_hip_joint": -0.1,
+  "FL_thigh_joint": 0.8,
+  "FR_thigh_joint": 0.8,
+  "RL_thigh_joint": 1.0,
+  "RR_thigh_joint": 1.0,
+  "FL_calf_joint": -1.5,
+  "FR_calf_joint": -1.5,
+  "RL_calf_joint": -1.5,
+  "RR_calf_joint": -1.5
+ },
+ "default_joint_vel": {
+  "FL_hip_joint": 0.0,
+  "FR_hip_joint": 0.0,
+  "RL_hip_joint": 0.0,
+  "RR_hip_joint": 0.0,
+  "FL_thigh_joint": 0.0,
+  "FR_thigh_joint": 0.0,
+  "RL_thigh_joint": 0.0,
+  "RR_thigh_joint": 0.0,
+  "FL_calf_joint": 0.0,
+  "FR_calf_joint": 0.0,
+  "RL_calf_joint": 0.0,
+  "RR_calf_joint": 0.0
+ },
+ "action": {
+  "dim": 12,
+  "raw_representation": "정책 출력 그대로 (wrapper clip_actions None). 다음 관측의 last_action 항이 이 값",
+  "formula": "target = clip(raw * scale + offset)  (joint_actions.py process_actions · clip 은 target 에)",
+  "scale": {
+   "FL_hip_joint": 0.25,
+   "FR_hip_joint": 0.25,
+   "RL_hip_joint": 0.25,
+   "RR_hip_joint": 0.25,
+   "FL_thigh_joint": 0.25,
+   "FR_thigh_joint": 0.25,
+   "RL_thigh_joint": 0.25,
+   "RR_thigh_joint": 0.25,
+   "FL_calf_joint": 0.25,
+   "FR_calf_joint": 0.25,
+   "RL_calf_joint": 0.25,
+   "RR_calf_joint": 0.25
+  },
+  "offset": "default_joint_pos (use_default_offset=True). native 평가기의 motor offset DR 이 있으면 그 값",
+  "clip_on_target": null
+ },
+ "observation_noise": "끔 (평가 설정 · 학습의 관측 잡음은 재현하지 않는다)",
+ "source": {
+  "foothold-v2.env.yaml": {
+   "path": "C:/Users/AI-WS01/Desktop/jay/인공지능사관학교/foothold-lab\\models\\foothold-v2.env.yaml",
+   "sha256": "a5ef31d626f8cabe850de37bae0aa26782e14e9db3ba61d678dd1210105323e7"
+  }
+ },
+ "observation": {
+  "groups": [
+   {
+    "name": "policy",
+    "dim": 235,
+    "history_length": 0,
+    "terms": [
+     {
+      "name": "base_lin_vel",
+      "start": 0,
+      "stop": 3,
+      "dim": 3
+     },
+     {
+      "name": "base_ang_vel",
+      "start": 3,
+      "stop": 6,
+      "dim": 3
+     },
+     {
+      "name": "projected_gravity",
+      "start": 6,
+      "stop": 9,
+      "dim": 3
+     },
+     {
+      "name": "velocity_commands",
+      "start": 9,
+      "stop": 12,
+      "dim": 3
+     },
+     {
+      "name": "joint_pos",
+      "start": 12,
+      "stop": 24,
+      "dim": 12
+     },
+     {
+      "name": "joint_vel",
+      "start": 24,
+      "stop": 36,
+      "dim": 12
+     },
+     {
+      "name": "actions",
+      "start": 36,
+      "stop": 48,
+      "dim": 12
+     },
+     {
+      "name": "height_scan",
+      "start": 48,
+      "stop": 235,
+      "dim": 187
+     }
+    ]
+   }
+  ],
+  "term_processing": [
+   {
+    "name": "base_lin_vel",
+    "func": "base_lin_vel",
+    "dim": 3,
+    "scale": null,
+    "clip": null,
+    "params": {}
+   },
+   {
+    "name": "base_ang_vel",
+    "func": "base_ang_vel",
+    "dim": 3,
+    "scale": null,
+    "clip": null,
+    "params": {}
+   },
+   {
+    "name": "projected_gravity",
+    "func": "projected_gravity",
+    "dim": 3,
+    "scale": null,
+    "clip": null,
+    "params": {}
+   },
+   {
+    "name": "velocity_commands",
+    "func": "generated_commands",
+    "dim": 3,
+    "scale": null,
+    "clip": null,
+    "params": {}
+   },
+   {
+    "name": "joint_pos",
+    "func": "joint_pos_rel",
+    "dim": 12,
+    "scale": null,
+    "clip": null,
+    "params": {}
+   },
+   {
+    "name": "joint_vel",
+    "func": "joint_vel_rel",
+    "dim": 12,
+    "scale": null,
+    "clip": null,
+    "params": {}
+   },
+   {
+    "name": "actions",
+    "func": "last_action",
+    "dim": 12,
+    "scale": null,
+    "clip": null,
+    "params": {}
+   },
+   {
+    "name": "height_scan",
+    "func": "height_scan_with_gap",
+    "dim": 187,
+    "scale": null,
+    "clip": [
+     -1.0,
+     1.0
+    ],
+    "params": {
+     "offset": 0.5,
+     "miss_value": 1.0
+    }
+   }
+  ],
+  "order": "clip 다음 scale (scale 은 모두 None)",
+  "height_scan": {
+   "formula": "clip(where(유효, pos_w_z - hit_z - offset, miss_value), -1, 1)",
+   "pos_w": "RayCaster data.pos_w (몸통 프림 위치 · 광선 시작 offset 20 m 는 안 더함)",
+   "scanner": {
+    "size": [
+     1.6,
+     1.0
+    ],
+    "resolution": 0.1,
+    "ordering": "xy",
+    "offset_pos": [
+     0.0,
+     0.0,
+     20.0
+    ],
+    "ray_alignment": "yaw",
+    "num_rays": 187
+   }
+  }
+ },
+ "signature_sha256": "2f1b0c2b011442c790749f2d21121df3ebbb9e6e1389d2c79fc5d64702814805"
+}

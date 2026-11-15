@@ -1,0 +1,21 @@
+{
+  "video_stream_sha256": {
+    "master_v2_and_v3": "c1209d02644cf71d642c5c74fade5383e6dc9dbf0ab1f1a07960cd5eef57c6c4",
+    "ending_v2_and_v3": "00f2a9b99d7795d0c61cf183b90837daec4876bea95fbcf0e99f3245fb4b0aa1"
+  },
+  "audio_patch_seconds": [
+    45.0,
+    50.5
+  ],
+  "source_gain_before": 0.1,
+  "source_gain_after": 0.62,
+  "repeated_foley_removed": true,
+  "e5pre_rms_dbfs_before": -16.7716,
+  "e5pre_rms_dbfs_after": -15.8343,
+  "source": "ffmpeg decoded stereo48kHz, whole 45.25-50.25 mix; not isolated ambience",
+  "no_paid_regeneration": true,
+  "listening_review": "Not claimed; user listening approval pending",
+  "master_url": "https://d2ol7oe51mr4n9.cloudfront.net/user_2vTkMQm9Kz0TWEHiovxqGSzlE6v/d75cfc3a-d42c-4aea-9c22-60d343c60256.mp4",
+  "ending_url": "https://d2ol7oe51mr4n9.cloudfront.net/user_2vTkMQm9Kz0TWEHiovxqGSzlE6v/3b13ea35-5e83-4892-b712-0656c350a91b.mp4",
+  "comparison_url": "https://d2ol7oe51mr4n9.cloudfront.net/user_2vTkMQm9Kz0TWEHiovxqGSzlE6v/c0bf83da-0b49-4aff-9bee-0f46de70b606.mp4"
+}

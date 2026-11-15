@@ -1,0 +1,195 @@
+{
+ "started": "2026-10-20T13:45:53",
+ "num_envs": 3072,
+ "iterations": 3,
+ "device": "cuda:0",
+ "seed": 42,
+ "gt_map_rays": 512,
+ "obs_shapes": {
+  "policy": [
+   3072,
+   45
+  ],
+  "depth": [
+   3072,
+   3600
+  ],
+  "gt_map": [
+   3072,
+   512
+  ],
+  "gt_feet": [
+   3072,
+   100
+  ],
+  "base_vel": [
+   3072,
+   3
+  ],
+  "contacts": [
+   3072,
+   4
+  ]
+ },
+ "memory_GiB": {
+  "1_sensors": 1.0082526206970215,
+  "2_rollout": 6.06289005279541,
+  "3_ppo_update": 2.960017204284668,
+  "4_perception_update": 8.249358177185059
+ },
+ "perception_cfg": {
+  "measure_phases": true,
+  "microbatch_envs": 256,
+  "replay_impl": "a3",
+  "replay_autocast": "bf16"
+ },
+ "learn_seconds": 44.97822141647339,
+ "resets": 223,
+ "perception_losses": {
+  "l_tr": 0.04440781542410454,
+  "l_ie": 0.3866857330004375,
+  "kl": 0.002643959406608095,
+  "o_next": 0.362099448343118,
+  "v": 0.01971964134524266,
+  "hf": 0.0009732402114120001,
+  "hb": 0.0012494440365117042
+ },
+ "adasmpl_p": 0.3493210283238738,
+ "memory_log": [
+  {
+   "it": 0,
+   "phase": "2_rollout",
+   "cum_peak": 6509978624,
+   "phase_peak": 6509978624,
+   "allocated": 2509391872
+  },
+  {
+   "it": 0,
+   "phase": "3_ppo_update",
+   "cum_peak": 2947835392,
+   "phase_peak": 2947835392,
+   "allocated": 2528259072
+  },
+  {
+   "it": 0,
+   "phase": "4_perception_update",
+   "cum_peak": 8644833792,
+   "phase_peak": 8644833792,
+   "allocated": 2547614720
+  },
+  {
+   "it": 1,
+   "phase": "2_rollout",
+   "cum_peak": 4178384896,
+   "phase_peak": 4178384896,
+   "allocated": 2757587456
+  },
+  {
+   "it": 1,
+   "phase": "3_ppo_update",
+   "cum_peak": 3178294272,
+   "phase_peak": 3178294272,
+   "allocated": 2758324736
+  },
+  {
+   "it": 1,
+   "phase": "4_perception_update",
+   "cum_peak": 8855223296,
+   "phase_peak": 8855223296,
+   "allocated": 2758554112
+  },
+  {
+   "it": 2,
+   "phase": "2_rollout",
+   "cum_peak": 4177839104,
+   "phase_peak": 4177839104,
+   "allocated": 2757897216
+  },
+  {
+   "it": 2,
+   "phase": "3_ppo_update",
+   "cum_peak": 3178210816,
+   "phase_peak": 3178210816,
+   "allocated": 2758536192
+  },
+  {
+   "it": 2,
+   "phase": "4_perception_update",
+   "cum_peak": 8857680896,
+   "phase_peak": 8857680896,
+   "allocated": 2758834688
+  }
+ ],
+ "iter_log": [
+  {
+   "it": 0,
+   "collection_s": 6.783536434173584,
+   "learn_s": 10.505919694900513,
+   "steps_per_s": 4264.333096980325
+  },
+  {
+   "it": 1,
+   "collection_s": 4.660984992980957,
+   "learn_s": 8.851135969161987,
+   "steps_per_s": 5456.434279012491
+  },
+  {
+   "it": 2,
+   "collection_s": 4.722611665725708,
+   "learn_s": 8.891412019729614,
+   "steps_per_s": 5415.59216462713
+  }
+ ],
+ "replay_bytes": 1402601472,
+ "precision_check": {
+  "l_tr": {
+   "loop_fp32": 0.03935708850622177,
+   "impl_fp32": 0.03935708478093147,
+   "impl_tf32": 0.03935706987977028,
+   "impl_bf16": 0.039396196603775024
+  },
+  "l_ie": {
+   "loop_fp32": 0.3705357015132904,
+   "impl_fp32": 0.3705357015132904,
+   "impl_tf32": 0.37053462862968445,
+   "impl_bf16": 0.37091565132141113
+  },
+  "kl": {
+   "loop_fp32": 0.0025463965721428394,
+   "impl_fp32": 0.002546400763094425,
+   "impl_tf32": 0.002545946044847369,
+   "impl_bf16": 0.002890580100938678
+  },
+  "o_next": {
+   "loop_fp32": 0.35068821907043457,
+   "impl_fp32": 0.35068821907043457,
+   "impl_tf32": 0.3506883382797241,
+   "impl_bf16": 0.3506900370121002
+  },
+  "v": {
+   "loop_fp32": 0.015006722882390022,
+   "impl_fp32": 0.015006722882390022,
+   "impl_tf32": 0.015006016008555889,
+   "impl_bf16": 0.015041632577776909
+  },
+  "hf": {
+   "loop_fp32": 0.0010844633216038346,
+   "impl_fp32": 0.0010844634380191565,
+   "impl_tf32": 0.001084470422938466,
+   "impl_bf16": 0.0010832329280674458
+  },
+  "hb": {
+   "loop_fp32": 0.0012098917504772544,
+   "impl_fp32": 0.0012098917504772544,
+   "impl_tf32": 0.0012098569422960281,
+   "impl_bf16": 0.0012101801112294197
+  },
+  "max_abs_impl_vs_loop": 4.190951585769653e-09,
+  "max_abs_bf16_vs_loop": 0.00037994980812072754,
+  "impl": "a3"
+ },
+ "checks": {
+  "traceback": false,
+  "measured": true
+ }
+}

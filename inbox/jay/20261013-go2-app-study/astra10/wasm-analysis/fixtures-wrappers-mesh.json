@@ -1,0 +1,312 @@
+{
+  "mode": "mesh",
+  "node": "v24.13.0",
+  "worker": "three.worker-BhnsyeGz.js",
+  "sha256": "2a2a87c04b03c51a02be39da4d282d585054cead6881e452a0cba3c9bcb23e96",
+  "manifest_matches": true,
+  "wasm": "libvoxel-doIu-r8s.wasm",
+  "wasm_sha256": "1ba27f065199954dc562b233aa38ea775ac687118cce77b5c71bc14e17e05542",
+  "source_changed": false,
+  "fetches": [
+    "/assets/libvoxel-doIu-r8s.wasm"
+  ],
+  "allocations": [
+    {
+      "size": 61440,
+      "ptr": 67320
+    },
+    {
+      "size": 80000,
+      "ptr": 128768
+    },
+    {
+      "size": 2880000,
+      "ptr": 208776
+    },
+    {
+      "size": 1920000,
+      "ptr": 3088784
+    },
+    {
+      "size": 5760000,
+      "ptr": 5008792
+    },
+    {
+      "size": 4,
+      "ptr": 10768800
+    },
+    {
+      "size": 4,
+      "ptr": 10768816
+    },
+    {
+      "size": 4,
+      "ptr": 10768832
+    }
+  ],
+  "generate_calls": [
+    [
+      67320,
+      252,
+      80000,
+      128768,
+      10768800,
+      208776,
+      3088784,
+      5008792,
+      10768816,
+      10768832,
+      3
+    ],
+    [
+      67320,
+      252,
+      80000,
+      128768,
+      10768800,
+      208776,
+      3088784,
+      5008792,
+      10768816,
+      10768832,
+      1
+    ]
+  ],
+  "reset_calls": 0,
+  "events": [
+    "boot",
+    "ready"
+  ],
+  "tests": [
+    {
+      "name": "numeric-string-resolution",
+      "input_resolution": ".05",
+      "input_origin": [
+        1,
+        2,
+        0.17
+      ],
+      "input_width": 128,
+      "output_resolution": 0.05,
+      "output_origin": [
+        1,
+        2,
+        0.17
+      ],
+      "z_normalized": 3,
+      "face_count": 6,
+      "point_count": 1,
+      "positions": [
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        1,
+        0,
+        0,
+        1,
+        1,
+        1,
+        1,
+        1,
+        0,
+        1,
+        1,
+        1,
+        0,
+        1,
+        0,
+        0,
+        1,
+        0,
+        1,
+        0,
+        0,
+        1,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        1,
+        1,
+        1,
+        1,
+        0,
+        1,
+        0,
+        1,
+        1,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        1,
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        1,
+        1,
+        0,
+        1,
+        0,
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "first_uvs": [
+        6,
+        0,
+        6,
+        255,
+        0,
+        0,
+        0,
+        255
+      ]
+    },
+    {
+      "name": "zero-resolution-fallback",
+      "input_resolution": 0,
+      "input_origin": [
+        1,
+        2,
+        0.17
+      ],
+      "input_width": 999,
+      "output_resolution": 0.1,
+      "output_origin": [
+        1,
+        2,
+        0.17
+      ],
+      "z_normalized": 1,
+      "face_count": 6,
+      "point_count": 1,
+      "positions": [
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        1,
+        0,
+        0,
+        1,
+        1,
+        1,
+        1,
+        1,
+        0,
+        1,
+        1,
+        1,
+        0,
+        1,
+        0,
+        0,
+        1,
+        0,
+        1,
+        0,
+        0,
+        1,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        1,
+        1,
+        1,
+        1,
+        0,
+        1,
+        0,
+        1,
+        1,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        1,
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        1,
+        1,
+        0,
+        1,
+        0,
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "first_uvs": [
+        6,
+        0,
+        6,
+        255,
+        0,
+        0,
+        0,
+        255
+      ]
+    }
+  ],
+  "memory_bytes": 65536000,
+  "assertions_passed": true,
+  "snippets": [
+    {
+      "anchor": "f=new URL",
+      "char_offset": 2000,
+      "text": "f=new URL(\"/assets/libvoxel-doIu-r8s.wasm\",self.location.href).href;function x(t){try{if(t==f&&_)return new Uint8Array(_);if(w)return w(t);throw\"both async and sync fetching of the wasm failed\"}catch(n){p(n)}}function ne"
+    },
+    {
+      "anchor": "generate(s,e)",
+      "char_offset": 5195,
+      "text": "generate(s,e){this._module.HEAPU8.set(s,this._input),this._module._generate(this._input,s.length,this._decompressBufferSize,this._decompressBuffer,this._decompressedSize,this._positions,this._uvs,this._indices,this._face"
+    },
+    {
+      "anchor": "Math.floor(s.origin[2]/s.resolution)",
+      "char_offset": 6243,
+      "text": "Math.floor(s.origin[2]/s.resolution));l.postMessage({geometryData:e,resolution:s.resolution,origin:s.origin})}catch(s){l.postMessage({type:\"error\",message:String(s)})}},!1);function G(r){const s=Number(r.resolution)||.1,"
+    },
+    {
+      "anchor": "function G(r)",
+      "char_offset": 6416,
+      "text": "function G(r){const s=Number(r.resolution)||.1,e=r.origin,d=r.width;return{data:new Uint8Array(r.data),resolution:s,origin:e,width:d}}})();\n"
+    }
+  ]
+}

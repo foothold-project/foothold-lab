@@ -1,0 +1,7 @@
+# test_post_v5.py 변이 시험 · 2026-10-13 10:41 · 사본 (_mut_post_v5.py) 에서만 바꿔 돌림
+N1 500 쌍 전에 결합 판정                 -> B1 B2 B3 FAIL
+N2 Newcombe 구간으로 되돌림              -> C6 FAIL (같은 배열에서 폭 0)
+N3 전체 판정에서 MAE 무시               -> C1 FAIL
+N4 선별 비해당 = 비퇴행                  -> C3 FAIL
+N5 stamp 해시 불일치 무시                -> D1 FAIL
+N6 NaN MAE 를 못 잡음                   -> C2 FAIL

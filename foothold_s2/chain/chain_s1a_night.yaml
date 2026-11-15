@@ -1,0 +1,299 @@
+# 10/20 밤 사슬 (SC-9). 학습 두 판(S1a-scan-v1 · S1a-blind-v1)은 이미 돌고 있어서 adopt 로 붙기만 한다.
+# 순서: 학습 done → (isaac311 S0 표본 재현) → S1 평가(축 1 범위 안 32 칸 --gate 200 · 축 2 시드 3 · 축 3) → v2 기준 판 축 1 32 칸 200 판
+#       → 평가 · 기준선(priority 1) 과 S1-b(priority 2) 가 먼저, bf16 비교 네 작업(priority 9)은 GPU 가 비는 틈만 쓴다. 안건 알림(GPU 없음).
+# priority: 작을수록 먼저. GPU 가 비었을 때 띄울 수 있는 작업이 여럿이면 작은 것부터, 높은 작업이 «지금 띄울 수 없을 때만» 낮은 작업이 빈 GPU 를 쓴다(선점 없음).
+# 띄우기: python -m foothold_s2.chain.start foothold_s2/chain/chain_s1a_night.yaml   (저장소 루트에서, isaac311 python)
+# 멈추기: 상태 폴더에 chain.stop 파일을 만든다(실행기만 끝나고 돌던 작업은 그대로).
+# 같은 yaml 을 Linux 에서 쓸 때: 아래 vars 만 고친다(또는 환경 변수 CHAIN_<이름> 으로 덮어쓴다). vars 는 반드시 jobs 앞에 둔다.
+poll_s: 30
+start_gap_s: 60
+vars:
+  REPO: C:/Users/AI-WS01/orca/workspaces/foothold-lab/sonnet-code
+  PY: C:/Users/AI-WS01/anaconda3/envs/isaac311/python.exe
+  NOTIFY_PY: C:/Users/AI-WS01/anaconda3/python.exe
+  MAI_RESUME_DIR: C:/mai/mai-tools/tools/mai-resume
+  LEAD: term_2580fc05-e7ff-4a63-8e24-714802e8f2c5
+  CHAIN_DIR: C:/Users/AI-WS01/s2_lab/chain
+  EVAL_ROOT: C:/Users/AI-WS01/s2_lab/eval_new
+  S1A_LOGS: ${REPO}/logs/rsl_rl/foothold_s1a
+  V11_LOGS: ${REPO}/logs/rsl_rl/foothold_s1a_v11        # S1a-v1.1 (lead 10/21 결정)
+  SNAP: ${CHAIN_DIR}/snap_bf16                        # bf16 세 판을 돌릴 «고정 커밋 사본»(git worktree). 세 판이 같은 코드로 돌게 한다
+  S2_LOGS: ${SNAP}/logs/rsl_rl/foothold_s2
+state_dir: ${CHAIN_DIR}
+python: ${PY}
+runner_python: ${PY}
+gpus: [0, 1]
+notify:
+  cwd: ${MAI_RESUME_DIR}
+  cmd: ["${NOTIFY_PY}", "-m", "mai_resume", "send", "--to", "${LEAD}", "--wait", "45", "--text", "{text}"]
+
+jobs:
+  # ---------------------------------------------------------------- 이미 도는 학습 (붙기만)
+  - name: scan_train
+    gpu: 0
+    priority: 1
+    adopt: {pid: 95784}
+    done:
+      status_glob: ${S1A_LOGS}/*s1a_scan/train_start_status.json
+      status_state: done
+      min_iter: 5999
+      outputs:
+        - ${S1A_LOGS}/*s1a_scan/latest.pt
+        - ${S1A_LOGS}/*s1a_scan/model_5999.pt
+      no_traceback: [${REPO}/logs/s1a_scan_20261020_165914/run.log]
+    retry:
+      cmd: [bash, foothold_s2/run_s1.sh, scan, "cuda:{gpu}", --resume, --load_run, "{globname:${S1A_LOGS}/*s1a_scan}", --checkpoint, latest.pt]
+
+  - name: blind_train
+    gpu: 1
+    priority: 1
+    adopt: {pid: 89020}
+    done:
+      status_glob: ${S1A_LOGS}/*s1a_blind/train_start_status.json
+      status_state: done
+      min_iter: 5999
+      outputs:
+        - ${S1A_LOGS}/*s1a_blind/latest.pt
+        - ${S1A_LOGS}/*s1a_blind/model_5999.pt
+      no_traceback: [${REPO}/logs/s1a_blind_20261020_170021/run.log]
+    retry:
+      cmd: [bash, foothold_s2/run_s1.sh, blind, "cuda:{gpu}", --resume, --load_run, "{globname:${S1A_LOGS}/*s1a_blind}", --checkpoint, latest.pt]
+
+  # ---------------------------------------------------------------- isaac311 로 S0 표본 재현 (불일치여도 종료 0 · verdict 만 알림, 평가를 막지 않는다)
+  - name: repro_s0   # <== lead 요청: S0(isaac311-moects) 값이 isaac311 에서 비트 일치하는지
+    gpu: 0
+    priority: 1
+    depends_on: [scan_train]
+    retries: 0
+    skip_if_done: true                   # 사전 실행(GPU 1, 10/20 22:0x)이 이미 repro_isaac311 에 verdict match 를 남겼다: 있으면 다시 돌리지 않는다
+    cmd: [python, -m, foothold_s2.eval.repro_check, --out, "${EVAL_ROOT}/repro_isaac311"]
+    log: ${EVAL_ROOT}/repro_isaac311/chain.log
+    done:
+      outputs: [${EVAL_ROOT}/repro_isaac311/repro_result.json]
+      no_traceback: [${EVAL_ROOT}/repro_isaac311/chain.log]
+      report: {file: "${EVAL_ROOT}/repro_isaac311/repro_result.json", keys: [verdict, ok]}
+
+  # ---------------------------------------------------------------- S1 평가 (범위 안 32 칸 --gate 200 · 축 2 시드 3 · 축 3)
+  - name: scan_eval
+    gpu: 0
+    priority: 1
+    depends_on: [scan_train]
+    after: [repro_s0]                    # 순서만(끝나기만 하면 됨, 성공 여부 무관)
+    cmd: [python, -m, foothold_s2.eval.s0_chain, --root, "${EVAL_ROOT}/s1a_scan", --policies, s1scan,
+          --policy_spec, "s1scan=s1scan={glob:${S1A_LOGS}/*s1a_scan/model_5999.pt}",
+          --axes, "axis1,axis2,axis3", --speeds, "0.5,1.0", --gate, --gpus, "0"]
+    log: ${EVAL_ROOT}/s1a_scan/chain.log
+    done:
+      outputs:
+        - ${EVAL_ROOT}/s1a_scan/s1scan/axis1/rough6/v0.5/axis1_raw.csv
+        - ${EVAL_ROOT}/s1a_scan/s1scan/axis1/rough6/v1.0/axis1_raw.csv
+        - ${EVAL_ROOT}/s1a_scan/s1scan/axis1/unseen10/v0.5/axis1_raw.csv
+        - ${EVAL_ROOT}/s1a_scan/s1scan/axis1/unseen10/v1.0/axis1_raw.csv
+        - ${EVAL_ROOT}/s1a_scan/s1scan/axis2/axis2_cells.csv
+      no_traceback: ["${EVAL_ROOT}/s1a_scan/s1scan/**/run.log"]
+
+  - name: v2_base_gate200
+    gpu: 0
+    priority: 1
+    depends_on: [scan_eval]
+    cmd: [python, -m, foothold_s2.eval.s0_chain, --root, "${EVAL_ROOT}/v2_gate200", --policies, v2,
+          --axes, axis1, --speeds, "0.5,1.0", --gate, --gpus, "0"]
+    log: ${EVAL_ROOT}/v2_gate200/chain.log
+    done:
+      outputs:
+        - ${EVAL_ROOT}/v2_gate200/v2/axis1/rough6/v0.5/axis1_raw.csv
+        - ${EVAL_ROOT}/v2_gate200/v2/axis1/unseen10/v1.0/axis1_raw.csv
+      no_traceback: ["${EVAL_ROOT}/v2_gate200/v2/**/run.log"]
+
+  - name: blind_eval
+    gpu: 1
+    priority: 1
+    depends_on: [blind_train]            # GPU 1 이 GPU 0 의 일(repro_s0)을 기다리지 않는다
+    cmd: [python, -m, foothold_s2.eval.s0_chain, --root, "${EVAL_ROOT}/s1a_blind", --policies, s1blind,
+          --policy_spec, "s1blind=s1blind={glob:${S1A_LOGS}/*s1a_blind/model_5999.pt}",
+          --axes, "axis1,axis2,axis3", --speeds, "0.5,1.0", --gate, --gpus, "1"]
+    log: ${EVAL_ROOT}/s1a_blind/chain.log
+    done:
+      outputs:
+        - ${EVAL_ROOT}/s1a_blind/s1blind/axis1/rough6/v0.5/axis1_raw.csv
+        - ${EVAL_ROOT}/s1a_blind/s1blind/axis1/rough6/v1.0/axis1_raw.csv
+        - ${EVAL_ROOT}/s1a_blind/s1blind/axis1/unseen10/v0.5/axis1_raw.csv
+        - ${EVAL_ROOT}/s1a_blind/s1blind/axis1/unseen10/v1.0/axis1_raw.csv
+        - ${EVAL_ROOT}/s1a_blind/s1blind/axis2/axis2_cells.csv
+      no_traceback: ["${EVAL_ROOT}/s1a_blind/s1blind/**/run.log"]
+
+  # ---------------------------------------------------------------- 안건 알림 (GPU 를 잡지 않는다)
+  - name: agenda_J1
+    priority: 1
+    depends_on: [scan_eval, blind_eval]
+    retries: 2
+    python: ${NOTIFY_PY}
+    cwd: ${MAI_RESUME_DIR}
+    cmd: [python, -m, mai_resume, send, --to, "${LEAD}", --wait, "900", --text,
+          "AGENDA-J1 · S1-a 평가 끝 · 판단층 구체화 안건을 꺼낼 때 · inbox/jay/20261019-design/AGENDA-LEAD.md"]
+    log: ${CHAIN_DIR}/agenda_J1.log
+
+  # ---------------------------------------------------------------- S1a 원인 시험 (lead 10/21 14:4x): S1a-v1.1(Rx1)은 팀장 「멈춰」 로 종료(사슬에서 뺌, 상태 보존 archive_v11_stopped_1021).
+  # C1-scan(토크 벌점 -2e-4) · C2-blind(정책 관측에 몸 선속도), 부모 = S1-a 정본 + fbg 0.25 + clip 17, 시드 42 · 4096 env · 1501 회. 이미 돌고 있어 adopt 로 붙기만 한다.
+  - name: c1_scan_train
+    cancelled: true          # 팀장 지시 15:00 (EX-07 · EX-08 중단)
+    gpu: 0
+    priority: 1
+    adopt: {pid: 84336}
+    done:
+      status_glob: ${REPO}/logs/rsl_rl/foothold_s1a_diag/*S1a-diag-C1-torque-scan/train_start_status.json
+      status_state: done
+      min_iter: 1500
+      outputs:
+        - ${REPO}/logs/rsl_rl/foothold_s1a_diag/*S1a-diag-C1-torque-scan/model_1500.pt
+      no_traceback: [${REPO}/logs/s1a_diag_C1-scan_20261021_144518/run.log]
+    retry:
+      cmd: [bash, foothold_s2/run_s1_diag.sh, C1-scan, "cuda:{gpu}", --run_name, S1a-diag-C1-torque-scan-resume, --resume, --load_run, "{globname:${REPO}/logs/rsl_rl/foothold_s1a_diag/*S1a-diag-C1-torque-scan}", --checkpoint, latest.pt, --load_experiment, foothold_s1a_diag]
+
+  - name: c2_blind_train
+    cancelled: true          # 팀장 지시 15:00 (EX-07 · EX-08 중단)
+    gpu: 1
+    priority: 1
+    adopt: {pid: 49412}
+    done:
+      status_glob: ${REPO}/logs/rsl_rl/foothold_s1a_diag/*S1a-diag-C2-linvel-blind/train_start_status.json
+      status_state: done
+      min_iter: 1500
+      outputs:
+        - ${REPO}/logs/rsl_rl/foothold_s1a_diag/*S1a-diag-C2-linvel-blind/model_1500.pt
+      no_traceback: [${REPO}/logs/s1a_diag_C2-blind_20261021_144520/run.log]
+    retry:
+      cmd: [bash, foothold_s2/run_s1_diag.sh, C2-blind, "cuda:{gpu}", --run_name, S1a-diag-C2-linvel-blind-resume, --resume, --load_run, "{globname:${REPO}/logs/rsl_rl/foothold_s1a_diag/*S1a-diag-C2-linvel-blind}", --checkpoint, latest.pt, --load_experiment, foothold_s1a_diag]
+
+  # ---------------------------------------------------------------- S1-b (lead 가 S1-a 판정 뒤 s1a_verdict_pass.json 을 써야 띄워진다)
+  # S1-a blind 의 model_5999.pt 에서 이어 3,000 회(iteration 6000 -> 9000, 가중치 + optimizer + 명령 상한 이어, 지형 칸은 새로). GPU 0, 4096 env.
+  # run_s1b.sh 가 가장 최근 S1-a blind 폴더를 스스로 찾는다. 중단되면 재시도가 S1-b 자신의 latest.pt 에서 이어 간다.
+  - name: s1b_train
+    gpu: 0
+    priority: 2
+    note: S1-a 판정 통과 파일이 생기면 S1-b 가 먼저 GPU 0 을 잡는다(bf16 은 판정 파일 뒤에만 뜸)
+    depends_on: [blind_train]            # lead 10/21 14:3x: S1a-v1.1 종료(팀장 「멈춰」)로 옛 blind_train 으로 되돌림. 판정 파일(require_file)이 없으면 계속 대기
+    require_file: ${CHAIN_DIR}/s1a_verdict_pass.json
+    cmd: [bash, foothold_s2/run_s1b.sh, "cuda:{gpu}"]
+    log: ${CHAIN_DIR}/s1b_train.log
+    done:
+      status_glob: ${REPO}/logs/rsl_rl/foothold_s1b/*s1b_blind/train_start_status.json
+      status_state: done
+      min_iter: 8999
+      outputs:
+        - ${REPO}/logs/rsl_rl/foothold_s1b/*s1b_blind/latest.pt
+        - ${REPO}/logs/rsl_rl/foothold_s1b/*s1b_blind/model_8999.pt
+      no_traceback: ["${REPO}/logs/s1b_blind_*/run.log"]
+    retry:
+      cmd: [bash, foothold_s2/run_s1b.sh, "cuda:{gpu}", --resume, --load_run, "{globname:${REPO}/logs/rsl_rl/foothold_s1b/*s1b_blind}", --checkpoint, latest.pt, --load_experiment, foothold_s1b]
+
+  # ---------------------------------------------------------------- bf16 비교 (rl 의 train_start.py, 각 300 회 · 3072 env · G1) · priority 9: 빈 틈만
+  # 세 판은 서로 다른 시각에 돌므로 그 사이 코드가 바뀌면 비교가 깨진다: 사슬 시작 때 HEAD 를 git worktree 로 떼어(snapshot_bf16) 거기서만 돌리고,
+  # 끝나면 판 폴더마다 git HEAD · cfg 해시 스탬프를 남기고(bf16_stamp), compare_curves 는 스탬프가 다르면 「판정 불가 · 코드 다름」 만 낸다.
+  - name: snapshot_bf16
+    priority: 0
+    retries: 0
+    cmd: [python, -m, foothold_s2.chain.snapshot, --dir, "${SNAP}", --repo, "${REPO}", --paths, foothold_s2]
+    log: ${CHAIN_DIR}/snapshot_bf16.log
+    done:
+      outputs: [${SNAP}/SNAPSHOT_HEAD.txt]
+
+  - name: bf16_B_bf16kl_mb256
+    gpu: 1
+    priority: 9
+    require_any_file: [${CHAIN_DIR}/s1a_verdict_pass.json, ${CHAIN_DIR}/s1a_verdict_fail.json]   # S1-a 판정이 나온 뒤에만(S1-b 가 GPU 를 먼저 잡게)
+    depends_on: [blind_eval, snapshot_bf16]
+    repo: ${SNAP}
+    cmd: [python, foothold_s2/scripts/train_start.py, --task, FootholdS2-Go2-S2-G1-v0, --headless, --device, "cuda:{gpu}",
+          --num_envs, "3072", --max_iterations, "300", --seed, "42", --run_name, bf16B, --map_input, reconstruction,
+          agent.perception.microbatch_envs=256, agent.perception.replay_autocast=bf16, agent.perception.kl_fp32=true]
+    log: ${CHAIN_DIR}/bf16_B.log
+    first_evidence: [{status_state: running, status_glob: "${S2_LOGS}/*_bf16B/train_start_status.json"}]
+    done:
+      status_glob: ${S2_LOGS}/*_bf16B/train_start_status.json
+      status_state: done
+      min_iter: 299
+      outputs: [${S2_LOGS}/*_bf16B/latest.pt]
+    retry:
+      cmd: [python, foothold_s2/scripts/train_start.py, --task, FootholdS2-Go2-S2-G1-v0, --headless, --device, "cuda:{gpu}",
+            --num_envs, "3072", --max_iterations, "300", --seed, "42", --run_name, bf16B, --map_input, reconstruction,
+            --resume, --load_run, "{globname:${S2_LOGS}/*_bf16B}", --checkpoint, latest.pt,
+            agent.perception.microbatch_envs=256, agent.perception.replay_autocast=bf16, agent.perception.kl_fp32=true]
+
+  - name: bf16_A_fp32_mb128
+    gpu: 0
+    priority: 9
+    require_any_file: [${CHAIN_DIR}/s1a_verdict_pass.json, ${CHAIN_DIR}/s1a_verdict_fail.json]   # S1-a 판정이 나온 뒤에만(S1-b 가 GPU 를 먼저 잡게)
+    depends_on: [v2_base_gate200, snapshot_bf16]
+    repo: ${SNAP}
+    cmd: [python, foothold_s2/scripts/train_start.py, --task, FootholdS2-Go2-S2-G1-v0, --headless, --device, "cuda:{gpu}",
+          --num_envs, "3072", --max_iterations, "300", --seed, "42", --run_name, bf16A, --map_input, reconstruction,
+          agent.perception.microbatch_envs=128]
+    log: ${CHAIN_DIR}/bf16_A.log
+    first_evidence: [{status_state: running, status_glob: "${S2_LOGS}/*_bf16A/train_start_status.json"}]
+    done:
+      status_glob: ${S2_LOGS}/*_bf16A/train_start_status.json
+      status_state: done
+      min_iter: 299
+      outputs: [${S2_LOGS}/*_bf16A/latest.pt]
+    retry:
+      cmd: [python, foothold_s2/scripts/train_start.py, --task, FootholdS2-Go2-S2-G1-v0, --headless, --device, "cuda:{gpu}",
+            --num_envs, "3072", --max_iterations, "300", --seed, "42", --run_name, bf16A, --map_input, reconstruction,
+            --resume, --load_run, "{globname:${S2_LOGS}/*_bf16A}", --checkpoint, latest.pt, agent.perception.microbatch_envs=128]
+
+  - name: bf16_A2_fp32_mb128_seed43
+    gpu: any
+    priority: 9
+    require_any_file: [${CHAIN_DIR}/s1a_verdict_pass.json, ${CHAIN_DIR}/s1a_verdict_fail.json]   # S1-a 판정이 나온 뒤에만(S1-b 가 GPU 를 먼저 잡게)
+    depends_on: [blind_eval, snapshot_bf16]
+    repo: ${SNAP}
+    cmd: [python, foothold_s2/scripts/train_start.py, --task, FootholdS2-Go2-S2-G1-v0, --headless, --device, "cuda:{gpu}",
+          --num_envs, "3072", --max_iterations, "300", --seed, "43", --run_name, bf16A2, --map_input, reconstruction,
+          agent.perception.microbatch_envs=128]
+    log: ${CHAIN_DIR}/bf16_A2.log
+    first_evidence: [{status_state: running, status_glob: "${S2_LOGS}/*_bf16A2/train_start_status.json"}]
+    done:
+      status_glob: ${S2_LOGS}/*_bf16A2/train_start_status.json
+      status_state: done
+      min_iter: 299
+      outputs: [${S2_LOGS}/*_bf16A2/latest.pt]
+    retry:
+      cmd: [python, foothold_s2/scripts/train_start.py, --task, FootholdS2-Go2-S2-G1-v0, --headless, --device, "cuda:{gpu}",
+            --num_envs, "3072", --max_iterations, "300", --seed, "43", --run_name, bf16A2, --map_input, reconstruction,
+            --resume, --load_run, "{globname:${S2_LOGS}/*_bf16A2}", --checkpoint, latest.pt, agent.perception.microbatch_envs=128]
+
+  - name: bf16_stamp
+    priority: 9
+    depends_on: [bf16_A_fp32_mb128, bf16_B_bf16kl_mb256, bf16_A2_fp32_mb128_seed43]
+    retries: 0
+    repo: ${SNAP}
+    cmd: [python, -m, foothold_s2.chain.stamp, --repo, "${SNAP}", --run, "{glob:${S2_LOGS}/*_bf16A}",
+          --run, "{glob:${S2_LOGS}/*_bf16B}", --run, "{glob:${S2_LOGS}/*_bf16A2}"]
+    log: ${CHAIN_DIR}/bf16_stamp.log
+    done:
+      outputs: [${S2_LOGS}/*_bf16A/code_stamp.json, ${S2_LOGS}/*_bf16B/code_stamp.json, ${S2_LOGS}/*_bf16A2/code_stamp.json]
+
+  - name: bf16_compare
+    priority: 9
+    require_any_file: [${CHAIN_DIR}/s1a_verdict_pass.json, ${CHAIN_DIR}/s1a_verdict_fail.json]   # S1-a 판정이 나온 뒤에만(S1-b 가 GPU 를 먼저 잡게)
+    depends_on: [bf16_stamp]
+    retries: 0
+    accept_rc: [0, 1]                    # compare_curves 는 «판정 실패(fail)» 에 1 을 낸다: 일은 정상으로 끝난 것
+    repo: ${SNAP}
+    cmd: [python, foothold_s2/scripts/compare_curves.py, --require_stamps,
+          --a, "{glob:${S2_LOGS}/*_bf16A}", --b, "{glob:${S2_LOGS}/*_bf16B}", --a2, "{glob:${S2_LOGS}/*_bf16A2}",
+          --out, "${CHAIN_DIR}/bf16_compare_result.json"]
+    log: ${CHAIN_DIR}/bf16_compare.log
+    done:
+      outputs: [${CHAIN_DIR}/bf16_compare_result.json]
+      report: {file: "${CHAIN_DIR}/bf16_compare_result.json", keys: [verdict]}
+
+  - name: agenda_J4
+    priority: 9
+    depends_on: [bf16_compare]
+    retries: 2
+    python: ${NOTIFY_PY}
+    cwd: ${MAI_RESUME_DIR}
+    cmd: [python, -m, mai_resume, send, --to, "${LEAD}", --wait, "900", --text,
+          "AGENDA-J4 · bf16 비교 끝 · bf16 채택 판단을 꺼낼 때 · inbox/jay/20261019-design/AGENDA-LEAD.md"]
+    log: ${CHAIN_DIR}/agenda_J4.log

@@ -1,0 +1,87 @@
+INPUT CHANGED during the aggregate: cq_on24000_wave_fwd03_on_s1000/episodes.csv while it was read; nothing written
+INPUT CHANGED during the aggregate: cmdr_eval_driver; nothing written
+INPUT CHANGED during the aggregate: cq_on24000_wave_fwd03_on_s1000/meta.json; nothing written
+PASS A0 runs got 0 want 0
+PASS A1 complete, 500 pairs each got (True, {'stop03': 500, 'fwd01': 500, 'fwd02': 500}) want (True, {'stop03': 500, 'fwd01': 500, 'fwd02': 500})
+PASS A2 +5 +10 +15 -> 개선 got (True, 10.0, '개선') want (True, 10.0, '개선')
+PASS A3 stop03 read from span_q2 got 0.05 want 0.05
+PASS A4 schema, no auth failures, manifest of every used run got ('cmdr_post v9', [], 30) want ('cmdr_post v9', [], 30)
+PASS B1 100 pairs: 보류 got (False, '수집 중 · 결합 판정 보류', [1001, 1002, 1003, 1004], False) want (False, '수집 중 · 결합 판정 보류', [1001, 1002, 1003, 1004], False)
+PASS B2 400 pairs: 보류 got '수집 중 · 결합 판정 보류' want '수집 중 · 결합 판정 보류'
+PASS C0 runs got 0 want 0
+PASS C1 MAE-only worsening got ('비퇴행', ['vx'], '퇴행 방지 조건 미충족') want ('비퇴행', ['vx'], '퇴행 방지 조건 미충족')
+PASS C2 all-NaN MAE: 결측, 미확인 got (['vx'], '미확인') want (['vx'], '미확인')
+PASS C3 -4 pp not flagged: 비퇴행 미확인 got ('선별 비해당 · 추가 측정 없음', '비퇴행 미확인') want ('선별 비해당 · 추가 측정 없음', '비퇴행 미확인')
+PASS C4 flagged -> 500: -2 pp 비퇴행, new 400 alone 0 got ('선별 → 500 판', -0.02, '비퇴행', 0.0) want ('선별 → 500 판', -0.02, '비퇴행', 0.0)
+PASS C5 2 of 4 new seeds: 다시 재는 중 got ('다시 재는 중', [1000, 1001, 1002]) want ('다시 재는 중', [1000, 1001, 1002])
+PASS C6 identical arrays: Tango width, 충족 label got (True, '퇴행 방지 조건 충족 (통과율 · MAE)') want (True, '퇴행 방지 조건 충족 (통과율 · MAE)')
+PASS C9 1 of 100 finite: 결측 + short list, 미확인 got (['vx'], '미확인') want (['vx'], '미확인')
+PASS C10 99 of 100 finite: still 결측 got (['vx'], '미확인') want (['vx'], '미확인')
+PASS C11 exactly +10 %: allowed got ([], '퇴행 방지 조건 충족 (통과율 · MAE)') want ([], '퇴행 방지 조건 충족 (통과율 · MAE)')
+PASS C12 +10.03 %: over got ['vx'] want ['vx']
+PASS C14 500-row shortfall kept: arm, seed, finite n got ('선별 → 500 판', [{'arm': 'on24000', 'seed': 1003, 'finite': 1}], '미확인') want ('선별 → 500 판', [{'arm': 'on24000', 'seed': 1003, 'finite': 1}], '미확인')
+PASS C15 absolute MAE line (control 0) got (['vx'], 'abs', 0.015) want (['vx'], 'abs', 0.015)
+PASS C16 coverage: done counts rows needing no more samples got (12, 11) want (12, 11)
+PASS C13 no target measured: three targets listed with 0 pairs, 보류 got ({'stop03': 0, 'fwd01': 0, 'fwd02': 0}, '수집 중 · 결합 판정 보류') want ({'stop03': 0, 'fwd01': 0, 'fwd02': 0}, '수집 중 · 결합 판정 보류')
+PASS C7 coverage: planned 99, measured 12 got (99, 12) want (99, 12)
+PASS C8 contract k/n and Wilson (independent calc 0.915481) got (97, 100, True, 0.9155) want (97, 100, True, 0.9155)
+PASS D changed cells.json got (['outputs changed after validation'], False) want (['outputs changed after validation'], False)
+PASS D no stamp got (['no stamp'], False) want (['no stamp'], False)
+PASS D cut stamp got (['stamp unreadable'], False) want (['stamp unreadable'], False)
+PASS D empty hashes got (['new stamp without the four output hashes'], False) want (['new stamp without the four output hashes'], False)
+PASS D checkpoint differs got (['stamp checkpoint differs from its log'], False) want (['stamp checkpoint differs from its log'], False)
+PASS D pins differ got (['stamp pins differ from its log'], False) want (['stamp pins differ from its log'], False)
+PASS D legacy stamps in a v3.2 log: accepted and listed got ([], 2, 2) want ([], 2, 2)
+PASS D legacy stamp in a v3.5 log: rejected got ['legacy stamp in a v3.3+ log', 'legacy stamp in a v3.3+ log'] want ['legacy stamp in a v3.3+ log', 'legacy stamp in a v3.3+ log']
+PASS D version key removed, old hashes kept got (['ambiguous stamp (new-format fields without stamp_version)'], False) want (['ambiguous stamp (new-format fields without stamp_version)'], False)
+PASS E1 pins differ between logs -> stop got (True, True) want (True, True)
+PASS E2 a pinned file missing -> stop got (True, True) want (True, True)
+PASS E3 other experiment -> stop got (True, True) want (True, True)
+PASS R1 CSV changed while it was read: exit 3, nothing written (v7 used the bytes it hashed; v8 stops) got (3, False) want (3, False)
+PASS R2 a log changed during the aggregate: exit 3, nothing written got (3, False) want (3, False)
+PASS L1 newer normal stamp over a log that published the older run: excluded, no +40 comparison got (0, [('cq_on24000_wave_fwd03_on_s1000', "stamp hashes differ from its log's run record")], False) want (0, [('cq_on24000_wave_fwd03_on_s1000', "stamp hashes differ from its log's run record")], False)
+PASS L1b same bytes, other attempt than the record: excluded got [('cq_on24000_wave_fwd03_on_s1000', "stamp attempt differs from its log's run record")] want [('cq_on24000_wave_fwd03_on_s1000', "stamp attempt differs from its log's run record")]
+PASS L2 control: legacy pair in a v3.2 log runs got (0, 2) want (0, 2)
+PASS L2 meta.json replaced after it was read (while the CSV is read): exit 3, nothing written got (3, False) want (3, False)
+PASS L3 owner re-validating: exit 5, nothing written got (5, False) want (5, False)
+PASS L3b attempt file running, same attempt as the log: read got 0 want 0
+PASS L3c attempt file names another attempt than the log: held got 5 want 5
+PASS L4 origin per run and counted; record and stamp attempts and the stamp hash kept got ({'hashed (stamp has no origin field)': 1, 'legacy-origin revalidated': 1}, True, 64, 'cmdr_eval_driver') want ({'hashed (stamp has no origin field)': 1, 'legacy-origin revalidated': 1}, True, 64, 'cmdr_eval_dri
+PASS L5 held run: out of the tables, listed with its reason, not an auth failure got (0, ['cq_on24000_wave_fwd03_on_s1000'], False, []) want (0, ['cq_on24000_wave_fwd03_on_s1000'], False, [])
+PASS L5b (16i 3) only re-validation metadata changed: still held, listed as a release candidate, not used got (0, ['cq_on24000_wave_fwd03_on_s1000'], ['cq_on24000_wave_fwd03_on_s1000'], [], False) want (0, ['cq_on24000_wave_fwd03_on_s1000'], ['cq_on24000_wave_fwd03_on_s1000'], [], False)
+PASS L5d (16j 5.3) 'released: true' with no record of the new run: still held, release rejected got (0, [('cq_on24000_wave_fwd03_on_s1000', True)], []) want (0, [('cq_on24000_wave_fwd03_on_s1000', True)], [])
+PASS L5e (16j 5.3) a release naming another attempt than the run on disk: still held got (0, ['cq_on24000_wave_fwd03_on_s1000'], []) want (0, ['cq_on24000_wave_fwd03_on_s1000'], [])
+PASS L5f (16k 4) a complete-looking release that names the held original itself: still held (not a new collection) got (0, [('cq_on24000_wave_fwd03_on_s1000', 'the released collection is the held orig')], []) want (0, [('cq_on24000_wave_fwd03_on_s1000', 'the released collection is the held orig')], [])
+PASS L5e2 (16k 4) the v8-style release (attempt only, no hashes or evidence) of a real new collection: still held, reason given got (0, [('cq_on24000_wave_fwd03_on_s1000', True)], []) want (0, [('cq_on24000_wave_fwd03_on_s1000', True)], [])
+PASS L5c a release naming the new collection, its hashes and its evidence: used again, the release record kept got (0, [], [('cq_on24000_wave_fwd03_on_s1000', 'NEW-j9')], True) want (0, [], [('cq_on24000_wave_fwd03_on_s1000', 'NEW-j9')], True)
+PASS L5g (16k 4) the released run re-validated later (stamp rewritten with the new attempt and a prev link, bytes unchanged): still released got (0, [], ['cq_on24000_wave_fwd03_on_s1000'], []) want (0, [], ['cq_on24000_wave_fwd03_on_s1000'], [])
+PASS L5g2 a stamp naming another attempt without the re-validation link: held got (0, [('cq_on24000_wave_fwd03_on_s1000', 'the stamp or the own')]) want (0, [('cq_on24000_wave_fwd03_on_s1000', 'the stamp or the own')])
+PASS L5h (16k 4) the evidence file changed after the release: held again got (0, [('cq_on24000_wave_fwd03_on_s1000', 'the evidence file is missing or changed')]) want (0, [('cq_on24000_wave_fwd03_on_s1000', 'the evidence file is missing or changed')])
+INPUT CHANGED during the aggregate: cmdr_eval_driver.attempt.json; nothing written
+INPUT CHANGED during the aggregate: cmdr_post_hold.json; nothing written
+PASS L5h2 evidence that does not show a ready comparison: held got (0, [('cq_on24000_wave_fwd03_on_s1000', 'the evidence does')]) want (0, [('cq_on24000_wave_fwd03_on_s1000', 'the evidence does')])
+PASS L5i (16k 4) same attempt but outputs, stamp and record re-signed with other hashes: held (the release fixed the bytes) got (0, [('cq_on24000_wave_fwd03_on_s1000', 'the output bytes on disk are not the released ones')]) want (0, [('cq_on24000_wave_fwd03_on_s1000', 'the output bytes on disk are not the released ones')])
+PASS L5j (16k 4) a valid release whose run then fails authentication: out of the tables, in auth_fail AND release_auth_fail got (0, ['cq_on24000_wave_fwd03_on_s1000'], ['cq_on24000_wave_fwd03_on_s1000'], False) want (0, ['cq_on24000_wave_fwd03_on_s1000'], ['cq_on24000_wave_fwd03_on_s1000'], False)
+PASS L6 owner log's last record invalid, a valid one only in the other log: excluded got (0, [('cq_on24000_wave_fwd03_on_s1000', "its log's run record is not valid")]) want (0, [('cq_on24000_wave_fwd03_on_s1000', "its log's run record is not valid")])
+PASS L7 a v3.3+ owner with an unreadable attempt file: held (exit 5), nothing written got (5, False) want (5, False)
+PASS L7b the attempt file turns to revalidating during the aggregate: exit 3, nothing written got (3, False) want (3, False)
+PASS L7c the hold list changes during the aggregate: exit 3, nothing written got (3, False) want (3, False)
+PASS F1 frozen bundle: v8 = v7 on the 22,000 and 24,000 targets and verdicts, one held run, no auth failures, every used file = hand-over manifest got ('complete', True, True, 1, ['cq_on24000_flat_stand_on_s1000'], [], True) want ('complete', True, True, 1, ['cq_on24000_flat_stand_on_s1000'], [], True)
+PASS F2 live tree (base attempt running): runs or stops for a changing log got True want True
+PASS G1 100-pair targets: 보류, values labelled (100 쌍, none labelled (500 쌍 got (True, True, False) want (True, True, False)
+PASS G2 their regression rows carry n and 수집 중 got (True, True) want (True, True)
+PASS G3 an older aggregate is refused, not read as 'no comparison' got (True, False) want (True, False)
+PASS G3b the frozen v8 aggregate is refused by the v9 page layer got True want True
+PASS G4 off-arm sentence reads n from the aggregate got (True, False) want (True, False)
+PASS G5 contract detail: one table per arm, one row per measured cell got [77, 76] want [77, 76]
+PASS G7 summary separates 'has a comparison' from 'samples complete' got (False, True) want (False, True)
+PASS G8 no valid comparison: says so without guessing why got (False, True) want (False, True)
+PASS G9 absolute MAE line in words on the regression row got True want True
+PASS G10 fragment: no old label, training status from a token got (False, True, False) want (False, True, False)
+PASS G11 seed ids in the per-seed list got True want True
+PASS G12 (16g 5.1) no result file: says only what is seen got (True, False) want (True, False)
+PASS G14 (16h 4.3) the status line names the held run and its reason got (True, True) want (True, True)
+PASS G13b (16i 6) a new stamp without an origin field: 'hashes present, first creation time unknown', never 'hashed at collection' got (True, False) want (True, False)
+PASS G13 (16g 4) the status line shows the origins got True want True
+PASS G6 rows with partial MAE are shown, not hidden got True want True
+FAILS []

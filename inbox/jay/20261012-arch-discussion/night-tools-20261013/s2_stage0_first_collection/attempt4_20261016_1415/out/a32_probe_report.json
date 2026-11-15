@@ -1,0 +1,44 @@
+{
+  "errors": [],
+  "evidence_kind": "unverified_collision_mesh",
+  "recorded_edge_differences": [],
+  "sensor_frame": {
+    "cfg_offset_pos_ray_starts": [
+      0.0,
+      0.0,
+      20.0
+    ],
+    "cfg_offset_rot": [
+      1.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    "cfg_prim_path": "/World/envs/env_.*/Robot/base",
+    "drift_max_abs": 0.0,
+    "ray_alignment": "yaw",
+    "ray_cast_drift_max_abs": 0.0,
+    "tracked_body_names": [
+      "base",
+      "FL_hip",
+      "FR_hip"
+    ],
+    "view_offset_pos_envs_equal": true,
+    "view_offset_quat": [
+      1.0,
+      0.0,
+      0.0,
+      0.0
+    ]
+  },
+  "usd": {
+    "approximation": null,
+    "collision_api": true,
+    "collision_enabled": true,
+    "faces_sha256": "9751771d6c5f064f3f190c07242e999518b2682075021782810e196ca8f5222e",
+    "prim_path": "/World/ground/terrain/mesh",
+    "root_layer": "anon:00000204BBCF5A50:World0.usd",
+    "vertices_sha256": "cb1c73d973f81d760bd23deac706ff5453970eea01127649e2817f80d6e24325",
+    "world_transform_sha256": "eba91ea447c2a18c1510229bb460a99bcd030ed6bde4091c466992e0dbafb3d1"
+  }
+}

@@ -1,0 +1,146 @@
+{
+ "started": "2026-10-20T13:19:39",
+ "num_envs": 3072,
+ "iterations": 3,
+ "device": "cuda:0",
+ "seed": 42,
+ "gt_map_rays": 512,
+ "obs_shapes": {
+  "policy": [
+   3072,
+   45
+  ],
+  "depth": [
+   3072,
+   3600
+  ],
+  "gt_map": [
+   3072,
+   512
+  ],
+  "gt_feet": [
+   3072,
+   100
+  ],
+  "base_vel": [
+   3072,
+   3
+  ],
+  "contacts": [
+   3072,
+   4
+  ]
+ },
+ "memory_GiB": {
+  "1_sensors": 1.0082526206970215,
+  "2_rollout": 6.06289005279541,
+  "3_ppo_update": 2.9567413330078125,
+  "4_perception_update": 6.795555591583252
+ },
+ "perception_cfg": {
+  "measure_phases": true,
+  "microbatch_envs": 128
+ },
+ "learn_seconds": 147.0177984237671,
+ "resets": 223,
+ "perception_losses": {
+  "l_tr": 0.04446609833588203,
+  "l_ie": 0.3844871799151104,
+  "kl": 0.002165631416331357,
+  "o_next": 0.3610281626383464,
+  "v": 0.01906556915491819,
+  "hf": 0.0009849923274790244,
+  "hb": 0.0012428229102321587
+ },
+ "adasmpl_p": 0.3364028493265318,
+ "memory_log": [
+  {
+   "it": 0,
+   "phase": "2_rollout",
+   "cum_peak": 6509978624,
+   "phase_peak": 6509978624,
+   "allocated": 2509391872
+  },
+  {
+   "it": 0,
+   "phase": "3_ppo_update",
+   "cum_peak": 2947835392,
+   "phase_peak": 2947835392,
+   "allocated": 2528259072
+  },
+  {
+   "it": 0,
+   "phase": "4_perception_update",
+   "cum_peak": 7088540160,
+   "phase_peak": 7088540160,
+   "allocated": 2544678912
+  },
+  {
+   "it": 1,
+   "phase": "2_rollout",
+   "cum_peak": 4176005632,
+   "phase_peak": 4176005632,
+   "allocated": 2753220608
+  },
+  {
+   "it": 1,
+   "phase": "3_ppo_update",
+   "cum_peak": 3174058496,
+   "phase_peak": 3174058496,
+   "allocated": 2753957888
+  },
+  {
+   "it": 1,
+   "phase": "4_perception_update",
+   "cum_peak": 7296672256,
+   "phase_peak": 7296672256,
+   "allocated": 2753957888
+  },
+  {
+   "it": 2,
+   "phase": "2_rollout",
+   "cum_peak": 4173004288,
+   "phase_peak": 4173004288,
+   "allocated": 2753938944
+  },
+  {
+   "it": 2,
+   "phase": "3_ppo_update",
+   "cum_peak": 3174776832,
+   "phase_peak": 3174776832,
+   "allocated": 2754676224
+  },
+  {
+   "it": 2,
+   "phase": "4_perception_update",
+   "cum_peak": 7296147968,
+   "phase_peak": 7296147968,
+   "allocated": 2754676224
+  }
+ ],
+ "iter_log": [
+  {
+   "it": 0,
+   "collection_s": 6.878415822982788,
+   "learn_s": 37.689077615737915,
+   "steps_per_s": 1654.2999013703638
+  },
+  {
+   "it": 1,
+   "collection_s": 5.050591230392456,
+   "learn_s": 46.22827339172363,
+   "steps_per_s": 1437.7853437925341
+  },
+  {
+   "it": 2,
+   "collection_s": 5.026769161224365,
+   "learn_s": 45.49190425872803,
+   "steps_per_s": 1459.4207450206138
+  }
+ ],
+ "replay_bytes": 1402601472,
+ "checks": {
+  "traceback": false,
+  "measured": true
+ }
+}

@@ -1,0 +1,16 @@
+{
+  "cfg_sha256": "7b55a0032cd15828684e37b7d0836670b65eb4f79b05704bf18027c48a1e1fc5",
+  "history_terms": 6,
+  "raw_map_columns": 374,
+  "reset_count": 1,
+  "selected_timeout": true,
+  "status": "PASS",
+  "steps": [
+    0,
+    1,
+    2
+  ],
+  "survivor_count": 1023,
+  "trace_path": "C:\\Users\\AI-WS01\\s2_lab\\s2_step22_run\\frozen\\runs\\shortA-20261017-151318-4e02ebe5\\out\\partial_reset_trace.pt",
+  "trace_sha256": "36c7555ae75f7c3fc0a38789647ec6adf073ebfd9c4d06dac4828bc5f7c5b963"
+}

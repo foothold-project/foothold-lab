@@ -1,0 +1,48 @@
+{
+  "schema": "s2-chain-draft-v1",
+  "approval": {
+    "status": "UNDECIDED",
+    "by": null,
+    "frozen_sha256": null
+  },
+  "inputs": {
+    "parent_sha256": null,
+    "code_sha256": null,
+    "env_config_sha256": null,
+    "step2_sha256_list": "91737d563dab78778a51b72dcca42a20f6b7358fecf12b97cf20ee21aef8c5e9",
+    "encoder_mode": null,
+    "freeze_updates": null,
+    "encoder_lr_ratio": null,
+    "seed": null,
+    "gap_proportion": null,
+    "stones_proportion": null,
+    "checkpoint_interval": null,
+    "evaluation_plan_sha256": null,
+    "gpu_index": null,
+    "shared_convert_lock": null,
+    "shared_registry": null,
+    "common_lease": null
+  },
+  "criteria": {
+    "grid_xy_tolerance_m": null,
+    "height_tolerance_m": null,
+    "flat_z_span_m": null,
+    "step_min_height_m": null,
+    "gap_min_bad_cells": null,
+    "stones_min_holes": null,
+    "stones_max_height_m": null,
+    "stones_min_spacing_cells": null,
+    "stones_max_spacing_cells": null,
+    "yaw_min_rad": null
+  },
+  "stages": {
+    "connect": {"max_launches": null, "max_wall_s": null, "updates_per_arm": null,
+                "num_envs": null, "diag_steps": null},
+    "smoke": {"max_launches": null, "max_wall_s": null, "updates_per_arm": null,
+               "num_envs": null, "rollout_steps": null, "epochs": null, "minibatches": null},
+    "short_ab": {"max_launches": null, "max_wall_s": null, "updates_per_arm": null,
+                  "num_envs": null, "rollout_steps": null, "epochs": null, "minibatches": null}
+  },
+  "stop_file": null,
+  "deadline_epoch": null
+}

@@ -1,0 +1,85 @@
+"""E1 conditional approval record only; this does not implement an E1 launcher."""
+from pathlib import Path
+import hashlib
+
+import pytest
+import yaml
+
+from foothold_s2.curriculum.ex42_prep import (
+    EX42Plan, validate_stage_zero_authorization, validate_stage_e0_authorization,
+)
+
+ROOT = Path(__file__).resolve().parents[2]
+TABLE = ROOT / 'foothold_s2/curriculum/ex42-prep.yaml'
+APPROVALS = ROOT / 'foothold_s2/curriculum/ex42-approvals.yaml'
+LIMITS = ROOT / 'foothold_s2/curriculum/ex42-reward-adjust-limits.yaml'
+E1_PARENT = '680c820b73646d9c11f62f184fd35e6cc096ffd04681951d542b2b4b472d779e'
+
+
+def test_e1_record_is_1750_updates_from_e0_and_requires_rejudgment_pass():
+    doc = yaml.safe_load(APPROVALS.read_text())
+    cell = doc['stage_e1_authorization']
+    assert cell['approved'] is True
+    assert cell['decision_source']['commit'] == '7ef023f58027f43c985c34a521d53a52252cabdf'
+    assert cell['scope_amendment']['decision_source']['commits'] == [
+        '3bb9b1e7bec3a24c46fa32a3b6f8c74477601523', 'c556f1b36e1018f92f1ab8f1f67adf1d099eea0f',
+        'dd3bbf88b2df7ee4e182ba230696013e80f7f233', '915dce6eede16255081577d4cfd29e57c0ed666e',
+        '64de0cad0ecab1fb9d58a38e869f83fd9b5e9c8d', 'bc66f6ee63f1aea0832520f72d127e5f8698969f',
+        '06d4a1aecc27885945b991e1556b9569a4c5b3e3', 'ca1844f593122a0f1d643fab6b3212ce064425dc',
+        'a76e783d7b0380115b1559aa49f6e1a6e656e955', '4f7e431e243bd2966f3eda1f720be2f5629997b1',
+        'b6024dd2162b0147dfc269a0518cab5deb7b053f']
+    assert cell['scope'] == dict(stage_id='E1', start_update=0, maximum_updates=1750,
+                                 parent_sha256=E1_PARENT, later_stages_authorized=False)
+    assert cell['extension_authorized'] is True
+    assert cell['extension_contract']['decision_source'] == '7121e0188cf1cbe558704764227e306e6097149f'
+    assert cell['boundary_evaluation_interval_updates'] == 250
+    required = cell['prerequisites']['e0_rejudgment']
+    assert required['required_result'] == 'PASS'
+    assert required['checkpoint_key'] == 'model_250.pt'
+    assert required['checkpoint_sha256'] == E1_PARENT
+    assert doc['domain_randomization']['stage_scales']['E1'] == 1.0
+    assert doc['production_launch_allowed'] is False
+    assert doc['automatic_launch_allowed']['mode'] == 'approved_stage_only'
+    assert doc['automatic_launch_allowed']['require_gate_pass'] is True
+
+
+def test_e1_file_repin_preserves_old_scopes_and_rejects_an_extra_line(tmp_path):
+    plan = EX42Plan.load(TABLE)
+    doc = yaml.safe_load(APPROVALS.read_text())
+    assert 'stage_e1_authorization' in doc
+    assert plan.document['stage_zero']['approval_sha256'] == hashlib.sha256(APPROVALS.read_bytes()).hexdigest()
+    assert validate_stage_zero_authorization(plan, APPROVALS)['scope']['maximum_updates'] == 1000
+    e0_parent = doc['stage_e0_authorization']['scope']['parent_sha256']
+    assert validate_stage_e0_authorization(plan, APPROVALS, e0_parent)['scope']['maximum_updates'] == 250
+    altered = tmp_path / 'extra-line.yaml'
+    altered.write_bytes(APPROVALS.read_bytes() + b'\n# unapproved change\n')
+    with pytest.raises(ValueError, match='approval SHA256'):
+        validate_stage_zero_authorization(plan, altered)
+    assert 'explicit_lead_approval_missing' in plan.launch_blockers(APPROVALS, None, None)
+
+
+def test_e1_slow_progress_fence_is_approved_and_v28_starts_at_point_two():
+    plan = EX42Plan.load(TABLE)
+    stage = next(row for row in plan.document['stages'] if row['id'] == 'E1')
+    limits = yaml.safe_load(LIMITS.read_text())
+    approval = yaml.safe_load(APPROVALS.read_text())['stage_e1_authorization']
+    assert limits['cells']['slow_progress'] == [0.0, 0.3]
+    assert stage['rewards']['slow_progress'] == 0.2          # v28, ledger b6024dd2: from the first update, inside the fence
+    assert limits['cells']['slow_progress'][0] <= stage['rewards']['slow_progress'] <= limits['cells']['slow_progress'][1]
+    assert stage['live_adjustment']['segment_reward_limits_sha256'] == hashlib.sha256(LIMITS.read_bytes()).hexdigest()
+    assert '4f7e431e243bd2966f3eda1f720be2f5629997b1' in approval['scope_amendment']['decision_source']['commits']
+    assert 'b6024dd2162b0147dfc269a0518cab5deb7b053f' in approval['scope_amendment']['decision_source']['commits']
+    assert 'slow_progress 0.2 첫 update 부터' in approval['scope_amendment']['statement']
+
+
+def test_e1_first_check_must_fall_on_an_evaluation_boundary(tmp_path):
+    """reviewer 11/12 14:29: a plan row whose first exit check is not a multiple of the 250 interval is refused."""
+    from foothold_s2.curriculum.ex42_prep import validate_stage_e1_authorization
+    assert validate_stage_e1_authorization(EX42Plan.load(TABLE), APPROVALS, E1_PARENT)['scope']['maximum_updates'] == 1750
+    import copy
+    import dataclasses
+    plan = EX42Plan.load(TABLE)
+    document = copy.deepcopy(plan.document)
+    next(row for row in document['stages'] if row['id'] == 'E1')['minimum_updates'] = 1700
+    with pytest.raises(ValueError, match='divide the first check'):
+        validate_stage_e1_authorization(dataclasses.replace(plan, document=document), APPROVALS, E1_PARENT)

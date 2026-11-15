@@ -1,0 +1,142 @@
+원본 sha256: s2_map_obs.py cf0552861905 · s2_policy.py 01e57d10843c · test_s2.py 6468abd33d9a
+BASELINE rc=0 PASS 14/14 FAIL [] (6.3 s)
+CAUGHT m01 [s2_map_obs.py] A 에 mask 실제 값 (height 만 상수) · 기대 ['T6'] · FAIL ['T1', 'T5', 'T6', 'T8'] · rc 1 (6.4 s)
+    사유 (T6): ValueError: A 정책에 상수가 아닌 지도 입력이 들어왔다 (A 는 height · mask 모두 상수)
+CAUGHT m02 [s2_map_obs.py] A 에 height 실제 값 (mask 만 상수) · 기대 ['T6'] · FAIL ['T1', 'T5', 'T6', 'T8'] · rc 1 (6.3 s)
+    사유 (T6): ValueError: A 정책에 상수가 아닌 지도 입력이 들어왔다 (A 는 height · mask 모두 상수)
+CAUGHT m04 [s2_map_obs.py] height 부호 반대 (맞은 점 - 센서) · 기대 ['T1'] · FAIL ['T1', 'T2', 'T3', 'T8'] · rc 1 (6.4 s)
+    사유 (T1): 2/11 칸 실패: height -0.1 이어야 함: -0.900000 ~ -0.900000 | 배치 [height 0~186, mask 187~373]
+CAUGHT m05 [s2_map_obs.py] 정상 miss (+inf) 를 hit 로 (mask 1) · 기대 ['T2'] · FAIL ['T2', 'T3', 'T6', 'T8'] · rc 1 (6.4 s)
+    사유 (T2): 4/9 칸 실패: height 칸별 대조 · 최대 차 2.000000 | mask 칸별 대조 · mask 0 위치 [] (0 번만이어야 함) | 정상 miss 와 유한한 깊은 바닥은 height 가 같고 (1) mask 로만 갈린다 (0 vs 1) | map_obs_b 에도 같은 값
+CAUGHT m06 [s2_map_obs.py] 광선 순서 ij (y 가 가장 빨리) · 기대 ['T3'] · FAIL ['T3'] · rc 1 (6.2 s)
+    사유 (T3): 4/27 칸 실패: 광선 1: [-0.800000011920929, -0.4000000059604645] != (-0.7, -0.5) | 광선 16: [-0.699999988079071, 0.0] != (0.8, -0.5) | 광선 17: [-0.699999988079071, 0.10000000149011612] != (-0.8, -0.4) | grid_ray_xy_body == IsaacLab grid_pattern (187 광선 모두 비트 동일)
+CAUGHT m11 [s2_map_obs.py] 판 1 의 1 m 깊이 분류를 되살림 (깊은 바닥 mask 0) · 기대 ['T2'] · FAIL ['T2'] · rc 1 (6.1 s)
+    사유 (T2): 4/9 칸 실패: height 칸별 대조 · 최대 차 1.000000 | mask 칸별 대조 · mask 0 위치 [0, 2, 6, 22] (0 번만이어야 함) | 정상 miss 와 유한한 깊은 바닥은 height 가 같고 (1) mask 로만 갈린다 (0 vs 1) | map_obs_b 에도 같은 값
+CAUGHT m12 [s2_map_obs.py] 정상 miss 칸 height 를 0 으로 («깊음» 아님) · 기대 ['T2'] · FAIL ['T2', 'T3', 'T8'] · rc 1 (6.1 s)
+    사유 (T2): 3/9 칸 실패: height 칸별 대조 · 최대 차 1.000000 | 정상 miss 와 유한한 깊은 바닥은 height 가 같고 (1) mask 로만 갈린다 (0 vs 1) | map_obs_b 에도 같은 값
+CAUGHT m13 [s2_map_obs.py] height clip 을 뺌 · 기대 ['T2'] · FAIL ['T2'] · rc 1 (6.1 s)
+    사유 (T2): 3/9 칸 실패: height 칸별 대조 · 최대 차 8.900000 | 정상 miss 와 유한한 깊은 바닥은 height 가 같고 (1) mask 로만 갈린다 (0 vs 1) | map_obs_b 에도 같은 값
+CAUGHT m14 [s2_map_obs.py] map_obs_b 배치 [mask, height] 로 뒤바뀜 · 기대 ['T1'] · FAIL ['T1', 'T2', 'T3', 'T8'] · rc 1 (6.3 s)
+    사유 (T1): 2/11 칸 실패: 배치 [height 0~186, mask 187~373] | map_obs('B') == map_obs_b
+CAUGHT m14b [s2_map_obs.py] map_obs('B') 배치 [mask, height] 로 뒤바뀜 · 기대 ['T1'] · FAIL ['T1', 'T6'] · rc 1 (6.2 s)
+    사유 (T1): 1/11 칸 실패: map_obs('B') == map_obs_b
+CAUGHT n01 [s2_map_obs.py] 센서 위치 NaN · inf 를 못 알아봄 · 기대 ['T8'] · FAIL ['T8'] · rc 1 (6.2 s)
+    사유 (T8): 6/31 칸 실패: 센서 비유한 env 2 개만 고장 (packet 으로 두 번 세지 않음): [False, False, False] · {'sensor_nonfinite_envs': 0, 'ray_packet_bad': 0, 'bad_envs': 0} | env_bad [False, False, False] | 센서 고장 env 의 지도는 자리표시 (height 0 · mask 0) | strict: 센서 고장 -> MapObsFault | 센서 고장: A ·
+CAUGHT n02 [s2_map_obs.py] 판 1 처럼 비유한 hit 를 모두 정상 miss (구멍) 로 · 기대 ['T8'] · FAIL ['T8', 'T10'] · rc 1 (6.2 s)
+    사유 (T8): 8/31 칸 실패: packet 고장 위치 [] (10 · 11 · 12 · 13 · 15 이어야 함) | packet 고장이 있는 env 는 env_bad | 고장 칸 (0, 0) · 정상 miss 칸 (1, 0) · 나머지 (-0.1, 1) | strict: packet 고장 -> MapObsFault (B) | strict: packet 고장 -> MapObsFault (A 도 같게) | packet 고장: A · B 고장 판정이 같음 ({'sensor_n
+CAUGHT n03 [s2_map_obs.py] z 만 +inf 인 손상 packet 을 정상 miss 로 · 기대 ['T8'] · FAIL ['T8'] · rc 1 (6.4 s)
+    사유 (T8): 3/31 칸 실패: packet 고장 위치 [10, 11, 12, 15] (10 · 11 · 12 · 13 · 15 이어야 함) | 고장 칸 (0, 0) · 정상 miss 칸 (1, 0) · 나머지 (-0.1, 1) | packet 고장 뒤 무효 {'map_steps': 2, 'sensor_nonfinite_envs': 0, 'ray_packet_bad': 4, 'critic_input_nonfinite': 0, 'value_nonfinite': 0}
+CAUGHT n04 [s2_map_obs.py] x 가 NaN 인 손상 packet 을 정상 hit 로 · 기대 ['T8'] · FAIL ['T8'] · rc 1 (6.2 s)
+    사유 (T8): 3/31 칸 실패: packet 고장 위치 [10, 11, 13, 15] (10 · 11 · 12 · 13 · 15 이어야 함) | 고장 칸 (0, 0) · 정상 miss 칸 (1, 0) · 나머지 (-0.1, 1) | packet 고장 뒤 무효 {'map_steps': 2, 'sensor_nonfinite_envs': 0, 'ray_packet_bad': 4, 'critic_input_nonfinite': 0, 'value_nonfinite': 0}
+CAUGHT n05 [s2_map_obs.py] 20 m ray 시작 offset 을 센서 높이에 다시 더함 · 기대 ['T8'] · FAIL ['T1', 'T2', 'T3', 'T8'] · rc 1 (6.2 s)
+    사유 (T8): 9/31 칸 실패: 고장 없는 env 0 은 정상 (-0.1 · 1) | 고장 칸 (0, 0) · 정상 miss 칸 (1, 0) · 나머지 (-0.1, 1) | 지면 0.3 -> height -0.4 · mask 1 (20 m 를 다시 더하면 clip 1): 1.0000 | yaw 0 · 블록 앞 0.3 m: 블록 광선 [] (96 이어야 함) | yaw 0 · 0.3 m 앞으로 옮김 -> 발밑: 블록 광선 [] (93 이어야 함) | yaw +90 · 블록 세
+CAUGHT n06 [s2_map_obs.py] A 만 고장 판정 · strict 를 건너뜀 (A · B 다른 관문) · 기대 ['T8'] · FAIL ['T8'] · rc 1 (6.1 s)
+    사유 (T8): 3/31 칸 실패: strict: packet 고장 -> MapObsFault (A 도 같게) | 센서 고장: A · B 고장 판정이 같음 ({'sensor_nonfinite_envs': 0, 'ray_packet_bad': 0, 'bad_envs': 0} vs {'sensor_nonfinite_envs': 2, 'ray_packet_bad': 0, 'bad_envs': 2}) | packet 고장: A · B 고장 판정이 같음 ({'sensor_nonfinit
+CAUGHT n07 [s2_map_obs.py] 고장 칸 자리표시를 정상 miss 꼴 (1, 0) 로 (구멍으로 바뀜) · 기대 ['T8'] · FAIL ['T8'] · rc 1 (6.3 s)
+    사유 (T8): 3/31 칸 실패: 센서 고장 env 의 지도는 자리표시 (height 0 · mask 0) | 센서 고장이 정상 miss 꼴 (height 1 · mask 0) 로 바뀌지 않음 (구멍 아님) | 고장 칸 (0, 0) · 정상 miss 칸 (1, 0) · 나머지 (-0.1, 1)
+CAUGHT n08 [s2_map_obs.py] strict 예외를 끔 · 기대 ['T8'] · FAIL ['T8'] · rc 1 (6.1 s)
+    사유 (T8): 3/31 칸 실패: strict: 센서 고장 -> MapObsFault | strict: packet 고장 -> MapObsFault (B) | strict: packet 고장 -> MapObsFault (A 도 같게)
+CAUGHT n09 [s2_map_obs.py] 관문이 packet 고장을 무시 · 기대 ['T8'] · FAIL ['T8'] · rc 1 (6.1 s)
+    사유 (T8): 2/31 칸 실패: packet 고장 뒤 무효 {'map_steps': 2, 'sensor_nonfinite_envs': 0, 'ray_packet_bad': 5, 'critic_input_nonfinite': 0, 'value_nonfinite': 0} | 무효 관문은 require_valid 에서 MapObsFault
+CAUGHT n10 [s2_map_obs.py] 관문이 critic 점검의 value NaN 을 무시 · 기대 ['T10'] · FAIL ['T10'] · rc 1 (6.2 s)
+    사유 (T10): 1/12 칸 실패: NaN 뒤 관문 무효 {'map_steps': 0, 'sensor_nonfinite_envs': 0, 'ray_packet_bad': 0, 'critic_input_nonfinite': 1, 'value_nonfinite': 0}
+CAUGHT m03 [s2_policy.py] 새 64 열을 0 이 아닌 값 (std 1e-3) 으로 시작 · 기대 ['T4'] · FAIL ['T4', 'T5', 'T14'] · rc 1 (6.3 s)
+    사유 (T4): 9/18 칸 실패: 새 64 열 [512, 64] 이 모두 0 | actor 첫 층 [512, 141] = [부모 77 열 | 0 64 열] | A · B 의 state_dict 가 열쇠 · 값 모두 같음 (같은 출발점) | B (무작위 1) action 이 부모와 비트 동일 | B (무작위 2) action 이 부모와 비트 동일 | B (거친 지형) action 이 부모와 비트 동일 | B (큰 값) action 이 부모와 비트 동일 | A action 이 부
+CAUGHT m07 [s2_policy.py] student encoder 의 no_grad 를 forward 에 그대로 둠 (부모 act 처럼) · 기대 ['T5'] · FAIL ['T5', 'T7', 'T9', 'T11', 'T12', 'T14'] · rc 1 (6.0 s)
+    사유 (T5): 2/27 칸 실패: B 갱신 전: student encoder gradient 가 매개변수마다 있음 (forward 에 no_grad 없음) [('student_moe_encoder.moe.experts.backbone.network.0.weight', 0), ('student_moe_encoder.moe.experts.backbone.network.0.bias', 0), ('student_moe_encoder.moe.experts.backbone.network
+CAUGHT m08 [s2_policy.py] map encoder 출력 detach (지도 경로 gradient 끊김) · 기대 ['T5'] · FAIL ['T5', 'T11'] · rc 1 (6.1 s)
+    사유 (T5): 5/27 칸 실패: B 갱신 전: map encoder 가 계산 그래프에 있음 (grad None 없음) | B 갱신 뒤: map encoder gradient 가 매개변수마다 0 아님 [('map_encoder.network.0.weight', 0), ('map_encoder.network.0.bias', 0), ('map_encoder.network.2.weight', 0), ('map_encoder.network.2.bias', 0)] | A 갱신 전: m
+CAUGHT m09 [s2_policy.py] optimizer 에서 map encoder 빠짐 · 기대 ['T5'] · FAIL ['T5', 'T7', 'T9', 'T11', 'T12', 'T13', 'T14'] · rc 1 (4.8 s)
+    사유 (T5): S2ControlError: optimizer 를 만들 때: group 이름 ('student_encoder', 'actor', 'critic', 'std') != 규칙 ('student_encoder', 'map_encoder', 'actor', 'critic', 'std') | 학습 대상 매개변수 4 개가 optimizer 에 없다
+CAUGHT m10 [s2_policy.py] critic 의 latent.detach 를 뺌 (value 손실이 student encoder 로 감) · 기대 ['T5'] · FAIL ['T5'] · rc 1 (6.2 s)
+    사유 (T5): 1/27 칸 실패: value 손실만: student encoder gradient 0 (latent.detach)
+CAUGHT m15 [s2_policy.py] actor 뒤쪽을 부모와 공유 (깊은 복사 안 함) · 기대 ['T7'] · FAIL ['T7'] · rc 1 (6.1 s)
+    사유 (T7): 3/12 칸 실패: 부모 모듈 값 == 파일 값 (앞 시험들과 이 갱신 뒤) · 다른 열쇠 ['actor.network.2.weight', 'actor.network.2.bias', 'actor.network.4.weight', 'actor.network.4.bias'] | S2 매개변수가 부모와 저장소를 나누지 않음 · 나누는 것 ['actor_rest.2.weight', 'actor_rest.2.bias', 'actor_rest.4.weight', 'acto
+CAUGHT m16 [s2_policy.py] std 를 부모 값이 아닌 1 로 · 기대 ['T4'] · FAIL ['T4', 'T7'] · rc 1 (6.2 s)
+    사유 (T4): 1/18 칸 실패: act() 분포 평균 · std 가 부모와 비트 동일
+CAUGHT m17 [s2_policy.py] A · B 의 map encoder 시드가 다름 (출발점 다름) · 기대 ['T4'] · FAIL ['T4'] · rc 1 (6.7 s)
+    사유 (T4): 1/18 칸 실패: A · B 의 state_dict 가 열쇠 · 값 모두 같음 (같은 출발점)
+CAUGHT m18 [s2_policy.py] A 상수 관문 끔 · 기대 ['T6'] · FAIL ['T6'] · rc 1 (6.2 s)
+    사유 (T6): 2/9 칸 실패: A 정책에 B 지도 (rough) 를 넣으면 ValueError | A 정책에 B 지도 (holes) 를 넣으면 ValueError
+CAUGHT m19 [s2_policy.py] actor 입력 순서 [single_obs, latent] 로 뒤바뀜 · 기대 ['T4'] · FAIL ['T4'] · rc 1 (6.4 s)
+    사유 (T4): 6/18 칸 실패: B (무작위 1) action 이 부모와 비트 동일 | B (무작위 2) action 이 부모와 비트 동일 | B (거친 지형) action 이 부모와 비트 동일 | B (큰 값) action 이 부모와 비트 동일 | A action 이 부모와 비트 동일 | act() 분포 평균 · std 가 부모와 비트 동일
+CAUGHT m20 [s2_policy.py] S2 를 지으며 부모 모듈 값을 바꿈 (메모리 안) · 기대 ['T7'] · FAIL ['T4', 'T7', 'T14'] · rc 1 (6.4 s)
+    사유 (T7): 2/12 칸 실패: 부모 모듈 값 == 파일 값 (앞 시험들과 이 갱신 뒤) · 다른 열쇠 ['std'] | 복사본 값 != 부모 값 ['std']
+CAUGHT p01 [s2_policy.py] 고정 구간 하나 더 김 (<=) · 기대 ['T9'] · FAIL ['T5', 'T7', 'T9', 'T12', 'T13'] · rc 1 (6.4 s)
+    사유 (T9): KeyError: 'step'
+CAUGHT p02 [s2_policy.py] 풀린 뒤 encoder lr 에 r 을 안 곱함 · 기대 ['T9'] · FAIL ['T9', 'T12', 'T13'] · rc 1 (6.5 s)
+    사유 (T9): 3/34 칸 실패: update 3: lr {'student_encoder': 0.00017085937500000009, 'map_encoder': 0.00017085937500000009, 'actor': 0.00017085937500000009, 'critic': 0.00017085937500000009, 'std': 0.00017085937500000009} (encoder 4.271484375000002e-05 · 나머지 0.0001708593750000
+CAUGHT p03 [s2_policy.py] lr 0 으로만 고정 (gradient · Adam moment 가 고정 중에 쌓임 · full_freeze 도 같은 줄) · 기대 ['T9'] · FAIL ['T9', 'T11', 'T12', 'T13', 'T14'] · rc 1 (4.9 s)
+    사유 (T9): S2ControlError: optimizer 를 만들 때: student encoder requires_grad 가 고정 규칙과 다른 매개변수 16 개
+CAUGHT p04 [s2_policy.py] W · r 에 기본값을 둠 · 기대 ['T9'] · FAIL ['T9', 'T11', 'T12', 'T13', 'T14'] · rc 1 (5.0 s)
+    사유 (T9): 3/34 칸 실패: make_optimizer 의 W · r 기본값은 「안 넘김」 표시 (쓸 수 있는 값 없음) | schedule 에 W · r 을 안 넘기면 TypeError | 인자 오류는 정책을 건드리기 전에 난다 (requires_grad 그대로)
+CAUGHT p05 [s2_policy.py] 만들 때 update 0 규칙을 안 걺 (첫 update 전 encoder 가 풀려 있음) · 기대 ['T9'] · FAIL ['T9', 'T11', 'T12', 'T13', 'T14'] · rc 1 (5.1 s)
+    사유 (T9): S2ControlError: optimizer 를 만들 때: student encoder requires_grad 가 고정 규칙과 다른 매개변수 16 개
+CAUGHT q01 [s2_policy.py] full_freeze 인데 student encoder 를 optimizer 에 넣음 · 기대 ['T11'] · FAIL ['T11', 'T12', 'T13', 'T14'] · rc 1 (5.2 s)
+    사유 (T11): S2ControlError: optimizer 를 만들 때: group 이름 ('student_encoder', 'map_encoder', 'actor', 'critic', 'std') != 규칙 ('map_encoder', 'actor', 'critic', 'std') | full_freeze 인데 student encoder 매개변수 16 개가 optimizer 에 있다
+CAUGHT q03 [s2_policy.py] full_freeze 가 번호 50 에서 풀림 · 기대 ['T11'] · FAIL ['T11'] · rc 1 (6.4 s)
+    사유 (T11): 1/31 칸 실패: 번호 (0, 1, 49, 50, 51, 1999, 2000, 20000, 1000000000) 모두 고정
+CAUGHT q04 [s2_policy.py] full_freeze 가 W · r 을 말없이 받음 · 기대 ['T11'] · FAIL ['T11'] · rc 1 (6.4 s)
+    사유 (T11): 6/31 칸 실패: full_freeze 에 {'encoder_freeze_updates': 50} 를 넘기면 TypeError | full_freeze 에 {'encoder_lr_ratio': 0.1} 를 넘기면 TypeError | full_freeze 에 {'encoder_freeze_updates': 50, 'encoder_lr_ratio': 0.1} 를 넘기면 TypeError | full_freeze 에 {'encoder_freeze_updates':
+CAUGHT q05 [s2_policy.py] encoder_mode 에 기본값을 둠 · 기대 ['T11'] · FAIL ['T11'] · rc 1 (6.4 s)
+    사유 (T11): 3/31 칸 실패: make_optimizer · EncoderControl 의 encoder_mode 기본값 없음 | encoder_mode 없이 부르면 TypeError | 인자 오류는 정책을 건드리기 전에 난다
+CAUGHT q06 [s2_policy.py] 다음 번호 검사를 뺌 (부모 20000 · runner 번호 · 건너뜀을 받음) · 기대 ['T12'] · FAIL ['T12'] · rc 1 (5.5 s)
+    사유 (T12): S2IndexError: S2 갱신 20000 이 끝나지 않았는데 0 를 시작한다
+CAUGHT q07 [s2_policy.py] 상태 변경이 한 update 늦음 (W 의 첫 minibatch 가 아니라 W+1 에서 해제) · 기대 ['T12'] · FAIL ['T9', 'T12', 'T13'] · rc 1 (6.3 s)
+    사유 (T12): 3/37 칸 실패: schedule W3: encoder Adam step = 해제 뒤 step 수 (update 3 · 4) | W3: update 3 의 첫 minibatch 부터 해제 (grad 있음 · requires_grad True · encoder lr = 0.25 x base) | update 0 ~ 4 첫 minibatch 의 고정 [T T T F F]
+CAUGHT q08 [s2_policy.py] 완료 수를 안 셈 · 기대 ['T12'] · FAIL ['T9', 'T11', 'T12', 'T13'] · rc 1 (5.4 s)
+    사유 (T12): S2IndexError: S2 갱신 번호 1 != 다음 번호 0 (S2 첫 rollout 의 update 가 0 이다. 부모 checkpoint iter 20000 이나 runner current_learning_iteration 을 넘기지 않는다. 재개 때 W 를 다시 시작하거나 건너뛰지 않는다)
+CAUGHT q09 [s2_policy.py] 재개 때 optimizer 상태를 안 읽음 · 기대 ['T12'] · FAIL ['T12'] · rc 1 (5.6 s)
+    사유 (T12): S2ControlError: optimizer 를 읽은 뒤 group 이름 · lr 이 저장과 다르다
+CAUGHT q10 [s2_policy.py] 재개 때 lr 을 안 되돌림 · 기대 ['T12'] · FAIL ['T12'] · rc 1 (6.0 s)
+    사유 (T12): 8/37 칸 실패: full_freeze 재개: 다음 번호 2 · lr 0.00017085937500000009 (저장 3.3750000000000014e-05) | full_freeze: 재개 뒤 정책 매개변수가 끊김 없는 학습과 비트 동일 | full_freeze: optimizer 상태 (step · exp_avg · exp_avg_sq) 비트 동일 (22 항목) | full_freeze: group lr · base lr 같음 (1.500000000000
+CAUGHT q11 [s2_policy.py] 재개 때 mode · W · r 이 달라도 받음 (다른 실험) · 기대 ['T12'] · FAIL ['T12'] · rc 1 (6.2 s)
+    사유 (T12): 1/37 칸 실패: schedule 저장을 다른 규칙 ('schedule', {'encoder_freeze_updates': 4, 'encoder_lr_ratio': 0.25}) 에 읽으면 ValueError
+CAUGHT q12 [s2_policy.py] 재개 때 완료 수를 0 으로 (W 를 다시 시작) · 기대 ['T12'] · FAIL ['T12'] · rc 1 (5.7 s)
+    사유 (T12): S2IndexError: S2 갱신 0 이 끝나지 않았는데 2 를 시작한다
+CAUGHT q23 [s2_policy.py] optimizer step 없는 update 를 완료로 셈 (갱신 생략) · 기대 ['T12'] · FAIL ['T12'] · rc 1 (5.7 s)
+    사유 (T12): S2ControlError: enforce_groups 는 begin_update ~ end_update 사이에서 부른다
+CAUGHT q24 [s2_policy.py] update 도중 저장을 받음 · 기대 ['T12'] · FAIL ['T12'] · rc 1 (6.4 s)
+    사유 (T12): 1/37 칸 실패: update 도중 저장 -> S2IndexError
+CAUGHT q25 [s2_policy.py] 끝나지 않은 update 위에 다시 시작을 받음 · 기대 ['T12'] · FAIL ['T12'] · rc 1 (6.5 s)
+    사유 (T12): 1/37 칸 실패: 끝나지 않은 update 위에 다시 시작 -> S2IndexError
+CAUGHT q26 [s2_policy.py] 번호의 형 검사를 뺌 (False · 0.0 · tensor 를 0 으로 받음) · 기대 ['T12'] · FAIL ['T12'] · rc 1 (5.7 s)
+    사유 (T12): S2IndexError: S2 갱신 False 이 끝나지 않았는데 0 를 시작한다
+CAUGHT q30 [s2_policy.py] 저장이 optimizer 상태를 깊은 복사하지 않음 (뒤 step 이 저장을 바꿈) · 기대 ['T12'] · FAIL ['T12'] · rc 1 (6.3 s)
+    사유 (T12): 6/37 칸 실패: full_freeze: 재개 뒤 정책 매개변수가 끊김 없는 학습과 비트 동일 | full_freeze: optimizer 상태 (step · exp_avg · exp_avg_sq) 비트 동일 (22 항목) | full_freeze: group lr · base lr 같음 (1.5000000000000005e-05) | schedule: 재개 뒤 정책 매개변수가 끊김 없는 학습과 비트 동일 | schedule: optimizer 상태 (step
+CAUGHT q13 [s2_policy.py] enforce_groups 가 group lr 을 다시 쓰지 않음 (확인만) · 기대 ['T13'] · FAIL ['T12', 'T13'] · rc 1 (5.8 s)
+    사유 (T13): S2ControlError: S2 갱신 0 step 전: group student_encoder lr 0.00017085937500000009 != 규칙 0.0
+CAUGHT q14 [s2_policy.py] 고정 encoder 의 grad None 확인을 뺌 · 기대 ['T13'] · FAIL ['T13'] · rc 1 (6.2 s)
+    사유 (T13): 1/25 칸 실패: 고정 encoder 에 남은 grad: audit 문제 0 개 (1 이어야 함) · enforce 예외 False
+CAUGHT q15 [s2_policy.py] full_freeze 에서 encoder 가 optimizer 에 끼어도 모름 · 기대 ['T13'] · FAIL ['T13'] · rc 1 (6.3 s)
+    사유 (T13): 1/25 칸 실패: encoder 매개변수를 actor 묶음에 끼움: audit 문제 0 개 (1 이어야 함) · enforce 예외 False
+CAUGHT q16 [s2_policy.py] encoder requires_grad 확인을 뺌 · 기대 ['T13'] · FAIL ['T13'] · rc 1 (6.3 s)
+    사유 (T13): 1/25 칸 실패: encoder requires_grad True: audit 문제 0 개 (1 이어야 함) · enforce 예외 False
+CAUGHT q17 [s2_policy.py] 고정 encoder 의 Adam 상태 확인을 뺌 · 기대 ['T13'] · FAIL ['T13'] · rc 1 (6.3 s)
+    사유 (T13): 1/25 칸 실패: encoder 의 Adam 상태: audit 문제 0 개 (1 이어야 함) · enforce 예외 False
+CAUGHT q18 [s2_policy.py] audit 이 group lr 을 안 봄 (enforce 뒤 덮어쓰기를 hook 이 못 잡음) · 기대 ['T13'] · FAIL ['T13'] · rc 1 (6.2 s)
+    사유 (T13): 3/25 칸 실패: audit 이 그 하나를 잡음: [] | enforce 뒤 부모 꼴 덮어쓰기 -> step 전 hook 이 S2ControlError | 막힌 step 은 세지 않음 (step 4)
+CAUGHT q19 [s2_policy.py] step 전 hook 을 안 걺 (enforce 없이 step 해도 모름) · 기대 ['T13'] · FAIL ['T5', 'T7', 'T9', 'T11', 'T12', 'T13', 'T14'] · rc 1 (4.9 s)
+    사유 (T13): S2ControlError: S2 갱신 0 에 optimizer step 이 없다 (갱신 생략은 W 의 뜻을 바꾼다)
+CAUGHT q22 [s2_policy.py] base_lr 검사를 뺌 (NaN · 0 · 음수를 받음) · 기대 ['T13'] · FAIL ['T13'] · rc 1 (6.1 s)
+    사유 (T13): S2ControlError: S2 갱신 0 step 직전 (enforce 뒤 바뀜): group map_encoder lr nan != 규칙 0.0002562890625000001 | group actor lr nan != 규칙 0.0002562890625000001 | group critic lr nan != 규칙 0.0002562890625000001 | group std lr nan != 규칙 0.0002562890625000001
+CAUGHT q27 [s2_policy.py] enforce 한 번이 뒤 step 들을 모두 통과시킴 · 기대 ['T13'] · FAIL ['T13'] · rc 1 (6.2 s)
+    사유 (T13): 2/25 칸 실패: enforce 없이 이어서 step -> S2ControlError (step 마다 enforce) | 막힌 step 은 세지 않음 (step 4)
+CAUGHT q28 [s2_policy.py] 다른 optimizer 로 enforce 를 받음 · 기대 ['T13'] · FAIL ['T13'] · rc 1 (6.2 s)
+    사유 (T13): 1/25 칸 실패: 묶이지 않은 (쌍둥이) optimizer -> S2ControlError
+CAUGHT q29 [s2_policy.py] encoder 밖 매개변수가 꺼져도 모름 · 기대 ['T13'] · FAIL ['T13'] · rc 1 (6.2 s)
+    사유 (T13): 1/25 칸 실패: encoder 밖 매개변수 requires_grad False: audit 문제 0 개 (1 이어야 함) · enforce 예외 False
+CAUGHT q20 [s2_policy.py] trainable_params 가 고정 encoder 까지 돌려줌 (판 2 의 전체 clip) · 기대 ['T14'] · FAIL ['T14'] · rc 1 (6.1 s)
+    사유 (T14): 3/9 칸 실패: trainable_params 에 encoder 없음 (38 = 전체 38 - 16) | full_freeze: trainable_params == optimizer 의 매개변수 | 판 3 방식: clip norm 4.999993 (3 · encoder 안 들어감) · encoder 밖 0.600001 (약 1) · 남은 encoder grad 0.800001 안 건드림
+CAUGHT q21 [s2_policy.py] schedule 이 r 0 을 받음 (실제 고정이 아닌 lr 0) · 기대 ['T9'] · FAIL ['T9'] · rc 1 (6.3 s)
+    사유 (T9): 2/34 칸 실패: r 0 은 ValueError (17f-2 3.1: lr 0 은 실제 고정이 아님 · 끝까지 고정은 full_freeze) | 인자 오류는 정책을 건드리기 전에 난다 (requires_grad 그대로)
+CAUGHT p06 [s2_policy.py] critic 점검이 critic 입력을 고쳐 씀 (NaN -> 0) · 기대 ['T10'] · FAIL ['T10'] · rc 1 (6.2 s)
+    사유 (T10): 5/12 칸 실패: critic 입력 NaN 1 칸 · 1 env: {'n_env': 4, 'critic_input_nonfinite': 0, 'critic_input_nonfinite_envs': 0, 'value_nonfinite': 0, 'miss_rays': 7, 'critic_at_miss_values': [-2.5], 'critic_at_miss_min': -2.5, 'critic_at_miss_max': -2.5} | value NaN 1 (env 
+CAUGHT p07 [s2_policy.py] critic height 열을 한 칸 어긋나게 읽음 · 기대 ['T10'] · FAIL ['T10'] · rc 1 (6.2 s)
+    사유 (T10): 2/12 칸 실패: critic height 열 시작 87 (88) · critic 첫 층 입력 307 = 32 + 88 + 187 | 정상 miss 칸의 critic 입력 = -2.5 (벽 쪽): [-2.5, -0.2499999850988388, 0.36027517914772034]
+CAUGHT p08 [s2_policy.py] critic 점검이 value NaN 을 안 셈 · 기대 ['T10'] · FAIL ['T10'] · rc 1 (6.1 s)
+    사유 (T10): 2/12 칸 실패: value NaN 1 (env 1): 0 | NaN 뒤 관문 무효 {'map_steps': 0, 'sensor_nonfinite_envs': 0, 'ray_packet_bad': 0, 'critic_input_nonfinite': 1, 'value_nonfinite': 0}
+CAUGHT g01 [관문 자체] T7 sha256 기대값을 틀린 값으로 (해시 대조가 헛돌지 않는지) · 기대 ['T7'] · FAIL ['T7'] · rc 1 (6.2 s)
+    사유 (T7): 2/12 칸 실패: 시험 전 sha256 c8951b797dbe4157 != 기록 0000000000000000 | 시험 뒤 sha256 c8951b797dbe4157 (전 c8951b797dbe4157)
+원본 sha256 시작 == 끝: True
+ALL CAUGHT 69/69

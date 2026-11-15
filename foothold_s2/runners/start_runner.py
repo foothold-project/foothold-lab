@@ -1,0 +1,1855 @@
+"""START 전용 runner (12 §6.1 · 13 §6 · 18 §5.1). 설치 rsl_rl 3.1.2 `OnPolicyRunner` 를 물려받아 한 iteration 을 다시 짠다.
+
+한 iteration 의 순서(12 §6.1, 바꾸면 ratio 입력이 수집 때와 달라지므로 금지):
+    ① rollout 수집(inference_mode) · 지각 50 Hz 진행 · actor 입력 96 을 PPO 버퍼에 그대로 저장 · 지각 재생 버퍼 채움
+    ② PPO update(설치 PPO 그대로 · 저장된 입력과 log prob 로만)
+    ③ 지각 재생 · L_TR + L_IE 를 한 번의 backward(계수 1 · 1) · 지각 optimizer 따로
+    ④ AdaSmpl 통계 갱신(분산이면 count · sum · sumsq 전 rank 합)
+    ⑤ 로그 · 저장(12 §6.1 상태 목록 전부)
+
+env 가 내야 하는 관측 묶음(env cfg 쪽 계약 · lead 의 s2_env_cfg 와 맞출 것):
+    policy (N, 45)    o_t (13 §2 식 1 순서 · 스케일)
+    depth  (N, 60, 60) 정규화 · 증강 뒤 깊이, 미검출 1.0 (11 §2)
+    gt_map (N, 512) 또는 (N, 32, 16)  정답 H^b (중력 정렬 yaw 틀)
+    gt_feet (N, 100)  정답 H^f (발 4 개 x 5 x 5)
+    base_vel (N, 3)   몸 틀 선속도 (특권)
+    contacts (N, 4)   발 접촉 (특권)
+critic 입력 664 는 이 runner 가 [policy, base_vel, contacts, gt_map, gt_feet] 순으로 묶는다(13 §2).
+
+설치 `save()` 는 정책 · PPO optimizer · RND 만 저장한다(on_policy_runner.py 291~303 행). 여기서 덧붙인다.
+"""
+
+from __future__ import annotations
+
+import json
+import copy
+import math
+import hashlib
+import os
+import random
+import re
+import subprocess
+import time
+import warnings
+from pathlib import Path
+from collections import deque
+
+import numpy as np
+import torch
+import torch.nn as nn
+from tensordict import TensorDict
+
+from rsl_rl.algorithms import PPO
+from rsl_rl.runners import OnPolicyRunner
+from rsl_rl.utils import resolve_obs_groups, store_code_state
+
+import rsl_rl
+from foothold_s2.commands import mixed_core as mc
+from foothold_s2.models import start_perception as sp
+from foothold_s2.models.start_perception import AdaSmpl, PerceptionCfg, StartPerception, velocity_band_records, lowband_bias_summary
+from foothold_s2.models.start_policy import ACTOR_KEY, CRITIC_KEY, OBS_GROUPS, StartActorCritic
+from foothold_s2.runners import kl_probe, manifest as run_manifest
+from foothold_s2.runners.contracts import command_sample_bad, contract_bad_fn, flag_env_command_bad
+from foothold_s2.runners.action_stats import ActionStats, phys_probe
+from foothold_s2.runners.map_switch import ELIGIBLE_NAMES, MapSwitchRecorder, OffEligibilityStats, SPARSE_NAMES, check_column_names, is_sparse_name, draw_map_off, eligible_map_off, make_generator, nearest_tile_cols
+from foothold_s2.runners.perception_replay import PerceptionReplay
+from foothold_s2.runners.reward_split import RewardSplit
+from foothold_s2.runners.status import write_status
+from foothold_s2.terrains import columns
+from foothold_s2.terrains.generator_columns import generator_column_names, has_column_source
+
+def _final_checkpoint_is_already_current(runtime, iteration: int, checkpoint_path: str | Path) -> bool:
+    """Avoid overwriting a just-saved stride checkpoint with its own reference."""
+    reference = getattr(runtime, "last_checkpoint", None)
+    path = Path(checkpoint_path)
+    if (not isinstance(reference, dict) or type(reference.get("iteration")) is not int
+            or reference["iteration"] != iteration or not path.is_file()):
+        return False
+    try:
+        resolved = path.resolve(strict=True)
+        recorded = Path(reference.get("path", "")).resolve(strict=True)
+        if recorded != resolved:
+            return False
+        with resolved.open("rb") as stream:
+            actual_sha = hashlib.file_digest(stream, "sha256").hexdigest()
+    except (OSError, RuntimeError, ValueError):
+        return False
+    return reference.get("sha256") == actual_sha
+
+
+CKPT_FORMAT = "foothold-start/1"
+MODE_DEFAULTS = {"est_mode": "learned", "critic_mode": "legacy"}   # 옛 체크포인트(G0 · G1 · EX-09 · EX-10)에는 이 칸이 없다: 그때의 동작이 이 값이다
+
+# 지각 optimizer 수치: 전부 가정 (12 §6.1, START · 선행에 없음)
+# 지각 optimizer 학습률을 이 값으로 고정한다 (v28f). None 이면 PERCEPTION_DEFAULTS / train_cfg 값 그대로(이전 동작과 같음).
+# 이어받기 때 저장본의 perception_optimizer 가 param_groups lr 까지 복원하므로 복원 직후마다 다시 덮는다 (_pin_perception_lr).
+PERCEPTION_LR_OVERRIDE = 1e-4
+PERCEPTION_DEFAULTS = {
+    "fast_gt_only": False,
+    "learning_rate": 5e-4,
+    "weight_decay": 0.0,
+    "num_learning_epochs": 5,
+    "num_mini_batches": 4,
+    "microbatch_envs": 256,
+    "max_grad_norm": 1.0,
+    "depth_dtype": "float16",
+    "replay_impl": "a3",  # loop · a1 · a2 · a3 (models/replay_fast.py · 계산 순서만 다르고 학습 내용은 같음 · lead 결정 10/20 RL-3)
+    "replay_autocast": None,  # None · "bf16" (RL-3 B · 정확도 차이는 손실 값으로 따로 기록)
+    "kl_fp32": False,  # bf16 일 때 I-E heads · KL 만 fp32 (RL-3 B 후보)
+    "latest_interval": 100,  # latest.pt 를 이 간격으로 덮어쓴다(무인 재개용 · 번호 붙은 model_N.pt 는 save_interval 마다 그대로)
+    "status_interval": 10,  # train_start_status.json 을 이 간격으로 갱신한다(첫 iteration 은 항상)
+    # ---- SONNET-X11 (EX-11 · EX-12). 기본값은 기존 G0 · G1 동작 그대로다 ----
+    "est_mode": "learned",  # learned | zero | oracle_vel. zero: 지각은 그대로 돌고 actor 입력의 est 51 칸만 0. oracle_vel: est 51 칸 중 앞 3 칸 = env 의 실제 몸 선속도(몸 좌표, oracle_vel_noise 만큼 균일 잡음), 나머지 48 칸 0. 수집 · PPO 저장 · 평가 모두 _ppo_obs 하나를 지난다
+    "oracle_vel_noise": 0.1,  # oracle_vel 일 때 선속도에 더하는 균일 잡음 ±(v2 의 base_lin_vel 관측 잡음과 같은 값). 평가 경계(adapters.load_s2_runner)에서는 0 으로 둔다(관측 잡음을 끄는 평가 규칙)
+    "critic_mode": "legacy",  # legacy | clean52. clean52: critic = env 의 잡음 없는 critic 묶음 52 + 지도 512 + 발 지도 100 = 664 (vel3 · contact4 는 52 안에 있어 중복 없음)
+    "log_action_stats": False,  # raw a · clip 뒤 a 분위 · 포화율 · 관절별 연속 포화 · PD target · 토크 포화를 action_stats.jsonl 에 (X5)
+    "log_reward_split": False,  # 항별 보상을 움직이는 env · 멈춘 env 로 나눠 train_extra.jsonl 에 (lead 요청, 기록만)
+    "log_kl": False,  # PPO 전후 · 지각 phi 전후 조건부 policy KL 을 train_extra.jsonl 에 (X6, scheduler 에 연결하지 않는다)
+    "kl_probe_envs": 256,
+    "contract": None,  # "start": 명령이 START 원문 범위를 벗어나면 실행 무효(멈추고 기록)
+    "stop_on_nonfinite": False,  # NaN/Inf(보상 · 행동 · 손실)이면 실행 무효
+    # ---- SONNET-X25f (EX-33 S-B). 기본값 0 은 B 와 같은 동작이다 ----
+    "p_map_off": 0.0,  # env 마다 에피소드 시작(reset) 때 이 확률로 «지도 끔» 을 뽑아 그 에피소드 끝까지 유지한다(끔 = est 를 만들 때 지도 토큰을 attention 키에서 뺌). 0 이면 뽑지 않고 기록기도 안 켠다
+    "p_map_off_change": None,  # M-T1: 이어 갈 때 체크포인트의 p_map_off 와 이 runner 값이 다르면 보통 거절한다. {"from_iter": N, "to": v[, "from": 직전 값]} 가 있고 to == p_map_off, N == 체크포인트 회차 + 1 일 때만 허용한다. 숫자(값 · 회차)는 cfg 칸으로만 받는다
+    "resume_adasmpl": None,  # M-T5: 이어 갈 때 저장본의 AdaSmpl.force_gt 를 덮을 값 {"force_gt": bool}. p 는 주지 않는다(저장본 값을 쓰고 첫 update 에서 식 5 가 정한다, DESIGN-MAPRATIO v0.4). None 이면 저장본 값이 조용히 되살아나므로 경고 줄을 낸다
+    "map_switch_seed": 20251025,  # 끔 뽑기 전용 난수열의 시드(전역 난수를 건드리지 않는다)
+}
+
+
+def _nan_to_none(x):
+    """json 에 NaN 을 쓰지 않는다(집단에 끝난 에피소드가 없으면 평균이 NaN)."""
+    if isinstance(x, dict):
+        return {k: _nan_to_none(v) for k, v in x.items()}
+    if isinstance(x, float) and x != x:
+        return None
+
+    return x
+
+
+def curriculum_finished(runtime) -> bool:
+    """Return the state-machine terminal flag consumed by the training loop."""
+    return bool(getattr(runtime, "finished", False))
+
+
+def curriculum_update_number(runtime, loop_iteration: int) -> int:
+    """Map the zero-based PPO loop index to the runtime's completed-update n."""
+    if type(loop_iteration) is not int or loop_iteration < 0:
+        raise ValueError("training loop iteration must be a nonnegative integer")
+    plan = getattr(runtime, "plan", None)
+    one_based = (getattr(plan, "is_ex41", False)
+                 or getattr(runtime, "uses_one_based_updates", False))
+    return loop_iteration + 1 if one_based else loop_iteration
+
+
+def resumed_loop_start(current_learning_iteration: int, resumed: bool, runtime) -> int:
+    """Return the loop index whose mapped update follows a saved checkpoint."""
+    if type(current_learning_iteration) is not int or current_learning_iteration < 0:
+        raise ValueError("saved START iteration must be a nonnegative integer")
+    plan = getattr(runtime, "plan", None)
+    one_based = (getattr(plan, "is_ex41", False)
+                 or getattr(runtime, "uses_one_based_updates", False))
+    if resumed and not one_based:
+        return current_learning_iteration + 1
+    return current_learning_iteration
+
+
+class StartRunner(OnPolicyRunner):
+    def __init__(self, env, train_cfg: dict, log_dir: str | None = None, device: str = "cpu") -> None:
+        # 설치 __init__ 은 env 관측 묶음으로 obs_groups 를 풀고 정책을 만든다. 우리는 정책이 지각 뒤 입력을 받으므로
+        # 같은 일을 그 입력 모양으로 한다(설치 54~78 행과 같은 속성을 채운다).
+        # TF32 를 끈 채로 고정한다: cuDNN GRU 가 TF32 면 GRUCell 과 hidden 이 3e-4 까지 달라진다(lead 결정 10/20 RL-3)
+        torch.backends.cudnn.allow_tf32 = False
+        torch.backends.cuda.matmul.allow_tf32 = False
+        self.cfg = train_cfg
+        # D93: opt in only.  The old 45-wide proprioceptive observation and
+        # its 10-step perception history remain byte-for-byte unchanged.
+        self.ex41_pose_commands = train_cfg.get("ex41_pose_commands", False)
+        if not isinstance(self.ex41_pose_commands, bool):
+            raise ValueError("ex41_pose_commands must be bool")
+        self.ex41_w86_required = train_cfg.get("ex41_w86_required", False)
+        if not isinstance(self.ex41_w86_required, bool) or (self.ex41_w86_required and not self.ex41_pose_commands):
+            raise ValueError("ex41_w86_required needs EX-41 pose commands and a bool setting")
+        self.ex41_critic_mirror = train_cfg.get("ex41_critic_mirror", False)
+        if not isinstance(self.ex41_critic_mirror, bool) or (self.ex41_critic_mirror and not self.ex41_pose_commands):
+            raise ValueError("ex41_critic_mirror requires ex41_pose_commands and a bool setting")
+        self.ex41_mirror_approval = train_cfg.get("ex41_mirror_approval")
+        self.ex41_mirror_hold_reason = None
+        if self.ex41_critic_mirror and not self._valid_ex41_mirror_approval(self.ex41_mirror_approval):
+            raise ValueError("EX-41 critic mirror requires a W72 APPROVED receipt")
+        self.alg_cfg = train_cfg["algorithm"]
+        self.policy_cfg = train_cfg["policy"]
+        self.device = device
+        self.env = env
+        self._configure_multi_gpu()
+        self.num_steps_per_env = self.cfg["num_steps_per_env"]
+        self.save_interval = self.cfg["save_interval"]
+
+        pcfg = dict(PERCEPTION_DEFAULTS)
+        pcfg.update(train_cfg.get("perception", {}))
+        self.pcfg = pcfg
+        if pcfg["fast_gt_only"] and (not pcfg.get("force_gt") or pcfg.get("map_input") != "reconstruction" or pcfg.get("log_kl")):
+            raise ValueError("fast_gt_only requires force_gt, reconstruction map, and disabled replay KL probe")
+        if pcfg["est_mode"] not in ("learned", "zero", "oracle_vel") or pcfg["critic_mode"] not in ("legacy", "clean52"):
+            raise ValueError(f"est_mode {pcfg['est_mode']!r} · critic_mode {pcfg['critic_mode']!r} 는 허용값이 아니다")
+        p_off = float(pcfg["p_map_off"])
+        if not 0.0 <= p_off <= 1.0:
+            raise ValueError(f"p_map_off 는 [0, 1]: {p_off}")
+        if p_off > 0.0 and pcfg.get("map_input", "reconstruction") == "none":
+            raise ValueError("p_map_off > 0 은 지도 입력이 있는 판에서만 쓴다")
+        self.p_map_off = p_off
+        chg = pcfg.get("p_map_off_change")
+        if chg is not None:
+            chg = dict(chg)
+            if not {"from_iter", "to"} <= set(chg) or set(chg) - {"from_iter", "to", "from"}:
+                raise ValueError(f"p_map_off_change 는 {{from_iter, to[, from]}}: {chg}")
+            if not 0.0 <= float(chg["to"]) <= 1.0 or int(chg["from_iter"]) < 1:
+                raise ValueError(f"p_map_off_change 값이 범위 밖: {chg}")
+            if float(chg["to"]) != p_off:
+                raise ValueError(f"p_map_off_change.to={chg['to']} 와 p_map_off={p_off} 가 다르다 (바꿀 값은 한 곳에서 정한다)")
+            pcfg["p_map_off_change"] = chg
+        ra = pcfg.get("resume_adasmpl")
+        if ra is not None:
+            ra = dict(ra)
+            if set(ra) != {"force_gt"}:
+                raise ValueError(f"resume_adasmpl 은 {{force_gt}} 만 받는다(p 는 저장본 값, 첫 update 에서 식 5): {ra}")
+            if bool(ra["force_gt"]) != bool(pcfg.get("force_gt", False)):
+                raise ValueError(f"resume_adasmpl.force_gt={ra['force_gt']} 와 force_gt={pcfg.get('force_gt', False)} 가 다르다 (yaml · manifest 의 force_gt 가 실제로 쓰는 값이어야 한다)")
+            pcfg["resume_adasmpl"] = ra
+        self.map_switch_changes: list[dict] = []   # 체크포인트에 실려 가는 p_map_off 변경 이력
+        self.map_ratio_events: list[dict] = []     # 이 실행이 manifest · jsonl 에 남기는 사건(변경 · 이어 가기 AdaSmpl · 첫 회차 표본)
+        self._events_written = 0
+        self.manifest = None
+        self.manifest_dir = None
+        self.perception = StartPerception(
+            PerceptionCfg(map_input=pcfg.get("map_input", "reconstruction"), force_gt=bool(pcfg.get("force_gt", False)),
+                          fast_gt_only=bool(pcfg["fast_gt_only"]),
+                          depth_delay_ticks=pcfg.get("depth_delay_ticks", 1))
+        ).to(device)
+        self.perception.ie.heads_fp32 = bool(pcfg.get("kl_fp32", False))
+        self.perception_optimizer = torch.optim.Adam(
+            self.perception.parameters(), lr=pcfg["learning_rate"], weight_decay=pcfg["weight_decay"]
+        )
+        self._pin_perception_lr("start")
+        self.adasmpl = AdaSmpl(self.perception.cfg.p_smpl_init, self.perception.cfg.cv_eps, self.perception.cfg.force_gt)
+
+        raw = self.env.get_observations().to(device)
+        self._check_raw(raw)
+        template = self._ppo_obs(raw, torch.zeros(raw.batch_size[0], 51, device=device))
+        self.cfg["obs_groups"] = resolve_obs_groups(template, dict(OBS_GROUPS), ["critic"])
+        self.alg = self._construct_algorithm(template)
+        self.replay = (None if pcfg["fast_gt_only"] else PerceptionReplay(
+            self.env.num_envs, self.num_steps_per_env, device, getattr(torch, pcfg["depth_dtype"])
+        ))
+        self.map_switch_gen = make_generator(device, pcfg["map_switch_seed"]) if p_off > 0.0 else None
+        self.map_switch = MapSwitchRecorder(self.env.num_envs, device) if p_off > 0.0 else None
+
+        self.disable_logs = self.is_distributed and self.gpu_global_rank != 0
+        self.log_dir = log_dir
+        self.writer = None
+        self.tot_timesteps = 0
+        self.tot_time = 0
+        self.current_learning_iteration = 0
+        # Persist the completed update's map-source fraction so self-resume can
+        # compare the exact last saved value before the next rollout starts.
+        self._last_use_gt_frac: float | None = None
+        self.git_status_repos = [rsl_rl.__file__]
+        self.last_perception_losses: dict[str, float] = {}
+        self.last_perception_v_bias: dict | None = None
+        self._vbias_samples: list = []
+        self._resumed = False
+        self.ex41_parent_transfer = None
+        self.memory_marks: dict[str, int] = {}
+        self.memory_log: list[dict] = []  # iteration 마다 단계별 peak (18 §5.2 측정)
+        self.iter_log: list[dict] = []
+
+    # ------------------------------------------------------------------ 관측
+    REQUIRED = {"policy": (45,), "depth": (60, 60), "gt_feet": (100,), "base_vel": (3,), "contacts": (4,)}
+
+    def _check_raw(self, raw: TensorDict) -> None:
+        for k, shape in self.REQUIRED.items():
+            if k not in raw.keys():
+                raise KeyError(f"env 관측에 '{k}' 묶음이 없다 (start_runner 머리말 계약)")
+            got = tuple(raw[k].shape[1:])
+            if k == "depth" and raw[k][0].numel() == 3600:
+                got = shape  # (60, 60) · (60, 60, 1) · 평탄화 3600 모두 받는다
+            if got != shape:
+                raise ValueError(f"'{k}' 모양 {got} 이 계약 {shape} 과 다르다")
+        if self.pcfg["critic_mode"] == "clean52":
+            if "critic" not in raw.keys() or tuple(raw["critic"].shape[1:]) != (52,):
+                raise KeyError("critic_mode=clean52 인데 env 관측에 (N, 52) 'critic' 묶음이 없다")
+        if "gt_map" not in raw.keys() or raw["gt_map"][0].numel() != 512:
+            raise ValueError("'gt_map' 은 512 칸(32 x 16)이어야 한다")
+        if self.ex41_pose_commands:
+            self._pose_command(raw)
+
+    @staticmethod
+    def _pose_command(raw: TensorDict) -> torch.Tensor:
+        """D93 order: [body height delta in metres, body roll in radians].
+
+        EX-41's first stage fixes both to zero.  The check is repeated for every
+        rollout observation, including after reset, before the policy sees it.
+        """
+        if "pose_cmd" not in raw.keys() or tuple(raw["pose_cmd"].shape) != (raw.batch_size[0], 2):
+            raise ValueError("EX-41 pose_cmd must have shape (N,2)")
+        pose = raw["pose_cmd"]
+        if not torch.isfinite(pose).all() or torch.count_nonzero(pose):
+            raise ValueError("EX-41 D93 pose_cmd must be finite and zero in this stage")
+        return pose
+
+    @staticmethod
+    def _split(raw: TensorDict):
+        n = raw.batch_size[0]
+        return (
+            raw["policy"],
+            raw["depth"].reshape(n, 60, 60),
+            raw["gt_map"].reshape(n, 32, 16),
+            raw["gt_feet"].reshape(n, 100),
+            raw["base_vel"],
+            raw["contacts"],
+        )
+
+    def _est_in(self, est: torch.Tensor, vel: torch.Tensor, noise: float | None = None) -> torch.Tensor:
+        """actor 입력의 est 51 칸을 est_mode 로 정한다. learned: 지각 est 그대로 · zero: 전부 0 · oracle_vel: 앞 3 칸 = 실제 몸 선속도 vel(+균일 잡음 ±noise), 나머지 48 칸 0.
+        est (..., 51) · vel (..., 3) 는 같은 앞 차원을 가진다. noise 가 None 이면 pcfg 의 oracle_vel_noise."""
+        mode = self.pcfg["est_mode"]
+
+        if mode == "zero":
+            return torch.zeros_like(est)
+
+        if mode == "oracle_vel":
+            n = self.pcfg["oracle_vel_noise"] if noise is None else noise
+            v = vel + (torch.empty_like(vel).uniform_(-n, n) if n > 0 else 0.0)
+            out = torch.zeros_like(est)
+            out[..., :3] = v
+
+            return out
+
+        return est
+
+    def _ppo_obs(self, raw: TensorDict, est: torch.Tensor) -> TensorDict:
+        """actor 입력 = o45 + est51 (est_mode=zero 면 est 칸이 0, oracle_vel 이면 앞 3 칸만 실제 선속도), critic 입력 664. 수집 · 부트스트랩 · 평가 adapter 가 모두 이 함수를 지난다."""
+        o, _, gmap, gfeet, vel, con = self._split(raw)
+        n = o.shape[0]
+        est_in = self._est_in(est, vel)
+        if self.pcfg["critic_mode"] == "clean52":
+            critic = torch.cat([raw["critic"].reshape(n, 52), gmap.reshape(n, -1), gfeet], -1)
+        else:
+            critic = torch.cat([o, vel, con, gmap.reshape(n, -1), gfeet], -1)
+        actor = torch.cat([o, est_in], -1)
+        if self.ex41_pose_commands:
+            pose = self._pose_command(raw)
+            actor = torch.cat([actor, pose], -1)
+            critic = torch.cat([critic, pose], -1)
+        return TensorDict(
+            {
+                ACTOR_KEY: actor,
+                CRITIC_KEY: critic,
+            },
+            batch_size=[n],
+            device=o.device,
+        )
+
+    def _construct_algorithm(self, obs: TensorDict) -> PPO:
+        self.policy_cfg.pop("class_name", None)
+        policy = StartActorCritic(obs, self.cfg["obs_groups"], self.env.num_actions,
+                                  pose_command_dim=2 if self.ex41_pose_commands else 0, **self.policy_cfg).to(self.device)
+        alg_cfg = dict(self.alg_cfg)
+        alg_cfg.pop("class_name", None)
+        if self.ex41_pose_commands:
+            from foothold_s2.runners.ex41_critic_mirror import CriticMirrorPPO
+            if self.ex41_critic_mirror:
+                self._assert_ex41_joint_order()
+            alg = CriticMirrorPPO(policy, device=self.device, **alg_cfg, multi_gpu_cfg=self.multi_gpu_cfg)
+            alg.mirror_enabled = self.ex41_critic_mirror
+            clip = self.cfg.get("clip_actions")      # the env clip: a mean past it only moves the log-prob (bounds loss)
+            alg.bounds_loss_limit = float(clip) if clip else None
+        else:
+            alg = PPO(policy, device=self.device, **alg_cfg, multi_gpu_cfg=self.multi_gpu_cfg)
+        alg.init_storage("rl", self.env.num_envs, self.num_steps_per_env, obs, [self.env.num_actions])
+        self._small_noise_target = alg
+        self._apply_small_noise()
+        return alg
+
+    def _pin_perception_lr(self, where: str) -> None:
+        """Set the perception optimizer lr to PERCEPTION_LR_OVERRIDE (every param group; the PPO optimizer is not touched) and log the
+        value read back from the optimizer. Called after the optimizer is built and after every load_state_dict that restores it."""
+        if PERCEPTION_LR_OVERRIDE is not None:
+            for group in self.perception_optimizer.param_groups:
+                group["lr"] = float(PERCEPTION_LR_OVERRIDE)
+        print("EX42_PERCEPTION_LR where=%s lr=%s override=%s" % (
+            where, ",".join("%g" % g["lr"] for g in self.perception_optimizer.param_groups), PERCEPTION_LR_OVERRIDE), flush=True)
+
+    def _apply_small_noise(self) -> None:
+        """Put the small-noise env scale on the storage and the policy while the mirror update is on, take it off when it is
+        not (the installed PPO.update re-acts on rows: no per-row scale). The mirror can be switched on after the algorithm
+        is built (set_ex41_critic_mirror), so every place that flips it calls this; the live metrics hear about it too."""
+        alg = getattr(self, "alg", None) or getattr(self, "_small_noise_target", None)
+        if alg is None or not self.ex41_pose_commands or getattr(alg, "storage", None) is None:
+            return
+        from foothold_s2.runners import ex41_critic_mirror as mirror
+        noise = None
+        if self.ex41_critic_mirror:
+            noise = mirror.small_noise_scale(self.env.num_envs, mirror.small_noise_static_share(),
+                                             mirror.SMALL_NOISE_SIGMA_SCALE, device=self.device)
+        self._lowspeed_noise = noise is not None and mirror.SMALL_NOISE_LOWSPEED_CMD > 0
+        mean = (mirror.mean_action_mask(self.env.num_envs, mirror.MEAN_ACTION_PERCEPTION_SHARE, device=self.device)
+                if self.ex41_critic_mirror else None)             # v28p: mean-action envs, outside PPO, inside the perception loss
+        self._mean_action = mean
+        if hasattr(alg, "mean_action_mask"):
+            alg.mean_action_mask = mean
+        alg.storage.noise_scale_steps = (torch.ones(alg.storage.num_transitions_per_env, self.env.num_envs, 1, device=self.device)
+                                         if self._lowspeed_noise else None)
+        self._noise_static = noise
+        alg.storage.noise_scale_env = noise
+        alg.policy.noise_scale = noise
+        hear = getattr(getattr(self, "continuous_curriculum", None), "refresh_small_noise", None)
+        if callable(hear):
+            hear()
+
+    _mean_action = None       # [num_envs] bool: envs acting with the mean action (v28p), None = off
+    _vbias_mean_samples = None
+    last_perception_v_bias_mean_action: dict | None = None
+
+    _noise_counts = None      # [low-speed envs, small-noise envs] summed over the steps of one rollout (device tensor)
+    _noise_steps = 0
+    _lowspeed_noise = False
+
+    def _step_small_noise(self, o: torch.Tensor) -> None:
+        """v28m: before the action of this step, the envs whose command (o[:, 6:8], as in _vbias_collect) is below
+        SMALL_NOISE_LOWSPEED_CMD join the fixed-share small-noise envs for this step. Counts are kept for the per-update line."""
+        storage = getattr(getattr(self, "alg", None), "storage", None)
+        if not getattr(self, "_lowspeed_noise", False) or storage is None or storage.noise_scale_steps is None:
+            return
+        from foothold_s2.runners import ex41_critic_mirror as mirror
+        low = mirror.lowspeed_noise_mask(o[:, 6:8], mirror.SMALL_NOISE_LOWSPEED_CMD)
+        scale = torch.where(low[:, None], torch.full_like(self._noise_static, mirror.SMALL_NOISE_SIGMA_SCALE), self._noise_static)
+        storage.noise_scale_env = scale
+        self.alg.policy.noise_scale = scale
+        noisy = scale.flatten() < 1
+        counts = torch.stack([low.sum(), noisy.sum()]).to(torch.float64)
+        self._noise_counts = counts if self._noise_counts is None else self._noise_counts + counts   # no host sync per step
+        self._noise_steps += 1
+        live = getattr(getattr(self, "continuous_curriculum", None), "live_metrics", None)
+        if live is not None and live.noise_envs is not None:
+            live.noise_envs = noisy.cpu()
+
+    def _small_noise_finish(self, it: int) -> dict:
+        """Per update: mean number of low-speed envs and of small-noise envs per step (record only), then reset the counts."""
+        from foothold_s2.runners import ex41_critic_mirror as mirror
+        steps, counts = self._noise_steps, self._noise_counts
+        self._noise_counts, self._noise_steps = None, 0
+        if not steps or counts is None:
+            return {}
+        low, noisy = counts.tolist()
+        row = {"lowspeed_envs": low / steps, "small_noise_envs": noisy / steps, "num_envs": self.env.num_envs,
+               "lowspeed_cmd": mirror.SMALL_NOISE_LOWSPEED_CMD}
+        if not self.disable_logs:
+            print("EX42_SMALL_NOISE it=%d lowspeed_envs=%.1f small_noise_envs=%.1f of=%d threshold=%.2f" % (
+                it, row["lowspeed_envs"], row["small_noise_envs"], row["num_envs"], row["lowspeed_cmd"]), flush=True)
+        return row
+
+    def _assert_ex41_joint_order(self) -> None:
+        from foothold_s2.runners.ex41_critic_mirror import assert_joint_order
+
+        base = getattr(self.env, "unwrapped", self.env)
+        try:
+            joint_names = base.scene["robot"].joint_names
+        except (AttributeError, KeyError, TypeError) as exc:
+            raise ValueError("EX-41 critic mirror needs env robot.joint_names") from exc
+        assert_joint_order(joint_names)
+
+    @staticmethod
+    def _valid_ex41_mirror_approval(receipt: dict | None) -> bool:
+        if not isinstance(receipt, dict) or receipt.get("status") != "APPROVED" or receipt.get("gate") != "W72":
+            return False
+        sha = receipt.get("approval_sha256")
+        cfg_sha = receipt.get("config_sha256")
+        decisions = receipt.get("decision_ids")
+        shape_ok = (isinstance(sha, str) and re.fullmatch(r"[0-9a-f]{64}", sha) is not None
+                and receipt.get("approval_id") == sha
+                and isinstance(cfg_sha, str) and re.fullmatch(r"[0-9a-f]{64}", cfg_sha) is not None
+                and isinstance(receipt.get("config_commit"), str)
+                and re.fullmatch(r"[0-9a-f]{40}", receipt["config_commit"]) is not None
+                and isinstance(decisions, list) and bool(decisions)
+                and all(isinstance(item, str) and bool(item) for item in decisions))
+        if not shape_ok:
+            return False
+        try:
+            files = [Path(receipt[key]).resolve(strict=True) for key in ("boundary_file", "approval_file")]
+            root_text = subprocess.check_output(["git", "-C", str(files[0].parent), "rev-parse", "--show-toplevel"], stderr=subprocess.DEVNULL)
+            root = Path(root_text.decode().strip()).resolve(strict=True)
+            if any(root not in path.parents for path in files):
+                return False
+            for path, expected in zip(files, (cfg_sha, sha), strict=True):
+                rel = path.relative_to(root).as_posix()
+                committed = subprocess.check_output(["git", "-C", str(root), "show", f"{receipt['config_commit']}:{rel}"], stderr=subprocess.DEVNULL)
+                if hashlib.sha256(committed).hexdigest() != expected or hashlib.sha256(path.read_bytes()).hexdigest() != expected:
+                    return False
+        except (OSError, ValueError, KeyError, subprocess.CalledProcessError):
+            return False
+        return True
+
+    @staticmethod
+    def _valid_ex42_mirror_approval(receipt: dict | None) -> bool:
+        """Validate the EX-42 D174 grant (E1 and the later stages that keep the mirror on) against the plan and
+        approval bytes: committed source bytes, or a materialized plan chained by its transition record."""
+        if (not isinstance(receipt, dict) or receipt.get("format") != "foothold-ex42-critic-mirror-approval/1"
+                or not isinstance(receipt.get("stage_id"), str) or receipt.get("decision_id") != "D174"):
+            return False
+        try:
+            plan_path = Path(receipt["plan_path"]).resolve(strict=True)
+            approval_path = Path(receipt["approval_path"]).resolve(strict=True)
+            import yaml
+            parsed = []
+            if "transition_path" in receipt:
+                if "config_commit" in receipt or Path(receipt["transition_path"]).resolve(strict=True) != plan_path.parent / "transition.json":
+                    return False
+                transition = json.loads(Path(receipt["transition_path"]).read_bytes())
+                for path, digest in ((plan_path, receipt["plan_sha256"]), (approval_path, receipt["approval_sha256"])):
+                    current = path.read_bytes()
+                    if not isinstance(digest, str) or hashlib.sha256(current).hexdigest() != digest:
+                        return False
+                    parsed.append(yaml.safe_load(current.decode("utf-8-sig")))
+                if not isinstance(transition, dict) or transition.get("new_plan_sha") != receipt["plan_sha256"]:
+                    return False
+            else:
+                commit = receipt["config_commit"]
+                if not isinstance(commit, str) or re.fullmatch(r"[0-9a-f]{40}", commit) is None:
+                    return False
+                root_text = subprocess.check_output(
+                    ["git", "-C", str(plan_path.parent), "rev-parse", "--show-toplevel"],
+                    stderr=subprocess.DEVNULL)
+                root = Path(root_text.decode().strip()).resolve(strict=True)
+                if any(root not in path.parents for path in (plan_path, approval_path)):
+                    return False
+                for path, digest in ((plan_path, receipt["plan_sha256"]),
+                                     (approval_path, receipt["approval_sha256"])):
+                    rel = path.relative_to(root).as_posix()
+                    committed = subprocess.check_output(
+                        ["git", "-C", str(root), "show", f"{commit}:{rel}"],
+                        stderr=subprocess.DEVNULL)
+                    current = path.read_bytes()
+                    if (not isinstance(digest, str) or hashlib.sha256(committed).hexdigest() != digest
+                            or hashlib.sha256(current).hexdigest() != digest):
+                        return False
+                    parsed.append(yaml.safe_load(current.decode("utf-8-sig")))
+            plan, approvals = parsed
+            field = approvals.get("fields", {}).get("critic_mirror")
+            on = False                      # the mirror is on from the stage that says so until a stage says off
+            for row in plan.get("stages", []):
+                on = row.get("critic_mirror", on)
+                if row.get("id") == receipt["stage_id"]:
+                    break
+            else:
+                return False
+            zero = plan.get("stage_zero", {})
+            return (plan.get("format") == "foothold-ex42-curriculum/1"
+                    and on is True
+                    and zero.get("critic_mirror", False) is False
+                    and approvals.get("format") == "foothold-ex42-approvals/1"
+                    and isinstance(field, dict) and field.get("approved") is True
+                    and field.get("decision_id") == "D174"
+                    and field.get("choices") == [True]
+                    and field.get("boundaries") == ["E1"])
+        except (OSError, ValueError, KeyError, TypeError, StopIteration,
+                UnicodeDecodeError, subprocess.CalledProcessError):
+            return False
+
+    def set_ex41_critic_mirror(self, enabled: bool, approval: dict | None = None) -> None:
+        """Apply the existing mirror switch only with a committed W72 or EX42 grant."""
+        if not self.ex41_pose_commands or not isinstance(enabled, bool):
+            raise ValueError("EX-41 critic mirror transition needs the pose runner and bool value")
+        if enabled and not (self._valid_ex41_mirror_approval(approval)
+                            or self._valid_ex42_mirror_approval(approval)):
+            self.ex41_critic_mirror = False
+            self.ex41_mirror_approval = None
+            self.alg.mirror_enabled = False
+            self._apply_small_noise()
+            raise ValueError("EX-41 W72 HOLD: committed approval files or SHA256 differ; critic mirror is off")
+        if enabled:
+            try:
+                self._assert_ex41_joint_order()
+            except ValueError:
+                self.ex41_critic_mirror = False
+                self.ex41_mirror_approval = None
+                self.alg.mirror_enabled = False
+                self._apply_small_noise()
+                raise
+        self.ex41_critic_mirror = enabled
+        self.ex41_mirror_approval = approval if enabled else None
+        self.alg.mirror_enabled = enabled
+        self._apply_small_noise()
+
+    def _hold_ex41_mirror_resume(self, checkpoint: str, iteration: int, reason: str) -> None:
+        """Keep a valid policy resume running with the optional mirror off."""
+        self.ex41_critic_mirror = False
+        self.ex41_mirror_approval = None
+        self.alg.mirror_enabled = False
+        self.ex41_mirror_hold_reason = reason
+        self._apply_small_noise()
+        warnings.warn(reason, RuntimeWarning, stacklevel=2)
+        if self.log_dir is None:
+            return
+        row = {"event": "resume_hold", "iteration": iteration, "checkpoint": checkpoint,
+               "mirror_enabled": False, "reason": reason, "time": time.strftime("%Y-%m-%dT%H:%M:%S")}
+        try:
+            os.makedirs(self.log_dir, exist_ok=True)
+            with open(os.path.join(self.log_dir, "ex41_mirror_events.jsonl"), "a", encoding="utf-8") as stream:
+                stream.write(json.dumps(row, ensure_ascii=False, sort_keys=True) + "\n")
+                stream.flush()
+                os.fsync(stream.fileno())
+        except OSError as exc:
+            warnings.warn(f"EX-41 W72 ledger write failed: {exc}", RuntimeWarning, stacklevel=2)
+
+    # ------------------------------------------------------------------ 메모리 표 (18 §5.2)
+    def _cuda(self) -> bool:
+        return torch.cuda.is_available() and str(self.device).startswith("cuda")
+
+    def _mark(self, name: str, it: int | None = None) -> None:
+        """누적 peak(프로세스 시작부터) 와 단계 peak(직전 _phase_start 부터) 를 함께 남긴다."""
+        if self._cuda():
+            torch.cuda.synchronize(self.device)
+            cum = int(torch.cuda.max_memory_allocated(self.device))
+            self.memory_marks[name] = max(self.memory_marks.get(name, 0), cum)
+            self.memory_log.append({"it": it, "phase": name, "cum_peak": cum,
+                                    "phase_peak": int(torch.cuda.max_memory_allocated(self.device)) if self._phase_reset else cum,
+                                    "allocated": int(torch.cuda.memory_allocated(self.device))})
+
+    _phase_reset = False
+
+    def _phase_start(self) -> None:
+        """단계 peak 를 재려면 measure_phases=True. 누적 peak 는 memory_log 의 cum_peak 를 최댓값으로 다시 모은다."""
+        if self._cuda() and self.pcfg.get("measure_phases", False):
+            self._phase_reset = True
+            prev = int(torch.cuda.max_memory_allocated(self.device))
+            self._cum_before = max(getattr(self, "_cum_before", 0), prev)
+            torch.cuda.reset_peak_memory_stats(self.device)
+
+    # ------------------------------------------------------------------ 학습
+    def attach_ex42_training_chain(self, chain) -> None:
+        """Attach the optional EX-42 boundary/save hooks without approving launch."""
+        plan = getattr(chain, "plan", None)
+        if not getattr(plan, "is_ex42", False):
+            raise ValueError("EX-42 chain requires the pinned EX-42 plan")
+        if plan.document.get("status") != "preparation_only":
+            raise ValueError("EX-42 launch status must remain preparation_only")
+        chain.attach_runner(self)
+
+    def learn(self, num_learning_iterations: int, init_at_random_ep_len: bool = False) -> None:
+        self._prepare_logging_writer()
+        if init_at_random_ep_len:
+            self.env.episode_length_buf = torch.randint_like(
+                self.env.episode_length_buf, high=int(self.env.max_episode_length)
+            )
+        raw = self.env.get_observations().to(self.device)
+        self._scatter_and_record_before_rollout()                 # EX-35: 흩기 · 영수증은 reset 이 다 끝난 뒤 첫 rollout 직전의 실제 값으로
+        self.train_mode()
+        n = self.env.num_envs
+        self.pstate = self.perception.init_state(n, self.device)
+        self.pstate.use_gt = self.adasmpl.sample(n, self.device)
+        self.pstate.map_off = self._restrict_map_off(draw_map_off(n, self.p_map_off, self.device, self.map_switch_gen), torch.ones(n, dtype=torch.bool, device=self.device))
+        print("EX33_MAP_SWITCH p_off=%s realized=%.4f envs=%d seed=%s" % (self.p_map_off, float(self.pstate.map_off.float().mean()), n, self.pcfg["map_switch_seed"]), flush=True)
+        self._report_first_sources()
+        ms_levels, ms_track = self._map_switch_probes() if self.map_switch is not None else (None, None)
+
+        ep_infos = []
+        rewbuffer, lenbuffer = deque(maxlen=100), deque(maxlen=100)
+        cur_reward_sum = torch.zeros(n, device=self.device)
+        cur_episode_length = torch.zeros(n, device=self.device)
+        gt_steps = torch.zeros((), device=self.device)
+        src_steps = torch.zeros(3, device=self.device)            # 이 회차 env-step 수: 정답 · 복원 · 끔(끔이 먼저)
+        learn_iters = 0
+        act_stats = None
+        rs_rec = (RewardSplit(basic_mode=self.pcfg["contract"] in ("basic_gait_v1", "basic_gait_ex39", "basic_gait_ex40"),
+                              ex39_mode=self.pcfg["contract"] in ("basic_gait_ex39", "basic_gait_ex40"))
+                  if self.pcfg["log_reward_split"] else None)
+        if rs_rec is not None:
+            rs_rec.attach(getattr(self.env, "unwrapped", self.env))
+        if self.pcfg["log_action_stats"]:
+            act_stats = ActionStats(float(self.cfg.get("clip_actions") or 1e9), n, self.env.num_actions, device=self.device)
+
+        if self.is_distributed:
+            self.broadcast_all()
+
+        # 재개 때는 저장된 iteration 이 «이미 끝난» 회차이므로 다음 회차부터 센다(설치 runner 는 같은 회차를 한 번 더 돈다)
+        active_curriculum = getattr(self, "continuous_curriculum", None)
+        start_iter = resumed_loop_start(
+            self.current_learning_iteration, self._resumed, active_curriculum)
+        self.current_learning_iteration = start_iter
+        tot_iter = start_iter + num_learning_iterations
+        trace = getattr(self, "training_trace", None)
+        for loop_it in range(start_iter, tot_iter):
+            continuous = getattr(self, "continuous_curriculum", None)
+            it = curriculum_update_number(continuous, loop_it) if continuous is not None else loop_it
+            curriculum_it = it
+            if continuous is not None:
+                ex41_plan = getattr(getattr(continuous, "plan", None), "is_ex41", False)
+                stage_before = (getattr(continuous, "effective", {}).get("stage_id")
+                                if ex41_plan else None)
+                continuous.on_update_start(curriculum_it)
+                stage_after = (getattr(continuous, "effective", {}).get("stage_id")
+                               if ex41_plan else None)
+                if (ex41_plan and stage_before and stage_after
+                        and stage_before != stage_after
+                        and self.log_dir is not None and not self.disable_logs):
+                    from foothold_s2.eval.ex41_w78_video_request import publish_stage_end_request
+                    from foothold_s2.ex41_ops import run_nonfatal_reporting
+
+                    def publish_w78_request():
+                        request = publish_stage_end_request(
+                            self.log_dir, continuous, stage_name=stage_before,
+                            next_stage=stage_after, boundary_iteration=curriculum_it)
+                        continuous._write({"event": "w78_video_request", **request})
+                        print("EX41_W78_VIDEO_REQUEST " + json.dumps(request, sort_keys=True), flush=True)
+                        return request
+
+                    run_nonfatal_reporting(self.log_dir, curriculum_it,
+                                           "stage_end_w78_video_request", publish_w78_request)
+                if (getattr(getattr(continuous, "plan", None), "is_ex41", False)
+                        and self.log_dir is not None and not self.disable_logs):
+                    from foothold_s2.ex41_ops import (
+                        deliver_pending_alerts, record_boundary, run_nonfatal_reporting)
+
+                    run_nonfatal_reporting(
+                        self.log_dir, curriculum_it, "record_boundary",
+                        lambda: record_boundary(continuous, self.log_dir, curriculum_it,
+                                                deliver=deliver_pending_alerts))
+                # Runtime state transitions happen at update boundaries. Stop
+                # before collecting another rollout after the terminal update.
+                if curriculum_finished(continuous):
+                    break
+            ex42_chain = getattr(self, "ex42_training_chain", None)
+            if ex42_chain is not None:
+                # Boundary application is training state, so a broken approved
+                # transition fails before collecting this update's rollout.
+                ex42_boundary = ex42_chain.on_runner_update_start(self, curriculum_it)
+                if ex42_boundary is not None:
+                    print("EX42_STAGE_TRANSITION " + json.dumps(
+                        ex42_boundary, ensure_ascii=False, sort_keys=True), flush=True)
+            ex40_dr_runtime = getattr(self, "ex40_dr_runtime", None)
+            if ex40_dr_runtime is not None:
+                ex40_dr_runtime.update_start(it)
+            if (continuous is not None and getattr(getattr(continuous, "plan", None), "is_ex41", False)
+                    and self.log_dir is not None and not self.disable_logs
+                    and getattr(continuous, "_last_boundary", None) == curriculum_it):
+                injected_delta = None
+                if (getattr(self, "ex41_rehearsal_m10_injection", False)
+                        and getattr(getattr(continuous, "plan", None), "rehearsal_stage_updates", None) is not None):
+                    injected_delta = 0.01
+                    self.ex41_rehearsal_m10_injection = False
+                from foothold_s2.ex41_ops import record_boundary_runtime_readback, run_nonfatal_reporting
+                raw_env = getattr(self.env, "unwrapped", self.env)
+                run_nonfatal_reporting(
+                    self.log_dir, curriculum_it, "boundary_runtime_readback",
+                    lambda: record_boundary_runtime_readback(
+                        continuous, ex40_dr_runtime, raw_env, self.log_dir,
+                        curriculum_it, inject_delta=injected_delta))
+            if getattr(self, "basic_lin_vel_z_schedule", False):
+                from foothold_s2.rewards.basic_gait_bundle import set_lin_vel_z_weight
+
+                basic_lin_vel_z_weight = set_lin_vel_z_weight(
+                    self.env, it, getattr(self, "basic_lin_vel_z_start_iteration", 0))
+            else:
+                basic_lin_vel_z_weight = None
+            if trace is not None:
+                trace.begin_update(it)
+            start = time.time()
+            self._phase_start()
+            if self.replay is not None:
+                self.replay.start(self.pstate.h_prop, self.pstate.h_terr)
+            gt_steps.zero_()
+            src_steps.zero_()
+            self._vbias_samples = []
+            self._vbias_mean_samples = []
+            noise_row: dict = {}
+            contract_fn = ((lambda c: torch.zeros(c.shape[0], dtype=torch.bool, device=c.device))
+                           if continuous is not None else contract_bad_fn(self.pcfg["contract"]))
+            contract_bad = torch.zeros(n, dtype=torch.bool, device=self.device) if contract_fn is not None else None
+            contract_example = torch.zeros(n, 3, device=self.device)
+            # ① 수집
+            with torch.inference_mode():
+                for step_k in range(self.num_steps_per_env):
+                    o, depth, gmap, gfeet, vel, _ = self._split(raw)
+                    inp = self.perception.ingest(self.pstate, o, depth)
+                    est = self.perception.step(self.pstate, inp, gmap)
+                    ppo_obs = self._ppo_obs(raw, est)
+                    self._vbias_collect(o, ppo_obs, vel)
+                    self._step_small_noise(o)
+                    if self.replay is not None:
+                        self.replay.add_pre(inp, o, gmap, gfeet, vel, self.pstate.use_gt, self.pstate.map_off)
+                    gt_steps += self.pstate.use_gt.float().mean()
+                    _off = self.pstate.map_off.bool()
+                    _gt = self.pstate.use_gt.bool()
+                    src_steps += torch.stack([(_gt & ~_off).sum(), (~_gt & ~_off).sum(), _off.sum()]).float()
+                    actions = self.alg.act(ppo_obs)
+                    w86_attached = (self.ex41_pose_commands and
+                                    getattr(getattr(self.env, "unwrapped", self.env), "_ex41_w86", None) is not None)
+                    if self.ex41_w86_required and not w86_attached:
+                        raise ValueError("EX-41 W86 runtime is not attached before rollout")
+                    if w86_attached:
+                        # W86 quarantines a bad env before its action reaches physics.
+                        from foothold_s2.rewards.w86_runtime import quarantine_actions
+
+                        actions = quarantine_actions(self, actions)
+                    if contract_bad is not None:
+                        consumed = self._consumed_command(it)               # 이 step 의 행동이 따른 명령(env.step 전 값)
+                        if continuous is not None:
+                            from foothold_s2.curriculum.continuous import command_bad
+
+                            term = self._command_term()
+                            bad_now = command_bad(consumed, term.slot_current.to(self.device),
+                                                  term.heading.to(self.device),
+                                                  continuous.env_stage.to(self.device), continuous.plan)
+                            bad_now = flag_env_command_bad(term, consumed, bad_now)   # flag envs: the flag command, not a slot
+                        elif self.pcfg["contract"] == "basic_gait_ex39":
+                            heading = self._command_term().heading.detach().clone().to(self.device)
+                            bad_now = command_sample_bad(self.pcfg["contract"], consumed, heading)
+                        else:
+                            bad_now = contract_fn(consumed)
+                        contract_example = torch.where(bad_now[:, None] & ~contract_bad[:, None], consumed, contract_example)
+                        contract_bad |= bad_now
+                    if trace is not None:
+                        trace.pre_step(actions)
+                    prev_xy = self._robot_xy_for_off()                        # M-T6: env.step 이 끝난 에피소드를 reset 해 버리기 전 위치(끝난 에피소드가 놓였던 칸을 알려고)
+                    if continuous is not None:
+                        continuous.record_pre_step()
+                    raw, rewards, dones, extras = self.env.step(actions.to(self.env.device))
+                    if w86_attached:
+                        from foothold_s2.rewards.w86_runtime import quarantine_step
+
+                        raw, rewards, dones, extras = quarantine_step(self, raw, rewards, dones, extras)
+                    elif self.ex41_pose_commands:
+                        extras = dict(extras)
+                        extras["ex41_ppo_valid"] = torch.ones(n, dtype=torch.bool, device=self.device)
+                    raw, rewards, dones = raw.to(self.device), rewards.to(self.device), dones.to(self.device)
+                    if continuous is not None:
+                        if getattr(continuous, "is_ex42_stage_zero", False):
+                            continuous.record_post_step(dones, extras.get("time_outs"))
+                        else:
+                            continuous.record_post_step(dones)
+                    if self.map_switch is not None:                       # 켬 · 끔 집단 기록: 이 step 의 행동을 만든 map_off(reset 전 값)로 센다
+                        lv, tl, ta = self._map_switch_step_values(ms_levels, ms_track)
+                        self.map_switch.add_step(self.pstate.map_off, rewards, dones, lv, tl, ta, extras.get("time_outs"), self.pstate.use_gt)
+                    if trace is not None:
+                        trace.post_step(step_k, rewards, dones)
+                    if rs_rec is not None:
+                        rs_rec.add()
+                    if act_stats is not None:
+                        act_stats.add(actions, dones, phys_probe(getattr(self.env, "unwrapped", self.env)) if (step_k % 8 == 0) else None)
+                    if self.pcfg["stop_on_nonfinite"]:
+                        self._check_finite(it, rewards=rewards, actions=actions)
+                    if self.replay is not None:
+                        self.replay.add_post(raw["policy"], dones)
+                    # 정규화 통계는 이번 스텝의 actor 입력으로 갱신한다(설치는 다음 관측: 한 스텝 어긋날 뿐 같은 흐름)
+                    self.alg.process_env_step(ppo_obs, rewards, dones, extras)
+                    if "episode" in extras:
+                        ep_infos.append(extras["episode"])
+                    elif "log" in extras:
+                        ep_infos.append(extras["log"])
+                    cur_reward_sum += rewards
+                    cur_episode_length += 1
+                    done_ids = (dones > 0).nonzero(as_tuple=False).flatten()
+                    if done_ids.numel():
+                        self._off_episode_ended(done_ids, prev_xy)
+                        self.adasmpl.add(cur_reward_sum[done_ids][~self.pstate.map_off[done_ids].bool()])   # M-T2: 지도를 끈 에피소드의 보상은 CV(p_gt)에서 뺀다(reset_envs 가 map_off 를 새로 뽑기 전 값으로 분류)
+                        rewbuffer.extend(cur_reward_sum[done_ids].cpu().tolist())
+                        lenbuffer.extend(cur_episode_length[done_ids].cpu().tolist())
+                        cur_reward_sum[done_ids] = 0
+                        cur_episode_length[done_ids] = 0
+                    self.perception.reset_envs(self.pstate, dones > 0, self.adasmpl.sample(n, self.device),
+                                               self._restrict_map_off(draw_map_off(n, self.p_map_off, self.device, self.map_switch_gen), dones > 0) if self.p_map_off > 0.0 else None)
+                    if done_ids.numel() and getattr(self, "continuous_curriculum", None) is not None:
+                        if getattr(self.continuous_curriculum, "is_ex42_stage_zero", False):
+                            self.continuous_curriculum.record_map_reset(
+                                done_ids, self.pstate.use_gt, self.pstate.map_off)
+                        else:
+                            self.continuous_curriculum.record_map_reset(done_ids, self.pstate.use_gt)
+                self._mark("2_rollout", it)
+                collection_time = time.time() - start
+                start = time.time()
+                self.alg.compute_returns(self._ppo_obs(raw, torch.zeros(n, 51, device=self.device)))
+                self._vbias_finish(it)
+                noise_row = self._small_noise_finish(it)
+            if trace is not None:
+                trace.end_update()
+            if contract_bad is not None and bool(contract_bad.any()):
+                self._invalid(it, f"{'START ' if self.pcfg['contract'] == 'start' else ''}명령 계약({self.pcfg['contract']}) 위반 {int(contract_bad.sum())} env (rollout 중 소비된 명령), 예 {contract_example[contract_bad][0].tolist()}")
+            # ② PPO update
+            self._phase_start()
+            klp = self._kl_ppo_before(it) if self.pcfg["log_kl"] else None
+            loss_dict = self.alg.update()
+            kl_info = {}
+            if klp is not None:
+                kl_info["ppo"] = self._kl_ppo_after(klp)
+            self._mark("3_ppo_update", it)
+            if self.pcfg["stop_on_nonfinite"]:
+                self._check_finite(it, **{k: torch.as_tensor(v, dtype=torch.float32) for k, v in loss_dict.items() if isinstance(v, (int, float)) or hasattr(v, "dtype")})
+            # ③ 지각
+            self._phase_start()
+            klf = self._kl_phi_before(it) if self.pcfg["log_kl"] else None
+            ploss = ({"fast_gt_only": 1.0}
+                     if self.pcfg["fast_gt_only"] else self.update_perception())
+            if self.pcfg["stop_on_nonfinite"]:
+                self._check_finite(it, **{f"perception/{k}": torch.as_tensor(v, dtype=torch.float32) for k, v in ploss.items()})
+                self._check_params_finite(it)
+            if klf is not None:
+                kl_info["phi"] = self._kl_phi_after(klf)
+            self._mark("4_perception_update", it)
+            loss_dict.update({f"perception/{k}": v for k, v in ploss.items()})
+            if basic_lin_vel_z_weight is not None:
+                loss_dict["basic_reward/lin_vel_z_weight"] = basic_lin_vel_z_weight
+            for name, res in kl_info.items():
+                loss_dict[f"kl_probe/{name}_mean"] = res["all"]["mean"]
+            split = rs_rec.summary() if rs_rec is not None else None
+            if split is not None and "unavailable" not in split:
+                loss_dict["reward_split/frac_moving"] = split["frac_moving"]
+                loss_dict["reward_split/frac_stalled"] = split["frac_stalled"]
+            nt_stats = self._take_new_task_stats()                  # 지형 커리큘럼의 새 과제 표식 통계(JUDGE-SPEC 5.2 6). 표식을 쓰는 명령 term 이 아니면 None
+            extra = {"it": it, "kl_probe": kl_info or None, "action_stats": act_stats.summary() if act_stats is not None else None, "reward_split": split}
+            if "bounds_loss" in loss_dict:                       # keys added only when the bounds loss is on
+                extra["bounds"] = {k: loss_dict[k] for k in ("bounds_loss", "mu_over_limit_frac", "mu_abs_max")}
+            if "small_noise_env_share" in loss_dict:             # keys added only when the small-noise envs are applied
+                extra["small_noise"] = {k: loss_dict[k] for k in ("small_noise_env_share", "small_noise_sigma_scale")}
+                if noise_row:
+                    extra["small_noise"].update(noise_row)
+            if (continuous is not None
+                    and getattr(getattr(continuous, "plan", None), "is_ex41", False)):
+                extra["use_gt_frac"] = float(gt_steps) / self.num_steps_per_env
+                self._last_use_gt_frac = extra["use_gt_frac"]
+            if ex40_dr_runtime is not None:
+                extra["ex40_dr"] = ex40_dr_runtime.summary()
+            if nt_stats is not None:
+                extra["new_task_mark"] = nt_stats
+            slot_stats = self._take_slot_stats()                    # EX-35: S2a 슬롯 실제 비율(기록)
+            if slot_stats is not None:
+                extra["command_slots"] = slot_stats
+            take_command_stats = getattr(continuous, "take_command_stats", None)     # EX-42: the commands actually drawn this update
+            command_stats = take_command_stats() if callable(take_command_stats) else None
+            if command_stats is not None:
+                extra["ex42_command_samples"] = command_stats
+            live_metrics = getattr(continuous, "live_metrics", None)
+            if live_metrics is not None:
+                # Every rank participates in this one reduction per update.
+                combined = live_metrics.end()
+                if combined is not None:
+                    extra["ex42_live_metrics"] = combined
+            fc_stats = self._take_frame_stats()                     # J-T10: 현행 · 세계 좌표 판정 9 칸 표(병행 기록)
+            if fc_stats is not None:
+                extra["world_frame_compare"] = fc_stats
+            sensor_evidence = getattr(getattr(self.env, "unwrapped", self.env),
+                                      "_ex40_stand_evidence", None)
+            if sensor_evidence is not None:
+                extra["ex40_stand_sensor"] = sensor_evidence.summary()
+            if getattr(self, "last_perception_v_bias", None) is not None:
+                extra["perception_v_bias"] = self._v_bias_record()
+            if (kl_info or act_stats is not None or split is not None or nt_stats is not None or fc_stats is not None or slot_stats is not None or sensor_evidence is not None or ex40_dr_runtime is not None or "use_gt_frac" in extra or "small_noise" in extra or "ex42_live_metrics" in extra or "perception_v_bias" in extra) and self.log_dir is not None and not self.disable_logs:
+                with open(os.path.join(self.log_dir, "train_extra.jsonl"), "a", encoding="utf-8") as fh:
+                    fh.write(json.dumps(extra, ensure_ascii=False) + "\n")
+            # ④ AdaSmpl
+            p = self._update_adasmpl_recorded(it, src_steps, learn_iters)
+            learn_iters += 1
+            if self.pcfg["stop_on_nonfinite"]:
+                self._check_finite(it, adasmpl_p=torch.as_tensor(p, dtype=torch.float32))
+            loss_dict["adasmpl/p_smpl"] = p
+            loss_dict["adasmpl/gt_fraction"] = float(gt_steps) / self.num_steps_per_env
+            if self.map_switch is not None:
+                self._map_switch_log(it, loss_dict)
+            learn_time = time.time() - start
+            self.current_learning_iteration = it
+            if continuous is not None:
+                continuous.flush_consumption(curriculum_it)
+            steps = self.num_steps_per_env * n * self.gpu_world_size
+            self.iter_log.append({"it": it, "collection_s": collection_time, "learn_s": learn_time,
+                                  "steps_per_s": steps / (collection_time + learn_time)})
+            # ⑤ 로그 · 저장
+            if self.log_dir is not None and not self.disable_logs:
+                self.log(locals())
+                if it % self.save_interval == 0:
+                    checkpoint_path = os.path.join(self.log_dir, f"model_{it}.pt")
+                    self.save(checkpoint_path)
+                    self._manifest_checkpoint(it, f"model_{it}.pt", n)
+                    ex42_chain = getattr(self, "ex42_training_chain", None)
+                    if ex42_chain is not None:
+                        # P1 admission follows both model_N bytes and manifest SHA.
+                        p1_result = ex42_chain.on_checkpoint_saved(self, it)
+                        print("EX42_P1_ENQUEUE " + json.dumps(
+                            p1_result, ensure_ascii=False, sort_keys=True), flush=True)
+                    if continuous is not None:
+                        continuous.on_checkpoint(curriculum_it, checkpoint_path)
+                disk_guard = self.cfg.get("ex41_disk_guard")
+                if disk_guard is not None and it % 250 == 0:
+                    from foothold_s2.scripts.ex41_startup import record_ex41_disk_snapshot
+
+                    record_ex41_disk_snapshot(self.log_dir, disk_guard, it)
+                if it % self.pcfg["latest_interval"] == 0:
+                    self._check_code(it)
+                    self.save_latest()
+                if loop_it == start_iter or it % self.pcfg["status_interval"] == 0:
+                    self._write_running_status(it, tot_iter, rewbuffer, lenbuffer, collection_time + learn_time, steps)
+            ep_infos.clear()
+            if loop_it == start_iter and not self.disable_logs and self.log_dir is not None:
+                store_code_state(self.log_dir, self.git_status_repos)
+        if self.log_dir is not None and not self.disable_logs:
+            checkpoint_path = os.path.join(self.log_dir, f"model_{self.current_learning_iteration}.pt")
+            final_runtime = getattr(self, "continuous_curriculum", None)
+            already_saved = (final_runtime is not None and _final_checkpoint_is_already_current(
+                final_runtime, self.current_learning_iteration, checkpoint_path))
+            if not already_saved:
+                self.save(checkpoint_path)
+                self._manifest_checkpoint(self.current_learning_iteration, f"model_{self.current_learning_iteration}.pt", n)
+                ex42_chain = getattr(self, "ex42_training_chain", None)
+                if ex42_chain is not None:
+                    p1_result = ex42_chain.on_checkpoint_saved(
+                        self, self.current_learning_iteration)
+                    print("EX42_P1_ENQUEUE " + json.dumps(
+                        p1_result, ensure_ascii=False, sort_keys=True), flush=True)
+                if final_runtime is not None:
+                    final_runtime.on_checkpoint(self.current_learning_iteration, checkpoint_path)
+            if final_runtime is not None:
+                if (getattr(getattr(final_runtime, "plan", None), "is_ex41", False)
+                        and getattr(final_runtime, "finished", False)):
+                    from foothold_s2.eval.ex41_w78_video_request import (
+                        publish_stage_end_request as publish_final_stage_end_request)
+                    from foothold_s2.ex41_ops import run_nonfatal_reporting
+
+                    def publish_final_w78_request():
+                        stage_name = getattr(final_runtime, "effective", {}).get("stage_id")
+                        request = publish_final_stage_end_request(
+                            self.log_dir, final_runtime, stage_name=stage_name,
+                            next_stage=None, boundary_iteration=self.current_learning_iteration)
+                        final_runtime._write({"event": "w78_video_request", **request})
+                        print("EX41_W78_VIDEO_REQUEST " + json.dumps(request, sort_keys=True), flush=True)
+                        return request
+
+                    run_nonfatal_reporting(
+                        self.log_dir, self.current_learning_iteration,
+                        "final_stage_end_w78_video_request", publish_final_w78_request)
+            self.save_latest()
+        self._resumed = True  # 같은 runner 로 learn 을 또 부르면 끝난 회차 다음부터 이어 간다
+
+    # ------------------------------------------------------------------ SONNET-X25f: EX-33 S-B 켬 · 끔 기록
+    def _map_switch_probes(self):
+        """지형 레벨 텐서와 track 두 항의 reward_manager 열 번호. 없으면 None(기록에서 빠지고 jsonl 에 이유가 남는다)."""
+        raw_env = getattr(self.env, "unwrapped", self.env)
+        terrain = getattr(getattr(raw_env, "scene", None), "terrain", None)
+        levels = getattr(terrain, "terrain_levels", None)
+        rm = getattr(raw_env, "reward_manager", None)
+        track = None
+        if rm is not None and hasattr(rm, "_step_reward"):
+            names = list(rm.active_terms)
+            lin = [i for i, nm in enumerate(names) if "track_lin_vel" in nm]
+            ang = [i for i, nm in enumerate(names) if "track_ang_vel" in nm]
+            if len(lin) == 1 and len(ang) == 1:
+                track = (rm, lin[0], ang[0])
+        self.map_switch_unavailable = {"terrain_levels": levels is None, "track_terms": track is None}
+
+        return (raw_env if levels is not None else None), track
+
+    def _map_switch_step_values(self, raw_env, track):
+        levels = raw_env.scene.terrain.terrain_levels.to(self.device) if raw_env is not None else None
+        if track is None:
+            return levels, None, None
+        rm, i, j = track
+
+        return levels, rm._step_reward[:, i].to(self.device), rm._step_reward[:, j].to(self.device)
+
+    def _map_switch_log(self, it: int, loss_dict: dict) -> None:
+        s = self.map_switch.summary()
+        self.map_switch.reset_window()
+        loss_dict["map_switch/off_frac"] = s["off_frac_steps"]
+        for g in ("on", "off"):
+            for k, v in s[g].items():
+                if isinstance(v, float) and v == v:
+                    loss_dict[f"map_switch/{g}_{k}"] = v
+        if self.log_dir is not None and not self.disable_logs:
+            row = {"it": it, "p_off": self.p_map_off, "unavailable": getattr(self, "map_switch_unavailable", None), **s}
+            if getattr(self, "off_elig", None) is not None:
+                row["off_eligibility"] = self.off_elig.take()
+            with open(os.path.join(self.log_dir, "map_switch.jsonl"), "a", encoding="utf-8") as fh:
+                fh.write(json.dumps(_nan_to_none(row), ensure_ascii=False) + "\n")
+
+    # ------------------------------------------------------------------ SONNET-X11: 실행 무효 · manifest · KL 기록
+    def attach_manifest(self, log_dir: str, manifest: dict) -> None:
+        """실행 시작 때 만든 manifest 를 붙인다. 체크포인트 저장 때마다 소비 코드 변경을 검사하고 진행 수를 갱신한다."""
+        self.manifest_dir, self.manifest = log_dir, manifest
+        self._flush_map_ratio_events()
+
+    def _invalid(self, it: int, reason: str) -> None:
+        """실행 무효 · 안전 중단: 성능 승패가 아니라 기록한 뒤 멈춘다."""
+        write_status(self.log_dir, {"state": "failed", "invalid_run": True, "iter": it, "reason": reason})
+        raise RuntimeError(f"실행 무효 (iter {it}): {reason}")
+
+    def _check_finite(self, it: int, **tensors) -> None:
+        for k, v in tensors.items():
+            if not bool(torch.isfinite(v).all()):
+                self._invalid(it, f"NaN/Inf: {k}")
+
+    def _consumed_command(self, it: int) -> torch.Tensor:
+        """이번 step 에 행동이 따른 명령 (N, 3). 명령 term 이 없으면 계약을 확인할 수 없으므로 실행 무효."""
+        term = self._command_term()
+        if term is None:
+            self._invalid(it, "START 명령 계약을 검사해야 하는데 command_manager 의 base_velocity term 이 없다")
+        return term.vel_command_b[:, :3].detach().clone().to(self.device)      # env 와 runner 의 장치가 다를 수 있다(예: env cuda:1 · runner 기본 cuda:0): 누적 텐서와 같은 장치로
+
+    def _take_new_task_stats(self):
+        """이번 update 동안 쌓인 새 과제 표식 통계를 꺼낸다(없거나 표식 term 이 아니면 None)."""
+        term = self._command_term()
+        stats = getattr(term, "new_task_stats", None)
+
+        return stats.take() if stats is not None else None
+
+    def _take_slot_stats(self):
+        term = self._command_term()
+        fn = getattr(term, "take_slot_counts", None)
+
+        return fn() if fn is not None else None
+
+    def scatter_episode_progress(self, seed: int) -> None:
+        """EX-35: 에피소드 진행도를 첫 rollout 직전에 U[0, 최대 길이) 로 흩도록 예약한다(시작 스크립트가 reset 이 다 끝난 뒤 · learn 앞에서 부름).
+        Isaac 의 `_reset_idx` 는 명령 term reset 뒤에 episode_length_buf 를 0 으로 덮으므로 term 안에서는 남지 않는다."""
+        self._episode_scatter_seed = int(seed)
+
+    def _scatter_and_record_before_rollout(self) -> None:
+        """첫 rollout 직전: (1) 예약된 에피소드 진행도 흩기를 하고 (2) 실제 env.episode_length_buf 와 명령 term time_left 를 읽어 영수증(범위 · 유한 · 구간 집중도)을 만든다.
+        manifest 사건과 run.log 한 줄로 남기고, 어기면 실행 무효. 아무것도 켜지 않은 판은 아무 일도 안 한다."""
+        term = self._command_term()
+        clock_on = bool(getattr(getattr(term, "cfg", None), "clock_scatter", False))
+        seed = getattr(self, "_episode_scatter_seed", None)
+
+        if not clock_on and seed is None:
+            return
+        u = getattr(self.env, "unwrapped", self.env)
+        it = int(self.current_learning_iteration)
+        bad = []
+
+        if seed is not None:
+            buf = u.episode_length_buf
+            buf[:] = mc.scatter_episode(mc.make_generator(seed, device=str(buf.device)), len(buf), int(u.max_episode_length)).to(buf.device)
+            ep = mc.scatter_receipt(u.episode_length_buf.float() * u.step_dt, int(u.max_episode_length) * u.step_dt, bins=5)          # 흩은 뒤 실제 버퍼를 다시 읽는다
+            self.map_ratio_events.append({"kind": "episode_progress_scatter", "it": it, "seed": seed, **ep})
+            print("EX35_EPISODE_SCATTER " + json.dumps(ep), flush=True)
+            if not ep["ok"]:
+                bad.append(f"에피소드 진행도 흩기 영수증 위반: {ep}")
+        if clock_on:
+            rc = mc.scatter_receipt(term.time_left, float(term.cfg.resampling_time_range[1]))                                         # 실제 time_left 를 읽는다
+            self.map_ratio_events.append({"kind": "command_clock_scatter", "it": it, **rc})
+            print("EX35_CLOCK_SCATTER " + json.dumps(rc), flush=True)
+            if not rc["ok"]:
+                bad.append(f"명령 시계 흩기 영수증 위반: {rc}")
+        if bad:
+            self._invalid(it, "; ".join(bad))
+
+    def _take_frame_stats(self):
+        """이번 update 동안 쌓인 현행 · 세계 좌표 판정 비교표를 꺼낸다(없으면 None)."""
+        stats = getattr(self._command_term(), "frame_stats", None)
+
+        return stats.take() if stats is not None else None
+
+    def _check_params_finite(self, it: int) -> None:
+        """갱신 뒤 정책 · 지각 파라미터가 모두 유한한지."""
+        for owner, module in (("policy", self.alg.policy), ("perception", self.perception)):
+            for name, prm in module.named_parameters():
+                if not bool(torch.isfinite(prm).all()):
+                    self._invalid(it, f"NaN/Inf 파라미터: {owner}.{name}")
+
+    def _check_code(self, it: int) -> None:
+        """시작 때 기록한 소비 파일이 바뀌었거나 사라졌으면 실행 무효. 새로 import 된 소비 파일은 manifest 에 덧붙이고 알린다(무효 아님)."""
+        if self.manifest is None:
+            return
+        ch = run_manifest.file_changes(self.manifest)
+        if ch["changed"] or ch["missing"]:
+            self._invalid(it, "실행 중 소비 코드가 바뀜: 변경 " + ",".join(ch["changed"][:8]) + " 소실 " + ",".join(ch["missing"][:8]))
+        if ch["added"]:
+            self.manifest["files"].setdefault("added_after_start", {}).update(ch["added"])
+            self.manifest["files"].setdefault("added_after_start_paths", {}).update(ch["added_paths"])
+
+    def _manifest_checkpoint(self, it: int, name: str, num_envs: int) -> None:
+        if self.manifest is None:
+            return
+        self._check_code(it)
+        # EX-42 stage-zero update numbers are one-based and the checkpoint
+        # named model_N.pt contains exactly N completed updates.
+        continuous = getattr(self, "continuous_curriculum", None)
+        done = it if getattr(continuous, "uses_one_based_updates", False) else it + 1
+        run_manifest.update_progress(self.manifest_dir, self.manifest, done, done * self.num_steps_per_env * num_envs * self.gpu_world_size,
+                                     (name, os.path.join(self.log_dir, name)))
+
+    def _kl_select(self):
+        k = min(int(self.pcfg["kl_probe_envs"]), self.env.num_envs)
+        return torch.arange(k, device=self.device)
+
+    def _kl_ppo_before(self, it: int) -> dict:
+        """PPO update 전: 저장된 actor 입력 부분집합에서 행동 분포(mean, std)를 잡아 둔다."""
+        sel = self._kl_select()
+        sub = self.alg.storage.observations[:, sel]
+        sub = sub.reshape(sub.batch_size[0] * sub.batch_size[1]).clone()
+        if self.ex41_pose_commands:
+            sub = sub[self.alg.storage.valid[:, sel].reshape(-1)]
+            if sub.batch_size[0] == 0:
+                return None
+        mu, std = kl_probe.policy_dist(self.alg.policy, sub)
+        return {"obs": sub, "mu": mu, "std": std}
+
+    def _kl_ppo_after(self, snap: dict) -> dict:
+        mu1, std1 = kl_probe.policy_dist(self.alg.policy, snap["obs"])
+        kl = kl_probe.gaussian_kl(snap["mu"], snap["std"], mu1, std1)
+        return kl_probe.summarize(kl, kl_probe.command_branch(snap["obs"][ACTOR_KEY][:, 6:9]))
+
+    def _kl_phi_before(self, it: int) -> dict:
+        """지각 phi update 전: 같은 history · 시작 hidden · epsilon 으로 est 시퀀스를 계산하고 theta(PPO 뒤 값)로 행동 분포를 잡는다."""
+        sel = self._kl_select()
+        batch = self.replay.gather(sel)
+        gen = torch.Generator(device="cpu").manual_seed(1234 + it)
+        T, K = batch["obs"].shape[0], batch["obs"].shape[1]
+        eps = torch.randn(T, K, 16, generator=gen).to(self.device)
+        snap = {"batch": batch, "eps": eps}
+        snap["mu"], snap["std"] = self._phi_dist(snap)
+        return snap
+
+    def _phi_dist(self, snap):
+        est = self.perception.est_sequence(snap["batch"], snap["eps"])
+        est_in = self._est_in(est, snap["batch"]["base_vel"], noise=0.0)          # zero · oracle_vel 은 phi 와 무관하게 정해져 phi 전후 KL 이 0 이다(잡음 0: 전 · 후 같은 입력)
+        o = snap["batch"]["obs"]
+        T, K = o.shape[0], o.shape[1]
+        actor = torch.cat([o, est_in], -1)
+        if self.ex41_pose_commands:
+            # D93 fixes both pose-command columns to zero for this stage.
+            # PerceptionReplay intentionally stores the base observation only,
+            # so reproduce the checked pose suffix for the actor KL probe.
+            pose = torch.zeros(T, K, 2, dtype=actor.dtype, device=actor.device)
+            actor = torch.cat([actor, pose], -1)
+        td = TensorDict({ACTOR_KEY: actor.reshape(T * K, -1)}, batch_size=[T * K], device=o.device)
+        return kl_probe.policy_dist(self.alg.policy, td)
+
+    def _kl_phi_after(self, snap: dict) -> dict:
+        mu1, std1 = self._phi_dist(snap)
+        kl = kl_probe.gaussian_kl(snap["mu"], snap["std"], mu1, std1)
+        return kl_probe.summarize(kl, kl_probe.command_branch(snap["batch"]["obs"].reshape(-1, snap["batch"]["obs"].shape[-1])[:, 6:9]))
+
+    def _vbias_collect(self, o: torch.Tensor, ppo_obs, vel: torch.Tensor) -> None:
+        """기록만. 명령 속력 (o[:, 6:9] 의 vx vy 노름) 이 저속 띠인 env 의 «actor 가 받은 est 의 속도 3 칸 - 실제 몸 속도» 를 모은다.
+        learned est 51 칸의 순서는 [z 0:16, v 16:19, zf 19:35, zb 35:51] (StartPerception.step) 이라 속도 추정은 est[16:19] 다 (앞 3 칸은 잠재 z).
+        est_mode oracle_vel 은 _est_in 이 앞 3 칸에 실제 속도를 넣으므로 0:3, zero 는 어느 칸이든 0."""
+        lo, hi = sp.PERCEPTION_V_BIAS_LOWBAND
+        cmd = o[:, 6:8].norm(dim=-1)
+        m = (cmd >= lo) & (cmd < hi)
+        k = o.shape[-1] + (0 if self.pcfg["est_mode"] == "oracle_vel" else sp.Z_DIM)
+        est3 = ppo_obs[ACTOR_KEY][:, k:k + sp.V_DIM]
+        self._vbias_samples.append((est3 - vel)[m].float())
+        if self._mean_action is not None:
+            if self._vbias_mean_samples is None:
+                self._vbias_mean_samples = []
+            self._vbias_mean_samples.append((est3 - vel)[m & self._mean_action].float())
+
+    def _vbias_finish(self, it: int) -> None:
+        """이 rollout 의 표본을 모아 (2 rank 면 표본을 합쳐서) 요약하고 매 회차 한 줄 찍는다. 모든 rank 가 같은 횟수로 부른다."""
+        parts = getattr(self, "_vbias_samples", None)
+        samples = torch.cat(parts) if parts else torch.zeros(0, 3, device=self.device)
+        if self.is_distributed:
+            gathered = [None] * self.gpu_world_size
+            torch.distributed.all_gather_object(gathered, samples.cpu())
+            samples = torch.cat(gathered)
+        self._vbias_samples = []
+        self.last_perception_v_bias = lowband_bias_summary(samples)
+        if not self.disable_logs:
+            r = self.last_perception_v_bias
+            f = lambda x: "null" if x is None else "%.4f" % x
+            print("EX42_PERCEPTION_V_BIAS it=%d band=cmd_%.2f_%.2f n=%d mean=%s p10=%s p90=%s mean_y=%s p10_y=%s p90_y=%s" % (
+                it, *sp.PERCEPTION_V_BIAS_LOWBAND, r["n"], f(r["mean"]), f(r["p10"]), f(r["p90"]), f(r["mean_y"]), f(r["p10_y"]), f(r["p90_y"])), flush=True)
+        if self._mean_action is not None:                     # v28p: the same record for the mean-action envs only (every rank calls this)
+            parts = self._vbias_mean_samples or []
+            samples = torch.cat(parts) if parts else torch.zeros(0, 3, device=self.device)
+            if self.is_distributed:
+                gathered = [None] * self.gpu_world_size
+                torch.distributed.all_gather_object(gathered, samples.cpu())
+                samples = torch.cat(gathered)
+            self._vbias_mean_samples = []
+            self.last_perception_v_bias_mean_action = r = lowband_bias_summary(samples)
+            if not self.disable_logs:
+                print("EX42_MEAN_ACTION it=%d envs=%d of=%d share=%.2f" % (
+                    it, int(self._mean_action.sum()), self.env.num_envs, float(self._mean_action.float().mean())), flush=True)
+                print("EX42_PERCEPTION_V_BIAS_MEAN_ACTION it=%d band=cmd_%.2f_%.2f n=%d mean=%s p10=%s p90=%s mean_y=%s p10_y=%s p90_y=%s" % (
+                    it, *sp.PERCEPTION_V_BIAS_LOWBAND, r["n"], f(r["mean"]), f(r["p10"]), f(r["p90"]), f(r["mean_y"]), f(r["p10_y"]), f(r["p90_y"])), flush=True)
+
+    def _v_bias_record(self) -> dict:
+        record = {"lowband": dict(self.last_perception_v_bias)}
+        if self.last_perception_v_bias_mean_action is not None:
+            record["mean_action_lowband"] = dict(self.last_perception_v_bias_mean_action)
+        return record
+
+    def update_perception(self) -> dict[str, float]:
+        if not self.replay.full():
+            raise RuntimeError("지각 재생 버퍼가 덜 찼다")
+        pc = self.pcfg
+        params = [p for p in self.perception.parameters() if p.requires_grad]
+        acc: dict[str, float] = {}
+        v_band_sum = None  # 속도 띠별 (추정 - 실제) 합과 표본 수 (기록만, 학습에 안 쓰임)
+        n_updates = 0
+        for idx in self.replay.env_batches(pc["num_mini_batches"], pc["num_learning_epochs"]):
+            self.perception_optimizer.zero_grad(set_to_none=True)
+            chunks = torch.split(idx, pc["microbatch_envs"])  # microbatch + gradient accumulation (18 §5.2)
+            for c in chunks:
+                with self._autocast():
+                    res = self.perception.sequence_loss(self.replay.gather(c), impl=pc["replay_impl"])
+                (res["loss"] * (len(c) / len(idx))).backward()
+                for k in ("l_tr", "l_ie", "kl", "o_next", "v", "hf", "hb"):
+                    acc[k] = acc.get(k, 0.0) + float(res[k]) * len(c) / len(idx)
+                if res.get("_v_band") is not None:
+                    vb = res["_v_band"].detach().float()
+                    v_band_sum = vb if v_band_sum is None else v_band_sum + vb
+            if self.is_distributed:
+                self._allreduce_grads(params)
+            nn.utils.clip_grad_norm_(params, pc["max_grad_norm"])
+            self.perception_optimizer.step()
+            n_updates += 1
+        self.last_perception_losses = {k: v / n_updates for k, v in acc.items()}
+        self.last_perception_losses.update(velocity_band_records(v_band_sum, n_updates))
+        return self.last_perception_losses
+
+    def _autocast(self):
+        if self.pcfg.get("replay_autocast") == "bf16" and self._cuda():
+            return torch.autocast("cuda", dtype=torch.bfloat16)
+        import contextlib
+
+        return contextlib.nullcontext()
+
+    def _update_adasmpl_recorded(self, it: int, src_steps: torch.Tensor, learn_iters: int) -> float:
+        """update 를 부르고, 이 learn 호출의 첫 두 회차에 «그 회차의 정답 · 복원 · 끔 env-step 수» 를, 첫 update 에는 CV · count · p 를 사건으로 남긴다(M-T5, 막음 1 확인용)."""
+        before = (self.adasmpl.count, self.adasmpl.sum, self.adasmpl.sumsq)
+        p_before = float(self.adasmpl.p)
+        p = self.update_adasmpl()
+        if learn_iters < 2:
+            gt, recon, off = (int(round(float(x))) for x in src_steps)
+            self.map_ratio_events.append({"kind": "iter_sources", "it": int(it), "learn_iter": learn_iters, "gt_steps": gt, "recon_steps": recon, "off_steps": off,
+                                          "total": gt + recon + off, "force_gt": bool(self.adasmpl.force_gt), "p_start": p_before})
+            if learn_iters == 0:
+                cv = AdaSmpl.cv(before[0], before[1], before[2], self.adasmpl.eps) if before[0] >= 2 and not self.adasmpl.force_gt else None
+                self.map_ratio_events.append({"kind": "first_update_adasmpl", "it": int(it), "count": before[0], "cv": cv, "p_before": p_before, "p_after": float(p)})
+            print("EX33_ITER_SOURCES it=%d gt_steps=%d recon_steps=%d off_steps=%d p_start=%.4f p_end=%.4f" % (it, gt, recon, off, p_before, p), flush=True)
+            self._flush_map_ratio_events()
+
+        return p
+
+    def update_adasmpl(self) -> float:
+        if self.is_distributed:
+            t = torch.tensor([self.adasmpl.count, self.adasmpl.sum, self.adasmpl.sumsq], dtype=torch.float64, device=self.device)
+            torch.distributed.all_reduce(t, op=torch.distributed.ReduceOp.SUM)
+            self.adasmpl.count, self.adasmpl.sum, self.adasmpl.sumsq = (float(x) for x in t)
+        return self.adasmpl.update()
+
+    # ------------------------------------------------------------------ 분산 (18 §5.1 · Linux 에서만 · 이 판에서 실행 안 함)
+    def _allreduce_grads(self, params) -> None:
+        grads = [p.grad.view(-1) for p in params if p.grad is not None]
+        flat = torch.cat(grads)
+        torch.distributed.all_reduce(flat, op=torch.distributed.ReduceOp.SUM)
+        flat /= self.gpu_world_size
+        off = 0
+        for p in params:
+            if p.grad is not None:
+                k = p.numel()
+                p.grad.copy_(flat[off : off + k].view_as(p.grad))
+                off += k
+
+    def broadcast_all(self) -> None:
+        objs = [self.alg.policy.state_dict(), self.perception.state_dict(), self.adasmpl.state_dict()]
+        torch.distributed.broadcast_object_list(objs, src=0)
+        self.alg.policy.load_state_dict(objs[0])
+        self.perception.load_state_dict(objs[1])
+        self.adasmpl.load_state_dict(objs[2])
+
+    # ------------------------------------------------------------------ 저장 · 복원 (12 §6.1 상태 목록)
+    # env 가 학습 회차에 걸쳐 들고 가는 상태. 저장하지 않고 재개하면 «오류 없이» 처음 값으로 돌아간다:
+    #   common_step_counter  명령 모드 비율의 1,000 회 전후 전환 · p_advance 의 T 가 이 값에서 나온다(반복 수 = 이 값 // 24)
+    #   terrain_levels / terrain_types  env 마다 서 있는 지형 칸
+    #   명령 term 의 range_curriculum  자유 속도 상한 vmax (1.0 에서 시작해 올라간다)
+    # env 가 `foothold_state_dict` / `foothold_load_state_dict` 를 내면 그것을 «더해서» 쓴다(위 셋은 항상 저장).
+    def _command_term(self):
+        u = getattr(self.env, "unwrapped", self.env)
+        cm = getattr(u, "command_manager", None)
+        try:
+            return cm.get_term("base_velocity") if cm is not None else None
+        except Exception:
+            return None
+
+    def _env_state(self) -> dict:
+        u = getattr(self.env, "unwrapped", self.env)
+        out: dict = {}
+        if getattr(u, "common_step_counter", None) is not None:
+            out["common_step_counter"] = int(u.common_step_counter)
+        terrain = getattr(getattr(u, "scene", None), "terrain", None)
+        for k in ("terrain_levels", "terrain_types"):
+            if terrain is not None and getattr(terrain, k, None) is not None:
+                out[k] = getattr(terrain, k).clone()
+        rc = getattr(self._command_term(), "range_curriculum", None)
+        if rc is not None:
+            out["range_curriculum"] = {k: (list(v) if isinstance(v, list) else v) for k, v in vars(rc).items()}
+        command = self._command_term()
+        from foothold_s2.runners.command_rng import save_command_rng
+
+        save_command_rng(command, out)
+        hook = getattr(u, "foothold_state_dict", None)
+        if callable(hook):
+            out["env_hook"] = hook()
+        return out
+
+    def _load_env_state(self, sd: dict) -> None:
+        u = getattr(self.env, "unwrapped", self.env)
+        if "common_step_counter" in sd:
+            u.common_step_counter = int(sd["common_step_counter"])
+        terrain = getattr(getattr(u, "scene", None), "terrain", None)
+        for k in ("terrain_levels", "terrain_types"):
+            if k in sd and terrain is not None and getattr(terrain, k, None) is not None:
+                getattr(terrain, k).copy_(sd[k])
+        if terrain is not None and "terrain_levels" in sd and "terrain_types" in sd:
+            origins = getattr(terrain, "terrain_origins", None)
+            active = getattr(terrain, "env_origins", None)
+            if origins is not None and active is not None:
+                restored = origins[terrain.terrain_levels, terrain.terrain_types]
+                active.copy_(restored)
+                scene_origins = getattr(u.scene, "env_origins", None)
+                if scene_origins is not None and not torch.equal(scene_origins, restored):
+                    raise RuntimeError("restored terrain origins differ from scene env origins")
+        rc = getattr(self._command_term(), "range_curriculum", None)
+        if rc is not None and "range_curriculum" in sd:
+            for k, v in sd["range_curriculum"].items():
+                setattr(rc, k, v)
+        from foothold_s2.runners.command_rng import restore_command_rng
+
+        restore_command_rng(self._command_term(), sd)
+        if "env_hook" in sd:
+            hook = getattr(u, "foothold_load_state_dict", None)
+            if not callable(hook):
+                raise RuntimeError("체크포인트에 env_hook 상태가 있는데 이 env 에는 foothold_load_state_dict 가 없다")
+            hook(sd["env_hook"])
+
+    @staticmethod
+    def rng_state() -> dict:
+        s = {"torch": torch.get_rng_state(), "numpy": np.random.get_state(), "python": random.getstate()}
+        if torch.cuda.is_available():
+            s["cuda"] = torch.cuda.get_rng_state_all()
+        return s
+
+    @staticmethod
+    def set_rng_state(s: dict) -> None:
+        # torch.load(map_location=self.device) can move the global CPU RNG
+        # ByteTensor onto CUDA; torch.set_rng_state only accepts a CPU tensor.
+        torch.set_rng_state(s["torch"].cpu())
+        np.random.set_state(s["numpy"])
+        random.setstate(s["python"])
+        if "cuda" in s and torch.cuda.is_available():
+            torch.cuda.set_rng_state_all([state.cpu() for state in s["cuda"]])
+
+    def state_dict(self, infos: dict | None = None) -> dict:
+        policy_state = self.alg.policy.state_dict()
+        perception_state = self.perception.state_dict()
+        norm_tokens = ("running_mean", "running_std", "running_var", "_mean", "_std", "_var", "_count")
+        norm_buffers = {
+            f"policy.{key}": value for key, value in policy_state.items()
+            if any(token in key.lower() for token in norm_tokens)
+        }
+        norm_buffers.update({
+            f"perception.{key}": value for key, value in perception_state.items()
+            if any(token in key.lower() for token in norm_tokens)
+        })
+        continuous = getattr(self, "continuous_curriculum", None)
+        effective = getattr(continuous, "effective", {}) if continuous is not None else {}
+        return {
+            "format": CKPT_FORMAT,
+            "ex41_pose_commands": self.ex41_pose_commands,
+            "ex41_critic_mirror": self.ex41_critic_mirror,
+            "ex41_mirror_approval": self.ex41_mirror_approval,
+            "ex41_mirror_hold_reason": self.ex41_mirror_hold_reason,
+            "ex41_parent_transfer": self.ex41_parent_transfer,
+            "ex42_parent_transfer": getattr(self, "ex42_parent_transfer", None),
+            "model_state_dict": policy_state,  # 정책·critic 및 있으면 관측 정규화 버퍼
+            "optimizer_state_dict": self.alg.optimizer.state_dict(),
+            "ppo_learning_rate": self.alg.learning_rate,  # adaptive 학습률은 optimizer 밖 속성에도 있다
+            "perception_state_dict": perception_state,
+            "perception_optimizer_state_dict": self.perception_optimizer.state_dict(),
+            "perception_cfg": dict(self.pcfg),
+            "adasmpl": self.adasmpl.state_dict(),
+            "env_state": self._env_state(),
+            "env_seed": getattr(getattr(getattr(self.env, "unwrapped", self.env), "cfg", None), "seed", None),
+            "iter": self.current_learning_iteration,
+            "last_use_gt_frac": self._last_use_gt_frac,
+            "normalization_state": {
+                "actor_obs_enabled": bool(self.policy_cfg.get("actor_obs_normalization", False)),
+                "critic_obs_enabled": bool(self.policy_cfg.get("critic_obs_normalization", False)),
+                "reward_enabled": False,
+                "running_buffers": norm_buffers,
+            },
+            "ex41_w86_reward_weights": copy.deepcopy(effective.get("reward_weights")),
+            "rng": self.rng_state(),
+            "map_switch": self.map_switch_state(),
+            "infos": infos,
+            "continuous_curriculum": (self.continuous_curriculum.state_dict()
+                                      if getattr(self, "continuous_curriculum", None) is not None else None),
+        }
+
+    def map_switch_state(self) -> dict:
+        """EX-33 S-B: 끔 확률 · 시드 · 끔 전용 난수열 상태. 이어 갈 때 p 가 다르면 거절하고, 같으면 난수열을 이어 간다."""
+        gen = self.map_switch_gen
+
+        return {"p_map_off": self.p_map_off, "map_switch_seed": int(self.pcfg["map_switch_seed"]),
+                "generator_state": gen.get_state() if gen is not None else None, "changes": list(self.map_switch_changes)}
+
+    def load_map_switch_state(self, saved: dict | None, ckpt_iter: int | None = None) -> None:
+        """체크포인트의 끔 설정을 이 runner 와 대조한다. 옛 체크포인트(칸 없음)는 p=0 으로 본다(B).
+
+        p 가 다르면 거절한다. 단 `p_map_off_change` 가 있고 to == 이 runner 의 p, from_iter == 체크포인트 회차 + 1 이면 허용하고 사건을 남긴다(M-T1).
+        난수열: 이전 p > 0 이고 새 p > 0 이면 저장된 상태를 이어 쓴다. 이전 p == 0 이면 이 runner 가 시드로 새로 만든 것, 새 p == 0 이면 난수열이 없다.
+        """
+        saved = saved or {"p_map_off": 0.0, "map_switch_seed": None, "generator_state": None}
+        old, new = float(saved["p_map_off"]), self.p_map_off
+        changed = old != new
+        if changed:
+            chg = self.pcfg.get("p_map_off_change")
+            if chg is None:
+                raise ValueError(f"체크포인트의 p_map_off={saved['p_map_off']} 와 이 runner 의 {self.p_map_off} 가 다르다 (지도 끔 비율이 다른 체크포인트를 섞지 않는다)")
+            if ckpt_iter is None or int(chg["from_iter"]) != int(ckpt_iter) + 1:
+                raise ValueError(f"p_map_off_change.from_iter={chg['from_iter']} 가 체크포인트 회차 {ckpt_iter} + 1 과 다르다 (p_map_off 변경은 이어 가는 첫 회차에서만 허용)")
+            if "from" in chg and float(chg["from"]) != old:
+                raise ValueError(f"p_map_off_change.from={chg['from']} 가 체크포인트의 p_map_off={old} 와 다르다")
+        self.map_switch_changes = [dict(e) for e in (saved.get("changes") or [])]
+        if not changed and self.pcfg.get("p_map_off_change") is not None:
+            print("MAP_RATIO_CHANGE_NOOP 체크포인트 p_map_off=%s 가 이미 인자의 to 와 같다 (묵은 인자: 적용할 변경 없음)" % old, flush=True)
+        if old > 0.0 and new > 0.0:
+            if int(saved["map_switch_seed"]) != int(self.pcfg["map_switch_seed"]):
+                raise ValueError(f"체크포인트의 map_switch_seed={saved['map_switch_seed']} 와 이 runner 의 {self.pcfg['map_switch_seed']} 가 다르다")
+            if saved["generator_state"] is None:
+                raise ValueError("체크포인트에 지도 끔 난수열 상태가 없다")
+            self.map_switch_gen.set_state(saved["generator_state"].cpu())
+        if changed:
+            ev = {"kind": "p_map_off_change", "from": old, "to": new, "from_iter": int(self.pcfg["p_map_off_change"]["from_iter"]),
+                  "rng": "continued" if (old > 0.0 and new > 0.0) else ("fresh_from_seed" if new > 0.0 else "none")}
+            self.map_switch_changes.append(ev)
+            self.map_ratio_events.append(ev)
+            print("MAP_RATIO_CHANGE from=%s to=%s from_iter=%d rng=%s" % (old, new, ev["from_iter"], ev["rng"]), flush=True)
+
+    # ------------------------------------------------------------------ M-T5: 이어 가기 AdaSmpl 덮어쓰기 · 사건 기록
+    def _apply_resume_adasmpl(self) -> None:
+        """저장본의 force_gt · p 는 AdaSmpl.load_state_dict 가 오류 없이 되살린다. 설정 `resume_adasmpl` 이 있으면 그 값으로 덮고, 없으면 저장본을 두고 설정과 다를 때 경고 줄을 낸다."""
+        before = {"force_gt": bool(self.adasmpl.force_gt), "p": float(self.adasmpl.p)}
+        cfg = self.pcfg.get("resume_adasmpl")
+        if cfg is None:
+            want = bool(self.pcfg.get("force_gt", False))
+            if before["force_gt"] != want:
+                print("RESUME_ADASMPL_WARN 저장본 force_gt=%s 가 설정 force_gt=%s 와 다르다 (resume_adasmpl 이 없어 저장본 값을 그대로 쓴다)" % (before["force_gt"], want), flush=True)
+            ev = {"kind": "resume_adasmpl", "applied": False, "saved": before, "configured_force_gt": want}
+        else:
+            self.adasmpl.force_gt = bool(cfg["force_gt"])
+            ev = {"kind": "resume_adasmpl", "applied": True, "saved": before, "after": {"force_gt": bool(self.adasmpl.force_gt), "p": float(self.adasmpl.p)}}
+        self.map_ratio_events.append(ev)
+        print("RESUME_ADASMPL %s" % json.dumps(ev, ensure_ascii=False), flush=True)
+
+    def _report_first_sources(self) -> None:
+        """학습 시작(또는 이어 가기 첫 회차) 때 실제로 뽑힌 env 의 지도 출처 수를 출력하고 기록한다: 정답 · 복원 · 끔(끔이 먼저)."""
+        off = self.pstate.map_off.bool()
+        gt = self.pstate.use_gt.bool()
+        ev = {"kind": "first_iter_sources", "gt": int((gt & ~off).sum()), "recon": int((~gt & ~off).sum()), "off": int(off.sum()),
+              "envs": int(off.numel()), "force_gt": bool(self.adasmpl.force_gt), "p": float(self.adasmpl.p), "resumed": bool(self._resumed)}
+        self.map_ratio_events.append(ev)
+        print("EX33_FIRST_SOURCES gt=%d recon=%d off=%d envs=%d force_gt=%s p=%.4f resumed=%s" % (ev["gt"], ev["recon"], ev["off"], ev["envs"], ev["force_gt"], ev["p"], ev["resumed"]), flush=True)
+        self._flush_map_ratio_events()
+
+    # ------------------------------------------------------------------ M-T6: 끔 대상 지형
+    def _off_terrain(self):
+        """끔 대상 지형을 정할 수 있는 지형 도구(지형 importer 의 열 배정 · 생성기 이름)가 있으면 그것, 없으면 None(= 모든 칸 허용, 지금 코드와 같다)."""
+        u = getattr(self.env, "unwrapped", self.env)
+        scene = getattr(u, "scene", None)
+        terrain = getattr(scene, "terrain", None) if scene is not None else None
+
+        if terrain is None or not hasattr(terrain, "terrain_types") or not hasattr(terrain, "terrain_levels"):
+            return None
+        gen = getattr(getattr(terrain, "cfg", None), "terrain_generator", None)
+
+        if not has_column_source(gen):
+            return None
+
+        return terrain
+
+    def _off_column_names(self):
+        """열 번호 -> 지형 이름(Isaac 고정 배치 식 `columns.column_types`). 처음 한 번 만들고, 모르는 이름이 있으면 거절한다. 지형 도구가 없으면 None."""
+        if not hasattr(self, "_off_names_cache"):
+            terrain = self._off_terrain()
+            self._off_names_cache = None
+            if terrain is not None:
+                gen = terrain.cfg.terrain_generator
+                names = generator_column_names(gen)
+                self._off_names_cache = check_column_names(names)
+                self.map_ratio_events.append({"kind": "off_eligibility", "eligible": sorted(ELIGIBLE_NAMES), "sparse": sorted(SPARSE_NAMES),
+                                              "num_cols": int(gen.num_cols), "column_counts": {n: self._off_names_cache.count(n) for n in sorted(set(self._off_names_cache))}})
+            self.off_elig = OffEligibilityStats() if self._off_names_cache is not None else None
+
+        return self._off_names_cache
+
+    def _restrict_map_off(self, off: torch.Tensor, reset: torch.Tensor) -> torch.Tensor:
+        """뽑기(n 개 전부, 난수열 소비는 그대로) 뒤에 «새 에피소드가 놓인 칸이 허용 지형인 env» 만 남긴다. 읽는 때는 env.step 이 끝난 뒤라 칸은 새 에피소드 값이다."""
+        names = self._off_column_names() if self.p_map_off > 0.0 else None
+        if names is None:
+            return off
+        terrain = self._off_terrain()
+        eligible = eligible_map_off(terrain.terrain_types.to(off.device), terrain.terrain_levels.to(off.device), names)
+        self.off_elig.add_draw(off & eligible, reset.to(off.device), eligible, terrain.terrain_levels.to(off.device), [names[int(c)] for c in terrain.terrain_types.cpu().tolist()])
+
+        return off & eligible
+
+    def _robot_xy_for_off(self):
+        if self.p_map_off <= 0.0 or self._off_column_names() is None:
+            return None
+        u = getattr(self.env, "unwrapped", self.env)
+
+        return u.scene["robot"].data.root_pos_w[:, :2].detach().clone()
+
+    def _off_episode_ended(self, done_ids: torch.Tensor, prev_xy) -> None:
+        """끝난 끔 에피소드가 듬성 칸 위에 있었는지(위치 -> 가장 가까운 칸 중심) 센다. 끔이 허용 칸에서만 시작하니 0 이 아니면 이동해 들어간 것이다."""
+        if prev_xy is None or self.off_elig is None:
+            return
+        names = self._off_column_names()
+        origins = self._off_terrain().terrain_origins[..., :2].to(prev_xy.device)
+        cols = nearest_tile_cols(prev_xy[done_ids], origins)
+        on_sparse = torch.tensor([is_sparse_name(n) for n in names], dtype=torch.bool, device=cols.device)[cols]
+        self.off_elig.add_ended(self.pstate.map_off[done_ids].to(cols.device), on_sparse)
+
+    def _flush_map_ratio_events(self) -> None:
+        """사건 목록을 manifest(다음 저장 경계에 파일로) 와 map_ratio_events.jsonl 에 낸다. 여러 번 불러도 같은 줄을 두 번 쓰지 않는다."""
+        if self.manifest is not None:
+            self.manifest["map_ratio_events"] = [dict(e) for e in self.map_ratio_events]
+        if self.log_dir is not None and not self.disable_logs and self._events_written < len(self.map_ratio_events):
+            with open(os.path.join(self.log_dir, "map_ratio_events.jsonl"), "a", encoding="utf-8") as fh:
+                for ev in self.map_ratio_events[self._events_written:]:
+                    fh.write(json.dumps(_nan_to_none(ev), ensure_ascii=False) + "\n")
+            self._events_written = len(self.map_ratio_events)
+
+    def save(self, path: str, infos: dict | None = None) -> None:
+        torch.save(self.state_dict(infos), path)
+
+    def save_latest(self) -> str:
+        """latest.pt 를 임시 파일에 쓴 뒤 바꿔치기한다. 쓰다 죽어도 이전 latest.pt 가 온전히 남는다."""
+        path = os.path.join(self.log_dir, "latest.pt")
+        tmp = f"{path}.tmp"
+        torch.save(self.state_dict(), tmp)
+        os.replace(tmp, path)
+        return path
+
+    def _write_running_status(self, it, tot_iter, rewbuffer, lenbuffer, iter_s, steps) -> None:
+        write_status(self.log_dir, {
+            "state": "running", "iter": it, "tot_iter": tot_iter, "iter_s": iter_s, "steps_per_s": steps / iter_s,
+            "mean_reward": (sum(rewbuffer) / len(rewbuffer)) if rewbuffer else None,
+            "mean_episode_length": (sum(lenbuffer) / len(lenbuffer)) if lenbuffer else None,
+            "p_smpl": self.adasmpl.p,
+            "gpu_max_allocated_GiB": (torch.cuda.max_memory_allocated(self.device) / 2**30) if self._cuda() else None,
+            "perception": {k: round(v, 5) for k, v in self.last_perception_losses.items()},
+            **({"perception_v_bias": self._v_bias_record()} if getattr(self, "last_perception_v_bias", None) is not None else {}),
+            "log_dir": self.log_dir,
+        })
+
+    def load(self, path: str, load_optimizer: bool = True, map_location: str | None = None) -> dict:
+        sd = torch.load(path, weights_only=False, map_location=map_location)
+        if sd.get("format") != CKPT_FORMAT:
+            raise ValueError(f"START 체크포인트가 아니다: format={sd.get('format')}")
+        if bool(sd.get("ex41_pose_commands", False)) != self.ex41_pose_commands or bool(sd.get("ex41_critic_mirror", False)) != self.ex41_critic_mirror:
+            raise ValueError("EX-41 pose/mirror settings differ from the checkpoint; use explicit parent transplant for EX-40")
+        saved = sd.get("perception_cfg") or {}
+        for key, default in MODE_DEFAULTS.items():
+            if saved.get(key, default) != self.pcfg[key]:
+                raise ValueError(f"체크포인트의 {key}={saved.get(key, default)!r} 와 이 runner 의 {self.pcfg[key]!r} 가 다르다 (처치가 다른 체크포인트를 섞지 않는다)")
+        self.alg.policy.load_state_dict(sd["model_state_dict"])
+        self.perception.load_state_dict(sd["perception_state_dict"])
+        self.adasmpl.load_state_dict(sd["adasmpl"])
+        self._apply_resume_adasmpl()
+        if load_optimizer:
+            self.alg.optimizer.load_state_dict(sd["optimizer_state_dict"])
+            self.alg.learning_rate = sd["ppo_learning_rate"]
+            self.perception_optimizer.load_state_dict(sd["perception_optimizer_state_dict"])
+            self._pin_perception_lr("load")
+        self.load_map_switch_state(sd.get("map_switch"), int(sd["iter"]))
+        self._load_env_state(sd["env_state"])
+        self.set_rng_state(sd["rng"])
+        self.current_learning_iteration = sd["iter"]
+        saved_use_gt_frac = sd.get("last_use_gt_frac")
+        if saved_use_gt_frac is not None:
+            if (not isinstance(saved_use_gt_frac, (int, float))
+                    or not math.isfinite(float(saved_use_gt_frac))
+                    or not 0.0 <= float(saved_use_gt_frac) <= 1.0):
+                raise ValueError("EX-41 checkpoint last use_gt_frac is invalid")
+            self._last_use_gt_frac = float(saved_use_gt_frac)
+        self.ex41_parent_transfer = sd.get("ex41_parent_transfer")
+        self.ex41_mirror_hold_reason = sd.get("ex41_mirror_hold_reason")
+        if self.ex41_critic_mirror:
+            approval = sd.get("ex41_mirror_approval")
+            # EX-42 E1 saves the committed plan + approval grant (D174), which is not a W72 receipt: a resume at an
+            # E1 boundary must keep the mirror on instead of falling into the W72 HOLD that switches it off.
+            live = self.ex41_mirror_approval          # an approval the caller already checked against the live files
+            if self._valid_ex41_mirror_approval(approval) or self._valid_ex42_mirror_approval(approval):
+                self.ex41_mirror_approval = approval
+                self.alg.mirror_enabled = True
+            elif self._valid_ex42_mirror_approval(live):   # the plan was re-pinned after the checkpoint was written
+                self.ex41_mirror_approval = live
+                self.alg.mirror_enabled = True
+            else:
+                self._hold_ex41_mirror_resume(
+                    path, int(sd["iter"]), "EX-41 W72 HOLD: checkpoint mirror approval file missing or SHA256 changed"
+                )
+        continuous = getattr(self, "continuous_curriculum", None)
+        if continuous is not None:
+            saved_stage = sd.get("continuous_curriculum")
+            if saved_stage is None:
+                if int(sd["iter"]) != continuous.plan.parent_update:
+                    raise ValueError("W55 stage state missing from a non-parent checkpoint")
+            else:
+                continuous.load_state_dict(saved_stage)
+            continuous.on_resume_checkpoint(path, int(sd["iter"]))
+        self._resumed = True
+        return sd["infos"]
+
+    def load_ex41_parent(self) -> dict:
+        """D93 one-time EX-40 transplant.  Never restore old physical env/stage.
+
+        EX-41's own later checkpoints must use ``load`` instead.  The caller
+        creates the new EX-41 stage state; this method leaves it untouched.
+        """
+        from foothold_s2.runners.ex41_transfer import optimizer_state, policy_state
+
+        if not self.ex41_pose_commands or self._resumed:
+            raise ValueError("EX-41 parent transplant requires a fresh 98/666 runner")
+        parent_cfg = self.cfg.get("ex41_parent")
+        if not isinstance(parent_cfg, dict) or set(parent_cfg) != {"path", "sha256", "iteration"}:
+            raise ValueError("EX-41 parent needs configured path, sha256, and iteration")
+        path, expected_sha256, expected_iteration = (parent_cfg[key] for key in ("path", "sha256", "iteration"))
+        if (not isinstance(path, str) or not Path(path).is_absolute()
+                or not isinstance(expected_sha256, str)
+                or re.fullmatch(r"[0-9a-f]{64}", expected_sha256) is None
+                or type(expected_iteration) is not int or expected_iteration <= 0):
+            raise ValueError("EX-41 parent configuration has invalid path, sha256, or iteration")
+        if Path(path).name != f"model_{expected_iteration}.pt":
+            raise ValueError("EX-41 parent filename differs from configured iteration")
+        with open(path, "rb") as fh:
+            actual_sha256 = hashlib.file_digest(fh, "sha256").hexdigest()
+        if actual_sha256 != expected_sha256:
+            raise ValueError("EX-41 parent checkpoint SHA256 mismatch")
+        sd = torch.load(path, weights_only=False, map_location=self.device)
+        if (sd.get("format") != CKPT_FORMAT or int(sd.get("iter", -1)) != expected_iteration
+                or sd.get("ex41_pose_commands")):
+            raise ValueError("EX-41 parent does not match the configured EX-40 START checkpoint")
+        saved = sd.get("perception_cfg") or {}
+        for key, default in MODE_DEFAULTS.items():
+            if saved.get(key, default) != self.pcfg[key]:
+                raise ValueError(f"EX-41 parent perception mode {key} differs")
+        target_policy = self.alg.policy
+        names = [name for name, _ in target_policy.named_parameters()]
+        target_policy.load_state_dict(policy_state(sd["model_state_dict"], target_policy.state_dict()))
+        self.perception.load_state_dict(sd["perception_state_dict"])
+        self.adasmpl.load_state_dict(sd["adasmpl"])
+        self.alg.optimizer.load_state_dict(optimizer_state(
+            sd["optimizer_state_dict"], self.alg.optimizer.state_dict(), names, names))
+        self.alg.learning_rate = sd["ppo_learning_rate"]
+        self.perception_optimizer.load_state_dict(sd["perception_optimizer_state_dict"])
+        self._pin_perception_lr("load_ex41_parent")
+        self.load_map_switch_state(sd.get("map_switch"), int(sd["iter"]))
+        self.set_rng_state(sd["rng"])
+        self.current_learning_iteration = int(sd["iter"])
+        self.ex41_parent_transfer = {
+            "parent_path": os.path.abspath(path), "parent_sha256": actual_sha256,
+            "parent_iteration": expected_iteration,
+            "preserved": ["policy", "policy_adam_moments_and_step", "policy_learning_rate",
+                          "perception", "perception_adam", "adasmpl", "map_switch", "rng"],
+            "new": ["pose_command_zero_columns", "pose_command_zero_moments", "physical_env_reset",
+                    "episode_history_reset", "ex41_curriculum_state"],
+        }
+        self._resumed = True
+        return dict(self.ex41_parent_transfer)
+
+    def load_ex42_stage_zero_parent(self, checkpoint: dict, receipt: dict, *,
+                                    stage_e0: bool = False, stage_e1: bool = False,
+                                    stage_id: str | None = None, parent_local_update: int | None = None,
+                                    parent_cumulative_update: int | None = None,
+                                    parent_mirror: bool = False) -> dict:
+        """Transfer EX-41 m12000 learner state into the separately approved EX-42 T0′.
+
+        With ``stage_e0`` the parent is the stage-zero m13000 (local 1000, cumulative 13000) and the
+        receipt state is parent_verified_for_stage_e0; everything else is the same transfer.
+
+        With ``stage_e1`` and a ``stage_id`` (a later stage that continues the previous stage's run) the parent
+        position and the mirror state the parent was saved with come from the plan's stage table instead of E1's
+        250 / 13250 / mirror off; this runner itself is always loaded fresh with the mirror off.
+
+        This starts a new physical environment and a new local curriculum clock.
+        EX-41 environment and continuous-curriculum state are intentionally omitted.
+        """
+        if (self._resumed or self.current_learning_iteration != 0
+                or self.ex41_pose_commands is not True or self.ex41_critic_mirror is not False):
+            raise ValueError("EX-42 stage-zero parent requires a fresh pose_cmd runner with mirror off")
+        if stage_e0 and stage_e1:
+            raise ValueError("EX-42 parent load is for one stage")
+        if stage_id is not None and not (stage_e1 and isinstance(parent_local_update, int)
+                                         and isinstance(parent_cumulative_update, int)
+                                         and type(parent_mirror) is bool):
+            raise ValueError("EX-42 later-stage parent load needs the stage table position and mirror state")
+        expected_state, local_update, cumulative_update = (
+            (f"parent_verified_for_stage_{stage_id.lower()}", parent_local_update, parent_cumulative_update)
+            if stage_id is not None
+            else ("parent_verified_for_stage_e1", 250, 13250) if stage_e1
+            else ("parent_verified_for_stage_e0", 1000, 13000) if stage_e0
+            else ("parent_verified_for_stage_zero", 6000, 12000))
+        if (not isinstance(receipt, dict)
+                or receipt.get("state") != expected_state
+                or receipt.get("parent_local_update") != local_update
+                or receipt.get("parent_cumulative_update") != cumulative_update
+                or receipt.get("actor_input_dim") != 98
+                or receipt.get("critic_input_dim") != 666
+                or receipt.get("ex41_environment_state_restored") is not False
+                or receipt.get("ex41_curriculum_state_restored") is not False):
+            raise ValueError("EX-42 stage-zero parent receipt is incomplete")
+        if checkpoint.get("format") != CKPT_FORMAT or checkpoint.get("iter") != local_update:
+            raise ValueError("EX-42 stage-zero checkpoint identity differs")
+        if checkpoint.get("ex41_pose_commands") is not True or checkpoint.get("ex41_critic_mirror") is not parent_mirror:
+            raise ValueError("EX-42 stage-zero parent pose/mirror contract differs")
+        saved = checkpoint.get("perception_cfg") or {}
+        for key, default in MODE_DEFAULTS.items():
+            if saved.get(key, default) != self.pcfg[key]:
+                raise ValueError(f"EX-42 stage-zero parent perception mode {key} differs")
+        if float(checkpoint["map_switch"]["p_map_off"]) != self.p_map_off:
+            raise ValueError("EX-42 stage-zero map-switch probability differs from parent")
+        self.alg.policy.load_state_dict(checkpoint["model_state_dict"], strict=True)
+        self.perception.load_state_dict(checkpoint["perception_state_dict"], strict=True)
+        self.adasmpl.load_state_dict(checkpoint["adasmpl"])
+        self._apply_resume_adasmpl()
+        self.alg.optimizer.load_state_dict(checkpoint["optimizer_state_dict"])
+        self.alg.learning_rate = float(checkpoint["ppo_learning_rate"])
+        self.perception_optimizer.load_state_dict(checkpoint["perception_optimizer_state_dict"])
+        self._pin_perception_lr("load_ex42_stage_zero_parent")
+        self.load_map_switch_state(checkpoint["map_switch"], local_update)
+        self.set_rng_state(checkpoint["rng"])
+        use_gt_frac = checkpoint.get("last_use_gt_frac")
+        if use_gt_frac is not None:
+            if (not isinstance(use_gt_frac, (int, float))
+                    or not math.isfinite(float(use_gt_frac))
+                    or not 0.0 <= float(use_gt_frac) <= 1.0):
+                raise ValueError("EX-42 stage-zero parent last use_gt_frac is invalid")
+            self._last_use_gt_frac = float(use_gt_frac)
+        self.current_learning_iteration = 0
+        self.ex42_parent_transfer = dict(receipt)
+        self._ex42_parent_loaded = True
+        return {**receipt, "state": (f"loaded_for_ex42_stage_{stage_id.lower()}" if stage_id is not None
+                                     else "loaded_for_ex42_stage_e1" if stage_e1 else "loaded_for_ex42_stage_e0" if stage_e0
+                                     else "loaded_for_ex42_stage_zero"),
+                "local_iteration_origin": 0,
+                "restored": ["policy", "critic", "policy_optimizer", "learning_rate",
+                             "perception", "perception_optimizer", "adasmpl",
+                             "normalization_buffers", "map_switch", "rng"],
+                "not_restored": ["ex41_environment_state", "ex41_curriculum_state"]}
+
+    def train_mode(self) -> None:
+        super().train_mode()
+        self.perception.train()
+
+    def eval_mode(self) -> None:
+        super().eval_mode()
+        self.perception.eval()
+
+    def log(self, locs: dict, width: int = 80, pad: int = 35) -> None:
+        super().log(locs, width, pad)
+        if self.memory_marks and self.writer is not None:
+            for k, v in self.memory_marks.items():
+                self.writer.add_scalar(f"Memory/{k}_GiB", v / 2**30, locs["it"])

@@ -27,7 +27,8 @@ with sync_playwright() as pw:
         cols=2 if dense else 3
         sheet=Image.new('RGB',(427*cols,270*((len(times)+cols-1)//cols)),(18,22,26))
         draw=ImageDraw.Draw(sheet)
-        for index,t in enumerate(times):
+        clip_times=([.05,.5,1,1.5,2.5,3.5,4.5,5.5,6.5,meta['duration']-.2] if dense and meta['duration']>6 else times)
+        for index,t in enumerate(clip_times):
             col,row=index%cols,index//cols
             encoded=page.evaluate('''async t=>{
               const v=document.querySelector('#clip-review-video');

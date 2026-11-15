@@ -1,0 +1,6 @@
+PASS stage0_fake_owner_receipt_status
+PASS atomic_receipt_and_status
+PASS chain_claim_once
+PASS forged_receipt_hash_rejected
+PASS incomplete_step_count_rejected
+PASS stage0_deadline_owned_family_stop

@@ -1,0 +1,13 @@
+{
+  "status": "APPROVED",
+  "chain_id": "s2-stage0-a3-urehearse-20261015-104017",
+  "by": "lead rehearsal (no Isaac)",
+  "scope": "unattended_stage0_information_only",
+  "decision_basis": {
+    "verdict_file": "REHEARSAL_NO_VERDICT",
+    "verdict_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+    "verdict_line": "rehearsal only, Isaac is never started"
+  },
+  "manifest_sha256": "df2d6d6d0a39a29d338df62174872b11c86891876ca1c518337d0c95b6b3879c",
+  "expires_epoch": 1792030317.0551522
+}

@@ -1,0 +1,2936 @@
+{
+  "schema": "start-go2-spawn-cpu/1",
+  "cpu_only": true,
+  "kit_reset_verified": false,
+  "mesh_path": "/mnt/win-d/mai/data/foothold/s2_lab/ex42_mesh_1111/seed42_ABCDE_v2/terrain_mesh.npz",
+  "mesh_file_sha256": "f1697a4bc0ad2e8f352d003a9bd41f9077bea808a605f8e1f911062b874d09c2",
+  "mount_file_sha256": "dc132372c8e50d731a527656f625234ad3718bdcbd40f65b562cfe56212649be",
+  "geometry_sha256": "eafbada6c431fdc37b2a0e20094a404f0caad96d58cb2bcaca761629acf0b01d",
+  "footprint_m": [
+    0.7,
+    0.5
+  ],
+  "reset_ranges": {
+    "stepping_stones_low": {
+      "x": [
+        0.0,
+        0.0
+      ],
+      "y": [
+        0.0,
+        0.0
+      ],
+      "yaw": [
+        0.0,
+        0.0
+      ]
+    },
+    "stepping_stones_high": {
+      "x": [
+        0.0,
+        0.0
+      ],
+      "y": [
+        0.0,
+        0.0
+      ],
+      "yaw": [
+        0.0,
+        0.0
+      ]
+    },
+    "balance_beams": {
+      "x": [
+        0.0,
+        0.0
+      ],
+      "y": [
+        0.0,
+        0.0
+      ],
+      "yaw": [
+        0.0,
+        0.0
+      ]
+    },
+    "stepping_beams": {
+      "x": [
+        0.0,
+        0.0
+      ],
+      "y": [
+        0.0,
+        0.0
+      ],
+      "yaw": [
+        0.0,
+        0.0
+      ]
+    }
+  },
+  "cases": 220,
+  "surface_probes": 36300,
+  "max_abs_z": 0.0,
+  "rows": [
+    {
+      "level": 0,
+      "column": 23,
+      "kind": "stepping_stones_low",
+      "origin_world": [
+        -39.5,
+        -12.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 0,
+      "column": 24,
+      "kind": "stepping_stones_low",
+      "origin_world": [
+        -39.5,
+        -4.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 0,
+      "column": 25,
+      "kind": "stepping_stones_low",
+      "origin_world": [
+        -39.5,
+        4.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 0,
+      "column": 26,
+      "kind": "stepping_stones_low",
+      "origin_world": [
+        -39.5,
+        12.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 0,
+      "column": 27,
+      "kind": "stepping_stones_low",
+      "origin_world": [
+        -39.5,
+        20.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 0,
+      "column": 28,
+      "kind": "stepping_stones_low",
+      "origin_world": [
+        -39.5,
+        28.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 0,
+      "column": 29,
+      "kind": "stepping_stones_low",
+      "origin_world": [
+        -39.5,
+        36.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 0,
+      "column": 30,
+      "kind": "stepping_stones_high",
+      "origin_world": [
+        -39.5,
+        44.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 0,
+      "column": 31,
+      "kind": "stepping_stones_high",
+      "origin_world": [
+        -39.5,
+        52.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 0,
+      "column": 32,
+      "kind": "stepping_stones_high",
+      "origin_world": [
+        -39.5,
+        60.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 0,
+      "column": 33,
+      "kind": "stepping_stones_high",
+      "origin_world": [
+        -39.5,
+        68.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 0,
+      "column": 34,
+      "kind": "stepping_stones_high",
+      "origin_world": [
+        -39.5,
+        76.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 0,
+      "column": 35,
+      "kind": "balance_beams",
+      "origin_world": [
+        -39.5,
+        84.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 0,
+      "column": 36,
+      "kind": "balance_beams",
+      "origin_world": [
+        -39.5,
+        92.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 0,
+      "column": 37,
+      "kind": "balance_beams",
+      "origin_world": [
+        -39.5,
+        100.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 0,
+      "column": 38,
+      "kind": "balance_beams",
+      "origin_world": [
+        -39.5,
+        108.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 0,
+      "column": 39,
+      "kind": "balance_beams",
+      "origin_world": [
+        -39.5,
+        116.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 0,
+      "column": 40,
+      "kind": "stepping_beams",
+      "origin_world": [
+        -39.5,
+        124.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 0,
+      "column": 41,
+      "kind": "stepping_beams",
+      "origin_world": [
+        -39.5,
+        132.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 0,
+      "column": 42,
+      "kind": "stepping_beams",
+      "origin_world": [
+        -39.5,
+        140.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 0,
+      "column": 43,
+      "kind": "stepping_beams",
+      "origin_world": [
+        -39.5,
+        148.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 0,
+      "column": 44,
+      "kind": "stepping_beams",
+      "origin_world": [
+        -39.5,
+        156.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 1,
+      "column": 23,
+      "kind": "stepping_stones_low",
+      "origin_world": [
+        -31.5,
+        -12.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 1,
+      "column": 24,
+      "kind": "stepping_stones_low",
+      "origin_world": [
+        -31.5,
+        -4.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 1,
+      "column": 25,
+      "kind": "stepping_stones_low",
+      "origin_world": [
+        -31.5,
+        4.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 1,
+      "column": 26,
+      "kind": "stepping_stones_low",
+      "origin_world": [
+        -31.5,
+        12.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 1,
+      "column": 27,
+      "kind": "stepping_stones_low",
+      "origin_world": [
+        -31.5,
+        20.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 1,
+      "column": 28,
+      "kind": "stepping_stones_low",
+      "origin_world": [
+        -31.5,
+        28.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 1,
+      "column": 29,
+      "kind": "stepping_stones_low",
+      "origin_world": [
+        -31.5,
+        36.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 1,
+      "column": 30,
+      "kind": "stepping_stones_high",
+      "origin_world": [
+        -31.5,
+        44.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 1,
+      "column": 31,
+      "kind": "stepping_stones_high",
+      "origin_world": [
+        -31.5,
+        52.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 1,
+      "column": 32,
+      "kind": "stepping_stones_high",
+      "origin_world": [
+        -31.5,
+        60.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 1,
+      "column": 33,
+      "kind": "stepping_stones_high",
+      "origin_world": [
+        -31.5,
+        68.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 1,
+      "column": 34,
+      "kind": "stepping_stones_high",
+      "origin_world": [
+        -31.5,
+        76.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 1,
+      "column": 35,
+      "kind": "balance_beams",
+      "origin_world": [
+        -31.5,
+        84.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 1,
+      "column": 36,
+      "kind": "balance_beams",
+      "origin_world": [
+        -31.5,
+        92.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 1,
+      "column": 37,
+      "kind": "balance_beams",
+      "origin_world": [
+        -31.5,
+        100.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 1,
+      "column": 38,
+      "kind": "balance_beams",
+      "origin_world": [
+        -31.5,
+        108.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 1,
+      "column": 39,
+      "kind": "balance_beams",
+      "origin_world": [
+        -31.5,
+        116.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 1,
+      "column": 40,
+      "kind": "stepping_beams",
+      "origin_world": [
+        -31.5,
+        124.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 1,
+      "column": 41,
+      "kind": "stepping_beams",
+      "origin_world": [
+        -31.5,
+        132.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 1,
+      "column": 42,
+      "kind": "stepping_beams",
+      "origin_world": [
+        -31.5,
+        140.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 1,
+      "column": 43,
+      "kind": "stepping_beams",
+      "origin_world": [
+        -31.5,
+        148.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 1,
+      "column": 44,
+      "kind": "stepping_beams",
+      "origin_world": [
+        -31.5,
+        156.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 2,
+      "column": 23,
+      "kind": "stepping_stones_low",
+      "origin_world": [
+        -23.5,
+        -12.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 2,
+      "column": 24,
+      "kind": "stepping_stones_low",
+      "origin_world": [
+        -23.5,
+        -4.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 2,
+      "column": 25,
+      "kind": "stepping_stones_low",
+      "origin_world": [
+        -23.5,
+        4.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 2,
+      "column": 26,
+      "kind": "stepping_stones_low",
+      "origin_world": [
+        -23.5,
+        12.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 2,
+      "column": 27,
+      "kind": "stepping_stones_low",
+      "origin_world": [
+        -23.5,
+        20.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 2,
+      "column": 28,
+      "kind": "stepping_stones_low",
+      "origin_world": [
+        -23.5,
+        28.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 2,
+      "column": 29,
+      "kind": "stepping_stones_low",
+      "origin_world": [
+        -23.5,
+        36.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 2,
+      "column": 30,
+      "kind": "stepping_stones_high",
+      "origin_world": [
+        -23.5,
+        44.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 2,
+      "column": 31,
+      "kind": "stepping_stones_high",
+      "origin_world": [
+        -23.5,
+        52.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 2,
+      "column": 32,
+      "kind": "stepping_stones_high",
+      "origin_world": [
+        -23.5,
+        60.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 2,
+      "column": 33,
+      "kind": "stepping_stones_high",
+      "origin_world": [
+        -23.5,
+        68.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 2,
+      "column": 34,
+      "kind": "stepping_stones_high",
+      "origin_world": [
+        -23.5,
+        76.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 2,
+      "column": 35,
+      "kind": "balance_beams",
+      "origin_world": [
+        -23.5,
+        84.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 2,
+      "column": 36,
+      "kind": "balance_beams",
+      "origin_world": [
+        -23.5,
+        92.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 2,
+      "column": 37,
+      "kind": "balance_beams",
+      "origin_world": [
+        -23.5,
+        100.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 2,
+      "column": 38,
+      "kind": "balance_beams",
+      "origin_world": [
+        -23.5,
+        108.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 2,
+      "column": 39,
+      "kind": "balance_beams",
+      "origin_world": [
+        -23.5,
+        116.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 2,
+      "column": 40,
+      "kind": "stepping_beams",
+      "origin_world": [
+        -23.5,
+        124.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 2,
+      "column": 41,
+      "kind": "stepping_beams",
+      "origin_world": [
+        -23.5,
+        132.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 2,
+      "column": 42,
+      "kind": "stepping_beams",
+      "origin_world": [
+        -23.5,
+        140.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 2,
+      "column": 43,
+      "kind": "stepping_beams",
+      "origin_world": [
+        -23.5,
+        148.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 2,
+      "column": 44,
+      "kind": "stepping_beams",
+      "origin_world": [
+        -23.5,
+        156.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 3,
+      "column": 23,
+      "kind": "stepping_stones_low",
+      "origin_world": [
+        -15.5,
+        -12.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 3,
+      "column": 24,
+      "kind": "stepping_stones_low",
+      "origin_world": [
+        -15.5,
+        -4.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 3,
+      "column": 25,
+      "kind": "stepping_stones_low",
+      "origin_world": [
+        -15.5,
+        4.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 3,
+      "column": 26,
+      "kind": "stepping_stones_low",
+      "origin_world": [
+        -15.5,
+        12.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 3,
+      "column": 27,
+      "kind": "stepping_stones_low",
+      "origin_world": [
+        -15.5,
+        20.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 3,
+      "column": 28,
+      "kind": "stepping_stones_low",
+      "origin_world": [
+        -15.5,
+        28.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 3,
+      "column": 29,
+      "kind": "stepping_stones_low",
+      "origin_world": [
+        -15.5,
+        36.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 3,
+      "column": 30,
+      "kind": "stepping_stones_high",
+      "origin_world": [
+        -15.5,
+        44.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 3,
+      "column": 31,
+      "kind": "stepping_stones_high",
+      "origin_world": [
+        -15.5,
+        52.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 3,
+      "column": 32,
+      "kind": "stepping_stones_high",
+      "origin_world": [
+        -15.5,
+        60.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 3,
+      "column": 33,
+      "kind": "stepping_stones_high",
+      "origin_world": [
+        -15.5,
+        68.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 3,
+      "column": 34,
+      "kind": "stepping_stones_high",
+      "origin_world": [
+        -15.5,
+        76.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 3,
+      "column": 35,
+      "kind": "balance_beams",
+      "origin_world": [
+        -15.5,
+        84.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 3,
+      "column": 36,
+      "kind": "balance_beams",
+      "origin_world": [
+        -15.5,
+        92.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 3,
+      "column": 37,
+      "kind": "balance_beams",
+      "origin_world": [
+        -15.5,
+        100.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 3,
+      "column": 38,
+      "kind": "balance_beams",
+      "origin_world": [
+        -15.5,
+        108.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 3,
+      "column": 39,
+      "kind": "balance_beams",
+      "origin_world": [
+        -15.5,
+        116.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 3,
+      "column": 40,
+      "kind": "stepping_beams",
+      "origin_world": [
+        -15.5,
+        124.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 3,
+      "column": 41,
+      "kind": "stepping_beams",
+      "origin_world": [
+        -15.5,
+        132.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 3,
+      "column": 42,
+      "kind": "stepping_beams",
+      "origin_world": [
+        -15.5,
+        140.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 3,
+      "column": 43,
+      "kind": "stepping_beams",
+      "origin_world": [
+        -15.5,
+        148.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 3,
+      "column": 44,
+      "kind": "stepping_beams",
+      "origin_world": [
+        -15.5,
+        156.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 4,
+      "column": 23,
+      "kind": "stepping_stones_low",
+      "origin_world": [
+        -7.5,
+        -12.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 4,
+      "column": 24,
+      "kind": "stepping_stones_low",
+      "origin_world": [
+        -7.5,
+        -4.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 4,
+      "column": 25,
+      "kind": "stepping_stones_low",
+      "origin_world": [
+        -7.5,
+        4.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 4,
+      "column": 26,
+      "kind": "stepping_stones_low",
+      "origin_world": [
+        -7.5,
+        12.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 4,
+      "column": 27,
+      "kind": "stepping_stones_low",
+      "origin_world": [
+        -7.5,
+        20.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 4,
+      "column": 28,
+      "kind": "stepping_stones_low",
+      "origin_world": [
+        -7.5,
+        28.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 4,
+      "column": 29,
+      "kind": "stepping_stones_low",
+      "origin_world": [
+        -7.5,
+        36.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 4,
+      "column": 30,
+      "kind": "stepping_stones_high",
+      "origin_world": [
+        -7.5,
+        44.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 4,
+      "column": 31,
+      "kind": "stepping_stones_high",
+      "origin_world": [
+        -7.5,
+        52.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 4,
+      "column": 32,
+      "kind": "stepping_stones_high",
+      "origin_world": [
+        -7.5,
+        60.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 4,
+      "column": 33,
+      "kind": "stepping_stones_high",
+      "origin_world": [
+        -7.5,
+        68.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 4,
+      "column": 34,
+      "kind": "stepping_stones_high",
+      "origin_world": [
+        -7.5,
+        76.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 4,
+      "column": 35,
+      "kind": "balance_beams",
+      "origin_world": [
+        -7.5,
+        84.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 4,
+      "column": 36,
+      "kind": "balance_beams",
+      "origin_world": [
+        -7.5,
+        92.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 4,
+      "column": 37,
+      "kind": "balance_beams",
+      "origin_world": [
+        -7.5,
+        100.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 4,
+      "column": 38,
+      "kind": "balance_beams",
+      "origin_world": [
+        -7.5,
+        108.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 4,
+      "column": 39,
+      "kind": "balance_beams",
+      "origin_world": [
+        -7.5,
+        116.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 4,
+      "column": 40,
+      "kind": "stepping_beams",
+      "origin_world": [
+        -7.5,
+        124.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 4,
+      "column": 41,
+      "kind": "stepping_beams",
+      "origin_world": [
+        -7.5,
+        132.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 4,
+      "column": 42,
+      "kind": "stepping_beams",
+      "origin_world": [
+        -7.5,
+        140.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 4,
+      "column": 43,
+      "kind": "stepping_beams",
+      "origin_world": [
+        -7.5,
+        148.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 4,
+      "column": 44,
+      "kind": "stepping_beams",
+      "origin_world": [
+        -7.5,
+        156.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 5,
+      "column": 23,
+      "kind": "stepping_stones_low",
+      "origin_world": [
+        0.5,
+        -12.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 5,
+      "column": 24,
+      "kind": "stepping_stones_low",
+      "origin_world": [
+        0.5,
+        -4.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 5,
+      "column": 25,
+      "kind": "stepping_stones_low",
+      "origin_world": [
+        0.5,
+        4.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 5,
+      "column": 26,
+      "kind": "stepping_stones_low",
+      "origin_world": [
+        0.5,
+        12.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 5,
+      "column": 27,
+      "kind": "stepping_stones_low",
+      "origin_world": [
+        0.5,
+        20.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 5,
+      "column": 28,
+      "kind": "stepping_stones_low",
+      "origin_world": [
+        0.5,
+        28.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 5,
+      "column": 29,
+      "kind": "stepping_stones_low",
+      "origin_world": [
+        0.5,
+        36.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 5,
+      "column": 30,
+      "kind": "stepping_stones_high",
+      "origin_world": [
+        0.5,
+        44.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 5,
+      "column": 31,
+      "kind": "stepping_stones_high",
+      "origin_world": [
+        0.5,
+        52.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 5,
+      "column": 32,
+      "kind": "stepping_stones_high",
+      "origin_world": [
+        0.5,
+        60.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 5,
+      "column": 33,
+      "kind": "stepping_stones_high",
+      "origin_world": [
+        0.5,
+        68.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 5,
+      "column": 34,
+      "kind": "stepping_stones_high",
+      "origin_world": [
+        0.5,
+        76.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 5,
+      "column": 35,
+      "kind": "balance_beams",
+      "origin_world": [
+        0.5,
+        84.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 5,
+      "column": 36,
+      "kind": "balance_beams",
+      "origin_world": [
+        0.5,
+        92.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 5,
+      "column": 37,
+      "kind": "balance_beams",
+      "origin_world": [
+        0.5,
+        100.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 5,
+      "column": 38,
+      "kind": "balance_beams",
+      "origin_world": [
+        0.5,
+        108.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 5,
+      "column": 39,
+      "kind": "balance_beams",
+      "origin_world": [
+        0.5,
+        116.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 5,
+      "column": 40,
+      "kind": "stepping_beams",
+      "origin_world": [
+        0.5,
+        124.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 5,
+      "column": 41,
+      "kind": "stepping_beams",
+      "origin_world": [
+        0.5,
+        132.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 5,
+      "column": 42,
+      "kind": "stepping_beams",
+      "origin_world": [
+        0.5,
+        140.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 5,
+      "column": 43,
+      "kind": "stepping_beams",
+      "origin_world": [
+        0.5,
+        148.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 5,
+      "column": 44,
+      "kind": "stepping_beams",
+      "origin_world": [
+        0.5,
+        156.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 6,
+      "column": 23,
+      "kind": "stepping_stones_low",
+      "origin_world": [
+        8.5,
+        -12.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 6,
+      "column": 24,
+      "kind": "stepping_stones_low",
+      "origin_world": [
+        8.5,
+        -4.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 6,
+      "column": 25,
+      "kind": "stepping_stones_low",
+      "origin_world": [
+        8.5,
+        4.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 6,
+      "column": 26,
+      "kind": "stepping_stones_low",
+      "origin_world": [
+        8.5,
+        12.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 6,
+      "column": 27,
+      "kind": "stepping_stones_low",
+      "origin_world": [
+        8.5,
+        20.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 6,
+      "column": 28,
+      "kind": "stepping_stones_low",
+      "origin_world": [
+        8.5,
+        28.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 6,
+      "column": 29,
+      "kind": "stepping_stones_low",
+      "origin_world": [
+        8.5,
+        36.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 6,
+      "column": 30,
+      "kind": "stepping_stones_high",
+      "origin_world": [
+        8.5,
+        44.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 6,
+      "column": 31,
+      "kind": "stepping_stones_high",
+      "origin_world": [
+        8.5,
+        52.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 6,
+      "column": 32,
+      "kind": "stepping_stones_high",
+      "origin_world": [
+        8.5,
+        60.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 6,
+      "column": 33,
+      "kind": "stepping_stones_high",
+      "origin_world": [
+        8.5,
+        68.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 6,
+      "column": 34,
+      "kind": "stepping_stones_high",
+      "origin_world": [
+        8.5,
+        76.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 6,
+      "column": 35,
+      "kind": "balance_beams",
+      "origin_world": [
+        8.5,
+        84.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 6,
+      "column": 36,
+      "kind": "balance_beams",
+      "origin_world": [
+        8.5,
+        92.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 6,
+      "column": 37,
+      "kind": "balance_beams",
+      "origin_world": [
+        8.5,
+        100.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 6,
+      "column": 38,
+      "kind": "balance_beams",
+      "origin_world": [
+        8.5,
+        108.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 6,
+      "column": 39,
+      "kind": "balance_beams",
+      "origin_world": [
+        8.5,
+        116.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 6,
+      "column": 40,
+      "kind": "stepping_beams",
+      "origin_world": [
+        8.5,
+        124.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 6,
+      "column": 41,
+      "kind": "stepping_beams",
+      "origin_world": [
+        8.5,
+        132.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 6,
+      "column": 42,
+      "kind": "stepping_beams",
+      "origin_world": [
+        8.5,
+        140.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 6,
+      "column": 43,
+      "kind": "stepping_beams",
+      "origin_world": [
+        8.5,
+        148.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 6,
+      "column": 44,
+      "kind": "stepping_beams",
+      "origin_world": [
+        8.5,
+        156.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 7,
+      "column": 23,
+      "kind": "stepping_stones_low",
+      "origin_world": [
+        16.5,
+        -12.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 7,
+      "column": 24,
+      "kind": "stepping_stones_low",
+      "origin_world": [
+        16.5,
+        -4.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 7,
+      "column": 25,
+      "kind": "stepping_stones_low",
+      "origin_world": [
+        16.5,
+        4.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 7,
+      "column": 26,
+      "kind": "stepping_stones_low",
+      "origin_world": [
+        16.5,
+        12.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 7,
+      "column": 27,
+      "kind": "stepping_stones_low",
+      "origin_world": [
+        16.5,
+        20.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 7,
+      "column": 28,
+      "kind": "stepping_stones_low",
+      "origin_world": [
+        16.5,
+        28.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 7,
+      "column": 29,
+      "kind": "stepping_stones_low",
+      "origin_world": [
+        16.5,
+        36.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 7,
+      "column": 30,
+      "kind": "stepping_stones_high",
+      "origin_world": [
+        16.5,
+        44.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 7,
+      "column": 31,
+      "kind": "stepping_stones_high",
+      "origin_world": [
+        16.5,
+        52.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 7,
+      "column": 32,
+      "kind": "stepping_stones_high",
+      "origin_world": [
+        16.5,
+        60.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 7,
+      "column": 33,
+      "kind": "stepping_stones_high",
+      "origin_world": [
+        16.5,
+        68.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 7,
+      "column": 34,
+      "kind": "stepping_stones_high",
+      "origin_world": [
+        16.5,
+        76.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 7,
+      "column": 35,
+      "kind": "balance_beams",
+      "origin_world": [
+        16.5,
+        84.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 7,
+      "column": 36,
+      "kind": "balance_beams",
+      "origin_world": [
+        16.5,
+        92.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 7,
+      "column": 37,
+      "kind": "balance_beams",
+      "origin_world": [
+        16.5,
+        100.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 7,
+      "column": 38,
+      "kind": "balance_beams",
+      "origin_world": [
+        16.5,
+        108.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 7,
+      "column": 39,
+      "kind": "balance_beams",
+      "origin_world": [
+        16.5,
+        116.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 7,
+      "column": 40,
+      "kind": "stepping_beams",
+      "origin_world": [
+        16.5,
+        124.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 7,
+      "column": 41,
+      "kind": "stepping_beams",
+      "origin_world": [
+        16.5,
+        132.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 7,
+      "column": 42,
+      "kind": "stepping_beams",
+      "origin_world": [
+        16.5,
+        140.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 7,
+      "column": 43,
+      "kind": "stepping_beams",
+      "origin_world": [
+        16.5,
+        148.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 7,
+      "column": 44,
+      "kind": "stepping_beams",
+      "origin_world": [
+        16.5,
+        156.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 8,
+      "column": 23,
+      "kind": "stepping_stones_low",
+      "origin_world": [
+        24.5,
+        -12.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 8,
+      "column": 24,
+      "kind": "stepping_stones_low",
+      "origin_world": [
+        24.5,
+        -4.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 8,
+      "column": 25,
+      "kind": "stepping_stones_low",
+      "origin_world": [
+        24.5,
+        4.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 8,
+      "column": 26,
+      "kind": "stepping_stones_low",
+      "origin_world": [
+        24.5,
+        12.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 8,
+      "column": 27,
+      "kind": "stepping_stones_low",
+      "origin_world": [
+        24.5,
+        20.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 8,
+      "column": 28,
+      "kind": "stepping_stones_low",
+      "origin_world": [
+        24.5,
+        28.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 8,
+      "column": 29,
+      "kind": "stepping_stones_low",
+      "origin_world": [
+        24.5,
+        36.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 8,
+      "column": 30,
+      "kind": "stepping_stones_high",
+      "origin_world": [
+        24.5,
+        44.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 8,
+      "column": 31,
+      "kind": "stepping_stones_high",
+      "origin_world": [
+        24.5,
+        52.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 8,
+      "column": 32,
+      "kind": "stepping_stones_high",
+      "origin_world": [
+        24.5,
+        60.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 8,
+      "column": 33,
+      "kind": "stepping_stones_high",
+      "origin_world": [
+        24.5,
+        68.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 8,
+      "column": 34,
+      "kind": "stepping_stones_high",
+      "origin_world": [
+        24.5,
+        76.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 8,
+      "column": 35,
+      "kind": "balance_beams",
+      "origin_world": [
+        24.5,
+        84.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 8,
+      "column": 36,
+      "kind": "balance_beams",
+      "origin_world": [
+        24.5,
+        92.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 8,
+      "column": 37,
+      "kind": "balance_beams",
+      "origin_world": [
+        24.5,
+        100.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 8,
+      "column": 38,
+      "kind": "balance_beams",
+      "origin_world": [
+        24.5,
+        108.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 8,
+      "column": 39,
+      "kind": "balance_beams",
+      "origin_world": [
+        24.5,
+        116.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 8,
+      "column": 40,
+      "kind": "stepping_beams",
+      "origin_world": [
+        24.5,
+        124.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 8,
+      "column": 41,
+      "kind": "stepping_beams",
+      "origin_world": [
+        24.5,
+        132.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 8,
+      "column": 42,
+      "kind": "stepping_beams",
+      "origin_world": [
+        24.5,
+        140.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 8,
+      "column": 43,
+      "kind": "stepping_beams",
+      "origin_world": [
+        24.5,
+        148.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 8,
+      "column": 44,
+      "kind": "stepping_beams",
+      "origin_world": [
+        24.5,
+        156.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 9,
+      "column": 23,
+      "kind": "stepping_stones_low",
+      "origin_world": [
+        32.5,
+        -12.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 9,
+      "column": 24,
+      "kind": "stepping_stones_low",
+      "origin_world": [
+        32.5,
+        -4.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 9,
+      "column": 25,
+      "kind": "stepping_stones_low",
+      "origin_world": [
+        32.5,
+        4.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 9,
+      "column": 26,
+      "kind": "stepping_stones_low",
+      "origin_world": [
+        32.5,
+        12.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 9,
+      "column": 27,
+      "kind": "stepping_stones_low",
+      "origin_world": [
+        32.5,
+        20.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 9,
+      "column": 28,
+      "kind": "stepping_stones_low",
+      "origin_world": [
+        32.5,
+        28.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 9,
+      "column": 29,
+      "kind": "stepping_stones_low",
+      "origin_world": [
+        32.5,
+        36.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 9,
+      "column": 30,
+      "kind": "stepping_stones_high",
+      "origin_world": [
+        32.5,
+        44.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 9,
+      "column": 31,
+      "kind": "stepping_stones_high",
+      "origin_world": [
+        32.5,
+        52.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 9,
+      "column": 32,
+      "kind": "stepping_stones_high",
+      "origin_world": [
+        32.5,
+        60.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 9,
+      "column": 33,
+      "kind": "stepping_stones_high",
+      "origin_world": [
+        32.5,
+        68.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 9,
+      "column": 34,
+      "kind": "stepping_stones_high",
+      "origin_world": [
+        32.5,
+        76.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 9,
+      "column": 35,
+      "kind": "balance_beams",
+      "origin_world": [
+        32.5,
+        84.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 9,
+      "column": 36,
+      "kind": "balance_beams",
+      "origin_world": [
+        32.5,
+        92.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 9,
+      "column": 37,
+      "kind": "balance_beams",
+      "origin_world": [
+        32.5,
+        100.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 9,
+      "column": 38,
+      "kind": "balance_beams",
+      "origin_world": [
+        32.5,
+        108.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 9,
+      "column": 39,
+      "kind": "balance_beams",
+      "origin_world": [
+        32.5,
+        116.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 9,
+      "column": 40,
+      "kind": "stepping_beams",
+      "origin_world": [
+        32.5,
+        124.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 9,
+      "column": 41,
+      "kind": "stepping_beams",
+      "origin_world": [
+        32.5,
+        132.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 9,
+      "column": 42,
+      "kind": "stepping_beams",
+      "origin_world": [
+        32.5,
+        140.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 9,
+      "column": 43,
+      "kind": "stepping_beams",
+      "origin_world": [
+        32.5,
+        148.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    {
+      "level": 9,
+      "column": 44,
+      "kind": "stepping_beams",
+      "origin_world": [
+        32.5,
+        156.0,
+        0.0
+      ],
+      "rays": 165,
+      "z_min": 0.0,
+      "z_max": 0.0
+    }
+  ]
+}

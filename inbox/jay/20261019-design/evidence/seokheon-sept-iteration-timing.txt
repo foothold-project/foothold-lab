@@ -1,0 +1,20 @@
+== 0911_nvidia_gap_v4_gap30_sedd42_add1500
+  Perf/collection time: n=1523 steps 899..2398 median=2.73 min=2.50 max=3.59
+  Perf/learning_time: n=1523 steps 899..2398 median=0.08 min=0.07 max=0.24
+  Perf/total_fps: n=1523 steps 899..2398 median=34960.00 min=25804.00 max=38174.00
+== 0914_rails
+  Perf/collection time: n=1500 steps 1501..3000 median=3.60 min=3.00 max=5.09
+  Perf/learning_time: n=1500 steps 1501..3000 median=0.22 min=0.13 max=0.55
+  Perf/total_fps: n=1500 steps 1501..3000 median=25735.50 min=17634.00 max=31394.00
+== 0914_rough7_control
+  Perf/collection time: n=1500 steps 1501..3000 median=2.51 min=2.42 max=3.09
+  Perf/learning_time: n=1500 steps 1501..3000 median=0.10 min=0.10 max=0.21
+  Perf/total_fps: n=1500 steps 1501..3000 median=37652.50 min=29793.00 max=38902.00
+== 0917_no_rails_heading
+  Perf/collection time: n=1500 steps 1501..3000 median=2.57 min=2.47 max=3.42
+  Perf/learning_time: n=1500 steps 1501..3000 median=0.11 min=0.10 max=0.20
+  Perf/total_fps: n=1500 steps 1501..3000 median=36712.00 min=27162.00 max=38174.00
+== 0917_rails
+  Perf/collection time: n=1500 steps 1501..3000 median=2.50 min=2.42 max=3.12
+  Perf/learning_time: n=1500 steps 1501..3000 median=0.11 min=0.10 max=0.21
+  Perf/total_fps: n=1500 steps 1501..3000 median=37690.50 min=29783.00 max=38963.00

@@ -1,0 +1,28 @@
+05:01:06 start
+CAUGHT M01 time-major 이력 (시점마다 45 칸을 이어 붙임): exit 1 failed ['T03', 'T04', 'T05', 'T21', 'T22', 'T23'] want ['T03']
+CAUGHT M02 초기 이력을 0 으로 채움 (첫 표본 반복 안 함): exit 1 failed ['T03', 'T04', 'T05', 'T23'] want ['T03', 'T04']
+CAUGHT M03 scale 누락: exit 1 failed ['T03', 'T04', 'T05', 'T06', 'T23'] want ['T03', 'T06']
+CAUGHT M04 scale 을 clip 보다 먼저: exit 1 failed ['T06'] want ['T06']
+CAUGHT M05 v2 miss 를 -1 로 (옛 규격 1): exit 1 failed ['T10', 'T11'] want ['T10', 'T11']
+CAUGHT M06 v2 높이에 광선 offset 20 m 를 더함: exit 1 failed ['T07', 'T10', 'T11', 'T12'] want ['T07', 'T10', 'T11']
+CAUGHT M07 관절을 이름이 아니라 자리로 맞춤: exit 1 failed ['T08', 'T09', 'T13', 'T21', 'T22', 'T23'] want ['T08', 'T09', 'T13']
+CAUGHT M08 디버그 읽기가 이력을 전진시킴: exit 1 failed ['T05', 'T21', 'T22', 'T23'] want ['T05']
+CAUGHT M09 reset 이 이력 횟수를 안 지움: exit 1 failed ['T04', 'T23'] want ['T04']
+CAUGHT M10 clip 을 target 이 아니라 raw 에: exit 1 failed ['T14'] want ['T14']
+CAUGHT M11 v2 에 CMD-R 의 scale (ang 0.25 · dq 0.05) 복사: exit 1 failed ['T02', 'T07', 'T09'] want ['T02', 'T07']
+CAUGHT M12 CTS reset 이 기억한 raw action 을 안 지움: exit 1 failed ['T04', 'T23'] want ['T04']
+CAUGHT M13 decode_action 이 raw 를 기억 안 함 (last_action 이 0 으로 남음): exit 1 failed ['T04', 'T15', 'T23'] want ['T04', 'T15']
+CAUGHT M14 이력 최신을 앞에 (newest -> oldest): exit 1 failed ['T03', 'T04', 'T05', 'T21', 'T22', 'T23'] want ['T03']
+CAUGHT M15 v2 height clip 을 버림: exit 1 failed ['T02', 'T10', 'T11'] want ['T02', 'T10']
+CAUGHT M16 광선 격자를 ij 순서로: exit 1 failed ['T12'] want ['T12']
+CAUGHT M17 infer 가 평균이 아니라 표본 (act) 을 냄: exit 1 failed ['T17', 'T18', 'T22', 'T23'] want ['T17', 'T18']
+CAUGHT M18 v2 reset 이 기억한 raw action 을 안 지움: exit 1 failed ['T15'] want ['T15']
+CAUGHT C01 대조기 위치 보고가 한 칸 밀림: exit 1 failed ['T21'] want ['T21']
+CAUGHT C02 대조기가 기록의 reset 을 무시: exit 1 failed ['T21', 'T22', 'T23'] want ['T21']
+CAUGHT C03 action 재계산이 한 step 늦은 관측을 씀: exit 1 failed ['T22', 'T23'] want ['T22']
+CAUGHT C04 배치 dims 를 숫자로만 읽음 (10/14 실제 기록의 문자열 dims 에서 죽은 판): exit 1 failed ['T23'] want ['T23']
+CAUGHT C05 height miss 「미측정 (None)」 을 미확인 목록에서 뺌 (17f 4.4): exit 1 failed ['T23'] want ['T23']
+CAUGHT C06 전환 뒤 action 수 대신 전환 횟수를 셈 (17f 4.4): exit 1 failed ['T23'] want ['T23']
+24/24 CAUGHT
+ALL CAUGHT
+mutate_adapters exit 0

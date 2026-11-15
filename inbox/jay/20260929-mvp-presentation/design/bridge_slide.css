@@ -1,0 +1,43 @@
+/* bridge_slide · 세 기둥 되짚기 + 다음 PoC 흐름 (2026-10-02 팀장 지시). 전부 .bridge-page / .track-a-next-page 안에만 건다.
+   규칙: 단계가 바뀌어도 요소가 자리를 옮기지 않는다(.reveal 은 투명도만 바뀌고 자리는 지킨다). 글자 15px 이상. */
+.slide.bridge-page .bridge-wrap{height:100%;display:flex;flex-direction:column;gap:0}
+.slide.bridge-page .pillars{display:grid;grid-template-columns:1fr 1.08fr 1fr;gap:26px;align-items:stretch}
+.slide.bridge-page .pillar{position:relative;border-top:3px solid var(--p-rule);padding:12px 18px 10px;display:flex;flex-direction:column;min-width:0;background:var(--p-bg)}
+.slide.bridge-page .pillar.bridge{border-top-color:#0e7a6e;background:#e0f0ed}
+.slide.bridge-page .pillar small{font-size:15px;letter-spacing:.06em;color:#0e7a6e;font-weight:650;display:block}
+.slide.bridge-page .content .pillar h3{font-size:27px;line-height:1.3;margin:6px 0 4px;letter-spacing:-.025em}
+.slide.bridge-page .content .pillar p.easy{font-size:18px;line-height:1.4;margin:0 0 8px;color:var(--p-ink)}
+.slide.bridge-page .pillar ul.tools{list-style:none;margin:0;padding:8px 0 0;border-top:1px solid var(--p-rule);font-size:16px;line-height:1.4;color:var(--p-muted)}
+.slide.bridge-page .pillar.bridge ul.tools{border-top-color:#b4c7c0}
+.slide.bridge-page .pillar ul.tools li{padding-left:14px;position:relative}
+.slide.bridge-page .pillar ul.tools li::before{content:'';position:absolute;left:0;top:9px;width:6px;height:6px;background:#0e7a6e;transform:rotate(45deg)}
+/* 단계 1 · 「지금 어디까지」 · 자리는 처음부터 잡아 두고 글자만 켠다 */
+.slide.bridge-page .pillar .now{margin-top:auto;padding-top:8px;border-top:2px solid #0e7a6e;min-height:92px}
+.slide.bridge-page .pillar .now>span{font-size:15px;letter-spacing:.06em;color:#0e7a6e;font-weight:650;display:block;margin-bottom:2px}
+.slide.bridge-page .content .pillar .now p{font-size:17px;line-height:1.45;margin:3px 0;color:var(--p-ink)}
+.slide.bridge-page .pillar .now b{color:#0b6459;font-weight:650}
+.slide.bridge-page .pillar .now b.warn{color:#8a3a2f}
+/* 가운데 기둥에서 양쪽으로 가는 화살 · overview.svg 의 아래 두 갈래 */
+.slide.bridge-page .pillar.bridge::before,.slide.bridge-page .pillar.bridge::after{content:'';position:absolute;top:122px;width:14px;height:14px;border-top:2px solid #0e7a6e;border-left:2px solid #0e7a6e}
+.slide.bridge-page .pillar.bridge::before{left:-20px;transform:rotate(-45deg)}
+.slide.bridge-page .pillar.bridge::after{right:-20px;transform:rotate(135deg)}
+.slide.bridge-page .content p.pillar-rule{margin:8px 0 0;font-size:17px;line-height:1.4;color:var(--p-muted);text-align:center}
+.slide.bridge-page .pillar-rule b{color:#0b6459;font-weight:650}
+/* 단계 2 · 다음 PoC 흐름 · 여섯 칸 */
+.slide.bridge-page .poc-flow{margin-top:12px;border-top:3px solid #0e7a6e;padding-top:6px}
+.slide.bridge-page .poc-flow>small{font-size:15px;letter-spacing:.06em;color:#0e7a6e;font-weight:650;display:block;margin-bottom:4px}
+.slide.bridge-page .poc-flow .cells{display:flex;align-items:stretch;gap:0}
+.slide.bridge-page .poc-flow .cell{flex:1;min-width:0;border-left:1px solid var(--p-rule);padding:4px 12px 2px 14px}
+.slide.bridge-page .poc-flow .cell:first-child{border-left:0;padding-left:0}
+.slide.bridge-page .poc-flow .cell b{font-size:20px;line-height:1.3;font-weight:650;color:var(--p-ink);display:block}
+.slide.bridge-page .content .poc-flow .cell p{font-size:17px;line-height:1.5;margin:2px 0 3px;color:#0b6459}
+.slide.bridge-page .poc-flow .cell span{font-size:15px;line-height:1.4;color:var(--p-muted);display:block}
+.slide.bridge-page .poc-flow i.arrow{flex:none;width:0;position:relative}
+.slide.bridge-page .poc-flow i.arrow::after{content:'';position:absolute;left:-5px;top:9px;width:9px;height:9px;border-top:2px solid #0e7a6e;border-right:2px solid #0e7a6e;transform:rotate(45deg);background:var(--p-bg)}
+.slide.bridge-page .content p.poc-note{margin:6px 0 0;font-size:16px;line-height:1.4;color:#8a3a2f}
+/* 인쇄: 단계 요소를 모두 보인다 */
+@media print{.slide.bridge-page .reveal.pending{opacity:1!important;transform:none!important}}
+
+/* 33쪽 · 「다음 실험은 지형·명령·관측을…」 kicker 한 줄. 격자(가운데 맞춤 · U208 실측 레이아웃)는 건드리지 않고
+   본문 상자 기준 절대 위치로 두 열의 윗선(실측 y275) 20px 위에 둔다. 열 높이가 Δ 바뀌면 간격은 Δ/2 만큼 움직인다. */
+.slide.track-a-next-page .content p.track-a-kicker{position:absolute;left:0;top:32px;margin:0;line-height:22px;font-size:18px;letter-spacing:.06em;color:#0e7a6e;font-weight:650}

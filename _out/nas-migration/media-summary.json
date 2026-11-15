@@ -1,0 +1,89 @@
+{
+ "site": "C:\\Users\\AI-WS01\\Desktop\\jay\\인공지능사관학교\\foothold-site",
+ "videos": 345,
+ "MB": 580.5,
+ "by_origin": {
+  "lab 에서 다시 구워짐": {
+   "count": 153,
+   "MB": 251.3
+  },
+  "site 유일본": {
+   "count": 192,
+   "MB": 328.4
+  }
+ },
+ "by_dir": {
+  "gallery/v1/clips": {
+   "count": 144,
+   "MB": 244.4
+  },
+  "assets/mvp-deck/media": {
+   "count": 71,
+   "MB": 154.1
+  },
+  "gallery/v2/clips": {
+   "count": 48,
+   "MB": 84.0
+  },
+  "assets/video/v2": {
+   "count": 51,
+   "MB": 75.4
+  },
+  "assets/video/genbench": {
+   "count": 10,
+   "MB": 6.6
+  },
+  "assets/video/eval_1500iter_level3.mp4": {
+   "count": 1,
+   "MB": 2.3
+  },
+  "assets/video/eval_1500iter_level6.mp4": {
+   "count": 1,
+   "MB": 2.3
+  },
+  "assets/video/eval_1500iter_level9.mp4": {
+   "count": 1,
+   "MB": 2.3
+  },
+  "assets/video/eval_1500iter_level0.mp4": {
+   "count": 1,
+   "MB": 1.9
+  },
+  "assets/video/eval_300iter_fixed_cmd.mp4": {
+   "count": 1,
+   "MB": 1.5
+  },
+  "assets/video/trainA_noflag_300iter.mp4": {
+   "count": 1,
+   "MB": 1.1
+  },
+  "assets/video/eval_300iter_random_cmd.mp4": {
+   "count": 1,
+   "MB": 1.0
+  },
+  "assets/mvp-deck/go2-blender": {
+   "count": 10,
+   "MB": 0.9
+  },
+  "assets/video/trainB_flag_300iter.mp4": {
+   "count": 1,
+   "MB": 0.8
+  },
+  "assets/video/pretrained_first_playback_20260729.mp4": {
+   "count": 1,
+   "MB": 0.5
+  },
+  "assets/video/usdscene_warehouse.mp4": {
+   "count": 1,
+   "MB": 0.5
+  },
+  "assets/video/train1500_playback.mp4": {
+   "count": 1,
+   "MB": 0.1
+  }
+ },
+ "unreferenced": {
+  "count": 4,
+  "MB": 2.0
+ }
+}

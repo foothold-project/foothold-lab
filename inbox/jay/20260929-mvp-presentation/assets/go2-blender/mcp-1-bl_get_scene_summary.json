@@ -1,0 +1,57 @@
+{
+  "result": {
+    "content": [
+      {
+        "type": "text",
+        "text": "{\"job_id\":\"274b29179d344bcbd19a22ddee8a99fb\",\"state\":\"completed\",\"ok\":true,\"result\":{\"scene\":\"Scene\",\"frame_current\":1,\"frame_range\":[1,250],\"render_engine\":\"BLENDER_EEVEE_NEXT\",\"objects\":[{\"name\":\"Cube\",\"type\":\"MESH\",\"location\":[0,0,0]},{\"name\":\"Light\",\"type\":\"LIGHT\",\"location\":[4.0762,1.0055,5.9039]},{\"name\":\"Camera\",\"type\":\"CAMERA\",\"location\":[7.3589,-6.9258,4.9583]}]},\"stdout\":\"\",\"stderr\":\"\"}"
+      }
+    ],
+    "structuredContent": {
+      "job_id": "274b29179d344bcbd19a22ddee8a99fb",
+      "state": "completed",
+      "ok": true,
+      "result": {
+        "scene": "Scene",
+        "frame_current": 1,
+        "frame_range": [
+          1,
+          250
+        ],
+        "render_engine": "BLENDER_EEVEE_NEXT",
+        "objects": [
+          {
+            "name": "Cube",
+            "type": "MESH",
+            "location": [
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "name": "Light",
+            "type": "LIGHT",
+            "location": [
+              4.0762,
+              1.0055,
+              5.9039
+            ]
+          },
+          {
+            "name": "Camera",
+            "type": "CAMERA",
+            "location": [
+              7.3589,
+              -6.9258,
+              4.9583
+            ]
+          }
+        ]
+      },
+      "stdout": "",
+      "stderr": ""
+    }
+  },
+  "jsonrpc": "2.0",
+  "id": 3
+}

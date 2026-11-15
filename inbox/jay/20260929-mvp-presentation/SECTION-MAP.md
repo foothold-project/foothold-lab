@@ -1,4 +1,12 @@
+> 2026-10-02 U206: 최신 구현은37쪽이다. 승인된 애니메이션 정리와 연구근거 보강은 [구현 상태](PPT-IMPLEMENTATION-STATUS.md) 및 [U206 요구](PPT-REVISION-U206.md)를 따른다. 아래 장수는 이전 설계 기록이다.
+
+> 2026-10-01 U202~203: 최신 도입/엔딩 순서와 멘트는 [PPT-INTRO-BRIEF-20261001.md](PPT-INTRO-BRIEF-20261001.md), 실제 구현 범위는 [PPT-IMPLEMENTATION-STATUS.md](PPT-IMPLEMENTATION-STATUS.md)를 먼저 확인한다. 전체 영화를 도입에서 상영하며, 별도 브랜드 FULL_v6는 엔딩에 연결한다.
+
+> 2026-10-02 U205: 현재 구현은 42쪽이다. 기존 10~16쪽을 같은 Go2 중심의 3개 클릭 장면으로 통합했다. 최신 구현과 원문 요구는 [PPT-REVISION-U205.md](PPT-REVISION-U205.md) 및 [구현 상태](PPT-IMPLEMENTATION-STATUS.md)를 따른다.
+
 # FOOTHOLD MVP 발표의 전체 섹션 지도
+
+2026-10-01 현재 안내: 28·34장과 당시 섹션 순서는 이전 설계다. 최신 발표 순서를 결정하지 않는다. 기술 설명과 Track 배치 등 충돌은 사용자 원문과 [PPT 요구 점검](PPT-REQUIREMENTS-AUDIT.md)의 최신 지시를 따른다. 전체 주제의 보존을 위한 이전 표는 유지한다.
 
 > 분류: 계획
 > 작성: Codex · 2026-09-29 20:05

@@ -1,0 +1,14 @@
+{
+  "state": "LAUNCHED",
+  "reason": "ready_seen",
+  "launched_epoch": 1792023176.2183962,
+  "chain_id": "s2-stage0-a3-urehearse-20261015-091255",
+  "gate_pid": 83108,
+  "gate_create_time": 1792023176.0052066,
+  "watchdog_pid": 65440,
+  "watchdog_create_time": 1792023176.0123096,
+  "gate_sha256": "6f5ea7eae2a7b41630c63c0e9482d08cc5b46d1bd40a8ff21cef1d565d74f602",
+  "watchdog_sha256": "d2d404a4a52dbfe0847a9f9fed9beddee24ce3441a800de18679e563105727bb",
+  "launcher_sha256": "fee8d265e9658bbf07b9284612304b1b39a889937aae8e3e837ef1bd8dec9ef0",
+  "manifest_sha256": "9d6563366b114f959a3d7a5b5acd119f2593ab83ad071eac21c3e30ec7e78df1"
+}

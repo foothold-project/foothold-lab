@@ -1,0 +1,29 @@
+167,170c167,168
+<     templates = {f: next((c for c in cases["cases"] if c["family"] == f), None)
+<                  for f in TARGETS}
+<     if any(v is None for v in templates.values()):
+<         raise VideoPlanHold("target_case_template_missing")
+---
+>     # Fixed seeds are registered evaluation cases. Use them unchanged so the
+>     # terrain row, geometry hash and case_id match the evaluated episode.
+173,175c171,176
+<         case = copy.deepcopy(templates[family])
+<         case.update(case_id=f"video-{family}-s{seed}", eval_seed=seed, terrain_seed=seed)
+<         selected.append({"reason": "preregistered_fixed", "case": case})
+---
+>         registered = [c for c in cases["cases"]
+>                       if c["family"] == family and c["eval_seed"] == seed]
+>         if len(registered) != 1:
+>             raise VideoPlanHold(f"fixed_case_not_registered:{family}:{seed}")
+>         selected.append({"reason": "preregistered_fixed",
+>                          "case": copy.deepcopy(registered[0])})
+189c190,196
+<                 selected.append({"reason": label, "case": copy.deepcopy(picked)})
+---
+>                 same = next((s for s in selected
+>                              if s["case"]["case_id"] == picked["case_id"]), None)
+>                 if same is not None:
+>                     same.setdefault("also_reasons", []).append(label)
+>                     chosen[-1]["already_selected"] = True
+>                 else:
+>                     selected.append({"reason": label, "case": copy.deepcopy(picked)})

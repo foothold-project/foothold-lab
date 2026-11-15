@@ -1,0 +1,26 @@
+/* U209 · 23쪽 slopegraph · 25쪽 속도 꺾은선 (2026-10-02). 글자는 전부 글 색(--p-ink/--p-muted), 데이터 색은 선·점에만. */
+.u209-slope{display:grid;grid-template-columns:1fr 1fr;gap:38px}
+.u209-slope h3{font-size:22px;margin:0 0 8px}
+.u209-slope svg{display:block;width:100%;height:auto;overflow:visible}
+.u209-key{display:flex;gap:34px;font-size:18px;line-height:1.3;color:var(--p-muted)}
+.u209-key i{display:inline-block;width:26px;height:3px;border-radius:2px;vertical-align:middle;margin:-3px 8px 0 0}
+svg.u209 text{fill:var(--p-ink);font-size:19px;font-weight:500;paint-order:stroke;stroke:var(--p-bg);stroke-width:5px;stroke-linejoin:round}
+svg.u209 .u209-head{font-size:20px;font-weight:700;fill:var(--p-muted)}
+svg.u209 .u209-lv{font-size:18px;font-weight:600;font-variant-numeric:tabular-nums}
+svg.u209 .u209-val{font-weight:600;font-variant-numeric:tabular-nums}
+svg.u209 .u209-grid{stroke:var(--p-rule);stroke-width:1}
+svg.u209 .u209-lead{stroke:var(--p-muted);stroke-opacity:.45;stroke-width:1}
+svg.u209 .u209-line{fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
+svg.u209 .u209-dot{stroke:var(--p-bg);stroke-width:2}
+svg.u209 .c-up{stroke:#0e7a6e}svg.u209 circle.c-up{fill:#0e7a6e}
+svg.u209 .c-low{stroke:#8a3a2f}svg.u209 circle.c-low{fill:#8a3a2f}
+/* 25쪽 */
+svg.u209-speed{display:block;width:100%;height:auto;overflow:visible}
+svg.u209-speed .u209-dash{stroke-dasharray:9 8}
+svg.u209-speed .u209-leg,svg.u209-speed .u209-end{font-size:20px;font-weight:600}
+svg.u209-speed .u209-tick{font-size:17px;fill:var(--p-muted);font-variant-numeric:tabular-nums}
+svg.u209-speed .u209-x{font-size:22px;font-weight:700}
+svg.u209-speed .u209-pv{font-size:20px;font-weight:600;font-variant-numeric:tabular-nums}
+svg.u209-speed .u209-note{font-size:18px;fill:var(--p-muted)}
+svg.u209-speed .u209-dot{stroke-width:2.5}
+.u209-speed+.small{margin:6px 0}

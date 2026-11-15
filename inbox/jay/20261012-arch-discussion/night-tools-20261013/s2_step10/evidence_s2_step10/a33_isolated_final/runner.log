@@ -1,0 +1,23 @@
+test_s2_scene_a2.py 0 4
+test_s2_connect_a2.py 0 10
+test_s2_connect_17v.py 0 10
+test_s2_17v_core.py 0 17
+test_s2_sensor_tracker_17v.py 0 7
+test_s2_capture_journal_a2.py 0 9
+test_s2_device_binding_a2.py 0 9
+test_s2_stage0_contract_a2.py 0 23
+test_s2_job_owner.py 0 5
+test_s2_job_object_os.py 0 2
+test_s2_resource_lease.py 0 4
+test_s2_zero_supervisor.py 0 6
+test_s2_capture_to_check_a3.py 0 4
+test_s2_prelaunch_competing_a3.py 0 7
+test_s2_hard_watchdog.py 0 13
+test_s2_a32.py 0 75
+test_s2_a33.py 0 3
+a_mutants 0 5 / 5
+a2_mutants 0 6 / 6
+a3_mutants 0 SUMMARY 7/7 CAUGHT
+watchdog_mutants 0 SUMMARY 4/4 CAUGHT
+a32_mutants 0 SUMMARY 28/28 CAUGHT
+frozen_clean_import 0 22 hashes True lines 50

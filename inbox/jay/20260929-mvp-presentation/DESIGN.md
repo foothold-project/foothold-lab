@@ -1,5 +1,7 @@
 # FOOTHOLD MVP 발표 설계와 합의 기록
 
+2026-10-01 현재 안내: 이 문서의 초기 목차·장수·제작 시점은 역사적 기록이다. 최신 PPT 재제작 요구와 남은 어셋은 [PPT 요구 점검](PPT-REQUIREMENTS-AUDIT.md), 발표 흐름은 [사용자 원문](USER-SPOKEN-NARRATIVE.md)을 함께 따른다. 아래 '픽셀은 후보'보다 뒤에 받은 픽셀 Go2 실제 보행 요청이 우선하며, 구현 도구만 미확정이다.
+
 요구 보존: [사용자 요구 기록](USER-REQUIREMENTS-LOG.md). 제작 공통 기준: [MVP 발표 디자인 시스템](PRESENTATION-DESIGN-SYSTEM.md). 브랜드 원칙을 참고하되 MVP에 맞게 변형하며, 첫 화면부터 순차 제작한다.
 
 최신 수정 방향: [실패 중심 서사와 Go2 클릭별 연출](REVISION-story-direction.md). 9월 30일 사용자 피드백으로 기존 34개 화면은 재설계 대상이다. 이 문서의 이전 배치를 최종 승인된 구성으로 사용하지 않는다.

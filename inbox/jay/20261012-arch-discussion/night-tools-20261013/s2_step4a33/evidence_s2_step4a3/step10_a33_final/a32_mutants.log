@@ -1,0 +1,29 @@
+CAUGHT clock_any_negative_only baseline_rc=0 want=[A32 scheduled reset: fixture passes] first_fail=[A32 scheduled reset: fixture passes] mutant_rc=1
+CAUGHT clock_regress_allowed baseline_rc=0 want=[A32 same-episode clock regress -> sensor_timestamp] first_fail=[A32 same-episode clock regress -> sensor_timestamp] mutant_rc=1
+CAUGHT clock_stall_allowed baseline_rc=0 want=[A32 same-episode clock stall (constant time) -> sensor_timestamp] first_fail=[A32 same-episode clock stall (constant time) -> sensor_timestamp] mutant_rc=1
+CAUGHT clock_after_reset_unchecked baseline_rc=0 want=[A32 clock after the reset not at one control step -> sensor_timestamp] first_fail=[A32 clock after the reset not at one control step -> sensor_timestamp] mutant_rc=1
+CAUGHT episode_plus_one_relaxed baseline_rc=0 want=[A32 episode jumps by 2 at the scheduled reset -> stale_packet] first_fail=[A32 episode jumps by 2 at the scheduled reset -> stale_packet] mutant_rc=1
+CAUGHT termination_not_checked baseline_rc=0 want=[A32 an unscheduled termination with a real reset is its own HOLD] first_fail=[A32 an unscheduled termination with a real reset is its own HOLD] mutant_rc=1
+CAUGHT timeout_not_checked baseline_rc=0 want=[A32 a timeout flag -> unscheduled_termination] first_fail=[A32 a timeout flag -> unscheduled_termination] mutant_rc=1
+CAUGHT reset_marker_not_checked baseline_rc=0 want=[A32 scheduled reset with no reset marker -> reset_marker] first_fail=[A32 scheduled reset with no reset marker -> reset_marker] mutant_rc=1
+CAUGHT ray_start_xy_not_checked baseline_rc=0 want=[A32 ray start XY 1 cm off the analysis XY -> ray_start_xy] first_fail=[A32 ray start XY 1 cm off the analysis XY -> ray_start_xy] mutant_rc=1
+CAUGHT ray_direction_not_checked baseline_rc=0 want=[A32 tilted ray direction -> ray_direction] first_fail=[A32 tilted ray direction -> ray_direction] mutant_rc=1
+CAUGHT ray_start_height_not_checked baseline_rc=0 want=[A32 rays that start below the terrain surface -> ray_start_height] first_fail=[A32 rays that start below the terrain surface -> ray_start_height] mutant_rc=1
+CAUGHT boundary_threshold_changed baseline_rc=0 want=[A32 scheduled reset: fixture passes] first_fail=[A32 scheduled reset: fixture passes] mutant_rc=1
+CAUGHT gravity_left_on baseline_rc=0 want=[A32 eight_case cfg: gravity off for the robot] first_fail=[A32 eight_case cfg: gravity off for the robot] mutant_rc=1
+CAUGHT illegal_contact_termination_kept baseline_rc=0 want=[A33 eight_case cfg: illegal_contact termination removed, time_out kept] first_fail=[A33 eight_case cfg: illegal_contact termination removed, time_out kept] mutant_rc=1
+CAUGHT fixed_pose_flag_always_true baseline_rc=0 want=[A32 fixed_pose_ok false when the pose moves 5 cm in warmup] first_fail=[A32 fixed_pose_ok false when the pose moves 5 cm in warmup] mutant_rc=1
+CAUGHT mesh_flag_always_true baseline_rc=0 want=[A32 unverified evidence leaves mesh_collision_verified false and the checker HOLDs] first_fail=[A32 unverified evidence leaves mesh_collision_verified false and the checker HOLDs] mutant_rc=1
+CAUGHT scope_not_required_by_checker baseline_rc=0 want=[A32 evidence without the sampled-scope statement is refused by the checker] first_fail=[A32 evidence without the sampled-scope statement is refused by the checker] mutant_rc=1
+CAUGHT asset_digest_invented baseline_rc=0 want=[A32 asset digest of an unreachable https reference is empty, not invented] first_fail=[A32 asset digest of an unreachable https reference is empty, not invented] mutant_rc=1
+CAUGHT mesh_faces_not_compared baseline_rc=0 want=[A32 different face order disagrees] first_fail=[A32 different face order disagrees] mutant_rc=1
+CAUGHT evidence_kind_always_observed baseline_rc=0 want=[A32 evidence is unverified when: mesh disagrees] first_fail=[A32 evidence is unverified when: mesh disagrees] mutant_rc=1
+CAUGHT occluded_holes_pass baseline_rc=0 want=[A32 branches: every hole ray occluded -> not ok (the occluded-holes counterexample)] first_fail=[A32 branches: every hole ray occluded -> not ok (the occluded-holes counterexample)] mutant_rc=1
+CAUGHT oracle_not_used baseline_rc=0 want=[A32 branches: PhysX finds ground in a hole -> not ok, counted as oracle and hit/miss mismatch] first_fail=[A32 branches: PhysX finds ground in a hole -> not ok, counted as oracle and hit/miss mismatch] mutant_rc=1
+CAUGHT missing_branch_ignored baseline_rc=0 want=[A32 branches: a scene sample that never looks into a hole -> missing_required, not ok] first_fail=[A32 branches: a scene sample that never looks into a hole -> missing_required, not ok] mutant_rc=1
+CAUGHT boundary_rays_compared baseline_rc=0 want=[A32 branches: boundary rays are skipped, and a branch left with too few rays is not satisfied] first_fail=[A32 branches: boundary rays are skipped, and a branch left with too few rays is not satisfied] mutant_rc=1
+CAUGHT robot_hits_treated_as_terrain baseline_rc=0 want=[A32 physx: a ray the robot collider takes is occluded, not a ground sample] first_fail=[A32 physx: a ray the robot collider takes is occluded, not a ground sample] mutant_rc=1
+CAUGHT physx_errors_not_recorded baseline_rc=0 want=[A32 physx: a failing query is recorded per ray and the loop goes on] first_fail=[A32 physx: a failing query is recorded per ray and the loop goes on] mutant_rc=1
+CAUGHT time_budget_ignored baseline_rc=0 want=[A32 PhysxSampler stops at its time budget and says so] first_fail=[A32 PhysxSampler stops at its time budget and says so] mutant_rc=1
+CAUGHT sampler_ignores_step_list baseline_rc=0 want=[A32 PhysxSampler records only the pre-registered steps] first_fail=[A32 PhysxSampler records only the pre-registered steps] mutant_rc=1
+SUMMARY 28/28 CAUGHT

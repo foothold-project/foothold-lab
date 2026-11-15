@@ -1,0 +1,4 @@
+PASS capture_keys_match_fixture
+PASS capture_shapes_match_fixture
+PASS ray_index_is_187_vector
+PASS collected_arrays_pass_checker

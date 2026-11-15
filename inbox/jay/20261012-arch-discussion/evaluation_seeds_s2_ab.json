@@ -1,0 +1,21 @@
+{
+  "schema": "s2-ab-evaluation-seeds-v1",
+  "registered_before_results": true,
+  "registered_at_kst": "2026-10-17 16:55",
+  "registered_by": "lead session; companion of evaluation_criteria_s2_ab.json (kept separate so the criteria file hash used by arm A and arm B does not change)",
+  "rule": "fixed in advance, one distinct seed per pair, disjoint from training seeds and smoke seeds; no seed is added, dropped or replaced after results are seen",
+  "training_seeds_excluded": [7, 11, 42, 1043],
+  "smoke_seeds_excluded": [3101, 3109, 3119, 3121],
+  "layers": {
+    "gap": {"pairs": 20, "seeds": [4000, 4001, 4002, 4003, 4004, 4005, 4006, 4007, 4008, 4009, 4010, 4011, 4012, 4013, 4014, 4015, 4016, 4017, 4018, 4019]},
+    "stepping_stones": {"pairs": 20, "seeds": [4020, 4021, 4022, 4023, 4024, 4025, 4026, 4027, 4028, 4029, 4030, 4031, 4032, 4033, 4034, 4035, 4036, 4037, 4038, 4039]},
+    "flat": {"pairs": 10, "seeds": [4040, 4041, 4042, 4043, 4044, 4045, 4046, 4047, 4048, 4049]},
+    "stairs_up": {"pairs": 10, "seeds": [4050, 4051, 4052, 4053, 4054, 4055, 4056, 4057, 4058, 4059]}
+  },
+  "total_pairs": 60,
+  "per_checkpoint_case_arms": 120,
+  "checkpoints": ["update 0", "update 2000"],
+  "arms": ["A", "B"],
+  "primary_command": "fwd10 (1.0 m/s)",
+  "note": "the same seed list is used for update 0 and update 2000 and for A and B so that every comparison is paired on terrain, seed and command"
+}

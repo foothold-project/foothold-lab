@@ -1,0 +1,20 @@
+{
+  "format": "foothold-ops-machine-profile/1",
+  "platform": "linux",
+  "paths": {
+    "gpu_root": "~/mai/tmp/gpu",
+    "c_layer_priority": "~/data/foothold/s2_lab/c_layer_m6000/priority",
+    "c_layer_ledger": "~/mai/tmp/c_layer_m6000_gpu1_remainder_v34/gpu1_remainder_loop.jsonl",
+    "stage_table": "~/mai/wt/foothold-lab/EX41-CHECKOUT/foothold_s2/curriculum/ex41-fixed5000.yaml",
+    "eval_root": "~/data/foothold/s2_lab/EX41-RUN/eval/score-watch",
+    "c_layer_manifest": "~/mai/tmp/c_layer_m6000_gpu1_remainder_v34/cap2/remaining.json",
+    "c_layer_out": "~/mai/tmp/c_layer_m6000/out",
+    "w78_video": "~/mai/tmp/ex41/w78_video",
+    "p1_attempt_glob": "~/data/foothold/s2_lab/ex41_main_*/eval/score-watch/model_*/attempt.json",
+    "worklist": "~/mai/wt/foothold-lab/LEAD-WORKLIST/inbox/jay/20261104-ex41-restart/WORKLIST.tsv",
+    "baseline_m6000": "~/data/foothold/s2_lab/EX40-BASELINE/score-watch-b/model_6000_d5e9ec400f33/map64/map_modes.json",
+    "canon_retry": "~/mai/wt/foothold-lab/LEAD-TOOLS/_out/tools/canon_retry.py"
+  },
+  "worker_handles": {},
+  "lead_mailbox": null
+}

@@ -1,0 +1,762 @@
+"""EX-35 창 경계 판정 소비기 (카드 v0.9 4b.6). 답 아는 입력: 부모 m1500 원자료를 저장본 폴더 모양으로 놓으면 기준선과 같아야 한다. CPU."""
+
+import json
+import shutil
+from pathlib import Path
+
+import pytest
+
+from foothold_s2.eval import ex35_window_judge as W
+from foothold_s2.eval import judge_gate as G
+
+BASE = Path(W.BASE_DEFAULT)
+HARD = Path(W.HARD_DEFAULT)
+pytestmark = pytest.mark.skipif(not (BASE / "map64" / "map_modes.json").exists(), reason="부모 m1500 원자료 없음")
+
+
+def _set_meta(path, sha, seed=True):
+    d = json.loads(Path(path).read_text(encoding="utf-8"))
+    d["checkpoint_sha256"] = sha
+
+    if seed:
+        d["eval_seed"] = 42
+
+    Path(path).write_text(json.dumps(d), encoding="utf-8")
+
+
+def _set_identity(path, sha, device="cuda:0", head="h" * 40, uuid=None):
+    d = json.loads(Path(path).read_text(encoding="utf-8"))
+    d["run_identity"] = {"device": device, "gpu_name": "gpu", "gpu_uuid": uuid or ("GPU-uuid-of-" + device), "checkpoint_sha256": sha, "eval_seed": 42, "code_head": head}
+    Path(path).write_text(json.dumps(d), encoding="utf-8")
+
+
+def sha_of(d):
+    return (Path(d) / "checkpoint_sha256.txt").read_text(encoding="utf-8").split()[0]
+
+
+BASE_HARD = {L: json.loads((HARD / ("sb10_" + L) / "map64" / "map_modes.json").read_text(encoding="utf-8"))["fixed_terrain"]["assignment_sha256"] for L in ("L6", "L9")}
+
+
+_TRAIN = {}
+
+
+def make_train_dir(root, nan_tag=None):
+    """창 경계 평가용 가짜 학습 폴더: 모든 step 1..3050 에 여섯 태그 tfevents(경고선 안쪽 값)."""
+    from torch.utils.tensorboard import SummaryWriter
+
+    d = Path(root) / ("train_" + str(nan_tag).replace("/", "_"))
+    w = SummaryWriter(str(d))
+    vals = {"Loss/value_function": 0.03, "Loss/kl_probe/ppo_mean": 0.02, "Loss/entropy": 9.0, "Policy/mean_noise_std": 0.5,
+            "Episode_Termination/bad_orientation": 0.1, "Train/mean_reward": 16.0}
+
+    for step in range(1, 3051):
+        for t, v in vals.items():
+            w.add_scalar(t, float("nan") if t == nan_tag else v, step)
+
+    w.close()
+
+    return str(d)
+
+
+def J(latest, prev, **kw):
+    """judge_window 호출 기본값: 학습 폴더를 주고, 64 env 독립 재계산 부재는 시험에서 따로 막는다."""
+    if "train_dir" not in kw:
+        if "t" not in _TRAIN:
+            import tempfile
+            _TRAIN["t"] = make_train_dir(tempfile.mkdtemp())
+
+        kw["train_dir"] = _TRAIN["t"]
+
+    kw.setdefault("allow_map64_unmeasured", True)
+
+    return W.judge_window(latest, prev, **kw)
+
+
+def make_ckpt(root, n, tag="a"):
+    """부모 m1500 원자료를 m<N>/ 모양으로 복사한다(턴 폴더에 walk 를 합치고, eval_pred 16 env 의 walk 는 켬 것을 복사한 시험용 자리 채움)."""
+    d = Path(root) / ("m%d" % n)
+
+    for mode in ("eval_gt", "probe_prop_only"):
+        shutil.copytree(BASE / ("turn16_" + mode), d / ("turn16_" + mode))
+
+        for f in (BASE / ("turn16_walk_" + mode)).glob("arrays_walk_turn_*.npz"):
+            shutil.copy(f, d / ("turn16_" + mode) / f.name)
+
+    shutil.copytree(BASE / "turn16_eval_pred", d / "turn16_eval_pred")
+
+    for f in (BASE / "turn16_walk_eval_gt").glob("arrays_walk_turn_*.npz"):
+        shutil.copy(f, d / "turn16_eval_pred" / f.name)
+
+    (d / "map64").mkdir(parents=True)
+    shutil.copy(BASE / "map64" / "map_modes.json", d / "map64" / "map_modes.json")
+    full = json.loads((BASE / "map64" / "map_modes.json").read_text(encoding="utf-8"))
+    pred = dict(full, modes={"eval_pred": full["modes"]["eval_pred"]})
+    (d / "map64_eval_pred").mkdir()
+    (d / "map64_eval_pred" / "map_modes.json").write_text(json.dumps(pred), encoding="utf-8")
+
+    for L in ("L6", "L9"):
+        (d / "hardlevel" / L).mkdir(parents=True)
+        shutil.copy(HARD / ("sb10_" + L) / "map64" / "map_modes.json", d / "hardlevel" / L / "map_modes.json")
+
+    model = Path(root) / ("model_%d.pt" % n)
+    model.write_bytes((tag * 64 + str(n)).encode())
+    sha = W._sha_file(model)
+    (d / "checkpoint_sha256.txt").write_text("%s  %s\n" % (sha, model.as_posix()), encoding="utf-8")
+
+    for rel in ("map64/map_modes.json", "map64_eval_pred/map_modes.json", "hardlevel/L6/map_modes.json", "hardlevel/L9/map_modes.json"):
+        _set_meta(d / rel, sha)
+        _set_identity(d / rel, sha)
+
+    for mode in ("eval_gt", "probe_prop_only", "eval_pred"):
+        _set_meta(d / ("turn16_" + mode) / "probe_result.json", sha, seed=False)
+        _set_identity(d / ("turn16_" + mode) / "probe_result.json", sha)
+
+    return d
+
+
+A11_OK = {"reader": "lead", "time": "2026-10-27 03:00", "checkpoint_sha256": "b" * 64, "cmp_video": {"path": "a.mp4", "sha256": "c"}, "solo_video": {"path": "b.mp4", "sha256": "d"},
+          "a1_figures_seen": True, "all_frames_checked": True, "items": {k: "없음" for k in "12345"}}
+
+
+def a11_file(tmp_path, sha, **kw):
+    import hashlib
+    p = tmp_path / "a11.json"
+    vids = {}
+
+    for k, nm in (("cmp_video", "cmp.mp4"), ("solo_video", "solo.mp4")):
+        v = tmp_path / nm
+        v.write_bytes((nm * 10).encode())
+        vids[k] = {"path": v.as_posix(), "sha256": hashlib.sha256(v.read_bytes()).hexdigest()}
+
+    p.write_text(json.dumps(dict(A11_OK, checkpoint_sha256=sha, **dict(vids, **kw))), encoding="utf-8")
+
+    return p
+
+
+@pytest.fixture()
+def pair(tmp_path):
+    return make_ckpt(tmp_path, 1950, "a"), make_ckpt(tmp_path, 2000, "b"), tmp_path
+
+
+def run(pair, **kw):
+    prev, latest, tmp = pair
+
+    a11 = kw.pop("a11", "default")
+
+    if a11 == "default":
+        a11 = a11_file(tmp, sha_of(latest))
+
+    return J(latest, prev, a11=a11, **kw)
+
+
+def test_parent_inputs_reproduce_the_baseline_and_continue(pair):
+    r = run(pair)
+    assert r["missing_inputs"] == {"latest": [], "prev": []}
+    assert r["states"]["latest"]["state"] == G.NEW_TASK_PENDING and r["states"]["prev"]["state"] == G.NEW_TASK_PENDING     # 부모 = 기준선: 유지 통과, 새 과제는 좌 전진 적분 3.006 < 3.200 으로 미달
+    assert r["branch"] == "CONTINUE" and r["decision"]["row"] == 10
+    bad = [x for x in r["axes"]["latest"] if x["ok"] is False]
+    assert {x["metric"] for x in bad} == {"켬 walk_turn_left 전진 적분 (성공선, m)", "가림 walk_turn_left 전진 적분 (성공선, m)"}
+    assert r["a12"]["latest"]["ok"] and r["a12"]["latest"]["checked_cases"] == 24
+
+
+def test_deleting_any_required_cell_gives_hold_no_data(pair):
+    prev, latest, tmp = pair
+
+    for rel in ("hardlevel/L9/map_modes.json", "map64_eval_pred/map_modes.json", "turn16_eval_pred/arrays_walk_turn_left.npz", "turn16_probe_prop_only/arrays_indep_left.npz"):
+        keep = (latest / rel).read_bytes()
+        (latest / rel).unlink()
+        r = run(pair)
+        assert r["branch"] == "HOLD_NO_DATA" and r["decision"]["row"] == 1, rel
+        assert rel in r["missing_inputs"]["latest"]
+        (latest / rel).write_bytes(keep)
+
+
+def test_same_checkpoint_sha_or_non_increasing_iteration_is_row_1(pair):
+    prev, latest, tmp = pair
+    (latest / "checkpoint_sha256.txt").write_text((prev / "checkpoint_sha256.txt").read_text(encoding="utf-8"), encoding="utf-8")
+    r = run(pair, a11=a11_file(tmp, sha_of(prev)))
+    assert r["branch"] == "HOLD_NO_DATA"
+    r = J(prev, latest, a11=a11_file(tmp, sha_of(prev)))                                  # 최신 · 직전을 바꿔 넣으면 회차가 줄어든다
+    assert r["branch"] == "HOLD_NO_DATA"
+
+
+def test_a11_missing_or_flagged_or_old_checkpoint_stops(pair):
+    prev, latest, tmp = pair
+    assert run(pair, a11=None)["decision"]["row"] == 4
+    assert run(pair, a11=tmp / "nope.json")["decision"]["row"] == 4
+    p = a11_file(tmp, sha_of(latest), items={"1": "없음", "2": "없음", "3": "있음", "4": "없음", "5": "없음"})
+    r = run(pair, a11=p)
+    assert r["decision"]["row"] == 4 and r["a11"]["yes"] == ["3"]
+    r = run(pair, a11=a11_file(tmp, sha_of(prev)))
+    assert r["decision"]["row"] == 4 and "재사용" in r["a11"]["why"]
+    p = a11_file(tmp, sha_of(latest), items={"1": "없음", "2": "없음", "3": "", "4": "없음", "5": "없음"})
+    assert run(pair, a11=p)["a11"]["state"] == "unfilled"
+
+
+def test_ceiling_m3000_stops(tmp_path):
+    prev, latest = make_ckpt(tmp_path, 2950, "a"), make_ckpt(tmp_path, 3000, "b")
+    pw = {"latest_iter": 2750, "a5_q": {"left": 0.4, "right": 0.4}, "no_improve_streak": 0}
+    r = J(latest, prev, a11=a11_file(tmp_path, sha_of(latest)), prev_window=pw)
+    assert r["decision"]["row"] == 5 and r["branch"] == "STOP"
+
+
+def _edit_map(path, fn):
+    d = json.loads(path.read_text(encoding="utf-8"))
+    fn(d)
+    path.write_text(json.dumps(d), encoding="utf-8")
+
+
+def test_hardlevel_and_pred_floors_are_maintain_conditions_not_ignored(pair):
+    prev, latest, tmp = pair
+    _edit_map(latest / "hardlevel" / "L9" / "map_modes.json", lambda d: d["modes"]["eval_gt"]["fwd1.0"].__setitem__("body_vx_integral_median_m", 4.0))   # 기준 5.01 x 0.9 = 4.51 미달
+    r = run(pair)
+    assert r["states"]["latest"]["state"] == G.MAINTAIN_FAIL
+    assert any(c["cond"] == "ex35w_L9_fwd10" for c in r["states"]["latest"]["reasons"])
+    assert r["branch"] == "HOLD" and r["decision"]["row"] == 7                                         # 최신 한 번만 유지 실패
+    _edit_map(prev / "hardlevel" / "L9" / "map_modes.json", lambda d: d["modes"]["eval_gt"]["fwd1.0"].__setitem__("body_vx_integral_median_m", 4.0))
+    r = run(pair)
+    assert r["branch"] == "STOP" and r["decision"]["row"] == 6                                         # 연속 두 저장본 유지 실패 = REVERT -> 멈춤
+    _edit_map(latest / "map64_eval_pred" / "map_modes.json", lambda d: d["modes"]["eval_pred"]["fwd1.0"].__setitem__("body_vx_integral_median_m", 4.8))      # 5.417 x 0.9 = 4.875 미달
+    assert any(c["cond"] == "ex35w_pred_fwd10" for c in run(pair)["states"]["latest"]["reasons"])
+
+
+def test_l6_survival_drop_over_six_is_caught(pair):
+    prev, latest, tmp = pair
+    base = json.loads((HARD / "sb10_L6" / "map64" / "map_modes.json").read_text(encoding="utf-8"))["modes"]["eval_gt"]["fwd1.0"]["alive_envs_at_end"]
+    _edit_map(latest / "hardlevel" / "L6" / "map_modes.json", lambda d: d["modes"]["eval_gt"]["fwd1.0"].__setitem__("alive_envs_at_end", base - 7))
+    r = run(pair)
+    assert any(c["cond"] == "ex35w_L6_survive" for c in r["states"]["latest"]["reasons"])
+    _edit_map(latest / "hardlevel" / "L6" / "map_modes.json", lambda d: d["modes"]["eval_gt"]["fwd1.0"].__setitem__("alive_envs_at_end", base - 6))
+    assert not any(c["cond"] == "ex35w_L6_survive" for c in run(pair)["states"]["latest"]["reasons"])
+
+
+def test_walk_maintain_floor_from_the_card(pair):
+    prev, latest, tmp = pair
+    base_vx = json.loads((BASE / "walk_turn_summary.json").read_text(encoding="utf-8"))["eval_gt/walk_turn_right"]["vx_integral_kept_mean"]
+    b = W.load_ckpt(latest)
+    base = W.load_base()
+    assert W.window_extra_broken(b, base) == []
+    b["turn"]["eval_gt"]["walk_turn_right"]["vx_integral_kept_mean"] = base_vx * 0.90 - 1e-9
+    assert [c["cond"] for c in W.window_extra_broken(b, base)] == ["ex35w_walk_vx"]
+    b["turn"]["eval_gt"]["walk_turn_right"]["vx_integral_kept_mean"] = base_vx * 0.90
+    assert W.window_extra_broken(b, base) == []
+
+
+def test_a12_independent_recompute_matches_judge_and_differs_for_tamper(pair):
+    prev, latest, tmp = pair
+    b = W.load_ckpt(latest)
+    r = W.reproduce_check(latest, b, BASE_HARD)
+    assert r["ok"] and r["checked_cases"] == 24 and r["not_independent"]
+    s = b["turn"]["eval_gt"]["indep_left"]
+    b["turn"]["eval_gt"]["indep_left"] = dict(s, Q=s["Q"] + 1e-5)                                    # judge 쪽 값이 독립 식과 1e-5 어긋남
+    assert not W.reproduce_check(latest, b, BASE_HARD)["ok"]
+    b["turn"]["eval_gt"]["indep_left"] = s
+    w = b["turn"]["eval_gt"]["walk_turn_left"]
+    b["turn"]["eval_gt"]["walk_turn_left"] = dict(w, vx_integral_kept_mean=w["vx_integral_kept_mean"] + 0.002)       # 거리 허용 1e-3 m
+    r = W.reproduce_check(latest, b, BASE_HARD)
+    assert not r["ok"] and r["mismatch"][0]["cond"] == "distance"
+
+
+def _a12(pair, rel, fn):
+    prev, latest, tmp = pair
+    keep = (latest / rel).read_bytes()
+    _edit_map(latest / rel, fn)
+    r = run(pair)
+    (latest / rel).write_bytes(keep)                                                                   # 다음 경우를 위해 되돌린다
+
+    return r, r["a12"]["latest"]
+
+
+def test_a12_checks_terrain_hash_eval_seed_and_checkpoint_sha_not_just_q(pair):
+    r, a = _a12(pair, "map64/map_modes.json", lambda j: j["fixed_terrain"].__setitem__("assignment_sha256", "0" * 64))
+    assert not a["ok"] and r["branch"] in ("HOLD_NO_DATA", "STOP")                                    # 칸 해시가 다르면 읽기 단계(read_map64 strict)에서 이미 판정 불가
+
+    r, a = _a12(pair, "hardlevel/L6/map_modes.json", lambda j: j.__setitem__("eval_seed", 43))
+    assert not a["ok"] and any(m["cond"] == "eval_seed" for m in a["mismatch"])
+
+    r, a = _a12(pair, "hardlevel/L9/map_modes.json", lambda j: j.pop("eval_seed"))
+    assert not a["ok"], "eval_seed 기록이 없으면 통과가 아니다"
+
+    r, a = _a12(pair, "hardlevel/L9/map_modes.json", lambda j: j["fixed_terrain"].__setitem__("assignment_sha256", BASE_HARD["L6"]))
+    assert not a["ok"] and any(m["cond"] == "terrain_hash" for m in a["mismatch"])                   # 레벨 9 자리에 레벨 6 칸이 들어오면 거절
+
+    r, a = _a12(pair, "map64_eval_pred/map_modes.json", lambda j: j.__setitem__("checkpoint_sha256", "f" * 64))
+    assert not a["ok"] and any(m["cond"] == "map_checkpoint_sha256" for m in a["mismatch"])
+
+
+def test_a12_missing_checkpoint_file_is_a_failure_not_a_pass(pair):
+    prev, latest, tmp = pair
+    path = (latest / "checkpoint_sha256.txt").read_text(encoding="utf-8").split()[1]
+    Path(path).unlink()
+    r = run(pair)
+    assert not r["a12"]["latest"]["ok"] and any(m["cond"] == "checkpoint_sha256" for m in r["a12"]["latest"]["mismatch"])
+    assert r["decision"]["row"] == 3 and r["branch"] == "STOP"
+
+
+def test_half_written_folder_gives_hold_not_an_exception(pair):
+    prev, latest, tmp = pair
+    (latest / "turn16_eval_pred" / "probe_result.json").unlink()                                       # 평가가 도는 중: npz 는 있고 probe_result.json 은 아직
+    r = run(pair)
+    assert r["branch"] == "HOLD_NO_DATA" and "turn16_eval_pred/probe_result.json" in r["missing_inputs"]["latest"]
+
+
+def test_unreadable_folder_is_hold_no_data_with_the_reason(pair):
+    prev, latest, tmp = pair
+    _edit_map(latest / "turn16_eval_gt" / "probe_result.json", lambda j: j["fixed_terrain"].__setitem__("assignment_sha256", "1" * 64))   # read_turn_dir 가 JudgeInputError
+    r = run(pair)
+    assert r["branch"] == "HOLD_NO_DATA" and r["read_failed"]["latest"] and "JudgeInputError" in r["read_failed"]["latest"]
+
+
+def test_prev_window_is_required_from_m2250_and_must_match(tmp_path):
+    prev, latest = make_ckpt(tmp_path, 2200, "a"), make_ckpt(tmp_path, 2250, "b")
+    a = a11_file(tmp_path, sha_of(latest))
+    r = J(latest, prev, a11=a)
+    assert r["branch"] == "HOLD_NO_DATA" and "--prev-window" in r["decision"]["action"]
+    r = J(latest, prev, a11=a, prev_window={"latest_iter": 1750, "a5_q": {"left": 0.4, "right": 0.4}})
+    assert r["branch"] == "HOLD_NO_DATA" and "m1750" in r["decision"]["action"]                        # m2000 의 것이 필요(2250 - 250)
+    r = J(latest, prev, a11=a, prev_window={"latest_iter": 2000, "a5_q": {"left": 0.4, "right": 0.4}, "no_improve_streak": 1})
+    assert r["branch"] != "HOLD_NO_DATA" and r["trend"]["has_prev"] is True
+    assert W.prev_window_problem(2250, {"latest_iter": 2000, "a5_q": {"left": 0.4}}) == ""
+    assert W.prev_window_problem(2000, None) == "" and W.prev_window_problem(2250, None) != "" and W.prev_window_problem(2250, {"latest_iter": 2250, "a5_q": {"left": 1}}) != ""
+
+
+def test_trend_and_flat_rule():
+    assert W.trend({"left": 0.5, "right": 0.5}, None)["flat"] is False
+    t = W.trend({"left": 0.50, "right": 0.50}, {"a5_q": {"left": 0.45, "right": 0.45}, "no_improve_streak": 0})
+    assert t["improved"] is False and t["no_improve_streak"] == 1 and t["flat"] is False
+    t2 = W.trend({"left": 0.5, "right": 0.5}, {"a5_q": {"left": 0.45, "right": 0.45}, "no_improve_streak": 1})
+    assert t2["flat"] is True                                                                          # 연속 2 창 개선 없음
+    t3 = W.trend({"left": 0.5651, "right": 0.45}, {"a5_q": {"left": 0.45, "right": 0.45}, "no_improve_streak": 1})
+    assert t3["improved"] is True and t3["no_improve_streak"] == 0 and t3["flat"] is False            # 한 방향이 +0.115 이상이면 개선(평균 아님)
+    t4 = W.trend({"left": 0.5649, "right": 0.45}, {"a5_q": {"left": 0.45, "right": 0.45}, "no_improve_streak": 0})
+    assert t4["improved"] is False                                                                      # 0.1149 는 개선 아님
+
+
+def ctx(**kw):
+    c = {"input_missing": [], "same_sha": False, "iter_increasing": True, "stop": False, "a12_ok": True, "a11": {"state": "clear"}, "at_ceiling": False, "flat": False}
+    c.update(kw)
+
+    return c
+
+
+def test_truth_table_eleven_rows_one_by_one():
+    P, M, N, H = G.PASS, G.MAINTAIN_FAIL, G.NEW_TASK_PENDING, G.HOLD_NO_DATA
+    tt = W.truth_table
+    assert tt(P, P, ctx(input_missing=["x"]))["row"] == 1 and tt(P, P, ctx(same_sha=True))["row"] == 1 and tt(P, P, ctx(iter_increasing=False))["row"] == 1 and tt(H, P, ctx())["row"] == 1
+    assert tt(P, P, ctx(stop=True))["row"] == 2 and tt(P, G.STOP, ctx(stop=True))["branch"] == "STOP"
+    assert tt(P, P, ctx(a12_ok=False))["row"] == 3
+    assert tt(P, P, ctx(a11={"state": "unfilled", "why": "x"}))["row"] == 4 and tt(P, P, ctx(a11={"state": "flagged", "yes": ["1"]}))["row"] == 4
+    assert tt(P, P, ctx(at_ceiling=True))["row"] == 5
+    assert (tt(M, M, ctx())["row"], tt(M, M, ctx())["branch"]) == (6, "STOP")
+    assert (tt(P, M, ctx())["row"], tt(P, M, ctx())["branch"]) == (7, "HOLD") and tt(N, M, ctx())["row"] == 7
+    assert (tt(M, P, ctx())["row"], tt(M, P, ctx())["branch"]) == (8, "CONTINUE") and tt(M, N, ctx())["row"] == 8
+    assert (tt(P, P, ctx())["row"], tt(P, P, ctx())["branch"]) == (9, "NEXT_STAGE")
+    assert (tt(P, N, ctx())["row"], tt(P, N, ctx())["branch"]) == (10, "CONTINUE") and tt(N, N, ctx())["row"] == 10 and tt(N, P, ctx())["row"] == 10
+    assert (tt(P, N, ctx(flat=True))["row"], tt(P, N, ctx(flat=True))["branch"]) == (11, "STOP")
+    assert tt(P, P, ctx(flat=True))["row"] == 9                                                         # 평평은 PENDING 일 때만(둘 다 PASS 면 EXPAND)
+    assert tt(P, P, ctx(stop=True, a12_ok=False))["row"] == 2                                          # 위에서부터 먼저 맞는 행
+
+
+def test_cli_writes_json_and_markdown(pair, tmp_path):
+    prev, latest, tmp = pair
+    a = a11_file(tmp, sha_of(latest))
+    J(latest, prev, a11=a)                                                                              # 가짜 학습 폴더를 먼저 만든다
+    assert W.main(["--latest-dir", str(latest), "--prev-dir", str(prev), "--a11", str(a), "--out-prefix", str(tmp_path / "win"),
+                   "--train-dir", _TRAIN["t"], "--allow-map64-unmeasured"]) == 0
+    d = json.loads((tmp_path / "win.json").read_text(encoding="utf-8"))
+    md = (tmp_path / "win.md").read_text(encoding="utf-8")
+    assert d["branch"] == "CONTINUE" and "| A2 |" in md and "| A7 |" in md and "| A9 |" in md
+
+
+def test_walk_kept_floor_14_is_a_maintain_condition(pair):
+    prev, latest, tmp = pair
+    b = W.load_ckpt(latest)
+    base = W.load_base()
+    w = b["turn"]["probe_prop_only"]["walk_turn_left"]
+    b["turn"]["probe_prop_only"]["walk_turn_left"] = dict(w, kept=13)
+    assert [c["cond"] for c in W.window_extra_broken(b, base)] == ["ex35w_walk_kept"]
+    b["turn"]["probe_prop_only"]["walk_turn_left"] = dict(w, kept=14)
+    assert W.window_extra_broken(b, base) == []
+
+
+def test_default_blocks_when_map64_has_no_independent_recompute(pair):
+    prev, latest, tmp = pair
+    r = W.judge_window(latest, prev, a11=a11_file(tmp, sha_of(latest)), train_dir=_TRAIN.get("t") or make_train_dir(tmp))
+    assert r["decision"]["row"] == 3 and r["branch"] == "STOP" and "미측" in r["a12_note"]
+
+
+def test_missing_train_dir_or_forward_npz_or_hardlevel_command_is_hold_not_pass(pair):
+    prev, latest, tmp = pair
+    a = a11_file(tmp, sha_of(latest))
+    r = W.judge_window(latest, prev, a11=a, allow_map64_unmeasured=True)
+    assert r["branch"] == "HOLD_NO_DATA" and "A9" in str(r["read_failed"])
+    (latest / "turn16_eval_gt" / "arrays_fwd0.5.npz").unlink()
+    assert "turn16_eval_gt/arrays_fwd0.5.npz" in run(pair)["missing_inputs"]["latest"] and run(pair)["branch"] == "HOLD_NO_DATA"
+    (latest / "turn16_eval_gt" / "arrays_fwd0.5.npz").write_bytes((prev / "turn16_eval_gt" / "arrays_fwd0.5.npz").read_bytes())
+    _edit_map(latest / "hardlevel/L9/map_modes.json", lambda j: j["modes"]["eval_gt"].pop("fwd0.5"))
+    r = run(pair)
+    assert r["branch"] == "HOLD_NO_DATA" and any("fwd0.5" in m for m in r["missing_inputs"]["latest"])
+
+
+def test_nonfinite_raw_array_or_curve_is_stop_not_continue(pair, tmp_path):
+    import numpy as np
+    prev, latest, tmp = pair
+    f = latest / "turn16_eval_gt" / "arrays_fwd1.0.npz"
+    z = dict(np.load(f))
+    k = next(k for k in z if "quat" in k)
+    z[k] = z[k].astype(float).copy()
+    z[k].flat[3] = float("nan")
+    np.savez(f, **z)
+    r = run(pair)
+    assert r["branch"] == "STOP" and r["nonfinite"]["raw"]["latest"]
+    f.write_bytes((prev / "turn16_eval_gt" / "arrays_fwd1.0.npz").read_bytes())
+    r = run(pair, train_dir=make_train_dir(tmp_path / "nan", nan_tag="Loss/entropy"))
+    assert r["branch"] == "STOP" and r["nonfinite"]["curve"]["latest"]
+
+
+def test_a11_video_file_must_exist_and_match_sha(pair):
+    prev, latest, tmp = pair
+    a = a11_file(tmp, sha_of(latest), cmp_video={"path": (tmp / "cmp.mp4").as_posix(), "sha256": "0" * 64})
+    r = J(latest, prev, a11=a)
+    assert r["decision"]["row"] == 4 and "sha256" in r["decision"]["action"]
+
+
+def _curve_dir(root, name, steps):
+    from torch.utils.tensorboard import SummaryWriter
+
+    d = Path(root) / name
+    w = SummaryWriter(str(d))
+
+    for step in steps:
+        for t in ("Loss/value_function", "Loss/kl_probe/ppo_mean", "Loss/entropy", "Policy/mean_noise_std", "Episode_Termination/bad_orientation", "Train/mean_reward"):
+            w.add_scalar(t, {"Loss/entropy": 9.0, "Policy/mean_noise_std": 0.5, "Train/mean_reward": 16.0}.get(t, 0.03), step)
+
+    w.close()
+
+    return str(d)
+
+
+def test_a9_incomplete_window_is_hold_no_data(pair, tmp_path):
+    from foothold_s2.eval import ex35_window_axes as AX
+    prev, latest, tmp = pair
+    full = list(range(1, 2051))
+    ok = _curve_dir(tmp_path, "ok", full)
+    assert AX.curve_axis(ok, 2000)["tags"]["Loss/entropy"]["n"] == 50
+    cases = {"one_point_per_window": [s for s in full if s <= 1900] + [1950, 2000],            # verifier 반례: 50 회 창마다 한 점
+             "gap_in_window": [s for s in full if not (1970 <= s <= 1985)],
+             "missing_end": [s for s in full if s <= 1990],
+             "duplicate_step": full + [1980],
+             "too_few_points": [s for s in full if s <= 1950 or s % 5 == 0 and s <= 1990] + [2000],
+             "only_two_points_in_whole_run": [1950, 2000]}                                       # verifier 반례: 전체 기록이 두 점이면 주기를 50 으로 추정하던 허점
+
+    for name, steps in cases.items():
+        d = _curve_dir(tmp_path, name, steps)
+
+        with pytest.raises(AX.AxisInputError):
+            AX.curve_axis(d, 2000)
+
+        r = J(latest, prev, a11=a11_file(tmp, sha_of(latest)), train_dir=d)
+        assert r["branch"] == "HOLD_NO_DATA" and r["read_failed"]["latest"], name
+
+
+def test_a9_verifier_original_counterexample_file_as_is(pair):
+    src = Path("C:/mai/wt/foothold-lab/verifier-27c-window/_out/db9_probe/train_partial")
+
+    if not src.is_dir():
+        pytest.skip("verifier 반례 폴더 없음")
+
+    prev, latest, tmp = pair
+    r = J(latest, prev, a11=a11_file(tmp, sha_of(latest)), train_dir=str(src))
+    assert r["branch"] == "HOLD_NO_DATA" and r["read_failed"]["latest"]
+
+
+def write_env_arrays(d):
+    """평가 JSON 행과 맞는 env 별 자료를 만든다(거리 중앙값 · 끝 생존 · 지형 배열 해시가 JSON 과 일치)."""
+    from foothold_s2.eval import fixed_terrain as FT
+
+    for rel in ("map64", "map64_eval_pred", "hardlevel/L6", "hardlevel/L9"):
+        f = Path(d) / rel / "map_modes.json"
+        j = json.loads(f.read_text(encoding="utf-8"))
+        ft = j["fixed_terrain"]
+        lev, col = FT.fixed_assignment(ft["num_envs"], ft["rows"], ft["cols"], ft.get("fixed_level"))
+        assert FT.assignment_sha256(lev, col) == ft["assignment_sha256"], rel
+
+        for mode, cmds in j["modes"].items():
+            for cname, row in cmds.items():
+                S_, N, dt = j["steps"], ft["num_envs"], 0.02
+                vx = np.zeros((S_, N), dtype=np.float32)
+                vx[:S_ - 1] = row["body_vx_integral_median_m"] / ((S_ - 1) * dt)
+                al = np.ones((S_, N), dtype=bool)
+                al[-1, row["alive_envs_at_end"]:] = False
+                al[S_ - 20:, row["alive_envs_at_end"]:] = False
+                vx[S_ - 20:, :] = 0.0
+                vx[:S_ - 20] = row["body_vx_integral_median_m"] / ((S_ - 20) * dt)
+                np.savez(f.parent / ("env_arrays_%s_%s.npz" % (mode, cname)), vx=vx, alive=al, dones=np.zeros((S_, N), dtype=bool), dt=dt, env=np.arange(N), terrain_level=lev, terrain_col=col,
+                         kind=np.array(["k"] * N), start_xy=np.zeros((N, 2)), fwd_end_m=np.zeros(N), body_vx_integral_m=(vx * al).sum(0) * dt, alive_end=al[-1], alive_steps=al.sum(0),
+                         first_done_step=np.full(N, -1), end_reason=np.array(["survived"] * N), assignment_sha256=FT.assignment_sha256(lev, col))
+
+
+np = __import__("numpy")
+
+
+def test_env_arrays_make_the_64env_recompute_independent_and_unblock_a12(pair):
+    prev, latest, tmp = pair
+    write_env_arrays(prev)
+    write_env_arrays(latest)
+    r = W.judge_window(latest, prev, a11=a11_file(tmp, sha_of(latest)), train_dir=_TRAIN.get("t") or make_train_dir(tmp))
+    assert r["a12"]["latest"]["ok"] and r["a12"]["latest"]["not_independent"] == [] and r["decision"]["row"] != 3, r["a12_note"]
+
+
+def test_env_arrays_disagreeing_with_json_or_terrain_hash_fail_a12(pair):
+    prev, latest, tmp = pair
+    write_env_arrays(prev)
+    write_env_arrays(latest)
+    f = latest / "map64" / "env_arrays_eval_gt_fwd1.0.npz"
+    z = dict(np.load(f))
+    z["vx"] = z["vx"] * 1.01                                                                    # 거리 1 % 어긋남
+    np.savez(f, **z)
+    r = J(latest, prev, a11=a11_file(tmp, sha_of(latest)))
+    assert not r["a12"]["latest"]["ok"] and any(m["cond"] == "map64_distance" for m in r["a12"]["latest"]["mismatch"])
+    write_env_arrays(latest)
+    z = dict(np.load(f))
+    z["terrain_col"] = (z["terrain_col"] + 1) % 10
+    np.savez(f, **z)
+    r = J(latest, prev, a11=a11_file(tmp, sha_of(latest)))
+    assert any(m["cond"] == "map64_env_terrain_hash" for m in r["a12"]["latest"]["mismatch"])
+    write_env_arrays(latest)
+    z = dict(np.load(f))
+    z["alive"] = z["alive"].copy()
+    z["alive"][-1, :] = ~z["alive"][-1, :]
+    np.savez(f, **z)
+    r = J(latest, prev, a11=a11_file(tmp, sha_of(latest)))
+    assert any(m["cond"] in ("map64_alive", "map64_distance") for m in r["a12"]["latest"]["mismatch"])
+
+
+def test_save_env_arrays_writes_kind_level_col_and_end_reason(tmp_path):
+    import ast
+    from types import SimpleNamespace
+
+    src = Path(__file__).resolve().parents[1] / "eval" / "eval_map_modes.py"
+    t = ast.parse(src.read_text(encoding="utf-8"))
+    fn = next(n for n in t.body if isinstance(n, ast.FunctionDef) and n.name == "_save_env_arrays")
+    ns = {"np": np, "os": __import__("os"), "json": json}
+
+    class T:
+        def __init__(self, a):
+            self.a = a
+
+        def cpu(self):
+            return self
+
+        def numpy(self):
+            return self.a
+
+    from foothold_s2.eval import fixed_terrain as FT
+    ns["fixed_terrain"] = FT
+    lev, col = np.array([0, 1, 2, 3]), np.array([0, 1, 2, 3])
+    terrain = SimpleNamespace(terrain_levels=T(lev), terrain_types=T(col), cfg=SimpleNamespace(terrain_generator=None))
+    ns["raw"] = SimpleNamespace(scene=SimpleNamespace(terrain=terrain))
+    ns["args"] = SimpleNamespace(out=str(tmp_path))
+    ns["res"] = {}
+    exec(compile(ast.Module(body=[fn], type_ignores=[]), str(src), "exec"), ns)
+    S_, N = 10, 4
+    vx = np.ones((S_, N)); al = np.ones((S_, N), dtype=bool); al[5:, 2] = False; dn = np.zeros((S_, N), dtype=bool); dn[5, 2] = True
+    ns["_save_env_arrays"]("eval_gt", "fwd1.0", vx, np.arange(S_ * N, dtype=float).reshape(S_, N), al, dn, 0.02, np.zeros((N, 2)), {})
+    z = np.load(tmp_path / "env_arrays_eval_gt_fwd1.0.npz")
+    assert list(z["end_reason"]) == ["survived", "survived", "terminated", "survived"] and int(z["first_done_step"][2]) == 5
+    assert z["terrain_col"].tolist() == [0, 1, 2, 3] and z["body_vx_integral_m"][2] < z["body_vx_integral_m"][0]
+    assert set(z["kind"].tolist()) == {"unknown"} and ns["res"]["env_array_basis"]["kind_error"]            # 이름 표를 못 만들면 unknown + 까닭 기록
+
+
+def test_terrain_report_groups_by_kind_with_known_answers(tmp_path):
+    from foothold_s2.eval import ex35_terrain_report as R
+    kind = np.array(["flat", "flat", "stairs", "stairs"])
+    np.savez(tmp_path / "env_arrays_probe_prop_only_fwd1.0.npz", kind=kind, terrain_level=np.array([0, 1, 0, 1]), terrain_col=np.array([0, 0, 1, 1]),
+             body_vx_integral_m=np.array([4.0, 6.0, 1.0, 3.0]), alive_end=np.array([True, True, False, True]),
+             end_reason=np.array(["survived", "survived", "terminated", "survived"]))
+    r = R.report([tmp_path])[str(tmp_path)]["probe_prop_only_fwd1.0"]
+    assert r["flat"]["dist_median_m"] == 5.0 and r["stairs"]["dist_mean_m"] == 2.0 and r["stairs"]["alive_end_fraction"] == 0.5 and r["stairs"]["terminated_envs"] == 1
+    assert R.main(["--dir", str(tmp_path), "--out-prefix", str(tmp_path / "rep")]) == 0 and "stairs" in (tmp_path / "rep.md").read_text(encoding="utf-8")
+
+
+def test_env_array_shape_mismatch_fails_a12_not_broadcast_through(pair):
+    prev, latest, tmp = pair
+    write_env_arrays(prev)
+    f = latest / "map64" / "env_arrays_eval_gt_fwd1.0.npz"
+
+    def broken(edit):
+        write_env_arrays(latest)
+        z = dict(np.load(f))
+        edit(z)
+        np.savez(f, **z)
+        r = J(latest, prev, a11=a11_file(tmp, sha_of(latest)))
+        a = r["a12"]["latest"]
+
+        return not a["ok"] and any(m["cond"] == "map64_env_shape" for m in a["mismatch"]) and a["not_independent"] == [] or not a["ok"] and any(m["cond"] == "map64_env_shape" for m in a["mismatch"])
+
+    def one_row(z):                                                                            # verifier 반례: vx 를 1 x N 으로 줄여 같은 적분이 되게 만든다
+        total = (z["vx"] * z["alive"]).sum(0, keepdims=True)
+        z["vx"] = (total / z["alive"].sum(0, keepdims=True)).astype(np.float32)
+
+    assert broken(one_row)
+    assert broken(lambda z: z.update(vx=z["vx"][:-1], alive=z["alive"][:-1], dones=z["dones"][:-1]))          # T 하나 짧음
+    assert broken(lambda z: z.update(vx=z["vx"][:, :-1]))                                                    # N 하나 짧음 (vx 만)
+    assert broken(lambda z: z.update(kind=z["kind"][:-1]))
+    assert broken(lambda z: z.update(terrain_col=z["terrain_col"][:-1]))
+    assert broken(lambda z: z.pop("dones"))
+
+
+ALL_IDENT = ("map64", "map64_eval_pred", "hardlevel/L6", "hardlevel/L9", "turn16_eval_gt", "turn16_eval_pred", "turn16_probe_prop_only")
+
+
+def _ident_file(d, rel):
+    return Path(d) / rel / ("probe_result.json" if rel.startswith("turn16_") else "map_modes.json")
+
+
+def _strip_identity(d, rels=ALL_IDENT):
+    for rel in rels:
+        f = _ident_file(d, rel)
+        j = json.loads(f.read_text(encoding="utf-8"))
+        j.pop("run_identity", None)
+        f.write_text(json.dumps(j), encoding="utf-8")
+
+
+def test_run_identity_clean_pair_passes_and_records_require_true(pair):
+    r = run(pair)
+    assert r["run_identity"]["problems"] == [] and r["run_identity"]["require"] is True and r["branch"] != "HOLD_NO_DATA"
+
+
+def test_run_identity_missing_is_hold_by_default_and_warning_only_when_allowed(pair):
+    prev, latest, tmp = pair
+    _strip_identity(prev)
+    _strip_identity(latest)
+    r = run(pair)
+    assert r["branch"] == "HOLD_NO_DATA" and "미기록" in r["decision"]["action"]
+    r = run(pair, require_run_identity=False)
+    assert r["branch"] != "HOLD_NO_DATA" and r["run_identity"]["require"] is False and r["run_identity"]["warning"].startswith("실행 계열 미기록")
+    assert W.to_markdown(r).startswith("> 경고: 실행 계열 미기록")
+
+
+def test_run_identity_one_side_missing_is_still_a_problem_in_strict_mode(pair):
+    prev, latest, tmp = pair
+    _strip_identity(prev, ("hardlevel/L9",))
+    r = run(pair)
+    assert r["branch"] == "HOLD_NO_DATA" and any("prev/hardlevel/L9" in m for m in r["run_identity"]["missing"])
+
+
+def test_run_identity_mixed_device_or_head_or_sha_is_hold_even_when_missing_allowed(pair):
+    prev, latest, tmp = pair
+    _set_identity(latest / "map64_eval_pred" / "map_modes.json", sha_of(latest), device="cuda:1")                 # 한 저장본 안 칸끼리 device 가 다름
+    r = run(pair, require_run_identity=False)
+    assert r["branch"] == "HOLD_NO_DATA" and "device" in r["decision"]["action"]
+    _set_identity(latest / "map64_eval_pred" / "map_modes.json", sha_of(latest))
+    for rel in ("map64", "map64_eval_pred", "hardlevel/L6", "hardlevel/L9"):
+        _set_identity(prev / rel / "map_modes.json", sha_of(prev), device="cuda:1")                           # 최신 대 직전 device 가 다름
+    assert run(pair)["branch"] == "HOLD_NO_DATA"
+    for rel in ("map64", "map64_eval_pred", "hardlevel/L6", "hardlevel/L9"):
+        _set_identity(prev / rel / "map_modes.json", sha_of(prev))
+    _set_identity(prev / "map64" / "map_modes.json", sha_of(prev), head="g" * 40)                              # 코드 head 가 섞임
+    r = run(pair)
+    assert r["branch"] == "HOLD_NO_DATA" and "코드 head" in r["decision"]["action"]
+    _set_identity(prev / "map64" / "map_modes.json", "e" * 64)                                                  # 저장본 sha 가 다른 저장본 것
+    assert any("저장본 sha" in p for p in run(pair)["run_identity"]["problems"])
+
+
+def test_run_identity_uses_gpu_uuid_not_device_string(pair):
+    prev, latest, tmp = pair
+    f = latest / "map64_eval_pred" / "map_modes.json"
+    _set_identity(f, sha_of(latest), uuid="GPU-other-physical-card")                 # device 문자열은 cuda:0 으로 같고 물리 GPU 만 다름
+    r = run(pair, require_run_identity=False)
+    assert r["branch"] == "HOLD_NO_DATA" and any("gpu_uuid" in p for p in r["run_identity"]["problems"])
+    _set_identity(f, sha_of(latest))
+    for rel in ALL_IDENT:                                                              # 최신 전체가 다른 물리 GPU(문자열은 같음)
+        _set_identity(_ident_file(latest, rel), sha_of(latest), uuid="GPU-other-physical-card")
+    assert run(pair)["branch"] == "HOLD_NO_DATA"
+    for rel in ALL_IDENT:
+        _set_identity(_ident_file(latest, rel), sha_of(latest))
+    assert run(pair)["run_identity"]["problems"] == []
+
+
+def test_run_identity_no_usable_uuid_counts_as_missing(pair):
+    prev, latest, tmp = pair
+    f = latest / "hardlevel" / "L6" / "map_modes.json"
+    for bad in ("None", "", None):
+        _set_identity(f, sha_of(latest), uuid="x")
+        j = json.loads(f.read_text(encoding="utf-8"))
+        j["run_identity"]["gpu_uuid"] = bad
+        f.write_text(json.dumps(j), encoding="utf-8")
+        r = run(pair)
+        assert r["branch"] == "HOLD_NO_DATA" and "latest/hardlevel/L6" in r["run_identity"]["missing"]
+        r = run(pair, require_run_identity=False)
+        assert r["branch"] != "HOLD_NO_DATA" and r["run_identity"]["warning"]
+
+
+def test_run_identity_turn16_cells_are_checked(pair):
+    prev, latest, tmp = pair
+    for mode in ("eval_gt", "eval_pred", "probe_prop_only"):                          # 16 env 한 칸만 다른 GPU
+        f = latest / ("turn16_" + mode) / "probe_result.json"
+        _set_identity(f, sha_of(latest), uuid="GPU-16env-other")
+        r = run(pair, require_run_identity=False)
+        assert r["branch"] == "HOLD_NO_DATA" and any("turn16_" + mode not in p and "gpu_uuid" in p for p in r["run_identity"]["problems"]), mode
+        _set_identity(f, sha_of(latest))
+    f = latest / "turn16_probe_prop_only" / "probe_result.json"
+    _set_identity(f, "e" * 64)                                                           # 16 env 의 저장본 sha 가 다른 저장본 것
+    assert any("turn16_probe_prop_only" in p and "저장본 sha" in p for p in run(pair)["run_identity"]["problems"])
+    _set_identity(f, sha_of(latest), head="g" * 40)                                      # 16 env 만 코드 head 가 다름
+    assert any("코드 head" in p for p in run(pair)["run_identity"]["problems"])
+
+
+def test_run_identity_turn16_missing_is_hold_by_default_and_warning_when_allowed(pair):
+    prev, latest, tmp = pair
+    _strip_identity(latest, ("turn16_eval_gt", "turn16_eval_pred", "turn16_probe_prop_only"))   # 64 env 는 기록 있음, 16 env 는 옛 자료
+    r = run(pair)
+    assert r["branch"] == "HOLD_NO_DATA" and "latest/turn16_eval_gt" in r["run_identity"]["missing"]
+    r = run(pair, require_run_identity=False)
+    assert r["branch"] != "HOLD_NO_DATA" and r["run_identity"]["warning"].startswith("실행 계열 미기록")
+
+
+def test_turn16_has_no_eval_seed_requirement(pair):
+    prev, latest, tmp = pair
+    f = latest / "turn16_eval_gt" / "probe_result.json"
+    j = json.loads(f.read_text(encoding="utf-8"))
+    j["run_identity"].pop("eval_seed", None)
+    f.write_text(json.dumps(j), encoding="utf-8")
+    assert run(pair)["run_identity"]["problems"] == []
+
+
+def test_run_identity_collect_known_answers(tmp_path):
+    from foothold_s2.eval import run_identity as RI
+    r = RI.collect("cpu", "ab" * 32, repo_root=str(tmp_path))                          # git 저장소 아님 + CPU: 칸 대신 까닭이 남는다
+    assert r["device"] == "cpu" and r["checkpoint_sha256"] == "ab" * 32 and "eval_seed" not in r and "gpu_error" in r and "gpu_uuid" not in r
+    assert RI.collect("cpu", "x", eval_seed=42)["eval_seed"] == 42
+    head = RI.collect("cpu", "x")                                                       # 이 저장소 안: 코드 head 40 자리
+    assert len(head["code_head"]) == 40
+    import foothold_s2.eval.run_identity as m
+    orig = m.collect
+    m.collect = lambda *a, **k: (_ for _ in ()).throw(RuntimeError("boom"))
+    try:
+        assert "boom" in RI.safe_collect("cpu", "x")["identity_error"]                 # 기록이 죽어도 평가는 계속
+    finally:
+        m.collect = orig
+
+
+def test_run_identity_required_values_empty_count_as_missing_verifier_counterexamples(pair):
+    prev, latest, tmp = pair
+    for key, bad in (("device", "__drop__"), ("device", None), ("code_head", ""), ("gpu_uuid", None), ("code_head", None)):
+        for d in (prev, latest):                                                         # 양쪽 여덟(칸 일곱씩) 전부
+            for rel in ALL_IDENT:
+                f = _ident_file(d, rel)
+                _set_identity(f, sha_of(d))
+                j = json.loads(f.read_text(encoding="utf-8"))
+                if bad == "__drop__":
+                    j["run_identity"].pop(key)
+                else:
+                    j["run_identity"][key] = bad
+                f.write_text(json.dumps(j), encoding="utf-8")
+        r = run(pair)
+        assert r["branch"] == "HOLD_NO_DATA" and len(r["run_identity"]["missing"]) == 14, (key, bad)
+        r = run(pair, require_run_identity=False)
+        assert r["branch"] != "HOLD_NO_DATA" and r["run_identity"]["warning"].startswith("실행 계열 미기록") and r["run_identity"]["require"] is False, (key, bad)
+        for d in (prev, latest):
+            for rel in ALL_IDENT:
+                _set_identity(_ident_file(d, rel), sha_of(d))

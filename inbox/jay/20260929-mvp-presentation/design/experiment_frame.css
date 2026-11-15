@@ -1,0 +1,113 @@
+/* 실험 장 공통 틀 (13~21쪽) · 2026-10-02 팀장 지시: 문제 파악 → 가설·설계 → 실험 → 검증 */
+.exp-page .content{display:flex;flex-direction:column;justify-content:flex-start!important}
+.exp-page .content>*:not(.exp-strip){flex:none}
+.exp-strip{flex:none;display:grid;grid-template-columns:1fr 16px 1fr 16px 1fr 16px 1.2fr 16px 1fr;align-items:stretch;
+  margin:0 0 18px;padding:0 0 14px;border-bottom:1px solid var(--p-rule)}
+.exp-cell{padding:8px 12px 6px;border-top:2px solid var(--p-rule);color:var(--p-muted)}
+.exp-cell small{display:block;font-size:13px;letter-spacing:.04em;font-weight:700;color:var(--p-muted);margin-bottom:4px}
+.exp-cell p{margin:0;font-size:15px;line-height:1.35}
+.exp-cell.on{border-top-color:#0e7a6e;background:rgba(14,122,110,.07);color:var(--p-ink)}
+.exp-cell.on small{color:#0e7a6e}
+.exp-cell.on p{font-weight:600}
+.exp-arrow{position:relative}
+.exp-arrow::after{content:'';position:absolute;left:4px;top:50%;width:7px;height:7px;border-top:2px solid #9fb3ad;border-right:2px solid #9fb3ad;transform:translateY(-50%) rotate(45deg)}
+.exp-page .rr-wrap{height:auto;flex:1;min-height:0}
+
+/* 전/후 영상 쌍 · 같은 크기 · 16:9 · 아래 두 열과 같은 폭 */
+.exp-two{display:grid;grid-template-columns:1fr 1fr;gap:40px;flex:1;min-height:0;align-content:start}
+.exp-col{min-width:0}
+.exp-h{font-size:20px;margin:0 0 10px;color:#0e7a6e}
+.exp-pair{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.exp-clip{margin:0}
+.exp-clip video{display:block;width:100%;height:auto!important;max-height:none!important;aspect-ratio:16/9;object-fit:cover;background:#0d151b}
+.exp-clip figcaption{font-size:15px;line-height:1.4;padding-top:8px;color:var(--p-muted);display:flex;gap:8px;align-items:center}
+.exp-verdict{flex:none;font-size:12px;letter-spacing:.04em;padding:2px 7px;border-radius:999px;color:#fff;background:#8a3a2f}
+.exp-verdict.ok{background:#0e7a6e}
+.exp-num{margin:14px 0 0;font-size:22px}
+.exp-num i{font-style:normal;color:var(--p-muted)}
+.exp-num b{font-size:30px;color:#0e7a6e}
+.exp-num small{display:block;font-size:15px;color:var(--p-muted);margin-top:4px}
+.exp-table{width:100%;border-collapse:collapse;margin-top:12px;font-size:17px}
+.exp-table th,.exp-table td{padding:5px 6px;border-bottom:1px solid var(--p-rule);text-align:right;vertical-align:middle}
+.exp-table th:first-child,.exp-table td:first-child{text-align:left;padding-left:0}
+.exp-table th{color:#0e7a6e;font-weight:600;font-size:15px}
+.exp-table td b{color:#0e7a6e}
+
+/* 실제 코드 조각 · 전문가용 */
+.exp-code{margin:12px 0 0;border:1px solid #2b3e45;border-radius:8px;overflow:hidden;background:#0b202b;color:#e3ebe8}
+.exp-code figcaption{font-size:13px;letter-spacing:.02em;color:#8ad1c2;padding:6px 12px;border-bottom:1px solid #2b3e45;font-family:Consolas,"Cascadia Mono",monospace}
+.exp-code pre{margin:0;padding:10px 12px;font:14px/1.5 Consolas,"Cascadia Mono",monospace;white-space:pre;overflow:hidden}
+.rr-gap-hero .exp-code{font-size:13px}
+.rr-gap-hero .exp-code pre{font-size:13px;padding:8px 10px}
+.rr-code-compare + .exp-code{margin:14px 0 0}
+@media print{.exp-cell.on{background:#eef5f3}}
+
+/* 17쪽 전후 쌍 · 틀 예산 (실측 2026-10-02: 표 행 46px·마무리 2줄이면 조건 줄이 푸터 아래로 내려갔다) */
+.content .exp-table td,.content .exp-table th{padding:5px 6px;font-size:17px}
+.content .exp-table th{font-size:14px}
+.content:has(.exp-two) .finding{font-size:20px;padding-top:12px!important}
+.content:has(.exp-two) .condition{font-size:15px;padding-top:8px}
+.exp-h{margin:0 0 8px}
+.exp-num{margin:10px 0 0;font-size:20px}.exp-num b{font-size:26px}
+
+/* ── 틀 예산 (실측 2026-10-02 · overflow_check.py): 띠 95px 가 들어가자 14~21쪽이 5~281px 넘쳤다 ──
+   띠를 20px 줄이고, 장마다 가장 큰 덩어리를 줄인다. 영상은 비율(16:9)을 지키고 높이만 줄인다. */
+.exp-strip{margin:0 0 12px;padding:0 0 10px}
+.exp-cell{padding:6px 10px 5px}
+.exp-cell small{font-size:12px;margin-bottom:3px}
+.exp-cell p{font-size:14px;line-height:1.3}
+.exp-page .finding{font-size:20px!important;padding-top:12px!important}
+.exp-page .content>.condition{font-size:16px;padding-top:8px}
+/* 14쪽 지형 10장 격자 */
+.exp-page .baseline-ten{gap:10px 14px}
+.exp-page .baseline-ten img{height:112px}
+/* 15쪽 진단표 */
+.exp-page .content>table td,.exp-page .content>table th{padding:7px 14px}
+/* 16쪽 틈 그림 + 코드 두 장 */
+.exp-page .rr-gap-hero img{height:200px}
+.exp-page .rr-gap-hero p{margin-top:10px}
+/* 17쪽 광선 그림 + 대조 + 코드 */
+.exp-page .rr-ray-svg{height:140px}
+.exp-page .rr-code-compare h3{margin-bottom:6px}
+.exp-page .rr-code-compare p{margin:5px 0}
+.exp-page .rr-code-compare+.exp-code pre{font-size:12px;line-height:1.4;padding:8px 12px}
+.exp-page .rr-code-compare+.exp-code{margin:10px 0 0}
+.exp-page .rr-wrap .rr-bottom{font-size:20px;padding-top:10px}
+/* 19쪽 영상 쌍 + 장부 */
+.exp-page .content:has(.lineage-ledger) .evidence-videos .film video{height:250px!important;width:auto!important;max-width:100%;aspect-ratio:16/9;display:block;margin:0 auto}
+/* 21쪽 설정 표 */
+.exp-page .settings-proof{height:auto}
+.exp-page .settings-proof img{height:150px}
+.exp-page .settings-proof td{padding:6px 14px;font-size:18px;line-height:1.4}
+
+/* 2회차 (17·19·21쪽 아직 41·77·55px 넘침) */
+.exp-page .rr-wrap{gap:10px}
+.exp-page .rr-ray-svg{height:120px}
+.exp-page .rr-code-compare p{font-size:19px!important}
+.exp-page .content:has(.lineage-ledger) .result-value{display:none}   /* 장부가 같은 숫자를 보여 준다 */
+.exp-page .settings-proof{grid-template-columns:.55fr 1.45fr;align-items:start}
+.exp-page .settings-proof>div:first-child img{height:150px!important;width:auto;max-width:100%}
+.exp-page .settings-proof p{font-size:15px;margin:6px 0 0}
+.exp-page .lineage-ledger table td,.exp-page .lineage-ledger table th{padding:3px 6px;font-size:18px}
+.exp-page .lineage-ledger{margin-bottom:8px}
+.exp-page .lineage-ledger span{margin-bottom:6px}.exp-page .lineage-ledger small{margin-top:6px}
+
+/* 3회차 (17·19·21쪽 13·9·33px) */
+.exp-page .rr-ray-svg{height:105px}
+.exp-page .rr-code-compare h3{font-size:22px}
+.exp-page .rr-wrap .rr-bottom{font-size:18px;padding-top:8px}
+.exp-page .content:has(.lineage-ledger) .evidence-videos .film video{height:240px!important}
+.exp-page .finding{padding-top:10px!important}
+.exp-page .content>.condition{padding-top:6px}
+.exp-page .settings-proof td{padding:4px 12px;font-size:17px}
+.exp-page .settings-proof>div:first-child img{height:140px!important}
+.exp-page .lineage-ledger table td,.exp-page .lineage-ledger table th{font-size:17px}
+.exp-page .lineage-ledger p{font-size:19px}
+
+/* 4회차: 21쪽 settings-proof 는 고정 높이 246 이 이겨서 비는 69px 가 남았다 · 17쪽 그림은 105px 로 글자가 11px 가 돼 다시 키운다 */
+.exp-page .settings-proof{height:auto!important}
+.exp-page .rr-ray-svg{height:140px}
+.exp-page .rr-wrap{gap:8px}
+.exp-page .rr-code-compare h3{font-size:20px;margin-bottom:4px}
+.exp-page .rr-code-compare p{font-size:18px!important;margin:3px 0}
+.exp-page .rr-code-compare+.exp-code pre{line-height:1.3}

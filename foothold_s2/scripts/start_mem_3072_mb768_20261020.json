@@ -1,0 +1,63 @@
+{
+ "started": "2026-10-20T13:17:18",
+ "num_envs": 3072,
+ "iterations": 3,
+ "device": "cuda:0",
+ "seed": 42,
+ "gt_map_rays": 512,
+ "obs_shapes": {
+  "policy": [
+   3072,
+   45
+  ],
+  "depth": [
+   3072,
+   3600
+  ],
+  "gt_map": [
+   3072,
+   512
+  ],
+  "gt_feet": [
+   3072,
+   100
+  ],
+  "base_vel": [
+   3072,
+   3
+  ],
+  "contacts": [
+   3072,
+   4
+  ]
+ },
+ "memory_GiB": {
+  "1_sensors": 1.0082526206970215
+ },
+ "perception_cfg": {
+  "measure_phases": true,
+  "microbatch_envs": 768
+ },
+ "traceback": "Traceback (most recent call last):\n  File \"C:\\mai\\wt\\foothold-lab\\rl\\foothold_s2\\scripts\\start_gate.py\", line 237, in <module>\n    out = restore_main() if args.restore_from else main()\n                                                   ^^^^^^\n  File \"C:\\mai\\wt\\foothold-lab\\rl\\foothold_s2\\scripts\\start_gate.py\", line 196, in main\n    runner.learn(args.iterations, init_at_random_ep_len=True)\n  File \"C:\\mai\\wt\\foothold-lab\\rl\\foothold_s2\\runners\\start_runner.py\", line 242, in learn\n    ploss = self.update_perception()\n            ^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\mai\\wt\\foothold-lab\\rl\\foothold_s2\\runners\\start_runner.py\", line 276, in update_perception\n    res = self.perception.sequence_loss(self.replay.gather(c))\n          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\mai\\wt\\foothold-lab\\rl\\foothold_s2\\models\\start_perception.py\", line 335, in sequence_loss\n    h_prop, h_terr, out = self._advance(\n                          ^^^^^^^^^^^^^^\n  File \"C:\\mai\\wt\\foothold-lab\\rl\\foothold_s2\\models\\start_perception.py\", line 303, in _advance\n    rough, refined = self.trnet.decode(h_terr)\n                     ^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\mai\\wt\\foothold-lab\\rl\\foothold_s2\\models\\start_perception.py\", line 129, in decode\n    return rough, self.refine(rough)\n                  ^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\AI-WS01\\anaconda3\\envs\\isaac311\\Lib\\site-packages\\torch\\nn\\modules\\module.py\", line 1751, in _wrapped_call_impl\n    return self._call_impl(*args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\AI-WS01\\anaconda3\\envs\\isaac311\\Lib\\site-packages\\torch\\nn\\modules\\module.py\", line 1762, in _call_impl\n    return forward_call(*args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\mai\\wt\\foothold-lab\\rl\\foothold_s2\\models\\start_perception.py\", line 108, in forward\n    d2 = self.d2(torch.cat([self.u2(m), e2], 1))\n                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\ntorch.OutOfMemoryError: CUDA out of memory. Tried to allocate 24.00 MiB. GPU 0 has a total capacity of 15.92 GiB of which 0 bytes is free. Of the allocated memory 11.17 GiB is allocated by PyTorch, and 112.95 MiB is reserved by PyTorch but unallocated. If reserved but unallocated memory is large try setting PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True to avoid fragmentation.  See documentation for Memory Management  (https://pytorch.org/docs/stable/notes/cuda.html#environment-variables)\n",
+ "memory_log": [
+  {
+   "it": 0,
+   "phase": "2_rollout",
+   "cum_peak": 6509978624,
+   "phase_peak": 6509978624,
+   "allocated": 2509391872
+  },
+  {
+   "it": 0,
+   "phase": "3_ppo_update",
+   "cum_peak": 2947835392,
+   "phase_peak": 2947835392,
+   "allocated": 2528259072
+  }
+ ],
+ "iter_log": [],
+ "max_allocated_at_fail_GiB": 11.167175769805908,
+ "checks": {
+  "traceback": true
+ }
+}

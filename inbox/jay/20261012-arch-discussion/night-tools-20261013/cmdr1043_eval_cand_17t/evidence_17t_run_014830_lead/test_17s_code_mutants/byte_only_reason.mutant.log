@@ -1,0 +1,9 @@
+FAIL byte-only JSON reason
+Traceback (most recent call last):
+  File "C:\Users\AI-WS01\.claude\jobs\09bbf294\tmp\codexE\cand\test_17s_diagnostic.py", line 151, in <module>
+    main()
+  File "C:\Users\AI-WS01\.claude\jobs\09bbf294\tmp\codexE\cand\test_17s_diagnostic.py", line 52, in main
+    check("byte-only JSON reason", comparison == {"semantic_equal": True,
+  File "C:\Users\AI-WS01\.claude\jobs\09bbf294\tmp\codexE\cand\test_17s_diagnostic.py", line 28, in check
+    raise AssertionError(label)
+AssertionError: byte-only JSON reason

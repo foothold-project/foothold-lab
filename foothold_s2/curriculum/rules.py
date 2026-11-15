@@ -1,0 +1,197 @@
+"""승급 · 강등 규칙 (14 §5). torch (CPU/GPU 공용). Isaac Lab 쪽 term 은 `terrain_levels_mixed.py`.
+
+방식마다 다르다.
+  깃발      승급: 깃발을 다 지남. 강등: 깃발 절반 미만 (JEPLO 868~872 의 식).
+  자유 속도 승급: 스폰에서 최대 이동 거리 > 지형 길이 / 2 (8 m 칸이면 4 m).
+            강등: 최대 이동 거리 < 0.5 x ||그 에피소드에 뽑힌 명령 벡터의 합|| x 재추출 간격 x 0.9.
+  명령을 한 번도 안 받은 에피소드(정지 · 제자리 회전만)는 승급 · 강등 판정에서 뺀다 (14 §5 가정).
+반환값: +1 승급, -1 강등, 0 유지.
+"""
+
+import torch
+
+
+def check_size_x(size_x):
+    """size_x (scalar or per-env tensor) must be finite and > 0: promotion is `max_dist > size_x / 2`,
+    so a 0 (the combined-mesh cfg once carried size (0, 0)) would promote every moving env."""
+    value = torch.as_tensor(size_x, dtype=torch.float32)
+    if value.numel() == 0 or not bool(torch.isfinite(value).all()) or float(value.min()) <= 0.0:
+        raise ValueError(f"promotion size_x must be finite and positive, got {size_x!r}")
+    return size_x
+
+
+def promotion_size_x(terrain, env_ids):
+    """Tile length (m, along the row axis) that the free-velocity promotion rule compares against.
+
+    A generator cfg that joins tiles of different sizes (EX-42 combined mesh) carries
+    `tile_x_by_column`; the value is then taken per env from its own column. Otherwise the cfg's
+    scalar `size[0]` (every Isaac generator) is used. Either way it must be positive.
+    """
+    gen = terrain.cfg.terrain_generator
+    by_column = getattr(gen, "tile_x_by_column", None)
+    if by_column is None:
+        return check_size_x(gen.size[0])
+    table = torch.as_tensor(by_column, dtype=torch.float32, device=terrain.terrain_types.device)
+    ids = torch.as_tensor(env_ids, dtype=torch.long, device=terrain.terrain_types.device)
+    return check_size_x(table[terrain.terrain_types[ids].long()])
+
+
+def judge_free(max_dist_m, cmd_sum_xy, size_x=8.0, resample_s=4.0, factor=0.9, eps=1.0e-9):
+    """자유 속도 env 들의 판정. `cmd_sum_xy` (n, 2) = 에피소드 동안 뽑힌 (vx, vy) 의 합(움직임 명령 재추출만)."""
+    check_size_x(size_x)
+    max_dist_m = torch.as_tensor(max_dist_m, dtype=torch.float32)
+    cmd_sum_xy = torch.as_tensor(cmd_sum_xy, dtype=torch.float32)
+    norm = torch.linalg.norm(cmd_sum_xy, dim=1)
+    out = torch.zeros(len(max_dist_m), dtype=torch.long, device=max_dist_m.device)
+    active = norm > eps
+    up = active & (max_dist_m > torch.as_tensor(size_x, dtype=max_dist_m.dtype, device=max_dist_m.device) / 2.0)
+    down = active & (max_dist_m < 0.5 * norm * resample_s * factor) & ~up
+    out[up] = 1
+    out[down] = -1
+
+    return out
+
+
+def judge_flag(goals_covered, num_goals, walk_frac=None, min_walk=0.25):
+    """깃발 env 들의 판정.
+
+    `walk_frac` (n,) = 에피소드 중 «걷는 시간» 비율. 제자리 회전(v < 0.3) · 물러나기 구간은 깃발 수 판정에서 시간만큼 뺀다
+    (14 §5 116 행): 필요한 깃발 수를 `num_goals x walk_frac` 로 줄인다. 걷는 시간이 `min_walk` 미만이면 판정에서 뺀다(0, 가정).
+    `walk_frac` 이 None 이면 예전 식(전부 통과 승급, 절반 미만 강등).
+    """
+    goals_covered = torch.as_tensor(goals_covered)
+    num_goals = torch.as_tensor(num_goals)
+    out = torch.zeros(len(goals_covered), dtype=torch.long, device=goals_covered.device)
+
+    if walk_frac is None:
+        required = num_goals.float()
+        valid = torch.ones_like(out, dtype=torch.bool)
+    else:
+        walk_frac = torch.as_tensor(walk_frac, dtype=torch.float32, device=goals_covered.device)
+        required = num_goals.float() * walk_frac
+        valid = walk_frac >= min_walk
+
+    up = valid & (goals_covered.float() >= required - 1.0e-6)
+    down = valid & (goals_covered.float() * 2.0 < required) & ~up
+    out[up] = 1
+    out[down] = -1
+
+    return out
+
+
+def judge(is_flag, max_dist_m, cmd_sum_xy, goals_covered, num_goals, size_x=8.0, walk_frac=None):
+    """두 방식을 한 번에. 깃발 env 는 깃발 규칙, 나머지는 자유 속도 규칙."""
+    is_flag = torch.as_tensor(is_flag, dtype=torch.bool)
+
+    return torch.where(is_flag, judge_flag(goals_covered, num_goals, walk_frac), judge_free(max_dist_m, cmd_sum_xy, size_x))
+
+
+def mask_new_task(move, had_new_task):
+    """새 과제 표식이 있는 에피소드는 승급 · 강등에서 뺀다(행 유지, 0). 표식이 모두 거짓이면 입력과 비트 단위로 같다 (JUDGE-SPEC 5.2 3).
+
+    임시 행 유지다(성과 기반 지형 커리큘럼 완성이 아니다). 표식 없는 env · 에피소드는 기존 규칙 그대로.
+    """
+    move = torch.as_tensor(move)
+    mark = torch.as_tensor(had_new_task, dtype=torch.bool, device=move.device)
+    out = move.clone()
+    out[mark] = 0
+
+    return out
+
+
+class FrameCompareStats:
+    """J-T10 병행 기록: 현행(몸 기준 합 `cmd_sum_xy`) 판정과 세계 좌표 기대 변위(`cmd_sum_w`) 판정을 둘 다 계산해 3 x 3 = 9 칸 표로 센다.
+
+    `add` 로 쌓고 `take` 로 꺼내 비운다. 칸 이름 `c{현행}w{세계}` (예: `c-1w0` = 현행 강등 · 세계 좌표 유지). 표식 유무별로 따로 센다.
+    깃발 env 는 두 판정이 같은 규칙이라 항상 대각선에 들어가므로 `free_only` 마스크를 줄 수 있다.
+    """
+
+    def __init__(self):
+        self.reset()
+
+    def reset(self):
+        self.episodes = 0
+        self.cells = {False: {}, True: {}}
+        self.world_frame = None
+
+    def add(self, move_cur, move_w, had_new_task=None, world_frame=False, select=None):
+        cur = torch.as_tensor(move_cur).cpu().long()
+        wld = torch.as_tensor(move_w).cpu().long()
+        mark = torch.zeros(len(cur), dtype=torch.bool) if had_new_task is None else torch.as_tensor(had_new_task, dtype=torch.bool).cpu()
+        keep = torch.ones(len(cur), dtype=torch.bool) if select is None else torch.as_tensor(select, dtype=torch.bool).cpu()
+        self.world_frame = bool(world_frame)
+        self.episodes += int(keep.sum())
+
+        for m in (False, True):
+            for c in (-1, 0, 1):
+                for w in (-1, 0, 1):
+                    n = int(((cur == c) & (wld == w) & (mark == m) & keep).sum())
+                    if n:
+                        key = "c%dw%d" % (c, w)
+                        self.cells[m][key] = self.cells[m].get(key, 0) + n
+
+    @staticmethod
+    def _mismatch(cells):
+        """현행과 세계 좌표 판정이 다른 에피소드 수(칸 이름 `c{현행}w{세계}` 에서 두 값이 다른 칸의 합)."""
+        return sum(n for key, n in cells.items() if key[1:].split("w")[0] != key.split("w")[1])
+
+    def take(self):
+        if self.episodes == 0:
+            return None
+
+        out = {"world_frame": self.world_frame, "episodes": self.episodes, "unmarked": dict(sorted(self.cells[False].items())), "marked": dict(sorted(self.cells[True].items()))}
+        out["mismatch"] = {"unmarked": self._mismatch(self.cells[False]), "marked": self._mismatch(self.cells[True])}
+        self.reset()
+
+        return out
+
+
+class NewTaskStats:
+    """update 한 번 동안의 표식 통계 (JUDGE-SPEC 5.2 6). `add` 로 쌓고 `take` 로 꺼내 비운다. 순수 torch.
+
+    에피소드 수, 표식 참 수 · 비율, 표식 유무별 판정 수(표식 있는 쪽은 «막지 않았다면» 의 원래 판정과 실제 0 을 함께), 지형 행별 에피소드 수(전체 · 표식).
+    """
+
+    def __init__(self):
+        self.reset()
+
+    def reset(self):
+        self.episodes = 0
+        self.marked = 0
+        self.unmarked_up = self.unmarked_down = self.unmarked_stay = 0
+        self.marked_would_up = self.marked_would_down = self.marked_would_stay = 0
+        self.row_total = {}
+        self.row_marked = {}
+
+    def add(self, move_raw, had_new_task, levels):
+        move_raw = torch.as_tensor(move_raw).cpu()
+        mark = torch.as_tensor(had_new_task, dtype=torch.bool).cpu()
+        levels = torch.as_tensor(levels).cpu().long()
+        self.episodes += int(move_raw.numel())
+        self.marked += int(mark.sum())
+        um, mm = ~mark, mark
+        self.unmarked_up += int(((move_raw > 0) & um).sum())
+        self.unmarked_down += int(((move_raw < 0) & um).sum())
+        self.unmarked_stay += int(((move_raw == 0) & um).sum())
+        self.marked_would_up += int(((move_raw > 0) & mm).sum())
+        self.marked_would_down += int(((move_raw < 0) & mm).sum())
+        self.marked_would_stay += int(((move_raw == 0) & mm).sum())
+
+        for lv in levels.unique().tolist():
+            sel = levels == lv
+            self.row_total[int(lv)] = self.row_total.get(int(lv), 0) + int(sel.sum())
+            self.row_marked[int(lv)] = self.row_marked.get(int(lv), 0) + int((sel & mark).sum())
+
+    def take(self):
+        """쌓인 통계를 사전으로 꺼내고 비운다. 쌓인 것이 없으면 None."""
+        if self.episodes == 0:
+            return None
+
+        out = {"episodes": self.episodes, "marked": self.marked, "marked_frac": self.marked / self.episodes,
+               "unmarked": {"up": self.unmarked_up, "down": self.unmarked_down, "stay": self.unmarked_stay},
+               "marked_would_have": {"up": self.marked_would_up, "down": self.marked_would_down, "stay": self.marked_would_stay},
+               "marked_actual": {"up": 0, "down": 0, "stay": self.marked},
+               "per_row": {str(k): v for k, v in sorted(self.row_total.items())}, "per_row_marked": {str(k): v for k, v in sorted(self.row_marked.items())}}
+        self.reset()
+
+        return out

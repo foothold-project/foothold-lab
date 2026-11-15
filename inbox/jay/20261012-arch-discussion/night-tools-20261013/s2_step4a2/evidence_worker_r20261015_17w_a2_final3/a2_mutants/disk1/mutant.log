@@ -1,0 +1,14 @@
+PASS exact_bundle_and_all_diag_args
+PASS cuda1_rejected
+FAIL disk1_rejected
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+    from test_s2_stage0_contract_a2 import main;main()
+                                                ~~~~^^
+  File "C:\Users\AI-WS01\.claude\jobs\09bbf294\tmp\codexE\s2_step4a2\test_s2_stage0_contract_a2.py", line 98, in main
+    else:check(label+"_rejected",False)
+         ~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\AI-WS01\.claude\jobs\09bbf294\tmp\codexE\s2_step4a2\test_s2_stage0_contract_a2.py", line 82, in check
+    assert good,label
+           ^^^^
+AssertionError: disk1_rejected

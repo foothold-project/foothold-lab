@@ -1,0 +1,14 @@
+PASS exact_bundle_and_all_diag_args
+PASS asset_dependency_real_prelaunch
+PASS asset_dependency_hash_rejected
+PASS cuda1_rejected
+FAIL disk1_rejected
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+  File "C:\Users\AI-WS01\.claude\jobs\09bbf294\tmp\codexE\s2_step12\s2_step4a34\test_s2_stage0_contract_a2.py", line 124, in main
+    else:check(label+"_rejected",False)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\AI-WS01\.claude\jobs\09bbf294\tmp\codexE\s2_step12\s2_step4a34\test_s2_stage0_contract_a2.py", line 93, in check
+    assert good,label
+           ^^^^
+AssertionError: disk1_rejected

@@ -1,0 +1,370 @@
+{
+ "tool": "ce12/dump_native_v2.py",
+ "contract": "CE12-v1",
+ "model": "v2",
+ "args": {
+  "checkpoint": "C:/Users/AI-WS01/Desktop/jay/인공지능사관학교/foothold-lab/models/foothold-v2.pt",
+  "env_yaml": "C:/Users/AI-WS01/Desktop/jay/인공지능사관학교/foothold-lab\\models\\foothold-v2.env.yaml",
+  "tag": "v2_native_17n_mapfix_20261014_085039",
+  "outdir": "C:/isaac/ext/go2_rl_robotlab/_eval/out_ce12/native",
+  "cells": "stand,fwd03,yawL05",
+  "envs_per_cell": 4,
+  "steps": 60,
+  "reset_envs": "1,6",
+  "reset_step": 30,
+  "switch_env": 0,
+  "switch_step": 40,
+  "switch_cell": "fwd03",
+  "seed": 42,
+  "env_spacing": 8.0,
+  "dr_profile": "generalization",
+  "spawn_xy_range": 0.1,
+  "yaw_range_deg": 5.0,
+  "joint_pos_scale": 0.05,
+  "enable_cameras": false,
+  "xr": false,
+  "device": "cuda:0",
+  "cpu": false,
+  "verbose": false,
+  "info": false,
+  "rendering_mode": null,
+  "kit_args": "",
+  "anim_recording_enabled": false,
+  "anim_recording_start_time": 0,
+  "anim_recording_stop_time": 10,
+  "headless": true,
+  "hide_ui": true,
+  "create_new_stage": false,
+  "physics_gpu": 0,
+  "active_gpu": 0
+ },
+ "checkpoint": "C:\\Users\\AI-WS01\\Desktop\\jay\\인공지능사관학교\\foothold-lab\\models\\foothold-v2.pt",
+ "checkpoint_sha256": "e5c213219b4529464b7d3f3cce8f7a61c78fa4f2f7df7c64cfe12944c5ab2fee",
+ "script_sha256": "251220254fc70b7b0adf1bbd2dd85d998c0218a38595c9c598ef3d626015be82",
+ "adapters_sha256": "39c1a2930a5992a65229529c49d8e5c278b202c12c534461f24c7ec26dea00c6",
+ "env_yaml": "C:/Users/AI-WS01/Desktop/jay/인공지능사관학교/foothold-lab\\models\\foothold-v2.env.yaml",
+ "env_yaml_sha256": "a5ef31d626f8cabe850de37bae0aa26782e14e9db3ba61d678dd1210105323e7",
+ "cells": {
+  "stand": [
+   0.0,
+   0.0,
+   0.0
+  ],
+  "fwd03": [
+   0.3,
+   0.0,
+   0.0
+  ],
+  "yawL05": [
+   0.0,
+   0.0,
+   0.5
+  ]
+ },
+ "N": 12,
+ "T_steps": 60,
+ "base_task": "Isaac-Velocity-Rough-Unitree-Go2-v0",
+ "lab_files_sha256": {
+  "std_form.py": "c78218c4318a1bab5d3d8922136d41e04158046d74cd3a445445f6d9e86f1e7a",
+  "generalization_env_cfg.py": "0009e1e11850191bb875e316038a08ae85308226e27d6a748fe474aa1301eed4",
+  "gap_observations.py": "aa6c801b12a4a3ea15cffde1525152b982c96b751f0bda9cf337a0dfec218da2"
+ },
+ "env_vars": {
+  "CUDA_VISIBLE_DEVICES": "1",
+  "CUDA_DEVICE_ORDER": "PCI_BUS_ID",
+  "OMNI_KIT_ACCEPT_EULA": "YES"
+ },
+ "t_start": "2026-10-14 08:52:16",
+ "miss_value": 1.0,
+ "eval_changes": [
+  "terrain plane (eval_command_response.py)",
+  "observation noise off",
+  "event push_robot off",
+  "event base_external_force_torque off",
+  "event add_base_mass off",
+  "event base_com off",
+  "reset: xy +-0.1 · yaw +-5.0 deg · joints x(1 +- 0.05) · vel 0",
+  "commands: no resample · heading off · standing 0 · injected into vel_command_b every step",
+  "height_scan -> height_scan_with_gap (offset 0.5 · miss +1 · clip [-1,1]) · 규격 2"
+ ],
+ "cfg_vs_env_yaml": {
+  "terms_runtime": [
+   [
+    "base_lin_vel",
+    "base_lin_vel",
+    "None",
+    "None",
+    "()"
+   ],
+   [
+    "base_ang_vel",
+    "base_ang_vel",
+    "None",
+    "None",
+    "()"
+   ],
+   [
+    "projected_gravity",
+    "projected_gravity",
+    "None",
+    "None",
+    "()"
+   ],
+   [
+    "velocity_commands",
+    "generated_commands",
+    "None",
+    "None",
+    "()"
+   ],
+   [
+    "joint_pos",
+    "joint_pos_rel",
+    "None",
+    "None",
+    "()"
+   ],
+   [
+    "joint_vel",
+    "joint_vel_rel",
+    "None",
+    "None",
+    "()"
+   ],
+   [
+    "actions",
+    "last_action",
+    "None",
+    "None",
+    "()"
+   ],
+   [
+    "height_scan",
+    "height_scan_with_gap",
+    "None",
+    "(-1.0, 1.0)",
+    "(('offset', 0.5), ('miss_value', 1.0))"
+   ]
+  ],
+  "terms_env_yaml": [
+   [
+    "base_lin_vel",
+    "base_lin_vel",
+    "None",
+    "None",
+    "()"
+   ],
+   [
+    "base_ang_vel",
+    "base_ang_vel",
+    "None",
+    "None",
+    "()"
+   ],
+   [
+    "projected_gravity",
+    "projected_gravity",
+    "None",
+    "None",
+    "()"
+   ],
+   [
+    "velocity_commands",
+    "generated_commands",
+    "None",
+    "None",
+    "()"
+   ],
+   [
+    "joint_pos",
+    "joint_pos_rel",
+    "None",
+    "None",
+    "()"
+   ],
+   [
+    "joint_vel",
+    "joint_vel_rel",
+    "None",
+    "None",
+    "()"
+   ],
+   [
+    "actions",
+    "last_action",
+    "None",
+    "None",
+    "()"
+   ],
+   [
+    "height_scan",
+    "height_scan_with_gap",
+    "None",
+    "(-1.0, 1.0)",
+    "(('offset', 0.5), ('miss_value', 1.0))"
+   ]
+  ],
+  "action_runtime": {
+   "joint_names": [
+    ".*"
+   ],
+   "scale": 0.25,
+   "clip": null,
+   "preserve_order": false,
+   "use_default_offset": true
+  },
+  "action_env_yaml": {
+   "joint_names": [
+    ".*"
+   ],
+   "scale": 0.25,
+   "clip": null,
+   "preserve_order": false,
+   "use_default_offset": true
+  }
+ },
+ "std_form": "scalar",
+ "agent_cfg_policy": {
+  "init_noise_std": 1.0,
+  "noise_std_type": "scalar",
+  "state_dependent_std": false,
+  "actor_obs_normalization": false,
+  "critic_obs_normalization": false,
+  "actor_hidden_dims": [
+   512,
+   256,
+   128
+  ],
+  "critic_hidden_dims": [
+   512,
+   256,
+   128
+  ],
+  "activation": "elu"
+ },
+ "loaded_iter": 3000,
+ "policy_class": "ActorCritic",
+ "obs_layout": {
+  "policy": {
+   "names": [
+    "base_lin_vel",
+    "base_ang_vel",
+    "projected_gravity",
+    "velocity_commands",
+    "joint_pos",
+    "joint_vel",
+    "actions",
+    "height_scan"
+   ],
+   "dims": [
+    [
+     3
+    ],
+    [
+     3
+    ],
+    [
+     3
+    ],
+    [
+     3
+    ],
+    [
+     12
+    ],
+    [
+     12
+    ],
+    [
+     12
+    ],
+    [
+     187
+    ]
+   ]
+  }
+ },
+ "action_term": {
+  "class": "JointPositionAction",
+  "joint_names": [
+   "FL_hip_joint",
+   "FR_hip_joint",
+   "RL_hip_joint",
+   "RR_hip_joint",
+   "FL_thigh_joint",
+   "FR_thigh_joint",
+   "RL_thigh_joint",
+   "RR_thigh_joint",
+   "FL_calf_joint",
+   "FR_calf_joint",
+   "RL_calf_joint",
+   "RR_calf_joint"
+  ],
+  "joint_ids": "all",
+  "scale": 0.25,
+  "clip": null
+ },
+ "height_scanner": {
+  "ray_alignment": "yaw",
+  "offset_pos": [
+   0.0,
+   0.0,
+   20.0
+  ],
+  "num_rays": 187
+ },
+ "rollout_wall_s": 1.8318815231323242,
+ "schedule": {
+  "cells": [
+   "stand",
+   "fwd03",
+   "yawL05"
+  ],
+  "envs_per_cell": 4,
+  "steps": 60,
+  "switch": {
+   "env": 0,
+   "step": 40,
+   "cell": "fwd03"
+  },
+  "forced_reset": {
+   "envs": [
+    1,
+    6
+   ],
+   "step": 30
+  }
+ },
+ "coverage": {
+  "reset_events": 2,
+  "reset_pairs_step_env": [
+   [
+    29,
+    1
+   ],
+   [
+    29,
+    6
+   ]
+  ],
+  "forced_reset_ok": true,
+  "command_switch_events": 1,
+  "command_switch_pairs_obs_env": [
+   [
+    40,
+    0
+   ]
+  ],
+  "ray_miss_count": 0
+ },
+ "checks": {
+  "obs_cmd_vs_command_max_abs": 0.0,
+  "command_vs_schedule_max_abs": 0.0,
+  "nonfinite_count_except_rays": 0,
+  "ray_miss_count": 0,
+  "reset_events": 2,
+  "obs_equals_art_order": true,
+  "action_equals_obs_order": true
+ },
+ "t_end": "2026-10-14 08:52:21"
+}

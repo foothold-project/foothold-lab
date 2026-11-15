@@ -1,0 +1,8 @@
+failed [rollout map snapshot and bootstrap time] want [rollout map snapshot and bootstrap time]
+CAUGHT map_snapshot normal 0 mutant 1
+failed [reward NaN gate blocks update] want [reward NaN gate blocks update]
+CAUGHT validity_gate normal 0 mutant 1
+failed [terrain geometry from CPU probe and parent untouched] want [terrain geometry from CPU probe and parent untouched]
+CAUGHT terrain_geometry normal 0 mutant 1
+failed [unapproved launch denied] want [unapproved launch denied]
+CAUGHT approval_gate normal 0 mutant 1

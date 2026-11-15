@@ -1,0 +1,18 @@
+{
+  "cache_keys": [
+    "/World/ground"
+  ],
+  "errors": [],
+  "selected_mesh_prim_paths": [
+    "/World/ground"
+  ],
+  "usd_meshes": [
+    {
+      "collision_api": true,
+      "faces_sha256": "38b937d2fb30d09c327fdd378757ca5ccfd870ef5283882dbf4dbddda211a47d",
+      "prim_path": "/World/ground/terrain/mesh",
+      "vertices_sha256": "64197c818fbab5dc43c4d338dea66ce15c8dd6ae29a4802808285c5d220c6eca",
+      "world_transform_sha256": "94308bd5ebe102852c59124240d7a44011664694967815df61d525b712f0686a"
+    }
+  ]
+}

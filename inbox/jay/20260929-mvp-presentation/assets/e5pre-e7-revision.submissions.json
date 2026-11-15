@@ -1,0 +1,35 @@
+{
+  "jobs": [
+    {
+      "index": 18,
+      "job_id": "ed3ce25b-cb6a-4de3-a0c1-23c5d47087d4",
+      "status": "pending",
+      "adjustments": {
+        "medias[1].role": {
+          "requested": "video",
+          "used": "video_references",
+          "reason": "Seedance 2.5 backend expects schema-key media roles"
+        },
+        "medias[2].role": {
+          "requested": "audio",
+          "used": "audio_references",
+          "reason": "Seedance 2.5 backend expects schema-key media roles"
+        }
+      }
+    },
+    {
+      "index": 19,
+      "job_id": "e831cc18-cb41-451b-8241-4bcb0eddf036",
+      "status": "pending",
+      "adjustments": {
+        "medias[1].role": {
+          "requested": "image",
+          "used": "image_references",
+          "reason": "Seedance 2.5 backend expects schema-key media roles"
+        }
+      }
+    }
+  ],
+  "submitted_count": 2,
+  "failed_count": 0
+}

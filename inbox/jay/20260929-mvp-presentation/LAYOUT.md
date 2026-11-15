@@ -1,5 +1,7 @@
 # FOOTHOLD MVP 발표 레이아웃 초안
 
+2026-10-01 현재 안내: 이 문서는 이전 34장 스케치의 기록이다. 현재 발표 진입점은 output/FOOTHOLD-MVP-cover.html이며 본문은 재제작 대상이다. [PPT 요구 점검](PPT-REQUIREMENTS-AUDIT.md)의 어셋 요구를 정적 빈칸으로 대체하지 않는다.
+
 최신 수정 방향: [실패 중심 서사와 Go2 클릭별 연출](REVISION-story-direction.md). 9월 30일 사용자 피드백으로 기존 34개 화면은 재설계 대상이다. 이 문서의 이전 배치를 최종 승인된 구성으로 사용하지 않는다.
 
 > 분류: 계획

@@ -1,0 +1,50 @@
+{
+ "tag": "fr_m20499_stairs_up",
+ "origins": null,
+ "columns": 93,
+ "lab": {
+  "lab_head": "adf6c210617877f1e97ff8a8c9c4a0cac9ab3e71",
+  "sim/eval/timeseries.py": "283c4d5a05fd8a6d",
+  "sim/eval/overlay/trace.py": "c887abbd33399120",
+  "sim/eval/metrics.py": "3e85321318a8e089"
+ },
+ "episodes": [
+  {
+   "file": "stairs_up_stop03_ep001.csv",
+   "rows": 501,
+   "floor_z_m": null,
+   "checks": [
+    [
+     "mae_vx",
+     0.09197587662825908,
+     0.09197586718905472,
+     9.439204362582387e-09,
+     true
+    ],
+    [
+     "mae_vy",
+     0.042022000263857454,
+     0.04202200043283582,
+     1.689783660219213e-10,
+     true
+    ],
+    [
+     "mae_wz",
+     0.08183635807125852,
+     0.081836356559204,
+     1.51205452325609e-09,
+     true
+    ],
+    [
+     "rows",
+     501.0,
+     501.0,
+     0.0,
+     true
+    ]
+   ],
+   "parquet_bytes": 157924,
+   "trace_bytes": 89600
+  }
+ ]
+}

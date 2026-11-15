@@ -479,6 +479,47 @@ def shell(title, eyebrow, lede, body, meta_rows, doc_label,
            doc_label, eyebrow, title, lede, metas, body, team_access.JS))
 
 
+SERIES_RE = re.compile(r'^\[계보\s*(\d+)\]\s*(.*)$')
+
+
+def _series_of(docs):
+    """제목이 `[계보 N]` 으로 시작하는 문서들 -> [(N, slug, 제목)] N 순서.
+
+    2026-11-08 팀장: 「연재순서에 쌓일 수 있게 · 하나에 하나 쓰느라 반복 작업이 아니고
+    같은 소스를 같이 쓰면 좋잖아」. 목록을 문서마다 손으로 적지 않고 제목에서 만든다.
+    """
+    out = []
+    for fn, path in docs.items():
+        t = mdpage.h1(io.open(path, encoding='utf-8').read())
+        m = SERIES_RE.match(t or '')
+        if m:
+            out.append((int(m.group(1)), fn[:-3], t, m.group(2).strip()))
+    return sorted(out)
+
+
+def _with_series_nav(md, slug, series):
+    """문서 머리 아래에 「연재 순서」 절을 만들어 넣는다. 손으로 쓴 같은 절은 걷어 낸다."""
+    md = re.sub(r'\n## 연재 순서\n.*?(?=\n## )', '\n', md, flags=re.S)
+    lines = ['## 연재 순서', '',
+             '제목 앞 [계보 N] 순서로 읽는다. 새 편이 생기면 이 목록에 저절로 더해진다.', '']
+    idx = [x[1] for x in series].index(slug)
+    for n, s2, t, rest in series:
+        if s2 == slug:
+            lines.append('- **[계보 %d] %s (이 문서)**' % (n, rest))
+        else:
+            lines.append('- [계보 %d] [%s](%s)' % (n, rest, page_of(s2)))
+    nav = []
+    if idx > 0:
+        nav.append('이전: [계보 %d] [%s](%s)' % (series[idx - 1][0], series[idx - 1][3], page_of(series[idx - 1][1])))
+    if idx + 1 < len(series):
+        nav.append('다음: [계보 %d] [%s](%s)' % (series[idx + 1][0], series[idx + 1][3], page_of(series[idx + 1][1])))
+    if nav:
+        lines += ['', ' · '.join(nav)]
+    block = '\n'.join(lines) + '\n\n'
+    i = md.find('\n## ')
+    return md if i < 0 else md[:i + 1] + block + md[i + 1:]
+
+
 def build():
     lab = find_lab()
     if not lab:
@@ -513,9 +554,12 @@ def build():
     extra = [k for k in docs if not os.path.exists(os.path.join(src_dir, k))]
     if extra:
         print('  다른 클론에서 추가로 발견: %s' % ', '.join(extra))
+    series = _series_of(docs)
     for fn, path in docs.items():
         md = io.open(path, encoding='utf-8').read()
         slug = fn[:-3]
+        if slug in {x[1] for x in series}:
+            md = _with_series_nav(md, slug, series)
 
         # 문서 간 .md 링크를 웹 링크로 재작성. 안 하면 (xxx.md) 가 죽은 글자로 게시된다
         #   (2026-08-13 실측: omniverse-stack 등 3편에서 링크가 텍스트로 나가고 있었다).

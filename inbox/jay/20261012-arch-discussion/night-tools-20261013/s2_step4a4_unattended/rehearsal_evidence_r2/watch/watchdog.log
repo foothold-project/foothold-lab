@@ -1,0 +1,2 @@
+{"chain_id": "s2-stage0-a3-urehearse-20261015-104017", "create_time": 1792028417.1831446, "epoch": 1792028417.3401773, "event": "watchdog_started", "hard_deadline_epoch": 1792030077.0551522, "mono_budget_s": 1080.0, "pid": 124152, "stale_after_s": 30.0}
+{"epoch": 1792028418.343546, "event": "watched_ended_by_itself"}

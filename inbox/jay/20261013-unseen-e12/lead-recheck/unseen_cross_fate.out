@@ -1,0 +1,22 @@
+== gap fwd10
+  e1_m20499: crossed&survived 14 · crossed then fell 16 · crossed total 30
+  e2_m20499: crossed&survived 14 · crossed then fell 13 · crossed total 27
+  paired crossing e1_m20499 vs e2_m20499: only E1 19 · only E2 16 · same start x True
+== gap fwd05
+  e1_m20000: crossed&survived 1 · crossed then fell 3 · crossed total 4
+  e2_m20000: crossed&survived 0 · crossed then fell 0 · crossed total 0
+  e1_m20499: crossed&survived 0 · crossed then fell 0 · crossed total 0
+  e2_m20499: crossed&survived 0 · crossed then fell 0 · crossed total 0
+  paired crossing e1_m20000 vs e2_m20000: only E1 4 · only E2 0 · same start x True
+  paired crossing e1_m20499 vs e2_m20499: only E1 0 · only E2 0 · same start x True
+== floating_ring fwd05
+  e1_m20000: crossed&survived 69 · crossed then fell 1 · crossed total 70
+  e2_m20000: crossed&survived 88 · crossed then fell 0 · crossed total 88
+  e1_m20499: crossed&survived 70 · crossed then fell 0 · crossed total 70
+  e2_m20499: crossed&survived 80 · crossed then fell 2 · crossed total 82
+  paired crossing e1_m20000 vs e2_m20000: only E1 7 · only E2 25 · same start x True
+  paired crossing e1_m20499 vs e2_m20499: only E1 13 · only E2 25 · same start x True
+== floating_ring fwd10
+  e1_m20499: crossed&survived 59 · crossed then fell 10 · crossed total 69
+  e2_m20499: crossed&survived 79 · crossed then fell 6 · crossed total 85
+  paired crossing e1_m20499 vs e2_m20499: only E1 8 · only E2 24 · same start x True

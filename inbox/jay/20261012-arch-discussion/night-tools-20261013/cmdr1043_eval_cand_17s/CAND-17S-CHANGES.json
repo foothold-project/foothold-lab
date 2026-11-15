@@ -1,0 +1,62 @@
+[
+  {
+    "file": "build_manifest_s1043.py",
+    "17r": "f0e4163cacee8b470f7e53623a39ac03e89c0c13ce45fb2b134356593f03046d",
+    "17s": "fc2bf8a108da7c5f3517c9bcf3410da58cc208b288a3897bddc2a2c41c1cb7c8"
+  },
+  {
+    "file": "cmdr_eval_driver_s1043.py",
+    "17r": "69008ba41b52c31cdef420e27171d88d8ff5d433172656fcfdfdb1cfbe445460",
+    "17s": "236e79b26f883454feb08496a3d841b8ed76c71fdf7078a2a81b359ff0b1a303"
+  },
+  {
+    "file": "manifest_s1043.json",
+    "17r": "79929490f5f271f50ca7794297fdce54f5c5edf144d78ce521a34971ecf1e4e3",
+    "17s": "837fbe07b4240b80dcc9bbb269534ed2f076eff0899c325b77eaa00843909413"
+  },
+  {
+    "file": "run_all_17s.py",
+    "17r": null,
+    "17s": "7daa9ab0f960a65687f20d268d9ad199d20db699973b0b5c2aaffbc31bbea38f"
+  },
+  {
+    "file": "s1043_manifest.py",
+    "17r": "ce1ad4930c5f1e3f42932b037a9c5cf49f537e93a3be7148ae41c3fcc3feda09",
+    "17s": "58bf719ae8817d7417784249aa288a83b2e9a038ddea70336c7e7927ef5a2a24"
+  },
+  {
+    "file": "test_17r_b.py",
+    "17r": "2540ebf3303b179d5dd031bb82d91c8193dabc500a7f5aec13f491ae4532b1fb",
+    "17s": "8b6ee6a1b0c7e56c4ed103a7774c89d1c7c39ce0f4f029ea06ad25d2955782b8"
+  },
+  {
+    "file": "test_17r_d.py",
+    "17r": "98856d39b2a60dcbebe02849c581712c70d39d4523561b5c79a0835ddee7869c",
+    "17s": "9d4225953c633098e7bc0383970c579511d3a97e1bb76b97fb7e799d6bb6b26e"
+  },
+  {
+    "file": "test_17r_e.py",
+    "17r": "cded0b516feb71a48590cc57915f5e8fdaf05fe6a2eaa040e2669483830015d5",
+    "17s": "c743eb607c8db5140736ab2d2d39aad18b7878855cda173ca0e912920309c760"
+  },
+  {
+    "file": "test_17s_code_mutants.py",
+    "17r": null,
+    "17s": "834ffe630c2432a698569c5bcc0ed2272b08e40290446114013aa92a622969cc"
+  },
+  {
+    "file": "test_17s_diagnostic.py",
+    "17r": null,
+    "17s": "6bb36658f05ca4a00c35db8c6c6a6aad48f9ff068bb46110c1a2b6cffa87dc8d"
+  },
+  {
+    "file": "test_17s_original.py",
+    "17r": null,
+    "17s": "34fc45137c6e350f5cfcb303b4eefa74754acf7b32c771a7ad994c25d70c676d"
+  },
+  {
+    "file": "test_17s_runtime.py",
+    "17r": null,
+    "17s": "71f40d712b43574cffab87c172e68c9c8569ed4988cdafaa405bfeb373a7bab0"
+  }
+]

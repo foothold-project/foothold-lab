@@ -1,0 +1,188 @@
+{
+ "test_only_robot": "motor offset 0, delay 0, gains x1, friction 1, restitution 0, feet 5 mm above the top at t=0",
+ "stale_row0": {
+  "base_contact_row0_envs": 0,
+  "nonfoot_gt1N_row0_envs": 267,
+  "foot_fz_row0_differs_from_row1_envs": 926
+ },
+ "placement_clearance_error_max_abs": 4.190951585769653e-08,
+ "results": [
+  {
+   "side": "outer",
+   "designed_margin": 0.08,
+   "expected": "safe",
+   "envs": 150,
+   "first_td_events": 300,
+   "classes": [
+    "outer"
+   ],
+   "class_counts": {
+    "outer": 300
+   },
+   "margin_minus_designed_max_abs": 0.0007587718963623508,
+   "margin_minus_designed_median_abs": 0.0007107305526733859,
+   "risky_matches_design": 300,
+   "risky_true": 0,
+   "risky_false": 300,
+   "feet_without_td": 0,
+   "td_time_s_minmax": [
+    0.08,
+    0.08
+   ]
+  },
+  {
+   "side": "outer",
+   "designed_margin": 0.045,
+   "expected": "safe",
+   "envs": 150,
+   "first_td_events": 300,
+   "classes": [
+    "outer"
+   ],
+   "class_counts": {
+    "outer": 300
+   },
+   "margin_minus_designed_max_abs": 0.000757784843444867,
+   "margin_minus_designed_median_abs": 0.0007086706161499451,
+   "risky_matches_design": 300,
+   "risky_true": 0,
+   "risky_false": 300,
+   "feet_without_td": 0,
+   "td_time_s_minmax": [
+    0.08,
+    0.08
+   ]
+  },
+  {
+   "side": "outer",
+   "designed_margin": 0.03,
+   "expected": "risky",
+   "envs": 150,
+   "first_td_events": 300,
+   "classes": [
+    "outer"
+   ],
+   "class_counts": {
+    "outer": 300
+   },
+   "margin_minus_designed_max_abs": 0.0007583665847778753,
+   "margin_minus_designed_median_abs": 0.0007109212875366644,
+   "risky_matches_design": 300,
+   "risky_true": 300,
+   "risky_false": 0,
+   "feet_without_td": 0,
+   "td_time_s_minmax": [
+    0.08,
+    0.08
+   ]
+  },
+  {
+   "side": "outer",
+   "designed_margin": 0.015,
+   "expected": "risky",
+   "envs": 150,
+   "first_td_events": 300,
+   "classes": [
+    "outer"
+   ],
+   "class_counts": {
+    "outer": 300
+   },
+   "margin_minus_designed_max_abs": 0.0007579946517944774,
+   "margin_minus_designed_median_abs": 0.0007085227966309032,
+   "risky_matches_design": 300,
+   "risky_true": 300,
+   "risky_false": 0,
+   "feet_without_td": 0,
+   "td_time_s_minmax": [
+    0.08,
+    0.08
+   ]
+  },
+  {
+   "side": "outer",
+   "designed_margin": -0.03,
+   "expected": "void_or_wall",
+   "envs": 150,
+   "first_td_events": 0,
+   "classes": [],
+   "class_counts": {},
+   "margin_minus_designed_max_abs": null,
+   "margin_minus_designed_median_abs": null,
+   "risky_matches_design": 0,
+   "risky_true": 0,
+   "risky_false": 0,
+   "feet_without_td": 300,
+   "td_time_s_minmax": [
+    null,
+    null
+   ]
+  },
+  {
+   "side": "inner",
+   "designed_margin": 0.08,
+   "expected": "safe",
+   "envs": 150,
+   "first_td_events": 300,
+   "classes": [
+    "inner"
+   ],
+   "class_counts": {
+    "inner": 300
+   },
+   "margin_minus_designed_max_abs": 0.0007460546493530257,
+   "margin_minus_designed_median_abs": 0.0007354450225830061,
+   "risky_matches_design": 300,
+   "risky_true": 0,
+   "risky_false": 300,
+   "feet_without_td": 0,
+   "td_time_s_minmax": [
+    0.06,
+    0.06
+   ]
+  },
+  {
+   "side": "inner",
+   "designed_margin": 0.03,
+   "expected": "risky",
+   "envs": 150,
+   "first_td_events": 300,
+   "classes": [
+    "inner"
+   ],
+   "class_counts": {
+    "inner": 300
+   },
+   "margin_minus_designed_max_abs": 0.0007464599609375011,
+   "margin_minus_designed_median_abs": 0.0007348370552062999,
+   "risky_matches_design": 300,
+   "risky_true": 300,
+   "risky_false": 0,
+   "feet_without_td": 0,
+   "td_time_s_minmax": [
+    0.06,
+    0.06
+   ]
+  },
+  {
+   "side": "inner",
+   "designed_margin": -0.03,
+   "expected": "void_or_wall",
+   "envs": 150,
+   "first_td_events": 0,
+   "classes": [],
+   "class_counts": {},
+   "margin_minus_designed_max_abs": null,
+   "margin_minus_designed_median_abs": null,
+   "risky_matches_design": 0,
+   "risky_true": 0,
+   "risky_false": 0,
+   "feet_without_td": 300,
+   "td_time_s_minmax": [
+    null,
+    null
+   ]
+  }
+ ],
+ "wall_s": 59.966591358184814
+}

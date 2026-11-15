@@ -1,0 +1,54 @@
+{
+  "run_id": "step12_a34_final",
+  "complete": false,
+  "results": [
+    {
+      "name": "test_s2_scene_a2.py",
+      "exit_code": 0,
+      "seconds": 0.26,
+      "passes": 4
+    },
+    {
+      "name": "test_s2_connect_a2.py",
+      "exit_code": 0,
+      "seconds": 1.16,
+      "passes": 10
+    },
+    {
+      "name": "test_s2_connect_17v.py",
+      "exit_code": 0,
+      "seconds": 1.12,
+      "passes": 10
+    },
+    {
+      "name": "test_s2_17v_core.py",
+      "exit_code": 0,
+      "seconds": 2.62,
+      "passes": 17
+    },
+    {
+      "name": "test_s2_sensor_tracker_17v.py",
+      "exit_code": 0,
+      "seconds": 2.7,
+      "passes": 7
+    },
+    {
+      "name": "test_s2_capture_journal_a2.py",
+      "exit_code": 0,
+      "seconds": 1.16,
+      "passes": 9
+    },
+    {
+      "name": "test_s2_device_binding_a2.py",
+      "exit_code": 0,
+      "seconds": 0.09,
+      "passes": 9
+    },
+    {
+      "name": "test_s2_stage0_contract_a2.py",
+      "exit_code": 1,
+      "seconds": 0.42,
+      "passes": 19
+    }
+  ]
+}

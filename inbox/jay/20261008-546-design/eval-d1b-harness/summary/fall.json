@@ -1,0 +1,917 @@
+{
+ "scenarios": [
+  {
+   "name": "walk_flat_student",
+   "col": 0,
+   "x": 0.7,
+   "yaw": 0.0,
+   "vel": null,
+   "policy": "student",
+   "cmd": [
+    0.3,
+    0,
+    0
+   ],
+   "gt": "nofall",
+   "how": "apriori"
+  },
+  {
+   "name": "walk_flat_teacher_g0",
+   "col": 0,
+   "x": 0.7,
+   "yaw": 0.0,
+   "vel": null,
+   "policy": "teacher_g0",
+   "cmd": [
+    0.3,
+    0,
+    0
+   ],
+   "gt": "nofall",
+   "how": "apriori"
+  },
+  {
+   "name": "drop_gapwide060_centre_yaw90",
+   "col": 5,
+   "x": 1.8,
+   "yaw": 1.5707963267948966,
+   "vel": null,
+   "policy": "zero",
+   "gt": "fall",
+   "how": "apriori"
+  },
+  {
+   "name": "drop_beyond_border",
+   "col": null,
+   "x": null,
+   "yaw": 0.0,
+   "vel": null,
+   "policy": "zero",
+   "gt": "fall",
+   "how": "apriori"
+  },
+  {
+   "name": "wedge_gap030_centre_yaw90",
+   "col": 3,
+   "x": 1.65,
+   "yaw": 1.5707963267948966,
+   "vel": null,
+   "policy": "zero",
+   "gt": null,
+   "how": "endstate"
+  },
+  {
+   "name": "tilted_hang_gap030_front_over_void",
+   "col": 3,
+   "x": 1.45,
+   "yaw": 0.0,
+   "vel": null,
+   "policy": "zero",
+   "gt": null,
+   "how": "endstate"
+  },
+  {
+   "name": "jump_flat_vz1.0",
+   "col": 0,
+   "x": 0.0,
+   "yaw": 0.0,
+   "vel": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "policy": "zero",
+   "gt": "nofall",
+   "how": "apriori_if_upright"
+  },
+  {
+   "name": "jump_gap020_vx1.2_vz1.2",
+   "col": 2,
+   "x": 1.38,
+   "yaw": 0.0,
+   "vel": [
+    1.2,
+    0.0,
+    1.2
+   ],
+   "policy": "zero",
+   "gt": null,
+   "how": "endstate"
+  },
+  {
+   "name": "reset_boundary_drop_then_timeout",
+   "col": 5,
+   "x": 1.8,
+   "yaw": 1.5707963267948966,
+   "vel": null,
+   "policy": "zero",
+   "gt": "fall",
+   "how": "apriori"
+  }
+ ],
+ "start_check": {
+  "placement_clearance_error_max_abs": 4.819594323635101e-08,
+  "root_vs_requested_max_abs": 0.0
+ },
+ "results": [
+  {
+   "name": "walk_flat_student",
+   "envs": 133,
+   "gt_rule": "apriori",
+   "z_end_minmedmax": [
+    0.3497754633426666,
+    0.365079402923584,
+    0.38058069348335266
+   ],
+   "envs_feet_below_bank_1s": 0,
+   "detector_reasons": [
+    ""
+   ],
+   "tp": 0,
+   "fn": 0,
+   "fp": 0,
+   "tn": 133,
+   "ambiguous": 0,
+   "invalid_label": 0,
+   "t_detect_minmax": null,
+   "examples": [
+    {
+     "env": 0,
+     "gt": "nofall",
+     "detector": "",
+     "t_fail": NaN,
+     "z_end": 0.3703204393386841,
+     "tilt_end": 1.7673540339723728,
+     "z_min": 0.2845103442668915,
+     "all_local_miss_samples": 0,
+     "reset_at": null,
+     "feet_below_bank_samples": 0,
+     "foot_z_end": [
+      0.02199999988079071,
+      0.02199999988079071,
+      0.02199999988079071,
+      0.02199999988079071
+     ]
+    },
+    {
+     "env": 1,
+     "gt": "nofall",
+     "detector": "",
+     "t_fail": NaN,
+     "z_end": 0.3755953907966614,
+     "tilt_end": 3.7452292610829616,
+     "z_min": 0.27448371052742004,
+     "all_local_miss_samples": 0,
+     "reset_at": null,
+     "feet_below_bank_samples": 0,
+     "foot_z_end": [
+      0.02199999988079071,
+      0.02199999988079071,
+      0.02199999988079071,
+      0.02199999988079071
+     ]
+    },
+    {
+     "env": 2,
+     "gt": "nofall",
+     "detector": "",
+     "t_fail": NaN,
+     "z_end": 0.37033548951148987,
+     "tilt_end": 2.9671551141858847,
+     "z_min": 0.2848491668701172,
+     "all_local_miss_samples": 0,
+     "reset_at": null,
+     "feet_below_bank_samples": 0,
+     "foot_z_end": [
+      0.02199999988079071,
+      0.02199999988079071,
+      0.04100000113248825,
+      0.02199999988079071
+     ]
+    }
+   ]
+  },
+  {
+   "name": "walk_flat_teacher_g0",
+   "envs": 133,
+   "gt_rule": "apriori",
+   "z_end_minmedmax": [
+    0.34927767515182495,
+    0.36654436588287354,
+    0.37825414538383484
+   ],
+   "envs_feet_below_bank_1s": 0,
+   "detector_reasons": [
+    ""
+   ],
+   "tp": 0,
+   "fn": 0,
+   "fp": 0,
+   "tn": 133,
+   "ambiguous": 0,
+   "invalid_label": 0,
+   "t_detect_minmax": null,
+   "examples": [
+    {
+     "env": 133,
+     "gt": "nofall",
+     "detector": "",
+     "t_fail": NaN,
+     "z_end": 0.36762601137161255,
+     "tilt_end": 3.810279681139606,
+     "z_min": 0.27257511019706726,
+     "all_local_miss_samples": 0,
+     "reset_at": null,
+     "feet_below_bank_samples": 0,
+     "foot_z_end": [
+      0.02199999988079071,
+      0.02199999988079071,
+      0.02199999988079071,
+      0.02199999988079071
+     ]
+    },
+    {
+     "env": 134,
+     "gt": "nofall",
+     "detector": "",
+     "t_fail": NaN,
+     "z_end": 0.35986554622650146,
+     "tilt_end": 3.488014372463468,
+     "z_min": 0.28149470686912537,
+     "all_local_miss_samples": 0,
+     "reset_at": null,
+     "feet_below_bank_samples": 0,
+     "foot_z_end": [
+      0.02199999988079071,
+      0.02199999988079071,
+      0.02199999988079071,
+      0.02199999988079071
+     ]
+    },
+    {
+     "env": 135,
+     "gt": "nofall",
+     "detector": "",
+     "t_fail": NaN,
+     "z_end": 0.36192604899406433,
+     "tilt_end": 2.8590331098169335,
+     "z_min": 0.2741934061050415,
+     "all_local_miss_samples": 0,
+     "reset_at": null,
+     "feet_below_bank_samples": 0,
+     "foot_z_end": [
+      0.02199999988079071,
+      0.02199999988079071,
+      0.02199999988079071,
+      0.02199999988079071
+     ]
+    }
+   ]
+  },
+  {
+   "name": "drop_gapwide060_centre_yaw90",
+   "envs": 133,
+   "gt_rule": "apriori",
+   "z_end_minmedmax": [
+    -43.836181640625,
+    -43.82854461669922,
+    -43.82681655883789
+   ],
+   "envs_feet_below_bank_1s": 133,
+   "detector_reasons": [
+    "sink"
+   ],
+   "tp": 133,
+   "fn": 0,
+   "fp": 0,
+   "tn": 0,
+   "ambiguous": 0,
+   "invalid_label": 0,
+   "t_detect_minmax": [
+    0.4,
+    0.4
+   ],
+   "examples": [
+    {
+     "env": 266,
+     "gt": "fall",
+     "detector": "sink",
+     "t_fail": 0.4,
+     "z_end": -43.82846450805664,
+     "tilt_end": 0.3244549486979649,
+     "z_min": -43.82846450805664,
+     "all_local_miss_samples": 151,
+     "reset_at": null,
+     "feet_below_bank_samples": 144,
+     "foot_z_end": [
+      -44.13199996948242,
+      -44.125999450683594,
+      -44.12200164794922,
+      -44.11899948120117
+     ]
+    },
+    {
+     "env": 267,
+     "gt": "fall",
+     "detector": "sink",
+     "t_fail": 0.4,
+     "z_end": -43.82890701293945,
+     "tilt_end": 1.1533486112844895,
+     "z_min": -43.82890701293945,
+     "all_local_miss_samples": 151,
+     "reset_at": null,
+     "feet_below_bank_samples": 145,
+     "foot_z_end": [
+      -44.12799835205078,
+      -44.1349983215332,
+      -44.12300109863281,
+      -44.12200164794922
+     ]
+    },
+    {
+     "env": 268,
+     "gt": "fall",
+     "detector": "sink",
+     "t_fail": 0.4,
+     "z_end": -43.828792572021484,
+     "tilt_end": 1.4272474569981917,
+     "z_min": -43.828792572021484,
+     "all_local_miss_samples": 151,
+     "reset_at": null,
+     "feet_below_bank_samples": 144,
+     "foot_z_end": [
+      -44.12799835205078,
+      -44.125999450683594,
+      -44.12200164794922,
+      -44.130001068115234
+     ]
+    }
+   ],
+   "t_detect_analytic_freefall_minmax": [
+    0.4,
+    0.4
+   ]
+  },
+  {
+   "name": "drop_beyond_border",
+   "envs": 133,
+   "gt_rule": "apriori",
+   "z_end_minmedmax": [
+    -43.83348083496094,
+    -43.828636169433594,
+    -43.82682800292969
+   ],
+   "envs_feet_below_bank_1s": 133,
+   "detector_reasons": [
+    "sink"
+   ],
+   "tp": 133,
+   "fn": 0,
+   "fp": 0,
+   "tn": 0,
+   "ambiguous": 0,
+   "invalid_label": 0,
+   "t_detect_minmax": [
+    0.4,
+    0.4
+   ],
+   "examples": [
+    {
+     "env": 399,
+     "gt": "fall",
+     "detector": "sink",
+     "t_fail": 0.4,
+     "z_end": -43.829383850097656,
+     "tilt_end": 0.8820438187623479,
+     "z_min": -43.829383850097656,
+     "all_local_miss_samples": 151,
+     "reset_at": null,
+     "feet_below_bank_samples": 144,
+     "foot_z_end": [
+      -44.12699890136719,
+      -44.12300109863281,
+      -44.125,
+      -44.12200164794922
+     ]
+    },
+    {
+     "env": 400,
+     "gt": "fall",
+     "detector": "sink",
+     "t_fail": 0.4,
+     "z_end": -43.82847595214844,
+     "tilt_end": 1.920404022085535,
+     "z_min": -43.82847595214844,
+     "all_local_miss_samples": 151,
+     "reset_at": null,
+     "feet_below_bank_samples": 144,
+     "foot_z_end": [
+      -44.124000549316406,
+      -44.137001037597656,
+      -44.11899948120117,
+      -44.13199996948242
+     ]
+    },
+    {
+     "env": 401,
+     "gt": "fall",
+     "detector": "sink",
+     "t_fail": 0.4,
+     "z_end": -43.8277702331543,
+     "tilt_end": 0.95326533197347,
+     "z_min": -43.8277702331543,
+     "all_local_miss_samples": 151,
+     "reset_at": null,
+     "feet_below_bank_samples": 145,
+     "foot_z_end": [
+      -44.13800048828125,
+      -44.124000549316406,
+      -44.12900161743164,
+      -44.124000549316406
+     ]
+    }
+   ],
+   "t_detect_analytic_freefall_minmax": [
+    0.4,
+    0.4
+   ]
+  },
+  {
+   "name": "wedge_gap030_centre_yaw90",
+   "envs": 133,
+   "gt_rule": "endstate",
+   "z_end_minmedmax": [
+    0.04230431467294693,
+    0.2813393473625183,
+    0.2917434573173523
+   ],
+   "envs_feet_below_bank_1s": 14,
+   "detector_reasons": [
+    "",
+    "base_contact",
+    "tilt60"
+   ],
+   "tp": 4,
+   "fn": 3,
+   "fp": 0,
+   "tn": 119,
+   "ambiguous": 7,
+   "invalid_label": 0,
+   "t_detect_minmax": [
+    0.86,
+    1.84
+   ],
+   "examples": [
+    {
+     "env": 532,
+     "gt": "nofall",
+     "detector": "",
+     "t_fail": NaN,
+     "z_end": 0.2877245247364044,
+     "tilt_end": 2.636930100127169,
+     "z_min": 0.2737066149711609,
+     "all_local_miss_samples": 0,
+     "reset_at": null,
+     "feet_below_bank_samples": 0,
+     "foot_z_end": [
+      0.02199999988079071,
+      0.02199999988079071,
+      0.02199999988079071,
+      0.02199999988079071
+     ]
+    },
+    {
+     "env": 533,
+     "gt": "nofall",
+     "detector": "",
+     "t_fail": NaN,
+     "z_end": 0.2762163281440735,
+     "tilt_end": 1.9416870967241404,
+     "z_min": 0.2536095082759857,
+     "all_local_miss_samples": 0,
+     "reset_at": null,
+     "feet_below_bank_samples": 0,
+     "foot_z_end": [
+      0.02199999988079071,
+      0.02199999988079071,
+      0.02199999988079071,
+      0.02199999988079071
+     ]
+    },
+    {
+     "env": 534,
+     "gt": "nofall",
+     "detector": "",
+     "t_fail": NaN,
+     "z_end": 0.28824684023857117,
+     "tilt_end": 2.655791370116757,
+     "z_min": 0.2702178359031677,
+     "all_local_miss_samples": 0,
+     "reset_at": null,
+     "feet_below_bank_samples": 0,
+     "foot_z_end": [
+      0.02199999988079071,
+      0.02199999988079071,
+      0.02199999988079071,
+      0.02199999988079071
+     ]
+    },
+    {
+     "env": 559,
+     "gt": "fall",
+     "detector": "",
+     "t_fail": NaN,
+     "z_end": 0.09673487395048141,
+     "tilt_end": 36.49725085158923,
+     "z_min": 0.09365440160036087,
+     "all_local_miss_samples": 0,
+     "reset_at": null,
+     "feet_below_bank_samples": 144,
+     "foot_z_end": [
+      -0.1860000044107437,
+      0.02199999988079071,
+      -0.23999999463558197,
+      0.02199999988079071
+     ]
+    },
+    {
+     "env": 660,
+     "gt": "fall",
+     "detector": "",
+     "t_fail": NaN,
+     "z_end": 0.09327998757362366,
+     "tilt_end": 36.73877299287687,
+     "z_min": 0.055655114352703094,
+     "all_local_miss_samples": 0,
+     "reset_at": null,
+     "feet_below_bank_samples": 145,
+     "foot_z_end": [
+      -0.1899999976158142,
+      0.02199999988079071,
+      -0.25,
+      0.02199999988079071
+     ]
+    },
+    {
+     "env": 663,
+     "gt": "fall",
+     "detector": "",
+     "t_fail": NaN,
+     "z_end": 0.04860290512442589,
+     "tilt_end": 49.94419119433193,
+     "z_min": 0.017333049327135086,
+     "all_local_miss_samples": 0,
+     "reset_at": null,
+     "feet_below_bank_samples": 144,
+     "foot_z_end": [
+      0.02199999988079071,
+      -0.22499999403953552,
+      0.02199999988079071,
+      -0.35499998927116394
+     ]
+    }
+   ]
+  },
+  {
+   "name": "tilted_hang_gap030_front_over_void",
+   "envs": 133,
+   "gt_rule": "endstate",
+   "z_end_minmedmax": [
+    0.15188920497894287,
+    0.17206236720085144,
+    0.2537505030632019
+   ],
+   "envs_feet_below_bank_1s": 132,
+   "detector_reasons": [
+    ""
+   ],
+   "tp": 0,
+   "fn": 0,
+   "fp": 0,
+   "tn": 1,
+   "ambiguous": 132,
+   "invalid_label": 0,
+   "t_detect_minmax": null,
+   "examples": [
+    {
+     "env": 665,
+     "gt": "ambiguous",
+     "detector": "",
+     "t_fail": NaN,
+     "z_end": 0.18183013796806335,
+     "tilt_end": 23.94356014219575,
+     "z_min": 0.17176538705825806,
+     "all_local_miss_samples": 0,
+     "reset_at": null,
+     "feet_below_bank_samples": 144,
+     "foot_z_end": [
+      -0.12200000137090683,
+      -0.16099999845027924,
+      0.02199999988079071,
+      0.02199999988079071
+     ]
+    },
+    {
+     "env": 666,
+     "gt": "ambiguous",
+     "detector": "",
+     "t_fail": NaN,
+     "z_end": 0.17569266259670258,
+     "tilt_end": 22.485587485198156,
+     "z_min": 0.1677866131067276,
+     "all_local_miss_samples": 0,
+     "reset_at": null,
+     "feet_below_bank_samples": 145,
+     "foot_z_end": [
+      -0.14900000393390656,
+      -0.15299999713897705,
+      0.02199999988079071,
+      0.02199999988079071
+     ]
+    },
+    {
+     "env": 667,
+     "gt": "ambiguous",
+     "detector": "",
+     "t_fail": NaN,
+     "z_end": 0.175993412733078,
+     "tilt_end": 22.388512668926474,
+     "z_min": 0.15963175892829895,
+     "all_local_miss_samples": 0,
+     "reset_at": null,
+     "feet_below_bank_samples": 145,
+     "foot_z_end": [
+      -0.13600000739097595,
+      -0.1420000046491623,
+      0.02199999988079071,
+      0.02199999988079071
+     ]
+    }
+   ]
+  },
+  {
+   "name": "jump_flat_vz1.0",
+   "envs": 133,
+   "gt_rule": "apriori_if_upright",
+   "z_end_minmedmax": [
+    0.23354239761829376,
+    0.2786158621311188,
+    0.2928376793861389
+   ],
+   "envs_feet_below_bank_1s": 0,
+   "detector_reasons": [
+    ""
+   ],
+   "tp": 0,
+   "fn": 0,
+   "fp": 0,
+   "tn": 133,
+   "ambiguous": 0,
+   "invalid_label": 0,
+   "t_detect_minmax": null,
+   "examples": [
+    {
+     "env": 798,
+     "gt": "nofall",
+     "detector": "",
+     "t_fail": NaN,
+     "z_end": 0.27177056670188904,
+     "tilt_end": 8.870417553697262,
+     "z_min": 0.23227597773075104,
+     "all_local_miss_samples": 0,
+     "reset_at": null,
+     "feet_below_bank_samples": 0,
+     "foot_z_end": [
+      0.02199999988079071,
+      0.02199999988079071,
+      0.02199999988079071,
+      0.02199999988079071
+     ]
+    },
+    {
+     "env": 799,
+     "gt": "nofall",
+     "detector": "",
+     "t_fail": NaN,
+     "z_end": 0.279488742351532,
+     "tilt_end": 1.8198368229277968,
+     "z_min": 0.22626912593841553,
+     "all_local_miss_samples": 0,
+     "reset_at": null,
+     "feet_below_bank_samples": 0,
+     "foot_z_end": [
+      0.02199999988079071,
+      0.02199999988079071,
+      0.02199999988079071,
+      0.02199999988079071
+     ]
+    },
+    {
+     "env": 800,
+     "gt": "nofall",
+     "detector": "",
+     "t_fail": NaN,
+     "z_end": 0.2895854711532593,
+     "tilt_end": 0.33919698372953155,
+     "z_min": 0.24458909034729004,
+     "all_local_miss_samples": 0,
+     "reset_at": null,
+     "feet_below_bank_samples": 0,
+     "foot_z_end": [
+      0.02199999988079071,
+      0.02199999988079071,
+      0.02199999988079071,
+      0.02199999988079071
+     ]
+    }
+   ]
+  },
+  {
+   "name": "jump_gap020_vx1.2_vz1.2",
+   "envs": 133,
+   "gt_rule": "endstate",
+   "z_end_minmedmax": [
+    0.07606906443834305,
+    0.18551073968410492,
+    0.242489293217659
+   ],
+   "envs_feet_below_bank_1s": 13,
+   "detector_reasons": [
+    "",
+    "tilt60"
+   ],
+   "tp": 51,
+   "fn": 0,
+   "fp": 0,
+   "tn": 15,
+   "ambiguous": 67,
+   "invalid_label": 0,
+   "t_detect_minmax": [
+    1.2,
+    2.9
+   ],
+   "examples": [
+    {
+     "env": 931,
+     "gt": "fall",
+     "detector": "tilt60",
+     "t_fail": 1.42,
+     "z_end": 0.07756362855434418,
+     "tilt_end": 173.67448065719307,
+     "z_min": 0.07756362855434418,
+     "all_local_miss_samples": 0,
+     "reset_at": 100,
+     "feet_below_bank_samples": 0,
+     "foot_z_end": [
+      0.3630000054836273,
+      0.4020000100135803,
+      0.3409999907016754,
+      0.3540000021457672
+     ]
+    },
+    {
+     "env": 932,
+     "gt": "fall",
+     "detector": "tilt60",
+     "t_fail": 1.24,
+     "z_end": 0.0797039344906807,
+     "tilt_end": 169.42727603683159,
+     "z_min": 0.07783105969429016,
+     "all_local_miss_samples": 0,
+     "reset_at": 80,
+     "feet_below_bank_samples": 8,
+     "foot_z_end": [
+      0.42500001192092896,
+      0.32899999618530273,
+      0.3569999933242798,
+      0.33399999141693115
+     ]
+    },
+    {
+     "env": 933,
+     "gt": "nofall",
+     "detector": "",
+     "t_fail": NaN,
+     "z_end": 0.21176795661449432,
+     "tilt_end": 22.200124634485483,
+     "z_min": 0.20425879955291748,
+     "all_local_miss_samples": 0,
+     "reset_at": null,
+     "feet_below_bank_samples": 0,
+     "foot_z_end": [
+      0.02199999988079071,
+      0.02199999988079071,
+      0.02199999988079071,
+      0.04100000113248825
+     ]
+    }
+   ]
+  },
+  {
+   "name": "reset_boundary_drop_then_timeout",
+   "envs": 136,
+   "gt_rule": "apriori",
+   "z_end_minmedmax": [
+    -2.8168418407440186,
+    -2.81617271900177,
+    -2.8142266273498535
+   ],
+   "envs_feet_below_bank_1s": 0,
+   "detector_reasons": [
+    "sink"
+   ],
+   "tp": 136,
+   "fn": 0,
+   "fp": 0,
+   "tn": 0,
+   "ambiguous": 0,
+   "invalid_label": 0,
+   "t_detect_minmax": [
+    0.4,
+    0.4
+   ],
+   "examples": [
+    {
+     "env": 1064,
+     "gt": "fall",
+     "detector": "sink",
+     "t_fail": 0.4,
+     "z_end": -2.816436529159546,
+     "tilt_end": 0.4293279392618348,
+     "z_min": -2.816436529159546,
+     "all_local_miss_samples": 41,
+     "reset_at": 40,
+     "feet_below_bank_samples": 35,
+     "foot_z_end": [
+      -3.121000051498413,
+      -3.115999937057495,
+      -3.1029999256134033,
+      -3.1080000400543213
+     ]
+    },
+    {
+     "env": 1065,
+     "gt": "fall",
+     "detector": "sink",
+     "t_fail": 0.4,
+     "z_end": -2.815760612487793,
+     "tilt_end": 0.7271236511272319,
+     "z_min": -2.815760612487793,
+     "all_local_miss_samples": 41,
+     "reset_at": 40,
+     "feet_below_bank_samples": 34,
+     "foot_z_end": [
+      -3.115999937057495,
+      -3.114000082015991,
+      -3.1110000610351562,
+      -3.109999895095825
+     ]
+    },
+    {
+     "env": 1066,
+     "gt": "fall",
+     "detector": "sink",
+     "t_fail": 0.4,
+     "z_end": -2.816098928451538,
+     "tilt_end": 0.20558422779686011,
+     "z_min": -2.816098928451538,
+     "all_local_miss_samples": 41,
+     "reset_at": 40,
+     "feet_below_bank_samples": 34,
+     "foot_z_end": [
+      -3.119999885559082,
+      -3.114000082015991,
+      -3.109999895095825,
+      -3.1059999465942383
+     ]
+    }
+   ],
+   "t_detect_analytic_freefall_minmax": [
+    0.4,
+    0.4
+   ],
+   "reset_flag_at_40": 136,
+   "recorded_z_at_reset_sample_minmax": [
+    -2.8168418407440186,
+    -2.8142266273498535
+   ],
+   "post_reset_live_z_end_minmax": [
+    0.2704731225967407,
+    0.28995615243911743
+   ],
+   "latched_j_fail_minmax": [
+    20,
+    20
+   ],
+   "outcome_with_goal_after_reset": [
+    "fall"
+   ]
+  }
+ ],
+ "stale_row0": {
+  "base_contact_row0_envs": 3,
+  "nonfoot_gt1N_row0_envs": 179,
+  "foot_fz_row0_differs_from_row1_envs": 1183
+ },
+ "wall_s": 56.09218883514404
+}

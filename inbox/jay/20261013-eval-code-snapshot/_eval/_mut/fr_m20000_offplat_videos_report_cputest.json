@@ -1,0 +1,40 @@
+{
+ "run_tag": "fr_m20000_offplat",
+ "full_tag": "fr_m20000_offplat",
+ "terrain_mesh_equal": true,
+ "sim_device": "cpu",
+ "videos": [
+  {
+   "file": "stairs_up_stop03_ep001_kinreplay.mp4",
+   "source_csv": "stairs_up_stop03_ep001.csv",
+   "frames": 501,
+   "fps": 50,
+   "seconds": 10.02,
+   "replay": "kinematic replay of the recorded states, physics not re-computed",
+   "terrain_mesh_equal_to_run": true,
+   "replayed_foot_vs_csv_max_abs_m": 1.3364257814174607e-05,
+   "contact_foot_height_above_terrain_m": {
+    "n": 1721,
+    "median": 0.023448023841857957,
+    "p01": 0.022787152316284143,
+    "p99": 0.14634992476837153,
+    "min": 0.02157302384185833,
+    "max": 0.17181902384185754,
+    "frac_within_0.018_0.028": 0.9413131900058106,
+    "n_above_0.028": 101,
+    "n_below_0.018": 0,
+    "note": "vertical ray below the foot centre; on stairs a foot touching a riser or edge reads the lower tread"
+   },
+   "png_rows": [
+    0,
+    125,
+    250,
+    375,
+    500
+   ],
+   "sim_device": "cpu",
+   "bytes": 9346942,
+   "wall_s": 22.1
+  }
+ ]
+}

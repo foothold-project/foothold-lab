@@ -1,0 +1,4 @@
+PASS post physical1 logical0 normal CLI
+PASS post normal 45 valid
+PASS post NaN MAE CLI invalid
+PASS post NaN no false 45 report

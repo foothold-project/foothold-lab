@@ -1,0 +1,298 @@
+{
+  "repo": "tfoldi/go2-webrtc",
+  "sha": "9239041aeb897d3eaa2c42640323e412ba4871c8",
+  "license": {
+    "key": "bsd-2-clause",
+    "name": "BSD 2-Clause \"Simplified\" License",
+    "spdx_id": "BSD-2-Clause",
+    "url": "https://api.github.com/licenses/bsd-2-clause",
+    "node_id": "MDc6TGljZW5zZTQ="
+  },
+  "tree": {
+    "sha": "9239041aeb897d3eaa2c42640323e412ba4871c8",
+    "url": "https://api.github.com/repos/tfoldi/go2-webrtc/git/trees/9239041aeb897d3eaa2c42640323e412ba4871c8",
+    "tree": [
+      {
+        "path": ".gitignore",
+        "mode": "100644",
+        "type": "blob",
+        "sha": "d3d352162fb3e1801c84dc6e1afe609b2a375626",
+        "size": 138,
+        "url": "https://api.github.com/repos/tfoldi/go2-webrtc/git/blobs/d3d352162fb3e1801c84dc6e1afe609b2a375626"
+      },
+      {
+        "path": "LICENSE",
+        "mode": "100644",
+        "type": "blob",
+        "sha": "c83c5508068d7475c0a4cd7985ad0a4332503d30",
+        "size": 1308,
+        "url": "https://api.github.com/repos/tfoldi/go2-webrtc/git/blobs/c83c5508068d7475c0a4cd7985ad0a4332503d30"
+      },
+      {
+        "path": "README.md",
+        "mode": "100644",
+        "type": "blob",
+        "sha": "4ac2718ebca48a30e2fd42dfffaca0a5369fb478",
+        "size": 4348,
+        "url": "https://api.github.com/repos/tfoldi/go2-webrtc/git/blobs/4ac2718ebca48a30e2fd42dfffaca0a5369fb478"
+      },
+      {
+        "path": "javascript",
+        "mode": "040000",
+        "type": "tree",
+        "sha": "d9171d745d1f67bb8af3bed87e6edf7a6202b254",
+        "url": "https://api.github.com/repos/tfoldi/go2-webrtc/git/trees/d9171d745d1f67bb8af3bed87e6edf7a6202b254"
+      },
+      {
+        "path": "javascript/README.md",
+        "mode": "100644",
+        "type": "blob",
+        "sha": "7387508cd2869ea227d07bdfba437b9bbb59638d",
+        "size": 3821,
+        "url": "https://api.github.com/repos/tfoldi/go2-webrtc/git/blobs/7387508cd2869ea227d07bdfba437b9bbb59638d"
+      },
+      {
+        "path": "javascript/constants.js",
+        "mode": "100644",
+        "type": "blob",
+        "sha": "fb73a614f247064cbb257e334dd9abb7ce199cb3",
+        "size": 1538,
+        "url": "https://api.github.com/repos/tfoldi/go2-webrtc/git/blobs/fb73a614f247064cbb257e334dd9abb7ce199cb3"
+      },
+      {
+        "path": "javascript/go2webrtc.js",
+        "mode": "100644",
+        "type": "blob",
+        "sha": "4c54ea6a468cae1166a2fd5efee64ad2c4ae2e35",
+        "size": 7719,
+        "url": "https://api.github.com/repos/tfoldi/go2-webrtc/git/blobs/4c54ea6a468cae1166a2fd5efee64ad2c4ae2e35"
+      },
+      {
+        "path": "javascript/index.html",
+        "mode": "100644",
+        "type": "blob",
+        "sha": "7f3376fbe20325b31861be6c7a40768c721af4e3",
+        "size": 4096,
+        "url": "https://api.github.com/repos/tfoldi/go2-webrtc/git/blobs/7f3376fbe20325b31861be6c7a40768c721af4e3"
+      },
+      {
+        "path": "javascript/index.js",
+        "mode": "100644",
+        "type": "blob",
+        "sha": "0e79e1909f7c362e1140826a0e3503ae28ac7163",
+        "size": 6740,
+        "url": "https://api.github.com/repos/tfoldi/go2-webrtc/git/blobs/0e79e1909f7c362e1140826a0e3503ae28ac7163"
+      },
+      {
+        "path": "javascript/joy.min.js",
+        "mode": "100644",
+        "type": "blob",
+        "sha": "98c4e7f47f79e7bd4e19f817292c8d381257427f",
+        "size": 6181,
+        "url": "https://api.github.com/repos/tfoldi/go2-webrtc/git/blobs/98c4e7f47f79e7bd4e19f817292c8d381257427f"
+      },
+      {
+        "path": "javascript/md5.js",
+        "mode": "100644",
+        "type": "blob",
+        "sha": "2a5e0fe392b9f14726b38dcb62a632d4650ed942",
+        "size": 12314,
+        "url": "https://api.github.com/repos/tfoldi/go2-webrtc/git/blobs/2a5e0fe392b9f14726b38dcb62a632d4650ed942"
+      },
+      {
+        "path": "javascript/models",
+        "mode": "040000",
+        "type": "tree",
+        "sha": "fc3c1bd60a24701d9150bc60b147505a0152c413",
+        "url": "https://api.github.com/repos/tfoldi/go2-webrtc/git/trees/fc3c1bd60a24701d9150bc60b147505a0152c413"
+      },
+      {
+        "path": "javascript/models/axisColor4.png",
+        "mode": "100644",
+        "type": "blob",
+        "sha": "a2517d059a3df2cd3ec0f00fdb4d13b296005f0e",
+        "size": 569,
+        "url": "https://api.github.com/repos/tfoldi/go2-webrtc/git/blobs/a2517d059a3df2cd3ec0f00fdb4d13b296005f0e"
+      },
+      {
+        "path": "javascript/server.py",
+        "mode": "100644",
+        "type": "blob",
+        "sha": "588afb4b95e17f6b3116f52fbb682508bd1f068f",
+        "size": 3418,
+        "url": "https://api.github.com/repos/tfoldi/go2-webrtc/git/blobs/588afb4b95e17f6b3116f52fbb682508bd1f068f"
+      },
+      {
+        "path": "javascript/threejs.html",
+        "mode": "100644",
+        "type": "blob",
+        "sha": "2121f340872e54b815488866e8bd335304e2751d",
+        "size": 662,
+        "url": "https://api.github.com/repos/tfoldi/go2-webrtc/git/blobs/2121f340872e54b815488866e8bd335304e2751d"
+      },
+      {
+        "path": "javascript/threejs.init.js",
+        "mode": "100644",
+        "type": "blob",
+        "sha": "5796c01da2b364629b768188e95cdac58fc110ad",
+        "size": 1177,
+        "url": "https://api.github.com/repos/tfoldi/go2-webrtc/git/blobs/5796c01da2b364629b768188e95cdac58fc110ad"
+      },
+      {
+        "path": "javascript/threejs.js",
+        "mode": "100644",
+        "type": "blob",
+        "sha": "56797da1f92b06643be80d5569133c5b875664d3",
+        "size": 11231,
+        "url": "https://api.github.com/repos/tfoldi/go2-webrtc/git/blobs/56797da1f92b06643be80d5569133c5b875664d3"
+      },
+      {
+        "path": "javascript/utils.js",
+        "mode": "100644",
+        "type": "blob",
+        "sha": "736faa4e9f5522b3b8628ad2ab53a5c8719c7878",
+        "size": 400,
+        "url": "https://api.github.com/repos/tfoldi/go2-webrtc/git/blobs/736faa4e9f5522b3b8628ad2ab53a5c8719c7878"
+      },
+      {
+        "path": "python",
+        "mode": "040000",
+        "type": "tree",
+        "sha": "e85e196c48e1bc7c2062720b6ef662266d7a15af",
+        "url": "https://api.github.com/repos/tfoldi/go2-webrtc/git/trees/e85e196c48e1bc7c2062720b6ef662266d7a15af"
+      },
+      {
+        "path": "python/README.md",
+        "mode": "100644",
+        "type": "blob",
+        "sha": "86199077c3d9692a79fe6c55c93e627fc9c23549",
+        "size": 1565,
+        "url": "https://api.github.com/repos/tfoldi/go2-webrtc/git/blobs/86199077c3d9692a79fe6c55c93e627fc9c23549"
+      },
+      {
+        "path": "python/examples",
+        "mode": "040000",
+        "type": "tree",
+        "sha": "e64c3e19a4034f7d7f5ddbdde93ba7e46a9f074e",
+        "url": "https://api.github.com/repos/tfoldi/go2-webrtc/git/trees/e64c3e19a4034f7d7f5ddbdde93ba7e46a9f074e"
+      },
+      {
+        "path": "python/examples/joystick",
+        "mode": "040000",
+        "type": "tree",
+        "sha": "4c974ce4900f9a9e9a949104d3f33d73c07161f4",
+        "url": "https://api.github.com/repos/tfoldi/go2-webrtc/git/trees/4c974ce4900f9a9e9a949104d3f33d73c07161f4"
+      },
+      {
+        "path": "python/examples/joystick/go2_joystick.py",
+        "mode": "100644",
+        "type": "blob",
+        "sha": "bd4533d99931c85a9f6b089ff67d7cb83658d8a9",
+        "size": 4303,
+        "url": "https://api.github.com/repos/tfoldi/go2-webrtc/git/blobs/bd4533d99931c85a9f6b089ff67d7cb83658d8a9"
+      },
+      {
+        "path": "python/examples/mqtt",
+        "mode": "040000",
+        "type": "tree",
+        "sha": "3bd2a40f4fd182bdd5d5a52087bdea0b4d1a9ab9",
+        "url": "https://api.github.com/repos/tfoldi/go2-webrtc/git/trees/3bd2a40f4fd182bdd5d5a52087bdea0b4d1a9ab9"
+      },
+      {
+        "path": "python/examples/mqtt/go2_mqtt.py",
+        "mode": "100644",
+        "type": "blob",
+        "sha": "b22f13cd9cd5601b188067d01ec2dd4349dea513",
+        "size": 5093,
+        "url": "https://api.github.com/repos/tfoldi/go2-webrtc/git/blobs/b22f13cd9cd5601b188067d01ec2dd4349dea513"
+      },
+      {
+        "path": "python/go2_webrtc",
+        "mode": "040000",
+        "type": "tree",
+        "sha": "83c221401d30f03e8947c5d2d2d39fbbf7cbeab0",
+        "url": "https://api.github.com/repos/tfoldi/go2-webrtc/git/trees/83c221401d30f03e8947c5d2d2d39fbbf7cbeab0"
+      },
+      {
+        "path": "python/go2_webrtc/__init__.py",
+        "mode": "100644",
+        "type": "blob",
+        "sha": "d89fe013505bc93d3570bf01b341caa70a1f1b28",
+        "size": 1443,
+        "url": "https://api.github.com/repos/tfoldi/go2-webrtc/git/blobs/d89fe013505bc93d3570bf01b341caa70a1f1b28"
+      },
+      {
+        "path": "python/go2_webrtc/constants.py",
+        "mode": "100644",
+        "type": "blob",
+        "sha": "4e84e28e7d817f31dbeb24550a117f8f7c7dc3fd",
+        "size": 4845,
+        "url": "https://api.github.com/repos/tfoldi/go2-webrtc/git/blobs/4e84e28e7d817f31dbeb24550a117f8f7c7dc3fd"
+      },
+      {
+        "path": "python/go2_webrtc/go2_connection.py",
+        "mode": "100644",
+        "type": "blob",
+        "sha": "3cbc57d364d9e7723ba83182becaaa36b6396851",
+        "size": 18577,
+        "url": "https://api.github.com/repos/tfoldi/go2-webrtc/git/blobs/3cbc57d364d9e7723ba83182becaaa36b6396851"
+      },
+      {
+        "path": "python/go2_webrtc/go2_cv_video.py",
+        "mode": "100644",
+        "type": "blob",
+        "sha": "788c3ab5dc43ec6db3b35605559901574e2d1271",
+        "size": 2072,
+        "url": "https://api.github.com/repos/tfoldi/go2-webrtc/git/blobs/788c3ab5dc43ec6db3b35605559901574e2d1271"
+      },
+      {
+        "path": "python/go2_webrtc/libvoxel.wasm",
+        "mode": "100644",
+        "type": "blob",
+        "sha": "d80d9bf670ed519e644f9e2f3f2e7d8f108b2eca",
+        "size": 9520,
+        "url": "https://api.github.com/repos/tfoldi/go2-webrtc/git/blobs/d80d9bf670ed519e644f9e2f3f2e7d8f108b2eca"
+      },
+      {
+        "path": "python/go2_webrtc/lidar_decoder.py",
+        "mode": "100644",
+        "type": "blob",
+        "sha": "c66f8c1c8a75252de5652ab8713e4f4423246c96",
+        "size": 6659,
+        "url": "https://api.github.com/repos/tfoldi/go2-webrtc/git/blobs/c66f8c1c8a75252de5652ab8713e4f4423246c96"
+      },
+      {
+        "path": "python/requirements.txt",
+        "mode": "100644",
+        "type": "blob",
+        "sha": "5f3f29d6663f978b2440673a19677c07750abaf0",
+        "size": 91,
+        "url": "https://api.github.com/repos/tfoldi/go2-webrtc/git/blobs/5f3f29d6663f978b2440673a19677c07750abaf0"
+      },
+      {
+        "path": "python/setup.py",
+        "mode": "100644",
+        "type": "blob",
+        "sha": "6e199d51fc6264a63c741c71eb58fcab3f09a3f6",
+        "size": 195,
+        "url": "https://api.github.com/repos/tfoldi/go2-webrtc/git/blobs/6e199d51fc6264a63c741c71eb58fcab3f09a3f6"
+      },
+      {
+        "path": "python/tests",
+        "mode": "040000",
+        "type": "tree",
+        "sha": "f0ad4c241c970581abac0cc1db2d90c567e79b6d",
+        "url": "https://api.github.com/repos/tfoldi/go2-webrtc/git/trees/f0ad4c241c970581abac0cc1db2d90c567e79b6d"
+      },
+      {
+        "path": "python/tests/test_go2connection.py",
+        "mode": "100644",
+        "type": "blob",
+        "sha": "456e4951105ab4eccdf31d771fc3810f1b8ff6d8",
+        "size": 974,
+        "url": "https://api.github.com/repos/tfoldi/go2-webrtc/git/blobs/456e4951105ab4eccdf31d771fc3810f1b8ff6d8"
+      }
+    ],
+    "truncated": false
+  }
+}

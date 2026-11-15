@@ -1,0 +1,19 @@
+test_contact_final_state_receipt (test_s2_step14_hooks.TestHooks.test_contact_final_state_receipt) ... ok
+test_initial_state_and_pair_mutation (test_s2_step14_hooks.TestHooks.test_initial_state_and_pair_mutation) ... ok
+test_pre_reset_and_other_env_unchanged (test_s2_step14_hooks.TestHooks.test_pre_reset_and_other_env_unchanged) ... ok
+test_reset_ids_mismatch_is_hold (test_s2_step14_hooks.TestHooks.test_reset_ids_mismatch_is_hold) ... ok
+test_tile_scope_and_case_row (test_s2_step14_hooks.TestHooks.test_tile_scope_and_case_row) ... ok
+test_code_mutation_caught (test_s2_step14_scope.TestScope.test_code_mutation_caught) ... ok
+test_fake_owner_receipt_and_family_release (test_s2_step14_scope.TestScope.test_fake_owner_receipt_and_family_release) ... ok
+test_known_answer_scope (test_s2_step14_scope.TestScope.test_known_answer_scope) ... ok
+test_mutated_argv_caught (test_s2_step14_scope.TestScope.test_mutated_argv_caught) ... ok
+test_observer_identity_mutation (test_s2_step14_scope.TestScope.test_observer_identity_mutation) ... ok
+test_paired_fingerprint_and_observer_receipt (test_s2_step14_scope.TestScope.test_paired_fingerprint_and_observer_receipt) ... ok
+test_scope_and_deadline_caught (test_s2_step14_scope.TestScope.test_scope_and_deadline_caught) ... ok
+test_ninth_entry_and_outside_assignment_hold (test_s2_step14_usd.TestUsdEvidence.test_ninth_entry_and_outside_assignment_hold) ... ok
+test_two_conversions_within_cap (test_s2_step14_usd.TestUsdEvidence.test_two_conversions_within_cap) ... ok
+
+----------------------------------------------------------------------
+Ran 14 tests in 0.382s
+
+OK

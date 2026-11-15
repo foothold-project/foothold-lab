@@ -1,0 +1,269 @@
+{
+ "question": "TAGA: Terrain-aware Active Gaze Learning for Generalizable Agile Humanoid Locomotion (arXiv 2606.05880, Unitree G1). 조사할 것: (1) 이 논문의 지각 신경망 구성: depth image 와 height scan 을 각각 어떻게 인코딩하고 어떻게 합치는지, 기억(GRU · transformer), teacher-student 여부, 능동 시선(active gaze)이 무엇을 움직이고 어떻게 학습하는지, 학습 규모 · 시뮬 · 실기 하드웨어 · 지연. (2) 공개 코드 · 프로젝트 페이지 · 저자들의 선행 연구와 후속 · 이 논문을 인용한 작업. (3) 같은 문제(depth + height scan 지각으로 험지 · 듬성한 발판 보행)를 푼 최근 4족 · 휴머노이드 연구와의 비교: START(arXiv 2512.13153 · 2409.15692 TR-Net 지형 재구성), JEPLO, MGDP, AME-2, Extreme Parkour, ANYmal perceptive locomotion. (4) 고정 장착 depth 카메라(Go2 의 D435i 아래 35도)와 순정 L1 라이다를 쓰는 4족에 이 논문의 기법 중 무엇이 옮겨질 수 있는지, 능동 시선의 대안(카메라 피치 선택, 지도 위 attention, 다중 시야 등). 결론은 「적용 권고 · 참고 · 해당 없음」 으로, 출처 링크와 함께 한국어로.",
+ "summary": "TAGA(arXiv 2606.05880, Unitree G1)의 「능동 시선」은 머리 · 목 · 카메라를 움직이지 않는다. 정책 안의 작은 출력부(f_roi)가 2차원 시선 좌표를 [0,1]^2 로 내고, 그 좌표를 중심으로 3x21x21 height scan 에서 3x11x11 patch 를 미분 가능한 bilinear grid sampling 으로 잘라 낸다. 그래서 시선은 PPO 목적 함수와 경계 벌점(margin 0.05) 하나로 end-to-end 학습되고, 시선 보상이나 시선 정답 라벨은 없다. 지각 구성은 이렇다. 전방 depth 1x36x64 는 CNN 을 거쳐 128차원, proprioception 5 프레임 이력은 MLP 를 거쳐 128차원이 된다. 이 둘을 투영한 값이 query 가 되고, patch 의 점별 임베딩(CNN + 좌표 MLP)이 key · value 가 되어 multi-head cross-attention 으로 128차원 융합 임베딩이 나온다. 그 뒤에 soft gating 으로 묶은 5-expert MoE decoder 가 29개 관절 목표를 낸다. teacher-student 는 없고, asymmetric actor-critic PPO 에서 critic 만 실제 선속도와 잘리지 않은 전체 scan 을 받는다. GRU · transformer 같은 시간 기억도 서술되어 있지 않다. 실기에서는 Livox Mid-360 + DLIO 로 만든 elevation map 에서 scan 을 뽑고, Jetson Orin 에서 돌린다. 시선이 「지도 위에서 어디를 볼지 고르는 소프트웨어 crop」이라서 고정 D435i 와 L1 라이다를 쓰는 Go2 에도 구조상 옮길 수 있다. 다만 이것은 우리 쪽 추론이고 검증된 적은 없다. 판정은 이렇게 나눈다. 높이 지도 위 cross-attention(AME-2 와 같은 계열)은 「적용 권고」, 학습된 crop 시선과 MoE decoder 는 「참고(소규모 비교 실험 후보)」, 물리적으로 움직이는 시선(LEAP 의 pan-tilt 짐벌)은 순정 Go2 에 「해당 없음」이다.",
+ "findings": [
+  {
+   "claim": "TAGA 의 능동 시선은 하드웨어를 움직이지 않는다. 정책이 height scan 위의 2차원 시선 좌표를 예측하고, 그 좌표를 중심으로 21x21 scan 에서 11x11 patch 를 미분 가능한 bilinear grid sampling 으로 잘라 낸다. 시선은 RL 목적 함수로만 학습되고 시선 전용 보상이나 감독 신호는 없다. 시선에만 붙는 추가 항은 경계 벌점 L_roi(margin 0.05, 가중치 미기재) 하나다. 환경에 나가는 action 은 29개 관절 위치 목표뿐이다.",
+   "confidence": "high",
+   "sources": [
+    "https://arxiv.org/html/2606.05880v2",
+    "https://arxiv.org/abs/2606.05880",
+    "https://marmotlab.github.io/taga-humanoid/"
+   ],
+   "evidence": "원문: 'a lightweight head predicts a normalized two-dimensional gaze location (used to crop the height scan via differentiable bilinear grid sampling)' · 'such gaze behaviors can naturally emerge through reinforcement learning alone, without requiring additional supervision or explicit guidance'. 보상표(Table 4)에는 시선 항이 없다. 목적 함수는 L_PPO(r_env + eta*r_AMP) + c_v*L_value - c_e*H + lambda_c*L_con + lambda_b*L_roi 이다. 머리 · 목 관절은 언급되지 않고, 상체 보상 항은 Waist deviation 하나다. 「RL 보상만으로」라는 더 강한 문구는 1-2 로 기각되었다. 경계 정규화 항이 있으므로 「RL 목적 함수 + 경계 정규화」로 적는 것이 정확하다.",
+   "vote": "3-0 (병합: [0][3][4][6]은 3-0, [8]은 2-1)"
+  },
+  {
+   "claim": "TAGA 의 지각 융합 구조는 이렇다. depth 1x36x64 는 CNN 을 거쳐 128차원, proprioception 5 프레임은 MLP 를 거쳐 128차원이 된다. 이 둘로 시선 좌표를 정한다. 잘린 3x11x11 patch 는 lightweight CNN 과 좌표 MLP 를 거쳐 점마다 128차원 key · value 가 된다. [proprio, depth] 를 투영한 값이 query 가 되고, multi-head cross-attention 이 128차원 융합 임베딩을 낸다. 그 다음 [proprio, 융합] 을 입력으로 soft gating 하는 5-expert MoE decoder 가 action 을 낸다. depth 는 잘리지 않고, 시선 위치를 정하는 데와 query 를 만드는 데만 쓰인다.",
+   "confidence": "high",
+   "sources": [
+    "https://arxiv.org/html/2606.05880v2",
+    "https://arxiv.org/html/2606.05880",
+    "https://marmotlab.github.io/taga-humanoid/"
+   ],
+   "evidence": "원문: 'a CNN-based depth encoder ϕd ... forward-facing depth image 1×36×64 ... 128-dim visual embedding' · 'a multi-head cross-attention layer outputs a 128-dim fusion embedding' · 'A mixture-of-experts action decoder then adapts control to diverse terrain conditions'. 부록 B 에서 K/2 범위 안의 칸을 남기므로 crop 은 시선 위치가 중심이다. CNN 층 구성, attention head 수, MLP 크기는 기재되어 있지 않다.",
+   "vote": "3-0 (병합: [1][5][7])"
+  },
+  {
+   "claim": "TAGA 는 teacher-student 증류를 쓰지 않는다. asymmetric actor-critic PPO 에서 critic 만 특권 정보(실제 base 선속도, 잘리지 않은 전체 height scan)를 받는다. 보조 손실은 두 가지로, 시선 경계 벌점과 MoE gating latent 를 전체 scan 맥락과 맞추는 contrastive loss(CMoE 계열)다. AMP 보상 항도 있다. 시간 기억(GRU · LSTM · transformer)은 방법 절에 서술되어 있지 않고, 서론은 오히려 recurrent memory 가 세밀한 기하를 오래 보존하지 못한다고 비판한다.",
+   "confidence": "high",
+   "sources": [
+    "https://arxiv.org/html/2606.05880v2"
+   ],
+   "evidence": "원문: 'the critic additionally receives privileged information, including the ground-truth base linear velocity and the full uncropped height scan'. 부록 D.1 에 contrastive loss, D.2 에 boundary margin m=0.05 가 있다. RSL-rl 은 참고문헌에만 나오고, 본문에서 사용했다고 명시하지는 않는다.",
+   "vote": "3-0"
+  },
+  {
+   "claim": "TAGA 의 실기 구성은 이렇다. depth 카메라는 전방을 향하고 30 Hz 다. height scan 은 Livox Mid-360 LiDAR 와 DLIO 로 만든 국소 elevation map 에서 뽑고, 추론은 Jetson Orin 에서 한다. Go2 의 순정 L1 이 아니라 Mid-360 이므로 지도 품질이 같을지는 검증되지 않았다. 카메라가 허리 회전을 따라 움직이는지도 논문에 적혀 있지 않다.",
+   "confidence": "medium",
+   "sources": [
+    "https://arxiv.org/html/2606.05880v2",
+    "https://marmotlab.github.io/taga-humanoid/"
+   ],
+   "evidence": "검증자 인용: 'A Livox Mid-360 LiDAR and DLIO provide the local elevation map from which height scans are extracted', 추론은 Jetson Orin. 독립 주장으로 투표된 것이 아니라 [4][0] 검증 근거 안에서 확인된 내용이라 medium 으로 둔다. 학습 규모(환경 수 · iteration · GPU 시간)와 종단 지연은 이번 검증에서 확인되지 않았다.",
+   "vote": "3-0 (근거 내부 확인)"
+  },
+  {
+   "claim": "Go2 적용 판정의 핵심은 이렇다. TAGA 의 시선은 지도 위의 소프트웨어 crop 이므로 고정 D435i(아래 35도)와 L1 기반 elevation map 에도 구조상 붙일 수 있다. 판정은 세 가지로 나눈다. 높이 지도 patch 에 proprio 기반 query 로 cross-attention 을 거는 구조는 「적용 권고」다. AME-2 가 같은 계열을 4족에서 이미 썼다. 학습된 crop 시선(21x21 에서 11x11)과 MoE decoder 는 「참고」로 두고 소규모 비교 실험 후보로 삼는다. 물리적 시선(짐벌)은 순정 Go2 에 「해당 없음」이다.",
+   "confidence": "medium",
+   "sources": [
+    "https://arxiv.org/html/2606.05880v2",
+    "https://arxiv.org/html/2601.08485v1",
+    "https://arxiv.org/pdf/2609.17628"
+   ],
+   "evidence": "[8] 검증자: 'the paper never mentions quadrupeds or fixed cameras ... the last sentence is the claimant's own inference ... Whether it works on a Go2 with an L1 elevation map has not been tested.' 구조상 근거는 분명하다. 움직이는 하드웨어가 없고, crop 대상은 지도다. 그러나 4족 실증은 없다.",
+   "vote": "추론 (근거 주장들은 3-0, [8]은 2-1)"
+  },
+  {
+   "claim": "START(arXiv 2512.13153, Lite3)는 lidar 와 실측 height scan 을 쓰지 않는다. 머리에 단 D435i 의 단일 시점 depth(10 Hz, 60x60) 두 프레임과 proprioception 을 TR-Net 에 넣는다. TR-Net 은 CNN 다음 GRU 기억, 그 뒤 MLP 거친 지도와 U-Net 정제 지도를 낸다. 출력은 뒤 0.5 m · 앞 1.1 m · 폭 0.8 m · 5 cm 격자의 높이 지도이고, 손실은 거친 지도에 MSE, 정제 지도에 L1 이다. 정책 쪽은 teacher-student 가 아닌 단일 단계 PPO(asymmetric actor-critic)다. I-E Estimator 는 GRU(proprio) · CNN(지도) · transformer 융합으로 구성되고 VAE latent, 속도, 지도 서술자를 낸다. AdaSmpl 은 학습 중 재구성 지도를 확률적으로 실제 지도로 바꾼다. TAGA 와 달리 기억이 명시적(GRU)이고, 지도 자체를 depth 로부터 학습해 만든다.",
+   "confidence": "high",
+   "sources": [
+    "https://arxiv.org/html/2512.13153v1"
+   ],
+   "evidence": "원문: 'An Intel RealSense D435i camera on its head captures raw depth at 10 Hz' · 'a memory-augmented Terrain Reconstruction Network (TR-Net) that fuses proprioception with single-view depth images to reconstruct a local heightmap' · 'AdaSmpl probabilistically substitutes reconstructed heightmaps with ground-truth as inputs'. 배치 때는 재구성 지도만 쓴다.",
+   "vote": "3-0 (병합: [10][11][12])"
+  },
+  {
+   "claim": "AME-2(arXiv 2601.08485)는 depth 를 정책에 바로 넣지 않는다. point cloud 를 국소 2D 높이 격자에 투영하고, 얕은 gated-residual U-Net 이 칸마다 높이와 불확실도를 낸다(β-NLL, β=0.5). 그 결과를 odometry 로 전역 지도에 합치는데, Bayesian 융합이 아니라 Probabilistic Winner-Take-All 을 쓴다. 지도 인코더 구조는 이렇다. CNN 과 위치 임베딩으로 점별 국소 특징을 만들고, MLP 와 max pooling 으로 전역 특징을 만든다. (전역 특징 + proprio 임베딩)을 MLP 에 넣어 query 를 만들고, 국소 특징에 MHA 를 건 뒤 전역 특징과 이어 붙인다. teacher 는 실제 지도(x,y,z), student 는 학습된 지도(x,y,z,u)를 받는다. student 손실은 PPO + action distillation + 지도 임베딩 MSE 다. 시간 기억은 GRU 가 아니라 proprio 20 step 쌓기와 LSIO 다. teacher 는 80k, student 는 40k iteration 을 학습한다. TAGA 의 cross-attention 융합과 가장 가까운 4족 사례다.",
+   "confidence": "high",
+   "sources": [
+    "https://arxiv.org/html/2601.08485v1"
+   ],
+   "evidence": "원문: 'project[s] the point cloud onto a local 2D height grid ... a shallow U-Net' · 'The AME-2 encoder first extracts local map features with a convolutional neural network (CNN).' · 'teacher policies train for 80,000 iterations and student policies for 40,000'. 다른 점이 둘 있다. TAGA 는 crop 한 patch 에 attention 을 걸고 AME-2 는 지도 전체에 건다. TAGA 의 query 에는 depth 가 들어가지만 AME-2 의 query 에는 전역 지도 특징이 들어간다.",
+   "vote": "3-0 (병합: [13][14][15])"
+  },
+  {
+   "claim": "고정 depth 만 쓰는 대안 사례가 둘 있다. GA-PHL(LimX Oli, 1.65 m · 31 DoF 휴머노이드)은 몸통 아래에 아래로 향한 D435i 하나만 쓰고 LiDAR 는 없다. compact U-Net 이 프레임마다 1.2 m x 0.8 m · 5 cm(425차원) 높이 지도를 만들고, 시간 융합은 하지 않는다. 지도 하나에 약 11 ms 걸리고 50 Hz 정책에 공급한다(Jetson Orin NX 탑재, 측정 장치는 명시되지 않았다). KiVi 는 Lite3 에 D435i 를 달았고, 장착 각도와 해상도는 적혀 있지 않다. depth 10 Hz, 정책 50 Hz 이고 Orin NX Super 에서 돌린다.",
+   "confidence": "high",
+   "sources": [
+    "https://arxiv.org/pdf/2512.07464",
+    "https://arxiv.org/abs/2509.23650"
+   ],
+   "evidence": "원문: 'a compact U-Net reconstructs a dense egocentric height map from each frame in real time' · 'a robot-centric patch of 1.2 m×0.8 m ... 5 cm spatial resolution; processes each frame in about 11 ms' · 'DeepRobotics Lite3 quadruped equipped with a RealSense D435i depth camera'. KiVi 의 MemTransformer 상세 주장(0-3)과 단일 단계 주장(1-2), GA-PHL 의 S-TS 학습 상세 주장(1-2)은 기각되었으므로 인용하지 않는다.",
+   "vote": "3-0 (병합: [9][16][17])"
+  },
+  {
+   "claim": "물리적 능동 시선의 4족 사례로 LEAP(arXiv 2609.17628, Gökbakan · Caron · Souères)가 있다. Go2 몸통 위 pan-tilt 짐벌에 D435 모델 depth 를 달고, 정책이 pan-tilt 속도(축마다 0.9 rad/s 이하, pan ±85°, tilt ±60°)를 직접 명령한다. 시선에는 보상이 없다. 계층 구조이며, 3층 Transformer 항법 정책(PPO 900M step, A100 한 장으로 약 20시간)이 10 Hz 로 평면 twist 와 pan-tilt 를 낸다. 따로 학습한 Go2 보행 정책이 50 Hz 로 관절 목표를 낸다. 보행 actor 는 19차원 T자 scan, critic 은 136-ray scan 을 받는다. 시험 때는 이 scan 을 미세 belief map 에서 샘플링한다. 전부 시뮬레이션이고 MuJoCo sim2sim 까지만 했으며 실기 짐벌은 없다. 순정 Go2 의 고정 D435i 로는 짐벌 시선을 그대로 옮길 수 없다.",
+   "confidence": "high",
+   "sources": [
+    "https://arxiv.org/pdf/2609.17628"
+   ],
+   "evidence": "원문: 'depth camera on a pan-tilt mount ... gimbal limits of ±85° pan, ±60° tilt' · 'Sensing actions carry no direct reward' · 'During training, the scan is rendered from GT terrain; at test time it is sampled from BMfine.' 논문 스스로 몸체 고정 카메라에서는 시선을 heading 밖으로 돌리려면 능동 카메라가 유일한 방법이라고 적는다(vy≡0 unicycle 가정).",
+   "vote": "3-0 (병합: [18][20])"
+  },
+  {
+   "claim": "LEAP 에서 시선과 무관하게 고정 카메라에도 쓸 수 있는 부분은 belief map 이다. depth 를 점군으로 바꾼 뒤, yaw 정렬된 자기 중심 지도 두 장에 칸별 높이 평균 · 표준편차로 누적한다. 미세 지도는 0.1 m 격자 32x32, 거친 지도는 0.6 m 격자 32x32 다. 채널은 다섯 개(μ, σ, ray hit, 목표 hit, 방문 흔적)다. 감쇠(0.93/0.99)가 오래된 칸을 사전값(평지, σ0=1 m)으로 되돌리고, 확산(λ=0.01)이 불확실도를 이웃 칸으로 퍼뜨린다. 이 지도가 recurrent state 대신 기억 역할을 한다. LEAP 의 Passive 기준선(고정 시선)도 같은 지도를 쓴다. Go2 의 아래 35도 고정 D435i 에서 「지나간 발밑 기억」을 만드는 대안으로 참고할 만하다.",
+   "confidence": "high",
+   "sources": [
+    "https://arxiv.org/pdf/2609.17628"
+   ],
+   "evidence": "원문: 'Each image is integrated into two egocentric belief maps ... Each cell exposes five channels (µ, σ, nc, ng, nv) ... The belief maps also act as a local spatio-temporal memory, sparing the network a recurrent state'. 학습된 인코더 없이 고정된 카메라 기하만으로 지도를 만든다.",
+   "vote": "3-0 ([19])"
+  }
+ ],
+ "caveats": "1) TAGA 는 2026 년 arXiv 사전 인쇄본(v2)이고, 근거는 저자 논문과 프로젝트 페이지뿐이다. 독립 재현은 없다. 2) 내부 불일치가 하나 있다. 본문은 crop 을 「differentiable bilinear grid sampling」이라 하고, 부록 B 는 floor 기반 정수 창 인덱싱으로 적는다. 실제로 기울기가 시선 좌표까지 흐르는지는 코드로 확인해야 한다. 3) TAGA 의 CNN 층 구성, attention head 수, lambda_b 값, 학습 규모(환경 수 · iteration · GPU 시간), 종단 지연은 이번 검증에서 확인되지 않았다. 4) 「Go2 에 옮길 수 있다」는 우리 추론이다. TAGA 는 G1 과 Mid-360 + DLIO 로만 시험했고, 4족이나 순정 L1 지도로는 시험하지 않았다. L1 의 점 밀도와 시야로 21x21 scan 의 품질이 나오는지는 우리 측정이 필요하다. 5) LEAP 는 시뮬레이션(MuJoCo sim2sim)뿐이다. 소속 표기 WILLOW 는 원문에 없다(Inria/DI ENS · ISIR · LAAS). 6) 연구 질문 (2) 중 공개 코드 여부, 저자 선행 · 후속 연구, 인용 작업은 이번 검증을 통과한 주장에 없어 답하지 못했다. JEPLO · MGDP · Extreme Parkour · ANYmal perceptive locomotion 비교도 검증된 주장이 없어 빠졌다. 7) KiVi 의 MemTransformer 구조와 GA-PHL 의 S-TS 학습 상세는 기각(0-3, 1-2, 1-2)되었으므로 근거로 쓰지 않는다.",
+ "openQuestions": [
+  "TAGA 공개 코드나 체크포인트가 있는가. 있다면 crop 이 실제로 bilinear(미분 가능)인지 floor 인덱싱인지, 학습 규모와 Orin 추론 지연은 얼마인가",
+  "Go2 순정 L1 과 아래 35도 D435i 로 만든 elevation map 이 TAGA 식 21x21 scan(그리고 시선 crop)을 받칠 만한 밀도와 앞쪽 범위를 갖는가. 우리 시뮬 · 실기에서 직접 잴 것",
+  "학습된 시선 crop 이 같은 지도 위의 AME-2 식 전역 attention 보다 4족에서 실제로 이득(학습 효율, 듬성한 발판 성공률)을 주는가. 같은 잣대로 비교한 결과가 없다",
+  "JEPLO · MGDP · Extreme Parkour · ANYmal perceptive locomotion 과 TAGA 를 같은 축(지도 생성 · 기억 · 증류 여부)으로 비교하려면 추가 조사가 필요하다"
+ ],
+ "refuted": [
+  {
+   "claim": "The gaze or attention behavior emerges from RL reward alone. Per the abstract, there is no extra supervision or explicit guidance signal for where to attend.",
+   "vote": "1-2",
+   "source": "https://arxiv.org/abs/2606.05880"
+  },
+  {
+   "claim": "The perception network works like this. A CNN turns the past 2 egocentric depth frames into 16 visual tokens, and an MLP turns the past 10 proprioceptive steps into 1 token. A 2-layer memory-augmented Transformer (MemTransformer, 1 head, FFN 128) fuses them and carries 3 memory tokens of dim 32 between timesteps. The paper uses no height scan, only depth. Removing memory dropped real-world success to 3/5, 2/5, 2/5 and 0/5 (high platform, obstacle, tall grass, block camera).",
+   "vote": "0-3",
+   "source": "https://arxiv.org/abs/2509.23650"
+  },
+  {
+   "claim": "Training is single-stage end-to-end PPO with an asymmetric actor-critic: the critic gets privileged information, and there is no teacher-student distillation. The authors argue this avoids distillation error accumulation.",
+   "vote": "1-2",
+   "source": "https://arxiv.org/abs/2509.23650"
+  },
+  {
+   "claim": "Training uses a single-stage teacher-student scheme called Successive Teacher-Student (S-TS) with PPO in IsaacLab (4096 envs). All networks are MLPs, and a fixed proprioceptive history stands in for a GRU or transformer memory.",
+   "vote": "1-2",
+   "source": "https://arxiv.org/pdf/2512.07464"
+  }
+ ],
+ "unverified": [],
+ "sources": [
+  {
+   "url": "https://arxiv.org/html/2606.05880v2",
+   "quality": "primary",
+   "angle": "primary paper architecture",
+   "claimCount": 5
+  },
+  {
+   "url": "https://arxiv.org/abs/2606.05880",
+   "quality": "primary",
+   "angle": "primary paper architecture",
+   "claimCount": 5
+  },
+  {
+   "url": "https://marmotlab.github.io/taga-humanoid/",
+   "quality": "primary",
+   "angle": "primary paper architecture",
+   "claimCount": 5
+  },
+  {
+   "url": "https://arxiv.org/html/2606.05880",
+   "quality": "primary",
+   "angle": "code, project page, citations",
+   "claimCount": 5
+  },
+  {
+   "url": "https://arxiv.org/abs/2509.23650",
+   "quality": "primary",
+   "angle": "code, project page, citations",
+   "claimCount": 5
+  },
+  {
+   "url": "https://arxiv.org/html/2512.13153v1",
+   "quality": "primary",
+   "angle": "comparison with depth + height scan locomotion",
+   "claimCount": 5
+  },
+  {
+   "url": "https://arxiv.org/html/2601.08485v1",
+   "quality": "primary",
+   "angle": "comparison with depth + height scan locomotion",
+   "claimCount": 5
+  },
+  {
+   "url": "https://arxiv.org/pdf/2512.07464",
+   "quality": "primary",
+   "angle": "comparison with depth + height scan locomotion",
+   "claimCount": 5
+  },
+  {
+   "url": "https://arxiv.org/pdf/2609.17628",
+   "quality": "primary",
+   "angle": "active gaze alternatives for fixed cameras",
+   "claimCount": 5
+  },
+  {
+   "url": "https://arxiv.org/pdf/2506.09588",
+   "quality": "primary",
+   "angle": "active gaze alternatives for fixed cameras",
+   "claimCount": 5
+  },
+  {
+   "url": "https://arxiv.org/pdf/2601.08485",
+   "quality": "primary",
+   "angle": "active gaze alternatives for fixed cameras",
+   "claimCount": 5
+  },
+  {
+   "url": "https://arxiv.org/pdf/2505.11164",
+   "quality": "primary",
+   "angle": "active gaze alternatives for fixed cameras",
+   "claimCount": 5
+  },
+  {
+   "url": "https://arxiv.org/pdf/2505.22974",
+   "quality": "primary",
+   "angle": "active gaze alternatives for fixed cameras",
+   "claimCount": 5
+  },
+  {
+   "url": "https://arxiv.org/pdf/2606.05880",
+   "quality": "primary",
+   "angle": "active gaze alternatives for fixed cameras",
+   "claimCount": 5
+  },
+  {
+   "url": "https://arxiv.org/pdf/2510.18348",
+   "quality": "primary",
+   "angle": "Go2 practitioner transfer",
+   "claimCount": 5
+  },
+  {
+   "url": "https://arxiv.org/pdf/2412.04453",
+   "quality": "primary",
+   "angle": "Go2 practitioner transfer",
+   "claimCount": 5
+  },
+  {
+   "url": "https://arxiv.org/pdf/2606.25765",
+   "quality": "primary",
+   "angle": "Go2 practitioner transfer",
+   "claimCount": 5
+  },
+  {
+   "url": "https://arxiv.org/pdf/2511.22744",
+   "quality": "primary",
+   "angle": "Go2 practitioner transfer",
+   "claimCount": 5
+  },
+  {
+   "url": "https://arxiv.org/pdf/2609.15770",
+   "quality": "primary",
+   "angle": "Go2 practitioner transfer",
+   "claimCount": 5
+  },
+  {
+   "url": "https://arxiv.org/pdf/2602.03002",
+   "quality": "primary",
+   "angle": "Go2 practitioner transfer",
+   "claimCount": 5
+  }
+ ],
+ "stats": {
+  "angles": 5,
+  "sourcesFetched": 20,
+  "claimsExtracted": 100,
+  "claimsVerified": 25,
+  "confirmed": 21,
+  "killed": 4,
+  "unverified": 0,
+  "afterSynthesis": 10,
+  "urlDupes": 6,
+  "budgetDropped": 4,
+  "agentCalls": 102
+ }
+}

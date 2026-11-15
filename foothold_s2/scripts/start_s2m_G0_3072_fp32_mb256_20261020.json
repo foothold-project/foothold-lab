@@ -1,0 +1,165 @@
+{
+ "started": "2026-10-20T14:01:22",
+ "args": {
+  "task": "G0",
+  "num_envs": 3072,
+  "iterations": 3,
+  "microbatch": 256,
+  "replay_impl": "a3",
+  "autocast": null,
+  "kl_fp32": false,
+  "tasks_root": "C:/Users/AI-WS01/orca/workspaces/foothold-lab/sonnet-code",
+  "out": "C:/Users/AI-WS01/AppData/Local/Temp/claude/C--Users-AI-WS01-orca-workspaces-foothold-lab-rl-v2-command-restore/0d6a4467-5aaa-4436-8e6b-698f433bf226/scratchpad/s2m_G0_3072_fp32_mb256",
+  "enable_cameras": false,
+  "xr": false,
+  "device": "cuda:0",
+  "cpu": false,
+  "verbose": false,
+  "info": false,
+  "rendering_mode": null,
+  "kit_args": "",
+  "anim_recording_enabled": false,
+  "anim_recording_start_time": 0,
+  "anim_recording_stop_time": 10,
+  "headless": true,
+  "hide_ui": true,
+  "create_new_stage": false,
+  "physics_gpu": 0,
+  "active_gpu": 0
+ },
+ "pid": 89736,
+ "terrain": {
+  "num_rows": 10,
+  "num_cols": 50,
+  "size": [
+   8.0,
+   8.0
+  ]
+ },
+ "module_files": {
+  "foothold_s2.runners.start_runner": "C:\\mai\\wt\\foothold-lab\\rl\\foothold_s2\\runners\\start_runner.py",
+  "foothold_s2.models.start_perception": "C:\\mai\\wt\\foothold-lab\\rl\\foothold_s2\\models\\start_perception.py",
+  "foothold_s2.models.replay_fast": null,
+  "foothold_s2.sensors.start_obs": "C:\\mai\\wt\\foothold-lab\\rl\\foothold_s2\\sensors\\start_obs.py",
+  "foothold_s2.tasks.s2_env_cfg": "C:\\Users/AI-WS01/orca/workspaces/foothold-lab/sonnet-code\\foothold_s2\\tasks\\s2_env_cfg.py"
+ },
+ "sensors_GiB": 1.6224231719970703,
+ "perception_cfg": {
+  "map_input": "none",
+  "microbatch_envs": 256,
+  "replay_impl": "a3",
+  "replay_autocast": null,
+  "kl_fp32": false,
+  "measure_phases": true
+ },
+ "iter_log": [
+  {
+   "it": 0,
+   "collection_s": 5.610664129257202,
+   "learn_s": 1.2994847297668457,
+   "steps_per_s": 10669.524130976963
+  },
+  {
+   "it": 1,
+   "collection_s": 3.793341636657715,
+   "learn_s": 1.1784119606018066,
+   "steps_per_s": 14829.375301430784
+  },
+  {
+   "it": 2,
+   "collection_s": 3.901491165161133,
+   "learn_s": 1.1994545459747314,
+   "steps_per_s": 14453.790370488467
+  }
+ ],
+ "memory_log": [
+  {
+   "it": 0,
+   "phase": "2_rollout",
+   "cum_peak": 3686288384,
+   "phase_peak": 3686288384,
+   "allocated": 2592541696
+  },
+  {
+   "it": 0,
+   "phase": "3_ppo_update",
+   "cum_peak": 3031427584,
+   "phase_peak": 3031427584,
+   "allocated": 2611728384
+  },
+  {
+   "it": 0,
+   "phase": "4_perception_update",
+   "cum_peak": 2907196928,
+   "phase_peak": 2907196928,
+   "allocated": 2617844736
+  },
+  {
+   "it": 1,
+   "phase": "2_rollout",
+   "cum_peak": 3664294400,
+   "phase_peak": 3664294400,
+   "allocated": 2621848064
+  },
+  {
+   "it": 1,
+   "phase": "3_ppo_update",
+   "cum_peak": 3043070976,
+   "phase_peak": 3043070976,
+   "allocated": 2622708224
+  },
+  {
+   "it": 1,
+   "phase": "4_perception_update",
+   "cum_peak": 2912318464,
+   "phase_peak": 2912318464,
+   "allocated": 2622708224
+  },
+  {
+   "it": 2,
+   "phase": "2_rollout",
+   "cum_peak": 3590095872,
+   "phase_peak": 3590095872,
+   "allocated": 2622034432
+  },
+  {
+   "it": 2,
+   "phase": "3_ppo_update",
+   "cum_peak": 3042348032,
+   "phase_peak": 3042348032,
+   "allocated": 2622771712
+  },
+  {
+   "it": 2,
+   "phase": "4_perception_update",
+   "cum_peak": 2913998336,
+   "phase_peak": 2913998336,
+   "allocated": 2622771712
+  }
+ ],
+ "perception_losses": {
+  "l_tr": 0.0,
+  "l_ie": 8.281576236089071,
+  "kl": 0.003063490971301993,
+  "o_next": 8.226097464561466,
+  "v": 0.04108946373065313,
+  "hf": 0.004332529062715669,
+  "hb": 0.006993301787103216
+ },
+ "summary": {
+  "iter_s": 5.036349654197693,
+  "collection_s": 3.847416400909424,
+  "learn_s": 1.188933253288269,
+  "steps_per_s": 14641.582835959625,
+  "peak_GiB": 3.41264009475708,
+  "phase_peak_GiB": {
+   "2_rollout": 3.41264009475708,
+   "3_ppo_update": 2.834080696105957,
+   "4_perception_update": 2.7138724327087402
+  }
+ },
+ "checks": {
+  "traceback": false,
+  "measured": true
+ }
+}

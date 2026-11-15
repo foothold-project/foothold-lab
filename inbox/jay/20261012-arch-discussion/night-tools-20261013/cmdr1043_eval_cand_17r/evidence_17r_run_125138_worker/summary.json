@@ -1,0 +1,41 @@
+{
+  "cpu_only": true,
+  "results": [
+    {
+      "test": "test_17r_b.py",
+      "exit_code": 0,
+      "wall_s": 3.84,
+      "log": "C:\\Users\\AI-WS01\\.claude\\jobs\\09bbf294\\tmp\\codexE\\evidence_17r\\run_20261014_125138_107212\\test_17r_b.log"
+    },
+    {
+      "test": "test_17r_c.py",
+      "exit_code": 0,
+      "wall_s": 1.22,
+      "log": "C:\\Users\\AI-WS01\\.claude\\jobs\\09bbf294\\tmp\\codexE\\evidence_17r\\run_20261014_125138_107212\\test_17r_c.log"
+    },
+    {
+      "test": "test_17r_d.py",
+      "exit_code": 0,
+      "wall_s": 0.47,
+      "log": "C:\\Users\\AI-WS01\\.claude\\jobs\\09bbf294\\tmp\\codexE\\evidence_17r\\run_20261014_125138_107212\\test_17r_d.log"
+    },
+    {
+      "test": "test_17r_e.py",
+      "exit_code": 0,
+      "wall_s": 28.91,
+      "log": "C:\\Users\\AI-WS01\\.claude\\jobs\\09bbf294\\tmp\\codexE\\evidence_17r\\run_20261014_125138_107212\\test_17r_e.log"
+    },
+    {
+      "test": "test_17r_post_cli.py",
+      "exit_code": 0,
+      "wall_s": 3.08,
+      "log": "C:\\Users\\AI-WS01\\.claude\\jobs\\09bbf294\\tmp\\codexE\\evidence_17r\\run_20261014_125138_107212\\test_17r_post_cli.log"
+    },
+    {
+      "test": "test_17r_mutants.py",
+      "exit_code": 0,
+      "wall_s": 0.31,
+      "log": "C:\\Users\\AI-WS01\\.claude\\jobs\\09bbf294\\tmp\\codexE\\evidence_17r\\run_20261014_125138_107212\\test_17r_mutants.log"
+    }
+  ]
+}
