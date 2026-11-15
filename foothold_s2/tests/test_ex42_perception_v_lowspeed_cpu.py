@@ -43,8 +43,8 @@ def _eps(b):
     return torch.randn(b["obs"].shape[0], b["obs"].shape[1], 16, generator=torch.Generator().manual_seed(5))
 
 
-def test_defaults_are_off_and_the_records_are_on():
-    assert sp.PERCEPTION_V_LOWSPEED_WEIGHT == 1.0
+def test_defaults_are_the_v29_13_on_value_and_the_records_are_on():
+    assert sp.PERCEPTION_V_LOWSPEED_WEIGHT == 3.0   # v29-13 is the ON commit; the off commit (1.0) is its parent
     assert sp.PERCEPTION_V_LOWSPEED_THRESHOLD == 0.3
     assert sp.PERCEPTION_V_BAND_EDGES == (0.0, 0.05, 0.15, 0.3, float("inf"))
 
@@ -61,7 +61,11 @@ def _want(est, gt, w):
 def test_off_is_bit_identical_to_mse_loss_and_on_is_the_per_axis_weighted_mean():
     g = torch.Generator().manual_seed(1)
     est, gt = torch.randn(64, 3, generator=g), torch.randn(64, 3, generator=g) * 0.3
-    assert torch.equal(sp.velocity_loss(est, gt), F.mse_loss(est, gt))
+    sp.PERCEPTION_V_LOWSPEED_WEIGHT = 1.0   # the off state is stated here, not inherited from the committed default (v29-13 commits 3.0)
+    try:
+        assert torch.equal(sp.velocity_loss(est, gt), F.mse_loss(est, gt))
+    finally:
+        sp.PERCEPTION_V_LOWSPEED_WEIGHT = _W0
     sp.PERCEPTION_V_LOWSPEED_WEIGHT = 3.0
     try:
         assert (gt[:, 0].abs() < 0.3).any() and (gt[:, 0].abs() >= 0.3).any() and (gt[:, 1].abs() < 0.3).any() and (gt[:, 1].abs() >= 0.3).any()
@@ -198,7 +202,11 @@ def test_the_weight_changes_the_gradient_of_a_real_batch_but_not_the_state_dict_
     eps = _eps(b)
     params = [q for q in r.perception.parameters()]
     keys = {k: tuple(v.shape) for k, v in r.perception.state_dict().items()}
-    g_off = torch.autograd.grad(r.perception.sequence_loss(b, eps=eps, impl="loop")["loss"], params, allow_unused=True)
+    sp.PERCEPTION_V_LOWSPEED_WEIGHT = 1.0
+    try:
+        g_off = torch.autograd.grad(r.perception.sequence_loss(b, eps=eps, impl="loop")["loss"], params, allow_unused=True)
+    finally:
+        sp.PERCEPTION_V_LOWSPEED_WEIGHT = _W0
     sp.PERCEPTION_V_LOWSPEED_WEIGHT = 3.0
     try:
         g_on = torch.autograd.grad(r.perception.sequence_loss(b, eps=eps, impl="loop")["loss"], params, allow_unused=True)

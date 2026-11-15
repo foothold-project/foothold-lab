@@ -196,7 +196,7 @@ def loss_tr(rough: torch.Tensor, refined: torch.Tensor, hb: torch.Tensor) -> tor
 # (vx 칸은 |vx|, vy 칸은 |vy| 로 각각, vz 칸은 항상 1). 이전 판은 xy 노름 하나로 세 칸 전체에 걸었으나, 옆 (vy) 추정 치우침이 옆 명령 점수
 # (m950 옆 +0.2 = 0.596 대 옆 -0.2 = 0.877) 와 같은 방향이라 축별로 바꿨다. 식: mean_{표본, 3 칸}(w_axis * err_axis) (F.mse_loss 와 같은 평균 축).
 # 가중이 정규화되지 않아 저속 축이 있는 만큼 손실이 커진다.
-PERCEPTION_V_LOWSPEED_WEIGHT = 1.0
+PERCEPTION_V_LOWSPEED_WEIGHT = 3.0   # v29-13: ON (lead 02:59). The off commit is the one before this (1.0).
 PERCEPTION_V_LOWSPEED_THRESHOLD = 0.3
 # EX-42 v29-9 (P-v): 지각 손실 l_ie 의 속도(v) 항에만 곱하는 계수. 1.0 = 꺼짐 (이전 동작과 비트 동일, 곱셈 자체를 하지 않는다). 켜려면 이 한 줄을 5.0 으로.
 # res["v"] (로그되는 Mean perception/v loss 와 v 띠 기록) 는 곱하기 전 값 그대로이고, l_ie 와 loss 에만 곱해진 값이 들어간다. 다른 항 (kl, o_next, hf, hb, l_tr) 은 그대로.
