@@ -84,7 +84,7 @@ MODE_DEFAULTS = {"est_mode": "learned", "critic_mode": "legacy"}   # 옛 체크�
 # 지각 optimizer 수치: 전부 가정 (12 §6.1, START · 선행에 없음)
 # 지각 optimizer 학습률을 이 값으로 고정한다 (v28f). None 이면 PERCEPTION_DEFAULTS / train_cfg 값 그대로(이전 동작과 같음).
 # 이어받기 때 저장본의 perception_optimizer 가 param_groups lr 까지 복원하므로 복원 직후마다 다시 덮는다 (_pin_perception_lr).
-PERCEPTION_LR_OVERRIDE = 1e-4
+PERCEPTION_LR_OVERRIDE = 2.5e-4
 PERCEPTION_DEFAULTS = {
     "fast_gt_only": False,
     "learning_rate": 5e-4,
@@ -410,6 +410,10 @@ class StartRunner(OnPolicyRunner):
     _mean_action = None       # [num_envs] bool: envs acting with the mean action (v28p), None = off
     _vbias_mean_samples = None
     last_perception_v_bias_mean_action: dict | None = None
+    _fwd01_samples = None
+    _fwd01_mean_samples = None
+    last_perception_v_bias_fwd01: dict | None = None
+    last_perception_v_bias_fwd01_mean_action: dict | None = None
 
     _noise_counts = None      # [low-speed envs, small-noise envs] summed over the steps of one rollout (device tensor)
     _noise_steps = 0
@@ -762,6 +766,8 @@ class StartRunner(OnPolicyRunner):
             src_steps.zero_()
             self._vbias_samples = []
             self._vbias_mean_samples = []
+            self._fwd01_samples = []
+            self._fwd01_mean_samples = []
             noise_row: dict = {}
             contract_fn = ((lambda c: torch.zeros(c.shape[0], dtype=torch.bool, device=c.device))
                            if continuous is not None else contract_bad_fn(self.pcfg["contract"]))
@@ -1244,6 +1250,46 @@ class StartRunner(OnPolicyRunner):
             if self._vbias_mean_samples is None:
                 self._vbias_mean_samples = []
             self._vbias_mean_samples.append((est3 - vel)[m & self._mean_action].float())
+        self._fwd01_collect(o, est3 - vel)
+
+    def _fwd01_collect(self, o: torch.Tensor, bias: torch.Tensor) -> None:
+        """기록만 (EX42_PERCEPTION_V_BIAS_FWD01): 평가 탐침과 같은 자 (|vy|<0.02 · wz 0 · heading 끔 · vx 0.08~0.12 · 명령이 바뀐 지 2 초) 의 표본만.
+        heading 은 명령 항의 플래그, 경과 시간은 명령 항의 (재표집 주기 상한 - time_left) (IsaacLab CommandTerm: reset 과 재표집이 time_left 를 주기로 되돌린다).
+        명령 항을 못 찾으면 표본 없음 (n=0)."""
+        if self._fwd01_samples is None:
+            self._fwd01_samples = []
+            self._fwd01_mean_samples = []
+        term = self._command_term()
+        if term is None:
+            return
+        age = float(term.cfg.resampling_time_range[1]) - term.time_left
+        fm = sp.fwd01_mask(o[:, 6:9], term.heading, age)
+        self._fwd01_samples.append(bias[fm].float())
+        if self._mean_action is not None:
+            self._fwd01_mean_samples.append(bias[fm & self._mean_action].float())
+
+    def _gather_vbias(self, parts) -> torch.Tensor:
+        samples = torch.cat(parts) if parts else torch.zeros(0, 3, device=self.device)
+        if self.is_distributed:
+            gathered = [None] * self.gpu_world_size
+            torch.distributed.all_gather_object(gathered, samples.cpu())
+            samples = torch.cat(gathered)
+        return samples
+
+    def _fwd01_finish(self, it: int) -> None:
+        """이 rollout 의 FWD01 표본을 (2 rank 면 합쳐서) 요약하고 한 줄 (평균 행동 env 가 있으면 한 줄 더) 찍는다. 모든 rank 가 같은 횟수로 부른다."""
+        f = lambda x: "null" if x is None else "%.4f" % x
+        c = sp.PERCEPTION_V_BIAS_FWD01
+        cond = "vy<%.2f_wz0_heading_off_vx_%.2f_%.2f_age>=%.1fs" % (c["vy_abs_max"], c["vx_lo"], c["vx_hi"], c["age_s"])
+        self.last_perception_v_bias_fwd01 = r = lowband_bias_summary(self._gather_vbias(self._fwd01_samples))
+        self._fwd01_samples = []
+        if not self.disable_logs:
+            print("EX42_PERCEPTION_V_BIAS_FWD01 it=%d cond=%s n=%d mean=%s p10=%s p90=%s" % (it, cond, r["n"], f(r["mean"]), f(r["p10"]), f(r["p90"])), flush=True)
+        if self._mean_action is not None:
+            self.last_perception_v_bias_fwd01_mean_action = r = lowband_bias_summary(self._gather_vbias(self._fwd01_mean_samples))
+            self._fwd01_mean_samples = []
+            if not self.disable_logs:
+                print("EX42_PERCEPTION_V_BIAS_FWD01_MEAN_ACTION it=%d cond=%s n=%d mean=%s p10=%s p90=%s" % (it, cond, r["n"], f(r["mean"]), f(r["p10"]), f(r["p90"])), flush=True)
 
     def _vbias_finish(self, it: int) -> None:
         """이 rollout 의 표본을 모아 (2 rank 면 표본을 합쳐서) 요약하고 매 회차 한 줄 찍는다. 모든 rank 가 같은 횟수로 부른다."""
@@ -1274,11 +1320,16 @@ class StartRunner(OnPolicyRunner):
                     it, int(self._mean_action.sum()), self.env.num_envs, float(self._mean_action.float().mean())), flush=True)
                 print("EX42_PERCEPTION_V_BIAS_MEAN_ACTION it=%d band=cmd_%.2f_%.2f n=%d mean=%s p10=%s p90=%s mean_y=%s p10_y=%s p90_y=%s" % (
                     it, *sp.PERCEPTION_V_BIAS_LOWBAND, r["n"], f(r["mean"]), f(r["p10"]), f(r["p90"]), f(r["mean_y"]), f(r["p10_y"]), f(r["p90_y"])), flush=True)
+        self._fwd01_finish(it)
 
     def _v_bias_record(self) -> dict:
         record = {"lowband": dict(self.last_perception_v_bias)}
         if self.last_perception_v_bias_mean_action is not None:
             record["mean_action_lowband"] = dict(self.last_perception_v_bias_mean_action)
+        if self.last_perception_v_bias_fwd01 is not None:
+            record["fwd01"] = dict(self.last_perception_v_bias_fwd01)
+        if self.last_perception_v_bias_fwd01_mean_action is not None:
+            record["fwd01_mean_action"] = dict(self.last_perception_v_bias_fwd01_mean_action)
         return record
 
     def update_perception(self) -> dict[str, float]:

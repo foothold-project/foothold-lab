@@ -81,7 +81,7 @@ SMALL_NOISE_REST_SHARE = 0.25
 # Their rows are marked invalid for PPO (the existing quarantine mask): no surrogate, value, entropy, bounds, scheduler KL
 # and no advantage normalisation statistics. The perception replay is filled for every env, so the perception loss
 # (velocity head included) still sees them: the velocity estimate is trained on the walk the noise-free evaluation shows.
-MEAN_ACTION_PERCEPTION_SHARE = 0.12
+MEAN_ACTION_PERCEPTION_SHARE = 0.0
 
 
 def small_noise_static_share() -> float:

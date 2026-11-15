@@ -40,7 +40,7 @@ def _rollout(alg, obs, rewards_for_mean=0.0, seed=11, steps=STEPS):
 
 
 def test_constants_and_the_helper():
-    assert mirror.MEAN_ACTION_PERCEPTION_SHARE == 0.12
+    assert mirror.MEAN_ACTION_PERCEPTION_SHARE == 0.0                   # v29: off (the helper below still checks 0.12 as an argument)
     assert mirror.SMALL_NOISE_LOWSPEED_CMD == 0.0 and mirror.SMALL_NOISE_ENV_SHARE == 0.25 and mirror.SMALL_NOISE_SIGMA_SCALE == 0.2   # v28f-like
     assert mirror.small_noise_static_share() == 0.25
     assert mean_action_mask(N, 0.0) is None
@@ -151,6 +151,7 @@ def _runner(alg, mirror_on=True):
 
 
 def test_runner_hands_the_mask_to_the_algorithm_and_off_switches_remove_it(monkeypatch):
+    monkeypatch.setattr(mirror, "MEAN_ACTION_PERCEPTION_SHARE", 0.12)   # v29 default is 0
     alg, _ = _alg(None)
     runner = _runner(alg)
     runner._apply_small_noise()
@@ -164,7 +165,8 @@ def test_runner_hands_the_mask_to_the_algorithm_and_off_switches_remove_it(monke
     assert alg.mean_action_mask is None
 
 
-def test_bias_of_the_mean_envs_is_recorded_apart_from_all_envs():
+def test_bias_of_the_mean_envs_is_recorded_apart_from_all_envs(monkeypatch):
+    monkeypatch.setattr(mirror, "MEAN_ACTION_PERCEPTION_SHARE", 0.12)   # v29 default is 0
     from foothold_s2.models import start_perception as sp
     alg, _ = _alg(None)
     runner = _runner(alg)

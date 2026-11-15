@@ -33,15 +33,15 @@ def _lrs(opt):
 
 
 def test_the_constant_is_one_value_and_on(monkeypatch):
-    assert start_runner.PERCEPTION_LR_OVERRIDE == 1e-4
+    assert start_runner.PERCEPTION_LR_OVERRIDE == 2.5e-4
     assert start_runner.PERCEPTION_DEFAULTS["learning_rate"] == 5e-4          # the default table is not edited (plan and saved cfg keep 5e-4)
 
 
 def test_a_new_runner_starts_at_the_pinned_lr_logs_the_optimizer_value_and_leaves_ppo_alone(capsys, monkeypatch):
     runner = _runner()
     out = capsys.readouterr().out
-    assert set(_lrs(runner.perception_optimizer)) == {1e-4}
-    assert "EX42_PERCEPTION_LR where=start lr=0.0001 override=0.0001" in out
+    assert set(_lrs(runner.perception_optimizer)) == {2.5e-4}
+    assert "EX42_PERCEPTION_LR where=start lr=0.00025 override=0.00025" in out
     monkeypatch.setattr(start_runner, "PERCEPTION_LR_OVERRIDE", None)
     plain = _runner()
     assert set(_lrs(plain.perception_optimizer)) == {5e-4}                     # None: the old behavior (the saved / default value)
@@ -72,11 +72,11 @@ def test_restoring_a_saved_5e4_perception_optimizer_is_pinned_again_and_ppo_lr_i
     capsys.readouterr()
     new.load(str(path), map_location="cpu")
     out = capsys.readouterr().out
-    assert set(_lrs(new.perception_optimizer)) == {1e-4}                        # load_state_dict restored 5e-4, the pin put 1e-4 back
-    assert "EX42_PERCEPTION_LR where=load lr=0.0001" in out
+    assert set(_lrs(new.perception_optimizer)) == {2.5e-4}                      # load_state_dict restored 5e-4, the pin put 2.5e-4 back
+    assert "EX42_PERCEPTION_LR where=load lr=0.00025" in out
     assert new.alg.learning_rate == 3e-4 and set(_lrs(new.alg.optimizer)) == {3e-4}      # the PPO side is exactly the saved one
     again = new.state_dict()
-    assert {g["lr"] for g in again["perception_optimizer_state_dict"]["param_groups"]} == {1e-4}   # and the next save carries 1e-4
+    assert {g["lr"] for g in again["perception_optimizer_state_dict"]["param_groups"]} == {2.5e-4}   # and the next save carries 2.5e-4
 
 
 def test_load_without_the_optimizer_keeps_whatever_the_runner_has(tmp_path, monkeypatch):
@@ -87,7 +87,7 @@ def test_load_without_the_optimizer_keeps_whatever_the_runner_has(tmp_path, monk
     monkeypatch.undo()
     new = _runner()
     new.load(str(path), load_optimizer=False, map_location="cpu")
-    assert set(_lrs(new.perception_optimizer)) == {1e-4}
+    assert set(_lrs(new.perception_optimizer)) == {2.5e-4}
 
 
 @needs_run
@@ -110,8 +110,8 @@ def test_real_e0_m250_stage_zero_parent_load_ends_at_the_pinned_lr(capsys):
     runner = _loader_runner(p_off, {**sr.MODE_DEFAULTS, **(checkpoint.get("perception_cfg") or {})})
     assert runner.perception_optimizer.param_groups[0]["lr"] == 5e-4
     runner.load_ex42_stage_zero_parent(checkpoint, receipt, stage_e1=True)
-    assert [g["lr"] for g in runner.perception_optimizer.param_groups] == [1e-4]
-    assert "EX42_PERCEPTION_LR where=load_ex42_stage_zero_parent lr=0.0001" in capsys.readouterr().out
+    assert [g["lr"] for g in runner.perception_optimizer.param_groups] == [2.5e-4]
+    assert "EX42_PERCEPTION_LR where=load_ex42_stage_zero_parent lr=0.00025" in capsys.readouterr().out
 
 
 def test_plan_and_approvals_are_not_touched():
