@@ -1,0 +1,63 @@
+{
+ "started": "2026-10-20T13:42:28",
+ "num_envs": 1536,
+ "iterations": 3,
+ "device": "cuda:0",
+ "seed": 42,
+ "gt_map_rays": 512,
+ "obs_shapes": {
+  "policy": [
+   1536,
+   45
+  ],
+  "depth": [
+   1536,
+   3600
+  ],
+  "gt_map": [
+   1536,
+   512
+  ],
+  "gt_feet": [
+   1536,
+   100
+  ],
+  "base_vel": [
+   1536,
+   3
+  ],
+  "contacts": [
+   1536,
+   4
+  ]
+ },
+ "memory_GiB": {
+  "1_sensors": 0.5118227005004883
+ },
+ "perception_cfg": {
+  "measure_phases": true,
+  "replay_impl": "a3"
+ },
+ "traceback": "Traceback (most recent call last):\n  File \"C:\\mai\\wt\\foothold-lab\\rl\\foothold_s2\\scripts\\start_gate.py\", line 240, in <module>\n    out = restore_main() if args.restore_from else main()\n                                                   ^^^^^^\n  File \"C:\\mai\\wt\\foothold-lab\\rl\\foothold_s2\\scripts\\start_gate.py\", line 199, in main\n    runner.learn(args.iterations, init_at_random_ep_len=True)\n  File \"C:\\mai\\wt\\foothold-lab\\rl\\foothold_s2\\runners\\start_runner.py\", line 243, in learn\n    ploss = self.update_perception()\n            ^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\mai\\wt\\foothold-lab\\rl\\foothold_s2\\runners\\start_runner.py\", line 278, in update_perception\n    (res[\"loss\"] * (len(c) / len(idx))).backward()\n  File \"C:\\Users\\AI-WS01\\anaconda3\\envs\\isaac311\\Lib\\site-packages\\torch\\_tensor.py\", line 648, in backward\n    torch.autograd.backward(\n  File \"C:\\Users\\AI-WS01\\anaconda3\\envs\\isaac311\\Lib\\site-packages\\torch\\autograd\\__init__.py\", line 353, in backward\n    _engine_run_backward(\n  File \"C:\\Users\\AI-WS01\\anaconda3\\envs\\isaac311\\Lib\\site-packages\\torch\\autograd\\graph.py\", line 824, in _engine_run_backward\n    return Variable._execution_engine.run_backward(  # Calls into the C++ engine to run the backward pass\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\ntorch.OutOfMemoryError: CUDA out of memory. Tried to allocate 774.00 MiB. GPU 0 has a total capacity of 15.92 GiB of which 102.13 MiB is free. Of the allocated memory 9.95 GiB is allocated by PyTorch, and 1.26 GiB is reserved by PyTorch but unallocated. If reserved but unallocated memory is large try setting PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True to avoid fragmentation.  See documentation for Memory Management  (https://pytorch.org/docs/stable/notes/cuda.html#environment-variables)\n",
+ "memory_log": [
+  {
+   "it": 0,
+   "phase": "2_rollout",
+   "cum_peak": 3279199744,
+   "phase_peak": 3279199744,
+   "allocated": 1267120128
+  },
+  {
+   "it": 0,
+   "phase": "3_ppo_update",
+   "cum_peak": 1495864832,
+   "phase_peak": 1495864832,
+   "allocated": 1285147648
+  }
+ ],
+ "iter_log": [],
+ "max_allocated_at_fail_GiB": 10.707457065582275,
+ "checks": {
+  "traceback": true
+ }
+}

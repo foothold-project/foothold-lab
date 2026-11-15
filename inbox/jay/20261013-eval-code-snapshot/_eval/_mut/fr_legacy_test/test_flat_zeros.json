@@ -1,0 +1,126 @@
+{
+ "synthetic": {
+  "r1.fwd_m": [
+   1.0,
+   1.0,
+   true
+  ],
+  "r1.lat_m": [
+   0.0,
+   0.0,
+   true
+  ],
+  "r2.fwd_m": [
+   0.0,
+   0.0,
+   true
+  ],
+  "r2.lat_m (left +)": [
+   1.0,
+   1.0,
+   true
+  ],
+  "r1.yaw_deg": [
+   90.0,
+   90.0,
+   true
+  ],
+  "r1.base_yaw_deg": [
+   90.0,
+   90.0,
+   true
+  ],
+  "r1.speed_mps": [
+   0.5,
+   0.5,
+   true
+  ],
+  "r1.vel_err_mps": [
+   0.4,
+   0.4,
+   true
+  ],
+  "r0.base_z_m (floor 0.1)": [
+   0.4,
+   0.4,
+   true
+  ],
+  "r0.base_z_w_m": [
+   0.5,
+   0.5,
+   true
+  ],
+  "r0.foot_contact_fl_n (3-4-5)": [
+   50.0,
+   50.0,
+   true
+  ],
+  "r1.joint_target_FL_hip (row 0 target)": [
+   0.11,
+   0.11,
+   true
+  ],
+  "r2.joint_target_FL_hip (row 1 target)": [
+   0.22,
+   0.22,
+   true
+  ],
+  "r0.joint_target empty": [
+   null,
+   null,
+   true
+  ]
+ },
+ "stand": [
+  {
+   "file": "flat_stand_ep000.csv",
+   "sum_contact_over_mg": 1.0005,
+   "torque_resid_median_Nm (shifted, as written)": 0.0016,
+   "torque_resid_median_Nm (unshifted)": 0.0022,
+   "columns_equal_lab_layout": true
+  },
+  {
+   "file": "flat_stand_ep096.csv",
+   "sum_contact_over_mg": 1.0016,
+   "torque_resid_median_Nm (shifted, as written)": 0.0034,
+   "torque_resid_median_Nm (unshifted)": 0.0037,
+   "columns_equal_lab_layout": true
+  }
+ ],
+ "walk_shift": [
+  {
+   "file": "flat_fwd05_ep000.csv",
+   "resid_shifted_Nm": 0.805,
+   "resid_unshifted_Nm": 1.517,
+   "shift_better": true
+  },
+  {
+   "file": "flat_fwd05_ep084.csv",
+   "resid_shifted_Nm": 0.117,
+   "resid_unshifted_Nm": 0.675,
+   "shift_better": true
+  },
+  {
+   "file": "flat_yawL05_ep000.csv",
+   "resid_shifted_Nm": 0.029,
+   "resid_unshifted_Nm": 0.204,
+   "shift_better": true
+  },
+  {
+   "file": "flat_yawL05_ep025.csv",
+   "resid_shifted_Nm": 0.013,
+   "resid_unshifted_Nm": 0.052,
+   "shift_better": true
+  },
+  {
+   "file": "flat_yawL05_ep071.csv",
+   "resid_shifted_Nm": 0.021,
+   "resid_unshifted_Nm": 0.075,
+   "shift_better": true
+  }
+ ],
+ "fold_back": {
+  "true_values_pass": true,
+  "mae_vx_plus_0.001_detected": true
+ }
+}

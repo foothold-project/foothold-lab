@@ -1,0 +1,53 @@
+[
+  {
+    "group": "landing",
+    "folder": "/mnt/win-d/mai/data/foothold/s2_lab/ex42_eval_mesh_1111/landing_seed42_v2",
+    "columns": 1,
+    "mesh_sha256": "baa59af3347c53c2cdeae674ddc873f26d4b9e38cffdbce4a4dc73cf94febb82",
+    "mesh_file_sha256": "86231d2f9ba85af18c89f6c10392498f609dba62ebfe530c7aa9ff5954088531",
+    "manifest_sha256": "94e3fe3dae914968e0e41b7fb3505339fcad72dd38a650c0381a2855af06d55e",
+    "origin_check": {
+      "probed": 1,
+      "no_hit": 0,
+      "max_abs_by_family_m": {
+        "V": 5.7220459037665705e-08
+      },
+      "passed": true
+    },
+    "kit_mount": "pending_lead_after_E1"
+  },
+  {
+    "group": "paper",
+    "folder": "/mnt/win-d/mai/data/foothold/s2_lab/ex42_eval_mesh_1111/paper_seed42_v2",
+    "columns": 7,
+    "mesh_sha256": "a194d719e70089a35498d7df4a851101810fe3a0dcf56cf0642e4a012c47b03e",
+    "mesh_file_sha256": "24d1f0cbee9801f44fff6f910094e7864a297343b2267a836bb8bf7e41938a30",
+    "manifest_sha256": "ba830a8d03e6747eeeaf783276a3625bf1c55221a4c9ef8334e373db2a3bc2ec",
+    "origin_check": {
+      "probed": 7,
+      "no_hit": 0,
+      "max_abs_by_family_m": {
+        "V": 0.0
+      },
+      "passed": true
+    },
+    "kit_mount": "pending_lead_after_E1"
+  },
+  {
+    "group": "start",
+    "folder": "/mnt/win-d/mai/data/foothold/s2_lab/ex42_eval_mesh_1111/start_seed42_v2",
+    "columns": 12,
+    "mesh_sha256": "aeaf97d5f1f57757183b5b7e9c14458964cb5042ed31abcbd7b19b8b4ecfd513",
+    "mesh_file_sha256": "b41c4f66452c568deb1f8dc504de55448bb06733d4de674af70a56f586ad7f9b",
+    "manifest_sha256": "c05234a108e0fd32f7ab7a05fcd3532757a6baf1bc3fb4a682eaa375b09af094",
+    "origin_check": {
+      "probed": 12,
+      "no_hit": 0,
+      "max_abs_by_family_m": {
+        "V": 0.0
+      },
+      "passed": true
+    },
+    "kit_mount": "pending_lead_after_E1"
+  }
+]

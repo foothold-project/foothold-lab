@@ -1,0 +1,52 @@
+schema: w86-preparation-v4-ex41
+execution_connected: false
+base_commit: 2df419b0
+design_reference: c48d9bc7
+terms:
+  zero_yaw:
+    weight: -0.5
+    status: approved_value_unwired
+    command_abs_threshold: 0.000001
+    excludes_heading: true
+  swing:
+    weight: -10.0
+    weight_status: D123_analyst_calculation_11_02_12xx
+    flat_clearance_m: 0.08
+    clearance_status: approved_value
+    reference: max_ground_below_and_ahead_world
+    foot_position: collision_sphere_bottom_world
+    function: swing_clearance_cost
+    cost: sum_squared_height_error_times_tanh_foot_speed
+    output_units: m_squared
+    exponential: false
+    tanh_multiplier: 2.0
+    includes_contact_feet: true
+    moving_command_only: true
+    lookahead_m: [0.0, 0.05, 0.10]
+    lookahead_status: proposal_not_measured
+existing_terms:
+  stumble: {weight: -2.0, status: D123_change_single_existing_weight, force_floor_n: 0.0}
+  collision: {weight: -10.0, status: preserve_single_existing_term, body_names: [base, '.*_thigh', 'Head_.*'], threshold_n: 0.1}
+  action_smoothness: {weight: -0.01, status: preserve_single_existing_term}
+  joint_power: {weight: -0.00002, status: preserve_single_existing_term}
+preregistered:
+  knee_effort_margin: {weight: 0.0, status: '미리 등록 · 지금 0', ratio: 0.9}
+  joint_limit_margin: {weight: 0.0, status: '미리 등록 · 지금 0', margin_rad: 0.05}
+  feet_air_time: {weight: 0.0, status: '미리 등록 · 지금 0', threshold_s: 0.5, future_weight_sign: positive_reward}
+  foot_slip: {weight: 0.0, status: '미리 등록 · 지금 0'}
+registration:
+  new_terms_at: n0_only
+  zero_weight_metrics: separate_recorder_required
+  stumble_update: replace_existing_weight_only_no_second_term
+  active_nonfinite_contract: terminate_reset_only_affected_env_and_record_no_global_stop
+  invalid_observations: do_not_write_nonfinite_values_to_rollout
+diagnostics_only:
+  stumble_min_force_n: 1.0
+  force_floor_applied_to_reward: false
+performance_weight_interface:
+  runtime_adapter: w86_runtime_and_curriculum_w72_CPU_only_integration_pending
+  scope: stage_boundary_only
+  allowed_terms: [swing, stumble]
+  proposed_bounds: {swing: [-20.0, -2.0], stumble: [-3.0, -1.0]}
+  required_record: [before, after, checkpoint_sha, score_sha, reason, decision_id]
+  preregistered_activation_allowed: false

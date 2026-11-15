@@ -1,0 +1,19 @@
+[CE12-COMPARE] v2 C:/isaac/ext/go2_rl_robotlab/_eval/out_ce12/native/v2_native_a1path_20261014_093859/native.npz T=60 N=12 resets=2
+PASS names.obs_vs_action_joint_names max_abs=0 n_bad=0
+PASS names.adapter_obs_joint_names max_abs=0 n_bad=0
+PASS names.adapter_action_joint_names max_abs=0 n_bad=0
+PASS names.articulation_has_all max_abs=0 n_bad=0
+PASS layout.policy max_abs=0 n_bad=0
+PASS shape.obs_policy max_abs=0 n_bad=0
+PASS default_joint_pos max_abs=0 n_bad=0
+PASS default_joint_vel max_abs=0 n_bad=0
+PASS rays.local_xy_vs_grid max_abs=1.49e-08 n_bad=0
+PASS obs.policy max_abs=0 n_bad=0
+PASS self.debug_read_does_not_advance max_abs=0 n_bad=0
+PASS state.last_action_memory max_abs=0 n_bad=0
+PASS joint_target max_abs=0 n_bad=0
+PASS info.offset_minus_default (motor offset DR 크기 · 판정 아님) max_abs=0 n_bad=0
+PASS action.recompute_from_adapter_obs max_abs=2.86e-06 n_bad=0
+PASS action.recompute_from_native_obs max_abs=2.86e-06 n_bad=0
+[CE12-COMPARE] ALL PASS
+[CE12-COMPARE] report C:\isaac\ext\go2_rl_robotlab\_eval\out_ce12\native\v2_native_a1path_20261014_093859\compare_report_20261014-094103.json

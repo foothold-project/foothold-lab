@@ -1,0 +1,45 @@
+{
+  "source": "C:\\mai\\wt\\foothold-lab\\lead_tmp-20261023\\inbox\\jay\\20261021-experiments\\figs\\ex23-25-sol-23c\\tb_scalar_raw.csv",
+  "known_input_test": "PASS",
+  "runs": {
+    "EX23": {
+      "source_event_sha256": [
+        "9e052900e36e17fd0d118c5484ce4632e18f183f837cb19d6f841d9bf93e47d9"
+      ],
+      "mean_s": 25.702337159156798,
+      "tail500_mean_s": 23.240862493991852,
+      "tail500_median_s": 22.75738000869751
+    },
+    "EX25": {
+      "source_event_sha256": [
+        "521bc26ca31673fe92123e7b2447d801008cc475baae8faa6621d720f53c4f41"
+      ],
+      "mean_s": 11.376826361338297,
+      "tail500_mean_s": 9.462426434993743,
+      "tail500_median_s": 9.418249249458313
+    }
+  },
+  "same_throughput_hours_assumption": {
+    "500": [
+      3.2278975686099796,
+      3.569769049882889
+    ],
+    "1000": [
+      6.455795137219959,
+      7.139538099765778
+    ],
+    "1500": [
+      9.68369270582994,
+      10.709307149648666
+    ],
+    "2000": [
+      12.911590274439918,
+      14.279076199531556
+    ],
+    "20000": [
+      129.11590274439916,
+      142.79076199531556
+    ]
+  },
+  "caveat": "Elapsed logger time, not pure GPU time. New curriculum/Linux speed and success time unmeasured."
+}

@@ -1,0 +1,52 @@
+{
+ "main": {
+  "flat": [
+   "fwd02",
+   "stop03"
+  ],
+  "wave": [
+   "back03",
+   "fwd02",
+   "fwd05",
+   "right03"
+  ],
+  "slope_up": [
+   "stop03"
+  ],
+  "slope_down": [
+   "stop03"
+  ],
+  "rough_slope": [
+   "fwd02",
+   "right03",
+   "stop03"
+  ],
+  "stairs_up": [
+   "left03"
+  ],
+  "stairs_down": [
+   "stop03"
+  ],
+  "obstacles": [
+   "back03",
+   "fwd02",
+   "fwd03",
+   "fwd05",
+   "left03",
+   "right03",
+   "stop03"
+  ]
+ },
+ "offplat": {
+  "stairs_up": [
+   "yawR05"
+  ],
+  "stairs_down": [
+   "yawR05"
+  ],
+  "obstacles": [
+   "yawL05"
+  ]
+ },
+ "episodes_total": 23000
+}

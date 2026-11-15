@@ -1,0 +1,62 @@
+{
+ "kind": "collection",
+ "attempt": "v2_native_a1path_20261014_093859-20261014-094020-150232",
+ "which": "v2",
+ "tag": "v2_native_a1path_20261014_093859",
+ "checks": [
+  "R1",
+  "R2",
+  "R3",
+  "R4",
+  "S1",
+  "S2",
+  "S3",
+  "S4",
+  "S5",
+  "S6",
+  "S7",
+  "S8",
+  "S9",
+  "S10",
+  "S11",
+  "G1",
+  "L1",
+  "L2",
+  "N1",
+  "N2",
+  "M1",
+  "M2"
+ ],
+ "files": {
+  "log": [
+   "C:/isaac/ext/go2_rl_robotlab/_eval/out_ce12/native/v2_native_a1path_20261014_093859.log",
+   "c84db57de21ccf4c2be572a8a80b849bad9c051242a3825323a64af6b6abe0ed"
+  ],
+  "guard": [
+   "C:/isaac/ext/go2_rl_robotlab/_eval/out_ce12/native/v2_native_a1path_20261014_093859.guard.json",
+   "a790e5e7a9b9b26fd5dc4cdbe4887436a2ca35d1e4e3ccc39b2c76897b4c5588"
+  ],
+  "slot": [
+   "C:/isaac/ext/go2_rl_robotlab/_eval/out_ce12/native/v2_native_a1path_20261014_093859.slot.json",
+   "67012e2ed219d956f3706c73ae47cad99be281069177289f6f20e157801d760c"
+  ],
+  "npz": [
+   "C:/isaac/ext/go2_rl_robotlab/_eval/out_ce12/native/v2_native_a1path_20261014_093859/native.npz",
+   "c9a87ea527d4f26dcbb46c487ead2924de11f3237a2533fd791bd52b2fb9087f"
+  ],
+  "meta": [
+   "C:/isaac/ext/go2_rl_robotlab/_eval/out_ce12/native/v2_native_a1path_20261014_093859/meta.json",
+   "72ca7417615e755286983cff98d8969c4c450ebb258898d0ab52e2deb7009c57"
+  ],
+  "signature": [
+   "C:/isaac/ext/go2_rl_robotlab/_eval/out_ce12/native/v2_native_a1path_20261014_093859/signature.json",
+   "9039b7d2b8462f8c8d76f31c4f12a9f29da37e9912e3d259192d184d60c666b4"
+  ],
+  "run": [
+   "C:/isaac/ext/go2_rl_robotlab/_eval/out_ce12/native/_attempts/v2_native_a1path_20261014_093859-20261014-094020-150232/run.json",
+   "d2be7ff8270d58cccdb2c0b801c96f0c2057707f281fb40817c92946693a912d"
+  ]
+ },
+ "validator_sha256": "dae3d93d6827903549043a58fdf20ee0ee2e7ad31780ff6e05ef36382421240e",
+ "t": "2026-10-14 09:40:49"
+}

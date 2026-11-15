@@ -1,0 +1,41 @@
+{
+  "source_urls": {
+    "master-v6.mp4": "https://d2ol7oe51mr4n9.cloudfront.net/user_2vTkMQm9Kz0TWEHiovxqGSzlE6v/fb5f4e92-e7ff-4ddf-91a2-67ecb8ba2e1b.mp4",
+    "ending-v6.mp4": "https://d2ol7oe51mr4n9.cloudfront.net/user_2vTkMQm9Kz0TWEHiovxqGSzlE6v/81c27202-e0a6-451d-a79f-bf7dd5bfa877.mp4",
+    "o1.mp4": "https://d8j0ntlcm91z4.cloudfront.net/user_2vTkMQm9Kz0TWEHiovxqGSzlE6v/hf_20261001_015642_9af80866-fc3e-4b09-a56e-dcd0e22b5cc9.mp4",
+    "o2.mp4": "https://d8j0ntlcm91z4.cloudfront.net/user_2vTkMQm9Kz0TWEHiovxqGSzlE6v/hf_20260930_202808_1d8ff642-092d-4958-afc2-827e828cfb62.mp4"
+  },
+  "translation_xy": [
+    -0.47812,
+    5.22373
+  ],
+  "lighting_gain_range": [
+    0.625,
+    1.625
+  ],
+  "correction_relax_seconds": 1,
+  "lowpass_seam_error_before": 2.7561377829820453,
+  "lowpass_seam_error_after": 0.6935402029664325,
+  "replaced_frame_range": [
+    0,
+    246
+  ],
+  "first_O3_frame": 247,
+  "first_E5_frame": 1193,
+  "master_duration": 80.625,
+  "opening_duration": 31.125,
+  "ending_duration": 49.5,
+  "audio": "Existing v6 unified mix retained, including all eight E5pre contact sounds. No new soundtrack or generator ambience replacement.",
+  "ending_bytes_identical_to_v6": true,
+  "native_script": "export default async ({project})=>{\nconst r='/home/user/continuity-v7';const p=await project({dir:r+'/project',size:'854x480',fps:24,background:'#000'});\nconst a=await p.add(r+'/o1.mp4'), b=await p.add(r+'/o2-matched.mp4');\np.compose(<media file={a} trimStart={.004} x={0} y={0} width={854} height={480} muted={true}/>,{at:0,dur:8,name:'O1 left-right-down'});\np.compose(<media file={b} trimStart={.004} x={0} y={0} width={854} height={480} muted={true}/>,{at:8,dur:55/24,name:'O2 registered light continuity'});\nawait p.render(r+'/native-join.mp4',{draft:false,bitrate:4000000});};",
+  "stream": {
+    "programs": [],
+    "streams": [
+      {
+        "r_frame_rate": "24/1",
+        "duration": "80.625000",
+        "nb_frames": "1935"
+      }
+    ]
+  }
+}

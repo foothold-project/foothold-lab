@@ -1,0 +1,30 @@
+[
+  {
+    "name": "identity_check_disabled",
+    "want": "wrong creation time: refuses and signals nothing",
+    "first_fail": "wrong creation time: refuses and signals nothing",
+    "rc": 1,
+    "caught": true
+  },
+  {
+    "name": "heartbeat_stale_disabled",
+    "want": "hung supervisor killed by heartbeat stale",
+    "first_fail": "hung supervisor killed by heartbeat stale",
+    "rc": 1,
+    "caught": true
+  },
+  {
+    "name": "hard_deadline_disabled",
+    "want": "hard deadline kills even with fresh heartbeat",
+    "first_fail": "hard deadline kills even with fresh heartbeat",
+    "rc": 1,
+    "caught": true
+  },
+  {
+    "name": "kill_call_removed",
+    "want": "hung supervisor killed by heartbeat stale",
+    "first_fail": "hung supervisor killed by heartbeat stale",
+    "rc": 1,
+    "caught": true
+  }
+]

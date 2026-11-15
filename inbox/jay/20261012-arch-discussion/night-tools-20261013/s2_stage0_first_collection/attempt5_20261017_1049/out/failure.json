@@ -1,0 +1,12 @@
+{
+  "cleanup": {
+    "app_closed": false,
+    "provider_closed": false
+  },
+  "ended_epoch": 1792201826.9694383,
+  "error": "ProvenanceHold('usd_isolation_state')",
+  "last_valid_step": 255,
+  "partial_rows": 256,
+  "traceback": "Traceback (most recent call last):\n  File \"C:\\Users\\AI-WS01\\s2_lab\\night-tools-20261013\\s2_step4a34\\s2_connect_diag_17v.py\", line 500, in _main_capture\n    usd=usd_evidence(usd_root,a.asset_path,paths,environment_created=True)\n        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\AI-WS01\\s2_lab\\night-tools-20261013\\s2_step4a34\\s2_a34_provenance.py\", line 61, in usd_evidence\n    raise ProvenanceHold(\"usd_isolation_state\")\ns2_a34_provenance.ProvenanceHold: usd_isolation_state\n",
+  "verdict": "HOLD_INFORMATION_ONLY"
+}

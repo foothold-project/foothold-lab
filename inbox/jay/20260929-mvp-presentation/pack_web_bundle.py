@@ -1,0 +1,259 @@
+# -*- coding: utf-8 -*-
+"""발표 덱을 `web/assets/mvp-deck/` 에 자립형 묶음으로 만든다.
+
+왜 필요한가. 덱은 저장소 «밖» 상대경로로 영상·이미지·프레임 73곳을
+가리킨다(163 MB). 그대로 올리면 전부 깨진다. 사이트의 기존 방식인
+`<이름>-presented.html` 단일 파일(copy_presented)로도 못 낸다. 묶음이라서다.
+
+돌리는 법:
+    python inbox/jay/20260929-mvp-presentation/pack_web_bundle.py
+    python web/_build/build.py
+
+★ 산출물은 .gitignore 에 있다. 영상 155 MB 는 이 저장소가 이미 들고 있는
+  파일의 «사본» 이라 LFS 에 또 넣지 않는다. 필요하면 이 스크립트로 다시 만든다.
+  배포본(foothold-site)에는 실물이 커밋된다.
+
+★ 속성 정규식만 쓰면 놓치는 것이 있다. 실측: `design/intro_story.js:37` 의
+  pixelAtlas.src 가 JS 문자열이라 안 걸렸고, 띄워 보고 나서야 404 로 드러났다.
+  JSPAT 이 그것을 본다.
+"""
+
+import io
+import json
+import os
+import re
+import shutil
+import sys
+from pathlib import Path
+
+LAB = Path(__file__).resolve().parents[3]
+SRC = LAB / 'inbox/jay/20260929-mvp-presentation/output/FOOTHOLD-MVP-cover.html'
+OUTDIR = LAB / 'web/assets/mvp-deck'
+GO2SRC = LAB / 'inbox/jay/20260929-mvp-presentation/assets/go2-blender'
+GH = 'https://github.com/foothold-project/foothold-lab/blob/main/'
+# ★ 2026-10-02 라이브에서 이미지·영상이 전부 안 떴다. Vercel cleanUrls 가
+#   /assets/mvp-deck/index.html 을 /assets/mvp-deck 로 돌리고, 그 주소는
+#   «파일» 로 취급돼 상대경로 media/x 가 /assets/media/x 로 풀렸다(404).
+#   로컬 시험은 돌림이 없어서 통과했다. 참조를 전부 절대경로로 쓴다.
+WEB = '/assets/mvp-deck/'
+
+MEDIA_EXT = {'.png', '.jpg', '.jpeg', '.webp', '.mp4', '.svg', '.gif', '.m4a'}
+
+html = SRC.read_text(encoding='utf-8')
+orig_len = len(html)
+
+# ---- 1. chamjo sujip -------------------------------------------------
+refs = set()
+for m in re.finditer(r'(?:src|href|poster)\s*=\s*"([^"]+)"', html):
+    refs.add(m.group(1))
+for m in re.finditer(r'url\(\s*["\']?([^"\')]+)', html):
+    refs.add(m.group(1))
+# ★ JS an eseo jikjeop halddanghaneun gyeongu ga itda.
+#   intro_story.js:37  pixelAtlas.src='../assets/go2-pixel-alpha-v2.png'
+#   sokseong jeonggyusik man sseumyeon igeos eul nochinda (silje ro nochyeotda).
+JSPAT = re.compile(r'''['"]((?:\.\.?/)[^'"\s<>]+?\.'''
+                   r'''(?:png|jpe?g|webp|gif|svg|mp4|m4a|json))['"]''',
+                   re.IGNORECASE)
+for m in JSPAT.finditer(html):
+    refs.add(m.group(1))
+
+local = []
+for r in sorted(refs):
+    if r.startswith(('data:', 'http://', 'https://', '#', 'mailto:',
+                     'javascript:', '//')):
+        continue
+    local.append(r)
+
+# ---- 2. bunryu wa bokcsa --------------------------------------------
+OUTDIR.mkdir(parents=True, exist_ok=True)
+MEDIA = OUTDIR / 'media'
+if MEDIA.exists():
+    shutil.rmtree(MEDIA)
+MEDIA.mkdir()
+
+used_names = {}
+rewrite = {}
+copied = 0
+copied_bytes = 0
+notfound = []
+
+for r in local:
+    q = (SRC.parent / r).resolve()
+    if not q.exists():
+        notfound.append(r)
+        continue
+    ext = q.suffix.lower()
+    if ext in MEDIA_EXT:
+        # pyeongpyeonghan ireum. chungdol myeon buno buchim.
+        name = q.name
+        if name in used_names and used_names[name] != q:
+            stem, sfx = q.stem, q.suffix
+            i = 2
+            while True:
+                name = '%s-%d%s' % (stem, i, sfx)
+                if name not in used_names:
+                    break
+                i += 1
+        used_names[name] = q
+        dst = MEDIA / name
+        if not dst.exists():
+            shutil.copy2(q, dst)
+            copied += 1
+            copied_bytes += q.stat().st_size
+        rewrite[r] = WEB + 'media/' + name
+    elif q.name == 'proposal-deck-presented.html':
+        rewrite[r] = '/assets/deliverables/proposal-deck-presented.html'
+    else:
+        try:
+            rel = q.relative_to(LAB).as_posix()
+            rewrite[r] = GH + rel
+        except ValueError:
+            rewrite[r] = GH
+
+# ---- 3. go2-blender bucunjip ----------------------------------------
+need = set()
+for mf in ['v4-manifest.js', 'v5-manifest.js', 'v6-manifest.js']:
+    obj = json.loads(GO2SRC.joinpath(mf).read_text(encoding='utf-8')
+                     .split('=', 1)[1].rstrip().rstrip(';'))
+    for s in obj.get('states', {}).values():
+        if isinstance(s, dict) and s.get('image'):
+            need.add(s['image'])
+    for seg in obj.get('segments', {}).values():
+        pat = seg.get('pattern')
+        if pat:
+            for f in range(int(seg['start']), int(seg['end']) + 1):
+                need.add(pat.replace('{frame:04d}', '%04d' % f))
+        for k in ('poster', 'preview'):
+            if seg.get(k):
+                need.add(seg[k])
+# player ga fetch haneun manifest json do ganchi.
+for extra in ['v4-manifest.json', 'v5-manifest.json', 'v6-manifest.json',
+              'v4-sensor-and-joint-anchors.json', 'geometry-manifest.json']:
+    if (GO2SRC / extra).exists():
+        need.add(extra)
+
+GO2DST = OUTDIR / 'go2-blender'
+if GO2DST.exists():
+    shutil.rmtree(GO2DST)
+go2_n = 0
+go2_bytes = 0
+go2_missing = []
+for rel in sorted(need):
+    s = GO2SRC / rel
+    if not s.exists():
+        go2_missing.append(rel)
+        continue
+    d = GO2DST / rel
+    d.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copy2(s, d)
+    go2_n += 1
+    go2_bytes += s.stat().st_size
+
+# ---- 4. HTML dasi sseugi --------------------------------------------
+def sub_attr(m):
+    whole, val = m.group(0), m.group(2)
+    if val in rewrite:
+        return m.group(1) + rewrite[val] + '"'
+    return whole
+
+html2 = re.sub(r'((?:src|href|poster)\s*=\s*")([^"]+)"', sub_attr, html)
+
+def sub_url(m):
+    val = m.group(2)
+    if val in rewrite:
+        return m.group(1) + rewrite[val]
+    return m.group(0)
+
+html2 = re.sub(r'(url\(\s*["\']?)([^"\')]+)', sub_url, html2)
+
+def sub_js(m):
+    val = m.group(1)
+    if val in rewrite:
+        return m.group(0)[0] + rewrite[val] + m.group(0)[-1]
+    return m.group(0)
+
+html2 = JSPAT.sub(sub_js, html2)
+
+# ★ 메모(deckNotes)는 JSON 문자열이라 따옴표가 \" 다. 위 속성 정규식에 안 걸려
+#   발표자 메모의 출처 링크가 lab 상대경로로 남았다. 같은 규칙으로 GitHub 로 보낸다.
+import posixpath
+DECK_OUT = 'inbox/jay/20260929-mvp-presentation/output'
+def sub_note(m):
+    u = m.group(1)
+    if u.startswith(('http://', 'https://', '#', 'mailto:', '/')):
+        return m.group(0)
+    rel = posixpath.normpath(posixpath.join(DECK_OUT, u))
+    if rel.startswith('..'):
+        return m.group(0)
+    return 'href=' + chr(92) + '"' + GH + rel + chr(92) + '"'
+# JSON 안이라 따옴표가 역슬래시+따옴표 다. 집합 안의 역슬래시는 «둘» 이어야 한다
+#   (하나면 `[^"\]` 가 닫는 괄호를 먹어 unterminated character set).
+NOTE_HREF = re.compile('href=' + chr(92) * 2 + '"([^"' + chr(92) * 2 + ']+)' + chr(92) * 2 + '"')
+assert NOTE_HREF.search('href=' + chr(92) + '"../x.md' + chr(92) + '"'), '메모 링크 정규식 자기시험 실패'
+html2 = NOTE_HREF.sub(sub_note, html2)
+
+# player base
+before = html2.count("'../assets/go2-blender'")
+html2 = html2.replace("'../assets/go2-blender'", "'" + WEB + "go2-blender'")
+assert before > 0, 'go2 base munjayeol eul mot chajatda'
+
+# ★ 폰 리모트 설정 (공개용 publishable key · 비밀 아님). 파일이 없으면 리모트는 꺼진 채 나간다.
+CFG = Path(__file__).resolve().parent / 'remote.config.json'
+if CFG.exists():
+    cfg = json.loads(CFG.read_text(encoding='utf-8'))
+    tag = ('<script>window.FOOTHOLD_REMOTE=' + json.dumps({'url': cfg['url'], 'key': cfg['key']})
+           + ';window.FOOTHOLD_REMOTE_ROLE="deck";</script>')
+    assert html2.count('<script>const deckMeta=') == 1
+    html2 = html2.replace('<script>const deckMeta=', tag + '<script>const deckMeta=', 1)
+    print('리모트 설정 주입 (덱 역할)')
+else:
+    print('리모트 설정 없음 (remote.config.json) · 리모트 꺼짐')
+(OUTDIR / 'index.html').write_text(html2, encoding='utf-8')
+
+# ---- 5. gwanmun: namneun kkaejin chamjo ------------------------------
+bad = []
+refs2 = set()
+for m in re.finditer(r'(?:src|href|poster)\s*=\s*"([^"]+)"', html2):
+    refs2.add(m.group(1))
+for m in re.finditer(r'url\(\s*["\']?([^"\')]+)', html2):
+    refs2.add(m.group(1))
+for m in JSPAT.finditer(html2):
+    refs2.add(m.group(1))
+for m in re.finditer(r'''['"](/assets/mvp-deck/[^'"\s]+)['"]''', html2):
+    refs2.add(m.group(1))
+for r in sorted(refs2):
+    if r.startswith(('data:', 'http://', 'https://', '#', 'mailto:',
+                     'javascript:', '//')):
+        continue
+    if r.startswith(WEB):
+        if not (OUTDIR / r[len(WEB):]).exists():
+            bad.append(r)
+        continue
+    if r.startswith('/assets/'):
+        continue                       # 사이트의 다른 자산 (발표본 등)
+    # ★ 여기 오면 «상대경로» 다. 라이브에서는 전부 깨진다. 하나도 허용 안 한다.
+    bad.append('상대경로(라이브에서 깨짐): ' + r)
+
+print('원본 참조 %d · 로컬 %d · 못 찾음 %d' % (len(refs), len(local), len(notfound)))
+print('media 복사 %d개 %.1f MB' % (copied, copied_bytes / 1048576))
+print('go2-blender %d개 %.1f MB · 빠짐 %d' % (go2_n, go2_bytes / 1048576,
+                                            len(go2_missing)))
+print('index.html %.1f MB (원본 %.1f MB)'
+      % (len(html2.encode('utf-8')) / 1048576, orig_len / 1048576))
+tot = sum(f.stat().st_size for f in OUTDIR.rglob('*') if f.is_file())
+print('묶음 전체 %.1f MB · 파일 %d개'
+      % (tot / 1048576, sum(1 for f in OUTDIR.rglob('*') if f.is_file())))
+print()
+print('★ 남은 깨진 참조 %d' % len(bad))
+for b in bad[:12]:
+    print('   ', b)
+if notfound:
+    print('원본에서 못 찾은 것', notfound[:6])
+if go2_missing:
+    print('go2 빠짐', go2_missing[:6])
+if not (bad or notfound or go2_missing):
+    # 모바일 대본 페이지도 같이 만든다 (2026-10-02 팀장 요청)
+    sys.path.insert(0, str(Path(__file__).resolve().parent))
+    import make_script_page
+    make_script_page.build()
+sys.exit(1 if (bad or notfound or go2_missing) else 0)

@@ -1,0 +1,9 @@
+{
+ "held": [],
+ "released": [
+  "cq_on24000_flat_stand_on_s1000"
+ ],
+ "differences": [],
+ "pass": true,
+ "result": "equal to the reference on every non-bookkeeping key"
+}

@@ -1,0 +1,11126 @@
+[
+ {
+  "t_start": "2026-10-13 16:35:34",
+  "t_end": "2026-10-13 16:35:34",
+  "scanner_pid": 128432,
+  "old_pids": [
+   162660,
+   134176
+  ],
+  "rule_sha256": "fa677df9ba82e81813f5969993ac2c45fe742f70f2f9058c3d817c0fcc6550b5",
+  "n_processes": 921,
+  "processes": [
+   {
+    "pid": 0,
+    "ppid": 0,
+    "create_time": null,
+    "name": "System Idle Process"
+   },
+   {
+    "pid": 4,
+    "ppid": 0,
+    "create_time": null,
+    "name": "System"
+   },
+   {
+    "pid": 812,
+    "ppid": 4,
+    "create_time": null,
+    "name": ""
+   },
+   {
+    "pid": 856,
+    "ppid": 4,
+    "create_time": null,
+    "name": "Registry"
+   },
+   {
+    "pid": 1460,
+    "ppid": 65540,
+    "create_time": null,
+    "name": "node.exe"
+   },
+   {
+    "pid": 1484,
+    "ppid": 22140,
+    "create_time": null,
+    "name": "powershell.exe"
+   },
+   {
+    "pid": 1496,
+    "ppid": 5572,
+    "create_time": null,
+    "name": "TabTip.exe"
+   },
+   {
+    "pid": 2040,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 2052,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 2072,
+    "ppid": 4,
+    "create_time": null,
+    "name": "smss.exe"
+   },
+   {
+    "pid": 2652,
+    "ppid": 2920,
+    "create_time": null,
+    "name": "LsaIso.exe"
+   },
+   {
+    "pid": 2684,
+    "ppid": 2920,
+    "create_time": null,
+    "name": "lsass.exe"
+   },
+   {
+    "pid": 2808,
+    "ppid": 2796,
+    "create_time": null,
+    "name": "csrss.exe"
+   },
+   {
+    "pid": 2920,
+    "ppid": 2796,
+    "create_time": null,
+    "name": "wininit.exe"
+   },
+   {
+    "pid": 2928,
+    "ppid": 2912,
+    "create_time": null,
+    "name": "csrss.exe"
+   },
+   {
+    "pid": 3000,
+    "ppid": 2920,
+    "create_time": null,
+    "name": "services.exe"
+   },
+   {
+    "pid": 3028,
+    "ppid": 2912,
+    "create_time": null,
+    "name": "winlogon.exe"
+   },
+   {
+    "pid": 3096,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 3112,
+    "ppid": 2920,
+    "create_time": null,
+    "name": "fontdrvhost.exe"
+   },
+   {
+    "pid": 3120,
+    "ppid": 3028,
+    "create_time": null,
+    "name": "fontdrvhost.exe"
+   },
+   {
+    "pid": 3196,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "WUDFHost.exe"
+   },
+   {
+    "pid": 3244,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 3276,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 3288,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 3348,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 3380,
+    "ppid": 3028,
+    "create_time": null,
+    "name": "dwm.exe"
+   },
+   {
+    "pid": 3404,
+    "ppid": 2052,
+    "create_time": null,
+    "name": "SearchHost.exe"
+   },
+   {
+    "pid": 3484,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 3500,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 3520,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 3544,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 3556,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 3596,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 3672,
+    "ppid": 144924,
+    "create_time": null,
+    "name": "cmd.exe"
+   },
+   {
+    "pid": 3720,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 3760,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 3812,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 3820,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 3828,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 3920,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 3944,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 4000,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 4020,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 4040,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 4092,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 4208,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 4252,
+    "ppid": 126336,
+    "create_time": null,
+    "name": "msedge.exe"
+   },
+   {
+    "pid": 4332,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 4392,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 4552,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 4600,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 4664,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 4692,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 4716,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "vmms.exe"
+   },
+   {
+    "pid": 4864,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 4880,
+    "ppid": 120560,
+    "create_time": null,
+    "name": "MoNotificationUx.exe"
+   },
+   {
+    "pid": 4904,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "WUDFHost.exe"
+   },
+   {
+    "pid": 4912,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "NVDisplay.Container.exe"
+   },
+   {
+    "pid": 4980,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 5044,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 5072,
+    "ppid": 22140,
+    "create_time": null,
+    "name": "OpenConsole.exe"
+   },
+   {
+    "pid": 5240,
+    "ppid": 4,
+    "create_time": null,
+    "name": "MemCompression"
+   },
+   {
+    "pid": 5300,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 5360,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 5372,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 5380,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 5528,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 5572,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 5672,
+    "ppid": 14504,
+    "create_time": null,
+    "name": "claude.exe"
+   },
+   {
+    "pid": 5688,
+    "ppid": 4392,
+    "create_time": null,
+    "name": "dasHost.exe"
+   },
+   {
+    "pid": 5740,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 6012,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 6020,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 6072,
+    "ppid": 22140,
+    "create_time": null,
+    "name": "powershell.exe"
+   },
+   {
+    "pid": 6368,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 6412,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 6436,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 6584,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "spoolsv.exe"
+   },
+   {
+    "pid": 6892,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 6940,
+    "ppid": 12868,
+    "create_time": null,
+    "name": "tail.exe"
+   },
+   {
+    "pid": 6964,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 7196,
+    "ppid": 2052,
+    "create_time": null,
+    "name": "prevhost.exe"
+   },
+   {
+    "pid": 7288,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "ObCrossEXService.exe"
+   },
+   {
+    "pid": 7304,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 7316,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "service.exe"
+   },
+   {
+    "pid": 7324,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 7340,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 7352,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "DtsApo4Service.exe"
+   },
+   {
+    "pid": 7360,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "Everything.exe"
+   },
+   {
+    "pid": 7368,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 7384,
+    "ppid": 162780,
+    "create_time": null,
+    "name": "cmd.exe"
+   },
+   {
+    "pid": 7412,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "IniClientSvc_x64.exe"
+   },
+   {
+    "pid": 7456,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 7472,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "rustdesk.exe"
+   },
+   {
+    "pid": 7480,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 7500,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "RtkAudUService64.exe"
+   },
+   {
+    "pid": 7516,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 7524,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "ASDSvc.exe"
+   },
+   {
+    "pid": 7536,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "ThunderboltService.exe"
+   },
+   {
+    "pid": 7540,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "wpmsvc.exe"
+   },
+   {
+    "pid": 7552,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 7560,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "TbtP2pShortcutService.exe"
+   },
+   {
+    "pid": 7568,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "GigabyteUpdateService.exe"
+   },
+   {
+    "pid": 7600,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 7616,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 7624,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "wslservice.exe"
+   },
+   {
+    "pid": 7684,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "logi_lamparray_service.AMD64.exe"
+   },
+   {
+    "pid": 7744,
+    "ppid": 37896,
+    "create_time": null,
+    "name": "msedgewebview2.exe"
+   },
+   {
+    "pid": 7872,
+    "ppid": 15744,
+    "create_time": null,
+    "name": "Everything.exe"
+   },
+   {
+    "pid": 7904,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 8040,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 8228,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "tailscaled.exe"
+   },
+   {
+    "pid": 8536,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 8588,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 8596,
+    "ppid": 86244,
+    "create_time": null,
+    "name": "node.exe"
+   },
+   {
+    "pid": 8672,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 8704,
+    "ppid": 2052,
+    "create_time": null,
+    "name": "WmiPrvSE.exe"
+   },
+   {
+    "pid": 8772,
+    "ppid": 7472,
+    "create_time": null,
+    "name": "rustdesk.exe"
+   },
+   {
+    "pid": 8844,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 8984,
+    "ppid": 4864,
+    "create_time": null,
+    "name": "taskhostw.exe"
+   },
+   {
+    "pid": 9104,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 9116,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 9528,
+    "ppid": 168524,
+    "create_time": null,
+    "name": "node.exe"
+   },
+   {
+    "pid": 9880,
+    "ppid": 4392,
+    "create_time": null,
+    "name": "dasHost.exe"
+   },
+   {
+    "pid": 9976,
+    "ppid": 117264,
+    "create_time": null,
+    "name": "adb.exe"
+   },
+   {
+    "pid": 10068,
+    "ppid": 8228,
+    "create_time": null,
+    "name": "tailscaled.exe"
+   },
+   {
+    "pid": 11752,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 11756,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 11864,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 12056,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 12196,
+    "ppid": 139848,
+    "create_time": null,
+    "name": "Code.exe"
+   },
+   {
+    "pid": 12236,
+    "ppid": 22140,
+    "create_time": null,
+    "name": "powershell.exe"
+   },
+   {
+    "pid": 12448,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 12808,
+    "ppid": 42336,
+    "create_time": null,
+    "name": "codex.exe"
+   },
+   {
+    "pid": 12828,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 13136,
+    "ppid": 14272,
+    "create_time": null,
+    "name": "NgcIso.exe"
+   },
+   {
+    "pid": 13144,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 13340,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 13440,
+    "ppid": 2052,
+    "create_time": null,
+    "name": "unsecapp.exe"
+   },
+   {
+    "pid": 13480,
+    "ppid": 4912,
+    "create_time": null,
+    "name": "NVDisplay.Container.exe"
+   },
+   {
+    "pid": 13692,
+    "ppid": 7324,
+    "create_time": null,
+    "name": "AggregatorHost.exe"
+   },
+   {
+    "pid": 13840,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 13844,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 14272,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 14348,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 14400,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 14504,
+    "ppid": 4208,
+    "create_time": null,
+    "name": "sihost.exe"
+   },
+   {
+    "pid": 14620,
+    "ppid": 22140,
+    "create_time": null,
+    "name": "OpenConsole.exe"
+   },
+   {
+    "pid": 14688,
+    "ppid": 44212,
+    "create_time": null,
+    "name": "node_repl.exe"
+   },
+   {
+    "pid": 14728,
+    "ppid": 113116,
+    "create_time": null,
+    "name": "codex-code-mode-host.exe"
+   },
+   {
+    "pid": 14776,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 14996,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 15208,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "vmcompute.exe"
+   },
+   {
+    "pid": 15272,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 15396,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 15412,
+    "ppid": 152072,
+    "create_time": null,
+    "name": "Figma.exe"
+   },
+   {
+    "pid": 15620,
+    "ppid": 37252,
+    "create_time": null,
+    "name": "hpwuschd2.exe"
+   },
+   {
+    "pid": 15712,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 15744,
+    "ppid": 15688,
+    "create_time": null,
+    "name": "explorer.exe"
+   },
+   {
+    "pid": 15804,
+    "ppid": 22140,
+    "create_time": null,
+    "name": "OpenConsole.exe"
+   },
+   {
+    "pid": 15856,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 16020,
+    "ppid": 14504,
+    "create_time": null,
+    "name": "CrossDeviceResume.exe"
+   },
+   {
+    "pid": 16036,
+    "ppid": 7412,
+    "create_time": null,
+    "name": "INISAFECrossWebEXSvc.exe"
+   },
+   {
+    "pid": 16108,
+    "ppid": 7288,
+    "create_time": null,
+    "name": "CrossEXService.exe"
+   },
+   {
+    "pid": 16500,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "NisSrv.exe"
+   },
+   {
+    "pid": 16852,
+    "ppid": 2052,
+    "create_time": null,
+    "name": "ShellExperienceHost.exe"
+   },
+   {
+    "pid": 17600,
+    "ppid": 5672,
+    "create_time": null,
+    "name": "claude.exe"
+   },
+   {
+    "pid": 17672,
+    "ppid": 26440,
+    "create_time": null,
+    "name": "veraport-x64.exe"
+   },
+   {
+    "pid": 17840,
+    "ppid": 7412,
+    "create_time": null,
+    "name": "INISAFEAdminUtil.exe"
+   },
+   {
+    "pid": 18300,
+    "ppid": 2052,
+    "create_time": null,
+    "name": "TextInputHost.exe"
+   },
+   {
+    "pid": 18348,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 19276,
+    "ppid": 5572,
+    "create_time": null,
+    "name": "ctfmon.exe"
+   },
+   {
+    "pid": 19464,
+    "ppid": 2052,
+    "create_time": null,
+    "name": "StartMenuExperienceHost.exe"
+   },
+   {
+    "pid": 19532,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 19544,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 19560,
+    "ppid": 116376,
+    "create_time": null,
+    "name": "tail.exe"
+   },
+   {
+    "pid": 19612,
+    "ppid": 7524,
+    "create_time": null,
+    "name": "StSess.exe"
+   },
+   {
+    "pid": 19620,
+    "ppid": 37896,
+    "create_time": null,
+    "name": "msedgewebview2.exe"
+   },
+   {
+    "pid": 19652,
+    "ppid": 2052,
+    "create_time": null,
+    "name": "UserOOBEBroker.exe"
+   },
+   {
+    "pid": 20304,
+    "ppid": 2052,
+    "create_time": null,
+    "name": "RuntimeBroker.exe"
+   },
+   {
+    "pid": 20324,
+    "ppid": 126336,
+    "create_time": null,
+    "name": "msedge.exe"
+   },
+   {
+    "pid": 20380,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 20516,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "SearchIndexer.exe"
+   },
+   {
+    "pid": 20564,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "MsMpEng.exe"
+   },
+   {
+    "pid": 20696,
+    "ppid": 2052,
+    "create_time": null,
+    "name": "WidgetService.exe"
+   },
+   {
+    "pid": 20732,
+    "ppid": 80268,
+    "create_time": null,
+    "name": "ChatGPT.exe"
+   },
+   {
+    "pid": 21060,
+    "ppid": 2052,
+    "create_time": null,
+    "name": "ApplicationFrameHost.exe"
+   },
+   {
+    "pid": 21068,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 21324,
+    "ppid": 2052,
+    "create_time": null,
+    "name": "Microsoft.Notes.exe"
+   },
+   {
+    "pid": 22140,
+    "ppid": 36792,
+    "create_time": null,
+    "name": "Orca.exe"
+   },
+   {
+    "pid": 22976,
+    "ppid": 2052,
+    "create_time": null,
+    "name": "RuntimeBroker.exe"
+   },
+   {
+    "pid": 23560,
+    "ppid": 3404,
+    "create_time": null,
+    "name": "msedgewebview2.exe"
+   },
+   {
+    "pid": 23632,
+    "ppid": 23560,
+    "create_time": null,
+    "name": "msedgewebview2.exe"
+   },
+   {
+    "pid": 23660,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 23716,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 24136,
+    "ppid": 23560,
+    "create_time": null,
+    "name": "msedgewebview2.exe"
+   },
+   {
+    "pid": 24164,
+    "ppid": 23560,
+    "create_time": null,
+    "name": "msedgewebview2.exe"
+   },
+   {
+    "pid": 24200,
+    "ppid": 58660,
+    "create_time": null,
+    "name": "conhost.exe"
+   },
+   {
+    "pid": 24240,
+    "ppid": 23560,
+    "create_time": null,
+    "name": "msedgewebview2.exe"
+   },
+   {
+    "pid": 24256,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 24500,
+    "ppid": 113116,
+    "create_time": null,
+    "name": "node.exe"
+   },
+   {
+    "pid": 24840,
+    "ppid": 23560,
+    "create_time": null,
+    "name": "msedgewebview2.exe"
+   },
+   {
+    "pid": 24928,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 25112,
+    "ppid": 2052,
+    "create_time": null,
+    "name": "dllhost.exe"
+   },
+   {
+    "pid": 25156,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 25724,
+    "ppid": 49244,
+    "create_time": null,
+    "name": "logi_crashpad_handler.exe"
+   },
+   {
+    "pid": 25956,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 26024,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 26136,
+    "ppid": 2052,
+    "create_time": null,
+    "name": "dllhost.exe"
+   },
+   {
+    "pid": 26148,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 26188,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 26500,
+    "ppid": 19612,
+    "create_time": null,
+    "name": "StSess32.exe"
+   },
+   {
+    "pid": 26588,
+    "ppid": 21084,
+    "create_time": null,
+    "name": "grep.exe"
+   },
+   {
+    "pid": 26696,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 26848,
+    "ppid": 108120,
+    "create_time": null,
+    "name": "grep.exe"
+   },
+   {
+    "pid": 27104,
+    "ppid": 155948,
+    "create_time": null,
+    "name": "bash.exe"
+   },
+   {
+    "pid": 27296,
+    "ppid": 20516,
+    "create_time": null,
+    "name": "SearchFilterHost.exe"
+   },
+   {
+    "pid": 27428,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 27616,
+    "ppid": 59552,
+    "create_time": null,
+    "name": "grep.exe"
+   },
+   {
+    "pid": 27720,
+    "ppid": 15744,
+    "create_time": null,
+    "name": "SecurityHealthSystray.exe"
+   },
+   {
+    "pid": 27748,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "SecurityHealthService.exe"
+   },
+   {
+    "pid": 27772,
+    "ppid": 166096,
+    "create_time": null,
+    "name": "grep.exe"
+   },
+   {
+    "pid": 27932,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 28128,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 28156,
+    "ppid": 5672,
+    "create_time": null,
+    "name": "uv.exe"
+   },
+   {
+    "pid": 28304,
+    "ppid": 15744,
+    "create_time": null,
+    "name": "RtkAudUService64.exe"
+   },
+   {
+    "pid": 28412,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 28744,
+    "ppid": 22140,
+    "create_time": null,
+    "name": "OpenConsole.exe"
+   },
+   {
+    "pid": 28844,
+    "ppid": 70044,
+    "create_time": null,
+    "name": "remoting_host.exe"
+   },
+   {
+    "pid": 28884,
+    "ppid": 28404,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 28896,
+    "ppid": 49244,
+    "create_time": null,
+    "name": "logioptionsplus_appbroker.exe"
+   },
+   {
+    "pid": 28916,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 29108,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 29124,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 29168,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 29392,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 29528,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 29544,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 29852,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "cmd.exe"
+   },
+   {
+    "pid": 29860,
+    "ppid": 29852,
+    "create_time": null,
+    "name": "conhost.exe"
+   },
+   {
+    "pid": 30344,
+    "ppid": 29852,
+    "create_time": null,
+    "name": "extension-host.exe"
+   },
+   {
+    "pid": 30356,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "cmd.exe"
+   },
+   {
+    "pid": 30392,
+    "ppid": 30356,
+    "create_time": null,
+    "name": "conhost.exe"
+   },
+   {
+    "pid": 30484,
+    "ppid": 98380,
+    "create_time": null,
+    "name": "conhost.exe"
+   },
+   {
+    "pid": 30540,
+    "ppid": 30356,
+    "create_time": null,
+    "name": "chrome-native-host.exe"
+   },
+   {
+    "pid": 31116,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 31252,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 31436,
+    "ppid": 113116,
+    "create_time": null,
+    "name": "node.exe"
+   },
+   {
+    "pid": 31496,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 31968,
+    "ppid": 4864,
+    "create_time": null,
+    "name": "taskhostw.exe"
+   },
+   {
+    "pid": 32100,
+    "ppid": 5672,
+    "create_time": null,
+    "name": "claude.exe"
+   },
+   {
+    "pid": 32224,
+    "ppid": 33756,
+    "create_time": null,
+    "name": "conhost.exe"
+   },
+   {
+    "pid": 32384,
+    "ppid": 15744,
+    "create_time": null,
+    "name": "LogiOptions.exe"
+   },
+   {
+    "pid": 32388,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 32396,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 32796,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 33056,
+    "ppid": 22140,
+    "create_time": null,
+    "name": "OpenConsole.exe"
+   },
+   {
+    "pid": 33136,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 33196,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "nossvc.exe"
+   },
+   {
+    "pid": 33296,
+    "ppid": 2052,
+    "create_time": null,
+    "name": "dllhost.exe"
+   },
+   {
+    "pid": 33640,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 33684,
+    "ppid": 32384,
+    "create_time": null,
+    "name": "LogiOptionsMgr.exe"
+   },
+   {
+    "pid": 33716,
+    "ppid": 32384,
+    "create_time": null,
+    "name": "LogiOverlay.exe"
+   },
+   {
+    "pid": 33756,
+    "ppid": 33684,
+    "create_time": null,
+    "name": "laclient.exe"
+   },
+   {
+    "pid": 33864,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 34060,
+    "ppid": 74364,
+    "create_time": null,
+    "name": "tail.exe"
+   },
+   {
+    "pid": 34200,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 34568,
+    "ppid": 22140,
+    "create_time": null,
+    "name": "powershell.exe"
+   },
+   {
+    "pid": 34632,
+    "ppid": 116872,
+    "create_time": null,
+    "name": "vmmemWSL"
+   },
+   {
+    "pid": 34956,
+    "ppid": 2052,
+    "create_time": null,
+    "name": "RuntimeBroker.exe"
+   },
+   {
+    "pid": 35216,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 35420,
+    "ppid": 47772,
+    "create_time": null,
+    "name": "logi_crashpad_handler.exe"
+   },
+   {
+    "pid": 35572,
+    "ppid": 22140,
+    "create_time": null,
+    "name": "OpenConsole.exe"
+   },
+   {
+    "pid": 35612,
+    "ppid": 165176,
+    "create_time": null,
+    "name": "claude.exe"
+   },
+   {
+    "pid": 35876,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 35984,
+    "ppid": 22140,
+    "create_time": null,
+    "name": "powershell.exe"
+   },
+   {
+    "pid": 36096,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 36380,
+    "ppid": 22140,
+    "create_time": null,
+    "name": "OpenConsole.exe"
+   },
+   {
+    "pid": 36560,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 36612,
+    "ppid": 123948,
+    "create_time": null,
+    "name": "cmd.exe"
+   },
+   {
+    "pid": 37072,
+    "ppid": 15744,
+    "create_time": null,
+    "name": "tailscale-ipn.exe"
+   },
+   {
+    "pid": 37328,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 37404,
+    "ppid": 2052,
+    "create_time": null,
+    "name": "explorer.exe"
+   },
+   {
+    "pid": 37444,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 37788,
+    "ppid": 15744,
+    "create_time": null,
+    "name": "rustdesk.exe"
+   },
+   {
+    "pid": 37824,
+    "ppid": 37252,
+    "create_time": null,
+    "name": "UniCRSLocalServer.exe"
+   },
+   {
+    "pid": 37832,
+    "ppid": 87792,
+    "create_time": null,
+    "name": "node_repl.exe"
+   },
+   {
+    "pid": 37896,
+    "ppid": 49396,
+    "create_time": null,
+    "name": "msedgewebview2.exe"
+   },
+   {
+    "pid": 37916,
+    "ppid": 37896,
+    "create_time": null,
+    "name": "msedgewebview2.exe"
+   },
+   {
+    "pid": 37992,
+    "ppid": 28504,
+    "create_time": null,
+    "name": "MEGA VPN.exe"
+   },
+   {
+    "pid": 38456,
+    "ppid": 39008,
+    "create_time": null,
+    "name": "msedgewebview2.exe"
+   },
+   {
+    "pid": 38552,
+    "ppid": 37896,
+    "create_time": null,
+    "name": "msedgewebview2.exe"
+   },
+   {
+    "pid": 38648,
+    "ppid": 39008,
+    "create_time": null,
+    "name": "msedgewebview2.exe"
+   },
+   {
+    "pid": 38824,
+    "ppid": 37896,
+    "create_time": null,
+    "name": "msedgewebview2.exe"
+   },
+   {
+    "pid": 38956,
+    "ppid": 5672,
+    "create_time": null,
+    "name": "claude.exe"
+   },
+   {
+    "pid": 39008,
+    "ppid": 15744,
+    "create_time": null,
+    "name": "msedgewebview2.exe"
+   },
+   {
+    "pid": 39220,
+    "ppid": 65540,
+    "create_time": null,
+    "name": "conhost.exe"
+   },
+   {
+    "pid": 39232,
+    "ppid": 39008,
+    "create_time": null,
+    "name": "msedgewebview2.exe"
+   },
+   {
+    "pid": 39516,
+    "ppid": 39008,
+    "create_time": null,
+    "name": "msedgewebview2.exe"
+   },
+   {
+    "pid": 39560,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 39788,
+    "ppid": 39008,
+    "create_time": null,
+    "name": "msedgewebview2.exe"
+   },
+   {
+    "pid": 40156,
+    "ppid": 140748,
+    "create_time": null,
+    "name": "grep.exe"
+   },
+   {
+    "pid": 41024,
+    "ppid": 114564,
+    "create_time": null,
+    "name": "conhost.exe"
+   },
+   {
+    "pid": 41172,
+    "ppid": 22140,
+    "create_time": null,
+    "name": "powershell.exe"
+   },
+   {
+    "pid": 41308,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 41316,
+    "ppid": 30344,
+    "create_time": null,
+    "name": "codex.exe"
+   },
+   {
+    "pid": 41572,
+    "ppid": 22140,
+    "create_time": null,
+    "name": "powershell.exe"
+   },
+   {
+    "pid": 41576,
+    "ppid": 22140,
+    "create_time": null,
+    "name": "powershell.exe"
+   },
+   {
+    "pid": 41672,
+    "ppid": 22140,
+    "create_time": null,
+    "name": "OpenConsole.exe"
+   },
+   {
+    "pid": 41992,
+    "ppid": 86244,
+    "create_time": null,
+    "name": "conhost.exe"
+   },
+   {
+    "pid": 42004,
+    "ppid": 172968,
+    "create_time": null,
+    "name": "powershell.exe"
+   },
+   {
+    "pid": 42124,
+    "ppid": 149860,
+    "create_time": null,
+    "name": "node.exe"
+   },
+   {
+    "pid": 42216,
+    "ppid": 81816,
+    "create_time": null,
+    "name": "ssh.exe"
+   },
+   {
+    "pid": 42424,
+    "ppid": 140324,
+    "create_time": null,
+    "name": "tail.exe"
+   },
+   {
+    "pid": 42648,
+    "ppid": 36612,
+    "create_time": null,
+    "name": "conhost.exe"
+   },
+   {
+    "pid": 42736,
+    "ppid": 22140,
+    "create_time": null,
+    "name": "OpenConsole.exe"
+   },
+   {
+    "pid": 42808,
+    "ppid": 41316,
+    "create_time": null,
+    "name": "node_repl.exe"
+   },
+   {
+    "pid": 43092,
+    "ppid": 159116,
+    "create_time": null,
+    "name": "emulator.exe"
+   },
+   {
+    "pid": 43136,
+    "ppid": 37252,
+    "create_time": null,
+    "name": "CCDaemon.exe"
+   },
+   {
+    "pid": 43320,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 43496,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 43584,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 43660,
+    "ppid": 14504,
+    "create_time": null,
+    "name": "ChatGPT Classic.exe"
+   },
+   {
+    "pid": 43676,
+    "ppid": 43660,
+    "create_time": null,
+    "name": "ChatGPT Classic.exe"
+   },
+   {
+    "pid": 43880,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 43904,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 43972,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 44012,
+    "ppid": 76260,
+    "create_time": null,
+    "name": "powershell.exe"
+   },
+   {
+    "pid": 44044,
+    "ppid": 43660,
+    "create_time": null,
+    "name": "ChatGPT Classic.exe"
+   },
+   {
+    "pid": 44212,
+    "ppid": 80268,
+    "create_time": null,
+    "name": "codex.exe"
+   },
+   {
+    "pid": 44440,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 44672,
+    "ppid": 43660,
+    "create_time": null,
+    "name": "ChatGPT Classic.exe"
+   },
+   {
+    "pid": 45944,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 45956,
+    "ppid": 55948,
+    "create_time": null,
+    "name": "Discord.exe"
+   },
+   {
+    "pid": 46996,
+    "ppid": 43660,
+    "create_time": null,
+    "name": "ChatGPT Classic.exe"
+   },
+   {
+    "pid": 47440,
+    "ppid": 55948,
+    "create_time": null,
+    "name": "Discord.exe"
+   },
+   {
+    "pid": 47772,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "logioptionsplus_updater.exe"
+   },
+   {
+    "pid": 48296,
+    "ppid": 179660,
+    "create_time": null,
+    "name": "node.exe"
+   },
+   {
+    "pid": 48784,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 48936,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 49076,
+    "ppid": 22140,
+    "create_time": null,
+    "name": "powershell.exe"
+   },
+   {
+    "pid": 49092,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 49180,
+    "ppid": 185448,
+    "create_time": null,
+    "name": "tail.exe"
+   },
+   {
+    "pid": 49244,
+    "ppid": 23456,
+    "create_time": null,
+    "name": "logioptionsplus_agent.exe"
+   },
+   {
+    "pid": 49396,
+    "ppid": 35592,
+    "create_time": null,
+    "name": "KakaoTalk.exe"
+   },
+   {
+    "pid": 49508,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 49716,
+    "ppid": 5672,
+    "create_time": null,
+    "name": "claude.exe"
+   },
+   {
+    "pid": 49736,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 49776,
+    "ppid": 93352,
+    "create_time": null,
+    "name": "Code.exe"
+   },
+   {
+    "pid": 49924,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 50120,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 50248,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 50552,
+    "ppid": 37252,
+    "create_time": null,
+    "name": "UniCRSNotiCenter.exe"
+   },
+   {
+    "pid": 50592,
+    "ppid": 15744,
+    "create_time": null,
+    "name": "rundll32.exe"
+   },
+   {
+    "pid": 51720,
+    "ppid": 165420,
+    "create_time": null,
+    "name": "grep.exe"
+   },
+   {
+    "pid": 52228,
+    "ppid": 80392,
+    "create_time": null,
+    "name": "node.exe"
+   },
+   {
+    "pid": 52708,
+    "ppid": 2052,
+    "create_time": null,
+    "name": "dllhost.exe"
+   },
+   {
+    "pid": 52740,
+    "ppid": 123948,
+    "create_time": null,
+    "name": "cmd.exe"
+   },
+   {
+    "pid": 53120,
+    "ppid": 179660,
+    "create_time": null,
+    "name": "node_repl.exe"
+   },
+   {
+    "pid": 53828,
+    "ppid": 87772,
+    "create_time": null,
+    "name": "cmd.exe"
+   },
+   {
+    "pid": 54112,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 54392,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 54720,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 54848,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 55112,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 55808,
+    "ppid": 182252,
+    "create_time": null,
+    "name": "grep.exe"
+   },
+   {
+    "pid": 55824,
+    "ppid": 80268,
+    "create_time": null,
+    "name": "ChatGPT.exe"
+   },
+   {
+    "pid": 55880,
+    "ppid": 2052,
+    "create_time": null,
+    "name": "dllhost.exe"
+   },
+   {
+    "pid": 55932,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 55948,
+    "ppid": 33020,
+    "create_time": null,
+    "name": "Discord.exe"
+   },
+   {
+    "pid": 55964,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 56064,
+    "ppid": 55948,
+    "create_time": null,
+    "name": "Discord.exe"
+   },
+   {
+    "pid": 56080,
+    "ppid": 93352,
+    "create_time": null,
+    "name": "Code.exe"
+   },
+   {
+    "pid": 56164,
+    "ppid": 55948,
+    "create_time": null,
+    "name": "Discord.exe"
+   },
+   {
+    "pid": 56172,
+    "ppid": 55948,
+    "create_time": null,
+    "name": "Discord.exe"
+   },
+   {
+    "pid": 56192,
+    "ppid": 73856,
+    "create_time": null,
+    "name": "conhost.exe"
+   },
+   {
+    "pid": 56196,
+    "ppid": 15744,
+    "create_time": null,
+    "name": "Notepad.exe"
+   },
+   {
+    "pid": 56636,
+    "ppid": 22140,
+    "create_time": null,
+    "name": "OpenConsole.exe"
+   },
+   {
+    "pid": 56892,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 56976,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 56996,
+    "ppid": 80268,
+    "create_time": null,
+    "name": "ChatGPT.exe"
+   },
+   {
+    "pid": 57252,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 57352,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 57852,
+    "ppid": 126336,
+    "create_time": null,
+    "name": "msedge.exe"
+   },
+   {
+    "pid": 58060,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 58212,
+    "ppid": 22140,
+    "create_time": null,
+    "name": "powershell.exe"
+   },
+   {
+    "pid": 58288,
+    "ppid": 68428,
+    "create_time": null,
+    "name": "conhost.exe"
+   },
+   {
+    "pid": 58660,
+    "ppid": 80268,
+    "create_time": null,
+    "name": "codex-computer-use-swift.exe"
+   },
+   {
+    "pid": 58784,
+    "ppid": 44212,
+    "create_time": null,
+    "name": "conhost.exe"
+   },
+   {
+    "pid": 58908,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 59600,
+    "ppid": 158260,
+    "create_time": null,
+    "name": "tail.exe"
+   },
+   {
+    "pid": 59780,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 59824,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 59972,
+    "ppid": 22140,
+    "create_time": null,
+    "name": "OpenConsole.exe"
+   },
+   {
+    "pid": 60160,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 60460,
+    "ppid": 22140,
+    "create_time": null,
+    "name": "OpenConsole.exe"
+   },
+   {
+    "pid": 60556,
+    "ppid": 61876,
+    "create_time": null,
+    "name": "grep.exe"
+   },
+   {
+    "pid": 60592,
+    "ppid": 172968,
+    "create_time": null,
+    "name": "OpenConsole.exe"
+   },
+   {
+    "pid": 60748,
+    "ppid": 172968,
+    "create_time": null,
+    "name": "OpenConsole.exe"
+   },
+   {
+    "pid": 61292,
+    "ppid": 66396,
+    "create_time": null,
+    "name": "Taskmgr.exe"
+   },
+   {
+    "pid": 61580,
+    "ppid": 153564,
+    "create_time": null,
+    "name": "conhost.exe"
+   },
+   {
+    "pid": 61744,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "MpDefenderCoreService.exe"
+   },
+   {
+    "pid": 61784,
+    "ppid": 80268,
+    "create_time": null,
+    "name": "ChatGPT.exe"
+   },
+   {
+    "pid": 61812,
+    "ppid": 80268,
+    "create_time": null,
+    "name": "ChatGPT.exe"
+   },
+   {
+    "pid": 62088,
+    "ppid": 157572,
+    "create_time": null,
+    "name": "tail.exe"
+   },
+   {
+    "pid": 62128,
+    "ppid": 5672,
+    "create_time": null,
+    "name": "cmd.exe"
+   },
+   {
+    "pid": 62396,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 62768,
+    "ppid": 172508,
+    "create_time": null,
+    "name": "node.exe"
+   },
+   {
+    "pid": 62996,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 63144,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 63228,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 63444,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 63520,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 63632,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 63876,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 64412,
+    "ppid": 22140,
+    "create_time": null,
+    "name": "powershell.exe"
+   },
+   {
+    "pid": 64876,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 64952,
+    "ppid": 22140,
+    "create_time": null,
+    "name": "powershell.exe"
+   },
+   {
+    "pid": 65136,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 65540,
+    "ppid": 87772,
+    "create_time": null,
+    "name": "cmd.exe"
+   },
+   {
+    "pid": 65580,
+    "ppid": 146544,
+    "create_time": null,
+    "name": "node.exe"
+   },
+   {
+    "pid": 66100,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "HPPrintScanDoctorService.exe"
+   },
+   {
+    "pid": 66976,
+    "ppid": 52740,
+    "create_time": null,
+    "name": "node.exe"
+   },
+   {
+    "pid": 67020,
+    "ppid": 52740,
+    "create_time": null,
+    "name": "conhost.exe"
+   },
+   {
+    "pid": 67148,
+    "ppid": 110904,
+    "create_time": null,
+    "name": "conhost.exe"
+   },
+   {
+    "pid": 67580,
+    "ppid": 66624,
+    "create_time": null,
+    "name": "grep.exe"
+   },
+   {
+    "pid": 67600,
+    "ppid": 149216,
+    "create_time": null,
+    "name": "tail.exe"
+   },
+   {
+    "pid": 67628,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 68168,
+    "ppid": 5528,
+    "create_time": null,
+    "name": "audiodg.exe"
+   },
+   {
+    "pid": 68252,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 68324,
+    "ppid": 84652,
+    "create_time": null,
+    "name": "UGREEN NAS.exe"
+   },
+   {
+    "pid": 68428,
+    "ppid": 84652,
+    "create_time": null,
+    "name": "syncspace_pro.exe"
+   },
+   {
+    "pid": 68436,
+    "ppid": 152336,
+    "create_time": null,
+    "name": "node.exe"
+   },
+   {
+    "pid": 68508,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 68556,
+    "ppid": 126336,
+    "create_time": null,
+    "name": "msedge.exe"
+   },
+   {
+    "pid": 68648,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 68772,
+    "ppid": 27104,
+    "create_time": null,
+    "name": "bash.exe"
+   },
+   {
+    "pid": 68788,
+    "ppid": 84652,
+    "create_time": null,
+    "name": "UGREEN NAS.exe"
+   },
+   {
+    "pid": 68968,
+    "ppid": 151352,
+    "create_time": null,
+    "name": "tail.exe"
+   },
+   {
+    "pid": 69140,
+    "ppid": 124596,
+    "create_time": null,
+    "name": "node.exe"
+   },
+   {
+    "pid": 69504,
+    "ppid": 24500,
+    "create_time": null,
+    "name": "conhost.exe"
+   },
+   {
+    "pid": 69576,
+    "ppid": 122372,
+    "create_time": null,
+    "name": "conhost.exe"
+   },
+   {
+    "pid": 69844,
+    "ppid": 126336,
+    "create_time": null,
+    "name": "msedge.exe"
+   },
+   {
+    "pid": 69872,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 70024,
+    "ppid": 48296,
+    "create_time": null,
+    "name": "conhost.exe"
+   },
+   {
+    "pid": 70044,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "remoting_host.exe"
+   },
+   {
+    "pid": 70232,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 70256,
+    "ppid": 22140,
+    "create_time": null,
+    "name": "powershell.exe"
+   },
+   {
+    "pid": 71604,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 71840,
+    "ppid": 5672,
+    "create_time": null,
+    "name": "claude.exe"
+   },
+   {
+    "pid": 71968,
+    "ppid": 99396,
+    "create_time": null,
+    "name": "remoting_desktop.exe"
+   },
+   {
+    "pid": 71992,
+    "ppid": 95020,
+    "create_time": null,
+    "name": "grep.exe"
+   },
+   {
+    "pid": 72100,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 72172,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 72224,
+    "ppid": 172968,
+    "create_time": null,
+    "name": "OpenConsole.exe"
+   },
+   {
+    "pid": 72260,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 72328,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 72388,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 72512,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 72648,
+    "ppid": 22140,
+    "create_time": null,
+    "name": "OpenConsole.exe"
+   },
+   {
+    "pid": 72664,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 72992,
+    "ppid": 62128,
+    "create_time": null,
+    "name": "node.exe"
+   },
+   {
+    "pid": 73360,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 73612,
+    "ppid": 5672,
+    "create_time": null,
+    "name": "claude.exe"
+   },
+   {
+    "pid": 73664,
+    "ppid": 5672,
+    "create_time": null,
+    "name": "claude.exe"
+   },
+   {
+    "pid": 73732,
+    "ppid": 94404,
+    "create_time": null,
+    "name": "conhost.exe"
+   },
+   {
+    "pid": 73752,
+    "ppid": 168196,
+    "create_time": null,
+    "name": "grep.exe"
+   },
+   {
+    "pid": 73820,
+    "ppid": 84652,
+    "create_time": null,
+    "name": "UGREEN NAS.exe"
+   },
+   {
+    "pid": 73856,
+    "ppid": 153480,
+    "create_time": null,
+    "name": "cmd.exe"
+   },
+   {
+    "pid": 74244,
+    "ppid": 80268,
+    "create_time": null,
+    "name": "ChatGPT.exe"
+   },
+   {
+    "pid": 74516,
+    "ppid": 80268,
+    "create_time": null,
+    "name": "ChatGPT.exe"
+   },
+   {
+    "pid": 74880,
+    "ppid": 74256,
+    "create_time": null,
+    "name": "grep.exe"
+   },
+   {
+    "pid": 74984,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 75068,
+    "ppid": 78280,
+    "create_time": null,
+    "name": "grep.exe"
+   },
+   {
+    "pid": 75236,
+    "ppid": 35844,
+    "create_time": null,
+    "name": "grep.exe"
+   },
+   {
+    "pid": 75696,
+    "ppid": 114580,
+    "create_time": null,
+    "name": "conhost.exe"
+   },
+   {
+    "pid": 76224,
+    "ppid": 64412,
+    "create_time": null,
+    "name": "node.exe"
+   },
+   {
+    "pid": 76260,
+    "ppid": 153368,
+    "create_time": null,
+    "name": "Orca.exe"
+   },
+   {
+    "pid": 76872,
+    "ppid": 87124,
+    "create_time": null,
+    "name": "tail.exe"
+   },
+   {
+    "pid": 77052,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 77292,
+    "ppid": 153368,
+    "create_time": null,
+    "name": "Orca.exe"
+   },
+   {
+    "pid": 77296,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 77556,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 77588,
+    "ppid": 171820,
+    "create_time": null,
+    "name": "grep.exe"
+   },
+   {
+    "pid": 78652,
+    "ppid": 152072,
+    "create_time": null,
+    "name": "Figma.exe"
+   },
+   {
+    "pid": 78900,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 79344,
+    "ppid": 7384,
+    "create_time": null,
+    "name": "node.exe"
+   },
+   {
+    "pid": 79744,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 79820,
+    "ppid": 95592,
+    "create_time": null,
+    "name": "tail.exe"
+   },
+   {
+    "pid": 80220,
+    "ppid": 80268,
+    "create_time": null,
+    "name": "ChatGPT.exe"
+   },
+   {
+    "pid": 80268,
+    "ppid": 15744,
+    "create_time": null,
+    "name": "ChatGPT.exe"
+   },
+   {
+    "pid": 80392,
+    "ppid": 44212,
+    "create_time": null,
+    "name": "cmd.exe"
+   },
+   {
+    "pid": 80968,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 81016,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 81292,
+    "ppid": 80268,
+    "create_time": null,
+    "name": "ChatGPT.exe"
+   },
+   {
+    "pid": 81300,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 81444,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 81756,
+    "ppid": 8704,
+    "create_time": null,
+    "name": "claude.exe"
+   },
+   {
+    "pid": 81816,
+    "ppid": 153564,
+    "create_time": 1791838802.8256173,
+    "name": "python.exe",
+    "argv_readable": true,
+    "argv_nonempty": true,
+    "headless_exact": false,
+    "matched_scripts": []
+   },
+   {
+    "pid": 82404,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 83296,
+    "ppid": 20516,
+    "create_time": null,
+    "name": "SearchFilterHost.exe"
+   },
+   {
+    "pid": 83864,
+    "ppid": 173020,
+    "create_time": null,
+    "name": "tail.exe"
+   },
+   {
+    "pid": 84468,
+    "ppid": 43660,
+    "create_time": null,
+    "name": "ChatGPT Classic.exe"
+   },
+   {
+    "pid": 84652,
+    "ppid": 15744,
+    "create_time": null,
+    "name": "UGREEN NAS.exe"
+   },
+   {
+    "pid": 84944,
+    "ppid": 41316,
+    "create_time": null,
+    "name": "node.exe"
+   },
+   {
+    "pid": 85028,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 85184,
+    "ppid": 121292,
+    "create_time": null,
+    "name": "tail.exe"
+   },
+   {
+    "pid": 85276,
+    "ppid": 135480,
+    "create_time": null,
+    "name": "CodeSetup-stable-2a59476c9bfcb90b3ddc372c36762471b7dfad1c.tmp"
+   },
+   {
+    "pid": 85324,
+    "ppid": 68428,
+    "create_time": null,
+    "name": "syncspace_pro.exe"
+   },
+   {
+    "pid": 86084,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 86244,
+    "ppid": 114948,
+    "create_time": null,
+    "name": "cmd.exe"
+   },
+   {
+    "pid": 86328,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 86484,
+    "ppid": 84652,
+    "create_time": null,
+    "name": "UGREEN NAS.exe"
+   },
+   {
+    "pid": 86888,
+    "ppid": 93352,
+    "create_time": null,
+    "name": "Code.exe"
+   },
+   {
+    "pid": 87772,
+    "ppid": 136120,
+    "create_time": null,
+    "name": "claude.exe"
+   },
+   {
+    "pid": 87792,
+    "ppid": 41316,
+    "create_time": null,
+    "name": "node.exe"
+   },
+   {
+    "pid": 87988,
+    "ppid": 27104,
+    "create_time": null,
+    "name": "conhost.exe"
+   },
+   {
+    "pid": 88164,
+    "ppid": 84652,
+    "create_time": null,
+    "name": "UGREEN NAS.exe"
+   },
+   {
+    "pid": 88240,
+    "ppid": 126336,
+    "create_time": null,
+    "name": "msedge.exe"
+   },
+   {
+    "pid": 88368,
+    "ppid": 20556,
+    "create_time": null,
+    "name": "grep.exe"
+   },
+   {
+    "pid": 88604,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 89036,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 89156,
+    "ppid": 121980,
+    "create_time": null,
+    "name": "conhost.exe"
+   },
+   {
+    "pid": 89596,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 89712,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 90060,
+    "ppid": 42336,
+    "create_time": null,
+    "name": "codex.exe"
+   },
+   {
+    "pid": 90144,
+    "ppid": 94868,
+    "create_time": null,
+    "name": "find.exe"
+   },
+   {
+    "pid": 91084,
+    "ppid": 7624,
+    "create_time": null,
+    "name": "wslrelay.exe"
+   },
+   {
+    "pid": 91176,
+    "ppid": 5672,
+    "create_time": null,
+    "name": "claude.exe"
+   },
+   {
+    "pid": 91368,
+    "ppid": 167860,
+    "create_time": null,
+    "name": "node.exe"
+   },
+   {
+    "pid": 91808,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 91972,
+    "ppid": 16052,
+    "create_time": null,
+    "name": "grep.exe"
+   },
+   {
+    "pid": 92092,
+    "ppid": 11968,
+    "create_time": null,
+    "name": "grep.exe"
+   },
+   {
+    "pid": 92724,
+    "ppid": 53120,
+    "create_time": null,
+    "name": "conhost.exe"
+   },
+   {
+    "pid": 92780,
+    "ppid": 2052,
+    "create_time": null,
+    "name": "RuntimeBroker.exe"
+   },
+   {
+    "pid": 92784,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 92988,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 93096,
+    "ppid": 165120,
+    "create_time": null,
+    "name": "tail.exe"
+   },
+   {
+    "pid": 93352,
+    "ppid": 15744,
+    "create_time": null,
+    "name": "Code.exe"
+   },
+   {
+    "pid": 93500,
+    "ppid": 2052,
+    "create_time": null,
+    "name": "SystemSettings.exe"
+   },
+   {
+    "pid": 93596,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 93716,
+    "ppid": 93672,
+    "create_time": null,
+    "name": "grep.exe"
+   },
+   {
+    "pid": 93720,
+    "ppid": 80268,
+    "create_time": null,
+    "name": "ChatGPT.exe"
+   },
+   {
+    "pid": 93764,
+    "ppid": 104684,
+    "create_time": null,
+    "name": "cmd.exe"
+   },
+   {
+    "pid": 93840,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 94176,
+    "ppid": 153368,
+    "create_time": null,
+    "name": "Orca.exe"
+   },
+   {
+    "pid": 94404,
+    "ppid": 179660,
+    "create_time": null,
+    "name": "node.exe"
+   },
+   {
+    "pid": 94700,
+    "ppid": 152072,
+    "create_time": null,
+    "name": "Figma.exe"
+   },
+   {
+    "pid": 94924,
+    "ppid": 179660,
+    "create_time": null,
+    "name": "node.exe"
+   },
+   {
+    "pid": 94944,
+    "ppid": 180516,
+    "create_time": null,
+    "name": "conhost.exe"
+   },
+   {
+    "pid": 95220,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 95344,
+    "ppid": 128364,
+    "create_time": null,
+    "name": "ssh.exe"
+   },
+   {
+    "pid": 95760,
+    "ppid": 114580,
+    "create_time": null,
+    "name": "node.exe"
+   },
+   {
+    "pid": 95796,
+    "ppid": 113116,
+    "create_time": null,
+    "name": "node.exe"
+   },
+   {
+    "pid": 95972,
+    "ppid": 93352,
+    "create_time": null,
+    "name": "Code.exe"
+   },
+   {
+    "pid": 95988,
+    "ppid": 125292,
+    "create_time": null,
+    "name": "tail.exe"
+   },
+   {
+    "pid": 96104,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "cowork-svc.exe"
+   },
+   {
+    "pid": 96220,
+    "ppid": 100468,
+    "create_time": null,
+    "name": "tail.exe"
+   },
+   {
+    "pid": 96604,
+    "ppid": 183456,
+    "create_time": null,
+    "name": "tail.exe"
+   },
+   {
+    "pid": 97136,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 97248,
+    "ppid": 41316,
+    "create_time": null,
+    "name": "node_repl.exe"
+   },
+   {
+    "pid": 97672,
+    "ppid": 28156,
+    "create_time": null,
+    "name": "conhost.exe"
+   },
+   {
+    "pid": 97800,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 98104,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 98152,
+    "ppid": 93352,
+    "create_time": null,
+    "name": "Code.exe"
+   },
+   {
+    "pid": 98176,
+    "ppid": 180240,
+    "create_time": null,
+    "name": "tail.exe"
+   },
+   {
+    "pid": 98380,
+    "ppid": 110104,
+    "create_time": null,
+    "name": "cmd.exe"
+   },
+   {
+    "pid": 98548,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 98760,
+    "ppid": 5672,
+    "create_time": null,
+    "name": "claude.exe"
+   },
+   {
+    "pid": 98796,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 98964,
+    "ppid": 31436,
+    "create_time": null,
+    "name": "conhost.exe"
+   },
+   {
+    "pid": 100040,
+    "ppid": 175572,
+    "create_time": null,
+    "name": "conhost.exe"
+   },
+   {
+    "pid": 100268,
+    "ppid": 2052,
+    "create_time": null,
+    "name": "dllhost.exe"
+   },
+   {
+    "pid": 100668,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 101192,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 101516,
+    "ppid": 121980,
+    "create_time": null,
+    "name": "node.exe"
+   },
+   {
+    "pid": 102000,
+    "ppid": 44212,
+    "create_time": null,
+    "name": "node.exe"
+   },
+   {
+    "pid": 102160,
+    "ppid": 144760,
+    "create_time": null,
+    "name": "tail.exe"
+   },
+   {
+    "pid": 102396,
+    "ppid": 132820,
+    "create_time": null,
+    "name": "grep.exe"
+   },
+   {
+    "pid": 102468,
+    "ppid": 2052,
+    "create_time": null,
+    "name": "WmiPrvSE.exe"
+   },
+   {
+    "pid": 102472,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 102624,
+    "ppid": 84652,
+    "create_time": null,
+    "name": "UgAgent.exe"
+   },
+   {
+    "pid": 102700,
+    "ppid": 153368,
+    "create_time": null,
+    "name": "Orca.exe"
+   },
+   {
+    "pid": 102840,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 102908,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 102964,
+    "ppid": 20516,
+    "create_time": null,
+    "name": "SearchFilterHost.exe"
+   },
+   {
+    "pid": 103132,
+    "ppid": 2052,
+    "create_time": null,
+    "name": "WindowsTerminal.exe"
+   },
+   {
+    "pid": 103648,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 104036,
+    "ppid": 20516,
+    "create_time": null,
+    "name": "SearchFilterHost.exe"
+   },
+   {
+    "pid": 104056,
+    "ppid": 88292,
+    "create_time": null,
+    "name": "grep.exe"
+   },
+   {
+    "pid": 104084,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 104528,
+    "ppid": 82764,
+    "create_time": null,
+    "name": "grep.exe"
+   },
+   {
+    "pid": 104684,
+    "ppid": 53828,
+    "create_time": null,
+    "name": "node.exe"
+   },
+   {
+    "pid": 105044,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 105076,
+    "ppid": 160092,
+    "create_time": null,
+    "name": "cmd.exe"
+   },
+   {
+    "pid": 105100,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 106308,
+    "ppid": 152072,
+    "create_time": null,
+    "name": "figma_agent.exe"
+   },
+   {
+    "pid": 106572,
+    "ppid": 98752,
+    "create_time": null,
+    "name": "tail.exe"
+   },
+   {
+    "pid": 106576,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 106588,
+    "ppid": 2052,
+    "create_time": null,
+    "name": "backgroundTaskHost.exe"
+   },
+   {
+    "pid": 106608,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 106792,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 107116,
+    "ppid": 155052,
+    "create_time": null,
+    "name": "node_repl.exe"
+   },
+   {
+    "pid": 107752,
+    "ppid": 182916,
+    "create_time": null,
+    "name": "grep.exe"
+   },
+   {
+    "pid": 107764,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 107952,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 108460,
+    "ppid": 179660,
+    "create_time": null,
+    "name": "node.exe"
+   },
+   {
+    "pid": 108472,
+    "ppid": 41172,
+    "create_time": null,
+    "name": "claude.exe"
+   },
+   {
+    "pid": 108504,
+    "ppid": 126336,
+    "create_time": null,
+    "name": "msedge.exe"
+   },
+   {
+    "pid": 109256,
+    "ppid": 63680,
+    "create_time": null,
+    "name": "grep.exe"
+   },
+   {
+    "pid": 109860,
+    "ppid": 172968,
+    "create_time": null,
+    "name": "OpenConsole.exe"
+   },
+   {
+    "pid": 110004,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 110104,
+    "ppid": 41572,
+    "create_time": null,
+    "name": "claude.exe"
+   },
+   {
+    "pid": 110392,
+    "ppid": 152072,
+    "create_time": null,
+    "name": "Figma.exe"
+   },
+   {
+    "pid": 110880,
+    "ppid": 2052,
+    "create_time": null,
+    "name": "RuntimeBroker.exe"
+   },
+   {
+    "pid": 110904,
+    "ppid": 110104,
+    "create_time": null,
+    "name": "cmd.exe"
+   },
+   {
+    "pid": 111156,
+    "ppid": 9104,
+    "create_time": null,
+    "name": "SnippingTool.exe"
+   },
+   {
+    "pid": 111336,
+    "ppid": 2052,
+    "create_time": null,
+    "name": "dllhost.exe"
+   },
+   {
+    "pid": 111488,
+    "ppid": 153368,
+    "create_time": null,
+    "name": "Orca.exe"
+   },
+   {
+    "pid": 111692,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 111996,
+    "ppid": 143256,
+    "create_time": null,
+    "name": "grep.exe"
+   },
+   {
+    "pid": 112176,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 112520,
+    "ppid": 152072,
+    "create_time": null,
+    "name": "Figma.exe"
+   },
+   {
+    "pid": 112772,
+    "ppid": 114948,
+    "create_time": null,
+    "name": "cmd.exe"
+   },
+   {
+    "pid": 112852,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 112936,
+    "ppid": 108460,
+    "create_time": null,
+    "name": "conhost.exe"
+   },
+   {
+    "pid": 113040,
+    "ppid": 172968,
+    "create_time": null,
+    "name": "powershell.exe"
+   },
+   {
+    "pid": 113116,
+    "ppid": 159028,
+    "create_time": null,
+    "name": "codex.exe"
+   },
+   {
+    "pid": 113660,
+    "ppid": 91740,
+    "create_time": null,
+    "name": "Orca.exe"
+   },
+   {
+    "pid": 113728,
+    "ppid": 107028,
+    "create_time": null,
+    "name": "tail.exe"
+   },
+   {
+    "pid": 113752,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 114428,
+    "ppid": 42004,
+    "create_time": null,
+    "name": "node.exe"
+   },
+   {
+    "pid": 114564,
+    "ppid": 113116,
+    "create_time": null,
+    "name": "powershell.exe"
+   },
+   {
+    "pid": 114580,
+    "ppid": 108472,
+    "create_time": null,
+    "name": "cmd.exe"
+   },
+   {
+    "pid": 114948,
+    "ppid": 34568,
+    "create_time": null,
+    "name": "claude.exe"
+   },
+   {
+    "pid": 115060,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 115192,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 115336,
+    "ppid": 185236,
+    "create_time": null,
+    "name": "grep.exe"
+   },
+   {
+    "pid": 115508,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 115740,
+    "ppid": 95548,
+    "create_time": null,
+    "name": "tail.exe"
+   },
+   {
+    "pid": 116212,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 116764,
+    "ppid": 150752,
+    "create_time": null,
+    "name": "crashpad_handler.exe"
+   },
+   {
+    "pid": 116872,
+    "ppid": 15208,
+    "create_time": null,
+    "name": "vmwp.exe"
+   },
+   {
+    "pid": 117404,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 117408,
+    "ppid": 94924,
+    "create_time": null,
+    "name": "conhost.exe"
+   },
+   {
+    "pid": 117608,
+    "ppid": 2052,
+    "create_time": null,
+    "name": "RuntimeBroker.exe"
+   },
+   {
+    "pid": 118000,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 118272,
+    "ppid": 112772,
+    "create_time": null,
+    "name": "conhost.exe"
+   },
+   {
+    "pid": 118980,
+    "ppid": 161496,
+    "create_time": 1791596927.9812424,
+    "name": "python.exe",
+    "argv_readable": true,
+    "argv_nonempty": true,
+    "headless_exact": false,
+    "matched_scripts": []
+   },
+   {
+    "pid": 119020,
+    "ppid": 41316,
+    "create_time": null,
+    "name": "node.exe"
+   },
+   {
+    "pid": 119064,
+    "ppid": 126336,
+    "create_time": null,
+    "name": "msedge.exe"
+   },
+   {
+    "pid": 119372,
+    "ppid": 126336,
+    "create_time": null,
+    "name": "msedge.exe"
+   },
+   {
+    "pid": 119564,
+    "ppid": 14728,
+    "create_time": null,
+    "name": "conhost.exe"
+   },
+   {
+    "pid": 119848,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 120456,
+    "ppid": 138220,
+    "create_time": null,
+    "name": "node_repl.exe"
+   },
+   {
+    "pid": 120876,
+    "ppid": 145308,
+    "create_time": null,
+    "name": "tail.exe"
+   },
+   {
+    "pid": 121028,
+    "ppid": 104084,
+    "create_time": null,
+    "name": "nosstarter.npe"
+   },
+   {
+    "pid": 121092,
+    "ppid": 92112,
+    "create_time": null,
+    "name": "tail.exe"
+   },
+   {
+    "pid": 121396,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 121520,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 121604,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 121980,
+    "ppid": 181008,
+    "create_time": null,
+    "name": "cmd.exe"
+   },
+   {
+    "pid": 122172,
+    "ppid": 37832,
+    "create_time": null,
+    "name": "codex.exe"
+   },
+   {
+    "pid": 122368,
+    "ppid": 16768,
+    "create_time": null,
+    "name": "tail.exe"
+   },
+   {
+    "pid": 122372,
+    "ppid": 22140,
+    "create_time": null,
+    "name": "powershell.exe"
+   },
+   {
+    "pid": 122984,
+    "ppid": 153368,
+    "create_time": null,
+    "name": "Orca.exe"
+   },
+   {
+    "pid": 123908,
+    "ppid": 58692,
+    "create_time": null,
+    "name": "head.exe"
+   },
+   {
+    "pid": 123948,
+    "ppid": 49076,
+    "create_time": null,
+    "name": "claude.exe"
+   },
+   {
+    "pid": 123988,
+    "ppid": 113116,
+    "create_time": null,
+    "name": "node_repl.exe"
+   },
+   {
+    "pid": 124076,
+    "ppid": 124596,
+    "create_time": null,
+    "name": "conhost.exe"
+   },
+   {
+    "pid": 124568,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 124580,
+    "ppid": 126336,
+    "create_time": null,
+    "name": "msedge.exe"
+   },
+   {
+    "pid": 124596,
+    "ppid": 5672,
+    "create_time": null,
+    "name": "cmd.exe"
+   },
+   {
+    "pid": 125108,
+    "ppid": 76032,
+    "create_time": null,
+    "name": "tail.exe"
+   },
+   {
+    "pid": 125192,
+    "ppid": 20516,
+    "create_time": null,
+    "name": "SearchFilterHost.exe"
+   },
+   {
+    "pid": 125328,
+    "ppid": 76260,
+    "create_time": null,
+    "name": "OpenConsole.exe"
+   },
+   {
+    "pid": 125572,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 126232,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 126256,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 126288,
+    "ppid": 13352,
+    "create_time": null,
+    "name": "tail.exe"
+   },
+   {
+    "pid": 126336,
+    "ppid": 89808,
+    "create_time": null,
+    "name": "msedge.exe"
+   },
+   {
+    "pid": 126508,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 126844,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 127632,
+    "ppid": 164108,
+    "create_time": null,
+    "name": "grep.exe"
+   },
+   {
+    "pid": 127784,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 127792,
+    "ppid": 132652,
+    "create_time": null,
+    "name": "node.exe"
+   },
+   {
+    "pid": 127816,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 128364,
+    "ppid": 172968,
+    "create_time": null,
+    "name": "powershell.exe"
+   },
+   {
+    "pid": 128384,
+    "ppid": 82644,
+    "create_time": null,
+    "name": "grep.exe"
+   },
+   {
+    "pid": 128424,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 128432,
+    "ppid": 68772,
+    "create_time": 1791876934.2798636,
+    "name": "python.exe",
+    "argv_readable": true,
+    "argv_nonempty": true,
+    "headless_exact": false,
+    "matched_scripts": []
+   },
+   {
+    "pid": 128532,
+    "ppid": 133544,
+    "create_time": null,
+    "name": "conhost.exe"
+   },
+   {
+    "pid": 128708,
+    "ppid": 112532,
+    "create_time": null,
+    "name": "grep.exe"
+   },
+   {
+    "pid": 128860,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 129480,
+    "ppid": 151440,
+    "create_time": null,
+    "name": "grep.exe"
+   },
+   {
+    "pid": 129716,
+    "ppid": 15744,
+    "create_time": null,
+    "name": "rustdesk.exe"
+   },
+   {
+    "pid": 130024,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 130600,
+    "ppid": 93352,
+    "create_time": null,
+    "name": "Code.exe"
+   },
+   {
+    "pid": 130780,
+    "ppid": 23560,
+    "create_time": null,
+    "name": "msedgewebview2.exe"
+   },
+   {
+    "pid": 130948,
+    "ppid": 15744,
+    "create_time": null,
+    "name": "mspaint.exe"
+   },
+   {
+    "pid": 131136,
+    "ppid": 127664,
+    "create_time": null,
+    "name": "grep.exe"
+   },
+   {
+    "pid": 131376,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 131404,
+    "ppid": 152072,
+    "create_time": null,
+    "name": "Figma.exe"
+   },
+   {
+    "pid": 131612,
+    "ppid": 117756,
+    "create_time": null,
+    "name": "tail.exe"
+   },
+   {
+    "pid": 131644,
+    "ppid": 112772,
+    "create_time": null,
+    "name": "node.exe"
+   },
+   {
+    "pid": 131820,
+    "ppid": 80268,
+    "create_time": null,
+    "name": "ChatGPT.exe"
+   },
+   {
+    "pid": 132048,
+    "ppid": 109668,
+    "create_time": null,
+    "name": "grep.exe"
+   },
+   {
+    "pid": 132624,
+    "ppid": 123988,
+    "create_time": null,
+    "name": "conhost.exe"
+   },
+   {
+    "pid": 132652,
+    "ppid": 95760,
+    "create_time": null,
+    "name": "cmd.exe"
+   },
+   {
+    "pid": 132812,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 132844,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 132848,
+    "ppid": 73856,
+    "create_time": null,
+    "name": "node.exe"
+   },
+   {
+    "pid": 133412,
+    "ppid": 126336,
+    "create_time": null,
+    "name": "msedge.exe"
+   },
+   {
+    "pid": 133544,
+    "ppid": 179660,
+    "create_time": null,
+    "name": "node.exe"
+   },
+   {
+    "pid": 133584,
+    "ppid": 98152,
+    "create_time": null,
+    "name": "Code.exe"
+   },
+   {
+    "pid": 134416,
+    "ppid": 5672,
+    "create_time": null,
+    "name": "claude.exe"
+   },
+   {
+    "pid": 135100,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 135480,
+    "ppid": 93352,
+    "create_time": null,
+    "name": "CodeSetup-stable-2a59476c9bfcb90b3ddc372c36762471b7dfad1c.exe"
+   },
+   {
+    "pid": 135868,
+    "ppid": 178760,
+    "create_time": null,
+    "name": "conhost.exe"
+   },
+   {
+    "pid": 136120,
+    "ppid": 172968,
+    "create_time": null,
+    "name": "powershell.exe"
+   },
+   {
+    "pid": 136180,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 136432,
+    "ppid": 126336,
+    "create_time": null,
+    "name": "msedge.exe"
+   },
+   {
+    "pid": 136720,
+    "ppid": 126336,
+    "create_time": null,
+    "name": "msedge.exe"
+   },
+   {
+    "pid": 136768,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 136824,
+    "ppid": 87112,
+    "create_time": null,
+    "name": "grep.exe"
+   },
+   {
+    "pid": 136908,
+    "ppid": 113116,
+    "create_time": null,
+    "name": "node_repl.exe"
+   },
+   {
+    "pid": 137588,
+    "ppid": 181564,
+    "create_time": null,
+    "name": "grep.exe"
+   },
+   {
+    "pid": 138220,
+    "ppid": 44212,
+    "create_time": null,
+    "name": "node.exe"
+   },
+   {
+    "pid": 138892,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 138980,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 139700,
+    "ppid": 161496,
+    "create_time": null,
+    "name": "conhost.exe"
+   },
+   {
+    "pid": 139848,
+    "ppid": 93352,
+    "create_time": null,
+    "name": "Code.exe"
+   },
+   {
+    "pid": 140088,
+    "ppid": 95796,
+    "create_time": null,
+    "name": "conhost.exe"
+   },
+   {
+    "pid": 140204,
+    "ppid": 152072,
+    "create_time": null,
+    "name": "Figma.exe"
+   },
+   {
+    "pid": 140516,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 140648,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 141664,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 141680,
+    "ppid": 3672,
+    "create_time": null,
+    "name": "node.exe"
+   },
+   {
+    "pid": 141860,
+    "ppid": 121896,
+    "create_time": null,
+    "name": "Photos.exe"
+   },
+   {
+    "pid": 142176,
+    "ppid": 36168,
+    "create_time": null,
+    "name": "grep.exe"
+   },
+   {
+    "pid": 142468,
+    "ppid": 178760,
+    "create_time": null,
+    "name": "node.exe"
+   },
+   {
+    "pid": 143004,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 143064,
+    "ppid": 93764,
+    "create_time": null,
+    "name": "node.exe"
+   },
+   {
+    "pid": 143572,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 143608,
+    "ppid": 131644,
+    "create_time": null,
+    "name": "cmd.exe"
+   },
+   {
+    "pid": 143684,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 143708,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 143740,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 144576,
+    "ppid": 179660,
+    "create_time": null,
+    "name": "node_repl.exe"
+   },
+   {
+    "pid": 144856,
+    "ppid": 153368,
+    "create_time": null,
+    "name": "Orca.exe"
+   },
+   {
+    "pid": 144924,
+    "ppid": 36612,
+    "create_time": null,
+    "name": "node.exe"
+   },
+   {
+    "pid": 144972,
+    "ppid": 180108,
+    "create_time": null,
+    "name": "conhost.exe"
+   },
+   {
+    "pid": 145180,
+    "ppid": 163660,
+    "create_time": 1791596928.000301,
+    "name": "python.exe",
+    "argv_readable": true,
+    "argv_nonempty": true,
+    "headless_exact": false,
+    "matched_scripts": []
+   },
+   {
+    "pid": 145312,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 145600,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 145764,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 145768,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 145860,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 145880,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 146100,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 146400,
+    "ppid": 143608,
+    "create_time": null,
+    "name": "node.exe"
+   },
+   {
+    "pid": 146544,
+    "ppid": 101516,
+    "create_time": null,
+    "name": "cmd.exe"
+   },
+   {
+    "pid": 147032,
+    "ppid": 161796,
+    "create_time": null,
+    "name": "conhost.exe"
+   },
+   {
+    "pid": 147168,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 147348,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 147352,
+    "ppid": 69140,
+    "create_time": null,
+    "name": "cmd.exe"
+   },
+   {
+    "pid": 147372,
+    "ppid": 37832,
+    "create_time": null,
+    "name": "node.exe"
+   },
+   {
+    "pid": 147740,
+    "ppid": 175540,
+    "create_time": null,
+    "name": "conhost.exe"
+   },
+   {
+    "pid": 148172,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 148344,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 148452,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 148476,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 148728,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 149048,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 149624,
+    "ppid": 30376,
+    "create_time": null,
+    "name": "tail.exe"
+   },
+   {
+    "pid": 149860,
+    "ppid": 175108,
+    "create_time": null,
+    "name": "cmd.exe"
+   },
+   {
+    "pid": 149872,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 149892,
+    "ppid": 147352,
+    "create_time": null,
+    "name": "node.exe"
+   },
+   {
+    "pid": 150180,
+    "ppid": 130276,
+    "create_time": null,
+    "name": "grep.exe"
+   },
+   {
+    "pid": 150352,
+    "ppid": 181164,
+    "create_time": null,
+    "name": "grep.exe"
+   },
+   {
+    "pid": 150568,
+    "ppid": 153560,
+    "create_time": null,
+    "name": "node.exe"
+   },
+   {
+    "pid": 150728,
+    "ppid": 142468,
+    "create_time": null,
+    "name": "cmd.exe"
+   },
+   {
+    "pid": 150752,
+    "ppid": 43092,
+    "create_time": null,
+    "name": "qemu-system-x86_64-headless.exe"
+   },
+   {
+    "pid": 151028,
+    "ppid": 41316,
+    "create_time": null,
+    "name": "codex-code-mode-host.exe"
+   },
+   {
+    "pid": 151080,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 151144,
+    "ppid": 153368,
+    "create_time": null,
+    "name": "Orca.exe"
+   },
+   {
+    "pid": 151828,
+    "ppid": 140712,
+    "create_time": null,
+    "name": "Notepad.exe"
+   },
+   {
+    "pid": 151868,
+    "ppid": 106408,
+    "create_time": null,
+    "name": "grep.exe"
+   },
+   {
+    "pid": 151964,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 152072,
+    "ppid": 96972,
+    "create_time": null,
+    "name": "Figma.exe"
+   },
+   {
+    "pid": 152256,
+    "ppid": 93352,
+    "create_time": null,
+    "name": "Code.exe"
+   },
+   {
+    "pid": 152336,
+    "ppid": 170956,
+    "create_time": null,
+    "name": "cmd.exe"
+   },
+   {
+    "pid": 152516,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 152588,
+    "ppid": 5672,
+    "create_time": null,
+    "name": "claude.exe"
+   },
+   {
+    "pid": 152796,
+    "ppid": 122556,
+    "create_time": null,
+    "name": "tail.exe"
+   },
+   {
+    "pid": 152864,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 153192,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 153368,
+    "ppid": 15744,
+    "create_time": null,
+    "name": "Orca.exe"
+   },
+   {
+    "pid": 153472,
+    "ppid": 2052,
+    "create_time": null,
+    "name": "AppActions.exe"
+   },
+   {
+    "pid": 153480,
+    "ppid": 35612,
+    "create_time": null,
+    "name": "claude.exe"
+   },
+   {
+    "pid": 153504,
+    "ppid": 118980,
+    "create_time": 1791596927.999312,
+    "name": "python.exe",
+    "argv_readable": true,
+    "argv_nonempty": true,
+    "headless_exact": false,
+    "matched_scripts": []
+   },
+   {
+    "pid": 153560,
+    "ppid": 132848,
+    "create_time": null,
+    "name": "cmd.exe"
+   },
+   {
+    "pid": 153888,
+    "ppid": 125132,
+    "create_time": null,
+    "name": "tail.exe"
+   },
+   {
+    "pid": 154268,
+    "ppid": 5672,
+    "create_time": null,
+    "name": "claude.exe"
+   },
+   {
+    "pid": 154672,
+    "ppid": 14504,
+    "create_time": null,
+    "name": "ShellHost.exe"
+   },
+   {
+    "pid": 154888,
+    "ppid": 144576,
+    "create_time": null,
+    "name": "conhost.exe"
+   },
+   {
+    "pid": 155052,
+    "ppid": 41316,
+    "create_time": null,
+    "name": "node.exe"
+   },
+   {
+    "pid": 155428,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 155616,
+    "ppid": 171316,
+    "create_time": null,
+    "name": "conhost.exe"
+   },
+   {
+    "pid": 155632,
+    "ppid": 5672,
+    "create_time": null,
+    "name": "claude.exe"
+   },
+   {
+    "pid": 155948,
+    "ppid": 153480,
+    "create_time": null,
+    "name": "bash.exe"
+   },
+   {
+    "pid": 156148,
+    "ppid": 150752,
+    "create_time": null,
+    "name": "netsimd.exe"
+   },
+   {
+    "pid": 156616,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 157380,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 158284,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 158572,
+    "ppid": 184700,
+    "create_time": null,
+    "name": "claude.exe"
+   },
+   {
+    "pid": 158756,
+    "ppid": 145556,
+    "create_time": null,
+    "name": "tail.exe"
+   },
+   {
+    "pid": 158820,
+    "ppid": 172968,
+    "create_time": null,
+    "name": "powershell.exe"
+   },
+   {
+    "pid": 159028,
+    "ppid": 41576,
+    "create_time": null,
+    "name": "node.exe"
+   },
+   {
+    "pid": 159064,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 159528,
+    "ppid": 93352,
+    "create_time": null,
+    "name": "Code.exe"
+   },
+   {
+    "pid": 159820,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 159824,
+    "ppid": 2052,
+    "create_time": null,
+    "name": "Widgets.exe"
+   },
+   {
+    "pid": 159928,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 160092,
+    "ppid": 110904,
+    "create_time": null,
+    "name": "node.exe"
+   },
+   {
+    "pid": 160172,
+    "ppid": 152072,
+    "create_time": null,
+    "name": "Figma.exe"
+   },
+   {
+    "pid": 160336,
+    "ppid": 5672,
+    "create_time": null,
+    "name": "claude.exe"
+   },
+   {
+    "pid": 160476,
+    "ppid": 175444,
+    "create_time": null,
+    "name": "tail.exe"
+   },
+   {
+    "pid": 160964,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 160972,
+    "ppid": 20516,
+    "create_time": null,
+    "name": "SearchProtocolHost.exe"
+   },
+   {
+    "pid": 161496,
+    "ppid": 5672,
+    "create_time": null,
+    "name": "uv.exe"
+   },
+   {
+    "pid": 161588,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 161628,
+    "ppid": 20516,
+    "create_time": null,
+    "name": "SearchFilterHost.exe"
+   },
+   {
+    "pid": 161688,
+    "ppid": 118728,
+    "create_time": null,
+    "name": "tail.exe"
+   },
+   {
+    "pid": 161716,
+    "ppid": 52448,
+    "create_time": null,
+    "name": "tail.exe"
+   },
+   {
+    "pid": 161796,
+    "ppid": 181008,
+    "create_time": null,
+    "name": "cmd.exe"
+   },
+   {
+    "pid": 162308,
+    "ppid": 153368,
+    "create_time": null,
+    "name": "Orca.exe"
+   },
+   {
+    "pid": 162776,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 162780,
+    "ppid": 161796,
+    "create_time": null,
+    "name": "node.exe"
+   },
+   {
+    "pid": 163292,
+    "ppid": 102624,
+    "create_time": null,
+    "name": "conhost.exe"
+   },
+   {
+    "pid": 163556,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 163660,
+    "ppid": 28156,
+    "create_time": 1791596927.981268,
+    "name": "python.exe",
+    "argv_readable": true,
+    "argv_nonempty": true,
+    "headless_exact": false,
+    "matched_scripts": []
+   },
+   {
+    "pid": 164292,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 164576,
+    "ppid": 105076,
+    "create_time": null,
+    "name": "node.exe"
+   },
+   {
+    "pid": 164660,
+    "ppid": 5672,
+    "create_time": null,
+    "name": "claude.exe"
+   },
+   {
+    "pid": 164704,
+    "ppid": 43092,
+    "create_time": null,
+    "name": "conhost.exe"
+   },
+   {
+    "pid": 164940,
+    "ppid": 5672,
+    "create_time": null,
+    "name": "claude.exe"
+   },
+   {
+    "pid": 165224,
+    "ppid": 8596,
+    "create_time": null,
+    "name": "cmd.exe"
+   },
+   {
+    "pid": 165228,
+    "ppid": 27548,
+    "create_time": null,
+    "name": "tail.exe"
+   },
+   {
+    "pid": 165544,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 165812,
+    "ppid": 176580,
+    "create_time": null,
+    "name": "tail.exe"
+   },
+   {
+    "pid": 166108,
+    "ppid": 144856,
+    "create_time": null,
+    "name": "Orca.exe"
+   },
+   {
+    "pid": 166288,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 167712,
+    "ppid": 37832,
+    "create_time": null,
+    "name": "node.exe"
+   },
+   {
+    "pid": 167860,
+    "ppid": 66976,
+    "create_time": null,
+    "name": "cmd.exe"
+   },
+   {
+    "pid": 167956,
+    "ppid": 150400,
+    "create_time": null,
+    "name": "tail.exe"
+   },
+   {
+    "pid": 168044,
+    "ppid": 113116,
+    "create_time": null,
+    "name": "node.exe"
+   },
+   {
+    "pid": 168068,
+    "ppid": 104268,
+    "create_time": null,
+    "name": "tail.exe"
+   },
+   {
+    "pid": 168524,
+    "ppid": 1460,
+    "create_time": null,
+    "name": "cmd.exe"
+   },
+   {
+    "pid": 168668,
+    "ppid": 5672,
+    "create_time": null,
+    "name": "claude.exe"
+   },
+   {
+    "pid": 168808,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 168812,
+    "ppid": 165224,
+    "create_time": null,
+    "name": "node.exe"
+   },
+   {
+    "pid": 168904,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 168952,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 169412,
+    "ppid": 152072,
+    "create_time": null,
+    "name": "Figma.exe"
+   },
+   {
+    "pid": 169820,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 170304,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 170956,
+    "ppid": 98380,
+    "create_time": null,
+    "name": "node.exe"
+   },
+   {
+    "pid": 171628,
+    "ppid": 126336,
+    "create_time": null,
+    "name": "msedge.exe"
+   },
+   {
+    "pid": 171980,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 172436,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "codex-windows-sandbox-service.exe"
+   },
+   {
+    "pid": 172476,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 172508,
+    "ppid": 72992,
+    "create_time": null,
+    "name": "cmd.exe"
+   },
+   {
+    "pid": 172968,
+    "ppid": 91740,
+    "create_time": null,
+    "name": "Orca.exe"
+   },
+   {
+    "pid": 173884,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 174320,
+    "ppid": 136908,
+    "create_time": null,
+    "name": "conhost.exe"
+   },
+   {
+    "pid": 174524,
+    "ppid": 150720,
+    "create_time": null,
+    "name": "grep.exe"
+   },
+   {
+    "pid": 174880,
+    "ppid": 33048,
+    "create_time": null,
+    "name": "Photos.exe"
+   },
+   {
+    "pid": 175032,
+    "ppid": 53828,
+    "create_time": null,
+    "name": "conhost.exe"
+   },
+   {
+    "pid": 175108,
+    "ppid": 175540,
+    "create_time": null,
+    "name": "node.exe"
+   },
+   {
+    "pid": 175196,
+    "ppid": 152072,
+    "create_time": null,
+    "name": "Figma.exe"
+   },
+   {
+    "pid": 175540,
+    "ppid": 108472,
+    "create_time": null,
+    "name": "cmd.exe"
+   },
+   {
+    "pid": 175572,
+    "ppid": 179660,
+    "create_time": null,
+    "name": "node.exe"
+   },
+   {
+    "pid": 175860,
+    "ppid": 177788,
+    "create_time": null,
+    "name": "tail.exe"
+   },
+   {
+    "pid": 176016,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 176044,
+    "ppid": 168044,
+    "create_time": null,
+    "name": "conhost.exe"
+   },
+   {
+    "pid": 176244,
+    "ppid": 80268,
+    "create_time": null,
+    "name": "ChatGPT.exe"
+   },
+   {
+    "pid": 176416,
+    "ppid": 172968,
+    "create_time": null,
+    "name": "OpenConsole.exe"
+   },
+   {
+    "pid": 176440,
+    "ppid": 2052,
+    "create_time": null,
+    "name": "mscopilot_proxy.exe"
+   },
+   {
+    "pid": 176848,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 177148,
+    "ppid": 62128,
+    "create_time": null,
+    "name": "conhost.exe"
+   },
+   {
+    "pid": 177736,
+    "ppid": 126336,
+    "create_time": null,
+    "name": "msedge.exe"
+   },
+   {
+    "pid": 177784,
+    "ppid": 41424,
+    "create_time": null,
+    "name": "tail.exe"
+   },
+   {
+    "pid": 177992,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 178604,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 178760,
+    "ppid": 153480,
+    "create_time": null,
+    "name": "cmd.exe"
+   },
+   {
+    "pid": 179080,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 179660,
+    "ppid": 76224,
+    "create_time": null,
+    "name": "codex.exe"
+   },
+   {
+    "pid": 180108,
+    "ppid": 179660,
+    "create_time": null,
+    "name": "codex-code-mode-host.exe"
+   },
+   {
+    "pid": 180492,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 180516,
+    "ppid": 179660,
+    "create_time": null,
+    "name": "node_repl.exe"
+   },
+   {
+    "pid": 180720,
+    "ppid": 5672,
+    "create_time": null,
+    "name": "claude.exe"
+   },
+   {
+    "pid": 180768,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 180788,
+    "ppid": 126336,
+    "create_time": null,
+    "name": "msedge.exe"
+   },
+   {
+    "pid": 180820,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 181008,
+    "ppid": 12236,
+    "create_time": null,
+    "name": "claude.exe"
+   },
+   {
+    "pid": 181104,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 181144,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 181840,
+    "ppid": 153368,
+    "create_time": null,
+    "name": "Orca.exe"
+   },
+   {
+    "pid": 183048,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 183292,
+    "ppid": 35612,
+    "create_time": null,
+    "name": "conhost.exe"
+   },
+   {
+    "pid": 183304,
+    "ppid": 5672,
+    "create_time": null,
+    "name": "claude.exe"
+   },
+   {
+    "pid": 184076,
+    "ppid": 2052,
+    "create_time": null,
+    "name": "OpenConsole.exe"
+   },
+   {
+    "pid": 184616,
+    "ppid": 157796,
+    "create_time": null,
+    "name": "grep.exe"
+   },
+   {
+    "pid": 184700,
+    "ppid": 113040,
+    "create_time": null,
+    "name": "claude.exe"
+   },
+   {
+    "pid": 184980,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 185408,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 185524,
+    "ppid": 5672,
+    "create_time": null,
+    "name": "claude.exe"
+   },
+   {
+    "pid": 185624,
+    "ppid": 150728,
+    "create_time": null,
+    "name": "node.exe"
+   },
+   {
+    "pid": 185920,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 186320,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   }
+  ],
+  "alive": [],
+  "rejudge_equal": true
+ },
+ {
+  "t_start": "2026-10-13 16:35:56",
+  "t_end": "2026-10-13 16:35:56",
+  "scanner_pid": 128432,
+  "old_pids": [
+   162660,
+   134176
+  ],
+  "rule_sha256": "fa677df9ba82e81813f5969993ac2c45fe742f70f2f9058c3d817c0fcc6550b5",
+  "n_processes": 920,
+  "processes": [
+   {
+    "pid": 0,
+    "ppid": 0,
+    "create_time": null,
+    "name": "System Idle Process"
+   },
+   {
+    "pid": 4,
+    "ppid": 0,
+    "create_time": null,
+    "name": "System"
+   },
+   {
+    "pid": 812,
+    "ppid": 4,
+    "create_time": null,
+    "name": ""
+   },
+   {
+    "pid": 856,
+    "ppid": 4,
+    "create_time": null,
+    "name": "Registry"
+   },
+   {
+    "pid": 1460,
+    "ppid": 65540,
+    "create_time": null,
+    "name": "node.exe"
+   },
+   {
+    "pid": 1484,
+    "ppid": 22140,
+    "create_time": null,
+    "name": "powershell.exe"
+   },
+   {
+    "pid": 1496,
+    "ppid": 5572,
+    "create_time": null,
+    "name": "TabTip.exe"
+   },
+   {
+    "pid": 2040,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 2052,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 2072,
+    "ppid": 4,
+    "create_time": null,
+    "name": "smss.exe"
+   },
+   {
+    "pid": 2652,
+    "ppid": 2920,
+    "create_time": null,
+    "name": "LsaIso.exe"
+   },
+   {
+    "pid": 2684,
+    "ppid": 2920,
+    "create_time": null,
+    "name": "lsass.exe"
+   },
+   {
+    "pid": 2808,
+    "ppid": 2796,
+    "create_time": null,
+    "name": "csrss.exe"
+   },
+   {
+    "pid": 2920,
+    "ppid": 2796,
+    "create_time": null,
+    "name": "wininit.exe"
+   },
+   {
+    "pid": 2928,
+    "ppid": 2912,
+    "create_time": null,
+    "name": "csrss.exe"
+   },
+   {
+    "pid": 3000,
+    "ppid": 2920,
+    "create_time": null,
+    "name": "services.exe"
+   },
+   {
+    "pid": 3028,
+    "ppid": 2912,
+    "create_time": null,
+    "name": "winlogon.exe"
+   },
+   {
+    "pid": 3096,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 3112,
+    "ppid": 2920,
+    "create_time": null,
+    "name": "fontdrvhost.exe"
+   },
+   {
+    "pid": 3120,
+    "ppid": 3028,
+    "create_time": null,
+    "name": "fontdrvhost.exe"
+   },
+   {
+    "pid": 3196,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "WUDFHost.exe"
+   },
+   {
+    "pid": 3244,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 3276,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 3288,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 3348,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 3380,
+    "ppid": 3028,
+    "create_time": null,
+    "name": "dwm.exe"
+   },
+   {
+    "pid": 3404,
+    "ppid": 2052,
+    "create_time": null,
+    "name": "SearchHost.exe"
+   },
+   {
+    "pid": 3484,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 3500,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 3520,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 3544,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 3556,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 3596,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 3672,
+    "ppid": 144924,
+    "create_time": null,
+    "name": "cmd.exe"
+   },
+   {
+    "pid": 3720,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 3760,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 3812,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 3820,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 3828,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 3920,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 3944,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 4000,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 4020,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 4040,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 4092,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 4208,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 4252,
+    "ppid": 126336,
+    "create_time": null,
+    "name": "msedge.exe"
+   },
+   {
+    "pid": 4332,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 4392,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 4552,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 4600,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 4664,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 4692,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 4716,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "vmms.exe"
+   },
+   {
+    "pid": 4864,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 4880,
+    "ppid": 120560,
+    "create_time": null,
+    "name": "MoNotificationUx.exe"
+   },
+   {
+    "pid": 4904,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "WUDFHost.exe"
+   },
+   {
+    "pid": 4912,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "NVDisplay.Container.exe"
+   },
+   {
+    "pid": 4980,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 5044,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 5072,
+    "ppid": 22140,
+    "create_time": null,
+    "name": "OpenConsole.exe"
+   },
+   {
+    "pid": 5240,
+    "ppid": 4,
+    "create_time": null,
+    "name": "MemCompression"
+   },
+   {
+    "pid": 5300,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 5360,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 5372,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 5380,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 5528,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 5572,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 5672,
+    "ppid": 14504,
+    "create_time": null,
+    "name": "claude.exe"
+   },
+   {
+    "pid": 5688,
+    "ppid": 4392,
+    "create_time": null,
+    "name": "dasHost.exe"
+   },
+   {
+    "pid": 5740,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 6012,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 6020,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 6072,
+    "ppid": 22140,
+    "create_time": null,
+    "name": "powershell.exe"
+   },
+   {
+    "pid": 6368,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 6412,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 6436,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 6584,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "spoolsv.exe"
+   },
+   {
+    "pid": 6892,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 6940,
+    "ppid": 12868,
+    "create_time": null,
+    "name": "tail.exe"
+   },
+   {
+    "pid": 6964,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 7196,
+    "ppid": 2052,
+    "create_time": null,
+    "name": "prevhost.exe"
+   },
+   {
+    "pid": 7288,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "ObCrossEXService.exe"
+   },
+   {
+    "pid": 7304,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 7316,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "service.exe"
+   },
+   {
+    "pid": 7324,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 7340,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 7352,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "DtsApo4Service.exe"
+   },
+   {
+    "pid": 7360,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "Everything.exe"
+   },
+   {
+    "pid": 7368,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 7384,
+    "ppid": 162780,
+    "create_time": null,
+    "name": "cmd.exe"
+   },
+   {
+    "pid": 7412,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "IniClientSvc_x64.exe"
+   },
+   {
+    "pid": 7456,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 7472,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "rustdesk.exe"
+   },
+   {
+    "pid": 7480,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 7500,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "RtkAudUService64.exe"
+   },
+   {
+    "pid": 7516,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 7524,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "ASDSvc.exe"
+   },
+   {
+    "pid": 7536,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "ThunderboltService.exe"
+   },
+   {
+    "pid": 7540,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "wpmsvc.exe"
+   },
+   {
+    "pid": 7552,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 7560,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "TbtP2pShortcutService.exe"
+   },
+   {
+    "pid": 7568,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "GigabyteUpdateService.exe"
+   },
+   {
+    "pid": 7600,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 7616,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 7624,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "wslservice.exe"
+   },
+   {
+    "pid": 7684,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "logi_lamparray_service.AMD64.exe"
+   },
+   {
+    "pid": 7744,
+    "ppid": 37896,
+    "create_time": null,
+    "name": "msedgewebview2.exe"
+   },
+   {
+    "pid": 7872,
+    "ppid": 15744,
+    "create_time": null,
+    "name": "Everything.exe"
+   },
+   {
+    "pid": 7904,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 8040,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 8228,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "tailscaled.exe"
+   },
+   {
+    "pid": 8536,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 8588,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 8596,
+    "ppid": 86244,
+    "create_time": null,
+    "name": "node.exe"
+   },
+   {
+    "pid": 8672,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 8704,
+    "ppid": 2052,
+    "create_time": null,
+    "name": "WmiPrvSE.exe"
+   },
+   {
+    "pid": 8772,
+    "ppid": 7472,
+    "create_time": null,
+    "name": "rustdesk.exe"
+   },
+   {
+    "pid": 8844,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 8984,
+    "ppid": 4864,
+    "create_time": null,
+    "name": "taskhostw.exe"
+   },
+   {
+    "pid": 9104,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 9116,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 9528,
+    "ppid": 168524,
+    "create_time": null,
+    "name": "node.exe"
+   },
+   {
+    "pid": 9880,
+    "ppid": 4392,
+    "create_time": null,
+    "name": "dasHost.exe"
+   },
+   {
+    "pid": 9976,
+    "ppid": 117264,
+    "create_time": null,
+    "name": "adb.exe"
+   },
+   {
+    "pid": 10068,
+    "ppid": 8228,
+    "create_time": null,
+    "name": "tailscaled.exe"
+   },
+   {
+    "pid": 11752,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 11756,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 11864,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 12056,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 12196,
+    "ppid": 139848,
+    "create_time": null,
+    "name": "Code.exe"
+   },
+   {
+    "pid": 12236,
+    "ppid": 22140,
+    "create_time": null,
+    "name": "powershell.exe"
+   },
+   {
+    "pid": 12448,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 12808,
+    "ppid": 42336,
+    "create_time": null,
+    "name": "codex.exe"
+   },
+   {
+    "pid": 12828,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 13136,
+    "ppid": 14272,
+    "create_time": null,
+    "name": "NgcIso.exe"
+   },
+   {
+    "pid": 13144,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 13340,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 13440,
+    "ppid": 2052,
+    "create_time": null,
+    "name": "unsecapp.exe"
+   },
+   {
+    "pid": 13480,
+    "ppid": 4912,
+    "create_time": null,
+    "name": "NVDisplay.Container.exe"
+   },
+   {
+    "pid": 13692,
+    "ppid": 7324,
+    "create_time": null,
+    "name": "AggregatorHost.exe"
+   },
+   {
+    "pid": 13840,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 13844,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 14272,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 14348,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 14400,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 14504,
+    "ppid": 4208,
+    "create_time": null,
+    "name": "sihost.exe"
+   },
+   {
+    "pid": 14620,
+    "ppid": 22140,
+    "create_time": null,
+    "name": "OpenConsole.exe"
+   },
+   {
+    "pid": 14688,
+    "ppid": 44212,
+    "create_time": null,
+    "name": "node_repl.exe"
+   },
+   {
+    "pid": 14728,
+    "ppid": 113116,
+    "create_time": null,
+    "name": "codex-code-mode-host.exe"
+   },
+   {
+    "pid": 14776,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 14996,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 15208,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "vmcompute.exe"
+   },
+   {
+    "pid": 15272,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 15396,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 15412,
+    "ppid": 152072,
+    "create_time": null,
+    "name": "Figma.exe"
+   },
+   {
+    "pid": 15620,
+    "ppid": 37252,
+    "create_time": null,
+    "name": "hpwuschd2.exe"
+   },
+   {
+    "pid": 15712,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 15744,
+    "ppid": 15688,
+    "create_time": null,
+    "name": "explorer.exe"
+   },
+   {
+    "pid": 15804,
+    "ppid": 22140,
+    "create_time": null,
+    "name": "OpenConsole.exe"
+   },
+   {
+    "pid": 15856,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 16020,
+    "ppid": 14504,
+    "create_time": null,
+    "name": "CrossDeviceResume.exe"
+   },
+   {
+    "pid": 16036,
+    "ppid": 7412,
+    "create_time": null,
+    "name": "INISAFECrossWebEXSvc.exe"
+   },
+   {
+    "pid": 16108,
+    "ppid": 7288,
+    "create_time": null,
+    "name": "CrossEXService.exe"
+   },
+   {
+    "pid": 16500,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "NisSrv.exe"
+   },
+   {
+    "pid": 16852,
+    "ppid": 2052,
+    "create_time": null,
+    "name": "ShellExperienceHost.exe"
+   },
+   {
+    "pid": 17600,
+    "ppid": 5672,
+    "create_time": null,
+    "name": "claude.exe"
+   },
+   {
+    "pid": 17672,
+    "ppid": 26440,
+    "create_time": null,
+    "name": "veraport-x64.exe"
+   },
+   {
+    "pid": 17840,
+    "ppid": 7412,
+    "create_time": null,
+    "name": "INISAFEAdminUtil.exe"
+   },
+   {
+    "pid": 18300,
+    "ppid": 2052,
+    "create_time": null,
+    "name": "TextInputHost.exe"
+   },
+   {
+    "pid": 18348,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 19276,
+    "ppid": 5572,
+    "create_time": null,
+    "name": "ctfmon.exe"
+   },
+   {
+    "pid": 19464,
+    "ppid": 2052,
+    "create_time": null,
+    "name": "StartMenuExperienceHost.exe"
+   },
+   {
+    "pid": 19532,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 19544,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 19560,
+    "ppid": 116376,
+    "create_time": null,
+    "name": "tail.exe"
+   },
+   {
+    "pid": 19612,
+    "ppid": 7524,
+    "create_time": null,
+    "name": "StSess.exe"
+   },
+   {
+    "pid": 19620,
+    "ppid": 37896,
+    "create_time": null,
+    "name": "msedgewebview2.exe"
+   },
+   {
+    "pid": 19652,
+    "ppid": 2052,
+    "create_time": null,
+    "name": "UserOOBEBroker.exe"
+   },
+   {
+    "pid": 20304,
+    "ppid": 2052,
+    "create_time": null,
+    "name": "RuntimeBroker.exe"
+   },
+   {
+    "pid": 20324,
+    "ppid": 126336,
+    "create_time": null,
+    "name": "msedge.exe"
+   },
+   {
+    "pid": 20380,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 20516,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "SearchIndexer.exe"
+   },
+   {
+    "pid": 20564,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "MsMpEng.exe"
+   },
+   {
+    "pid": 20696,
+    "ppid": 2052,
+    "create_time": null,
+    "name": "WidgetService.exe"
+   },
+   {
+    "pid": 20732,
+    "ppid": 80268,
+    "create_time": null,
+    "name": "ChatGPT.exe"
+   },
+   {
+    "pid": 21060,
+    "ppid": 2052,
+    "create_time": null,
+    "name": "ApplicationFrameHost.exe"
+   },
+   {
+    "pid": 21068,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 21324,
+    "ppid": 2052,
+    "create_time": null,
+    "name": "Microsoft.Notes.exe"
+   },
+   {
+    "pid": 22140,
+    "ppid": 36792,
+    "create_time": null,
+    "name": "Orca.exe"
+   },
+   {
+    "pid": 22976,
+    "ppid": 2052,
+    "create_time": null,
+    "name": "RuntimeBroker.exe"
+   },
+   {
+    "pid": 23560,
+    "ppid": 3404,
+    "create_time": null,
+    "name": "msedgewebview2.exe"
+   },
+   {
+    "pid": 23632,
+    "ppid": 23560,
+    "create_time": null,
+    "name": "msedgewebview2.exe"
+   },
+   {
+    "pid": 23660,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 23716,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 24136,
+    "ppid": 23560,
+    "create_time": null,
+    "name": "msedgewebview2.exe"
+   },
+   {
+    "pid": 24164,
+    "ppid": 23560,
+    "create_time": null,
+    "name": "msedgewebview2.exe"
+   },
+   {
+    "pid": 24200,
+    "ppid": 58660,
+    "create_time": null,
+    "name": "conhost.exe"
+   },
+   {
+    "pid": 24240,
+    "ppid": 23560,
+    "create_time": null,
+    "name": "msedgewebview2.exe"
+   },
+   {
+    "pid": 24256,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 24500,
+    "ppid": 113116,
+    "create_time": null,
+    "name": "node.exe"
+   },
+   {
+    "pid": 24840,
+    "ppid": 23560,
+    "create_time": null,
+    "name": "msedgewebview2.exe"
+   },
+   {
+    "pid": 24928,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 25112,
+    "ppid": 2052,
+    "create_time": null,
+    "name": "dllhost.exe"
+   },
+   {
+    "pid": 25156,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 25724,
+    "ppid": 49244,
+    "create_time": null,
+    "name": "logi_crashpad_handler.exe"
+   },
+   {
+    "pid": 25956,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 26024,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 26136,
+    "ppid": 2052,
+    "create_time": null,
+    "name": "dllhost.exe"
+   },
+   {
+    "pid": 26148,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 26188,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 26500,
+    "ppid": 19612,
+    "create_time": null,
+    "name": "StSess32.exe"
+   },
+   {
+    "pid": 26588,
+    "ppid": 21084,
+    "create_time": null,
+    "name": "grep.exe"
+   },
+   {
+    "pid": 26696,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 26848,
+    "ppid": 108120,
+    "create_time": null,
+    "name": "grep.exe"
+   },
+   {
+    "pid": 27104,
+    "ppid": 155948,
+    "create_time": null,
+    "name": "bash.exe"
+   },
+   {
+    "pid": 27296,
+    "ppid": 20516,
+    "create_time": null,
+    "name": "SearchFilterHost.exe"
+   },
+   {
+    "pid": 27428,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 27616,
+    "ppid": 59552,
+    "create_time": null,
+    "name": "grep.exe"
+   },
+   {
+    "pid": 27720,
+    "ppid": 15744,
+    "create_time": null,
+    "name": "SecurityHealthSystray.exe"
+   },
+   {
+    "pid": 27748,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "SecurityHealthService.exe"
+   },
+   {
+    "pid": 27772,
+    "ppid": 166096,
+    "create_time": null,
+    "name": "grep.exe"
+   },
+   {
+    "pid": 27796,
+    "ppid": 118020,
+    "create_time": null,
+    "name": "conhost.exe"
+   },
+   {
+    "pid": 27932,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 28128,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 28156,
+    "ppid": 5672,
+    "create_time": null,
+    "name": "uv.exe"
+   },
+   {
+    "pid": 28304,
+    "ppid": 15744,
+    "create_time": null,
+    "name": "RtkAudUService64.exe"
+   },
+   {
+    "pid": 28412,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 28744,
+    "ppid": 22140,
+    "create_time": null,
+    "name": "OpenConsole.exe"
+   },
+   {
+    "pid": 28844,
+    "ppid": 70044,
+    "create_time": null,
+    "name": "remoting_host.exe"
+   },
+   {
+    "pid": 28884,
+    "ppid": 28404,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 28896,
+    "ppid": 49244,
+    "create_time": null,
+    "name": "logioptionsplus_appbroker.exe"
+   },
+   {
+    "pid": 28916,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 29108,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 29124,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 29168,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 29392,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 29528,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 29544,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 29852,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "cmd.exe"
+   },
+   {
+    "pid": 29860,
+    "ppid": 29852,
+    "create_time": null,
+    "name": "conhost.exe"
+   },
+   {
+    "pid": 30344,
+    "ppid": 29852,
+    "create_time": null,
+    "name": "extension-host.exe"
+   },
+   {
+    "pid": 30356,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "cmd.exe"
+   },
+   {
+    "pid": 30392,
+    "ppid": 30356,
+    "create_time": null,
+    "name": "conhost.exe"
+   },
+   {
+    "pid": 30484,
+    "ppid": 98380,
+    "create_time": null,
+    "name": "conhost.exe"
+   },
+   {
+    "pid": 30540,
+    "ppid": 30356,
+    "create_time": null,
+    "name": "chrome-native-host.exe"
+   },
+   {
+    "pid": 31116,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 31252,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 31436,
+    "ppid": 113116,
+    "create_time": null,
+    "name": "node.exe"
+   },
+   {
+    "pid": 31496,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 31968,
+    "ppid": 4864,
+    "create_time": null,
+    "name": "taskhostw.exe"
+   },
+   {
+    "pid": 32100,
+    "ppid": 5672,
+    "create_time": null,
+    "name": "claude.exe"
+   },
+   {
+    "pid": 32224,
+    "ppid": 33756,
+    "create_time": null,
+    "name": "conhost.exe"
+   },
+   {
+    "pid": 32384,
+    "ppid": 15744,
+    "create_time": null,
+    "name": "LogiOptions.exe"
+   },
+   {
+    "pid": 32388,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 32396,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 32796,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 33056,
+    "ppid": 22140,
+    "create_time": null,
+    "name": "OpenConsole.exe"
+   },
+   {
+    "pid": 33136,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 33196,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "nossvc.exe"
+   },
+   {
+    "pid": 33296,
+    "ppid": 2052,
+    "create_time": null,
+    "name": "dllhost.exe"
+   },
+   {
+    "pid": 33640,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 33684,
+    "ppid": 32384,
+    "create_time": null,
+    "name": "LogiOptionsMgr.exe"
+   },
+   {
+    "pid": 33716,
+    "ppid": 32384,
+    "create_time": null,
+    "name": "LogiOverlay.exe"
+   },
+   {
+    "pid": 33756,
+    "ppid": 33684,
+    "create_time": null,
+    "name": "laclient.exe"
+   },
+   {
+    "pid": 33864,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 34060,
+    "ppid": 74364,
+    "create_time": null,
+    "name": "tail.exe"
+   },
+   {
+    "pid": 34200,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 34568,
+    "ppid": 22140,
+    "create_time": null,
+    "name": "powershell.exe"
+   },
+   {
+    "pid": 34632,
+    "ppid": 116872,
+    "create_time": null,
+    "name": "vmmemWSL"
+   },
+   {
+    "pid": 34956,
+    "ppid": 2052,
+    "create_time": null,
+    "name": "RuntimeBroker.exe"
+   },
+   {
+    "pid": 35216,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 35420,
+    "ppid": 47772,
+    "create_time": null,
+    "name": "logi_crashpad_handler.exe"
+   },
+   {
+    "pid": 35572,
+    "ppid": 22140,
+    "create_time": null,
+    "name": "OpenConsole.exe"
+   },
+   {
+    "pid": 35612,
+    "ppid": 165176,
+    "create_time": null,
+    "name": "claude.exe"
+   },
+   {
+    "pid": 35876,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 35984,
+    "ppid": 22140,
+    "create_time": null,
+    "name": "powershell.exe"
+   },
+   {
+    "pid": 36096,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 36380,
+    "ppid": 22140,
+    "create_time": null,
+    "name": "OpenConsole.exe"
+   },
+   {
+    "pid": 36560,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 36612,
+    "ppid": 123948,
+    "create_time": null,
+    "name": "cmd.exe"
+   },
+   {
+    "pid": 37072,
+    "ppid": 15744,
+    "create_time": null,
+    "name": "tailscale-ipn.exe"
+   },
+   {
+    "pid": 37328,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 37404,
+    "ppid": 2052,
+    "create_time": null,
+    "name": "explorer.exe"
+   },
+   {
+    "pid": 37444,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 37788,
+    "ppid": 15744,
+    "create_time": null,
+    "name": "rustdesk.exe"
+   },
+   {
+    "pid": 37824,
+    "ppid": 37252,
+    "create_time": null,
+    "name": "UniCRSLocalServer.exe"
+   },
+   {
+    "pid": 37832,
+    "ppid": 87792,
+    "create_time": null,
+    "name": "node_repl.exe"
+   },
+   {
+    "pid": 37896,
+    "ppid": 49396,
+    "create_time": null,
+    "name": "msedgewebview2.exe"
+   },
+   {
+    "pid": 37916,
+    "ppid": 37896,
+    "create_time": null,
+    "name": "msedgewebview2.exe"
+   },
+   {
+    "pid": 37992,
+    "ppid": 28504,
+    "create_time": null,
+    "name": "MEGA VPN.exe"
+   },
+   {
+    "pid": 38456,
+    "ppid": 39008,
+    "create_time": null,
+    "name": "msedgewebview2.exe"
+   },
+   {
+    "pid": 38552,
+    "ppid": 37896,
+    "create_time": null,
+    "name": "msedgewebview2.exe"
+   },
+   {
+    "pid": 38648,
+    "ppid": 39008,
+    "create_time": null,
+    "name": "msedgewebview2.exe"
+   },
+   {
+    "pid": 38824,
+    "ppid": 37896,
+    "create_time": null,
+    "name": "msedgewebview2.exe"
+   },
+   {
+    "pid": 38956,
+    "ppid": 5672,
+    "create_time": null,
+    "name": "claude.exe"
+   },
+   {
+    "pid": 39008,
+    "ppid": 15744,
+    "create_time": null,
+    "name": "msedgewebview2.exe"
+   },
+   {
+    "pid": 39220,
+    "ppid": 65540,
+    "create_time": null,
+    "name": "conhost.exe"
+   },
+   {
+    "pid": 39232,
+    "ppid": 39008,
+    "create_time": null,
+    "name": "msedgewebview2.exe"
+   },
+   {
+    "pid": 39516,
+    "ppid": 39008,
+    "create_time": null,
+    "name": "msedgewebview2.exe"
+   },
+   {
+    "pid": 39560,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 39788,
+    "ppid": 39008,
+    "create_time": null,
+    "name": "msedgewebview2.exe"
+   },
+   {
+    "pid": 40156,
+    "ppid": 140748,
+    "create_time": null,
+    "name": "grep.exe"
+   },
+   {
+    "pid": 41024,
+    "ppid": 114564,
+    "create_time": null,
+    "name": "conhost.exe"
+   },
+   {
+    "pid": 41172,
+    "ppid": 22140,
+    "create_time": null,
+    "name": "powershell.exe"
+   },
+   {
+    "pid": 41308,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 41316,
+    "ppid": 30344,
+    "create_time": null,
+    "name": "codex.exe"
+   },
+   {
+    "pid": 41572,
+    "ppid": 22140,
+    "create_time": null,
+    "name": "powershell.exe"
+   },
+   {
+    "pid": 41576,
+    "ppid": 22140,
+    "create_time": null,
+    "name": "powershell.exe"
+   },
+   {
+    "pid": 41672,
+    "ppid": 22140,
+    "create_time": null,
+    "name": "OpenConsole.exe"
+   },
+   {
+    "pid": 41992,
+    "ppid": 86244,
+    "create_time": null,
+    "name": "conhost.exe"
+   },
+   {
+    "pid": 42004,
+    "ppid": 172968,
+    "create_time": null,
+    "name": "powershell.exe"
+   },
+   {
+    "pid": 42124,
+    "ppid": 149860,
+    "create_time": null,
+    "name": "node.exe"
+   },
+   {
+    "pid": 42216,
+    "ppid": 81816,
+    "create_time": null,
+    "name": "ssh.exe"
+   },
+   {
+    "pid": 42424,
+    "ppid": 140324,
+    "create_time": null,
+    "name": "tail.exe"
+   },
+   {
+    "pid": 42648,
+    "ppid": 36612,
+    "create_time": null,
+    "name": "conhost.exe"
+   },
+   {
+    "pid": 42736,
+    "ppid": 22140,
+    "create_time": null,
+    "name": "OpenConsole.exe"
+   },
+   {
+    "pid": 42808,
+    "ppid": 41316,
+    "create_time": null,
+    "name": "node_repl.exe"
+   },
+   {
+    "pid": 43092,
+    "ppid": 159116,
+    "create_time": null,
+    "name": "emulator.exe"
+   },
+   {
+    "pid": 43136,
+    "ppid": 37252,
+    "create_time": null,
+    "name": "CCDaemon.exe"
+   },
+   {
+    "pid": 43320,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 43496,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 43584,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 43660,
+    "ppid": 14504,
+    "create_time": null,
+    "name": "ChatGPT Classic.exe"
+   },
+   {
+    "pid": 43676,
+    "ppid": 43660,
+    "create_time": null,
+    "name": "ChatGPT Classic.exe"
+   },
+   {
+    "pid": 43880,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 43904,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 43972,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 44012,
+    "ppid": 76260,
+    "create_time": null,
+    "name": "powershell.exe"
+   },
+   {
+    "pid": 44044,
+    "ppid": 43660,
+    "create_time": null,
+    "name": "ChatGPT Classic.exe"
+   },
+   {
+    "pid": 44212,
+    "ppid": 80268,
+    "create_time": null,
+    "name": "codex.exe"
+   },
+   {
+    "pid": 44440,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 44672,
+    "ppid": 43660,
+    "create_time": null,
+    "name": "ChatGPT Classic.exe"
+   },
+   {
+    "pid": 45944,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 45956,
+    "ppid": 55948,
+    "create_time": null,
+    "name": "Discord.exe"
+   },
+   {
+    "pid": 46996,
+    "ppid": 43660,
+    "create_time": null,
+    "name": "ChatGPT Classic.exe"
+   },
+   {
+    "pid": 47440,
+    "ppid": 55948,
+    "create_time": null,
+    "name": "Discord.exe"
+   },
+   {
+    "pid": 47772,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "logioptionsplus_updater.exe"
+   },
+   {
+    "pid": 48296,
+    "ppid": 179660,
+    "create_time": null,
+    "name": "node.exe"
+   },
+   {
+    "pid": 48784,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 48936,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 49076,
+    "ppid": 22140,
+    "create_time": null,
+    "name": "powershell.exe"
+   },
+   {
+    "pid": 49092,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 49180,
+    "ppid": 185448,
+    "create_time": null,
+    "name": "tail.exe"
+   },
+   {
+    "pid": 49244,
+    "ppid": 23456,
+    "create_time": null,
+    "name": "logioptionsplus_agent.exe"
+   },
+   {
+    "pid": 49396,
+    "ppid": 35592,
+    "create_time": null,
+    "name": "KakaoTalk.exe"
+   },
+   {
+    "pid": 49508,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 49716,
+    "ppid": 5672,
+    "create_time": null,
+    "name": "claude.exe"
+   },
+   {
+    "pid": 49736,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 49776,
+    "ppid": 93352,
+    "create_time": null,
+    "name": "Code.exe"
+   },
+   {
+    "pid": 49924,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 50120,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 50248,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 50552,
+    "ppid": 37252,
+    "create_time": null,
+    "name": "UniCRSNotiCenter.exe"
+   },
+   {
+    "pid": 50592,
+    "ppid": 15744,
+    "create_time": null,
+    "name": "rundll32.exe"
+   },
+   {
+    "pid": 51720,
+    "ppid": 165420,
+    "create_time": null,
+    "name": "grep.exe"
+   },
+   {
+    "pid": 52228,
+    "ppid": 80392,
+    "create_time": null,
+    "name": "node.exe"
+   },
+   {
+    "pid": 52708,
+    "ppid": 2052,
+    "create_time": null,
+    "name": "dllhost.exe"
+   },
+   {
+    "pid": 52740,
+    "ppid": 123948,
+    "create_time": null,
+    "name": "cmd.exe"
+   },
+   {
+    "pid": 53120,
+    "ppid": 179660,
+    "create_time": null,
+    "name": "node_repl.exe"
+   },
+   {
+    "pid": 53828,
+    "ppid": 87772,
+    "create_time": null,
+    "name": "cmd.exe"
+   },
+   {
+    "pid": 54112,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 54392,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 54720,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 54848,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 55112,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 55808,
+    "ppid": 182252,
+    "create_time": null,
+    "name": "grep.exe"
+   },
+   {
+    "pid": 55824,
+    "ppid": 80268,
+    "create_time": null,
+    "name": "ChatGPT.exe"
+   },
+   {
+    "pid": 55880,
+    "ppid": 2052,
+    "create_time": null,
+    "name": "dllhost.exe"
+   },
+   {
+    "pid": 55932,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 55948,
+    "ppid": 33020,
+    "create_time": null,
+    "name": "Discord.exe"
+   },
+   {
+    "pid": 55964,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 56064,
+    "ppid": 55948,
+    "create_time": null,
+    "name": "Discord.exe"
+   },
+   {
+    "pid": 56080,
+    "ppid": 93352,
+    "create_time": null,
+    "name": "Code.exe"
+   },
+   {
+    "pid": 56164,
+    "ppid": 55948,
+    "create_time": null,
+    "name": "Discord.exe"
+   },
+   {
+    "pid": 56172,
+    "ppid": 55948,
+    "create_time": null,
+    "name": "Discord.exe"
+   },
+   {
+    "pid": 56192,
+    "ppid": 73856,
+    "create_time": null,
+    "name": "conhost.exe"
+   },
+   {
+    "pid": 56196,
+    "ppid": 15744,
+    "create_time": null,
+    "name": "Notepad.exe"
+   },
+   {
+    "pid": 56636,
+    "ppid": 22140,
+    "create_time": null,
+    "name": "OpenConsole.exe"
+   },
+   {
+    "pid": 56892,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 56976,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 56996,
+    "ppid": 80268,
+    "create_time": null,
+    "name": "ChatGPT.exe"
+   },
+   {
+    "pid": 57252,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 57352,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 57852,
+    "ppid": 126336,
+    "create_time": null,
+    "name": "msedge.exe"
+   },
+   {
+    "pid": 58060,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 58212,
+    "ppid": 22140,
+    "create_time": null,
+    "name": "powershell.exe"
+   },
+   {
+    "pid": 58288,
+    "ppid": 68428,
+    "create_time": null,
+    "name": "conhost.exe"
+   },
+   {
+    "pid": 58660,
+    "ppid": 80268,
+    "create_time": null,
+    "name": "codex-computer-use-swift.exe"
+   },
+   {
+    "pid": 58784,
+    "ppid": 44212,
+    "create_time": null,
+    "name": "conhost.exe"
+   },
+   {
+    "pid": 58908,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 59600,
+    "ppid": 158260,
+    "create_time": null,
+    "name": "tail.exe"
+   },
+   {
+    "pid": 59780,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 59824,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 59972,
+    "ppid": 22140,
+    "create_time": null,
+    "name": "OpenConsole.exe"
+   },
+   {
+    "pid": 60160,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 60460,
+    "ppid": 22140,
+    "create_time": null,
+    "name": "OpenConsole.exe"
+   },
+   {
+    "pid": 60556,
+    "ppid": 61876,
+    "create_time": null,
+    "name": "grep.exe"
+   },
+   {
+    "pid": 60592,
+    "ppid": 172968,
+    "create_time": null,
+    "name": "OpenConsole.exe"
+   },
+   {
+    "pid": 60748,
+    "ppid": 172968,
+    "create_time": null,
+    "name": "OpenConsole.exe"
+   },
+   {
+    "pid": 61292,
+    "ppid": 66396,
+    "create_time": null,
+    "name": "Taskmgr.exe"
+   },
+   {
+    "pid": 61580,
+    "ppid": 153564,
+    "create_time": null,
+    "name": "conhost.exe"
+   },
+   {
+    "pid": 61744,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "MpDefenderCoreService.exe"
+   },
+   {
+    "pid": 61784,
+    "ppid": 80268,
+    "create_time": null,
+    "name": "ChatGPT.exe"
+   },
+   {
+    "pid": 61812,
+    "ppid": 80268,
+    "create_time": null,
+    "name": "ChatGPT.exe"
+   },
+   {
+    "pid": 62088,
+    "ppid": 157572,
+    "create_time": null,
+    "name": "tail.exe"
+   },
+   {
+    "pid": 62128,
+    "ppid": 5672,
+    "create_time": null,
+    "name": "cmd.exe"
+   },
+   {
+    "pid": 62396,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 62768,
+    "ppid": 172508,
+    "create_time": null,
+    "name": "node.exe"
+   },
+   {
+    "pid": 62996,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 63144,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 63228,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 63444,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 63520,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 63632,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 63876,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 64412,
+    "ppid": 22140,
+    "create_time": null,
+    "name": "powershell.exe"
+   },
+   {
+    "pid": 64876,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 64952,
+    "ppid": 22140,
+    "create_time": null,
+    "name": "powershell.exe"
+   },
+   {
+    "pid": 65136,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 65540,
+    "ppid": 87772,
+    "create_time": null,
+    "name": "cmd.exe"
+   },
+   {
+    "pid": 65580,
+    "ppid": 146544,
+    "create_time": null,
+    "name": "node.exe"
+   },
+   {
+    "pid": 66100,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "HPPrintScanDoctorService.exe"
+   },
+   {
+    "pid": 66976,
+    "ppid": 52740,
+    "create_time": null,
+    "name": "node.exe"
+   },
+   {
+    "pid": 67020,
+    "ppid": 52740,
+    "create_time": null,
+    "name": "conhost.exe"
+   },
+   {
+    "pid": 67148,
+    "ppid": 110904,
+    "create_time": null,
+    "name": "conhost.exe"
+   },
+   {
+    "pid": 67580,
+    "ppid": 66624,
+    "create_time": null,
+    "name": "grep.exe"
+   },
+   {
+    "pid": 67600,
+    "ppid": 149216,
+    "create_time": null,
+    "name": "tail.exe"
+   },
+   {
+    "pid": 67628,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 68168,
+    "ppid": 5528,
+    "create_time": null,
+    "name": "audiodg.exe"
+   },
+   {
+    "pid": 68252,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 68324,
+    "ppid": 84652,
+    "create_time": null,
+    "name": "UGREEN NAS.exe"
+   },
+   {
+    "pid": 68428,
+    "ppid": 84652,
+    "create_time": null,
+    "name": "syncspace_pro.exe"
+   },
+   {
+    "pid": 68436,
+    "ppid": 152336,
+    "create_time": null,
+    "name": "node.exe"
+   },
+   {
+    "pid": 68508,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 68556,
+    "ppid": 126336,
+    "create_time": null,
+    "name": "msedge.exe"
+   },
+   {
+    "pid": 68648,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 68772,
+    "ppid": 27104,
+    "create_time": null,
+    "name": "bash.exe"
+   },
+   {
+    "pid": 68788,
+    "ppid": 84652,
+    "create_time": null,
+    "name": "UGREEN NAS.exe"
+   },
+   {
+    "pid": 68968,
+    "ppid": 151352,
+    "create_time": null,
+    "name": "tail.exe"
+   },
+   {
+    "pid": 69140,
+    "ppid": 124596,
+    "create_time": null,
+    "name": "node.exe"
+   },
+   {
+    "pid": 69504,
+    "ppid": 24500,
+    "create_time": null,
+    "name": "conhost.exe"
+   },
+   {
+    "pid": 69844,
+    "ppid": 126336,
+    "create_time": null,
+    "name": "msedge.exe"
+   },
+   {
+    "pid": 69872,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 70024,
+    "ppid": 48296,
+    "create_time": null,
+    "name": "conhost.exe"
+   },
+   {
+    "pid": 70044,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "remoting_host.exe"
+   },
+   {
+    "pid": 70232,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 70256,
+    "ppid": 22140,
+    "create_time": null,
+    "name": "powershell.exe"
+   },
+   {
+    "pid": 71604,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 71840,
+    "ppid": 5672,
+    "create_time": null,
+    "name": "claude.exe"
+   },
+   {
+    "pid": 71968,
+    "ppid": 99396,
+    "create_time": null,
+    "name": "remoting_desktop.exe"
+   },
+   {
+    "pid": 71992,
+    "ppid": 95020,
+    "create_time": null,
+    "name": "grep.exe"
+   },
+   {
+    "pid": 72100,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 72172,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 72224,
+    "ppid": 172968,
+    "create_time": null,
+    "name": "OpenConsole.exe"
+   },
+   {
+    "pid": 72260,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 72328,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 72388,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 72512,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 72648,
+    "ppid": 22140,
+    "create_time": null,
+    "name": "OpenConsole.exe"
+   },
+   {
+    "pid": 72664,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 72992,
+    "ppid": 62128,
+    "create_time": null,
+    "name": "node.exe"
+   },
+   {
+    "pid": 73360,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 73612,
+    "ppid": 5672,
+    "create_time": null,
+    "name": "claude.exe"
+   },
+   {
+    "pid": 73664,
+    "ppid": 5672,
+    "create_time": null,
+    "name": "claude.exe"
+   },
+   {
+    "pid": 73732,
+    "ppid": 94404,
+    "create_time": null,
+    "name": "conhost.exe"
+   },
+   {
+    "pid": 73752,
+    "ppid": 168196,
+    "create_time": null,
+    "name": "grep.exe"
+   },
+   {
+    "pid": 73820,
+    "ppid": 84652,
+    "create_time": null,
+    "name": "UGREEN NAS.exe"
+   },
+   {
+    "pid": 73856,
+    "ppid": 153480,
+    "create_time": null,
+    "name": "cmd.exe"
+   },
+   {
+    "pid": 74244,
+    "ppid": 80268,
+    "create_time": null,
+    "name": "ChatGPT.exe"
+   },
+   {
+    "pid": 74516,
+    "ppid": 80268,
+    "create_time": null,
+    "name": "ChatGPT.exe"
+   },
+   {
+    "pid": 74880,
+    "ppid": 74256,
+    "create_time": null,
+    "name": "grep.exe"
+   },
+   {
+    "pid": 74984,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 75068,
+    "ppid": 78280,
+    "create_time": null,
+    "name": "grep.exe"
+   },
+   {
+    "pid": 75236,
+    "ppid": 35844,
+    "create_time": null,
+    "name": "grep.exe"
+   },
+   {
+    "pid": 75696,
+    "ppid": 114580,
+    "create_time": null,
+    "name": "conhost.exe"
+   },
+   {
+    "pid": 76224,
+    "ppid": 64412,
+    "create_time": null,
+    "name": "node.exe"
+   },
+   {
+    "pid": 76260,
+    "ppid": 153368,
+    "create_time": null,
+    "name": "Orca.exe"
+   },
+   {
+    "pid": 76872,
+    "ppid": 87124,
+    "create_time": null,
+    "name": "tail.exe"
+   },
+   {
+    "pid": 77052,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 77292,
+    "ppid": 153368,
+    "create_time": null,
+    "name": "Orca.exe"
+   },
+   {
+    "pid": 77296,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 77556,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 77588,
+    "ppid": 171820,
+    "create_time": null,
+    "name": "grep.exe"
+   },
+   {
+    "pid": 78652,
+    "ppid": 152072,
+    "create_time": null,
+    "name": "Figma.exe"
+   },
+   {
+    "pid": 78900,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 79344,
+    "ppid": 7384,
+    "create_time": null,
+    "name": "node.exe"
+   },
+   {
+    "pid": 79744,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 79820,
+    "ppid": 95592,
+    "create_time": null,
+    "name": "tail.exe"
+   },
+   {
+    "pid": 80220,
+    "ppid": 80268,
+    "create_time": null,
+    "name": "ChatGPT.exe"
+   },
+   {
+    "pid": 80268,
+    "ppid": 15744,
+    "create_time": null,
+    "name": "ChatGPT.exe"
+   },
+   {
+    "pid": 80392,
+    "ppid": 44212,
+    "create_time": null,
+    "name": "cmd.exe"
+   },
+   {
+    "pid": 80968,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 81016,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 81292,
+    "ppid": 80268,
+    "create_time": null,
+    "name": "ChatGPT.exe"
+   },
+   {
+    "pid": 81300,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 81444,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 81756,
+    "ppid": 8704,
+    "create_time": null,
+    "name": "claude.exe"
+   },
+   {
+    "pid": 81816,
+    "ppid": 153564,
+    "create_time": 1791838802.8256173,
+    "name": "python.exe",
+    "argv_readable": true,
+    "argv_nonempty": true,
+    "headless_exact": false,
+    "matched_scripts": []
+   },
+   {
+    "pid": 82404,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 83296,
+    "ppid": 20516,
+    "create_time": null,
+    "name": "SearchFilterHost.exe"
+   },
+   {
+    "pid": 83864,
+    "ppid": 173020,
+    "create_time": null,
+    "name": "tail.exe"
+   },
+   {
+    "pid": 84468,
+    "ppid": 43660,
+    "create_time": null,
+    "name": "ChatGPT Classic.exe"
+   },
+   {
+    "pid": 84652,
+    "ppid": 15744,
+    "create_time": null,
+    "name": "UGREEN NAS.exe"
+   },
+   {
+    "pid": 84944,
+    "ppid": 41316,
+    "create_time": null,
+    "name": "node.exe"
+   },
+   {
+    "pid": 85028,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 85184,
+    "ppid": 121292,
+    "create_time": null,
+    "name": "tail.exe"
+   },
+   {
+    "pid": 85276,
+    "ppid": 135480,
+    "create_time": null,
+    "name": "CodeSetup-stable-2a59476c9bfcb90b3ddc372c36762471b7dfad1c.tmp"
+   },
+   {
+    "pid": 85324,
+    "ppid": 68428,
+    "create_time": null,
+    "name": "syncspace_pro.exe"
+   },
+   {
+    "pid": 86084,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 86244,
+    "ppid": 114948,
+    "create_time": null,
+    "name": "cmd.exe"
+   },
+   {
+    "pid": 86328,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 86484,
+    "ppid": 84652,
+    "create_time": null,
+    "name": "UGREEN NAS.exe"
+   },
+   {
+    "pid": 86888,
+    "ppid": 93352,
+    "create_time": null,
+    "name": "Code.exe"
+   },
+   {
+    "pid": 87772,
+    "ppid": 136120,
+    "create_time": null,
+    "name": "claude.exe"
+   },
+   {
+    "pid": 87792,
+    "ppid": 41316,
+    "create_time": null,
+    "name": "node.exe"
+   },
+   {
+    "pid": 87988,
+    "ppid": 27104,
+    "create_time": null,
+    "name": "conhost.exe"
+   },
+   {
+    "pid": 88164,
+    "ppid": 84652,
+    "create_time": null,
+    "name": "UGREEN NAS.exe"
+   },
+   {
+    "pid": 88240,
+    "ppid": 126336,
+    "create_time": null,
+    "name": "msedge.exe"
+   },
+   {
+    "pid": 88368,
+    "ppid": 20556,
+    "create_time": null,
+    "name": "grep.exe"
+   },
+   {
+    "pid": 88604,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 89036,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 89156,
+    "ppid": 121980,
+    "create_time": null,
+    "name": "conhost.exe"
+   },
+   {
+    "pid": 89596,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 89712,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 90060,
+    "ppid": 42336,
+    "create_time": null,
+    "name": "codex.exe"
+   },
+   {
+    "pid": 90144,
+    "ppid": 94868,
+    "create_time": null,
+    "name": "find.exe"
+   },
+   {
+    "pid": 91084,
+    "ppid": 7624,
+    "create_time": null,
+    "name": "wslrelay.exe"
+   },
+   {
+    "pid": 91176,
+    "ppid": 5672,
+    "create_time": null,
+    "name": "claude.exe"
+   },
+   {
+    "pid": 91368,
+    "ppid": 167860,
+    "create_time": null,
+    "name": "node.exe"
+   },
+   {
+    "pid": 91808,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 91972,
+    "ppid": 16052,
+    "create_time": null,
+    "name": "grep.exe"
+   },
+   {
+    "pid": 92092,
+    "ppid": 11968,
+    "create_time": null,
+    "name": "grep.exe"
+   },
+   {
+    "pid": 92724,
+    "ppid": 53120,
+    "create_time": null,
+    "name": "conhost.exe"
+   },
+   {
+    "pid": 92780,
+    "ppid": 2052,
+    "create_time": null,
+    "name": "RuntimeBroker.exe"
+   },
+   {
+    "pid": 92784,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 92988,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 93096,
+    "ppid": 165120,
+    "create_time": null,
+    "name": "tail.exe"
+   },
+   {
+    "pid": 93352,
+    "ppid": 15744,
+    "create_time": null,
+    "name": "Code.exe"
+   },
+   {
+    "pid": 93500,
+    "ppid": 2052,
+    "create_time": null,
+    "name": "SystemSettings.exe"
+   },
+   {
+    "pid": 93596,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 93716,
+    "ppid": 93672,
+    "create_time": null,
+    "name": "grep.exe"
+   },
+   {
+    "pid": 93720,
+    "ppid": 80268,
+    "create_time": null,
+    "name": "ChatGPT.exe"
+   },
+   {
+    "pid": 93764,
+    "ppid": 104684,
+    "create_time": null,
+    "name": "cmd.exe"
+   },
+   {
+    "pid": 93840,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 94176,
+    "ppid": 153368,
+    "create_time": null,
+    "name": "Orca.exe"
+   },
+   {
+    "pid": 94404,
+    "ppid": 179660,
+    "create_time": null,
+    "name": "node.exe"
+   },
+   {
+    "pid": 94700,
+    "ppid": 152072,
+    "create_time": null,
+    "name": "Figma.exe"
+   },
+   {
+    "pid": 94924,
+    "ppid": 179660,
+    "create_time": null,
+    "name": "node.exe"
+   },
+   {
+    "pid": 94944,
+    "ppid": 180516,
+    "create_time": null,
+    "name": "conhost.exe"
+   },
+   {
+    "pid": 95220,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 95344,
+    "ppid": 128364,
+    "create_time": null,
+    "name": "ssh.exe"
+   },
+   {
+    "pid": 95760,
+    "ppid": 114580,
+    "create_time": null,
+    "name": "node.exe"
+   },
+   {
+    "pid": 95796,
+    "ppid": 113116,
+    "create_time": null,
+    "name": "node.exe"
+   },
+   {
+    "pid": 95972,
+    "ppid": 93352,
+    "create_time": null,
+    "name": "Code.exe"
+   },
+   {
+    "pid": 95988,
+    "ppid": 125292,
+    "create_time": null,
+    "name": "tail.exe"
+   },
+   {
+    "pid": 96104,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "cowork-svc.exe"
+   },
+   {
+    "pid": 96220,
+    "ppid": 100468,
+    "create_time": null,
+    "name": "tail.exe"
+   },
+   {
+    "pid": 96604,
+    "ppid": 183456,
+    "create_time": null,
+    "name": "tail.exe"
+   },
+   {
+    "pid": 97136,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 97248,
+    "ppid": 41316,
+    "create_time": null,
+    "name": "node_repl.exe"
+   },
+   {
+    "pid": 97672,
+    "ppid": 28156,
+    "create_time": null,
+    "name": "conhost.exe"
+   },
+   {
+    "pid": 97800,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 98104,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 98152,
+    "ppid": 93352,
+    "create_time": null,
+    "name": "Code.exe"
+   },
+   {
+    "pid": 98176,
+    "ppid": 180240,
+    "create_time": null,
+    "name": "tail.exe"
+   },
+   {
+    "pid": 98380,
+    "ppid": 110104,
+    "create_time": null,
+    "name": "cmd.exe"
+   },
+   {
+    "pid": 98548,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 98760,
+    "ppid": 5672,
+    "create_time": null,
+    "name": "claude.exe"
+   },
+   {
+    "pid": 98796,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 98964,
+    "ppid": 31436,
+    "create_time": null,
+    "name": "conhost.exe"
+   },
+   {
+    "pid": 100040,
+    "ppid": 175572,
+    "create_time": null,
+    "name": "conhost.exe"
+   },
+   {
+    "pid": 100268,
+    "ppid": 2052,
+    "create_time": null,
+    "name": "dllhost.exe"
+   },
+   {
+    "pid": 100668,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 101192,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 101516,
+    "ppid": 121980,
+    "create_time": null,
+    "name": "node.exe"
+   },
+   {
+    "pid": 102000,
+    "ppid": 44212,
+    "create_time": null,
+    "name": "node.exe"
+   },
+   {
+    "pid": 102160,
+    "ppid": 144760,
+    "create_time": null,
+    "name": "tail.exe"
+   },
+   {
+    "pid": 102396,
+    "ppid": 132820,
+    "create_time": null,
+    "name": "grep.exe"
+   },
+   {
+    "pid": 102468,
+    "ppid": 2052,
+    "create_time": null,
+    "name": "WmiPrvSE.exe"
+   },
+   {
+    "pid": 102472,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 102624,
+    "ppid": 84652,
+    "create_time": null,
+    "name": "UgAgent.exe"
+   },
+   {
+    "pid": 102700,
+    "ppid": 153368,
+    "create_time": null,
+    "name": "Orca.exe"
+   },
+   {
+    "pid": 102840,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 102908,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 102964,
+    "ppid": 20516,
+    "create_time": null,
+    "name": "SearchFilterHost.exe"
+   },
+   {
+    "pid": 103132,
+    "ppid": 2052,
+    "create_time": null,
+    "name": "WindowsTerminal.exe"
+   },
+   {
+    "pid": 103648,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 104036,
+    "ppid": 20516,
+    "create_time": null,
+    "name": "SearchFilterHost.exe"
+   },
+   {
+    "pid": 104056,
+    "ppid": 88292,
+    "create_time": null,
+    "name": "grep.exe"
+   },
+   {
+    "pid": 104084,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 104528,
+    "ppid": 82764,
+    "create_time": null,
+    "name": "grep.exe"
+   },
+   {
+    "pid": 104684,
+    "ppid": 53828,
+    "create_time": null,
+    "name": "node.exe"
+   },
+   {
+    "pid": 105044,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 105076,
+    "ppid": 160092,
+    "create_time": null,
+    "name": "cmd.exe"
+   },
+   {
+    "pid": 105100,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 106308,
+    "ppid": 152072,
+    "create_time": null,
+    "name": "figma_agent.exe"
+   },
+   {
+    "pid": 106572,
+    "ppid": 98752,
+    "create_time": null,
+    "name": "tail.exe"
+   },
+   {
+    "pid": 106576,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 106588,
+    "ppid": 2052,
+    "create_time": null,
+    "name": "backgroundTaskHost.exe"
+   },
+   {
+    "pid": 106608,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 106792,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 107116,
+    "ppid": 155052,
+    "create_time": null,
+    "name": "node_repl.exe"
+   },
+   {
+    "pid": 107752,
+    "ppid": 182916,
+    "create_time": null,
+    "name": "grep.exe"
+   },
+   {
+    "pid": 107764,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 107952,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 108460,
+    "ppid": 179660,
+    "create_time": null,
+    "name": "node.exe"
+   },
+   {
+    "pid": 108472,
+    "ppid": 41172,
+    "create_time": null,
+    "name": "claude.exe"
+   },
+   {
+    "pid": 108504,
+    "ppid": 126336,
+    "create_time": null,
+    "name": "msedge.exe"
+   },
+   {
+    "pid": 109256,
+    "ppid": 63680,
+    "create_time": null,
+    "name": "grep.exe"
+   },
+   {
+    "pid": 109860,
+    "ppid": 172968,
+    "create_time": null,
+    "name": "OpenConsole.exe"
+   },
+   {
+    "pid": 110004,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 110104,
+    "ppid": 41572,
+    "create_time": null,
+    "name": "claude.exe"
+   },
+   {
+    "pid": 110392,
+    "ppid": 152072,
+    "create_time": null,
+    "name": "Figma.exe"
+   },
+   {
+    "pid": 110880,
+    "ppid": 2052,
+    "create_time": null,
+    "name": "RuntimeBroker.exe"
+   },
+   {
+    "pid": 110904,
+    "ppid": 110104,
+    "create_time": null,
+    "name": "cmd.exe"
+   },
+   {
+    "pid": 111156,
+    "ppid": 9104,
+    "create_time": null,
+    "name": "SnippingTool.exe"
+   },
+   {
+    "pid": 111336,
+    "ppid": 2052,
+    "create_time": null,
+    "name": "dllhost.exe"
+   },
+   {
+    "pid": 111488,
+    "ppid": 153368,
+    "create_time": null,
+    "name": "Orca.exe"
+   },
+   {
+    "pid": 111692,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 111996,
+    "ppid": 143256,
+    "create_time": null,
+    "name": "grep.exe"
+   },
+   {
+    "pid": 112176,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 112520,
+    "ppid": 152072,
+    "create_time": null,
+    "name": "Figma.exe"
+   },
+   {
+    "pid": 112772,
+    "ppid": 114948,
+    "create_time": null,
+    "name": "cmd.exe"
+   },
+   {
+    "pid": 112852,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 112936,
+    "ppid": 108460,
+    "create_time": null,
+    "name": "conhost.exe"
+   },
+   {
+    "pid": 113040,
+    "ppid": 172968,
+    "create_time": null,
+    "name": "powershell.exe"
+   },
+   {
+    "pid": 113116,
+    "ppid": 159028,
+    "create_time": null,
+    "name": "codex.exe"
+   },
+   {
+    "pid": 113660,
+    "ppid": 91740,
+    "create_time": null,
+    "name": "Orca.exe"
+   },
+   {
+    "pid": 113728,
+    "ppid": 107028,
+    "create_time": null,
+    "name": "tail.exe"
+   },
+   {
+    "pid": 113752,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 114428,
+    "ppid": 42004,
+    "create_time": null,
+    "name": "node.exe"
+   },
+   {
+    "pid": 114564,
+    "ppid": 113116,
+    "create_time": null,
+    "name": "powershell.exe"
+   },
+   {
+    "pid": 114580,
+    "ppid": 108472,
+    "create_time": null,
+    "name": "cmd.exe"
+   },
+   {
+    "pid": 114948,
+    "ppid": 34568,
+    "create_time": null,
+    "name": "claude.exe"
+   },
+   {
+    "pid": 115060,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 115192,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 115336,
+    "ppid": 185236,
+    "create_time": null,
+    "name": "grep.exe"
+   },
+   {
+    "pid": 115508,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 115740,
+    "ppid": 95548,
+    "create_time": null,
+    "name": "tail.exe"
+   },
+   {
+    "pid": 116212,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 116764,
+    "ppid": 150752,
+    "create_time": null,
+    "name": "crashpad_handler.exe"
+   },
+   {
+    "pid": 116872,
+    "ppid": 15208,
+    "create_time": null,
+    "name": "vmwp.exe"
+   },
+   {
+    "pid": 117404,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 117408,
+    "ppid": 94924,
+    "create_time": null,
+    "name": "conhost.exe"
+   },
+   {
+    "pid": 117608,
+    "ppid": 2052,
+    "create_time": null,
+    "name": "RuntimeBroker.exe"
+   },
+   {
+    "pid": 118000,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 118020,
+    "ppid": 22140,
+    "create_time": null,
+    "name": "powershell.exe"
+   },
+   {
+    "pid": 118272,
+    "ppid": 112772,
+    "create_time": null,
+    "name": "conhost.exe"
+   },
+   {
+    "pid": 118980,
+    "ppid": 161496,
+    "create_time": 1791596927.9812424,
+    "name": "python.exe",
+    "argv_readable": true,
+    "argv_nonempty": true,
+    "headless_exact": false,
+    "matched_scripts": []
+   },
+   {
+    "pid": 119020,
+    "ppid": 41316,
+    "create_time": null,
+    "name": "node.exe"
+   },
+   {
+    "pid": 119064,
+    "ppid": 126336,
+    "create_time": null,
+    "name": "msedge.exe"
+   },
+   {
+    "pid": 119372,
+    "ppid": 126336,
+    "create_time": null,
+    "name": "msedge.exe"
+   },
+   {
+    "pid": 119564,
+    "ppid": 14728,
+    "create_time": null,
+    "name": "conhost.exe"
+   },
+   {
+    "pid": 119848,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 120456,
+    "ppid": 138220,
+    "create_time": null,
+    "name": "node_repl.exe"
+   },
+   {
+    "pid": 120876,
+    "ppid": 145308,
+    "create_time": null,
+    "name": "tail.exe"
+   },
+   {
+    "pid": 121028,
+    "ppid": 104084,
+    "create_time": null,
+    "name": "nosstarter.npe"
+   },
+   {
+    "pid": 121092,
+    "ppid": 92112,
+    "create_time": null,
+    "name": "tail.exe"
+   },
+   {
+    "pid": 121396,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 121520,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 121604,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 121980,
+    "ppid": 181008,
+    "create_time": null,
+    "name": "cmd.exe"
+   },
+   {
+    "pid": 122172,
+    "ppid": 37832,
+    "create_time": null,
+    "name": "codex.exe"
+   },
+   {
+    "pid": 122368,
+    "ppid": 16768,
+    "create_time": null,
+    "name": "tail.exe"
+   },
+   {
+    "pid": 122984,
+    "ppid": 153368,
+    "create_time": null,
+    "name": "Orca.exe"
+   },
+   {
+    "pid": 123908,
+    "ppid": 58692,
+    "create_time": null,
+    "name": "head.exe"
+   },
+   {
+    "pid": 123948,
+    "ppid": 49076,
+    "create_time": null,
+    "name": "claude.exe"
+   },
+   {
+    "pid": 123988,
+    "ppid": 113116,
+    "create_time": null,
+    "name": "node_repl.exe"
+   },
+   {
+    "pid": 124076,
+    "ppid": 124596,
+    "create_time": null,
+    "name": "conhost.exe"
+   },
+   {
+    "pid": 124568,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 124580,
+    "ppid": 126336,
+    "create_time": null,
+    "name": "msedge.exe"
+   },
+   {
+    "pid": 124596,
+    "ppid": 5672,
+    "create_time": null,
+    "name": "cmd.exe"
+   },
+   {
+    "pid": 125108,
+    "ppid": 76032,
+    "create_time": null,
+    "name": "tail.exe"
+   },
+   {
+    "pid": 125192,
+    "ppid": 20516,
+    "create_time": null,
+    "name": "SearchFilterHost.exe"
+   },
+   {
+    "pid": 125328,
+    "ppid": 76260,
+    "create_time": null,
+    "name": "OpenConsole.exe"
+   },
+   {
+    "pid": 125572,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 126232,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 126256,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 126288,
+    "ppid": 13352,
+    "create_time": null,
+    "name": "tail.exe"
+   },
+   {
+    "pid": 126336,
+    "ppid": 89808,
+    "create_time": null,
+    "name": "msedge.exe"
+   },
+   {
+    "pid": 126508,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 126844,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 127632,
+    "ppid": 164108,
+    "create_time": null,
+    "name": "grep.exe"
+   },
+   {
+    "pid": 127784,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 127792,
+    "ppid": 132652,
+    "create_time": null,
+    "name": "node.exe"
+   },
+   {
+    "pid": 127816,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 128364,
+    "ppid": 172968,
+    "create_time": null,
+    "name": "powershell.exe"
+   },
+   {
+    "pid": 128384,
+    "ppid": 82644,
+    "create_time": null,
+    "name": "grep.exe"
+   },
+   {
+    "pid": 128424,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 128432,
+    "ppid": 68772,
+    "create_time": 1791876934.2798636,
+    "name": "python.exe",
+    "argv_readable": true,
+    "argv_nonempty": true,
+    "headless_exact": false,
+    "matched_scripts": []
+   },
+   {
+    "pid": 128532,
+    "ppid": 133544,
+    "create_time": null,
+    "name": "conhost.exe"
+   },
+   {
+    "pid": 128708,
+    "ppid": 112532,
+    "create_time": null,
+    "name": "grep.exe"
+   },
+   {
+    "pid": 128860,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 129480,
+    "ppid": 151440,
+    "create_time": null,
+    "name": "grep.exe"
+   },
+   {
+    "pid": 129716,
+    "ppid": 15744,
+    "create_time": null,
+    "name": "rustdesk.exe"
+   },
+   {
+    "pid": 130024,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 130600,
+    "ppid": 93352,
+    "create_time": null,
+    "name": "Code.exe"
+   },
+   {
+    "pid": 130780,
+    "ppid": 23560,
+    "create_time": null,
+    "name": "msedgewebview2.exe"
+   },
+   {
+    "pid": 130948,
+    "ppid": 15744,
+    "create_time": null,
+    "name": "mspaint.exe"
+   },
+   {
+    "pid": 131136,
+    "ppid": 127664,
+    "create_time": null,
+    "name": "grep.exe"
+   },
+   {
+    "pid": 131376,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 131404,
+    "ppid": 152072,
+    "create_time": null,
+    "name": "Figma.exe"
+   },
+   {
+    "pid": 131612,
+    "ppid": 117756,
+    "create_time": null,
+    "name": "tail.exe"
+   },
+   {
+    "pid": 131644,
+    "ppid": 112772,
+    "create_time": null,
+    "name": "node.exe"
+   },
+   {
+    "pid": 131820,
+    "ppid": 80268,
+    "create_time": null,
+    "name": "ChatGPT.exe"
+   },
+   {
+    "pid": 132048,
+    "ppid": 109668,
+    "create_time": null,
+    "name": "grep.exe"
+   },
+   {
+    "pid": 132624,
+    "ppid": 123988,
+    "create_time": null,
+    "name": "conhost.exe"
+   },
+   {
+    "pid": 132652,
+    "ppid": 95760,
+    "create_time": null,
+    "name": "cmd.exe"
+   },
+   {
+    "pid": 132812,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 132844,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 132848,
+    "ppid": 73856,
+    "create_time": null,
+    "name": "node.exe"
+   },
+   {
+    "pid": 133412,
+    "ppid": 126336,
+    "create_time": null,
+    "name": "msedge.exe"
+   },
+   {
+    "pid": 133544,
+    "ppid": 179660,
+    "create_time": null,
+    "name": "node.exe"
+   },
+   {
+    "pid": 133584,
+    "ppid": 98152,
+    "create_time": null,
+    "name": "Code.exe"
+   },
+   {
+    "pid": 134416,
+    "ppid": 5672,
+    "create_time": null,
+    "name": "claude.exe"
+   },
+   {
+    "pid": 135100,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 135480,
+    "ppid": 93352,
+    "create_time": null,
+    "name": "CodeSetup-stable-2a59476c9bfcb90b3ddc372c36762471b7dfad1c.exe"
+   },
+   {
+    "pid": 135868,
+    "ppid": 178760,
+    "create_time": null,
+    "name": "conhost.exe"
+   },
+   {
+    "pid": 136120,
+    "ppid": 172968,
+    "create_time": null,
+    "name": "powershell.exe"
+   },
+   {
+    "pid": 136180,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 136432,
+    "ppid": 126336,
+    "create_time": null,
+    "name": "msedge.exe"
+   },
+   {
+    "pid": 136720,
+    "ppid": 126336,
+    "create_time": null,
+    "name": "msedge.exe"
+   },
+   {
+    "pid": 136768,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 136824,
+    "ppid": 87112,
+    "create_time": null,
+    "name": "grep.exe"
+   },
+   {
+    "pid": 136908,
+    "ppid": 113116,
+    "create_time": null,
+    "name": "node_repl.exe"
+   },
+   {
+    "pid": 137588,
+    "ppid": 181564,
+    "create_time": null,
+    "name": "grep.exe"
+   },
+   {
+    "pid": 138220,
+    "ppid": 44212,
+    "create_time": null,
+    "name": "node.exe"
+   },
+   {
+    "pid": 138892,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 138980,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 139700,
+    "ppid": 161496,
+    "create_time": null,
+    "name": "conhost.exe"
+   },
+   {
+    "pid": 139848,
+    "ppid": 93352,
+    "create_time": null,
+    "name": "Code.exe"
+   },
+   {
+    "pid": 140088,
+    "ppid": 95796,
+    "create_time": null,
+    "name": "conhost.exe"
+   },
+   {
+    "pid": 140204,
+    "ppid": 152072,
+    "create_time": null,
+    "name": "Figma.exe"
+   },
+   {
+    "pid": 140516,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 140648,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 141664,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 141680,
+    "ppid": 3672,
+    "create_time": null,
+    "name": "node.exe"
+   },
+   {
+    "pid": 141860,
+    "ppid": 121896,
+    "create_time": null,
+    "name": "Photos.exe"
+   },
+   {
+    "pid": 142176,
+    "ppid": 36168,
+    "create_time": null,
+    "name": "grep.exe"
+   },
+   {
+    "pid": 142468,
+    "ppid": 178760,
+    "create_time": null,
+    "name": "node.exe"
+   },
+   {
+    "pid": 143004,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 143064,
+    "ppid": 93764,
+    "create_time": null,
+    "name": "node.exe"
+   },
+   {
+    "pid": 143572,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 143608,
+    "ppid": 131644,
+    "create_time": null,
+    "name": "cmd.exe"
+   },
+   {
+    "pid": 143684,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 143708,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 143740,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 144576,
+    "ppid": 179660,
+    "create_time": null,
+    "name": "node_repl.exe"
+   },
+   {
+    "pid": 144856,
+    "ppid": 153368,
+    "create_time": null,
+    "name": "Orca.exe"
+   },
+   {
+    "pid": 144924,
+    "ppid": 36612,
+    "create_time": null,
+    "name": "node.exe"
+   },
+   {
+    "pid": 144972,
+    "ppid": 180108,
+    "create_time": null,
+    "name": "conhost.exe"
+   },
+   {
+    "pid": 145180,
+    "ppid": 163660,
+    "create_time": 1791596928.000301,
+    "name": "python.exe",
+    "argv_readable": true,
+    "argv_nonempty": true,
+    "headless_exact": false,
+    "matched_scripts": []
+   },
+   {
+    "pid": 145312,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 145600,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 145764,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 145768,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "svchost.exe"
+   },
+   {
+    "pid": 145860,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 145880,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 146100,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 146400,
+    "ppid": 143608,
+    "create_time": null,
+    "name": "node.exe"
+   },
+   {
+    "pid": 146544,
+    "ppid": 101516,
+    "create_time": null,
+    "name": "cmd.exe"
+   },
+   {
+    "pid": 147032,
+    "ppid": 161796,
+    "create_time": null,
+    "name": "conhost.exe"
+   },
+   {
+    "pid": 147168,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 147348,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 147352,
+    "ppid": 69140,
+    "create_time": null,
+    "name": "cmd.exe"
+   },
+   {
+    "pid": 147372,
+    "ppid": 37832,
+    "create_time": null,
+    "name": "node.exe"
+   },
+   {
+    "pid": 147740,
+    "ppid": 175540,
+    "create_time": null,
+    "name": "conhost.exe"
+   },
+   {
+    "pid": 148172,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 148344,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 148452,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 148476,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 148728,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 149048,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 149624,
+    "ppid": 30376,
+    "create_time": null,
+    "name": "tail.exe"
+   },
+   {
+    "pid": 149860,
+    "ppid": 175108,
+    "create_time": null,
+    "name": "cmd.exe"
+   },
+   {
+    "pid": 149872,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 149892,
+    "ppid": 147352,
+    "create_time": null,
+    "name": "node.exe"
+   },
+   {
+    "pid": 150180,
+    "ppid": 130276,
+    "create_time": null,
+    "name": "grep.exe"
+   },
+   {
+    "pid": 150352,
+    "ppid": 181164,
+    "create_time": null,
+    "name": "grep.exe"
+   },
+   {
+    "pid": 150568,
+    "ppid": 153560,
+    "create_time": null,
+    "name": "node.exe"
+   },
+   {
+    "pid": 150728,
+    "ppid": 142468,
+    "create_time": null,
+    "name": "cmd.exe"
+   },
+   {
+    "pid": 150752,
+    "ppid": 43092,
+    "create_time": null,
+    "name": "qemu-system-x86_64-headless.exe"
+   },
+   {
+    "pid": 151028,
+    "ppid": 41316,
+    "create_time": null,
+    "name": "codex-code-mode-host.exe"
+   },
+   {
+    "pid": 151080,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 151144,
+    "ppid": 153368,
+    "create_time": null,
+    "name": "Orca.exe"
+   },
+   {
+    "pid": 151828,
+    "ppid": 140712,
+    "create_time": null,
+    "name": "Notepad.exe"
+   },
+   {
+    "pid": 151868,
+    "ppid": 106408,
+    "create_time": null,
+    "name": "grep.exe"
+   },
+   {
+    "pid": 151964,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 152072,
+    "ppid": 96972,
+    "create_time": null,
+    "name": "Figma.exe"
+   },
+   {
+    "pid": 152256,
+    "ppid": 93352,
+    "create_time": null,
+    "name": "Code.exe"
+   },
+   {
+    "pid": 152336,
+    "ppid": 170956,
+    "create_time": null,
+    "name": "cmd.exe"
+   },
+   {
+    "pid": 152516,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 152588,
+    "ppid": 5672,
+    "create_time": null,
+    "name": "claude.exe"
+   },
+   {
+    "pid": 152796,
+    "ppid": 122556,
+    "create_time": null,
+    "name": "tail.exe"
+   },
+   {
+    "pid": 152864,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 153192,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 153368,
+    "ppid": 15744,
+    "create_time": null,
+    "name": "Orca.exe"
+   },
+   {
+    "pid": 153472,
+    "ppid": 2052,
+    "create_time": null,
+    "name": "AppActions.exe"
+   },
+   {
+    "pid": 153480,
+    "ppid": 35612,
+    "create_time": null,
+    "name": "claude.exe"
+   },
+   {
+    "pid": 153504,
+    "ppid": 118980,
+    "create_time": 1791596927.999312,
+    "name": "python.exe",
+    "argv_readable": true,
+    "argv_nonempty": true,
+    "headless_exact": false,
+    "matched_scripts": []
+   },
+   {
+    "pid": 153560,
+    "ppid": 132848,
+    "create_time": null,
+    "name": "cmd.exe"
+   },
+   {
+    "pid": 153888,
+    "ppid": 125132,
+    "create_time": null,
+    "name": "tail.exe"
+   },
+   {
+    "pid": 154268,
+    "ppid": 5672,
+    "create_time": null,
+    "name": "claude.exe"
+   },
+   {
+    "pid": 154672,
+    "ppid": 14504,
+    "create_time": null,
+    "name": "ShellHost.exe"
+   },
+   {
+    "pid": 154888,
+    "ppid": 144576,
+    "create_time": null,
+    "name": "conhost.exe"
+   },
+   {
+    "pid": 155052,
+    "ppid": 41316,
+    "create_time": null,
+    "name": "node.exe"
+   },
+   {
+    "pid": 155428,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 155616,
+    "ppid": 171316,
+    "create_time": null,
+    "name": "conhost.exe"
+   },
+   {
+    "pid": 155632,
+    "ppid": 5672,
+    "create_time": null,
+    "name": "claude.exe"
+   },
+   {
+    "pid": 155948,
+    "ppid": 153480,
+    "create_time": null,
+    "name": "bash.exe"
+   },
+   {
+    "pid": 156148,
+    "ppid": 150752,
+    "create_time": null,
+    "name": "netsimd.exe"
+   },
+   {
+    "pid": 156616,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 157380,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 158284,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 158572,
+    "ppid": 184700,
+    "create_time": null,
+    "name": "claude.exe"
+   },
+   {
+    "pid": 158756,
+    "ppid": 145556,
+    "create_time": null,
+    "name": "tail.exe"
+   },
+   {
+    "pid": 158820,
+    "ppid": 172968,
+    "create_time": null,
+    "name": "powershell.exe"
+   },
+   {
+    "pid": 159028,
+    "ppid": 41576,
+    "create_time": null,
+    "name": "node.exe"
+   },
+   {
+    "pid": 159064,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 159528,
+    "ppid": 93352,
+    "create_time": null,
+    "name": "Code.exe"
+   },
+   {
+    "pid": 159820,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 159824,
+    "ppid": 2052,
+    "create_time": null,
+    "name": "Widgets.exe"
+   },
+   {
+    "pid": 159928,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 160092,
+    "ppid": 110904,
+    "create_time": null,
+    "name": "node.exe"
+   },
+   {
+    "pid": 160172,
+    "ppid": 152072,
+    "create_time": null,
+    "name": "Figma.exe"
+   },
+   {
+    "pid": 160336,
+    "ppid": 5672,
+    "create_time": null,
+    "name": "claude.exe"
+   },
+   {
+    "pid": 160476,
+    "ppid": 175444,
+    "create_time": null,
+    "name": "tail.exe"
+   },
+   {
+    "pid": 160964,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 160972,
+    "ppid": 20516,
+    "create_time": null,
+    "name": "SearchProtocolHost.exe"
+   },
+   {
+    "pid": 161496,
+    "ppid": 5672,
+    "create_time": null,
+    "name": "uv.exe"
+   },
+   {
+    "pid": 161588,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 161628,
+    "ppid": 20516,
+    "create_time": null,
+    "name": "SearchFilterHost.exe"
+   },
+   {
+    "pid": 161688,
+    "ppid": 118728,
+    "create_time": null,
+    "name": "tail.exe"
+   },
+   {
+    "pid": 161716,
+    "ppid": 52448,
+    "create_time": null,
+    "name": "tail.exe"
+   },
+   {
+    "pid": 161796,
+    "ppid": 181008,
+    "create_time": null,
+    "name": "cmd.exe"
+   },
+   {
+    "pid": 162308,
+    "ppid": 153368,
+    "create_time": null,
+    "name": "Orca.exe"
+   },
+   {
+    "pid": 162776,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 162780,
+    "ppid": 161796,
+    "create_time": null,
+    "name": "node.exe"
+   },
+   {
+    "pid": 163292,
+    "ppid": 102624,
+    "create_time": null,
+    "name": "conhost.exe"
+   },
+   {
+    "pid": 163556,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 163660,
+    "ppid": 28156,
+    "create_time": 1791596927.981268,
+    "name": "python.exe",
+    "argv_readable": true,
+    "argv_nonempty": true,
+    "headless_exact": false,
+    "matched_scripts": []
+   },
+   {
+    "pid": 164292,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 164576,
+    "ppid": 105076,
+    "create_time": null,
+    "name": "node.exe"
+   },
+   {
+    "pid": 164660,
+    "ppid": 5672,
+    "create_time": null,
+    "name": "claude.exe"
+   },
+   {
+    "pid": 164704,
+    "ppid": 43092,
+    "create_time": null,
+    "name": "conhost.exe"
+   },
+   {
+    "pid": 164940,
+    "ppid": 5672,
+    "create_time": null,
+    "name": "claude.exe"
+   },
+   {
+    "pid": 165224,
+    "ppid": 8596,
+    "create_time": null,
+    "name": "cmd.exe"
+   },
+   {
+    "pid": 165228,
+    "ppid": 27548,
+    "create_time": null,
+    "name": "tail.exe"
+   },
+   {
+    "pid": 165544,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 165812,
+    "ppid": 176580,
+    "create_time": null,
+    "name": "tail.exe"
+   },
+   {
+    "pid": 166288,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 167712,
+    "ppid": 37832,
+    "create_time": null,
+    "name": "node.exe"
+   },
+   {
+    "pid": 167860,
+    "ppid": 66976,
+    "create_time": null,
+    "name": "cmd.exe"
+   },
+   {
+    "pid": 167956,
+    "ppid": 150400,
+    "create_time": null,
+    "name": "tail.exe"
+   },
+   {
+    "pid": 168044,
+    "ppid": 113116,
+    "create_time": null,
+    "name": "node.exe"
+   },
+   {
+    "pid": 168068,
+    "ppid": 104268,
+    "create_time": null,
+    "name": "tail.exe"
+   },
+   {
+    "pid": 168524,
+    "ppid": 1460,
+    "create_time": null,
+    "name": "cmd.exe"
+   },
+   {
+    "pid": 168668,
+    "ppid": 5672,
+    "create_time": null,
+    "name": "claude.exe"
+   },
+   {
+    "pid": 168808,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 168812,
+    "ppid": 165224,
+    "create_time": null,
+    "name": "node.exe"
+   },
+   {
+    "pid": 168904,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 168952,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 169412,
+    "ppid": 152072,
+    "create_time": null,
+    "name": "Figma.exe"
+   },
+   {
+    "pid": 169820,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 170304,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 170956,
+    "ppid": 98380,
+    "create_time": null,
+    "name": "node.exe"
+   },
+   {
+    "pid": 171628,
+    "ppid": 126336,
+    "create_time": null,
+    "name": "msedge.exe"
+   },
+   {
+    "pid": 171980,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 172436,
+    "ppid": 3000,
+    "create_time": null,
+    "name": "codex-windows-sandbox-service.exe"
+   },
+   {
+    "pid": 172476,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 172508,
+    "ppid": 72992,
+    "create_time": null,
+    "name": "cmd.exe"
+   },
+   {
+    "pid": 172968,
+    "ppid": 91740,
+    "create_time": null,
+    "name": "Orca.exe"
+   },
+   {
+    "pid": 173884,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 174320,
+    "ppid": 136908,
+    "create_time": null,
+    "name": "conhost.exe"
+   },
+   {
+    "pid": 174524,
+    "ppid": 150720,
+    "create_time": null,
+    "name": "grep.exe"
+   },
+   {
+    "pid": 174880,
+    "ppid": 33048,
+    "create_time": null,
+    "name": "Photos.exe"
+   },
+   {
+    "pid": 175032,
+    "ppid": 53828,
+    "create_time": null,
+    "name": "conhost.exe"
+   },
+   {
+    "pid": 175108,
+    "ppid": 175540,
+    "create_time": null,
+    "name": "node.exe"
+   },
+   {
+    "pid": 175196,
+    "ppid": 152072,
+    "create_time": null,
+    "name": "Figma.exe"
+   },
+   {
+    "pid": 175540,
+    "ppid": 108472,
+    "create_time": null,
+    "name": "cmd.exe"
+   },
+   {
+    "pid": 175572,
+    "ppid": 179660,
+    "create_time": null,
+    "name": "node.exe"
+   },
+   {
+    "pid": 175860,
+    "ppid": 177788,
+    "create_time": null,
+    "name": "tail.exe"
+   },
+   {
+    "pid": 176016,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 176044,
+    "ppid": 168044,
+    "create_time": null,
+    "name": "conhost.exe"
+   },
+   {
+    "pid": 176244,
+    "ppid": 80268,
+    "create_time": null,
+    "name": "ChatGPT.exe"
+   },
+   {
+    "pid": 176416,
+    "ppid": 172968,
+    "create_time": null,
+    "name": "OpenConsole.exe"
+   },
+   {
+    "pid": 176440,
+    "ppid": 2052,
+    "create_time": null,
+    "name": "mscopilot_proxy.exe"
+   },
+   {
+    "pid": 176848,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 177148,
+    "ppid": 62128,
+    "create_time": null,
+    "name": "conhost.exe"
+   },
+   {
+    "pid": 177736,
+    "ppid": 126336,
+    "create_time": null,
+    "name": "msedge.exe"
+   },
+   {
+    "pid": 177784,
+    "ppid": 41424,
+    "create_time": null,
+    "name": "tail.exe"
+   },
+   {
+    "pid": 177992,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 178604,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 178760,
+    "ppid": 153480,
+    "create_time": null,
+    "name": "cmd.exe"
+   },
+   {
+    "pid": 179080,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 179660,
+    "ppid": 76224,
+    "create_time": null,
+    "name": "codex.exe"
+   },
+   {
+    "pid": 180108,
+    "ppid": 179660,
+    "create_time": null,
+    "name": "codex-code-mode-host.exe"
+   },
+   {
+    "pid": 180492,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 180516,
+    "ppid": 179660,
+    "create_time": null,
+    "name": "node_repl.exe"
+   },
+   {
+    "pid": 180720,
+    "ppid": 5672,
+    "create_time": null,
+    "name": "claude.exe"
+   },
+   {
+    "pid": 180768,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 180788,
+    "ppid": 126336,
+    "create_time": null,
+    "name": "msedge.exe"
+   },
+   {
+    "pid": 180820,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 181008,
+    "ppid": 12236,
+    "create_time": null,
+    "name": "claude.exe"
+   },
+   {
+    "pid": 181104,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 181144,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 181840,
+    "ppid": 153368,
+    "create_time": null,
+    "name": "Orca.exe"
+   },
+   {
+    "pid": 183048,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 183292,
+    "ppid": 35612,
+    "create_time": null,
+    "name": "conhost.exe"
+   },
+   {
+    "pid": 183304,
+    "ppid": 5672,
+    "create_time": null,
+    "name": "claude.exe"
+   },
+   {
+    "pid": 184076,
+    "ppid": 2052,
+    "create_time": null,
+    "name": "OpenConsole.exe"
+   },
+   {
+    "pid": 184616,
+    "ppid": 157796,
+    "create_time": null,
+    "name": "grep.exe"
+   },
+   {
+    "pid": 184700,
+    "ppid": 113040,
+    "create_time": null,
+    "name": "claude.exe"
+   },
+   {
+    "pid": 184980,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 185408,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 185524,
+    "ppid": 5672,
+    "create_time": null,
+    "name": "claude.exe"
+   },
+   {
+    "pid": 185624,
+    "ppid": 150728,
+    "create_time": null,
+    "name": "node.exe"
+   },
+   {
+    "pid": 185920,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   },
+   {
+    "pid": 186320,
+    "ppid": 28884,
+    "create_time": null,
+    "name": "chrome.exe"
+   }
+  ],
+  "alive": [],
+  "rejudge_equal": true
+ }
+]

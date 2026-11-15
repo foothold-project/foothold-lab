@@ -1,0 +1,145 @@
+{
+  "consumer_commit": "6603b0ae",
+  "consumer_source_sha256": "e0317518d3a5e22ef67b7608a9e387bf2f69f7b30d836283248aa349a3f6b5e0",
+  "producer_source_sha256": "7ece631f660e2d41c84f42cc65073b88cd0fcfa9931d01d2640c7d7bf1de5bac",
+  "cpu_only": true,
+  "global_columns_matched": 7,
+  "zero_pose_env_samples": 96,
+  "nonzero_values": 0,
+  "default_A_unchanged": true,
+  "C_table": [
+    {
+      "family": "C",
+      "kind": "gap",
+      "ranges": {
+        "x": [
+          0.0,
+          0.0
+        ],
+        "y": [
+          0.0,
+          0.0
+        ],
+        "yaw": [
+          0.0,
+          0.0
+        ]
+      },
+      "from_declaration": true
+    },
+    {
+      "family": "C",
+      "kind": "flat",
+      "ranges": {
+        "x": [
+          -0.5,
+          0.5
+        ],
+        "y": [
+          -0.5,
+          0.5
+        ],
+        "yaw": [
+          -3.14,
+          3.14
+        ]
+      },
+      "from_declaration": false
+    },
+    {
+      "family": "C",
+      "kind": "box",
+      "ranges": {
+        "x": [
+          0.0,
+          0.0
+        ],
+        "y": [
+          0.0,
+          0.0
+        ],
+        "yaw": [
+          0.0,
+          0.0
+        ]
+      },
+      "from_declaration": true
+    },
+    {
+      "family": "C",
+      "kind": "discrete_obstacles",
+      "ranges": {
+        "x": [
+          0.0,
+          0.0
+        ],
+        "y": [
+          0.0,
+          0.0
+        ],
+        "yaw": [
+          0.0,
+          0.0
+        ]
+      },
+      "from_declaration": true
+    },
+    {
+      "family": "C",
+      "kind": "discrete_grid",
+      "ranges": {
+        "x": [
+          -0.5,
+          0.5
+        ],
+        "y": [
+          -0.5,
+          0.5
+        ],
+        "yaw": [
+          -3.14,
+          3.14
+        ]
+      },
+      "from_declaration": false
+    },
+    {
+      "family": "C",
+      "kind": "pyramid_stairs",
+      "ranges": {
+        "x": [
+          -0.5,
+          0.5
+        ],
+        "y": [
+          -0.5,
+          0.5
+        ],
+        "yaw": [
+          -3.14,
+          3.14
+        ]
+      },
+      "from_declaration": false
+    },
+    {
+      "family": "C",
+      "kind": "inverted_pyramid_stairs",
+      "ranges": {
+        "x": [
+          -0.5,
+          0.5
+        ],
+        "y": [
+          -0.5,
+          0.5
+        ],
+        "yaw": [
+          -3.14,
+          3.14
+        ]
+      },
+      "from_declaration": false
+    }
+  ]
+}

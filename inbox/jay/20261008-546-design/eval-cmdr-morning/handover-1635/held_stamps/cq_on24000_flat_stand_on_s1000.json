@@ -1,0 +1,18 @@
+{
+ "pins": {
+  "q_eval_cmdr.py": "24aeaf6358ef79096911e3dcb220212ac715775012da96bf14e438c331dba4bc",
+  "q_metrics.py": "c9930f8d327efd04df51440da519fefab2585490ae45b4a6ffbd39466138a794",
+  "q_post.py": "f90aaa97a50c5347111298b913d7bb948e58f0d1ce3af09808739cfcae1e26dd",
+  "gpu_guard.py": "7fabec30704830a410878e4244190a4e62c60f3828ad5908fbf9ee264c30cbd4",
+  "cmdr_bundle_compare.py": "bb827f3c77a239e6eaeb9fa613c49b1a740dcac367cd50cdde84d75e786e470d",
+  "source/robot_lab/robot_lab/tasks/go2/mdp/commands.py": "d21346dc035ab1579683a9f2d3ccf51fddb5e83df2da5da55e69c0e543c55972",
+  "source/robot_lab/robot_lab/tasks/go2/mdp/curriculums.py": "ba98c273884f2fa253a0f362066cff4e0c4808f25c76ed36690e9bcca9d412b4",
+  "source/robot_lab/robot_lab/tasks/go2/mdp/utils.py": "6a03714d233bccf84a392bc761d7f989a75e365a9a2a260bb6e8094b1b0326e8",
+  "source/robot_lab/robot_lab/tasks/go2/env_cfg.py": "f01e93a8f0afc7dfb7772a9b12dd99160686513d64498321d07fc664dd2ae0aa",
+  "source/rsl_rl/rsl_rl/runners/on_policy_runner_cts.py": "6800c7866edd03f7deb2bf38a00c6683922a96cbd1d7909ea55989a5eed844a9",
+  "source/rsl_rl/rsl_rl/algorithms/moe_cts.py": "136a1c1082243ae1c6654307ffcf32de2a99cf6c4d6581419ada59f288a058f6"
+ },
+ "t": "2026-10-13 11:39:04",
+ "ckpt_sha256": "9d26717c70061ef3a3de33a6e3cc040596682ccc9e650b45cc36b9a1a02c8b25",
+ "pair_ref": "cq_p20000_flat_stand_on_s1000"
+}

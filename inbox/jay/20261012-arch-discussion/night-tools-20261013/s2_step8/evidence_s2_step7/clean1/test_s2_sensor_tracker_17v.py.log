@@ -1,0 +1,12 @@
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+  File "<frozen runpy>", line 291, in run_path
+  File "<frozen runpy>", line 98, in _run_module_code
+  File "<frozen runpy>", line 88, in _run_code
+  File "C:\Users\AI-WS01\AppData\Local\Temp\s2_step7_clean_3f66br4w\bundle\test_s2_sensor_tracker_17v.py", line 43, in <module>
+    if __name__=="__main__":main()
+                            ^^^^^^
+  File "C:\Users\AI-WS01\AppData\Local\Temp\s2_step7_clean_3f66br4w\bundle\test_s2_sensor_tracker_17v.py", line 24, in main
+    s=FakeSensor();t=SensorUpdateTracker(s,num_envs=2,step_getter=lambda:s.step)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: SensorUpdateTracker.__init__() missing 3 required keyword-only arguments: 'root_pose_getter', 'expected_hook_path', and 'expected_hook_sha256'

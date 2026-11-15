@@ -1,0 +1,740 @@
+{
+  "schema": "jeplo-spawn-cpu-replay/1",
+  "cpu_only": true,
+  "kit_contact_verified": false,
+  "input_mesh": "/mnt/win-d/mai/data/foothold/s2_lab/ex42_mesh_1111/seed42_ACDE/terrain_mesh.npz",
+  "input_sha256": "f7f3bd4095c7e4c386cdc8a43d4cdd43d852da2ab9e20969982a4bdb028aa527",
+  "reset_xy_yaw_range": [
+    0.0,
+    0.0
+  ],
+  "footprint_xy_half_extent_m": [
+    0.35,
+    0.25
+  ],
+  "cases": 30,
+  "surface_probes": 1470,
+  "max_relief_m": 0.1191659874691791,
+  "rows": [
+    {
+      "level": 0,
+      "column": 50,
+      "kind": "gap",
+      "old_origin_world": [
+        -40.5,
+        244.5,
+        -0.015
+      ],
+      "new_origin_world": [
+        -44.04,
+        244.48,
+        0.009999217781458935
+      ],
+      "new_origin_local": [
+        0.96,
+        4.48,
+        0.009999217781458935
+      ],
+      "support_probes": 49,
+      "support_min_m": -0.015207577223024075,
+      "support_max_m": 0.019997863371437264,
+      "support_relief_m": 0.03520544059446134
+    },
+    {
+      "level": 0,
+      "column": 52,
+      "kind": "box",
+      "old_origin_world": [
+        -40.5,
+        262.5,
+        0.305
+      ],
+      "new_origin_world": [
+        -44.04,
+        262.48,
+        0.005000743606229816
+      ],
+      "new_origin_local": [
+        0.96,
+        4.48,
+        0.005000743606229816
+      ],
+      "support_probes": 49,
+      "support_min_m": -0.009583294973030433,
+      "support_max_m": 0.009583911800492041,
+      "support_relief_m": 0.019167206773522474
+    },
+    {
+      "level": 0,
+      "column": 53,
+      "kind": "discrete_obstacles",
+      "old_origin_world": [
+        -40.5,
+        271.5,
+        -0.005
+      ],
+      "new_origin_world": [
+        -44.04,
+        271.48,
+        -6.864988404634703e-07
+      ],
+      "new_origin_local": [
+        0.96,
+        4.48,
+        -6.864988404634703e-07
+      ],
+      "support_probes": 49,
+      "support_min_m": -0.009584026238788164,
+      "support_max_m": 0.010000367657037514,
+      "support_relief_m": 0.019584393895825676
+    },
+    {
+      "level": 1,
+      "column": 50,
+      "kind": "gap",
+      "old_origin_world": [
+        -31.5,
+        244.5,
+        -0.01
+      ],
+      "new_origin_world": [
+        -35.04,
+        244.48,
+        0.004999561208106121
+      ],
+      "new_origin_local": [
+        0.96,
+        4.48,
+        0.004999561208106121
+      ],
+      "support_probes": 49,
+      "support_min_m": -0.01708197876498703,
+      "support_max_m": 0.017914367963750802,
+      "support_relief_m": 0.03499634672873783
+    },
+    {
+      "level": 1,
+      "column": 52,
+      "kind": "box",
+      "old_origin_world": [
+        -31.5,
+        262.5,
+        0.425
+      ],
+      "new_origin_world": [
+        -35.04,
+        262.48,
+        0.004999141731956645
+      ],
+      "new_origin_local": [
+        0.96,
+        4.48,
+        0.004999141731956645
+      ],
+      "support_probes": 49,
+      "support_min_m": -0.009999999776482582,
+      "support_max_m": 0.009583116999123785,
+      "support_relief_m": 0.01958311677560637
+    },
+    {
+      "level": 1,
+      "column": 53,
+      "kind": "discrete_obstacles",
+      "old_origin_world": [
+        -31.5,
+        271.5,
+        0.0
+      ],
+      "new_origin_world": [
+        -35.04,
+        271.48,
+        0.0
+      ],
+      "new_origin_local": [
+        0.96,
+        4.48,
+        0.0
+      ],
+      "support_probes": 49,
+      "support_min_m": -0.008749687451971895,
+      "support_max_m": 0.01916636352706276,
+      "support_relief_m": 0.027916050979034657
+    },
+    {
+      "level": 2,
+      "column": 50,
+      "kind": "gap",
+      "old_origin_world": [
+        -22.5,
+        244.5,
+        -0.005
+      ],
+      "new_origin_world": [
+        -26.04,
+        244.48,
+        -0.0050001143265374125
+      ],
+      "new_origin_local": [
+        0.96,
+        4.48,
+        -0.0050001143265374125
+      ],
+      "support_probes": 49,
+      "support_min_m": -0.018333560206592405,
+      "support_max_m": 0.028541374008036153,
+      "support_relief_m": 0.04687493421462856
+    },
+    {
+      "level": 2,
+      "column": 52,
+      "kind": "box",
+      "old_origin_world": [
+        -22.5,
+        262.5,
+        0.56
+      ],
+      "new_origin_world": [
+        -26.04,
+        262.48,
+        0.009996452843984139
+      ],
+      "new_origin_local": [
+        0.96,
+        4.48,
+        0.009996452843984139
+      ],
+      "support_probes": 49,
+      "support_min_m": -0.014167938151038912,
+      "support_max_m": 0.012916089894571268,
+      "support_relief_m": 0.02708402804561018
+    },
+    {
+      "level": 2,
+      "column": 53,
+      "kind": "discrete_obstacles",
+      "old_origin_world": [
+        -22.5,
+        271.5,
+        -0.01
+      ],
+      "new_origin_world": [
+        -26.04,
+        271.48,
+        0.025000744090379026
+      ],
+      "new_origin_local": [
+        0.96,
+        4.48,
+        0.025000744090379026
+      ],
+      "support_probes": 49,
+      "support_min_m": -0.004791064865086446,
+      "support_max_m": 0.02958417848270876,
+      "support_relief_m": 0.03437524334779521
+    },
+    {
+      "level": 3,
+      "column": 50,
+      "kind": "gap",
+      "old_origin_world": [
+        -13.5,
+        244.5,
+        -0.005
+      ],
+      "new_origin_world": [
+        -17.04,
+        244.48,
+        -4.958992832307083e-07
+      ],
+      "new_origin_local": [
+        0.96,
+        4.48,
+        -4.958992832307083e-07
+      ],
+      "support_probes": 49,
+      "support_min_m": -0.01895759382891904,
+      "support_max_m": 0.028332358380965542,
+      "support_relief_m": 0.04728995220988458
+    },
+    {
+      "level": 3,
+      "column": 52,
+      "kind": "box",
+      "old_origin_world": [
+        -13.5,
+        262.5,
+        0.6950000000000001
+      ],
+      "new_origin_world": [
+        -17.12,
+        262.48,
+        0.0050000523403775435
+      ],
+      "new_origin_local": [
+        0.88,
+        4.48,
+        0.0050000523403775435
+      ],
+      "support_probes": 49,
+      "support_min_m": -0.010624871021135804,
+      "support_max_m": 0.014165814681855196,
+      "support_relief_m": 0.024790685702991
+    },
+    {
+      "level": 3,
+      "column": 53,
+      "kind": "discrete_obstacles",
+      "old_origin_world": [
+        -13.5,
+        271.5,
+        0.005
+      ],
+      "new_origin_world": [
+        -17.04,
+        271.48,
+        0.014998683886191006
+      ],
+      "new_origin_local": [
+        0.96,
+        4.48,
+        0.014998683886191006
+      ],
+      "support_probes": 49,
+      "support_min_m": 0.0008333179929799759,
+      "support_max_m": 0.028959324323306394,
+      "support_relief_m": 0.028126006330326418
+    },
+    {
+      "level": 4,
+      "column": 50,
+      "kind": "gap",
+      "old_origin_world": [
+        -4.5,
+        244.5,
+        -1.33
+      ],
+      "new_origin_world": [
+        -8.04,
+        244.48,
+        0.004999475379611818
+      ],
+      "new_origin_local": [
+        0.96,
+        4.48,
+        0.004999475379611818
+      ],
+      "support_probes": 49,
+      "support_min_m": -0.018752105168679,
+      "support_max_m": 0.031874760783471304,
+      "support_relief_m": 0.0506268659521503
+    },
+    {
+      "level": 4,
+      "column": 52,
+      "kind": "box",
+      "old_origin_world": [
+        -4.5,
+        262.5,
+        0.84
+      ],
+      "new_origin_world": [
+        -8.04,
+        262.48,
+        0.01499862905123096
+      ],
+      "new_origin_local": [
+        0.96,
+        4.48,
+        0.01499862905123096
+      ],
+      "support_probes": 49,
+      "support_min_m": -0.009999999776482582,
+      "support_max_m": 0.01499862905123096,
+      "support_relief_m": 0.024998628827713542
+    },
+    {
+      "level": 4,
+      "column": 53,
+      "kind": "discrete_obstacles",
+      "old_origin_world": [
+        -4.5,
+        271.5,
+        0.035
+      ],
+      "new_origin_world": [
+        -8.04,
+        271.48,
+        0.029998628715955274
+      ],
+      "new_origin_local": [
+        0.96,
+        4.48,
+        0.029998628715955274
+      ],
+      "support_probes": 49,
+      "support_min_m": -0.005000352175898391,
+      "support_max_m": 0.057291292645637135,
+      "support_relief_m": 0.06229164482153553
+    },
+    {
+      "level": 5,
+      "column": 50,
+      "kind": "gap",
+      "old_origin_world": [
+        4.5,
+        244.5,
+        -1.975
+      ],
+      "new_origin_world": [
+        0.96,
+        244.48,
+        0.0199994681897927
+      ],
+      "new_origin_local": [
+        0.96,
+        4.48,
+        0.0199994681897927
+      ],
+      "support_probes": 49,
+      "support_min_m": -0.02249934741481114,
+      "support_max_m": 0.03208251310481115,
+      "support_relief_m": 0.05458186051962229
+    },
+    {
+      "level": 5,
+      "column": 52,
+      "kind": "box",
+      "old_origin_world": [
+        4.5,
+        262.5,
+        0.9500000000000001
+      ],
+      "new_origin_world": [
+        0.96,
+        262.48,
+        0.004998624208350852
+      ],
+      "new_origin_local": [
+        0.96,
+        4.48,
+        0.004998624208350852
+      ],
+      "support_probes": 49,
+      "support_min_m": -0.008750004908070937,
+      "support_max_m": 0.01874926393151463,
+      "support_relief_m": 0.027499268839585568
+    },
+    {
+      "level": 5,
+      "column": 53,
+      "kind": "discrete_obstacles",
+      "old_origin_world": [
+        4.5,
+        271.5,
+        0.005
+      ],
+      "new_origin_world": [
+        0.96,
+        271.48,
+        0.03999863013156391
+      ],
+      "new_origin_local": [
+        0.96,
+        4.48,
+        0.03999863013156391
+      ],
+      "support_probes": 49,
+      "support_min_m": -0.0024999287744108534,
+      "support_max_m": 0.054375111294776304,
+      "support_relief_m": 0.05687504006918716
+    },
+    {
+      "level": 6,
+      "column": 50,
+      "kind": "gap",
+      "old_origin_world": [
+        13.5,
+        244.5,
+        -0.02
+      ],
+      "new_origin_world": [
+        9.96,
+        244.48,
+        0.024998650953895824
+      ],
+      "new_origin_local": [
+        0.96,
+        4.48,
+        0.024998650953895824
+      ],
+      "support_probes": 49,
+      "support_min_m": -0.019998931462201216,
+      "support_max_m": 0.033125259944535385,
+      "support_relief_m": 0.053124191406736604
+    },
+    {
+      "level": 6,
+      "column": 52,
+      "kind": "box",
+      "old_origin_world": [
+        13.5,
+        262.5,
+        1.105
+      ],
+      "new_origin_world": [
+        9.96,
+        262.48,
+        -0.00499999035148924
+      ],
+      "new_origin_local": [
+        0.96,
+        4.48,
+        -0.00499999035148924
+      ],
+      "support_probes": 49,
+      "support_min_m": -0.01291740559191725,
+      "support_max_m": 0.022498943123066918,
+      "support_relief_m": 0.03541634871498417
+    },
+    {
+      "level": 6,
+      "column": 53,
+      "kind": "discrete_obstacles",
+      "old_origin_world": [
+        13.5,
+        271.5,
+        0.035
+      ],
+      "new_origin_world": [
+        9.96,
+        271.48,
+        0.014994514826564205
+      ],
+      "new_origin_local": [
+        0.96,
+        4.48,
+        0.014994514826564205
+      ],
+      "support_probes": 49,
+      "support_min_m": -0.009581289914559168,
+      "support_max_m": 0.06125002881084368,
+      "support_relief_m": 0.07083131872540285
+    },
+    {
+      "level": 7,
+      "column": 50,
+      "kind": "gap",
+      "old_origin_world": [
+        22.5,
+        244.5,
+        -1.8900000000000001
+      ],
+      "new_origin_world": [
+        18.96,
+        244.48,
+        0.014999255815798971
+      ],
+      "new_origin_local": [
+        0.96,
+        4.48,
+        0.014999255815798971
+      ],
+      "support_probes": 49,
+      "support_min_m": -0.012708254374169805,
+      "support_max_m": 0.04291648612231514,
+      "support_relief_m": 0.05562474049648494
+    },
+    {
+      "level": 7,
+      "column": 52,
+      "kind": "box",
+      "old_origin_world": [
+        22.5,
+        262.5,
+        1.235
+      ],
+      "new_origin_world": [
+        18.96,
+        262.48,
+        0.009999370496790179
+      ],
+      "new_origin_local": [
+        0.96,
+        4.48,
+        0.009999370496790179
+      ],
+      "support_probes": 49,
+      "support_min_m": -0.008332509170964644,
+      "support_max_m": 0.023749885834836358,
+      "support_relief_m": 0.032082395005801
+    },
+    {
+      "level": 7,
+      "column": 53,
+      "kind": "discrete_obstacles",
+      "old_origin_world": [
+        22.5,
+        271.5,
+        0.02
+      ],
+      "new_origin_world": [
+        18.96,
+        271.48,
+        0.07000297517053145
+      ],
+      "new_origin_local": [
+        0.96,
+        4.48,
+        0.07000297517053145
+      ],
+      "support_probes": 49,
+      "support_min_m": -0.004792568354578846,
+      "support_max_m": 0.08812453507836107,
+      "support_relief_m": 0.09291710343293992
+    },
+    {
+      "level": 8,
+      "column": 50,
+      "kind": "gap",
+      "old_origin_world": [
+        31.5,
+        244.5,
+        -1.6
+      ],
+      "new_origin_world": [
+        27.96,
+        244.48,
+        0.03499862688941885
+      ],
+      "new_origin_local": [
+        0.96,
+        4.48,
+        0.03499862688941885
+      ],
+      "support_probes": 49,
+      "support_min_m": -0.0010408113111333578,
+      "support_max_m": 0.04187469673022997,
+      "support_relief_m": 0.04291550804136333
+    },
+    {
+      "level": 8,
+      "column": 52,
+      "kind": "box",
+      "old_origin_world": [
+        31.5,
+        262.5,
+        1.36
+      ],
+      "new_origin_world": [
+        27.96,
+        262.48,
+        0.024995194880517907
+      ],
+      "new_origin_local": [
+        0.96,
+        4.48,
+        0.024995194880517907
+      ],
+      "support_probes": 49,
+      "support_min_m": -0.008751964725103204,
+      "support_max_m": 0.024995194880517907,
+      "support_relief_m": 0.03374715960562111
+    },
+    {
+      "level": 8,
+      "column": 53,
+      "kind": "discrete_obstacles",
+      "old_origin_world": [
+        31.5,
+        271.5,
+        0.06
+      ],
+      "new_origin_world": [
+        27.96,
+        271.48,
+        0.047499461363466236
+      ],
+      "new_origin_local": [
+        0.96,
+        4.48,
+        0.047499461363466236
+      ],
+      "support_probes": 49,
+      "support_min_m": 0.0,
+      "support_max_m": 0.1022913950880133,
+      "support_relief_m": 0.1022913950880133
+    },
+    {
+      "level": 9,
+      "column": 50,
+      "kind": "gap",
+      "old_origin_world": [
+        40.5,
+        244.5,
+        -1.5
+      ],
+      "new_origin_world": [
+        36.96,
+        244.48,
+        -0.0049990653088049
+      ],
+      "new_origin_local": [
+        0.96,
+        4.48,
+        -0.0049990653088049
+      ],
+      "support_probes": 49,
+      "support_min_m": -0.008124759016551202,
+      "support_max_m": 0.04833356283700527,
+      "support_relief_m": 0.05645832185355647
+    },
+    {
+      "level": 9,
+      "column": 52,
+      "kind": "box",
+      "old_origin_world": [
+        40.5,
+        262.5,
+        1.51
+      ],
+      "new_origin_world": [
+        36.96,
+        262.48,
+        0.019998340459543934
+      ],
+      "new_origin_local": [
+        0.96,
+        4.48,
+        0.019998340459543934
+      ],
+      "support_probes": 49,
+      "support_min_m": -0.009164459082828877,
+      "support_max_m": 0.02604194592748738,
+      "support_relief_m": 0.03520640501031626
+    },
+    {
+      "level": 9,
+      "column": 53,
+      "kind": "discrete_obstacles",
+      "old_origin_world": [
+        40.5,
+        271.5,
+        0.03
+      ],
+      "new_origin_world": [
+        36.96,
+        271.48,
+        0.0033332940516833526
+      ],
+      "new_origin_local": [
+        0.96,
+        4.48,
+        0.0033332940516833526
+      ],
+      "support_probes": 49,
+      "support_min_m": -0.0008347345770463033,
+      "support_max_m": 0.1183312528921328,
+      "support_relief_m": 0.1191659874691791
+    }
+  ]
+}

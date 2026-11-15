@@ -1,0 +1,2 @@
+c79e1399071deeac53c654246821ff4062f35f86bfa19f7d624ab81b1e824190  foothold_s2/ex40_eval_once.py
+4cbc928594766d4b7e182d127362262e866fd0ee7404b7ffc8fe544050ffe998  foothold_s2/tests/test_ex40_kit_argv_cpu.py

@@ -1,0 +1,23 @@
+{
+  "model": "seedance_2_5",
+  "mode": "omni_reference",
+  "duration": 8,
+  "resolution": "480p",
+  "aspect_ratio": "16:9",
+  "count": 1,
+  "generate_audio": true,
+  "bitrate_mode": "standard",
+  "draft": false,
+  "folder_id": "bb3b8052-bde7-4b9b-b750-694e133479fb",
+  "medias": [
+    {
+      "role": "image",
+      "value": "f9215028-d71e-4f17-8fd8-921e7f38c2b8"
+    },
+    {
+      "role": "end_image",
+      "value": "adae6dc1-97bc-4815-8970-4b00abe9bdd3"
+    }
+  ],
+  "prompt": "O1 revision, one continuous 8-second FIRST-PERSON LOOK-AROUND ending in the O2 close floor view. Use image 1 ONLY for the industrial hall geometry, image 2 for the final nearby gravel floor view. This is NOT a forward dolly or zoom. Camera stays at the same low observer position and visibly changes its viewing direction, like cautiously looking LEFT, then RIGHT, then DOWN. Preserve the dangerous flooded hall, irregular disconnected concrete path, pipes and columns.\n\n0.00-1.20: pure BLACK, only the tiny distant red beacon blinks twice. All ambient illumination remains nearly zero for the entire shot.\n1.20-2.55: turn the camera visibly LEFT about 15 degrees. An unseen light next to the camera lens turns WITH the gaze, revealing only a small soft-edged patch of the left column base, corroded pipe, and broken slab edge above black water. Actual perspective changes: nearby column shifts across frame with the pan. Do not merely slide a light over a frozen image.\n2.55-4.25: look visibly RIGHT, smoothly across the forward route to the right side about 15 degrees. The lens-side light sweeps across discontinuous footholds and water to a jagged right-hand edge. Isolated patches emerge and disappear in darkness. This second change of gaze must be clearly readable before looking down. No full hall reveal, no ceiling light, no daylight, no automatic exposure increase.\n4.25-5.20: return toward CENTER, rediscover the broken route and tiny far red target. A brief cautious pause, then begin looking down.\n5.20-7.50: smoothly pitch DOWN from that same camera position. Nearby rubble and coarse gravel rise into the image while the hall leaves the top. The light pool follows the gaze down to the ground immediately in front of the observer. Arrive at image 2's close gravel-floor framing, spatially continuous, ready to cut to O2. No teleport, morph, dissolve, sudden zoom or move across a gap.\n7.50-8.00: slight continuing downward gaze and a very small light movement over the nearby floor, no long frozen hold.\n\nThe light is NEVER visible as a physical flashlight, hand, person, robot, limb, distant spotlight or ceiling fixture. The only broad image content visible is the surface touched by the camera-side light. No luminous beam crossing from a column or window. Surroundings remain near black even when the light moves. Rust is dull, concrete porous with subtle uneven dampness, local reflections restrained, soft photographic highlights, no HDR harshness, oversharpening or plastic gloss. Sparse fine haze, dark water and tiny irregular drips. Audio: same cavernous industrial room ambience throughout, scattered dripping water, restrained mechanical sensing hum moving with the gaze. No footsteps, speech, lyrics, music, whooshes, alarms or impact stingers. Preserve a natural room sound for integration with adjacent O2. Priority: black start, unmistakable LEFT-RIGHT look-around, then smooth DOWNWARD view of nearby floor."
+}

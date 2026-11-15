@@ -1,0 +1,35 @@
+| ID | a | b | c | status | owner |
+|---|---|---|---|---|---|
+| G01 | x | x | x | 검증 완료 | fixture |
+| G02 | x | x | x | 검증 완료 | fixture |
+| G03 | x | x | x | 검증 완료 | fixture |
+| G04 | x | x | x | 검증 완료 | fixture |
+| G05 | x | x | x | 검증 완료 | fixture |
+| G06 | x | x | x | 검증 완료 | fixture |
+| G07 | x | x | x | 검증 완료 | fixture |
+| G08 | x | x | x | 검증 완료 | fixture |
+| G09 | x | x | x | 검증 완료 | fixture |
+| G10 | x | x | x | 검증 완료 | fixture |
+| G11 | x | x | x | 예행 대기 | fixture |
+| G12 | x | x | x | 검증 완료 | fixture |
+| G13 | x | x | x | 검증 완료 | fixture |
+| G14 | x | x | x | 검증 완료 | fixture |
+| G15 | x | x | x | 검증 완료 | fixture |
+| G16 | x | x | x | 검증 완료 | fixture |
+| G17 | x | x | x | 검증 완료 | fixture |
+| G18 | x | x | x | 검증 완료 | fixture |
+| G19 | x | x | x | 검증 완료 | fixture |
+| G20 | x | x | x | 검증 완료 | fixture |
+| G21 | x | x | x | 검증 완료 | fixture |
+| G22 | x | x | x | 검증 완료 | fixture |
+| G23 | x | x | x | 검증 완료 | fixture |
+| G24 | x | x | x | 검증 완료 | fixture |
+| G25 | x | x | x | 검증 완료 | fixture |
+| G26 | x | x | x | 검증 완료 | fixture |
+| G27 | x | x | x | 검증 완료 | fixture |
+| G28 | x | x | x | 검증 완료 | fixture |
+| G29 | x | x | x | 검증 완료 | fixture |
+| G30 | x | x | x | 검증 완료 | fixture |
+| G31 | x | x | x | 검증 완료 | fixture |
+| G32 | x | x | x | 검증 완료 | fixture |
+| G33 | x | x | x | 검증 완료 | fixture |

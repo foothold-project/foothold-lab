@@ -1,0 +1,4 @@
+PASS physical_bus_and_kit_zero
+PASS torch_bus_mismatch_rejected
+PASS kit_renderer_mismatch_rejected
+PASS kit_unknown_recorded

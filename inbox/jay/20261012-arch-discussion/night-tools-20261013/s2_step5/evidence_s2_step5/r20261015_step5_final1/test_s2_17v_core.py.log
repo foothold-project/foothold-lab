@@ -1,0 +1,10 @@
+PASS timeout_parent_2_98_terminal_1_nonterminal_2_98
+PASS timeout_not_done_rejected
+Traceback (most recent call last):
+  File "C:\Users\AI-WS01\.claude\jobs\09bbf294\tmp\codexE\s2_step5\test_s2_17v_core.py", line 149, in <module>
+    test_all()
+  File "C:\Users\AI-WS01\.claude\jobs\09bbf294\tmp\codexE\s2_step5\test_s2_17v_core.py", line 66, in test_all
+    p0.validate(previous=None, previous_done=None)
+  File "C:\Users\AI-WS01\.claude\jobs\09bbf294\tmp\codexE\s2_step5\s2_packet_17v.py", line 56, in validate
+    raise AdapterFault("sensor source receipt mismatched")
+s2_env_adapter_17v.AdapterFault: sensor source receipt mismatched

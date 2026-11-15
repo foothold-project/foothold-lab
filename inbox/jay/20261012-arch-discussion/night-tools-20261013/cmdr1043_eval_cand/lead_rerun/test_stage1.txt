@@ -1,0 +1,9 @@
+sys.executable C:\Users\AI-WS01\anaconda3\envs\isaac311-moects\python.exe
+candidate.__file__ C:\Users\AI-WS01\.claude\jobs\09bbf294\tmp\codexE\cand\test_stage1.py
+candidate.sha256 403eb30824f07ccd38ebaff3261071bc9ca13b76ad18a008d5faa0e70b5498f0
+ISOLATION {'data': 'C:\\Users\\AI-WS01\\.claude\\jobs\\09bbf294\\tmp\\codexE\\cand\\data', 'reports': 'C:\\Users\\AI-WS01\\.claude\\jobs\\09bbf294\\tmp\\codexE\\cand\\reports', 'work': 'C:\\Users\\AI-WS01\\.claude\\jobs\\09bbf294\\tmp\\codexE\\cand\\work', 'attempts': 'C:\\Users\\AI-WS01\\.claude\\jobs\\09bbf294\\tmp\\codexE\\cand\\attempts', 'registry': 'C:\\Users\\AI-WS01\\.claude\\jobs\\09bbf294\\tmp\\codexE\\cand\\registry\\isaac_usd_registry_v3.json', 'convert_lock': 'C:\\Users\\AI-WS01\\.claude\\jobs\\09bbf294\\tmp\\codexE\\cand\\locks\\isaac_convert.lock', 'run_lease': 'C:\\Users\\AI-WS01\\.claude\\jobs\\09bbf294\\tmp\\codexE\\cand\\locks\\isaac_run.lock', 'slot_records': 'C:\\Users\\AI-WS01\\.claude\\jobs\\09bbf294\\tmp\\codexE\\cand\\slot_records', 'stop': 'C:\\Users\\AI-WS01\\.claude\\jobs\\09bbf294\\tmp\\codexE\\cand\\STOP', 'logs': 'C:\\Users\\AI-WS01\\.claude\\jobs\\09bbf294\\tmp\\codexE\\cand\\logs', 'compare_report': 'C:\\Users\\AI-WS01\\.claude\\jobs\\09bbf294\\tmp\\codexE\\cand\\reports\\bundle_compare.json'}
+normal PASS rc 0 problems 0
+seed_1042 PASS rc 1 problems 3
+parent_hash PASS rc 1 problems 3
+one_arm_bytes PASS rc 1 problems 1
+normal_final PASS rc 0 problems 0

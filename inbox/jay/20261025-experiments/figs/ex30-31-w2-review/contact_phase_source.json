@@ -1,0 +1,13 @@
+{
+  "source": "C:\\mai\\wt\\foothold-lab\\impl-t5\\logs\\sol25b\\gait_summary.json",
+  "sha256": "d31d7c860762cb765237ab80587ab0266e5e52686b0da9f318383f0abf12bb48",
+  "definition": {
+    "sample_hz": 200,
+    "contact_force_threshold_N": 1.0,
+    "contact": "link net force magnitude > 1 N; foot order FL,FR,RL,RR",
+    "event": "live adjacent sample contact transition; no cross-reset transitions",
+    "phase": "first FR+RL pair touchdown within consecutive FL+RR pair touchdown cycle; circular mean degrees; undefined if no cycles",
+    "foot_release": "sum(abs(actual yaw rate) * any foot off) / sum(abs(actual yaw rate)); forward case uses abs(actual vx) instead; not causal slip evidence"
+  },
+  "terrain_assignment_sha256": "7f49a1e935ea1dd741b0db47fe6da965eaa772c03f30c94f9fa976125db33506"
+}

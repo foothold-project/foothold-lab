@@ -1,0 +1,252 @@
+{
+  "geometry": [
+    {
+      "source": "/go2_description/base/visuals/mesh_0",
+      "object": "base_visual",
+      "vertices": 233784,
+      "faces": 77928
+    },
+    {
+      "source": "/go2_description/FL_hip/visuals/mesh_0",
+      "object": "FL_hip_visual",
+      "vertices": 111120,
+      "faces": 37040
+    },
+    {
+      "source": "/go2_description/FL_thigh/visuals/mesh_0",
+      "object": "FL_thigh_visual",
+      "vertices": 90402,
+      "faces": 30134
+    },
+    {
+      "source": "/go2_description/FL_calf/visuals/mesh_0",
+      "object": "FL_calf_visual",
+      "vertices": 25806,
+      "faces": 8602
+    },
+    {
+      "source": "/go2_description/FL_foot/visuals/mesh_0",
+      "object": "FL_foot_visual",
+      "vertices": 13212,
+      "faces": 4404
+    },
+    {
+      "source": "/go2_description/FR_hip/visuals/mesh_0",
+      "object": "FR_hip_visual",
+      "vertices": 111120,
+      "faces": 37040
+    },
+    {
+      "source": "/go2_description/FR_thigh/visuals/mesh_0",
+      "object": "FR_thigh_visual",
+      "vertices": 90378,
+      "faces": 30126
+    },
+    {
+      "source": "/go2_description/FR_calf/visuals/mesh_0",
+      "object": "FR_calf_visual",
+      "vertices": 25806,
+      "faces": 8602
+    },
+    {
+      "source": "/go2_description/FR_foot/visuals/mesh_0",
+      "object": "FR_foot_visual",
+      "vertices": 13212,
+      "faces": 4404
+    },
+    {
+      "source": "/go2_description/RL_hip/visuals/mesh_0",
+      "object": "RL_hip_visual",
+      "vertices": 111120,
+      "faces": 37040
+    },
+    {
+      "source": "/go2_description/RL_thigh/visuals/mesh_0",
+      "object": "RL_thigh_visual",
+      "vertices": 90402,
+      "faces": 30134
+    },
+    {
+      "source": "/go2_description/RL_calf/visuals/mesh_0",
+      "object": "RL_calf_visual",
+      "vertices": 25806,
+      "faces": 8602
+    },
+    {
+      "source": "/go2_description/RL_foot/visuals/mesh_0",
+      "object": "RL_foot_visual",
+      "vertices": 13212,
+      "faces": 4404
+    },
+    {
+      "source": "/go2_description/RR_hip/visuals/mesh_0",
+      "object": "RR_hip_visual",
+      "vertices": 111120,
+      "faces": 37040
+    },
+    {
+      "source": "/go2_description/RR_thigh/visuals/mesh_0",
+      "object": "RR_thigh_visual",
+      "vertices": 90378,
+      "faces": 30126
+    },
+    {
+      "source": "/go2_description/RR_calf/visuals/mesh_0",
+      "object": "RR_calf_visual",
+      "vertices": 25806,
+      "faces": 8602
+    },
+    {
+      "source": "/go2_description/RR_foot/visuals/mesh_0",
+      "object": "RR_foot_visual",
+      "vertices": 13212,
+      "faces": 4404
+    }
+  ],
+  "joints": [
+    {
+      "name": "FL_hip_joint",
+      "axis_parent": [
+        1.0,
+        0.0,
+        0.0
+      ],
+      "child": "FL_hip",
+      "initial_radians": 0.1
+    },
+    {
+      "name": "FR_hip_joint",
+      "axis_parent": [
+        1.0,
+        0.0,
+        0.0
+      ],
+      "child": "FR_hip",
+      "initial_radians": -0.1
+    },
+    {
+      "name": "RL_hip_joint",
+      "axis_parent": [
+        1.0,
+        0.0,
+        0.0
+      ],
+      "child": "RL_hip",
+      "initial_radians": 0.1
+    },
+    {
+      "name": "RR_hip_joint",
+      "axis_parent": [
+        1.0,
+        0.0,
+        0.0
+      ],
+      "child": "RR_hip",
+      "initial_radians": -0.1
+    },
+    {
+      "name": "FL_thigh_joint",
+      "axis_parent": [
+        0.0,
+        0.9999999403953552,
+        0.0
+      ],
+      "child": "FL_thigh",
+      "initial_radians": 0.8
+    },
+    {
+      "name": "FL_calf_joint",
+      "axis_parent": [
+        0.0,
+        0.9999999403953552,
+        0.0
+      ],
+      "child": "FL_calf",
+      "initial_radians": -1.5
+    },
+    {
+      "name": "FR_thigh_joint",
+      "axis_parent": [
+        0.0,
+        0.9999999403953552,
+        0.0
+      ],
+      "child": "FR_thigh",
+      "initial_radians": 0.8
+    },
+    {
+      "name": "FR_calf_joint",
+      "axis_parent": [
+        0.0,
+        0.9999999403953552,
+        0.0
+      ],
+      "child": "FR_calf",
+      "initial_radians": -1.5
+    },
+    {
+      "name": "RL_thigh_joint",
+      "axis_parent": [
+        0.0,
+        0.9999999403953552,
+        0.0
+      ],
+      "child": "RL_thigh",
+      "initial_radians": 1.0
+    },
+    {
+      "name": "RL_calf_joint",
+      "axis_parent": [
+        0.0,
+        0.9999999403953552,
+        0.0
+      ],
+      "child": "RL_calf",
+      "initial_radians": -1.5
+    },
+    {
+      "name": "RR_thigh_joint",
+      "axis_parent": [
+        0.0,
+        0.9999999403953552,
+        0.0
+      ],
+      "child": "RR_thigh",
+      "initial_radians": 1.0
+    },
+    {
+      "name": "RR_calf_joint",
+      "axis_parent": [
+        0.0,
+        0.9999999403953552,
+        0.0
+      ],
+      "child": "RR_calf",
+      "initial_radians": -1.5
+    }
+  ],
+  "exploded_links": [
+    "FL_hip",
+    "FL_thigh",
+    "FL_calf",
+    "FR_hip",
+    "FR_thigh",
+    "FR_calf",
+    "Head_upper",
+    "Head_lower",
+    "RL_hip",
+    "RL_thigh",
+    "RL_calf",
+    "RR_hip",
+    "RR_thigh",
+    "RR_calf"
+  ],
+  "materials": "USD diffuse constants preserved; roughness .48 studio adaptation",
+  "frames": {
+    "front": 1,
+    "three_quarter": 96,
+    "exploded": 156,
+    "assembled": 216,
+    "joints": 240
+  }
+}

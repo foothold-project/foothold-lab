@@ -1,0 +1,77 @@
+{
+ "started": "2026-10-20T13:56:48",
+ "args": {
+  "task": "G1",
+  "num_envs": 3072,
+  "iterations": 3,
+  "microbatch": 256,
+  "replay_impl": "a3",
+  "autocast": null,
+  "kl_fp32": false,
+  "tasks_root": "C:/Users/AI-WS01/orca/workspaces/foothold-lab/sonnet-code",
+  "out": "C:/Users/AI-WS01/AppData/Local/Temp/claude/C--Users-AI-WS01-orca-workspaces-foothold-lab-rl-v2-command-restore/0d6a4467-5aaa-4436-8e6b-698f433bf226/scratchpad/s2m_G1_3072_fp32_mb256",
+  "enable_cameras": false,
+  "xr": false,
+  "device": "cuda:0",
+  "cpu": false,
+  "verbose": false,
+  "info": false,
+  "rendering_mode": null,
+  "kit_args": "",
+  "anim_recording_enabled": false,
+  "anim_recording_start_time": 0,
+  "anim_recording_stop_time": 10,
+  "headless": true,
+  "hide_ui": true,
+  "create_new_stage": false,
+  "physics_gpu": 0,
+  "active_gpu": 0
+ },
+ "pid": 88004,
+ "terrain": {
+  "num_rows": 10,
+  "num_cols": 50,
+  "size": [
+   8.0,
+   8.0
+  ]
+ },
+ "module_files": {
+  "foothold_s2.runners.start_runner": "C:\\mai\\wt\\foothold-lab\\rl\\foothold_s2\\runners\\start_runner.py",
+  "foothold_s2.models.start_perception": "C:\\mai\\wt\\foothold-lab\\rl\\foothold_s2\\models\\start_perception.py",
+  "foothold_s2.models.replay_fast": null,
+  "foothold_s2.sensors.start_obs": "C:\\mai\\wt\\foothold-lab\\rl\\foothold_s2\\sensors\\start_obs.py",
+  "foothold_s2.tasks.s2_env_cfg": "C:\\Users/AI-WS01/orca/workspaces/foothold-lab/sonnet-code\\foothold_s2\\tasks\\s2_env_cfg.py"
+ },
+ "sensors_GiB": 1.6224231719970703,
+ "perception_cfg": {
+  "map_input": "reconstruction",
+  "microbatch_envs": 256,
+  "replay_impl": "a3",
+  "replay_autocast": null,
+  "kl_fp32": false,
+  "measure_phases": true
+ },
+ "traceback": "Traceback (most recent call last):\n  File \"C:\\mai\\wt\\foothold-lab\\rl\\foothold_s2\\scripts\\start_measure_s2.py\", line 95, in <module>\n    out = main()\n          ^^^^^^\n  File \"C:\\mai\\wt\\foothold-lab\\rl\\foothold_s2\\scripts\\start_measure_s2.py\", line 82, in main\n    runner.learn(args.iterations, init_at_random_ep_len=True)\n  File \"C:\\mai\\wt\\foothold-lab\\rl\\foothold_s2\\runners\\start_runner.py\", line 249, in learn\n    ploss = self.update_perception()\n            ^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\mai\\wt\\foothold-lab\\rl\\foothold_s2\\runners\\start_runner.py\", line 284, in update_perception\n    res = self.perception.sequence_loss(self.replay.gather(c), impl=pc[\"replay_impl\"])\n          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\mai\\wt\\foothold-lab\\rl\\foothold_s2\\models\\start_perception.py\", line 346, in sequence_loss\n    return sequence_loss_fast(self, batch, eps, impl)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\mai\\wt\\foothold-lab\\rl\\foothold_s2\\models\\replay_fast.py\", line 163, in sequence_loss_fast\n    res = (_losses_flat if impl in (\"a1\", \"a3\") else _losses_stepwise)(p, b, eps, H_prop, H_terr)\n          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\mai\\wt\\foothold-lab\\rl\\foothold_s2\\models\\replay_fast.py\", line 112, in _losses_flat\n    out = p.ie.estimate(H_prop.flatten(0, 1), hmap)\n          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\mai\\wt\\foothold-lab\\rl\\foothold_s2\\models\\start_perception.py\", line 163, in estimate\n    out = self.attn(seq)[:, 0]  # prop 토큰 자리의 출력을 쓴다: 가정(rl)\n          ^^^^^^^^^^^^^^\n  File \"C:\\Users\\AI-WS01\\anaconda3\\envs\\isaac311\\Lib\\site-packages\\torch\\nn\\modules\\module.py\", line 1751, in _wrapped_call_impl\n    return self._call_impl(*args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\AI-WS01\\anaconda3\\envs\\isaac311\\Lib\\site-packages\\torch\\nn\\modules\\module.py\", line 1762, in _call_impl\n    return forward_call(*args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\AI-WS01\\anaconda3\\envs\\isaac311\\Lib\\site-packages\\torch\\nn\\modules\\transformer.py\", line 514, in forward\n    output = mod(\n             ^^^^\n  File \"C:\\Users\\AI-WS01\\anaconda3\\envs\\isaac311\\Lib\\site-packages\\torch\\nn\\modules\\module.py\", line 1751, in _wrapped_call_impl\n    return self._call_impl(*args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\AI-WS01\\anaconda3\\envs\\isaac311\\Lib\\site-packages\\torch\\nn\\modules\\module.py\", line 1762, in _call_impl\n    return forward_call(*args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\AI-WS01\\anaconda3\\envs\\isaac311\\Lib\\site-packages\\torch\\nn\\modules\\transformer.py\", line 916, in forward\n    x = self.norm2(x + self._ff_block(x))\n                       ^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\AI-WS01\\anaconda3\\envs\\isaac311\\Lib\\site-packages\\torch\\nn\\modules\\transformer.py\", line 941, in _ff_block\n    x = self.linear2(self.dropout(self.activation(self.linear1(x))))\n                                                  ^^^^^^^^^^^^^^^\n  File \"C:\\Users\\AI-WS01\\anaconda3\\envs\\isaac311\\Lib\\site-packages\\torch\\nn\\modules\\module.py\", line 1751, in _wrapped_call_impl\n    return self._call_impl(*args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\AI-WS01\\anaconda3\\envs\\isaac311\\Lib\\site-packages\\torch\\nn\\modules\\module.py\", line 1762, in _call_impl\n    return forward_call(*args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\AI-WS01\\anaconda3\\envs\\isaac311\\Lib\\site-packages\\torch\\nn\\modules\\linear.py\", line 125, in forward\n    return F.linear(input, self.weight, self.bias)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\ntorch.OutOfMemoryError: CUDA out of memory. Tried to allocate 774.00 MiB. GPU 0 has a total capacity of 15.92 GiB of which 0 bytes is free. Of the allocated memory 10.30 GiB is allocated by PyTorch, and 548.11 MiB is reserved by PyTorch but unallocated. If reserved but unallocated memory is large try setting PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True to avoid fragmentation.  See documentation for Memory Management  (https://pytorch.org/docs/stable/notes/cuda.html#environment-variables)\n",
+ "iter_log": [],
+ "memory_log": [
+  {
+   "it": 0,
+   "phase": "2_rollout",
+   "cum_peak": 4542737920,
+   "phase_peak": 4542737920,
+   "allocated": 2596388864
+  },
+  {
+   "it": 0,
+   "phase": "3_ppo_update",
+   "cum_peak": 3035295232,
+   "phase_peak": 3035295232,
+   "allocated": 2614801408
+  }
+ ],
+ "max_allocated_at_fail_GiB": 10.304575443267822,
+ "checks": {
+  "traceback": true
+ }
+}

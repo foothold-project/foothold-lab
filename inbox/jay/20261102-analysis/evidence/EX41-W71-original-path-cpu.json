@@ -1,0 +1,56 @@
+{
+  "format": "analyst-cpu-review/1",
+  "created_at": "2026-11-02T16:23:38.360059+09:00",
+  "parent_commit": "35fbdce5cf6c76ae07d44775e3971b750196907f",
+  "scope": "A3 original score_watch path, L2 two archives, L3 filename contract",
+  "python": "C:/Users/AI-WS01/anaconda3/envs/isaac311/python.exe",
+  "cuda_visible_devices": "",
+  "files": [
+    "foothold_s2/tests/test_ex40_w71_cpu.py",
+    "foothold_s2/tests/test_ex40_stage_publish_cpu.py",
+    "foothold_s2/tests/test_ex40_b11_all_fixes_cpu.py",
+    "foothold_s2/tests/test_ex41_fixed_cpu.py",
+    "foothold_s2/tests/test_ex41_runtime_cpu.py",
+    "foothold_s2/tests/test_ex41_review_regressions.py",
+    "foothold_s2/tests/test_ex41_scoring_cpu.py"
+  ],
+  "pytest_summary": "174 passed in 190.77s",
+  "junit": {
+    "name": "pytest",
+    "errors": "0",
+    "failures": "0",
+    "skipped": "0",
+    "tests": "174",
+    "time": "190.766",
+    "timestamp": "2026-11-02T16:19:08.474425+09:00",
+    "hostname": "AI-WS01"
+  },
+  "artifacts": [
+    {
+      "path": "D:\\_codex_cpu_tests\\analyst-ex41-w71-3bfb369ec287489db1699bcb22b9c583\\result.xml",
+      "sha256": "04902f72ce004382621f532109acb03471f60b06b121960aafcf15288f9144a7"
+    },
+    {
+      "path": "D:\\_codex_cpu_tests\\analyst-ex41-w71-3bfb369ec287489db1699bcb22b9c583\\pytest.log",
+      "sha256": "20d2871143f6b62108e21fc1de8aeeedb19c4b97362fb91d5ecb0fbc56f4c465"
+    }
+  ],
+  "before_fix": {
+    "failed": 5,
+    "passed": 1,
+    "seconds": 12.01
+  },
+  "interrupted_attempt": {
+    "failed": 1,
+    "passed": 143,
+    "errors": 30,
+    "seconds": 162.93,
+    "reason": "OSError Errno 28: no space left on C:; not a full pass"
+  },
+  "limitations": [
+    "CPU children replace Kit program only; GPU/Kit not run",
+    "Historical EX40 launch handle state unconfirmed",
+    "G17 EX41 integration is runner-owned and not verified here",
+    "Existing excluded dr_v8/launch_smoke/v7_continue failures not retested"
+  ]
+}

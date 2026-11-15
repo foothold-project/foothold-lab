@@ -1,0 +1,61 @@
+{
+  "asset_sha256": "ba171c972b987d8c8fb7157ccad2ba9c0c1fed105755d2d8af46bef96cc11c6d",
+  "attempt": "one",
+  "boundary_count": 4154,
+  "boundary_evidence_path": "C:\\Users\\AI-WS01\\s2_lab\\night-tools-20261013\\s2_runs\\live-20261016-141535\\out\\boundary_evidence.bin",
+  "boundary_evidence_sha256": "14b74e445d9351b8004ba2abc6b6b2850264abf157fa0b1e3891a205b06b7590",
+  "boundary_exclusion_sha256": "14b74e445d9351b8004ba2abc6b6b2850264abf157fa0b1e3891a205b06b7590",
+  "capture_sha256": "5f170abc6b47a54f7a4497f623358f0819581c0b1797c477931c508e2df881a9",
+  "cases": [
+    "flat_0",
+    "flat_90",
+    "step_0",
+    "step_90",
+    "gap_0",
+    "gap_90",
+    "stones_0",
+    "stones_90"
+  ],
+  "code_sha256": "065b832c46523977c80430e0abc5bd63a83da30bb86df3c40e6f741ffc549bfc",
+  "collision_mesh_sha256": "9c6127d5512c509b2900d560dc8d42f9869d7b68c3fc4fbce635e09683924922",
+  "control_steps": 256,
+  "device_binding": {
+    "kit_observation_status": "verified",
+    "kit_observed": {
+      "/physics/cudaDevice": 0,
+      "/renderer/activeGpu": 0
+    },
+    "kit_requested_device": 0,
+    "torch_logical_device": 0,
+    "torch_uuid": "c08e23b0-62b6-a4f2-8eb2-11151c6a8c7b",
+    "torch_uuid_normalized": "c08e23b062b6a4f28eb211151c6a8c7b"
+  },
+  "device_uuid": "GPU-c08e23b0-62b6-a4f2-8eb2-11151c6a8c7b",
+  "driver_version": "591.86",
+  "env_config_sha256": "9a9c7a8b0fc0e14f58ac912ff818e6d8527e1d2109368b6039ca247493023a67",
+  "final_cfg_sha256": "395e93c6112b5a26649b7e0eec406c3b497e847cdfe32f39ed8365e1eb2140e0",
+  "fixed_pose_verified": false,
+  "isaac_version": "isaaclab=0.54.2;isaacsim=5.1.0.0",
+  "kit_version": "107.3.3+production.229672.69cbf6ad.gl",
+  "mesh_collision_verified": false,
+  "mesh_evidence_path": "C:\\Users\\AI-WS01\\s2_lab\\night-tools-20261013\\s2_runs\\live-20261016-141535\\out\\mesh_evidence.json",
+  "mesh_evidence_sha256": "f635315133ac68c679a3ad63cfa95ab36013f6a0a78f71f07a1fba77f8343932",
+  "mesh_faces_sha256": "9751771d6c5f064f3f190c07242e999518b2682075021782810e196ca8f5222e",
+  "mesh_prim_path": "/World/ground",
+  "mesh_transform_sha256": "eba91ea447c2a18c1510229bb460a99bcd030ed6bde4091c466992e0dbafb3d1",
+  "mesh_vertices_sha256": "cb1c73d973f81d760bd23deac706ff5453970eea01127649e2817f80d6e24325",
+  "optimizer_steps": 0,
+  "parent_sha256": "c8951b797dbe41570009e9de35589d56b7ea1d10092728af17761d46a2df47e8",
+  "purpose": "stage0_information_only",
+  "recorded_edge_differences_first20": [],
+  "recorded_edge_mismatch_before_recompute": 0,
+  "root_sensor_offset_b": [
+    0.0,
+    0.0,
+    0.0
+  ],
+  "scene_answer_sha256": "b3a9c5be54e4e16856249c2426d39640f450b18778e24e979fc1a1f1d18a4296",
+  "started_epoch": 1792127747.3283355,
+  "terrain_assignment_verified": true,
+  "torch_version": "2.7.0+cu128"
+}

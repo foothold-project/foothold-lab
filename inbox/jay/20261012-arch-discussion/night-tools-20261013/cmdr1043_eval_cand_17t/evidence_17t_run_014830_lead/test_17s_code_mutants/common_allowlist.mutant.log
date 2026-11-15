@@ -1,0 +1,17 @@
+PASS byte-only JSON reason
+PASS conservative strict hold
+PASS semantic mismatch distinct
+PASS repeat same report fields
+PASS failed report same fields with null evidence
+PASS held distinct from failed
+PASS peak scope labeled
+PASS write_root default isolated
+FAIL _eval slot without allowlist rejected
+Traceback (most recent call last):
+  File "C:\Users\AI-WS01\.claude\jobs\09bbf294\tmp\codexE\cand\test_17s_diagnostic.py", line 151, in <module>
+    main()
+  File "C:\Users\AI-WS01\.claude\jobs\09bbf294\tmp\codexE\cand\test_17s_diagnostic.py", line 102, in main
+    check("_eval slot without allowlist rejected", False)
+  File "C:\Users\AI-WS01\.claude\jobs\09bbf294\tmp\codexE\cand\test_17s_diagnostic.py", line 28, in check
+    raise AssertionError(label)
+AssertionError: _eval slot without allowlist rejected

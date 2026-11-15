@@ -1,0 +1,10 @@
+{
+ "artifact": "https://claude.ai/artifact/TKJKCUbk2TKwWB16DvY5h5",
+ "version": "1791880499-7d76",
+ "published": "2026-10-13 (lead)",
+ "served_index_sha256": "37de18de0cdf8b2ec99d515361ea855e1099ecb498b701cc8cf33ebd5897c562",
+ "files": 289,
+ "videos_audit": "audit_unseen144_site.json (144 files · every frame · 0 bad)",
+ "render": "render_local.json · render_served.json (1920/1366/390 · light/dark · scrollWidth <= innerWidth · player rate 0.25 applied)",
+ "why": "팀장 10/13: 미경험 지형 영상 페이지가 규칙 (속도 조절 재생기 · 기준을 위에) 을 안 따름 → 2판"
+}

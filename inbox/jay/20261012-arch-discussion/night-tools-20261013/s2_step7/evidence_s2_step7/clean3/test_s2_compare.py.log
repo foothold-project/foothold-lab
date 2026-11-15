@@ -1,0 +1,12 @@
+PASS frozen_hash_in_report
+PASS known_wilson_zero_two
+PASS assigned_primary_and_approach_secondary
+PASS nonoverlap_and_cumulative
+PASS paired_delta_ci_known_answer
+PASS insufficient_attn_indeterminate
+PASS first_chain_mlp_only
+PASS assigned_primary_rate
+PASS assigned_denominator_exposes_avoidance
+PASS block_stratum_conflict_rejected
+PASS duplicate_event_rejected
+PASS post_result_threshold_change_rejected

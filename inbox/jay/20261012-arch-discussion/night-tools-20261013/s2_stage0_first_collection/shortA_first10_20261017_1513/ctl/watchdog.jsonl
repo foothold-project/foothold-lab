@@ -1,0 +1,2 @@
+{"create_time": 1792217612.8726945, "epoch": 1792217613.0127316, "event": "watchdog_started", "hard_deadline_epoch": 1792239288.549398, "pid": 165272, "stale_after_s": 20.0}
+{"epoch": 1792217880.0211964, "event": "supervisor_ended_by_itself"}

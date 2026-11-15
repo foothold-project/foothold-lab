@@ -1,0 +1,15 @@
+PASS launch_parity_17
+PASS child_env_exact
+PASS manifest_seal_known_answer
+PASS approved_manifest
+PASS reject_missing_approval
+PASS reject_eula_unaccepted
+PASS reject_wrong_env_count
+PASS reject_wrong_terrain
+PASS reject_wrong_arm
+PASS reject_wrong_device
+PASS reject_wrong_argv
+PASS reject_wrong_code
+PASS fake_prelaunch_GO
+PASS fake_run_receipt
+PASS single_claim_reuse_rejected

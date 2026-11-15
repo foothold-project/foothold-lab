@@ -1,0 +1,23 @@
+# test_unseen_v2.py · 2026-10-13 10:10 · unseen_driver.py (v2) sha256 cafaa9187941726f
+PASS 1 all 100 real runs validate got [''] want ['']
+PASS 1b 100 tags got 100 want 100
+PASS 2a copy validates got '' want ''
+PASS 2b no completion line got 'log has no completion line for this tag and N' want 'log has no completion line for this tag and N'
+PASS 2c traceback got 'Python Traceback in log' want 'Python Traceback in log'
+PASS 2d wrong arg got 'arg obs_noise=True want False' want 'arg obs_noise=True want False'
+PASS 2e other model's checkpoint got True want True
+PASS 2f 99 episodes got 'episodes.csv ids / family / cell' want 'episodes.csv ids / family / cell'
+PASS 2g labelled full record file missing got 'full record file missing gap_fwd05_ep000.csv' want 'full record file missing gap_fwd05_ep000.csv'
+PASS 2g2 summary survival disagrees with episodes.csv got 'full record episode 0 does not match episodes.csv' want 'full record episode 0 does not match episodes.csv'
+PASS 2h guard stopped got True want True
+PASS 2i stamped copy reusable got True want True
+PASS 2j changed output not reusable got False want False
+PASS 3a replay / HUD / web frames == source rows got [True, True, True] want [True, True, True]
+PASS 3b truncated copy fails got False want False
+PASS 3c missing file -> -1 got -1 want -1
+PASS 4a all rows -> no failure got [] want []
+PASS 4b one row missing -> failure got ['post'] want ['post']
+PASS 4c exit 1 -> failure got ['unseen_post.py exit 1:'] want ['unseen_post.py exit 1:']
+PASS 5a expected / audited / missing got (3, 2, 1, []) want (3, 2, 1, [])
+PASS 5b missing file is a failure got ['audit'] want ['audit']
+FAILS []

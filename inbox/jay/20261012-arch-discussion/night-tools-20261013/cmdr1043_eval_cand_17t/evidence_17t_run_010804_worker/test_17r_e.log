@@ -1,0 +1,33 @@
+PASS approved CPU fixture gate
+PASS both branch completion
+01:08:11 pins 23 files · q_eval_cmdr 24aeaf6358ef7909 · attempt cpu-normal-e
+01:08:11 GPU 0 is ours
+PASS start pins and parent ready
+PASS actual OS log lock
+01:08:14 RUN cq_test_1bf704d3_g0t010812p155176_smoke try 1 EXIT 0 1s · slot {'state': 'fake', 'held_s': 0.01, 'rc': 0} · usd ['c:\\cpu\\cpu-normal-e-cq_test_1bf704d3_g0t010812p155176_smoke-try1\\isaaclab\\usd_20261014_120000_1234']
+01:08:16 RUN cq_test_1bf704d3_g0t010812p155176_ka_orig try 1 EXIT 0 1s · slot {'state': 'fake', 'held_s': 0.01, 'rc': 0} · usd ['c:\\cpu\\cpu-normal-e-cq_test_1bf704d3_g0t010812p155176_ka_orig-try1\\isaaclab\\usd_20261014_120000_1234']
+01:08:18 RUN cq_test_1bf704d3_g0t010812p155176_ka_copy try 1 EXIT 0 1s · slot {'state': 'fake', 'held_s': 0.01, 'rc': 0} · usd ['c:\\cpu\\cpu-normal-e-cq_test_1bf704d3_g0t010812p155176_ka_copy-try1\\isaaclab\\usd_20261014_120000_1234']
+01:08:20 RUN cq_test_1bf704d3_g0t010812p155176_ka_copy_default_buffers try 1 EXIT 0 1s · slot {'state': 'fake', 'held_s': 0.01, 'rc': 0} · usd ['c:\\cpu\\cpu-normal-e-cq_test_1bf704d3_g0t010812p155176_ka_copy_default_buffers-try1\\isaaclab\\usd_20261014_120000_1234']
+01:08:22 UNOWNED UNKNOWN child identity: hold lease and hand off to operator
+01:08:22 RUN cq_test_1bf704d3_g0t010812p155176_wrong_yaml_other_run try 1 EXIT 1 1s · slot {'state': 'fake', 'held_s': 0.01, 'rc': 1} · usd ['c:\\cpu\\cpu-normal-e-cq_test_1bf704d3_g0t010812p155176_wrong_yaml_other_run-try1\\isaaclab\\usd_20261014_120000_1234']
+01:08:24 RUN cq_test_1bf704d3_g0t010812p155176_wrong_yaml_sibling try 1 EXIT 1 1s · slot {'state': 'fake', 'held_s': 0.01, 'rc': 1} · usd ['c:\\cpu\\cpu-normal-e-cq_test_1bf704d3_g0t010812p155176_wrong_yaml_sibling-try1\\isaaclab\\usd_20261014_120000_1234']
+01:08:26 RUN cq_test_1bf704d3_g0t010812p155176_branch_off24000 try 1 EXIT 0 1s · slot {'state': 'fake', 'held_s': 0.01, 'rc': 0} · usd ['c:\\cpu\\cpu-normal-e-cq_test_1bf704d3_g0t010812p155176_branch_off24000-try1\\isaaclab\\usd_20261014_120000_1234']
+01:08:28 RUN cq_test_1bf704d3_g0t010812p155176_branch_on24000 try 1 EXIT 0 1s · slot {'state': 'fake', 'held_s': 0.01, 'rc': 0} · usd ['c:\\cpu\\cpu-normal-e-cq_test_1bf704d3_g0t010812p155176_branch_on24000-try1\\isaaclab\\usd_20261014_120000_1234']
+PASS start tests connected
+PASS slot registry written
+PASS frozen CLI reached
+NORMAL_CONNECTED_PASS 8 slot tries
+PASS true on-only training refused
+01:08:29 FROZEN INPUT before approval limit: ['approval contract mismatch']
+PASS approval limit gate blocked
+01:08:29 FROZEN INPUT before candidate code: ['candidate hash frozen_exec_s1043.py', 'approval contract mismatch']
+PASS candidate code gate blocked
+01:08:34 RUN cq_test_deadbeef_g0t123456p123_ka_orig2 try 1 EXIT 0 4s · slot {'state': 'fake', 'held_s': 0.01, 'rc': 0} · usd ['c:\\cpu\\cpu-normal-e-cq_test_deadbeef_g0t123456p123_ka_orig2-try1\\isaaclab\\usd_20261014_120000_1234']
+PASS connected orphan descendant lease
+PASS fake slot actually waiting
+PASS shared conversion OS lock
+PASS run lease OS lock during slot
+PASS registry names active attempt
+01:08:36 RUN cq_test_deadbeef_g0t123456p123_ka_copy try 1 EXIT 92 1s · slot {'state': 'fake', 'held_s': 0.01, 'rc': 92} · usd ['c:\\cpu\\cpu-normal-e-cq_test_deadbeef_g0t123456p123_ka_copy-try1\\isaaclab\\usd_20261014_120000_1234']
+PASS slot wait input mutation caught
+MUTANT_CAUGHT slot_wait_input

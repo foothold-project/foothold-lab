@@ -1,0 +1,5 @@
+# test_post_v6.py 변이 시험 · 2026-10-13 11:25 · 사본 (_mut_post_v6.py) 에서만 바꿔 돌림
+Q1 부분 MAE 결측을 남은 판으로 판정     -> C2 C9 C10 G6 FAIL
+Q2 MAE 10 % 선을 부동소수 그대로 비교   -> C11 FAIL
+Q3 stamp 없는 실행 수용                 -> D no stamp FAIL
+Q4 stamp checkpoint 대조 안 함          -> D checkpoint differs FAIL

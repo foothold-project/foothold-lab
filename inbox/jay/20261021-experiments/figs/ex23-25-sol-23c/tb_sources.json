@@ -1,0 +1,54 @@
+{
+  "sources": {
+    "EX11": {
+      "path": "C:\\Users\\AI-WS01\\orca\\workspaces\\foothold-lab\\sonnet-code\\logs\\rsl_rl\\foothold_s2_x11\\2026-10-22_01-33-36_ex11-est-zero\\events.out.tfevents.1792600433.AI-WS01.84612.0",
+      "sha256": "142897d7a37ed8d16f6037bafb79e53c99967ae13905adc88e7904d97a51fdca",
+      "num_envs": 3072,
+      "steps_per_env": 24,
+      "transitions_per_update": 73728
+    },
+    "EX23": {
+      "path": "C:\\Users\\AI-WS01\\orca\\workspaces\\foothold-lab\\sonnet-code\\logs\\rsl_rl\\foothold_s2_x23\\2026-10-22_21-52-26_ex23-g1\\events.out.tfevents.1792673564.AI-WS01.29056.0",
+      "sha256": "9e052900e36e17fd0d118c5484ce4632e18f183f837cb19d6f841d9bf93e47d9",
+      "num_envs": 3072,
+      "steps_per_env": 24,
+      "transitions_per_update": 73728
+    },
+    "EX25": {
+      "path": "C:\\Users\\AI-WS01\\orca\\workspaces\\foothold-lab\\sonnet-code\\logs\\rsl_rl\\foothold_s2_x23\\2026-10-22_23-00-45_ex25-g0\\events.out.tfevents.1792677663.AI-WS01.46760.0",
+      "sha256": "521bc26ca31673fe92123e7b2447d801008cc475baae8faa6621d720f53c4f41",
+      "num_envs": 3072,
+      "steps_per_env": 24,
+      "transitions_per_update": 73728
+    },
+    "811": {
+      "path": "C:\\isaac\\IsaacLab\\logs\\rsl_rl\\unitree_go2_rough\\2026-08-11_20-32-58\\events.out.tfevents.1786447995.AI-WS01.71864.0",
+      "sha256": "0453f60798f695627263aff812a65d17e52d6407c098eaa2234dc9b8c0c0ee19",
+      "num_envs": 4096,
+      "steps_per_env": 24,
+      "transitions_per_update": 98304
+    }
+  },
+  "missing": [
+    [
+      "811",
+      "stall fraction",
+      "Loss/reward_split/frac_stalled"
+    ],
+    [
+      "811",
+      "perception KL",
+      "Loss/perception/kl"
+    ],
+    [
+      "811",
+      "foot below ground",
+      "Episode_Termination/foot_below_ground"
+    ],
+    [
+      "811",
+      "PPO KL probe",
+      "Loss/kl_probe/ppo_mean"
+    ]
+  ]
+}

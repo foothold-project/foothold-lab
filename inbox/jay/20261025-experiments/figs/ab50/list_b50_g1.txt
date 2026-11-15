@@ -1,0 +1,3 @@
+b50_m1510|C:/mai/wt/foothold-lab/impl-stagger/logs/rsl_rl/foothold_s2_ex31r_stagger/2026-10-25_19-15-52_ex31r-b50//model_1510.pt
+b50_m1530|C:/mai/wt/foothold-lab/impl-stagger/logs/rsl_rl/foothold_s2_ex31r_stagger/2026-10-25_19-15-52_ex31r-b50//model_1530.pt
+b50_m1550|C:/mai/wt/foothold-lab/impl-stagger/logs/rsl_rl/foothold_s2_ex31r_stagger/2026-10-25_19-15-52_ex31r-b50//model_1550.pt

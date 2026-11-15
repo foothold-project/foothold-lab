@@ -1,0 +1,4688 @@
+{
+  "blockers": [],
+  "family_counts_expected": {
+    "A": 13,
+    "B": 12,
+    "C": 7,
+    "D": 3,
+    "E": 4,
+    "continuous": 7
+  },
+  "family_counts_observed": {
+    "A": 13,
+    "B": 12,
+    "C": 7,
+    "D": 3,
+    "E": 4,
+    "continuous": 7
+  },
+  "format": "foothold-ex42-terrain-manifest/1",
+  "kinds": [
+    {
+      "dimension_crosscheck": {
+        "note": "Exact parameters/source hashes retained; nominal C values precede grid rounding.",
+        "state": "nominal_declaration"
+      },
+      "dimension_scope": "owner-declared nominal dimensions; exact code parameters recorded separately",
+      "evaluation_axis_directions": {
+        "border_width_m": "same",
+        "platform_width_m": "same",
+        "step_height_l9_m": "same",
+        "step_width_m": "same"
+      },
+      "evaluation_dimensions_m": {
+        "border_width_m": 1.0,
+        "platform_width_m": 3.0,
+        "step_height_l9_m": 0.23,
+        "step_width_m": 0.3
+      },
+      "family": "continuous",
+      "generator_parameters": {
+        "cfg": {
+          "border_width": 1.0,
+          "holes": false,
+          "platform_width": 3.0,
+          "step_height_range": [
+            0.05,
+            0.23
+          ],
+          "step_width": 0.3
+        }
+      },
+      "geometry_family": "A",
+      "geometry_selection": {
+        "bounds_m": [
+          [
+            -40.0,
+            -200.0,
+            -0.22429488599300385
+          ],
+          [
+            40.0,
+            -160.0,
+            1.5700641870498657
+          ]
+        ],
+        "columns": [
+          0,
+          1,
+          2,
+          3,
+          4
+        ],
+        "face_count": 17350,
+        "geometry_sha256": "08e32e5c015652f0e3b15745c1a0a60ce6cf95fc10942973fd4ec57cf1de10b9",
+        "hash_encoding": "sorted source vertex indices; little-endian float32 vertices + remapped int32 faces",
+        "rows": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9
+        ],
+        "scope": "saved mesh faces with centroid in kind columns; generator outer border excluded",
+        "vertex_count": 11600
+      },
+      "geometry_sha256": "08e32e5c015652f0e3b15745c1a0a60ce6cf95fc10942973fd4ec57cf1de10b9",
+      "kind": "pyramid_stairs",
+      "original_dimensions_m": {
+        "border_width_m": 1.0,
+        "platform_width_m": 3.0,
+        "step_height_l9_m": 0.23,
+        "step_width_m": 0.3
+      },
+      "paper_reference": "Isaac Lab rough terrain cfg (15-TERRAIN v1.4 §3) · CG v0.16 E0 치수 행 (CG:209 · rough_go2_cfg.py:20~36) · 부모 EX-41 과 같은 preset (E0 diff 0 · CG:583)",
+      "physical_flag": false,
+      "preset_id": "rough_go2_cfg",
+      "training_dimensions_m": {
+        "border_width_m": 1.0,
+        "platform_width_m": 3.0,
+        "step_height_l9_m": 0.23,
+        "step_width_m": 0.3
+      }
+    },
+    {
+      "dimension_crosscheck": {
+        "note": "Exact parameters/source hashes retained; nominal C values precede grid rounding.",
+        "state": "nominal_declaration"
+      },
+      "dimension_scope": "owner-declared nominal dimensions; exact code parameters recorded separately",
+      "evaluation_axis_directions": {
+        "border_width_m": "same",
+        "platform_width_m": "same",
+        "step_height_l9_m": "same",
+        "step_width_m": "same"
+      },
+      "evaluation_dimensions_m": {
+        "border_width_m": 1.0,
+        "platform_width_m": 3.0,
+        "step_height_l9_m": 0.23,
+        "step_width_m": 0.3
+      },
+      "family": "continuous",
+      "generator_parameters": {
+        "cfg": {
+          "border_width": 1.0,
+          "holes": false,
+          "platform_width": 3.0,
+          "step_height_range": [
+            0.05,
+            0.23
+          ],
+          "step_width": 0.3
+        }
+      },
+      "geometry_family": "A",
+      "geometry_selection": {
+        "bounds_m": [
+          [
+            -40.0,
+            -160.0,
+            -1.8345133066177368
+          ],
+          [
+            40.0,
+            -120.0,
+            0.0
+          ]
+        ],
+        "columns": [
+          5,
+          6,
+          7,
+          8,
+          9
+        ],
+        "face_count": 17370,
+        "geometry_sha256": "d2f944b254295b2a2745549b8d2d5d67565128dff925a499bf4a2f054852d657",
+        "hash_encoding": "sorted source vertex indices; little-endian float32 vertices + remapped int32 faces",
+        "rows": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9
+        ],
+        "scope": "saved mesh faces with centroid in kind columns; generator outer border excluded",
+        "vertex_count": 11640
+      },
+      "geometry_sha256": "d2f944b254295b2a2745549b8d2d5d67565128dff925a499bf4a2f054852d657",
+      "kind": "pyramid_stairs_inv",
+      "original_dimensions_m": {
+        "border_width_m": 1.0,
+        "platform_width_m": 3.0,
+        "step_height_l9_m": 0.23,
+        "step_width_m": 0.3
+      },
+      "paper_reference": "Isaac Lab rough terrain cfg (15-TERRAIN v1.4 §3) · CG v0.16 E0 치수 행 (CG:209 · rough_go2_cfg.py:20~36) · 부모 EX-41 과 같은 preset (E0 diff 0 · CG:583)",
+      "physical_flag": false,
+      "preset_id": "rough_go2_cfg",
+      "training_dimensions_m": {
+        "border_width_m": 1.0,
+        "platform_width_m": 3.0,
+        "step_height_l9_m": 0.23,
+        "step_width_m": 0.3
+      }
+    },
+    {
+      "dimension_crosscheck": {
+        "note": "Exact parameters/source hashes retained; nominal C values precede grid rounding.",
+        "state": "nominal_declaration"
+      },
+      "dimension_scope": "owner-declared nominal dimensions; exact code parameters recorded separately",
+      "evaluation_axis_directions": {
+        "grid_height_l9_m": "same",
+        "grid_width_m": "same",
+        "platform_width_m": "same"
+      },
+      "evaluation_dimensions_m": {
+        "grid_height_l9_m": 0.1,
+        "grid_width_m": 0.45,
+        "platform_width_m": 2.0
+      },
+      "family": "continuous",
+      "generator_parameters": {
+        "cfg": {
+          "grid_height_range": [
+            0.025,
+            0.1
+          ],
+          "grid_width": 0.45,
+          "platform_width": 2.0
+        }
+      },
+      "geometry_family": "A",
+      "geometry_selection": {
+        "bounds_m": [
+          [
+            -40.0,
+            -120.0,
+            -1.0
+          ],
+          [
+            40.0,
+            -88.0,
+            0.09926951676607132
+          ]
+        ],
+        "columns": [
+          10,
+          11,
+          12,
+          13
+        ],
+        "face_count": 141096,
+        "geometry_sha256": "b4807f8c3bd15f1b8758d571005f823dc1b75747a6e39651c0271e2a2fe067c9",
+        "hash_encoding": "sorted source vertex indices; little-endian float32 vertices + remapped int32 faces",
+        "rows": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9
+        ],
+        "scope": "saved mesh faces with centroid in kind columns; generator outer border excluded",
+        "vertex_count": 91440
+      },
+      "geometry_sha256": "b4807f8c3bd15f1b8758d571005f823dc1b75747a6e39651c0271e2a2fe067c9",
+      "kind": "boxes",
+      "original_dimensions_m": {
+        "grid_height_l9_m": 0.1,
+        "grid_width_m": 0.45,
+        "platform_width_m": 2.0
+      },
+      "paper_reference": "Isaac Lab rough terrain cfg (15-TERRAIN v1.4 §3) · CG v0.16 E0 치수 행 (CG:209 · rough_go2_cfg.py:20~36) · 부모 EX-41 과 같은 preset (E0 diff 0 · CG:583)",
+      "physical_flag": false,
+      "preset_id": "rough_go2_cfg",
+      "training_dimensions_m": {
+        "grid_height_l9_m": 0.1,
+        "grid_width_m": 0.45,
+        "platform_width_m": 2.0
+      }
+    },
+    {
+      "dimension_crosscheck": {
+        "note": "Exact parameters/source hashes retained; nominal C values precede grid rounding.",
+        "state": "nominal_declaration"
+      },
+      "dimension_scope": "owner-declared nominal dimensions; exact code parameters recorded separately",
+      "evaluation_axis_directions": {
+        "border_width_m": "same",
+        "noise_l9_m": "same",
+        "noise_step_m": "same"
+      },
+      "evaluation_dimensions_m": {
+        "border_width_m": 0.25,
+        "noise_l9_m": 0.06,
+        "noise_step_m": 0.01
+      },
+      "family": "continuous",
+      "generator_parameters": {
+        "cfg": {
+          "border_width": 0.25,
+          "noise_range": [
+            0.01,
+            0.06
+          ],
+          "noise_step": 0.01
+        }
+      },
+      "geometry_family": "A",
+      "geometry_selection": {
+        "bounds_m": [
+          [
+            -40.0,
+            -88.0,
+            -1.0
+          ],
+          [
+            40.0,
+            -56.0,
+            0.05999999865889549
+          ]
+        ],
+        "columns": [
+          14,
+          15,
+          16,
+          17
+        ],
+        "face_count": 512020,
+        "geometry_sha256": "510149e1a8c0557d5e133d4c6f72b811d0754a0ce5f8a54dc034be49d00c31b9",
+        "hash_encoding": "sorted source vertex indices; little-endian float32 vertices + remapped int32 faces",
+        "rows": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9
+        ],
+        "scope": "saved mesh faces with centroid in kind columns; generator outer border excluded",
+        "vertex_count": 262480
+      },
+      "geometry_sha256": "510149e1a8c0557d5e133d4c6f72b811d0754a0ce5f8a54dc034be49d00c31b9",
+      "kind": "random_rough",
+      "original_dimensions_m": {
+        "border_width_m": 0.25,
+        "noise_l9_m": 0.06,
+        "noise_step_m": 0.01
+      },
+      "paper_reference": "Isaac Lab rough terrain cfg (15-TERRAIN v1.4 §3) · CG v0.16 E0 치수 행 (CG:209 · rough_go2_cfg.py:20~36) · 부모 EX-41 과 같은 preset (E0 diff 0 · CG:583)",
+      "physical_flag": false,
+      "preset_id": "rough_go2_cfg",
+      "training_dimensions_m": {
+        "border_width_m": 0.25,
+        "noise_l9_m": 0.06,
+        "noise_step_m": 0.01
+      }
+    },
+    {
+      "dimension_crosscheck": {
+        "note": "Exact parameters/source hashes retained; nominal C values precede grid rounding.",
+        "state": "nominal_declaration"
+      },
+      "dimension_scope": "owner-declared nominal dimensions; exact code parameters recorded separately",
+      "evaluation_axis_directions": {
+        "border_width_m": "same",
+        "platform_width_m": "same",
+        "slope_l9_ratio": "same"
+      },
+      "evaluation_dimensions_m": {
+        "border_width_m": 0.25,
+        "platform_width_m": 2.0,
+        "slope_l9_ratio": 0.4
+      },
+      "family": "continuous",
+      "generator_parameters": {
+        "cfg": {
+          "border_width": 0.25,
+          "platform_width": 2.0,
+          "slope_range": [
+            0.0,
+            0.4
+          ]
+        }
+      },
+      "geometry_family": "A",
+      "geometry_selection": {
+        "bounds_m": [
+          [
+            -40.0,
+            -56.0,
+            0.0
+          ],
+          [
+            40.0,
+            -40.0,
+            0.7450000047683716
+          ]
+        ],
+        "columns": [
+          18,
+          19
+        ],
+        "face_count": 256000,
+        "geometry_sha256": "86d44212ad8f889b856b86243ccdd1a7634d3267a93709d5b522f428a09116ed",
+        "hash_encoding": "sorted source vertex indices; little-endian float32 vertices + remapped int32 faces",
+        "rows": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9
+        ],
+        "scope": "saved mesh faces with centroid in kind columns; generator outer border excluded",
+        "vertex_count": 131220
+      },
+      "geometry_sha256": "86d44212ad8f889b856b86243ccdd1a7634d3267a93709d5b522f428a09116ed",
+      "kind": "hf_pyramid_slope",
+      "original_dimensions_m": {
+        "border_width_m": 0.25,
+        "platform_width_m": 2.0,
+        "slope_l9_ratio": 0.4
+      },
+      "paper_reference": "Isaac Lab rough terrain cfg (15-TERRAIN v1.4 §3) · CG v0.16 E0 치수 행 (CG:209 · rough_go2_cfg.py:20~36) · 부모 EX-41 과 같은 preset (E0 diff 0 · CG:583)",
+      "physical_flag": false,
+      "preset_id": "rough_go2_cfg",
+      "training_dimensions_m": {
+        "border_width_m": 0.25,
+        "platform_width_m": 2.0,
+        "slope_l9_ratio": 0.4
+      }
+    },
+    {
+      "dimension_crosscheck": {
+        "note": "Exact parameters/source hashes retained; nominal C values precede grid rounding.",
+        "state": "nominal_declaration"
+      },
+      "dimension_scope": "owner-declared nominal dimensions; exact code parameters recorded separately",
+      "evaluation_axis_directions": {
+        "border_width_m": "same",
+        "platform_width_m": "same",
+        "slope_l9_ratio": "same"
+      },
+      "evaluation_dimensions_m": {
+        "border_width_m": 0.25,
+        "platform_width_m": 2.0,
+        "slope_l9_ratio": 0.4
+      },
+      "family": "continuous",
+      "generator_parameters": {
+        "cfg": {
+          "border_width": 0.25,
+          "platform_width": 2.0,
+          "slope_range": [
+            0.0,
+            0.4
+          ]
+        }
+      },
+      "geometry_family": "A",
+      "geometry_selection": {
+        "bounds_m": [
+          [
+            -40.0,
+            -40.0,
+            -0.7599999904632568
+          ],
+          [
+            40.0,
+            -24.0,
+            0.0
+          ]
+        ],
+        "columns": [
+          20,
+          21
+        ],
+        "face_count": 256000,
+        "geometry_sha256": "2f9a3bc7f9eaf335c0764589f24962d094b7deb36c87994501924b4a3e9e2ad2",
+        "hash_encoding": "sorted source vertex indices; little-endian float32 vertices + remapped int32 faces",
+        "rows": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9
+        ],
+        "scope": "saved mesh faces with centroid in kind columns; generator outer border excluded",
+        "vertex_count": 131220
+      },
+      "geometry_sha256": "2f9a3bc7f9eaf335c0764589f24962d094b7deb36c87994501924b4a3e9e2ad2",
+      "kind": "hf_pyramid_slope_inv",
+      "original_dimensions_m": {
+        "border_width_m": 0.25,
+        "platform_width_m": 2.0,
+        "slope_l9_ratio": 0.4
+      },
+      "paper_reference": "Isaac Lab rough terrain cfg (15-TERRAIN v1.4 §3) · CG v0.16 E0 치수 행 (CG:209 · rough_go2_cfg.py:20~36) · 부모 EX-41 과 같은 preset (E0 diff 0 · CG:583)",
+      "physical_flag": false,
+      "preset_id": "rough_go2_cfg",
+      "training_dimensions_m": {
+        "border_width_m": 0.25,
+        "platform_width_m": 2.0,
+        "slope_l9_ratio": 0.4
+      }
+    },
+    {
+      "dimension_crosscheck": {
+        "note": "Exact parameters/source hashes retained; nominal C values precede grid rounding.",
+        "state": "nominal_declaration"
+      },
+      "dimension_scope": "owner-declared nominal dimensions; exact code parameters recorded separately",
+      "evaluation_axis_directions": {
+        "border_width_m": "same",
+        "platform_width_m": "same",
+        "step_height_m": "same",
+        "step_width_m": "same"
+      },
+      "evaluation_dimensions_m": {
+        "border_width_m": 1.0,
+        "platform_width_m": 3.0,
+        "step_height_m": 0.15,
+        "step_width_m": 0.3
+      },
+      "family": "continuous",
+      "generator_parameters": {
+        "cfg": {
+          "border_width": 1.0,
+          "holes": false,
+          "platform_width": 3.0,
+          "step_height_range": [
+            0.15,
+            0.15
+          ],
+          "step_width": 0.3
+        }
+      },
+      "geometry_family": "A",
+      "geometry_selection": {
+        "bounds_m": [
+          [
+            -40.0,
+            -24.0,
+            -0.15000000596046448
+          ],
+          [
+            40.0,
+            -16.0,
+            1.0499999523162842
+          ]
+        ],
+        "columns": [
+          22
+        ],
+        "face_count": 3454,
+        "geometry_sha256": "b12d90fd77d31d38d6940c57d3741c15a2e5aeacf47f8c6271bcf85f50b604ad",
+        "hash_encoding": "sorted source vertex indices; little-endian float32 vertices + remapped int32 faces",
+        "rows": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9
+        ],
+        "scope": "saved mesh faces with centroid in kind columns; generator outer border excluded",
+        "vertex_count": 2320
+      },
+      "geometry_sha256": "b12d90fd77d31d38d6940c57d3741c15a2e5aeacf47f8c6271bcf85f50b604ad",
+      "kind": "stage_stairs",
+      "original_dimensions_m": {
+        "border_width_m": 1.0,
+        "platform_width_m": 3.0,
+        "step_height_m": 0.15,
+        "step_width_m": 0.3
+      },
+      "paper_reference": "Isaac Lab rough terrain cfg (15-TERRAIN v1.4 §3) · CG v0.16 E0 치수 행 (CG:209 · rough_go2_cfg.py:20~36) · 부모 EX-41 과 같은 preset (E0 diff 0 · CG:583)",
+      "physical_flag": false,
+      "preset_id": "rough_go2_cfg",
+      "training_dimensions_m": {
+        "border_width_m": 1.0,
+        "platform_width_m": 3.0,
+        "step_height_m": 0.15,
+        "step_width_m": 0.3
+      }
+    },
+    {
+      "dimension_crosscheck": {
+        "note": "Exact parameters/source hashes retained; nominal C values precede grid rounding.",
+        "state": "nominal_declaration"
+      },
+      "dimension_scope": "owner-declared nominal dimensions; exact code parameters recorded separately",
+      "evaluation_axis_directions": {
+        "border_width_m": "same",
+        "platform_width_m": "same",
+        "slope_l9_ratio": "same"
+      },
+      "evaluation_dimensions_m": {
+        "border_width_m": 0.25,
+        "platform_width_m": 2.0,
+        "slope_l9_ratio": 0.7
+      },
+      "family": "E",
+      "generator_parameters": {
+        "cfg_type": "HfPyramidSlopedTerrainCfg",
+        "fixed": {
+          "border_width": 0.25,
+          "platform_width": 2.0
+        },
+        "range_key": "slope_range",
+        "range_value": [
+          0.4,
+          0.7
+        ]
+      },
+      "geometry_family": "E",
+      "geometry_selection": {
+        "bounds_m": [
+          [
+            -40.0,
+            531.0,
+            0.0
+          ],
+          [
+            40.0,
+            539.0,
+            1.3650000095367432
+          ]
+        ],
+        "columns": [
+          72
+        ],
+        "face_count": 128000,
+        "geometry_sha256": "88cd4fedf1f1dfa83c2b6e783921e1ed2e8703246194c501eeb122005b434f31",
+        "hash_encoding": "sorted source vertex indices; little-endian float32 vertices + remapped int32 faces",
+        "rows": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9
+        ],
+        "scope": "saved mesh faces with centroid in kind columns; generator outer border excluded",
+        "vertex_count": 65610
+      },
+      "geometry_sha256": "88cd4fedf1f1dfa83c2b6e783921e1ed2e8703246194c501eeb122005b434f31",
+      "kind": "slope_steep",
+      "original_dimensions_m": {
+        "border_width_m": 0.25,
+        "platform_width_m": 2.0,
+        "slope_ratio": 0.4
+      },
+      "paper_reference": "PIE (Lite3 실기 경사 30° · 계단 0.25 m) · MOVE (Lite3 계단 0.25 · 후진 0.10) · D176 ⑥ ⑦ · CG v0.16 §E.8 (CG:589~590) · §E.10 5 결정 (CG:630) · E4 치수 행 (CG:294) · prep:69~80 paper_ext_v1",
+      "physical_flag": false,
+      "preset_id": "paper_ext_v1",
+      "training_dimensions_m": {
+        "border_width_m": 0.25,
+        "platform_width_m": 2.0,
+        "slope_l9_ratio": 0.7
+      }
+    },
+    {
+      "dimension_crosscheck": {
+        "note": "Exact parameters/source hashes retained; nominal C values precede grid rounding.",
+        "state": "nominal_declaration"
+      },
+      "dimension_scope": "owner-declared nominal dimensions; exact code parameters recorded separately",
+      "evaluation_axis_directions": {
+        "border_width_m": "same",
+        "platform_width_m": "same",
+        "slope_l9_ratio": "same"
+      },
+      "evaluation_dimensions_m": {
+        "border_width_m": 0.25,
+        "platform_width_m": 2.0,
+        "slope_l9_ratio": 0.7
+      },
+      "family": "E",
+      "generator_parameters": {
+        "cfg_type": "HfInvertedPyramidSlopedTerrainCfg",
+        "fixed": {
+          "border_width": 0.25,
+          "platform_width": 2.0
+        },
+        "range_key": "slope_range",
+        "range_value": [
+          0.4,
+          0.7
+        ]
+      },
+      "geometry_family": "E",
+      "geometry_selection": {
+        "bounds_m": [
+          [
+            -40.0,
+            539.0,
+            -1.375
+          ],
+          [
+            40.0,
+            547.0,
+            0.0
+          ]
+        ],
+        "columns": [
+          73
+        ],
+        "face_count": 128000,
+        "geometry_sha256": "6b49b813c58fe346fd7c5766a567361e5875ec877a4722f76bbb827c86e8bb36",
+        "hash_encoding": "sorted source vertex indices; little-endian float32 vertices + remapped int32 faces",
+        "rows": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9
+        ],
+        "scope": "saved mesh faces with centroid in kind columns; generator outer border excluded",
+        "vertex_count": 65610
+      },
+      "geometry_sha256": "6b49b813c58fe346fd7c5766a567361e5875ec877a4722f76bbb827c86e8bb36",
+      "kind": "slope_steep_inv",
+      "original_dimensions_m": {
+        "border_width_m": 0.25,
+        "platform_width_m": 2.0,
+        "slope_ratio": 0.4
+      },
+      "paper_reference": "PIE (Lite3 실기 경사 30° · 계단 0.25 m) · MOVE (Lite3 계단 0.25 · 후진 0.10) · D176 ⑥ ⑦ · CG v0.16 §E.8 (CG:589~590) · §E.10 5 결정 (CG:630) · E4 치수 행 (CG:294) · prep:69~80 paper_ext_v1",
+      "physical_flag": false,
+      "preset_id": "paper_ext_v1",
+      "training_dimensions_m": {
+        "border_width_m": 0.25,
+        "platform_width_m": 2.0,
+        "slope_l9_ratio": 0.7
+      }
+    },
+    {
+      "dimension_crosscheck": {
+        "note": "Exact parameters/source hashes retained; nominal C values precede grid rounding.",
+        "state": "nominal_declaration"
+      },
+      "dimension_scope": "owner-declared nominal dimensions; exact code parameters recorded separately",
+      "evaluation_axis_directions": {
+        "border_width_m": "same",
+        "platform_width_m": "same",
+        "step_height_l9_m": "same",
+        "step_width_m": "same"
+      },
+      "evaluation_dimensions_m": {
+        "border_width_m": 1.0,
+        "platform_width_m": 3.0,
+        "step_height_l9_m": 0.3,
+        "step_width_m": 0.3
+      },
+      "family": "E",
+      "generator_parameters": {
+        "cfg_type": "MeshPyramidStairsTerrainCfg",
+        "fixed": {
+          "border_width": 1.0,
+          "holes": false,
+          "platform_width": 3.0,
+          "step_width": 0.3
+        },
+        "range_key": "step_height_range",
+        "range_value": [
+          0.23,
+          0.3
+        ]
+      },
+      "geometry_family": "E",
+      "geometry_selection": {
+        "bounds_m": [
+          [
+            -40.0,
+            547.0,
+            -0.2977813482284546
+          ],
+          [
+            40.0,
+            555.0,
+            2.0844693183898926
+          ]
+        ],
+        "columns": [
+          74
+        ],
+        "face_count": 3454,
+        "geometry_sha256": "b7fe7fefde662d4b3915f9bb634e4caceadfe79a041392311ac360b1a937b801",
+        "hash_encoding": "sorted source vertex indices; little-endian float32 vertices + remapped int32 faces",
+        "rows": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9
+        ],
+        "scope": "saved mesh faces with centroid in kind columns; generator outer border excluded",
+        "vertex_count": 2320
+      },
+      "geometry_sha256": "b7fe7fefde662d4b3915f9bb634e4caceadfe79a041392311ac360b1a937b801",
+      "kind": "stairs_high",
+      "original_dimensions_m": {
+        "border_width_m": 1.0,
+        "platform_width_m": 3.0,
+        "step_height_m": 0.23,
+        "step_width_m": 0.3
+      },
+      "paper_reference": "PIE (Lite3 실기 경사 30° · 계단 0.25 m) · MOVE (Lite3 계단 0.25 · 후진 0.10) · D176 ⑥ ⑦ · CG v0.16 §E.8 (CG:589~590) · §E.10 5 결정 (CG:630) · E4 치수 행 (CG:294) · prep:69~80 paper_ext_v1",
+      "physical_flag": false,
+      "preset_id": "paper_ext_v1",
+      "training_dimensions_m": {
+        "border_width_m": 1.0,
+        "platform_width_m": 3.0,
+        "step_height_l9_m": 0.3,
+        "step_width_m": 0.3
+      }
+    },
+    {
+      "dimension_crosscheck": {
+        "note": "Exact parameters/source hashes retained; nominal C values precede grid rounding.",
+        "state": "nominal_declaration"
+      },
+      "dimension_scope": "owner-declared nominal dimensions; exact code parameters recorded separately",
+      "evaluation_axis_directions": {
+        "border_width_m": "same",
+        "platform_width_m": "same",
+        "step_height_l9_m": "same",
+        "step_width_m": "same"
+      },
+      "evaluation_dimensions_m": {
+        "border_width_m": 1.0,
+        "platform_width_m": 3.0,
+        "step_height_l9_m": 0.3,
+        "step_width_m": 0.3
+      },
+      "family": "E",
+      "generator_parameters": {
+        "cfg_type": "MeshInvertedPyramidStairsTerrainCfg",
+        "fixed": {
+          "border_width": 1.0,
+          "holes": false,
+          "platform_width": 3.0,
+          "step_width": 0.3
+        },
+        "range_key": "step_height_range",
+        "range_value": [
+          0.23,
+          0.3
+        ]
+      },
+      "geometry_family": "E",
+      "geometry_selection": {
+        "bounds_m": [
+          [
+            -40.0,
+            555.0,
+            -2.38150954246521
+          ],
+          [
+            40.0,
+            563.0,
+            0.0
+          ]
+        ],
+        "columns": [
+          75
+        ],
+        "face_count": 3474,
+        "geometry_sha256": "605733935ddd9da54fc30b1f4292717f5eb33034a268a1652910a37c74c0b95a",
+        "hash_encoding": "sorted source vertex indices; little-endian float32 vertices + remapped int32 faces",
+        "rows": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9
+        ],
+        "scope": "saved mesh faces with centroid in kind columns; generator outer border excluded",
+        "vertex_count": 2360
+      },
+      "geometry_sha256": "605733935ddd9da54fc30b1f4292717f5eb33034a268a1652910a37c74c0b95a",
+      "kind": "stairs_high_inv",
+      "original_dimensions_m": {
+        "border_width_m": 1.0,
+        "platform_width_m": 3.0,
+        "step_height_m": 0.23,
+        "step_width_m": 0.3
+      },
+      "paper_reference": "PIE (Lite3 실기 경사 30° · 계단 0.25 m) · MOVE (Lite3 계단 0.25 · 후진 0.10) · D176 ⑥ ⑦ · CG v0.16 §E.8 (CG:589~590) · §E.10 5 결정 (CG:630) · E4 치수 행 (CG:294) · prep:69~80 paper_ext_v1",
+      "physical_flag": false,
+      "preset_id": "paper_ext_v1",
+      "training_dimensions_m": {
+        "border_width_m": 1.0,
+        "platform_width_m": 3.0,
+        "step_height_l9_m": 0.3,
+        "step_width_m": 0.3
+      }
+    },
+    {
+      "dimension_crosscheck": {
+        "note": "Exact parameters/source hashes retained; nominal C values precede grid rounding.",
+        "state": "nominal_declaration"
+      },
+      "dimension_scope": "owner-declared nominal dimensions; exact code parameters recorded separately",
+      "evaluation_axis_directions": {
+        "border_width_m": "same",
+        "platform_width_m": "same",
+        "step_height_l9_m": "same",
+        "step_width_m": "same"
+      },
+      "evaluation_dimensions_m": {
+        "border_width_m": 1.0,
+        "platform_width_m": 3.0,
+        "step_height_l9_m": 0.23,
+        "step_width_m": 0.3
+      },
+      "family": "A",
+      "generator_parameters": {
+        "cfg": {
+          "border_width": 1.0,
+          "holes": false,
+          "platform_width": 3.0,
+          "step_height_range": [
+            0.05,
+            0.23
+          ],
+          "step_width": 0.3
+        }
+      },
+      "geometry_family": "A",
+      "geometry_selection": {
+        "bounds_m": [
+          [
+            -40.0,
+            -200.0,
+            -0.22429488599300385
+          ],
+          [
+            40.0,
+            -160.0,
+            1.5700641870498657
+          ]
+        ],
+        "columns": [
+          0,
+          1,
+          2,
+          3,
+          4
+        ],
+        "face_count": 17350,
+        "geometry_sha256": "08e32e5c015652f0e3b15745c1a0a60ce6cf95fc10942973fd4ec57cf1de10b9",
+        "hash_encoding": "sorted source vertex indices; little-endian float32 vertices + remapped int32 faces",
+        "rows": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9
+        ],
+        "scope": "saved mesh faces with centroid in kind columns; generator outer border excluded",
+        "vertex_count": 11600
+      },
+      "geometry_sha256": "08e32e5c015652f0e3b15745c1a0a60ce6cf95fc10942973fd4ec57cf1de10b9",
+      "kind": "pyramid_stairs",
+      "original_dimensions_m": {
+        "border_width_m": 1.0,
+        "platform_width_m": 3.0,
+        "step_height_l9_m": 0.23,
+        "step_width_m": 0.3
+      },
+      "paper_reference": "Isaac Lab rough terrain cfg (15-TERRAIN v1.4 §3) · CG v0.16 E0 치수 행 (CG:209 · rough_go2_cfg.py:20~36) · 부모 EX-41 과 같은 preset (E0 diff 0 · CG:583)",
+      "physical_flag": false,
+      "preset_id": "start_go2_v2",
+      "training_dimensions_m": {
+        "border_width_m": 1.0,
+        "platform_width_m": 3.0,
+        "step_height_l9_m": 0.23,
+        "step_width_m": 0.3
+      }
+    },
+    {
+      "dimension_crosscheck": {
+        "note": "Exact parameters/source hashes retained; nominal C values precede grid rounding.",
+        "state": "nominal_declaration"
+      },
+      "dimension_scope": "owner-declared nominal dimensions; exact code parameters recorded separately",
+      "evaluation_axis_directions": {
+        "border_width_m": "same",
+        "platform_width_m": "same",
+        "step_height_l9_m": "same",
+        "step_width_m": "same"
+      },
+      "evaluation_dimensions_m": {
+        "border_width_m": 1.0,
+        "platform_width_m": 3.0,
+        "step_height_l9_m": 0.23,
+        "step_width_m": 0.3
+      },
+      "family": "A",
+      "generator_parameters": {
+        "cfg": {
+          "border_width": 1.0,
+          "holes": false,
+          "platform_width": 3.0,
+          "step_height_range": [
+            0.05,
+            0.23
+          ],
+          "step_width": 0.3
+        }
+      },
+      "geometry_family": "A",
+      "geometry_selection": {
+        "bounds_m": [
+          [
+            -40.0,
+            -160.0,
+            -1.8345133066177368
+          ],
+          [
+            40.0,
+            -120.0,
+            0.0
+          ]
+        ],
+        "columns": [
+          5,
+          6,
+          7,
+          8,
+          9
+        ],
+        "face_count": 17370,
+        "geometry_sha256": "d2f944b254295b2a2745549b8d2d5d67565128dff925a499bf4a2f054852d657",
+        "hash_encoding": "sorted source vertex indices; little-endian float32 vertices + remapped int32 faces",
+        "rows": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9
+        ],
+        "scope": "saved mesh faces with centroid in kind columns; generator outer border excluded",
+        "vertex_count": 11640
+      },
+      "geometry_sha256": "d2f944b254295b2a2745549b8d2d5d67565128dff925a499bf4a2f054852d657",
+      "kind": "pyramid_stairs_inv",
+      "original_dimensions_m": {
+        "border_width_m": 1.0,
+        "platform_width_m": 3.0,
+        "step_height_l9_m": 0.23,
+        "step_width_m": 0.3
+      },
+      "paper_reference": "Isaac Lab rough terrain cfg (15-TERRAIN v1.4 §3) · CG v0.16 E0 치수 행 (CG:209 · rough_go2_cfg.py:20~36) · 부모 EX-41 과 같은 preset (E0 diff 0 · CG:583)",
+      "physical_flag": false,
+      "preset_id": "start_go2_v2",
+      "training_dimensions_m": {
+        "border_width_m": 1.0,
+        "platform_width_m": 3.0,
+        "step_height_l9_m": 0.23,
+        "step_width_m": 0.3
+      }
+    },
+    {
+      "dimension_crosscheck": {
+        "note": "Exact parameters/source hashes retained; nominal C values precede grid rounding.",
+        "state": "nominal_declaration"
+      },
+      "dimension_scope": "owner-declared nominal dimensions; exact code parameters recorded separately",
+      "evaluation_axis_directions": {
+        "grid_height_l9_m": "same",
+        "grid_width_m": "same",
+        "platform_width_m": "same"
+      },
+      "evaluation_dimensions_m": {
+        "grid_height_l9_m": 0.1,
+        "grid_width_m": 0.45,
+        "platform_width_m": 2.0
+      },
+      "family": "A",
+      "generator_parameters": {
+        "cfg": {
+          "grid_height_range": [
+            0.025,
+            0.1
+          ],
+          "grid_width": 0.45,
+          "platform_width": 2.0
+        }
+      },
+      "geometry_family": "A",
+      "geometry_selection": {
+        "bounds_m": [
+          [
+            -40.0,
+            -120.0,
+            -1.0
+          ],
+          [
+            40.0,
+            -88.0,
+            0.09926951676607132
+          ]
+        ],
+        "columns": [
+          10,
+          11,
+          12,
+          13
+        ],
+        "face_count": 141096,
+        "geometry_sha256": "b4807f8c3bd15f1b8758d571005f823dc1b75747a6e39651c0271e2a2fe067c9",
+        "hash_encoding": "sorted source vertex indices; little-endian float32 vertices + remapped int32 faces",
+        "rows": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9
+        ],
+        "scope": "saved mesh faces with centroid in kind columns; generator outer border excluded",
+        "vertex_count": 91440
+      },
+      "geometry_sha256": "b4807f8c3bd15f1b8758d571005f823dc1b75747a6e39651c0271e2a2fe067c9",
+      "kind": "boxes",
+      "original_dimensions_m": {
+        "grid_height_l9_m": 0.1,
+        "grid_width_m": 0.45,
+        "platform_width_m": 2.0
+      },
+      "paper_reference": "Isaac Lab rough terrain cfg (15-TERRAIN v1.4 §3) · CG v0.16 E0 치수 행 (CG:209 · rough_go2_cfg.py:20~36) · 부모 EX-41 과 같은 preset (E0 diff 0 · CG:583)",
+      "physical_flag": false,
+      "preset_id": "start_go2_v2",
+      "training_dimensions_m": {
+        "grid_height_l9_m": 0.1,
+        "grid_width_m": 0.45,
+        "platform_width_m": 2.0
+      }
+    },
+    {
+      "dimension_crosscheck": {
+        "note": "Exact parameters/source hashes retained; nominal C values precede grid rounding.",
+        "state": "nominal_declaration"
+      },
+      "dimension_scope": "owner-declared nominal dimensions; exact code parameters recorded separately",
+      "evaluation_axis_directions": {
+        "border_width_m": "same",
+        "noise_l9_m": "same",
+        "noise_step_m": "same"
+      },
+      "evaluation_dimensions_m": {
+        "border_width_m": 0.25,
+        "noise_l9_m": 0.06,
+        "noise_step_m": 0.01
+      },
+      "family": "A",
+      "generator_parameters": {
+        "cfg": {
+          "border_width": 0.25,
+          "noise_range": [
+            0.01,
+            0.06
+          ],
+          "noise_step": 0.01
+        }
+      },
+      "geometry_family": "A",
+      "geometry_selection": {
+        "bounds_m": [
+          [
+            -40.0,
+            -88.0,
+            -1.0
+          ],
+          [
+            40.0,
+            -56.0,
+            0.05999999865889549
+          ]
+        ],
+        "columns": [
+          14,
+          15,
+          16,
+          17
+        ],
+        "face_count": 512020,
+        "geometry_sha256": "510149e1a8c0557d5e133d4c6f72b811d0754a0ce5f8a54dc034be49d00c31b9",
+        "hash_encoding": "sorted source vertex indices; little-endian float32 vertices + remapped int32 faces",
+        "rows": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9
+        ],
+        "scope": "saved mesh faces with centroid in kind columns; generator outer border excluded",
+        "vertex_count": 262480
+      },
+      "geometry_sha256": "510149e1a8c0557d5e133d4c6f72b811d0754a0ce5f8a54dc034be49d00c31b9",
+      "kind": "random_rough",
+      "original_dimensions_m": {
+        "border_width_m": 0.25,
+        "noise_l9_m": 0.06,
+        "noise_step_m": 0.01
+      },
+      "paper_reference": "Isaac Lab rough terrain cfg (15-TERRAIN v1.4 §3) · CG v0.16 E0 치수 행 (CG:209 · rough_go2_cfg.py:20~36) · 부모 EX-41 과 같은 preset (E0 diff 0 · CG:583)",
+      "physical_flag": false,
+      "preset_id": "start_go2_v2",
+      "training_dimensions_m": {
+        "border_width_m": 0.25,
+        "noise_l9_m": 0.06,
+        "noise_step_m": 0.01
+      }
+    },
+    {
+      "dimension_crosscheck": {
+        "note": "Exact parameters/source hashes retained; nominal C values precede grid rounding.",
+        "state": "nominal_declaration"
+      },
+      "dimension_scope": "owner-declared nominal dimensions; exact code parameters recorded separately",
+      "evaluation_axis_directions": {
+        "border_width_m": "same",
+        "platform_width_m": "same",
+        "slope_l9_ratio": "same"
+      },
+      "evaluation_dimensions_m": {
+        "border_width_m": 0.25,
+        "platform_width_m": 2.0,
+        "slope_l9_ratio": 0.4
+      },
+      "family": "A",
+      "generator_parameters": {
+        "cfg": {
+          "border_width": 0.25,
+          "platform_width": 2.0,
+          "slope_range": [
+            0.0,
+            0.4
+          ]
+        }
+      },
+      "geometry_family": "A",
+      "geometry_selection": {
+        "bounds_m": [
+          [
+            -40.0,
+            -56.0,
+            0.0
+          ],
+          [
+            40.0,
+            -40.0,
+            0.7450000047683716
+          ]
+        ],
+        "columns": [
+          18,
+          19
+        ],
+        "face_count": 256000,
+        "geometry_sha256": "86d44212ad8f889b856b86243ccdd1a7634d3267a93709d5b522f428a09116ed",
+        "hash_encoding": "sorted source vertex indices; little-endian float32 vertices + remapped int32 faces",
+        "rows": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9
+        ],
+        "scope": "saved mesh faces with centroid in kind columns; generator outer border excluded",
+        "vertex_count": 131220
+      },
+      "geometry_sha256": "86d44212ad8f889b856b86243ccdd1a7634d3267a93709d5b522f428a09116ed",
+      "kind": "hf_pyramid_slope",
+      "original_dimensions_m": {
+        "border_width_m": 0.25,
+        "platform_width_m": 2.0,
+        "slope_l9_ratio": 0.4
+      },
+      "paper_reference": "Isaac Lab rough terrain cfg (15-TERRAIN v1.4 §3) · CG v0.16 E0 치수 행 (CG:209 · rough_go2_cfg.py:20~36) · 부모 EX-41 과 같은 preset (E0 diff 0 · CG:583)",
+      "physical_flag": false,
+      "preset_id": "start_go2_v2",
+      "training_dimensions_m": {
+        "border_width_m": 0.25,
+        "platform_width_m": 2.0,
+        "slope_l9_ratio": 0.4
+      }
+    },
+    {
+      "dimension_crosscheck": {
+        "note": "Exact parameters/source hashes retained; nominal C values precede grid rounding.",
+        "state": "nominal_declaration"
+      },
+      "dimension_scope": "owner-declared nominal dimensions; exact code parameters recorded separately",
+      "evaluation_axis_directions": {
+        "border_width_m": "same",
+        "platform_width_m": "same",
+        "slope_l9_ratio": "same"
+      },
+      "evaluation_dimensions_m": {
+        "border_width_m": 0.25,
+        "platform_width_m": 2.0,
+        "slope_l9_ratio": 0.4
+      },
+      "family": "A",
+      "generator_parameters": {
+        "cfg": {
+          "border_width": 0.25,
+          "platform_width": 2.0,
+          "slope_range": [
+            0.0,
+            0.4
+          ]
+        }
+      },
+      "geometry_family": "A",
+      "geometry_selection": {
+        "bounds_m": [
+          [
+            -40.0,
+            -40.0,
+            -0.7599999904632568
+          ],
+          [
+            40.0,
+            -24.0,
+            0.0
+          ]
+        ],
+        "columns": [
+          20,
+          21
+        ],
+        "face_count": 256000,
+        "geometry_sha256": "2f9a3bc7f9eaf335c0764589f24962d094b7deb36c87994501924b4a3e9e2ad2",
+        "hash_encoding": "sorted source vertex indices; little-endian float32 vertices + remapped int32 faces",
+        "rows": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9
+        ],
+        "scope": "saved mesh faces with centroid in kind columns; generator outer border excluded",
+        "vertex_count": 131220
+      },
+      "geometry_sha256": "2f9a3bc7f9eaf335c0764589f24962d094b7deb36c87994501924b4a3e9e2ad2",
+      "kind": "hf_pyramid_slope_inv",
+      "original_dimensions_m": {
+        "border_width_m": 0.25,
+        "platform_width_m": 2.0,
+        "slope_l9_ratio": 0.4
+      },
+      "paper_reference": "Isaac Lab rough terrain cfg (15-TERRAIN v1.4 §3) · CG v0.16 E0 치수 행 (CG:209 · rough_go2_cfg.py:20~36) · 부모 EX-41 과 같은 preset (E0 diff 0 · CG:583)",
+      "physical_flag": false,
+      "preset_id": "start_go2_v2",
+      "training_dimensions_m": {
+        "border_width_m": 0.25,
+        "platform_width_m": 2.0,
+        "slope_l9_ratio": 0.4
+      }
+    },
+    {
+      "dimension_crosscheck": {
+        "note": "Exact parameters/source hashes retained; nominal C values precede grid rounding.",
+        "state": "nominal_declaration"
+      },
+      "dimension_scope": "owner-declared nominal dimensions; exact code parameters recorded separately",
+      "evaluation_axis_directions": {
+        "border_width_m": "same",
+        "platform_width_m": "same",
+        "step_height_m": "same",
+        "step_width_m": "same"
+      },
+      "evaluation_dimensions_m": {
+        "border_width_m": 1.0,
+        "platform_width_m": 3.0,
+        "step_height_m": 0.15,
+        "step_width_m": 0.3
+      },
+      "family": "A",
+      "generator_parameters": {
+        "cfg": {
+          "border_width": 1.0,
+          "holes": false,
+          "platform_width": 3.0,
+          "step_height_range": [
+            0.15,
+            0.15
+          ],
+          "step_width": 0.3
+        }
+      },
+      "geometry_family": "A",
+      "geometry_selection": {
+        "bounds_m": [
+          [
+            -40.0,
+            -24.0,
+            -0.15000000596046448
+          ],
+          [
+            40.0,
+            -16.0,
+            1.0499999523162842
+          ]
+        ],
+        "columns": [
+          22
+        ],
+        "face_count": 3454,
+        "geometry_sha256": "b12d90fd77d31d38d6940c57d3741c15a2e5aeacf47f8c6271bcf85f50b604ad",
+        "hash_encoding": "sorted source vertex indices; little-endian float32 vertices + remapped int32 faces",
+        "rows": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9
+        ],
+        "scope": "saved mesh faces with centroid in kind columns; generator outer border excluded",
+        "vertex_count": 2320
+      },
+      "geometry_sha256": "b12d90fd77d31d38d6940c57d3741c15a2e5aeacf47f8c6271bcf85f50b604ad",
+      "kind": "stage_stairs",
+      "original_dimensions_m": {
+        "border_width_m": 1.0,
+        "platform_width_m": 3.0,
+        "step_height_m": 0.15,
+        "step_width_m": 0.3
+      },
+      "paper_reference": "Isaac Lab rough terrain cfg (15-TERRAIN v1.4 §3) · CG v0.16 E0 치수 행 (CG:209 · rough_go2_cfg.py:20~36) · 부모 EX-41 과 같은 preset (E0 diff 0 · CG:583)",
+      "physical_flag": false,
+      "preset_id": "start_go2_v2",
+      "training_dimensions_m": {
+        "border_width_m": 1.0,
+        "platform_width_m": 3.0,
+        "step_height_m": 0.15,
+        "step_width_m": 0.3
+      }
+    },
+    {
+      "dimension_crosscheck": {
+        "note": "Exact parameters/source hashes retained; nominal C values precede grid rounding.",
+        "state": "nominal_declaration"
+      },
+      "dimension_scope": "owner-declared nominal dimensions; exact code parameters recorded separately",
+      "evaluation_axis_directions": {
+        "gap_x_m": "higher",
+        "gap_y_m": "same",
+        "stone_height_m": "same",
+        "stone_x_m": "same",
+        "stone_y_m": "lower"
+      },
+      "evaluation_dimensions_m": {
+        "gap_x_m": 0.3186,
+        "gap_y_m": 0.155,
+        "stone_height_m": 0.05,
+        "stone_x_m": 0.222,
+        "stone_y_m": 0.1505
+      },
+      "family": "A",
+      "generator_parameters": {
+        "constants": {
+          "BEAM_WIDTH": [
+            0.531,
+            0.09
+          ],
+          "DEPTH_RANGE": [
+            0.2,
+            0.7
+          ],
+          "GAP_WIDTH": [
+            0.11080000000000001,
+            0.7756000000000001
+          ],
+          "HEIGHT_JITTER": 0.05,
+          "PLATFORM_Z": 0.0,
+          "SIZE": [
+            8.0,
+            4.0
+          ],
+          "STEP_BEAM_GAP": [
+            0.11080000000000001,
+            0.3047
+          ],
+          "STEP_BEAM_WIDTH": [
+            0.554,
+            0.16620000000000001
+          ],
+          "STONE_GAP_X": [
+            0.19390000000000002,
+            0.277
+          ],
+          "STONE_GAP_Y": [
+            0.08850000000000001,
+            0.15487499999999998
+          ],
+          "STONE_SIZE_X": [
+            0.554,
+            0.22160000000000002
+          ],
+          "STONE_SIZE_Y": [
+            0.4425,
+            0.17700000000000002
+          ],
+          "ZONE_X": [
+            1.0,
+            7.0
+          ]
+        }
+      },
+      "geometry_family": "A",
+      "geometry_selection": {
+        "bounds_m": [
+          [
+            -40.0,
+            -16.0,
+            -0.8938134908676147
+          ],
+          [
+            40.0,
+            40.0,
+            0.0499933585524559
+          ]
+        ],
+        "columns": [
+          23,
+          24,
+          25,
+          26,
+          27,
+          28,
+          29
+        ],
+        "face_count": 79158,
+        "geometry_sha256": "9b3fae5cb36fe5ae17e1b55f347e247569952eae76b0efa2555dd500b4729cb9",
+        "hash_encoding": "sorted source vertex indices; little-endian float32 vertices + remapped int32 faces",
+        "rows": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9
+        ],
+        "scope": "saved mesh faces with centroid in kind columns; generator outer border excluded",
+        "vertex_count": 52848
+      },
+      "geometry_sha256": "9b3fae5cb36fe5ae17e1b55f347e247569952eae76b0efa2555dd500b4729cb9",
+      "kind": "stepping_stones_low",
+      "original_dimensions_m": {
+        "gap_x_m": 0.25,
+        "gap_y_m": 0.175,
+        "stone_height_m": 0.05,
+        "stone_x_m": 0.2,
+        "stone_y_m": 0.2
+      },
+      "paper_reference": "START (Fig. 4 · II-D3 · Lite3) · 15-TERRAIN v1.4 §4 · D158 Go2 축척 학습 열 (DT:186~196) · CG v0.16 E3 치수 행 (CG:273 start_go2_v2) · 평가 전용 열 D176 ⑧ 틈 ×1.15 · 지지면 ×0.85 (CG:393)",
+      "physical_flag": false,
+      "preset_id": "start_go2_v2",
+      "training_dimensions_m": {
+        "gap_x_m": 0.277,
+        "gap_y_m": 0.155,
+        "stone_height_m": 0.05,
+        "stone_x_m": 0.222,
+        "stone_y_m": 0.177
+      }
+    },
+    {
+      "dimension_crosscheck": {
+        "note": "Exact parameters/source hashes retained; nominal C values precede grid rounding.",
+        "state": "nominal_declaration"
+      },
+      "dimension_scope": "owner-declared nominal dimensions; exact code parameters recorded separately",
+      "evaluation_axis_directions": {
+        "gap_x_m": "higher",
+        "gap_y_m": "same",
+        "random_ratio_l9": "same",
+        "stone_height_m": "same",
+        "stone_x_m": "same",
+        "stone_y_m": "lower"
+      },
+      "evaluation_dimensions_m": {
+        "gap_x_m": 0.3186,
+        "gap_y_m": 0.155,
+        "random_ratio_l9": 1.0,
+        "stone_height_m": 0.05,
+        "stone_x_m": 0.222,
+        "stone_y_m": 0.1505
+      },
+      "family": "A",
+      "generator_parameters": {
+        "constants": {
+          "BEAM_WIDTH": [
+            0.531,
+            0.09
+          ],
+          "DEPTH_RANGE": [
+            0.2,
+            0.7
+          ],
+          "GAP_WIDTH": [
+            0.11080000000000001,
+            0.7756000000000001
+          ],
+          "HEIGHT_JITTER": 0.05,
+          "PLATFORM_Z": 0.0,
+          "SIZE": [
+            8.0,
+            4.0
+          ],
+          "STEP_BEAM_GAP": [
+            0.11080000000000001,
+            0.3047
+          ],
+          "STEP_BEAM_WIDTH": [
+            0.554,
+            0.16620000000000001
+          ],
+          "STONE_GAP_X": [
+            0.19390000000000002,
+            0.277
+          ],
+          "STONE_GAP_Y": [
+            0.08850000000000001,
+            0.15487499999999998
+          ],
+          "STONE_SIZE_X": [
+            0.554,
+            0.22160000000000002
+          ],
+          "STONE_SIZE_Y": [
+            0.4425,
+            0.17700000000000002
+          ],
+          "ZONE_X": [
+            1.0,
+            7.0
+          ]
+        }
+      },
+      "geometry_family": "A",
+      "geometry_selection": {
+        "bounds_m": [
+          [
+            -40.0,
+            40.0,
+            -0.8964685201644897
+          ],
+          [
+            40.0,
+            80.0,
+            0.04998442158102989
+          ]
+        ],
+        "columns": [
+          30,
+          31,
+          32,
+          33,
+          34
+        ],
+        "face_count": 56570,
+        "geometry_sha256": "3b1863f8c02b151b4b67044731b96c3125ca17505bc4fda585ab6a68857bf36c",
+        "hash_encoding": "sorted source vertex indices; little-endian float32 vertices + remapped int32 faces",
+        "rows": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9
+        ],
+        "scope": "saved mesh faces with centroid in kind columns; generator outer border excluded",
+        "vertex_count": 37840
+      },
+      "geometry_sha256": "3b1863f8c02b151b4b67044731b96c3125ca17505bc4fda585ab6a68857bf36c",
+      "kind": "stepping_stones_high",
+      "original_dimensions_m": {
+        "gap_x_m": 0.25,
+        "gap_y_m": 0.175,
+        "random_ratio_l9": 1.0,
+        "stone_height_m": 0.05,
+        "stone_x_m": 0.2,
+        "stone_y_m": 0.2
+      },
+      "paper_reference": "START (Fig. 4 · II-D3 · Lite3) · 15-TERRAIN v1.4 §4 · D158 Go2 축척 학습 열 (DT:186~196) · CG v0.16 E3 치수 행 (CG:273 start_go2_v2) · 평가 전용 열 D176 ⑧ 틈 ×1.15 · 지지면 ×0.85 (CG:393)",
+      "physical_flag": false,
+      "preset_id": "start_go2_v2",
+      "training_dimensions_m": {
+        "gap_x_m": 0.277,
+        "gap_y_m": 0.155,
+        "random_ratio_l9": 1.0,
+        "stone_height_m": 0.05,
+        "stone_x_m": 0.222,
+        "stone_y_m": 0.177
+      }
+    },
+    {
+      "dimension_crosscheck": {
+        "note": "Exact parameters/source hashes retained; nominal C values precede grid rounding.",
+        "state": "nominal_declaration"
+      },
+      "dimension_scope": "owner-declared nominal dimensions; exact code parameters recorded separately",
+      "evaluation_axis_directions": {
+        "beam_width_y_m": "lower"
+      },
+      "evaluation_dimensions_m": {
+        "beam_width_y_m": 0.0765
+      },
+      "family": "A",
+      "generator_parameters": {
+        "constants": {
+          "BEAM_WIDTH": [
+            0.531,
+            0.09
+          ],
+          "DEPTH_RANGE": [
+            0.2,
+            0.7
+          ],
+          "GAP_WIDTH": [
+            0.11080000000000001,
+            0.7756000000000001
+          ],
+          "HEIGHT_JITTER": 0.05,
+          "PLATFORM_Z": 0.0,
+          "SIZE": [
+            8.0,
+            4.0
+          ],
+          "STEP_BEAM_GAP": [
+            0.11080000000000001,
+            0.3047
+          ],
+          "STEP_BEAM_WIDTH": [
+            0.554,
+            0.16620000000000001
+          ],
+          "STONE_GAP_X": [
+            0.19390000000000002,
+            0.277
+          ],
+          "STONE_GAP_Y": [
+            0.08850000000000001,
+            0.15487499999999998
+          ],
+          "STONE_SIZE_X": [
+            0.554,
+            0.22160000000000002
+          ],
+          "STONE_SIZE_Y": [
+            0.4425,
+            0.17700000000000002
+          ],
+          "ZONE_X": [
+            1.0,
+            7.0
+          ]
+        }
+      },
+      "geometry_family": "A",
+      "geometry_selection": {
+        "bounds_m": [
+          [
+            -40.0,
+            80.0,
+            -0.8964685201644897
+          ],
+          [
+            40.0,
+            120.0,
+            0.04872181639075279
+          ]
+        ],
+        "columns": [
+          35,
+          36,
+          37,
+          38,
+          39
+        ],
+        "face_count": 2390,
+        "geometry_sha256": "54940b611e6a497575963deb7f6abe744691801e5624b73d1c4097f66e7aa693",
+        "hash_encoding": "sorted source vertex indices; little-endian float32 vertices + remapped int32 faces",
+        "rows": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9
+        ],
+        "scope": "saved mesh faces with centroid in kind columns; generator outer border excluded",
+        "vertex_count": 1720
+      },
+      "geometry_sha256": "54940b611e6a497575963deb7f6abe744691801e5624b73d1c4097f66e7aa693",
+      "kind": "balance_beams",
+      "original_dimensions_m": {
+        "beam_width_y_m": 0.175
+      },
+      "paper_reference": "START (Fig. 4 · II-D3 · Lite3) · 15-TERRAIN v1.4 §4 · D158 Go2 축척 학습 열 (DT:186~196) · CG v0.16 E3 치수 행 (CG:273 start_go2_v2) · 평가 전용 열 D176 ⑧ 틈 ×1.15 · 지지면 ×0.85 (CG:393)",
+      "physical_flag": false,
+      "preset_id": "start_go2_v2",
+      "training_dimensions_m": {
+        "beam_width_y_m": 0.09
+      }
+    },
+    {
+      "dimension_crosscheck": {
+        "note": "Exact parameters/source hashes retained; nominal C values precede grid rounding.",
+        "state": "nominal_declaration"
+      },
+      "dimension_scope": "owner-declared nominal dimensions; exact code parameters recorded separately",
+      "evaluation_axis_directions": {
+        "beam_thickness_x_m": "lower",
+        "gap_x_m": "higher"
+      },
+      "evaluation_dimensions_m": {
+        "beam_thickness_x_m": 0.1413,
+        "gap_x_m": 0.3504
+      },
+      "family": "A",
+      "generator_parameters": {
+        "constants": {
+          "BEAM_WIDTH": [
+            0.531,
+            0.09
+          ],
+          "DEPTH_RANGE": [
+            0.2,
+            0.7
+          ],
+          "GAP_WIDTH": [
+            0.11080000000000001,
+            0.7756000000000001
+          ],
+          "HEIGHT_JITTER": 0.05,
+          "PLATFORM_Z": 0.0,
+          "SIZE": [
+            8.0,
+            4.0
+          ],
+          "STEP_BEAM_GAP": [
+            0.11080000000000001,
+            0.3047
+          ],
+          "STEP_BEAM_WIDTH": [
+            0.554,
+            0.16620000000000001
+          ],
+          "STONE_GAP_X": [
+            0.19390000000000002,
+            0.277
+          ],
+          "STONE_GAP_Y": [
+            0.08850000000000001,
+            0.15487499999999998
+          ],
+          "STONE_SIZE_X": [
+            0.554,
+            0.22160000000000002
+          ],
+          "STONE_SIZE_Y": [
+            0.4425,
+            0.17700000000000002
+          ],
+          "ZONE_X": [
+            1.0,
+            7.0
+          ]
+        }
+      },
+      "geometry_family": "A",
+      "geometry_selection": {
+        "bounds_m": [
+          [
+            -40.0,
+            120.0,
+            -0.8859186172485352
+          ],
+          [
+            40.0,
+            160.0,
+            0.04937686026096344
+          ]
+        ],
+        "columns": [
+          40,
+          41,
+          42,
+          43,
+          44
+        ],
+        "face_count": 8150,
+        "geometry_sha256": "c62c82dad745d2baa3e91aae7c2b1b2103eedc4999c7a0048ede11c03ae12f71",
+        "hash_encoding": "sorted source vertex indices; little-endian float32 vertices + remapped int32 faces",
+        "rows": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9
+        ],
+        "scope": "saved mesh faces with centroid in kind columns; generator outer border excluded",
+        "vertex_count": 5560
+      },
+      "geometry_sha256": "c62c82dad745d2baa3e91aae7c2b1b2103eedc4999c7a0048ede11c03ae12f71",
+      "kind": "stepping_beams",
+      "original_dimensions_m": {
+        "beam_thickness_x_m": 0.15,
+        "gap_x_m": 0.275
+      },
+      "paper_reference": "START (Fig. 4 · II-D3 · Lite3) · 15-TERRAIN v1.4 §4 · D158 Go2 축척 학습 열 (DT:186~196) · CG v0.16 E3 치수 행 (CG:273 start_go2_v2) · 평가 전용 열 D176 ⑧ 틈 ×1.15 · 지지면 ×0.85 (CG:393)",
+      "physical_flag": false,
+      "preset_id": "start_go2_v2",
+      "training_dimensions_m": {
+        "beam_thickness_x_m": 0.1662,
+        "gap_x_m": 0.3047
+      }
+    },
+    {
+      "dimension_crosscheck": {
+        "note": "Exact parameters/source hashes retained; nominal C values precede grid rounding.",
+        "state": "nominal_declaration"
+      },
+      "dimension_scope": "owner-declared nominal dimensions; exact code parameters recorded separately",
+      "evaluation_axis_directions": {
+        "depth_max_m": "same",
+        "depth_min_m": "same",
+        "gap_x_m": "higher"
+      },
+      "evaluation_dimensions_m": {
+        "depth_max_m": 0.7,
+        "depth_min_m": 0.2,
+        "gap_x_m": 0.8919
+      },
+      "family": "A",
+      "generator_parameters": {
+        "constants": {
+          "BEAM_WIDTH": [
+            0.531,
+            0.09
+          ],
+          "DEPTH_RANGE": [
+            0.2,
+            0.7
+          ],
+          "GAP_WIDTH": [
+            0.11080000000000001,
+            0.7756000000000001
+          ],
+          "HEIGHT_JITTER": 0.05,
+          "PLATFORM_Z": 0.0,
+          "SIZE": [
+            8.0,
+            4.0
+          ],
+          "STEP_BEAM_GAP": [
+            0.11080000000000001,
+            0.3047
+          ],
+          "STEP_BEAM_WIDTH": [
+            0.554,
+            0.16620000000000001
+          ],
+          "STONE_GAP_X": [
+            0.19390000000000002,
+            0.277
+          ],
+          "STONE_GAP_Y": [
+            0.08850000000000001,
+            0.15487499999999998
+          ],
+          "STONE_SIZE_X": [
+            0.554,
+            0.22160000000000002
+          ],
+          "STONE_SIZE_Y": [
+            0.4425,
+            0.17700000000000002
+          ],
+          "ZONE_X": [
+            1.0,
+            7.0
+          ]
+        }
+      },
+      "geometry_family": "A",
+      "geometry_selection": {
+        "bounds_m": [
+          [
+            -40.0,
+            160.0,
+            -0.8907555937767029
+          ],
+          [
+            40.0,
+            184.0,
+            0.0
+          ]
+        ],
+        "columns": [
+          45,
+          46,
+          47
+        ],
+        "face_count": 2514,
+        "geometry_sha256": "b9778e67f3535be55a3d494a15931be63d7d63e0bcdecaefc7a7831ee43bde77",
+        "hash_encoding": "sorted source vertex indices; little-endian float32 vertices + remapped int32 faces",
+        "rows": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9
+        ],
+        "scope": "saved mesh faces with centroid in kind columns; generator outer border excluded",
+        "vertex_count": 1800
+      },
+      "geometry_sha256": "b9778e67f3535be55a3d494a15931be63d7d63e0bcdecaefc7a7831ee43bde77",
+      "kind": "gaps",
+      "original_dimensions_m": {
+        "depth_max_m": 0.7,
+        "depth_min_m": 0.2,
+        "gap_x_m": 0.7
+      },
+      "paper_reference": "START (Fig. 4 · II-D3 · Lite3) · 15-TERRAIN v1.4 §4 · D158 Go2 축척 학습 열 (DT:186~196) · CG v0.16 E3 치수 행 (CG:273 start_go2_v2) · 평가 전용 열 D176 ⑧ 틈 ×1.15 · 지지면 ×0.85 (CG:393)",
+      "physical_flag": false,
+      "preset_id": "start_go2_v2",
+      "training_dimensions_m": {
+        "depth_max_m": 0.7,
+        "depth_min_m": 0.2,
+        "gap_x_m": 0.7756
+      }
+    },
+    {
+      "dimension_crosscheck": {
+        "note": "Exact parameters/source hashes retained; nominal C values precede grid rounding.",
+        "state": "nominal_declaration"
+      },
+      "dimension_scope": "owner-declared nominal dimensions; exact code parameters recorded separately",
+      "evaluation_axis_directions": {
+        "tile_size_m": "same"
+      },
+      "evaluation_dimensions_m": {
+        "tile_size_m": 8.0
+      },
+      "family": "A",
+      "generator_parameters": {
+        "constants": {
+          "BEAM_WIDTH": [
+            0.531,
+            0.09
+          ],
+          "DEPTH_RANGE": [
+            0.2,
+            0.7
+          ],
+          "GAP_WIDTH": [
+            0.11080000000000001,
+            0.7756000000000001
+          ],
+          "HEIGHT_JITTER": 0.05,
+          "PLATFORM_Z": 0.0,
+          "SIZE": [
+            8.0,
+            4.0
+          ],
+          "STEP_BEAM_GAP": [
+            0.11080000000000001,
+            0.3047
+          ],
+          "STEP_BEAM_WIDTH": [
+            0.554,
+            0.16620000000000001
+          ],
+          "STONE_GAP_X": [
+            0.19390000000000002,
+            0.277
+          ],
+          "STONE_GAP_Y": [
+            0.08850000000000001,
+            0.15487499999999998
+          ],
+          "STONE_SIZE_X": [
+            0.554,
+            0.22160000000000002
+          ],
+          "STONE_SIZE_Y": [
+            0.4425,
+            0.17700000000000002
+          ],
+          "ZONE_X": [
+            1.0,
+            7.0
+          ]
+        }
+      },
+      "geometry_family": "A",
+      "geometry_selection": {
+        "bounds_m": [
+          [
+            -40.0,
+            184.0,
+            -0.8907555937767029
+          ],
+          [
+            40.0,
+            200.0,
+            0.0
+          ]
+        ],
+        "columns": [
+          48,
+          49
+        ],
+        "face_count": 276,
+        "geometry_sha256": "09704081af25216e00ff2d6d75c352d3239ad5be5ce64ded7e12ad83cf502389",
+        "hash_encoding": "sorted source vertex indices; little-endian float32 vertices + remapped int32 faces",
+        "rows": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9
+        ],
+        "scope": "saved mesh faces with centroid in kind columns; generator outer border excluded",
+        "vertex_count": 280
+      },
+      "geometry_sha256": "09704081af25216e00ff2d6d75c352d3239ad5be5ce64ded7e12ad83cf502389",
+      "kind": "flat",
+      "original_dimensions_m": {
+        "tile_size_m": 8.0
+      },
+      "paper_reference": "15-TERRAIN v1.4 §5 보조 평지 (DT:110) · 칸 8 × 8 m (rough_go2_cfg.py:42 · DT:214)",
+      "physical_flag": false,
+      "preset_id": "start_go2_v2",
+      "training_dimensions_m": {
+        "tile_size_m": 8.0
+      }
+    },
+    {
+      "dimension_crosscheck": {
+        "code_values": {
+          "step_height_l0_m": 0.05,
+          "step_height_l9_m": 0.27,
+          "tile_size_m": 12.0,
+          "tread_m": 0.3
+        },
+        "state": "code_matches"
+      },
+      "dimension_scope": "owner-declared nominal dimensions; exact code parameters recorded separately",
+      "evaluation_axis_directions": {
+        "step_height_l0_m": "same",
+        "step_height_l9_m": "same",
+        "tile_size_m": "same",
+        "tread_m": "same"
+      },
+      "evaluation_dimensions_m": {
+        "step_height_l0_m": 0.05,
+        "step_height_l9_m": 0.27,
+        "tile_size_m": 12.0,
+        "tread_m": 0.3
+      },
+      "family": "B",
+      "generator_parameters": {
+        "levels": {
+          "0": {
+            "step_height_m": 0.05,
+            "tread_m": 0.3
+          },
+          "1": {
+            "step_height_m": 0.07444444444444445,
+            "tread_m": 0.3
+          },
+          "2": {
+            "step_height_m": 0.0988888888888889,
+            "tread_m": 0.3
+          },
+          "3": {
+            "step_height_m": 0.12333333333333335,
+            "tread_m": 0.3
+          },
+          "4": {
+            "step_height_m": 0.14777777777777779,
+            "tread_m": 0.3
+          },
+          "5": {
+            "step_height_m": 0.17222222222222222,
+            "tread_m": 0.3
+          },
+          "6": {
+            "step_height_m": 0.1966666666666667,
+            "tread_m": 0.3
+          },
+          "7": {
+            "step_height_m": 0.22111111111111115,
+            "tread_m": 0.3
+          },
+          "8": {
+            "step_height_m": 0.24555555555555558,
+            "tread_m": 0.3
+          },
+          "9": {
+            "step_height_m": 0.27,
+            "tread_m": 0.3
+          }
+        },
+        "size_m": 12.0
+      },
+      "geometry_family": "B",
+      "geometry_selection": {
+        "bounds_m": [
+          [
+            -60.0,
+            231.0,
+            -0.20000000298023224
+          ],
+          [
+            60.0,
+            241.0,
+            1.6200000047683716
+          ]
+        ],
+        "columns": [
+          50
+        ],
+        "face_count": 958,
+        "geometry_sha256": "c36eb6716b67473ea2199392a4b89384ee6807ec7a9a07e3fae50f615d20ee5f",
+        "hash_encoding": "sorted source vertex indices; little-endian float32 vertices + remapped int32 faces",
+        "rows": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9
+        ],
+        "scope": "saved mesh faces with centroid in kind columns; generator outer border excluded",
+        "vertex_count": 640
+      },
+      "geometry_sha256": "c36eb6716b67473ea2199392a4b89384ee6807ec7a9a07e3fae50f615d20ee5f",
+      "kind": "stair_up",
+      "original_dimensions_m": {
+        "stair_slope_l0_deg": 5.0,
+        "stair_slope_l9_deg": 45.0
+      },
+      "paper_reference": "원문(ANYmal-D · TRON1 같음): 경사 5° → 45° (단 높이 아님) · G1 코드: step 0.05 → 0.27 · 폭 0.27~0.35 (TR:41~70) · 학습 = G1 값 그대로 (CG:294 에 명시 없음 · 코드 실제값 · 등급 코드) · AME-2 (논문 Appendix A 비율 · 지형 표 ANYmal-D 열 P:1114~1130 · TRON1 열 · 공식 G1 코드 terrains.py TR 행) · SPEC-ame2-go2 §1.6 (SPEC:138~156) · DT v0.4.6 §3.2 (DT:118~132) · CG v0.16 E4 치수 행 (CG:294) · prep:93~97 ame2_go2_mix_v1 · 코드 ame2_preset.py:16~31 · 86~106 (통합 3b78bf18 · #613 포함 · #617 은 dimensions() 불변) · 타일 12 × 12 m (SIZE 12.0) · 평가 = 같은 메시 종류별 (family, kind, level) 칸 (CG:392) 이라 치수 같음",
+      "physical_flag": false,
+      "preset_id": "ame2_go2_mix_v1",
+      "training_dimensions_m": {
+        "step_height_l0_m": 0.05,
+        "step_height_l9_m": 0.27,
+        "tile_size_m": 12.0,
+        "tread_m": 0.3
+      }
+    },
+    {
+      "dimension_crosscheck": {
+        "code_values": {
+          "step_height_l0_m": 0.05,
+          "step_height_l9_m": 0.27,
+          "tile_size_m": 12.0,
+          "tread_m": 0.3
+        },
+        "state": "code_matches"
+      },
+      "dimension_scope": "owner-declared nominal dimensions; exact code parameters recorded separately",
+      "evaluation_axis_directions": {
+        "step_height_l0_m": "same",
+        "step_height_l9_m": "same",
+        "tile_size_m": "same",
+        "tread_m": "same"
+      },
+      "evaluation_dimensions_m": {
+        "step_height_l0_m": 0.05,
+        "step_height_l9_m": 0.27,
+        "tile_size_m": 12.0,
+        "tread_m": 0.3
+      },
+      "family": "B",
+      "generator_parameters": {
+        "levels": {
+          "0": {
+            "step_height_m": 0.05,
+            "tread_m": 0.3
+          },
+          "1": {
+            "step_height_m": 0.07444444444444445,
+            "tread_m": 0.3
+          },
+          "2": {
+            "step_height_m": 0.0988888888888889,
+            "tread_m": 0.3
+          },
+          "3": {
+            "step_height_m": 0.12333333333333335,
+            "tread_m": 0.3
+          },
+          "4": {
+            "step_height_m": 0.14777777777777779,
+            "tread_m": 0.3
+          },
+          "5": {
+            "step_height_m": 0.17222222222222222,
+            "tread_m": 0.3
+          },
+          "6": {
+            "step_height_m": 0.1966666666666667,
+            "tread_m": 0.3
+          },
+          "7": {
+            "step_height_m": 0.22111111111111115,
+            "tread_m": 0.3
+          },
+          "8": {
+            "step_height_m": 0.24555555555555558,
+            "tread_m": 0.3
+          },
+          "9": {
+            "step_height_m": 0.27,
+            "tread_m": 0.3
+          }
+        },
+        "size_m": 12.0
+      },
+      "geometry_family": "B",
+      "geometry_selection": {
+        "bounds_m": [
+          [
+            -60.0,
+            243.0,
+            -1.8200000524520874
+          ],
+          [
+            60.0,
+            253.0,
+            0.0
+          ]
+        ],
+        "columns": [
+          51
+        ],
+        "face_count": 958,
+        "geometry_sha256": "010d096cbaa5a4cf562b500a6219e6000d4ce3b1d09085f0ff97f918012822a1",
+        "hash_encoding": "sorted source vertex indices; little-endian float32 vertices + remapped int32 faces",
+        "rows": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9
+        ],
+        "scope": "saved mesh faces with centroid in kind columns; generator outer border excluded",
+        "vertex_count": 640
+      },
+      "geometry_sha256": "010d096cbaa5a4cf562b500a6219e6000d4ce3b1d09085f0ff97f918012822a1",
+      "kind": "stair_down",
+      "original_dimensions_m": {
+        "stair_slope_l0_deg": 5.0,
+        "stair_slope_l9_deg": 45.0
+      },
+      "paper_reference": "원문(ANYmal-D · TRON1 같음): 경사 5° → 45° · G1 코드 step 0.05 → 0.27 (TR:41~70) · 학습 = G1 값 (등급 코드) · AME-2 (논문 Appendix A 비율 · 지형 표 ANYmal-D 열 P:1114~1130 · TRON1 열 · 공식 G1 코드 terrains.py TR 행) · SPEC-ame2-go2 §1.6 (SPEC:138~156) · DT v0.4.6 §3.2 (DT:118~132) · CG v0.16 E4 치수 행 (CG:294) · prep:93~97 ame2_go2_mix_v1 · 코드 ame2_preset.py:16~31 · 86~106 (통합 3b78bf18 · #613 포함 · #617 은 dimensions() 불변) · 타일 12 × 12 m (SIZE 12.0) · 평가 = 같은 메시 종류별 (family, kind, level) 칸 (CG:392) 이라 치수 같음",
+      "physical_flag": false,
+      "preset_id": "ame2_go2_mix_v1",
+      "training_dimensions_m": {
+        "step_height_l0_m": 0.05,
+        "step_height_l9_m": 0.27,
+        "tile_size_m": 12.0,
+        "tread_m": 0.3
+      }
+    },
+    {
+      "dimension_crosscheck": {
+        "code_values": {
+          "noise_amplitude_l9_m": 0.08,
+          "tile_size_m": 12.0,
+          "undulation_slope_l9_deg": 20.0
+        },
+        "state": "code_matches"
+      },
+      "dimension_scope": "owner-declared nominal dimensions; exact code parameters recorded separately",
+      "evaluation_axis_directions": {
+        "noise_amplitude_l9_m": "same",
+        "tile_size_m": "same",
+        "undulation_slope_l9_deg": "same"
+      },
+      "evaluation_dimensions_m": {
+        "noise_amplitude_l9_m": 0.08,
+        "tile_size_m": 12.0,
+        "undulation_slope_l9_deg": 20.0
+      },
+      "family": "B",
+      "generator_parameters": {
+        "levels": {
+          "0": {
+            "noise_amplitude_m": 0.0,
+            "undulation_slope_deg": 0.0
+          },
+          "1": {
+            "noise_amplitude_m": 0.008888888888888889,
+            "undulation_slope_deg": 2.2222222222222223
+          },
+          "2": {
+            "noise_amplitude_m": 0.017777777777777778,
+            "undulation_slope_deg": 4.444444444444445
+          },
+          "3": {
+            "noise_amplitude_m": 0.026666666666666665,
+            "undulation_slope_deg": 6.666666666666667
+          },
+          "4": {
+            "noise_amplitude_m": 0.035555555555555556,
+            "undulation_slope_deg": 8.88888888888889
+          },
+          "5": {
+            "noise_amplitude_m": 0.044444444444444446,
+            "undulation_slope_deg": 11.11111111111111
+          },
+          "6": {
+            "noise_amplitude_m": 0.05333333333333333,
+            "undulation_slope_deg": 13.333333333333334
+          },
+          "7": {
+            "noise_amplitude_m": 0.06222222222222223,
+            "undulation_slope_deg": 15.555555555555555
+          },
+          "8": {
+            "noise_amplitude_m": 0.07111111111111111,
+            "undulation_slope_deg": 17.77777777777778
+          },
+          "9": {
+            "noise_amplitude_m": 0.08,
+            "undulation_slope_deg": 20.0
+          }
+        },
+        "size_m": 12.0
+      },
+      "geometry_family": "B",
+      "geometry_selection": {
+        "bounds_m": [
+          [
+            -60.0,
+            254.0,
+            -0.25277915596961975
+          ],
+          [
+            60.0,
+            266.0,
+            0.27237802743911743
+          ]
+        ],
+        "columns": [
+          52
+        ],
+        "face_count": 288120,
+        "geometry_sha256": "c3bc7832d30624e700bbf6fb9173cead348e4385703a52fcac12e5d13eaa3bbc",
+        "hash_encoding": "sorted source vertex indices; little-endian float32 vertices + remapped int32 faces",
+        "rows": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9
+        ],
+        "scope": "saved mesh faces with centroid in kind columns; generator outer border excluded",
+        "vertex_count": 146490
+      },
+      "geometry_sha256": "c3bc7832d30624e700bbf6fb9173cead348e4385703a52fcac12e5d13eaa3bbc",
+      "kind": "rough",
+      "original_dimensions_m": {
+        "noise_amplitude_l9_m": 0.2
+      },
+      "paper_reference": "원문 ANYmal-D: 잡음 ±0 → ±0.2 m · TRON1 ±0.15 (경사 성분은 원문에 없음) · G1 코드: 거칠기 0 → 0.16 (= 진폭 ±0.08 · CG E3 G1 전폭) + 3 m 굴곡 경사 0 → 20° (TR:24~40 · CT:105~156) · 학습 = G1 값 (CG:294 · prep:95~97 undulation 20 · roughness 0.16 · lead 01:42 정정 · 등급 코드) · AME-2 (논문 Appendix A 비율 · 지형 표 ANYmal-D 열 P:1114~1130 · TRON1 열 · 공식 G1 코드 terrains.py TR 행) · SPEC-ame2-go2 §1.6 (SPEC:138~156) · DT v0.4.6 §3.2 (DT:118~132) · CG v0.16 E4 치수 행 (CG:294) · prep:93~97 ame2_go2_mix_v1 · 코드 ame2_preset.py:16~31 · 86~106 (통합 3b78bf18 · #613 포함 · #617 은 dimensions() 불변) · 타일 12 × 12 m (SIZE 12.0) · 평가 = 같은 메시 종류별 (family, kind, level) 칸 (CG:392) 이라 치수 같음",
+      "physical_flag": false,
+      "preset_id": "ame2_go2_mix_v1",
+      "training_dimensions_m": {
+        "noise_amplitude_l9_m": 0.08,
+        "tile_size_m": 12.0,
+        "undulation_slope_l9_deg": 20.0
+      }
+    },
+    {
+      "dimension_crosscheck": {
+        "code_values": {
+          "box_height_l0_m": 0.05,
+          "box_height_l9_m": 0.3,
+          "tile_size_m": 12.0
+        },
+        "state": "code_matches"
+      },
+      "dimension_scope": "owner-declared nominal dimensions; exact code parameters recorded separately",
+      "evaluation_axis_directions": {
+        "box_height_l0_m": "same",
+        "box_height_l9_m": "same",
+        "tile_size_m": "same"
+      },
+      "evaluation_dimensions_m": {
+        "box_height_l0_m": 0.05,
+        "box_height_l9_m": 0.3,
+        "tile_size_m": 12.0
+      },
+      "family": "B",
+      "generator_parameters": {
+        "levels": {
+          "0": {
+            "box_height_m": 0.05
+          },
+          "1": {
+            "box_height_m": 0.07777777777777778
+          },
+          "2": {
+            "box_height_m": 0.10555555555555556
+          },
+          "3": {
+            "box_height_m": 0.13333333333333333
+          },
+          "4": {
+            "box_height_m": 0.1611111111111111
+          },
+          "5": {
+            "box_height_m": 0.18888888888888888
+          },
+          "6": {
+            "box_height_m": 0.21666666666666667
+          },
+          "7": {
+            "box_height_m": 0.24444444444444446
+          },
+          "8": {
+            "box_height_m": 0.2722222222222222
+          },
+          "9": {
+            "box_height_m": 0.3
+          }
+        },
+        "size_m": 12.0
+      },
+      "geometry_family": "B",
+      "geometry_selection": {
+        "bounds_m": [
+          [
+            -60.0,
+            266.0,
+            -0.20000000298023224
+          ],
+          [
+            60.0,
+            278.0,
+            0.29102733731269836
+          ]
+        ],
+        "columns": [
+          53
+        ],
+        "face_count": 2498,
+        "geometry_sha256": "ebb6001d928a2c0426daaa721582659ba894519b829339569f3308e1d6be344f",
+        "hash_encoding": "sorted source vertex indices; little-endian float32 vertices + remapped int32 faces",
+        "rows": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9
+        ],
+        "scope": "saved mesh faces with centroid in kind columns; generator outer border excluded",
+        "vertex_count": 1680
+      },
+      "geometry_sha256": "ebb6001d928a2c0426daaa721582659ba894519b829339569f3308e1d6be344f",
+      "kind": "boxes",
+      "original_dimensions_m": {
+        "box_height_l0_m": 0.05,
+        "box_height_l9_m": 0.4
+      },
+      "paper_reference": "원문 ANYmal-D 0.05 → 0.4 · TRON1 0.05 → 0.3 · G1 코드 0.05 → 0.3 · 20 상자 0.8~2.0 m (TR:71~89) · 학습 = TRON1 = G1 값 (등급 코드) · AME-2 (논문 Appendix A 비율 · 지형 표 ANYmal-D 열 P:1114~1130 · TRON1 열 · 공식 G1 코드 terrains.py TR 행) · SPEC-ame2-go2 §1.6 (SPEC:138~156) · DT v0.4.6 §3.2 (DT:118~132) · CG v0.16 E4 치수 행 (CG:294) · prep:93~97 ame2_go2_mix_v1 · 코드 ame2_preset.py:16~31 · 86~106 (통합 3b78bf18 · #613 포함 · #617 은 dimensions() 불변) · 타일 12 × 12 m (SIZE 12.0) · 평가 = 같은 메시 종류별 (family, kind, level) 칸 (CG:392) 이라 치수 같음",
+      "physical_flag": false,
+      "preset_id": "ame2_go2_mix_v1",
+      "training_dimensions_m": {
+        "box_height_l0_m": 0.05,
+        "box_height_l9_m": 0.3,
+        "tile_size_m": 12.0
+      }
+    },
+    {
+      "dimension_crosscheck": {
+        "code_values": {
+          "ledge_height_l0_m": 0.1,
+          "ledge_height_l9_m": 0.53,
+          "tile_size_m": 12.0
+        },
+        "state": "code_matches"
+      },
+      "dimension_scope": "owner-declared nominal dimensions; exact code parameters recorded separately",
+      "evaluation_axis_directions": {
+        "ledge_height_l0_m": "same",
+        "ledge_height_l9_m": "same",
+        "tile_size_m": "same"
+      },
+      "evaluation_dimensions_m": {
+        "ledge_height_l0_m": 0.1,
+        "ledge_height_l9_m": 0.53,
+        "tile_size_m": 12.0
+      },
+      "family": "B",
+      "generator_parameters": {
+        "levels": {
+          "0": {
+            "ledge_height_m": 0.1
+          },
+          "1": {
+            "ledge_height_m": 0.14777777777777779
+          },
+          "2": {
+            "ledge_height_m": 0.19555555555555557
+          },
+          "3": {
+            "ledge_height_m": 0.24333333333333335
+          },
+          "4": {
+            "ledge_height_m": 0.2911111111111111
+          },
+          "5": {
+            "ledge_height_m": 0.3388888888888889
+          },
+          "6": {
+            "ledge_height_m": 0.3866666666666667
+          },
+          "7": {
+            "ledge_height_m": 0.4344444444444445
+          },
+          "8": {
+            "ledge_height_m": 0.4822222222222222
+          },
+          "9": {
+            "ledge_height_m": 0.53
+          }
+        },
+        "size_m": 12.0
+      },
+      "geometry_family": "B",
+      "geometry_selection": {
+        "bounds_m": [
+          [
+            -60.0,
+            278.0,
+            -0.20000000298023224
+          ],
+          [
+            60.0,
+            290.0,
+            0.5299999713897705
+          ]
+        ],
+        "columns": [
+          54
+        ],
+        "face_count": 218,
+        "geometry_sha256": "819050d0ad986fa3e10b43cae14544e7b8e571881c30d46b7835f48e9d55eee2",
+        "hash_encoding": "sorted source vertex indices; little-endian float32 vertices + remapped int32 faces",
+        "rows": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9
+        ],
+        "scope": "saved mesh faces with centroid in kind columns; generator outer border excluded",
+        "vertex_count": 200
+      },
+      "geometry_sha256": "819050d0ad986fa3e10b43cae14544e7b8e571881c30d46b7835f48e9d55eee2",
+      "kind": "climb_up",
+      "original_dimensions_m": {
+        "ledge_height_l0_m": 0.1,
+        "ledge_height_l9_m": 1.0
+      },
+      "paper_reference": "원문 ANYmal-D 0.1 → 1.0 · TRON1 0.1 → 0.48 · G1 코드 0.1 → 0.65 (TR:110~126) · 학습 0.53 = CG:294 결정 (D159 0.32 → JEPLO Go2 실기 상자 0.53 · v0.15) · prep:94 climb_up_l9_m 0.53 · 물리 표시: 턱 0.60 판정 (E6b high_ledge) · 0.75 기록 열 (CG:593 · 625 · prep:468) · 등급 결정 · AME-2 (논문 Appendix A 비율 · 지형 표 ANYmal-D 열 P:1114~1130 · TRON1 열 · 공식 G1 코드 terrains.py TR 행) · SPEC-ame2-go2 §1.6 (SPEC:138~156) · DT v0.4.6 §3.2 (DT:118~132) · CG v0.16 E4 치수 행 (CG:294) · prep:93~97 ame2_go2_mix_v1 · 코드 ame2_preset.py:16~31 · 86~106 (통합 3b78bf18 · #613 포함 · #617 은 dimensions() 불변) · 타일 12 × 12 m (SIZE 12.0) · 평가 = 같은 메시 종류별 (family, kind, level) 칸 (CG:392) 이라 치수 같음",
+      "physical_flag": true,
+      "preset_id": "ame2_go2_mix_v1",
+      "training_dimensions_m": {
+        "ledge_height_l0_m": 0.1,
+        "ledge_height_l9_m": 0.53,
+        "tile_size_m": 12.0
+      }
+    },
+    {
+      "dimension_crosscheck": {
+        "code_values": {
+          "ledge_height_l0_m": 0.2,
+          "ledge_height_l9_m": 0.6,
+          "tile_size_m": 12.0
+        },
+        "state": "code_matches"
+      },
+      "dimension_scope": "owner-declared nominal dimensions; exact code parameters recorded separately",
+      "evaluation_axis_directions": {
+        "ledge_height_l0_m": "same",
+        "ledge_height_l9_m": "same",
+        "tile_size_m": "same"
+      },
+      "evaluation_dimensions_m": {
+        "ledge_height_l0_m": 0.2,
+        "ledge_height_l9_m": 0.6,
+        "tile_size_m": 12.0
+      },
+      "family": "B",
+      "generator_parameters": {
+        "levels": {
+          "0": {
+            "ledge_height_m": 0.2
+          },
+          "1": {
+            "ledge_height_m": 0.24444444444444446
+          },
+          "2": {
+            "ledge_height_m": 0.28888888888888886
+          },
+          "3": {
+            "ledge_height_m": 0.33333333333333337
+          },
+          "4": {
+            "ledge_height_m": 0.37777777777777777
+          },
+          "5": {
+            "ledge_height_m": 0.4222222222222222
+          },
+          "6": {
+            "ledge_height_m": 0.4666666666666667
+          },
+          "7": {
+            "ledge_height_m": 0.5111111111111111
+          },
+          "8": {
+            "ledge_height_m": 0.5555555555555556
+          },
+          "9": {
+            "ledge_height_m": 0.6
+          }
+        },
+        "size_m": 12.0
+      },
+      "geometry_family": "B",
+      "geometry_selection": {
+        "bounds_m": [
+          [
+            -60.0,
+            290.0,
+            -0.20000000298023224
+          ],
+          [
+            60.0,
+            302.0,
+            0.6000000238418579
+          ]
+        ],
+        "columns": [
+          55
+        ],
+        "face_count": 238,
+        "geometry_sha256": "23e28e48a0beeb8d49fff22308525d1dcd57124f40992eac2a6a589aba77b081",
+        "hash_encoding": "sorted source vertex indices; little-endian float32 vertices + remapped int32 faces",
+        "rows": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9
+        ],
+        "scope": "saved mesh faces with centroid in kind columns; generator outer border excluded",
+        "vertex_count": 240
+      },
+      "geometry_sha256": "23e28e48a0beeb8d49fff22308525d1dcd57124f40992eac2a6a589aba77b081",
+      "kind": "climb_down",
+      "original_dimensions_m": {
+        "ledge_height_l0_m": 0.2,
+        "ledge_height_l9_m": 1.0
+      },
+      "paper_reference": "원문 ANYmal-D 0.2 → 1.0 · TRON1 0.2 → 0.88 · G1 코드 0.2 → 0.88 (TR:127~143) · 학습 0.6 = CG:294 · 물리 표시: 0.6 판정 · 0.75 · 0.88 기록 열 (CG:594 · 625 · prep:473) · 등급 결정 · AME-2 (논문 Appendix A 비율 · 지형 표 ANYmal-D 열 P:1114~1130 · TRON1 열 · 공식 G1 코드 terrains.py TR 행) · SPEC-ame2-go2 §1.6 (SPEC:138~156) · DT v0.4.6 §3.2 (DT:118~132) · CG v0.16 E4 치수 행 (CG:294) · prep:93~97 ame2_go2_mix_v1 · 코드 ame2_preset.py:16~31 · 86~106 (통합 3b78bf18 · #613 포함 · #617 은 dimensions() 불변) · 타일 12 × 12 m (SIZE 12.0) · 평가 = 같은 메시 종류별 (family, kind, level) 칸 (CG:392) 이라 치수 같음",
+      "physical_flag": true,
+      "preset_id": "ame2_go2_mix_v1",
+      "training_dimensions_m": {
+        "ledge_height_l0_m": 0.2,
+        "ledge_height_l9_m": 0.6,
+        "tile_size_m": 12.0
+      }
+    },
+    {
+      "dimension_crosscheck": {
+        "code_values": {
+          "gap_l0_m": 0.18,
+          "gap_l9_m": 0.7,
+          "tile_size_m": 12.0
+        },
+        "state": "code_matches"
+      },
+      "dimension_scope": "owner-declared nominal dimensions; exact code parameters recorded separately",
+      "evaluation_axis_directions": {
+        "gap_l0_m": "same",
+        "gap_l9_m": "same",
+        "tile_size_m": "same"
+      },
+      "evaluation_dimensions_m": {
+        "gap_l0_m": 0.18,
+        "gap_l9_m": 0.7,
+        "tile_size_m": 12.0
+      },
+      "family": "B",
+      "generator_parameters": {
+        "levels": {
+          "0": {
+            "gap_m": 0.18
+          },
+          "1": {
+            "gap_m": 0.23777777777777778
+          },
+          "2": {
+            "gap_m": 0.29555555555555557
+          },
+          "3": {
+            "gap_m": 0.35333333333333333
+          },
+          "4": {
+            "gap_m": 0.4111111111111111
+          },
+          "5": {
+            "gap_m": 0.4688888888888889
+          },
+          "6": {
+            "gap_m": 0.5266666666666666
+          },
+          "7": {
+            "gap_m": 0.5844444444444444
+          },
+          "8": {
+            "gap_m": 0.6422222222222222
+          },
+          "9": {
+            "gap_m": 0.7
+          }
+        },
+        "size_m": 12.0
+      },
+      "geometry_family": "B",
+      "geometry_selection": {
+        "bounds_m": [
+          [
+            -60.0,
+            302.0,
+            -1.5977109670639038
+          ],
+          [
+            60.0,
+            314.0,
+            0.6000000238418579
+          ]
+        ],
+        "columns": [
+          56
+        ],
+        "face_count": 1020,
+        "geometry_sha256": "032f02915d9564723412396035b6803420ad1871db6e43475390b4208519b4a0",
+        "hash_encoding": "sorted source vertex indices; little-endian float32 vertices + remapped int32 faces",
+        "rows": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9
+        ],
+        "scope": "saved mesh faces with centroid in kind columns; generator outer border excluded",
+        "vertex_count": 776
+      },
+      "geometry_sha256": "032f02915d9564723412396035b6803420ad1871db6e43475390b4208519b4a0",
+      "kind": "gap",
+      "original_dimensions_m": {
+        "gap_l0_m": 0.1,
+        "gap_l9_m": 1.1
+      },
+      "paper_reference": "원문 ANYmal-D 0.1 → 1.1 (양쪽 높이차 ±30 %) · TRON1 0.1 → 0.6 · G1 코드 0.18 → 1.2 (TR:162~178) · 학습 0.18 → 0.70 = CG:294 결정 · 틈 0.90 · 1.00 기록 열은 START 평가 전용 열 쪽 (CG:592 start_go2_eval_gap115 행) 이라 이 종 flag 는 false · 등급 결정 · AME-2 (논문 Appendix A 비율 · 지형 표 ANYmal-D 열 P:1114~1130 · TRON1 열 · 공식 G1 코드 terrains.py TR 행) · SPEC-ame2-go2 §1.6 (SPEC:138~156) · DT v0.4.6 §3.2 (DT:118~132) · CG v0.16 E4 치수 행 (CG:294) · prep:93~97 ame2_go2_mix_v1 · 코드 ame2_preset.py:16~31 · 86~106 (통합 3b78bf18 · #613 포함 · #617 은 dimensions() 불변) · 타일 12 × 12 m (SIZE 12.0) · 평가 = 같은 메시 종류별 (family, kind, level) 칸 (CG:392) 이라 치수 같음",
+      "physical_flag": false,
+      "preset_id": "ame2_go2_mix_v1",
+      "training_dimensions_m": {
+        "gap_l0_m": 0.18,
+        "gap_l9_m": 0.7,
+        "tile_size_m": 12.0
+      }
+    },
+    {
+      "dimension_crosscheck": {
+        "code_values": {
+          "beam_width_l0_m": 0.4,
+          "beam_width_l9_m": 0.16,
+          "gap_l0_m": 0.08,
+          "gap_l9_m": 0.35,
+          "height_difference_l9_m": 0.3,
+          "tile_size_m": 12.0
+        },
+        "state": "code_matches"
+      },
+      "dimension_scope": "owner-declared nominal dimensions; exact code parameters recorded separately",
+      "evaluation_axis_directions": {
+        "beam_width_l0_m": "same",
+        "beam_width_l9_m": "same",
+        "gap_l0_m": "same",
+        "gap_l9_m": "same",
+        "height_difference_l9_m": "same",
+        "tile_size_m": "same"
+      },
+      "evaluation_dimensions_m": {
+        "beam_width_l0_m": 0.4,
+        "beam_width_l9_m": 0.16,
+        "gap_l0_m": 0.08,
+        "gap_l9_m": 0.35,
+        "height_difference_l9_m": 0.3,
+        "tile_size_m": 12.0
+      },
+      "family": "B",
+      "generator_parameters": {
+        "levels": {
+          "0": {
+            "beam_width_m": 0.4,
+            "gap_m": 0.08,
+            "height_difference_m": 0.0
+          },
+          "1": {
+            "beam_width_m": 0.37333333333333335,
+            "gap_m": 0.11,
+            "height_difference_m": 0.03333333333333333
+          },
+          "2": {
+            "beam_width_m": 0.3466666666666667,
+            "gap_m": 0.13999999999999999,
+            "height_difference_m": 0.06666666666666667
+          },
+          "3": {
+            "beam_width_m": 0.32,
+            "gap_m": 0.16999999999999998,
+            "height_difference_m": 0.09999999999999999
+          },
+          "4": {
+            "beam_width_m": 0.29333333333333333,
+            "gap_m": 0.19999999999999998,
+            "height_difference_m": 0.13333333333333333
+          },
+          "5": {
+            "beam_width_m": 0.26666666666666666,
+            "gap_m": 0.22999999999999998,
+            "height_difference_m": 0.16666666666666666
+          },
+          "6": {
+            "beam_width_m": 0.24,
+            "gap_m": 0.25999999999999995,
+            "height_difference_m": 0.19999999999999998
+          },
+          "7": {
+            "beam_width_m": 0.21333333333333335,
+            "gap_m": 0.29,
+            "height_difference_m": 0.23333333333333334
+          },
+          "8": {
+            "beam_width_m": 0.18666666666666668,
+            "gap_m": 0.31999999999999995,
+            "height_difference_m": 0.26666666666666666
+          },
+          "9": {
+            "beam_width_m": 0.16,
+            "gap_m": 0.35,
+            "height_difference_m": 0.3
+          }
+        },
+        "size_m": 12.0
+      },
+      "geometry_family": "B",
+      "geometry_selection": {
+        "bounds_m": [
+          [
+            -60.0,
+            314.0,
+            -1.5977109670639038
+          ],
+          [
+            60.0,
+            326.0,
+            0.25900691747665405
+          ]
+        ],
+        "columns": [
+          57
+        ],
+        "face_count": 2664,
+        "geometry_sha256": "2a4fe6d9579c4b66b72ae4db9bdce1f3db8cc7fbeb137f7e6f16ae8fe223eff1",
+        "hash_encoding": "sorted source vertex indices; little-endian float32 vertices + remapped int32 faces",
+        "rows": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9
+        ],
+        "scope": "saved mesh faces with centroid in kind columns; generator outer border excluded",
+        "vertex_count": 1860
+      },
+      "geometry_sha256": "2a4fe6d9579c4b66b72ae4db9bdce1f3db8cc7fbeb137f7e6f16ae8fe223eff1",
+      "kind": "pallets",
+      "original_dimensions_m": {
+        "beam_width_l0_m": 0.4,
+        "beam_width_l9_m": 0.16,
+        "gap_l0_m": 0.08,
+        "gap_l9_m": 0.35,
+        "height_difference_l9_m": 0.3
+      },
+      "paper_reference": "원문 ANYmal-D 폭 0.4 → 0.16 · 틈 0.08 → 0.35 · 높이차 0 → 0.3 · TRON1 틈 0.08 → 0.2 · 높이차 0 → 0.2 · G1 코드 폭 0.4 → 0.16 · 틈 0.16 → 0.24 · 높이 0 → 0.2 (TR:179~196) · 학습 = ANYmal-D 원문값 = CG:294 v0.16 결정 (§E.10 6 · 틈 0.35 · 높이차 0.30 · 서로 다른 경계) · prep:30~33 · 등급 원문 = 결정 · AME-2 (논문 Appendix A 비율 · 지형 표 ANYmal-D 열 P:1114~1130 · TRON1 열 · 공식 G1 코드 terrains.py TR 행) · SPEC-ame2-go2 §1.6 (SPEC:138~156) · DT v0.4.6 §3.2 (DT:118~132) · CG v0.16 E4 치수 행 (CG:294) · prep:93~97 ame2_go2_mix_v1 · 코드 ame2_preset.py:16~31 · 86~106 (통합 3b78bf18 · #613 포함 · #617 은 dimensions() 불변) · 타일 12 × 12 m (SIZE 12.0) · 평가 = 같은 메시 종류별 (family, kind, level) 칸 (CG:392) 이라 치수 같음",
+      "physical_flag": false,
+      "preset_id": "ame2_go2_mix_v1",
+      "training_dimensions_m": {
+        "beam_width_l0_m": 0.4,
+        "beam_width_l9_m": 0.16,
+        "gap_l0_m": 0.08,
+        "gap_l9_m": 0.35,
+        "height_difference_l9_m": 0.3,
+        "tile_size_m": 12.0
+      }
+    },
+    {
+      "dimension_crosscheck": {
+        "code_values": {
+          "gap_l0_m": 0.08,
+          "gap_l9_m": 0.12,
+          "stone_side_l0_m": 0.71,
+          "stone_side_l9_m": 0.41,
+          "tile_size_m": 12.0
+        },
+        "state": "code_matches"
+      },
+      "dimension_scope": "owner-declared nominal dimensions; exact code parameters recorded separately",
+      "evaluation_axis_directions": {
+        "gap_l0_m": "same",
+        "gap_l9_m": "same",
+        "stone_side_l0_m": "same",
+        "stone_side_l9_m": "same",
+        "tile_size_m": "same"
+      },
+      "evaluation_dimensions_m": {
+        "gap_l0_m": 0.08,
+        "gap_l9_m": 0.12,
+        "stone_side_l0_m": 0.71,
+        "stone_side_l9_m": 0.41,
+        "tile_size_m": 12.0
+      },
+      "family": "B",
+      "generator_parameters": {
+        "levels": {
+          "0": {
+            "gap_m": 0.08,
+            "stone_side_m": 0.71
+          },
+          "1": {
+            "gap_m": 0.08444444444444445,
+            "stone_side_m": 0.6766666666666666
+          },
+          "2": {
+            "gap_m": 0.08888888888888889,
+            "stone_side_m": 0.6433333333333333
+          },
+          "3": {
+            "gap_m": 0.09333333333333334,
+            "stone_side_m": 0.61
+          },
+          "4": {
+            "gap_m": 0.09777777777777777,
+            "stone_side_m": 0.5766666666666667
+          },
+          "5": {
+            "gap_m": 0.10222222222222221,
+            "stone_side_m": 0.5433333333333333
+          },
+          "6": {
+            "gap_m": 0.10666666666666666,
+            "stone_side_m": 0.51
+          },
+          "7": {
+            "gap_m": 0.1111111111111111,
+            "stone_side_m": 0.4766666666666666
+          },
+          "8": {
+            "gap_m": 0.11555555555555555,
+            "stone_side_m": 0.4433333333333333
+          },
+          "9": {
+            "gap_m": 0.12,
+            "stone_side_m": 0.41
+          }
+        },
+        "size_m": 12.0
+      },
+      "geometry_family": "B",
+      "geometry_selection": {
+        "bounds_m": [
+          [
+            -60.0,
+            326.0,
+            -1.542115569114685
+          ],
+          [
+            59.56649398803711,
+            338.0,
+            0.05998558923602104
+          ]
+        ],
+        "columns": [
+          58
+        ],
+        "face_count": 39706,
+        "geometry_sha256": "88ff30819a7a21448aefd924f02927cc89f850e12276937245e10dbd3aad6b1a",
+        "hash_encoding": "sorted source vertex indices; little-endian float32 vertices + remapped int32 faces",
+        "rows": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9
+        ],
+        "scope": "saved mesh faces with centroid in kind columns; generator outer border excluded",
+        "vertex_count": 26500
+      },
+      "geometry_sha256": "88ff30819a7a21448aefd924f02927cc89f850e12276937245e10dbd3aad6b1a",
+      "kind": "stones",
+      "original_dimensions_m": {
+        "gap_l0_m": 0.08,
+        "gap_l9_m": 0.12,
+        "stone_side_l0_m": 0.71,
+        "stone_side_l9_m": 0.41
+      },
+      "paper_reference": "원문: 「StonesEverywhere」 [26][15] 인용만 · 수치 없음 → original = G1 코드값 상자 0.71 → 0.41 · 틈 0.08 → 0.12 · 높이 0.06 (TR:211~231 · 등급 코드 원문) · 학습 = 같은 값 = CG:294 · AME-2 (논문 Appendix A 비율 · 지형 표 ANYmal-D 열 P:1114~1130 · TRON1 열 · 공식 G1 코드 terrains.py TR 행) · SPEC-ame2-go2 §1.6 (SPEC:138~156) · DT v0.4.6 §3.2 (DT:118~132) · CG v0.16 E4 치수 행 (CG:294) · prep:93~97 ame2_go2_mix_v1 · 코드 ame2_preset.py:16~31 · 86~106 (통합 3b78bf18 · #613 포함 · #617 은 dimensions() 불변) · 타일 12 × 12 m (SIZE 12.0) · 평가 = 같은 메시 종류별 (family, kind, level) 칸 (CG:392) 이라 치수 같음",
+      "physical_flag": false,
+      "preset_id": "ame2_go2_mix_v1",
+      "training_dimensions_m": {
+        "gap_l0_m": 0.08,
+        "gap_l9_m": 0.12,
+        "stone_side_l0_m": 0.71,
+        "stone_side_l9_m": 0.41,
+        "tile_size_m": 12.0
+      }
+    },
+    {
+      "dimension_crosscheck": {
+        "code_values": {
+          "beam_width_l0_m": 0.9,
+          "beam_width_l9_m": 0.18000000000000005,
+          "height_difference_l9_m": 0.2,
+          "max_rpy_rad": 0.1,
+          "tile_size_m": 12.0
+        },
+        "state": "code_matches"
+      },
+      "dimension_scope": "owner-declared nominal dimensions; exact code parameters recorded separately",
+      "evaluation_axis_directions": {
+        "beam_width_l0_m": "same",
+        "beam_width_l9_m": "same",
+        "height_difference_l9_m": "same",
+        "max_rpy_rad": "same",
+        "tile_size_m": "same"
+      },
+      "evaluation_dimensions_m": {
+        "beam_width_l0_m": 0.9,
+        "beam_width_l9_m": 0.18,
+        "height_difference_l9_m": 0.2,
+        "max_rpy_rad": 0.1,
+        "tile_size_m": 12.0
+      },
+      "family": "B",
+      "generator_parameters": {
+        "levels": {
+          "0": {
+            "beam_width_m": 0.9,
+            "height_difference_m": 0.0,
+            "max_rpy_rad": 0.1
+          },
+          "1": {
+            "beam_width_m": 0.8200000000000001,
+            "height_difference_m": 0.022222222222222223,
+            "max_rpy_rad": 0.1
+          },
+          "2": {
+            "beam_width_m": 0.74,
+            "height_difference_m": 0.044444444444444446,
+            "max_rpy_rad": 0.1
+          },
+          "3": {
+            "beam_width_m": 0.66,
+            "height_difference_m": 0.06666666666666668,
+            "max_rpy_rad": 0.1
+          },
+          "4": {
+            "beam_width_m": 0.5800000000000001,
+            "height_difference_m": 0.08888888888888889,
+            "max_rpy_rad": 0.1
+          },
+          "5": {
+            "beam_width_m": 0.5,
+            "height_difference_m": 0.1111111111111111,
+            "max_rpy_rad": 0.1
+          },
+          "6": {
+            "beam_width_m": 0.42,
+            "height_difference_m": 0.13333333333333336,
+            "max_rpy_rad": 0.1
+          },
+          "7": {
+            "beam_width_m": 0.33999999999999997,
+            "height_difference_m": 0.15555555555555556,
+            "max_rpy_rad": 0.1
+          },
+          "8": {
+            "beam_width_m": 0.26,
+            "height_difference_m": 0.17777777777777778,
+            "max_rpy_rad": 0.1
+          },
+          "9": {
+            "beam_width_m": 0.18000000000000005,
+            "height_difference_m": 0.2,
+            "max_rpy_rad": 0.1
+          }
+        },
+        "size_m": 12.0
+      },
+      "geometry_family": "B",
+      "geometry_selection": {
+        "bounds_m": [
+          [
+            -60.0,
+            338.0,
+            -1.542115569114685
+          ],
+          [
+            60.0,
+            350.0,
+            0.3962424397468567
+          ]
+        ],
+        "columns": [
+          59
+        ],
+        "face_count": 386,
+        "geometry_sha256": "9f089c14580c8add7ca50c93ea05069e027f8caf1918e4377a0f15dbb7b8e756",
+        "hash_encoding": "sorted source vertex indices; little-endian float32 vertices + remapped int32 faces",
+        "rows": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9
+        ],
+        "scope": "saved mesh faces with centroid in kind columns; generator outer border excluded",
+        "vertex_count": 304
+      },
+      "geometry_sha256": "9f089c14580c8add7ca50c93ea05069e027f8caf1918e4377a0f15dbb7b8e756",
+      "kind": "beam",
+      "original_dimensions_m": {
+        "beam_width_l0_m": 0.9,
+        "beam_width_l9_m": 0.18,
+        "height_difference_l9_m": 0.2,
+        "max_rpy_rad": 0.1
+      },
+      "paper_reference": "원문 ANYmal-D · TRON1: 폭 0.9 → 0.18 · rpy ±0.1 rad · 높이차 ±0.2 · G1 코드 폭 0.5 → 0.17 · max_rpy 0.087 · 높이차 ±0.05·난이도 (TR:197~210) · 학습 = 원문값 (CG:294 「beam 폭 0.9 → 0.18」) · 등급 원문 · AME-2 (논문 Appendix A 비율 · 지형 표 ANYmal-D 열 P:1114~1130 · TRON1 열 · 공식 G1 코드 terrains.py TR 행) · SPEC-ame2-go2 §1.6 (SPEC:138~156) · DT v0.4.6 §3.2 (DT:118~132) · CG v0.16 E4 치수 행 (CG:294) · prep:93~97 ame2_go2_mix_v1 · 코드 ame2_preset.py:16~31 · 86~106 (통합 3b78bf18 · #613 포함 · #617 은 dimensions() 불변) · 타일 12 × 12 m (SIZE 12.0) · 평가 = 같은 메시 종류별 (family, kind, level) 칸 (CG:392) 이라 치수 같음",
+      "physical_flag": false,
+      "preset_id": "ame2_go2_mix_v1",
+      "training_dimensions_m": {
+        "beam_width_l0_m": 0.9,
+        "beam_width_l9_m": 0.18,
+        "height_difference_l9_m": 0.2,
+        "max_rpy_rad": 0.1,
+        "tile_size_m": 12.0
+      }
+    },
+    {
+      "dimension_crosscheck": {
+        "code_values": {
+          "first_ring_height_l0_m": 0.05,
+          "first_ring_height_l9_m": 0.3,
+          "second_ring_height_l0_m": 0.05,
+          "second_ring_height_l9_m": 0.3,
+          "tile_size_m": 12.0
+        },
+        "state": "code_matches"
+      },
+      "dimension_scope": "owner-declared nominal dimensions; exact code parameters recorded separately",
+      "evaluation_axis_directions": {
+        "first_ring_height_l0_m": "same",
+        "first_ring_height_l9_m": "same",
+        "second_ring_height_l0_m": "same",
+        "second_ring_height_l9_m": "same",
+        "tile_size_m": "same"
+      },
+      "evaluation_dimensions_m": {
+        "first_ring_height_l0_m": 0.05,
+        "first_ring_height_l9_m": 0.3,
+        "second_ring_height_l0_m": 0.05,
+        "second_ring_height_l9_m": 0.3,
+        "tile_size_m": 12.0
+      },
+      "family": "B",
+      "generator_parameters": {
+        "levels": {
+          "0": {
+            "first_ring_height_m": 0.05,
+            "second_ring_height_m": 0.05
+          },
+          "1": {
+            "first_ring_height_m": 0.07777777777777778,
+            "second_ring_height_m": 0.07777777777777778
+          },
+          "2": {
+            "first_ring_height_m": 0.10555555555555556,
+            "second_ring_height_m": 0.10555555555555556
+          },
+          "3": {
+            "first_ring_height_m": 0.13333333333333333,
+            "second_ring_height_m": 0.13333333333333333
+          },
+          "4": {
+            "first_ring_height_m": 0.1611111111111111,
+            "second_ring_height_m": 0.1611111111111111
+          },
+          "5": {
+            "first_ring_height_m": 0.18888888888888888,
+            "second_ring_height_m": 0.18888888888888888
+          },
+          "6": {
+            "first_ring_height_m": 0.21666666666666667,
+            "second_ring_height_m": 0.21666666666666667
+          },
+          "7": {
+            "first_ring_height_m": 0.24444444444444446,
+            "second_ring_height_m": 0.24444444444444446
+          },
+          "8": {
+            "first_ring_height_m": 0.2722222222222222,
+            "second_ring_height_m": 0.2722222222222222
+          },
+          "9": {
+            "first_ring_height_m": 0.3,
+            "second_ring_height_m": 0.3
+          }
+        },
+        "size_m": 12.0
+      },
+      "geometry_family": "B",
+      "geometry_selection": {
+        "bounds_m": [
+          [
+            -60.0,
+            350.0,
+            -1.4772758483886719
+          ],
+          [
+            60.0,
+            362.0,
+            0.6000000238418579
+          ]
+        ],
+        "columns": [
+          60
+        ],
+        "face_count": 550,
+        "geometry_sha256": "ce3d27371272063a7c8b9f9164736cad14709e95273f01d58f91e58da79e179a",
+        "hash_encoding": "sorted source vertex indices; little-endian float32 vertices + remapped int32 faces",
+        "rows": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9
+        ],
+        "scope": "saved mesh faces with centroid in kind columns; generator outer border excluded",
+        "vertex_count": 504
+      },
+      "geometry_sha256": "ce3d27371272063a7c8b9f9164736cad14709e95273f01d58f91e58da79e179a",
+      "kind": "consecutive",
+      "original_dimensions_m": {
+        "first_ring_height_l9_m": 0.5,
+        "second_ring_height_l9_m": 0.4
+      },
+      "paper_reference": "원문 ANYmal-D 1 층 0.05 → 0.5 · 2 층 0.05 → 0.4 · TRON1 0.05 → 0.3 · 0.3 · G1 코드 0.05 → 0.35 · 0.35 (TR:144~161) · 학습 0.05 → 0.30 = TRON1 = CG:294 · 물리 표시: 0.30 판정 · 0.40 기록 열 (CG:598 · 625 · prep:475) · 등급 결정 · AME-2 (논문 Appendix A 비율 · 지형 표 ANYmal-D 열 P:1114~1130 · TRON1 열 · 공식 G1 코드 terrains.py TR 행) · SPEC-ame2-go2 §1.6 (SPEC:138~156) · DT v0.4.6 §3.2 (DT:118~132) · CG v0.16 E4 치수 행 (CG:294) · prep:93~97 ame2_go2_mix_v1 · 코드 ame2_preset.py:16~31 · 86~106 (통합 3b78bf18 · #613 포함 · #617 은 dimensions() 불변) · 타일 12 × 12 m (SIZE 12.0) · 평가 = 같은 메시 종류별 (family, kind, level) 칸 (CG:392) 이라 치수 같음",
+      "physical_flag": true,
+      "preset_id": "ame2_go2_mix_v1",
+      "training_dimensions_m": {
+        "first_ring_height_l0_m": 0.05,
+        "first_ring_height_l9_m": 0.3,
+        "second_ring_height_l0_m": 0.05,
+        "second_ring_height_l9_m": 0.3,
+        "tile_size_m": 12.0
+      }
+    },
+    {
+      "dimension_crosscheck": {
+        "code_values": {
+          "density_l9_per_m2": 0.5,
+          "obstacle_height_max_m": 2.0,
+          "obstacle_height_min_m": 0.2,
+          "tile_size_m": 12.0
+        },
+        "state": "code_matches"
+      },
+      "dimension_scope": "owner-declared nominal dimensions; exact code parameters recorded separately",
+      "evaluation_axis_directions": {
+        "density_l9_per_m2": "same",
+        "obstacle_height_max_m": "same",
+        "obstacle_height_min_m": "same",
+        "tile_size_m": "same"
+      },
+      "evaluation_dimensions_m": {
+        "density_l9_per_m2": 0.5,
+        "obstacle_height_max_m": 2.0,
+        "obstacle_height_min_m": 0.2,
+        "tile_size_m": 12.0
+      },
+      "family": "B",
+      "generator_parameters": {
+        "levels": {
+          "0": {
+            "density_per_m2": 0.0,
+            "obstacle_height_max_m": 2.0,
+            "obstacle_height_min_m": 0.2
+          },
+          "1": {
+            "density_per_m2": 0.05555555555555555,
+            "obstacle_height_max_m": 2.0,
+            "obstacle_height_min_m": 0.2
+          },
+          "2": {
+            "density_per_m2": 0.1111111111111111,
+            "obstacle_height_max_m": 2.0,
+            "obstacle_height_min_m": 0.2
+          },
+          "3": {
+            "density_per_m2": 0.16666666666666666,
+            "obstacle_height_max_m": 2.0,
+            "obstacle_height_min_m": 0.2
+          },
+          "4": {
+            "density_per_m2": 0.2222222222222222,
+            "obstacle_height_max_m": 2.0,
+            "obstacle_height_min_m": 0.2
+          },
+          "5": {
+            "density_per_m2": 0.2777777777777778,
+            "obstacle_height_max_m": 2.0,
+            "obstacle_height_min_m": 0.2
+          },
+          "6": {
+            "density_per_m2": 0.3333333333333333,
+            "obstacle_height_max_m": 2.0,
+            "obstacle_height_min_m": 0.2
+          },
+          "7": {
+            "density_per_m2": 0.3888888888888889,
+            "obstacle_height_max_m": 2.0,
+            "obstacle_height_min_m": 0.2
+          },
+          "8": {
+            "density_per_m2": 0.4444444444444444,
+            "obstacle_height_max_m": 2.0,
+            "obstacle_height_min_m": 0.2
+          },
+          "9": {
+            "density_per_m2": 0.5,
+            "obstacle_height_max_m": 2.0,
+            "obstacle_height_min_m": 0.2
+          }
+        },
+        "size_m": 12.0
+      },
+      "geometry_family": "B",
+      "geometry_selection": {
+        "bounds_m": [
+          [
+            -60.0,
+            362.0,
+            -2.1981093883514404
+          ],
+          [
+            60.0,
+            374.0,
+            1.989215612411499
+          ]
+        ],
+        "columns": [
+          61
+        ],
+        "face_count": 28092,
+        "geometry_sha256": "d11f2a60822bda57ed71e2c260bbac387d768ff2c3684976c49e809456d8ee80",
+        "hash_encoding": "sorted source vertex indices; little-endian float32 vertices + remapped int32 faces",
+        "rows": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9
+        ],
+        "scope": "saved mesh faces with centroid in kind columns; generator outer border excluded",
+        "vertex_count": 19088
+      },
+      "geometry_sha256": "d11f2a60822bda57ed71e2c260bbac387d768ff2c3684976c49e809456d8ee80",
+      "kind": "obstacles",
+      "original_dimensions_m": {
+        "density_l9_per_m2": 0.5
+      },
+      "paper_reference": "원문 밀도 0 → 0.5 m⁻² (ANYmal-D · TRON1 같음) · 높이 0.2~2.0 · 크기 0.3~0.8 은 G1 코드 (TR:90~109) · CG:294 「밀도 0 → 0.5 · 높이 0.2~2.0」 · 등급 원문(밀도) · 코드(높이) · AME-2 (논문 Appendix A 비율 · 지형 표 ANYmal-D 열 P:1114~1130 · TRON1 열 · 공식 G1 코드 terrains.py TR 행) · SPEC-ame2-go2 §1.6 (SPEC:138~156) · DT v0.4.6 §3.2 (DT:118~132) · CG v0.16 E4 치수 행 (CG:294) · prep:93~97 ame2_go2_mix_v1 · 코드 ame2_preset.py:16~31 · 86~106 (통합 3b78bf18 · #613 포함 · #617 은 dimensions() 불변) · 타일 12 × 12 m (SIZE 12.0) · 평가 = 같은 메시 종류별 (family, kind, level) 칸 (CG:392) 이라 치수 같음",
+      "physical_flag": false,
+      "preset_id": "ame2_go2_mix_v1",
+      "training_dimensions_m": {
+        "density_l9_per_m2": 0.5,
+        "obstacle_height_max_m": 2.0,
+        "obstacle_height_min_m": 0.2,
+        "tile_size_m": 12.0
+      }
+    },
+    {
+      "dimension_crosscheck": {
+        "note": "Exact parameters/source hashes retained; nominal C values precede grid rounding.",
+        "state": "nominal_declaration"
+      },
+      "dimension_scope": "owner-declared nominal dimensions; exact code parameters recorded separately",
+      "evaluation_axis_directions": {
+        "depth_max_m": "same",
+        "depth_min_m": "same",
+        "gap_l9_m": "same",
+        "tile_size_m": "same"
+      },
+      "evaluation_dimensions_m": {
+        "depth_max_m": 2.0,
+        "depth_min_m": 1.0,
+        "gap_l9_m": 0.64,
+        "tile_size_m": 9.0
+      },
+      "family": "C",
+      "generator_parameters": {
+        "border_cells": 7,
+        "horizontal_scale_m": 0.08,
+        "inner_cells": 99,
+        "nominal_to_grid_note": "Declaration dimensions are nominal; generator quantizes at H/V.",
+        "size_m": 9.0,
+        "vertical_scale_m": 0.005
+      },
+      "geometry_family": "C",
+      "geometry_selection": {
+        "bounds_m": [
+          [
+            -45.0,
+            404.0,
+            -2.005000114440918
+          ],
+          [
+            45.0,
+            413.0,
+            0.07999999821186066
+          ]
+        ],
+        "columns": [
+          62
+        ],
+        "face_count": 250880,
+        "geometry_sha256": "66dccaadc9f2afa37b59dfde52eed3413e1717dd3e4d7cf81bb8d738495cd24e",
+        "hash_encoding": "sorted source vertex indices; little-endian float32 vertices + remapped int32 faces",
+        "rows": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9
+        ],
+        "scope": "saved mesh faces with centroid in kind columns; generator outer border excluded",
+        "vertex_count": 126739
+      },
+      "geometry_sha256": "66dccaadc9f2afa37b59dfde52eed3413e1717dd3e4d7cf81bb8d738495cd24e",
+      "kind": "gap",
+      "original_dimensions_m": {
+        "depth_max_m": 2.0,
+        "depth_min_m": 1.0,
+        "gap_l9_m": 0.64,
+        "tile_size_m": 9.0
+      },
+      "paper_reference": "JEPLO (ASIG-X/JEPLO go2_parkour 실행 preset · Go2) · SPEC-JEPLO-PRESET.md §2 (D113 명세 재구현) · DT v0.4.6 §3.3 (DT:138~145) · CG v0.16 E3 · E4 치수 행 (CG:273 · 294) · jeplo_preset.py:16~18",
+      "physical_flag": false,
+      "preset_id": "jeplo_preset_v1",
+      "training_dimensions_m": {
+        "depth_max_m": 2.0,
+        "depth_min_m": 1.0,
+        "gap_l9_m": 0.64,
+        "tile_size_m": 9.0
+      }
+    },
+    {
+      "dimension_crosscheck": {
+        "note": "Exact parameters/source hashes retained; nominal C values precede grid rounding.",
+        "state": "nominal_declaration"
+      },
+      "dimension_scope": "owner-declared nominal dimensions; exact code parameters recorded separately",
+      "evaluation_axis_directions": {
+        "roughness_l9_m": "same",
+        "tile_size_m": "same"
+      },
+      "evaluation_dimensions_m": {
+        "roughness_l9_m": 0.06,
+        "tile_size_m": 9.0
+      },
+      "family": "C",
+      "generator_parameters": {
+        "border_cells": 7,
+        "horizontal_scale_m": 0.08,
+        "inner_cells": 99,
+        "nominal_to_grid_note": "Declaration dimensions are nominal; generator quantizes at H/V.",
+        "size_m": 9.0,
+        "vertical_scale_m": 0.005
+      },
+      "geometry_family": "C",
+      "geometry_selection": {
+        "bounds_m": [
+          [
+            -45.0,
+            413.0,
+            -0.03999999910593033
+          ],
+          [
+            45.0,
+            422.0,
+            0.07999999821186066
+          ]
+        ],
+        "columns": [
+          63
+        ],
+        "face_count": 250880,
+        "geometry_sha256": "0bfce3b39d871752f5f153a464b1e70a98a01a64a3ed225d47558d9455615bb7",
+        "hash_encoding": "sorted source vertex indices; little-endian float32 vertices + remapped int32 faces",
+        "rows": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9
+        ],
+        "scope": "saved mesh faces with centroid in kind columns; generator outer border excluded",
+        "vertex_count": 126725
+      },
+      "geometry_sha256": "0bfce3b39d871752f5f153a464b1e70a98a01a64a3ed225d47558d9455615bb7",
+      "kind": "flat",
+      "original_dimensions_m": {
+        "roughness_l9_m": 0.06,
+        "tile_size_m": 9.0
+      },
+      "paper_reference": "JEPLO (ASIG-X/JEPLO go2_parkour 실행 preset · Go2) · SPEC-JEPLO-PRESET.md §2 (D113 명세 재구현) · DT v0.4.6 §3.3 (DT:138~145) · CG v0.16 E3 · E4 치수 행 (CG:273 · 294) · jeplo_preset.py:16~18",
+      "physical_flag": false,
+      "preset_id": "jeplo_preset_v1",
+      "training_dimensions_m": {
+        "roughness_l9_m": 0.06,
+        "tile_size_m": 9.0
+      }
+    },
+    {
+      "dimension_crosscheck": {
+        "note": "Exact parameters/source hashes retained; nominal C values precede grid rounding.",
+        "state": "nominal_declaration"
+      },
+      "dimension_scope": "owner-declared nominal dimensions; exact code parameters recorded separately",
+      "evaluation_axis_directions": {
+        "center_height_l9_m": "same",
+        "length_max_m": "same",
+        "length_min_m": "same",
+        "step_l9_m": "same",
+        "tile_size_m": "same"
+      },
+      "evaluation_dimensions_m": {
+        "center_height_l9_m": 1.5,
+        "length_max_m": 1.5,
+        "length_min_m": 0.8,
+        "step_l9_m": 0.5,
+        "tile_size_m": 9.0
+      },
+      "family": "C",
+      "generator_parameters": {
+        "border_cells": 7,
+        "horizontal_scale_m": 0.08,
+        "inner_cells": 99,
+        "nominal_to_grid_note": "Declaration dimensions are nominal; generator quantizes at H/V.",
+        "size_m": 9.0,
+        "vertical_scale_m": 0.005
+      },
+      "geometry_family": "C",
+      "geometry_selection": {
+        "bounds_m": [
+          [
+            -45.0,
+            422.0,
+            -0.02500000037252903
+          ],
+          [
+            45.0,
+            431.0,
+            1.5399999618530273
+          ]
+        ],
+        "columns": [
+          64
+        ],
+        "face_count": 250880,
+        "geometry_sha256": "b3758b1c0bf3efec93f584dbc07dc060690c8a774b40b3a19b0dfba944cc4665",
+        "hash_encoding": "sorted source vertex indices; little-endian float32 vertices + remapped int32 faces",
+        "rows": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9
+        ],
+        "scope": "saved mesh faces with centroid in kind columns; generator outer border excluded",
+        "vertex_count": 127645
+      },
+      "geometry_sha256": "b3758b1c0bf3efec93f584dbc07dc060690c8a774b40b3a19b0dfba944cc4665",
+      "kind": "box",
+      "original_dimensions_m": {
+        "center_height_l9_m": 1.5,
+        "length_max_m": 1.5,
+        "length_min_m": 0.8,
+        "step_l9_m": 0.5,
+        "tile_size_m": 9.0
+      },
+      "paper_reference": "JEPLO (ASIG-X/JEPLO go2_parkour 실행 preset · Go2) · SPEC-JEPLO-PRESET.md §2 (D113 명세 재구현) · DT v0.4.6 §3.3 (DT:138~145) · CG v0.16 E3 · E4 치수 행 (CG:273 · 294) · jeplo_preset.py:16~18",
+      "physical_flag": false,
+      "preset_id": "jeplo_preset_v1",
+      "training_dimensions_m": {
+        "center_height_l9_m": 1.5,
+        "length_max_m": 1.5,
+        "length_min_m": 0.8,
+        "step_l9_m": 0.5,
+        "tile_size_m": 9.0
+      }
+    },
+    {
+      "dimension_crosscheck": {
+        "note": "Exact parameters/source hashes retained; nominal C values precede grid rounding.",
+        "state": "nominal_declaration"
+      },
+      "dimension_scope": "owner-declared nominal dimensions; exact code parameters recorded separately",
+      "evaluation_axis_directions": {
+        "box_height_l9_m": "same",
+        "box_size_max_m": "same",
+        "box_size_min_m": "same",
+        "grid_height_l9_m": "same",
+        "grid_m": "same",
+        "tile_size_m": "same"
+      },
+      "evaluation_dimensions_m": {
+        "box_height_l9_m": 0.4,
+        "box_size_max_m": 1.25,
+        "box_size_min_m": 0.8,
+        "grid_height_l9_m": 0.1,
+        "grid_m": 0.5,
+        "tile_size_m": 9.0
+      },
+      "family": "C",
+      "generator_parameters": {
+        "border_cells": 7,
+        "horizontal_scale_m": 0.08,
+        "inner_cells": 99,
+        "nominal_to_grid_note": "Declaration dimensions are nominal; generator quantizes at H/V.",
+        "size_m": 9.0,
+        "vertical_scale_m": 0.005
+      },
+      "geometry_family": "C",
+      "geometry_selection": {
+        "bounds_m": [
+          [
+            -45.0,
+            431.0,
+            -0.019999999552965164
+          ],
+          [
+            45.0,
+            440.0,
+            0.4350000023841858
+          ]
+        ],
+        "columns": [
+          65
+        ],
+        "face_count": 250880,
+        "geometry_sha256": "118bb51bc59926f8fc1c9f3f8943d223585b331dc8479beb1541461d7d78a0be",
+        "hash_encoding": "sorted source vertex indices; little-endian float32 vertices + remapped int32 faces",
+        "rows": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9
+        ],
+        "scope": "saved mesh faces with centroid in kind columns; generator outer border excluded",
+        "vertex_count": 127395
+      },
+      "geometry_sha256": "118bb51bc59926f8fc1c9f3f8943d223585b331dc8479beb1541461d7d78a0be",
+      "kind": "discrete_obstacles",
+      "original_dimensions_m": {
+        "box_height_l9_m": 0.4,
+        "box_size_max_m": 1.25,
+        "box_size_min_m": 0.8,
+        "grid_height_l9_m": 0.1,
+        "grid_m": 0.5,
+        "tile_size_m": 9.0
+      },
+      "paper_reference": "JEPLO (ASIG-X/JEPLO go2_parkour 실행 preset · Go2) · SPEC-JEPLO-PRESET.md §2 (D113 명세 재구현) · DT v0.4.6 §3.3 (DT:138~145) · CG v0.16 E3 · E4 치수 행 (CG:273 · 294) · jeplo_preset.py:16~18",
+      "physical_flag": false,
+      "preset_id": "jeplo_preset_v1",
+      "training_dimensions_m": {
+        "box_height_l9_m": 0.4,
+        "box_size_max_m": 1.25,
+        "box_size_min_m": 0.8,
+        "grid_height_l9_m": 0.1,
+        "grid_m": 0.5,
+        "tile_size_m": 9.0
+      }
+    },
+    {
+      "dimension_crosscheck": {
+        "note": "Exact parameters/source hashes retained; nominal C values precede grid rounding.",
+        "state": "nominal_declaration"
+      },
+      "dimension_scope": "owner-declared nominal dimensions; exact code parameters recorded separately",
+      "evaluation_axis_directions": {
+        "grid_height_l9_m": "same",
+        "grid_m": "same",
+        "tile_size_m": "same"
+      },
+      "evaluation_dimensions_m": {
+        "grid_height_l9_m": 0.2,
+        "grid_m": 0.5,
+        "tile_size_m": 9.0
+      },
+      "family": "C",
+      "generator_parameters": {
+        "border_cells": 7,
+        "horizontal_scale_m": 0.08,
+        "inner_cells": 99,
+        "nominal_to_grid_note": "Declaration dimensions are nominal; generator quantizes at H/V.",
+        "size_m": 9.0,
+        "vertical_scale_m": 0.005
+      },
+      "geometry_family": "C",
+      "geometry_selection": {
+        "bounds_m": [
+          [
+            -45.0,
+            440.0,
+            -0.019999999552965164
+          ],
+          [
+            45.0,
+            449.0,
+            0.23499999940395355
+          ]
+        ],
+        "columns": [
+          66
+        ],
+        "face_count": 250880,
+        "geometry_sha256": "aab1ae2f7b3229a28b211921ec8f5fabdca5772fea1a36c095cdd8d147cdde0d",
+        "hash_encoding": "sorted source vertex indices; little-endian float32 vertices + remapped int32 faces",
+        "rows": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9
+        ],
+        "scope": "saved mesh faces with centroid in kind columns; generator outer border excluded",
+        "vertex_count": 127351
+      },
+      "geometry_sha256": "aab1ae2f7b3229a28b211921ec8f5fabdca5772fea1a36c095cdd8d147cdde0d",
+      "kind": "discrete_grid",
+      "original_dimensions_m": {
+        "grid_height_l9_m": 0.2,
+        "grid_m": 0.5,
+        "tile_size_m": 9.0
+      },
+      "paper_reference": "JEPLO (ASIG-X/JEPLO go2_parkour 실행 preset · Go2) · SPEC-JEPLO-PRESET.md §2 (D113 명세 재구현) · DT v0.4.6 §3.3 (DT:138~145) · CG v0.16 E3 · E4 치수 행 (CG:273 · 294) · jeplo_preset.py:16~18",
+      "physical_flag": false,
+      "preset_id": "jeplo_preset_v1",
+      "training_dimensions_m": {
+        "grid_height_l9_m": 0.2,
+        "grid_m": 0.5,
+        "tile_size_m": 9.0
+      }
+    },
+    {
+      "dimension_crosscheck": {
+        "note": "Exact parameters/source hashes retained; nominal C values precede grid rounding.",
+        "state": "nominal_declaration"
+      },
+      "dimension_scope": "owner-declared nominal dimensions; exact code parameters recorded separately",
+      "evaluation_axis_directions": {
+        "platform_m": "same",
+        "step_height_l9_m": "same",
+        "step_width_max_m": "same",
+        "step_width_min_m": "same",
+        "tile_size_m": "same"
+      },
+      "evaluation_dimensions_m": {
+        "platform_m": 2.0,
+        "step_height_l9_m": 0.2,
+        "step_width_max_m": 0.35,
+        "step_width_min_m": 0.25,
+        "tile_size_m": 9.0
+      },
+      "family": "C",
+      "generator_parameters": {
+        "border_cells": 7,
+        "horizontal_scale_m": 0.08,
+        "inner_cells": 99,
+        "nominal_to_grid_note": "Declaration dimensions are nominal; generator quantizes at H/V.",
+        "size_m": 9.0,
+        "vertical_scale_m": 0.005
+      },
+      "geometry_family": "C",
+      "geometry_selection": {
+        "bounds_m": [
+          [
+            -45.0,
+            449.0,
+            -0.014999999664723873
+          ],
+          [
+            45.0,
+            458.0,
+            2.424999952316284
+          ]
+        ],
+        "columns": [
+          67
+        ],
+        "face_count": 250880,
+        "geometry_sha256": "d997d43f0b7786eb99cf7a846c8965987189f052fe0729c0273d53de9775b015",
+        "hash_encoding": "sorted source vertex indices; little-endian float32 vertices + remapped int32 faces",
+        "rows": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9
+        ],
+        "scope": "saved mesh faces with centroid in kind columns; generator outer border excluded",
+        "vertex_count": 127377
+      },
+      "geometry_sha256": "d997d43f0b7786eb99cf7a846c8965987189f052fe0729c0273d53de9775b015",
+      "kind": "pyramid_stairs",
+      "original_dimensions_m": {
+        "platform_m": 2.0,
+        "step_height_l9_m": 0.2,
+        "step_width_max_m": 0.35,
+        "step_width_min_m": 0.25,
+        "tile_size_m": 9.0
+      },
+      "paper_reference": "JEPLO (ASIG-X/JEPLO go2_parkour 실행 preset · Go2) · SPEC-JEPLO-PRESET.md §2 (D113 명세 재구현) · DT v0.4.6 §3.3 (DT:138~145) · CG v0.16 E3 · E4 치수 행 (CG:273 · 294) · jeplo_preset.py:16~18",
+      "physical_flag": false,
+      "preset_id": "jeplo_preset_v1",
+      "training_dimensions_m": {
+        "platform_m": 2.0,
+        "step_height_l9_m": 0.2,
+        "step_width_max_m": 0.35,
+        "step_width_min_m": 0.25,
+        "tile_size_m": 9.0
+      }
+    },
+    {
+      "dimension_crosscheck": {
+        "note": "Exact parameters/source hashes retained; nominal C values precede grid rounding.",
+        "state": "nominal_declaration"
+      },
+      "dimension_scope": "owner-declared nominal dimensions; exact code parameters recorded separately",
+      "evaluation_axis_directions": {
+        "platform_m": "same",
+        "step_height_l9_m": "same",
+        "step_width_max_m": "same",
+        "step_width_min_m": "same",
+        "tile_size_m": "same"
+      },
+      "evaluation_dimensions_m": {
+        "platform_m": 2.0,
+        "step_height_l9_m": 0.2,
+        "step_width_max_m": 0.35,
+        "step_width_min_m": 0.25,
+        "tile_size_m": 9.0
+      },
+      "family": "C",
+      "generator_parameters": {
+        "border_cells": 7,
+        "horizontal_scale_m": 0.08,
+        "inner_cells": 99,
+        "nominal_to_grid_note": "Declaration dimensions are nominal; generator quantizes at H/V.",
+        "size_m": 9.0,
+        "vertical_scale_m": 0.005
+      },
+      "geometry_family": "C",
+      "geometry_selection": {
+        "bounds_m": [
+          [
+            -45.0,
+            458.0,
+            -2.4149999618530273
+          ],
+          [
+            45.0,
+            467.0,
+            0.02500000037252903
+          ]
+        ],
+        "columns": [
+          68
+        ],
+        "face_count": 250880,
+        "geometry_sha256": "2227409b6df40afa689c9818ce3f8bed1f7246fc424eecb2162b4a1b878cfd1d",
+        "hash_encoding": "sorted source vertex indices; little-endian float32 vertices + remapped int32 faces",
+        "rows": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9
+        ],
+        "scope": "saved mesh faces with centroid in kind columns; generator outer border excluded",
+        "vertex_count": 127565
+      },
+      "geometry_sha256": "2227409b6df40afa689c9818ce3f8bed1f7246fc424eecb2162b4a1b878cfd1d",
+      "kind": "inverted_pyramid_stairs",
+      "original_dimensions_m": {
+        "platform_m": 2.0,
+        "step_height_l9_m": 0.2,
+        "step_width_max_m": 0.35,
+        "step_width_min_m": 0.25,
+        "tile_size_m": 9.0
+      },
+      "paper_reference": "JEPLO (ASIG-X/JEPLO go2_parkour 실행 preset · Go2) · SPEC-JEPLO-PRESET.md §2 (D113 명세 재구현) · DT v0.4.6 §3.3 (DT:138~145) · CG v0.16 E3 · E4 치수 행 (CG:273 · 294) · jeplo_preset.py:16~18",
+      "physical_flag": false,
+      "preset_id": "jeplo_preset_v1",
+      "training_dimensions_m": {
+        "platform_m": 2.0,
+        "step_height_l9_m": 0.2,
+        "step_width_max_m": 0.35,
+        "step_width_min_m": 0.25,
+        "tile_size_m": 9.0
+      }
+    },
+    {
+      "dimension_crosscheck": {
+        "code_values": {
+          "floor_thickness_m": 0.1,
+          "ledge_height_l0_m": 0.3,
+          "ledge_height_l1_m": 0.45,
+          "ledge_height_l2_m": 0.6,
+          "tile_x_m": 8.0,
+          "tile_y_m": 8.0
+        },
+        "state": "code_matches"
+      },
+      "dimension_scope": "owner-declared nominal dimensions; exact code parameters recorded separately",
+      "evaluation_axis_directions": {
+        "floor_thickness_m": "same",
+        "ledge_height_l0_m": "same",
+        "ledge_height_l1_m": "same",
+        "ledge_height_l2_m": "same",
+        "tile_x_m": "same",
+        "tile_y_m": "same"
+      },
+      "evaluation_dimensions_m": {
+        "floor_thickness_m": 0.1,
+        "ledge_height_l0_m": 0.3,
+        "ledge_height_l1_m": 0.45,
+        "ledge_height_l2_m": 0.6,
+        "tile_x_m": 8.0,
+        "tile_y_m": 8.0
+      },
+      "family": "D",
+      "generator_parameters": {
+        "dimension_source": "project_inference_20261111",
+        "levels": {
+          "0": {
+            "floor_thickness_m": 0.1,
+            "ledge_height_m": 0.3,
+            "tile_x_m": 8.0,
+            "tile_y_m": 8.0
+          },
+          "1": {
+            "floor_thickness_m": 0.1,
+            "ledge_height_m": 0.45,
+            "tile_x_m": 8.0,
+            "tile_y_m": 8.0
+          },
+          "2": {
+            "floor_thickness_m": 0.1,
+            "ledge_height_m": 0.6,
+            "tile_x_m": 8.0,
+            "tile_y_m": 8.0
+          }
+        }
+      },
+      "geometry_family": "D",
+      "geometry_selection": {
+        "bounds_m": [
+          [
+            -40.0,
+            487.0,
+            -0.10000000149011612
+          ],
+          [
+            40.0,
+            495.0,
+            0.6000000238418579
+          ]
+        ],
+        "columns": [
+          69
+        ],
+        "face_count": 198,
+        "geometry_sha256": "ef49fa1f068e1f6322e48f6b361763e734bdf554ef248489f3d0f0818a6bb740",
+        "hash_encoding": "sorted source vertex indices; little-endian float32 vertices + remapped int32 faces",
+        "rows": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9
+        ],
+        "scope": "saved mesh faces with centroid in kind columns; generator outer border excluded",
+        "vertex_count": 164
+      },
+      "geometry_sha256": "ef49fa1f068e1f6322e48f6b361763e734bdf554ef248489f3d0f0818a6bb740",
+      "kind": "high_ledge",
+      "original_dimensions_m": {
+        "floor_thickness_m": 0.1,
+        "ledge_height_l0_m": 0.3,
+        "ledge_height_l1_m": 0.45,
+        "ledge_height_l2_m": 0.6,
+        "tile_x_m": 8.0,
+        "tile_y_m": 8.0
+      },
+      "paper_reference": "original 등급 **위임 추정** (논문 수치 없음 · 값 = CG:362 W73 프로젝트 결정 0.3 → 0.45 → 0.6 세 레벨 · LEVEL_COUNTS 3) · 다른 논문 증거 MOVE 0.60 · PIE 0.75 · JEPLO Go2 0.53 (CG:593) · 물리 표시: 0.60 판정 · 0.75 기록 열 (CG:625 · prep:468) · 턱은 뒤쪽 절반 (hipan_posture.py:80~81) · HiPAN (2604.26504 · IV-A · Fig. 2 · 5 · 6: 과제 종류만 · 치수 수치 미기재 · hipan_posture.py:3~5 docstring · CG:599) · CG v0.16 E6b 치수 행 (CG:362 · W73) · §E.8 (CG:593 · 599) · §E.10 4 (CG:625) · prep:467~478 physical_flag_record_only · 코드 hipan_posture.py:16~26 · 76~98 (#602 6a9719bf · 통합 포함) · PRESET_ID posture_go2_v1 · PRESET_SOURCE project_inference_20261111 · 타일 8 × 8 m · 바닥 두께 0.10 · 평가 = 같은 메시 종류별 칸 (CG:392 · E6b 평가 칸 행 CG:369) 이라 치수 같음",
+      "physical_flag": true,
+      "preset_id": "posture_go2_v1",
+      "training_dimensions_m": {
+        "floor_thickness_m": 0.1,
+        "ledge_height_l0_m": 0.3,
+        "ledge_height_l1_m": 0.45,
+        "ledge_height_l2_m": 0.6,
+        "tile_x_m": 8.0,
+        "tile_y_m": 8.0
+      }
+    },
+    {
+      "dimension_crosscheck": {
+        "code_values": {
+          "corridor_width_m": 0.8,
+          "floor_thickness_m": 0.1,
+          "tile_x_m": 8.0,
+          "tile_y_m": 8.0,
+          "wall_height_m": 1.2,
+          "wall_thickness_m": 0.1
+        },
+        "state": "code_matches"
+      },
+      "dimension_scope": "owner-declared nominal dimensions; exact code parameters recorded separately",
+      "evaluation_axis_directions": {
+        "corridor_width_m": "same",
+        "floor_thickness_m": "same",
+        "tile_x_m": "same",
+        "tile_y_m": "same",
+        "wall_height_m": "same",
+        "wall_thickness_m": "same"
+      },
+      "evaluation_dimensions_m": {
+        "corridor_width_m": 0.8,
+        "floor_thickness_m": 0.1,
+        "tile_x_m": 8.0,
+        "tile_y_m": 8.0,
+        "wall_height_m": 1.2,
+        "wall_thickness_m": 0.1
+      },
+      "family": "D",
+      "generator_parameters": {
+        "dimension_source": "project_inference_20261111",
+        "levels": {
+          "0": {
+            "corridor_width_m": 0.8,
+            "floor_thickness_m": 0.1,
+            "tile_x_m": 8.0,
+            "tile_y_m": 8.0,
+            "wall_height_m": 1.2,
+            "wall_thickness_m": 0.1
+          }
+        }
+      },
+      "geometry_family": "D",
+      "geometry_selection": {
+        "bounds_m": [
+          [
+            -40.0,
+            487.0,
+            -0.10000000149011612
+          ],
+          [
+            40.0,
+            511.0,
+            1.2000000476837158
+          ]
+        ],
+        "columns": [
+          70
+        ],
+        "face_count": 259,
+        "geometry_sha256": "b48ae7d265371cc320fd57819b136c516766e70c4852d76997af0ede57e3ff1d",
+        "hash_encoding": "sorted source vertex indices; little-endian float32 vertices + remapped int32 faces",
+        "rows": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9
+        ],
+        "scope": "saved mesh faces with centroid in kind columns; generator outer border excluded",
+        "vertex_count": 243
+      },
+      "geometry_sha256": "b48ae7d265371cc320fd57819b136c516766e70c4852d76997af0ede57e3ff1d",
+      "kind": "wall",
+      "original_dimensions_m": {
+        "corridor_width_m": 0.8,
+        "floor_thickness_m": 0.1,
+        "tile_x_m": 8.0,
+        "tile_y_m": 8.0,
+        "wall_height_m": 1.2,
+        "wall_thickness_m": 0.1
+      },
+      "paper_reference": "original 등급 **팀장 위임 추정** (논문 수치 없음 · 그림만 · CG:362 「wall 높이 · 우회 통로 폭 미정」 → 코드 project choice: 높이 1.20 = 3 × Go2 서 있는 높이 0.40 · 통로 0.80 = Go2 폭 0.31 + 양쪽 0.245 · hipan_posture.py:22~23 · 레벨 1 개) · 벽은 +y 쪽 우회 통로를 남기고 중심선 막음 (hipan_posture.py:90~98) · 넘을 수 없는 벽 = 등반 목표 아님 (CG:362) · HiPAN (2604.26504 · IV-A · Fig. 2 · 5 · 6: 과제 종류만 · 치수 수치 미기재 · hipan_posture.py:3~5 docstring · CG:599) · CG v0.16 E6b 치수 행 (CG:362 · W73) · §E.8 (CG:593 · 599) · §E.10 4 (CG:625) · prep:467~478 physical_flag_record_only · 코드 hipan_posture.py:16~26 · 76~98 (#602 6a9719bf · 통합 포함) · PRESET_ID posture_go2_v1 · PRESET_SOURCE project_inference_20261111 · 타일 8 × 8 m · 바닥 두께 0.10 · 평가 = 같은 메시 종류별 칸 (CG:392 · E6b 평가 칸 행 CG:369) 이라 치수 같음",
+      "physical_flag": false,
+      "preset_id": "posture_go2_v1",
+      "training_dimensions_m": {
+        "corridor_width_m": 0.8,
+        "floor_thickness_m": 0.1,
+        "tile_x_m": 8.0,
+        "tile_y_m": 8.0,
+        "wall_height_m": 1.2,
+        "wall_thickness_m": 0.1
+      }
+    },
+    {
+      "dimension_crosscheck": {
+        "code_values": {
+          "ceiling_clearance_l0_m": 0.3,
+          "ceiling_clearance_l9_m": 0.25,
+          "floor_thickness_m": 0.1,
+          "roof_thickness_m": 0.1,
+          "tile_x_m": 8.0,
+          "tile_y_m": 8.0
+        },
+        "state": "code_matches"
+      },
+      "dimension_scope": "owner-declared nominal dimensions; exact code parameters recorded separately",
+      "evaluation_axis_directions": {
+        "ceiling_clearance_l0_m": "same",
+        "ceiling_clearance_l9_m": "same",
+        "floor_thickness_m": "same",
+        "roof_thickness_m": "same",
+        "tile_x_m": "same",
+        "tile_y_m": "same"
+      },
+      "evaluation_dimensions_m": {
+        "ceiling_clearance_l0_m": 0.3,
+        "ceiling_clearance_l9_m": 0.25,
+        "floor_thickness_m": 0.1,
+        "roof_thickness_m": 0.1,
+        "tile_x_m": 8.0,
+        "tile_y_m": 8.0
+      },
+      "family": "D",
+      "generator_parameters": {
+        "dimension_source": "project_inference_20261111",
+        "levels": {
+          "0": {
+            "ceiling_clearance_m": 0.3,
+            "floor_thickness_m": 0.1,
+            "roof_thickness_m": 0.1,
+            "tile_x_m": 8.0,
+            "tile_y_m": 8.0
+          },
+          "1": {
+            "ceiling_clearance_m": 0.29444444444444445,
+            "floor_thickness_m": 0.1,
+            "roof_thickness_m": 0.1,
+            "tile_x_m": 8.0,
+            "tile_y_m": 8.0
+          },
+          "2": {
+            "ceiling_clearance_m": 0.28888888888888886,
+            "floor_thickness_m": 0.1,
+            "roof_thickness_m": 0.1,
+            "tile_x_m": 8.0,
+            "tile_y_m": 8.0
+          },
+          "3": {
+            "ceiling_clearance_m": 0.2833333333333333,
+            "floor_thickness_m": 0.1,
+            "roof_thickness_m": 0.1,
+            "tile_x_m": 8.0,
+            "tile_y_m": 8.0
+          },
+          "4": {
+            "ceiling_clearance_m": 0.2777777777777778,
+            "floor_thickness_m": 0.1,
+            "roof_thickness_m": 0.1,
+            "tile_x_m": 8.0,
+            "tile_y_m": 8.0
+          },
+          "5": {
+            "ceiling_clearance_m": 0.2722222222222222,
+            "floor_thickness_m": 0.1,
+            "roof_thickness_m": 0.1,
+            "tile_x_m": 8.0,
+            "tile_y_m": 8.0
+          },
+          "6": {
+            "ceiling_clearance_m": 0.26666666666666666,
+            "floor_thickness_m": 0.1,
+            "roof_thickness_m": 0.1,
+            "tile_x_m": 8.0,
+            "tile_y_m": 8.0
+          },
+          "7": {
+            "ceiling_clearance_m": 0.2611111111111111,
+            "floor_thickness_m": 0.1,
+            "roof_thickness_m": 0.1,
+            "tile_x_m": 8.0,
+            "tile_y_m": 8.0
+          },
+          "8": {
+            "ceiling_clearance_m": 0.25555555555555554,
+            "floor_thickness_m": 0.1,
+            "roof_thickness_m": 0.1,
+            "tile_x_m": 8.0,
+            "tile_y_m": 8.0
+          },
+          "9": {
+            "ceiling_clearance_m": 0.25,
+            "floor_thickness_m": 0.1,
+            "roof_thickness_m": 0.1,
+            "tile_x_m": 8.0,
+            "tile_y_m": 8.0
+          }
+        }
+      },
+      "geometry_family": "D",
+      "geometry_selection": {
+        "bounds_m": [
+          [
+            -40.0,
+            487.0,
+            -0.10000000149011612
+          ],
+          [
+            40.0,
+            511.0,
+            0.4000000059604645
+          ]
+        ],
+        "columns": [
+          71
+        ],
+        "face_count": 219,
+        "geometry_sha256": "52ad4f298ac45553d75d4b468228128ccec3cd2ba074137534eeb2b64ab77088",
+        "hash_encoding": "sorted source vertex indices; little-endian float32 vertices + remapped int32 faces",
+        "rows": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9
+        ],
+        "scope": "saved mesh faces with centroid in kind columns; generator outer border excluded",
+        "vertex_count": 203
+      },
+      "geometry_sha256": "52ad4f298ac45553d75d4b468228128ccec3cd2ba074137534eeb2b64ab77088",
+      "kind": "crawl",
+      "original_dimensions_m": {
+        "ceiling_clearance_l0_m": 0.3,
+        "ceiling_clearance_l9_m": 0.25,
+        "floor_thickness_m": 0.1,
+        "roof_thickness_m": 0.1,
+        "tile_x_m": 8.0,
+        "tile_y_m": 8.0
+      },
+      "paper_reference": "original 등급 **위임 추정** (HiPAN 수치 미기재 CG:599 · 값 = CG:362 W73 천장 여유 0.30 → 0.25 · 10 레벨 linspace 는 코드 배치 관행 hipan_posture.py:83~88) · MOVE Lite3 전진 0.20 · 물리 표시: 0.25 판정 · 0.20 기록 열 (CG:599 · 625 · prep:477) · 천장 슬래브는 가운데 절반 · HiPAN (2604.26504 · IV-A · Fig. 2 · 5 · 6: 과제 종류만 · 치수 수치 미기재 · hipan_posture.py:3~5 docstring · CG:599) · CG v0.16 E6b 치수 행 (CG:362 · W73) · §E.8 (CG:593 · 599) · §E.10 4 (CG:625) · prep:467~478 physical_flag_record_only · 코드 hipan_posture.py:16~26 · 76~98 (#602 6a9719bf · 통합 포함) · PRESET_ID posture_go2_v1 · PRESET_SOURCE project_inference_20261111 · 타일 8 × 8 m · 바닥 두께 0.10 · 평가 = 같은 메시 종류별 칸 (CG:392 · E6b 평가 칸 행 CG:369) 이라 치수 같음",
+      "physical_flag": true,
+      "preset_id": "posture_go2_v1",
+      "training_dimensions_m": {
+        "ceiling_clearance_l0_m": 0.3,
+        "ceiling_clearance_l9_m": 0.25,
+        "floor_thickness_m": 0.1,
+        "roof_thickness_m": 0.1,
+        "tile_x_m": 8.0,
+        "tile_y_m": 8.0
+      }
+    }
+  ],
+  "measurements": {
+    "generation_seconds": 9.176870384999347,
+    "peak_memory_gib": 0.90625,
+    "ray_count_per_second": 687191753.0844679
+  },
+  "missing_declarations": [],
+  "provenance": {
+    "aggregate_sha256": "27f05942b1f2437ec6c22f46de76edb01f17c4ac8e4d176ecbc2f6da6aa24f84",
+    "continuous_alias_scope": "seven A columns/kinds reused, not seven additional measured kinds",
+    "cpu_readback_only": true,
+    "declarations": [
+      {
+        "path": "/home/jay/mai/wt/foothold-lab/analyst-lx-terrain-d/inbox/jay/20261111-analysis/evidence/ex42-declarations-1111.json",
+        "sha256": "083e6e7010c2903ef17c4e2ae6f6544b57be4fd62a407230dd22f32e8de6e499"
+      }
+    ],
+    "evaluation_geometry_measured": false,
+    "generator_sources": {
+      "foothold_s2/eval/start_sheet.py": "15e830bda3fc5ed7f106074d415b30e6ca5334887a9f1b011d980ffce018d9ec",
+      "foothold_s2/scripts/ex42_mesh_build.py": "03a5e60e9ba2d239ba7b9a1dc21a94f289cb6c7fb49625fab08e1ac3ba031aa5",
+      "foothold_s2/terrains/ame2_preset.py": "d01aeacb9ab1f99f651f06abf4ac8b2b8ddd8289291a6cf48297fcc9eb3561e8",
+      "foothold_s2/terrains/columns.py": "a1dc682849135cb98ef32e6d9aa0c4f50077176e9ee5d49b271f696d0f9dca76",
+      "foothold_s2/terrains/ex42.py": "7a1ff5c4b4e29a9c56ae7338a2d0356295b1e8cf9e17acfd15026e5335a156c3",
+      "foothold_s2/terrains/ex42_column_reset.py": "c19e8f1df59aad6b92e6f5ba1e16b75832fd996d1ebbad5ebd5a8a0abe278088",
+      "foothold_s2/terrains/hipan_posture.py": "37e6550d53931df9de01b32b1d12e08c136af3b60601bb3c68eea211ebe55509",
+      "foothold_s2/terrains/jeplo_preset.py": "7ece631f660e2d41c84f42cc65073b88cd0fcfa9931d01d2640c7d7bf1de5bac",
+      "foothold_s2/terrains/rough_go2_cfg.py": "cb2541ccc1148e128023d810bb87d8f8be56440a6d3f4c2e529a687871641610",
+      "foothold_s2/terrains/sparse_terrains.py": "5f296cf750609b83d99c46d6f730716d2f58532f436fae0dc3b776be7737b522",
+      "foothold_s2/terrains/start_go2_v2.py": "c0c7b07647f7c08b5dfdd42d94a569bf468b028ea1d48ab77a732cf831159814"
+    },
+    "measurement_device": "cuda:0",
+    "measurement_scope": "combined mesh aggregate; not independent per-kind timing or real sensor timing",
+    "memory_measurement": {
+      "free_memory_drop_gib": 0.90625,
+      "torch_peak_gib": 0.392578125
+    },
+    "mesh_directory": "/mnt/win-d/mai/data/foothold/s2_lab/ex42_mesh_1111/seed42_E0_c333",
+    "mesh_file_sha256": "b3e6ab6f5093cc78ad2cbb8848d8caa2969ad44774ad7889d5e16d1d8ed7734d",
+    "mesh_manifest_sha256": "820dec9f4dbff33fa8b49ad0e2907a412024f09539f7b7fabc2ca290b2a5581d",
+    "mesh_sha256": "88197b3adfdde327edc633c025c6ad9aa690ea59aa7df5d51d548f7f56c12a95",
+    "plan_sha256": "c92bc89130c4e0ee47b6ccc5d8a2aceef0ebb2cee077c711d67b7dcdf9915997",
+    "ray_measurement": {
+      "envs": 3072,
+      "max_s": 0.01704316800169181,
+      "mean_s": 0.016929283490062518,
+      "p50_s": 0.016918439499931992,
+      "p95_s": 0.016988633801338436,
+      "pattern": "downward grid rays (187 height-scan + 3600 depth); proxy, not the sensor patterns",
+      "rays_per_cast": 11633664,
+      "rays_per_env": 3787,
+      "timed": 100,
+      "warmup": 20
+    },
+    "seed": 42,
+    "source_scope": "reader/inventory/parameter sources, not an attestation of the historical mesh build HEAD",
+    "training_started": false
+  },
+  "receipt_ids": [
+    "combined-mesh:88197b3adfdde327edc633c025c6ad9aa690ea59aa7df5d51d548f7f56c12a95",
+    "aggregate:27f05942b1f2437ec6c22f46de76edb01f17c4ac8e4d176ecbc2f6da6aa24f84"
+  ],
+  "status": "measured",
+  "training_presets": {
+    "A": "start_go2_v2",
+    "B": "ame2_go2_mix_v1",
+    "C": "jeplo_preset_v1",
+    "D": "posture_go2_v1",
+    "E": "paper_ext_v1",
+    "continuous": "rough_go2_cfg"
+  }
+}

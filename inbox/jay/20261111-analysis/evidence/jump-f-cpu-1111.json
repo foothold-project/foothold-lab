@@ -1,0 +1,99 @@
+{
+  "code_commit": "fa8372d98d01b984e79d985b8784b104d7547565",
+  "base_commit": "dd453688027d0714dd93096c9f3d7e25f9b7ccb0",
+  "source_design_commit": "368d03e2061b505fc72ad73e9cd2527a766e7738",
+  "seed": 42,
+  "processes": 2,
+  "gpu_used": false,
+  "numpy": "1.26.0",
+  "trimesh": "4.5.1",
+  "paths": [
+    "/home/jay/mai/tmp/analyst-lx/jump_f_seed42_1111/build1",
+    "/home/jay/mai/tmp/analyst-lx/jump_f_seed42_1111/build2"
+  ],
+  "files": {
+    "terrain_mesh.npz": {
+      "sha256": "1465a55cb366df7b3821dba427e04a7272b7234c1c063982296a93875db7f6b9",
+      "size_bytes": 6332,
+      "equal": true
+    },
+    "mesh_manifest.json": {
+      "sha256": "1ad420b100ff9dc5cd293b40e02358fd6ee37ee7b1c00841924a9a5ca088fdd8",
+      "size_bytes": 38488,
+      "equal": true
+    },
+    "terrain_manifest.json": {
+      "sha256": "308a027e560f02c576f62350e6aee39f68233e60f1f67b6d8bb9ec048de1876f",
+      "size_bytes": 4592,
+      "equal": true
+    },
+    "cpu_support.json": {
+      "sha256": "aca73398b68c29ff3c1e2b3f97b24d34635d0174c2457d6aebfd6e33fdf441b0",
+      "size_bytes": 11523,
+      "equal": true
+    }
+  },
+  "tests": {
+    "passed": 72,
+    "failed": 0
+  },
+  "zip_timestamps": {
+    "vertices.npy": [
+      1980,
+      1,
+      1,
+      0,
+      0,
+      0
+    ],
+    "faces.npy": [
+      1980,
+      1,
+      1,
+      0,
+      0,
+      0
+    ],
+    "origins.npy": [
+      1980,
+      1,
+      1,
+      0,
+      0,
+      0
+    ],
+    "column_family.npy": [
+      1980,
+      1,
+      1,
+      0,
+      0,
+      0
+    ],
+    "flags.npy": [
+      1980,
+      1,
+      1,
+      0,
+      0,
+      0
+    ]
+  },
+  "geometry_sha256": "eaa6476310d494a3707eee92bdd0a2e4ec3c634768a1eeff4cdc2fdeb1fc58eb",
+  "verified_cells": 40,
+  "reset_ray_count": 360,
+  "flag_ray_count": 160,
+  "max_origin_support_error_m": 1.1920928966180355e-08,
+  "mesh_counts": {
+    "vertex_count": 720,
+    "face_count": 1080,
+    "origins_shape": [
+      10,
+      4,
+      3
+    ]
+  },
+  "design_blob_sha256": "f296354307d0ec9eea76d518a2fd9a65961665bcf1b0d32212b12523f8e55beb",
+  "delivered_bundle": "/mnt/win-d/mai/data/foothold/s2_lab/ex42_mesh_1111/seed42_F_jump_fa8372d9",
+  "delivered_file_hashes_match": true
+}

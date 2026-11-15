@@ -1,0 +1,14 @@
+PASS byte-only JSON reason
+PASS conservative strict hold
+PASS semantic mismatch distinct
+PASS repeat same report fields
+PASS failed report same fields with null evidence
+PASS held distinct from failed
+PASS peak scope labeled
+PASS write_root default isolated
+PASS _eval slot without allowlist rejected
+PASS exact common allowlist accepted
+PASS unlisted common path rejected
+PASS substring alias rejected
+PASS case alias rejected
+PASS case alias in allowlist rejected

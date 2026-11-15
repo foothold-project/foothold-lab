@@ -1,0 +1,510 @@
+--- cmdr_post_v10.py
++++ cmdr_post_s1043.py
+@@ -1,3 +1,5 @@
++"""1043 A-only aggregate, ported from cmdr_post_v10.py."""
++# Historical v2-v10 notes below describe the source, not enabled 1043 behavior.
+ # CMD-R morning tables v2 (lead, 2026-10-13 00:20; rules from VERIFY-astra-7 2(c) and VERIFY-astra-8 section 5).
+ # Reads only runs the driver marked "valid" in out/cmdr_eval_driver.json (validated, stamped with the current pins,
+ # initial-state fingerprints equal within the group). Writes out/cmdr_post.json and out/CMDR-tables.md.
+@@ -113,20 +115,46 @@
+ import math
+ import sys
+ import time
++import argparse
++from pathlib import Path
++import tempfile
+ 
+ import numpy as np
+ 
++from s1043_manifest import load as load_manifest, check_inputs, sha256, inside
++
++ap = argparse.ArgumentParser(allow_abbrev=False)
++ap.add_argument("--manifest", required=True)
++ap.add_argument("--expect_self_sha", required=True)
++ap.add_argument("--cpu_fixture", action="store_true")
++args = ap.parse_args()
++print("sys.executable", sys.executable)
++print("candidate.__file__", str(Path(__file__).resolve()))
++print("candidate.sha256", sha256(__file__))
++if sha256(__file__) != args.expect_self_sha:
++    raise SystemExit("environment mismatch: self hash")
++MANIFEST = load_manifest(args.manifest)
++CONTRACT = MANIFEST["contract"]
++problems = check_inputs(MANIFEST, require_files=not args.cpu_fixture)
++if problems:
++    raise SystemExit(f"registered inputs rejected: {problems[:4]}")
++if any(os.environ.get(k) for k in ("CMDR_POST_OUT", "CMDR_POST_DEST", "CMDR_POST_BUNDLE", "CMDR_POST_HOLD")):
++    raise SystemExit("legacy post environment override refused")
++src_dir = str(Path(CONTRACT["inputs"]["source_paired_ci.py"]["path"]).parent)
++sys.path.insert(0, src_dir)
+ import paired_ci as PCI
+ import q_metrics as Q
+ 
+ HERE = os.path.dirname(os.path.abspath(__file__))
+-OUT = os.environ.get("CMDR_POST_OUT", os.path.join(HERE, "out"))  # test: point at a synthetic folder
+-DEST = os.environ.get("CMDR_POST_DEST", OUT)  # v4: tables can be written elsewhere (tests, dry runs)
+-MODELS = ["p20000", "off22000", "on22000", "off24000", "on24000"]
+-CELLS = ["stop03", "fwd01", "fwd02", "stand", "fwd03", "fwd05", "back03", "left03", "right03", "yawL05", "yawR05"]
+-TARGETS = ["stop03", "fwd01", "fwd02"]
+-FAMILIES = ["flat", "obstacles", "rough_slope", "slope_up", "slope_down", "stairs_up", "stairs_down", "wave"]
+-SEEDS = [1000, 1001, 1002, 1003, 1004]
++OUT = CONTRACT["paths"]["data"]
++DEST = CONTRACT["paths"]["reports"]
++if not all(inside(p) for p in (OUT, DEST)):
++    raise SystemExit("post output root outside codexE")
++MODELS = list(dict.fromkeys(j[0] for j in CONTRACT["plan"]["base"]))
++CELLS = CONTRACT["evaluation"]["all_cell_names"]
++TARGETS = list(CONTRACT["evaluation"]["commands"])
++FAMILIES = list(dict.fromkeys(j[1] for j in CONTRACT["plan"]["base"]))
++SEEDS = CONTRACT["evaluation"]["seeds"]
+ 
+ 
+ def main_col(cell):
+@@ -168,6 +196,8 @@
+     if [int(r["episode"]) for r in eps] != list(range(100)):
+         raise ValueError(f"{tag}: episode ids are not 0..99")
+     cell = eps[0]["cell"]
++    if any(r["cell"] != cell for r in eps):
++        raise ValueError(f"{tag}: mixed episode cells")
+     st = startup(np.load(io.BytesIO(blobs["traj.npz"])))
+     mae, mae_n = {}, {}
+     for k in ("vx", "vy", "wz"):
+@@ -186,57 +216,57 @@
+     return h.hexdigest()
+ 
+ 
+-LOGS = ["cmdr_eval_driver", "cmdr_eval_driver_g0"]
+-PIN_KEYS = ["q_eval_cmdr.py", "q_metrics.py", "q_post.py", "gpu_guard.py", "cmdr_bundle_compare.py"]
+-EXPERIMENT = "cmdr_s1042_pair_eval"
++LOGS = ["s1043A_base"]
++EXPERIMENT = CONTRACT["experiment"]
+ OUT4 = ("meta.json", "cells.json", "episodes.csv", "traj.npz")
+-drv = {"matrix": {}, "pair_fail": [], "skipped": [], "logs": {}, "owner": {}, "log_pins": {}, "log_ckpt": {}}
+-for name in LOGS:
+-    p = os.path.join(OUT, f"{name}.json")
+-    if not os.path.exists(p):
+-        continue
+-    raw = open(p, "rb").read()
+-    d = json.loads(raw.decode("utf-8"))
+-    drv.setdefault("inputs", {})[name] = hashlib.sha256(raw).hexdigest()
+-    pins = d.get("pins") or {}
+-    missing = [k for k in PIN_KEYS if not pins.get(k)]
+-    assert not missing, f"{name}: pins missing {missing}"
+-    ver = str(d.get("version", "3.2"))
+-    if ver not in ("3.2",) or "experiment" in d:
+-        assert d.get("experiment") == EXPERIMENT, f"{name}: experiment {d.get('experiment')!r}"
+-    for k in ("pins", "ckpt"):
+-        for kk, vv in (d.get(k) or {}).items():
+-            vv = vv.get("sha256") if isinstance(vv, dict) else vv
+-            prev = drv.setdefault(k, {}).setdefault(kk, vv)
+-            assert prev == vv, f"{name}: {k} {kk} differs between the two logs"
+-    both = set(drv["matrix"]) & set(d.get("matrix", {}))
+-    assert not both, f"{name}: tags in two logs {sorted(both)[:3]}"  # the two instances never share a run
+-    drv["matrix"].update(d.get("matrix", {}))
+-    drv["owner"].update({t: name for t in d.get("matrix", {})})
+-    drv["log_pins"][name] = pins
+-    drv["log_ckpt"][name] = {m: (v.get("sha256") if isinstance(v, dict) else v) for m, v in (d.get("ckpt") or {}).items()}
+-    drv["pair_fail"] += d.get("pair_fail", [])
+-    drv["skipped"] += d.get("skipped", [])
+-    drv["logs"][name] = {"version": ver, "experiment": d.get("experiment"), "runs": len(d.get("runs", [])),
+-                         "ended": d.get("ended"), "stopped": d.get("stopped"), "attempt": d.get("attempt")}
+-    for r_ in d.get("runs", []):  # 16g 3.1 / 16i 5.1: the last record of each tag in THIS log is what this log published
+-        if isinstance(r_, dict) and r_.get("tag"):
+-            drv.setdefault("rec", {})[(name, r_["tag"])] = r_
+-    ap_ = os.path.join(OUT, f"{name}.attempt.json")
+-    raw_af = open(ap_, "rb").read() if os.path.exists(ap_) else None
+-    drv.setdefault("sidecar", {})[name] = raw_af  # 16i 5.2: compared again at the end
+-    try:
+-        af = json.loads(raw_af.decode("utf-8")) if raw_af is not None else None
+-    except (json.JSONDecodeError, UnicodeDecodeError):
+-        af = "broken"
+-    if ver != "3.2" and not isinstance(af, dict):  # 16i 5.2: a v3.3+ owner without a readable attempt file is not trusted
+-        print(f"HELD: {name} (v{ver}) has {'no' if af is None else 'an unreadable'} attempt file. Nothing written", file=sys.stderr)
+-        sys.exit(5)
+-    if isinstance(af, dict) and (af.get("state") == "revalidating" or af.get("attempt") != d.get("attempt")):
+-        print(f"HELD: {name} is being rebuilt by attempt {af.get('attempt')} ({af.get('state')}); the log on disk is "
+-              f"{d.get('attempt')}. Nothing written", file=sys.stderr)
+-        sys.exit(5)
+-valid = sorted(t for t, s in drv["matrix"].items() if s == "valid")
++expected = {"cq_" + "_".join(map(str, j[:-1])) + "_s" + str(j[-1]): tuple(j)
++            for j in CONTRACT["plan"]["A"]}
++if len(expected) != 45:
++    raise SystemExit("A plan must contain 45 unique tags")
++name = LOGS[0]
++p_log = Path(OUT) / (name + ".json")
++raw_log = p_log.read_bytes()
++d = json.loads(raw_log.decode("utf-8"))
++if (d.get("version") != "1043-A1" or d.get("experiment") != EXPERIMENT or
++        d.get("contract_sha256") != MANIFEST["contract_sha256"] or d.get("stage") != "A"):
++    raise SystemExit("1043 A log identity mismatch")
++if d.get("pair_fail") or d.get("skipped") or d.get("not_run") or d.get("not_valid"):
++    raise SystemExit("A log has failures or missing runs")
++if not d.get("complete") or not d.get("ended") or d.get("end_kind") != "complete":
++    raise SystemExit("A log incomplete")
++if d.get("matrix") != {t: "valid" for t in expected}:
++    raise SystemExit("A matrix must contain exactly 45 valid tags")
++records = d.get("runs")
++if not isinstance(records, list) or len(records) != 45 or [r.get("tag") for r in records] != list(dict.fromkeys(r.get("tag") for r in records)):
++    raise SystemExit("A records missing or duplicate")
++if {r.get("tag") for r in records} != set(expected) or not all(r.get("valid") and r.get("attempt") for r in records):
++    raise SystemExit("A run records invalid")
++expected_pins = {k.removeprefix("source_").removeprefix("config_"): v["sha256"]
++                 for k, v in CONTRACT["inputs"].items() if k.startswith(("source_", "config_"))}
++for filename in ("s1043_manifest.py", "cmdr_bundle_compare_s1043.py", "cmdr_eval_driver_s1043.py",
++                 "cmdr_post_s1043.py", "frozen_exec_s1043.py"):
++    expected_pins[filename] = sha256(Path(HERE) / filename)
++expected_pins["manifest_s1043.json"] = sha256(args.manifest)
++if d.get("pins") != expected_pins:
++    raise SystemExit("A log pins mismatch")
++expected_ckpt = {"p20000": "parent_model", "off22000": "off_model_22000",
++                 "on22000": "on_model_22000", "off24000": "off_model_24000", "on24000": "on_model_24000"}
++for model in ("p20000", "off24000", "on24000"):
++    rec = (d.get("ckpt") or {}).get(model)
++    if not isinstance(rec, dict) or rec.get("sha256") != CONTRACT["inputs"][expected_ckpt[model]]["sha256"]:
++        raise SystemExit("A checkpoint mismatch: " + model)
++p_attempt = Path(OUT) / (name + ".attempt.json")
++raw_attempt = p_attempt.read_bytes()
++attempt = json.loads(raw_attempt.decode("utf-8"))
++if attempt.get("attempt") != d.get("attempt") or attempt.get("state") != "ended":
++    raise SystemExit("A attempt mismatch or rebuilding")
++drv = {"matrix": d["matrix"], "pair_fail": [], "skipped": [], "owner": {t: name for t in expected},
++       "log_pins": {name: d["pins"]}, "log_ckpt": {name: {m: v.get("sha256") for m, v in d["ckpt"].items()}},
++       "rec": {(name, r["tag"]): r for r in records}, "inputs": {name: hashlib.sha256(raw_log).hexdigest()},
++       "sidecar": {name: raw_attempt},
++       "logs": {name: {"version": d["version"], "experiment": EXPERIMENT,
++                       "runs": len(records), "ended": d["ended"], "attempt": d["attempt"]}}}
++valid = sorted(expected)
+ 
+ 
+ STATS = {}
+@@ -272,160 +302,86 @@
+ 
+ 
+ def auth(tag, m, blobs):
+-    """'' and the stamp form ('new' / 'legacy') when the run's stamp ties it to its log, else (reason, None)."""
+-    if blobs["driver_stamp.json"] is None:
+-        return "no stamp", None
++    if any(blobs[f] is None for f in ("driver_stamp.json",) + OUT4):
++        return "stamp or output missing"
+     try:
+         stp = json.loads(blobs["driver_stamp.json"].decode("utf-8"))
+-    except (json.JSONDecodeError, UnicodeDecodeError):
+-        return "stamp unreadable", None
+-    if not isinstance(stp, dict):
+-        return "stamp not a dict", None
+-    if any(blobs[f] is None for f in OUT4):
+-        return "an output file is missing", None
+-    owner = drv["owner"][tag]
+-    if stp.get("pins") != drv["log_pins"][owner]:
+-        return "stamp pins differ from its log", None
+-    want = drv["log_ckpt"][owner].get(m)
++    except (ValueError, UnicodeError):
++        return "stamp unreadable"
++    if not isinstance(stp, dict) or stp.get("stamp_version") != "1043-A1":
++        return "legacy or wrong stamp version"
++    if (stp.get("experiment") != EXPERIMENT or stp.get("contract_sha256") != MANIFEST["contract_sha256"] or
++            stp.get("stage") != "A" or stp.get("origin") != "hashed-at-collection"):
++        return "stamp 1043 identity mismatch"
++    if stp.get("pins") != drv["log_pins"][name]:
++        return "stamp pins mismatch"
++    want = drv["log_ckpt"][name].get(m)
+     if not want or stp.get("ckpt_sha256") != want:
+-        return "stamp checkpoint differs from its log", None
+-    if "stamp_version" in stp:
+-        h = stp.get("out_sha256")
+-        if not isinstance(h, dict) or sorted(h) != sorted(OUT4):
+-            return "new stamp without the four output hashes", None
+-        if any(hashlib.sha256(blobs[f]).hexdigest() != h[f] for f in OUT4):
+-            return "outputs changed after validation", None
+-        rec = drv.get("rec", {}).get((owner, tag))  # 16g 3.1 / 16i 5.1: the run the OWNER log published
+-        if rec is None:
+-            return "no run record for this tag in its log", None
+-        if not rec.get("valid"):
+-            return "its log's run record is not valid", None
+-        if rec.get("out_sha256") != h:
+-            return "stamp hashes differ from its log's run record", None
+-        if rec.get("attempt") != stp.get("attempt"):
+-            return "stamp attempt differs from its log's run record", None
+-        return "", "new"
+-    if any(k in stp for k in NEW_FIELDS):  # 16e 3.1: a new-format trace without its version is ambiguous, not legacy
+-        return "ambiguous stamp (new-format fields without stamp_version)", None
+-    if drv["logs"][owner]["version"] != "3.2":
+-        return "legacy stamp in a v3.3+ log", None
+-    return "", "legacy"
++        return "stamp checkpoint mismatch"
++    hashes = stp.get("out_sha256")
++    if not isinstance(hashes, dict) or set(hashes) != set(OUT4):
++        return "stamp output hashes missing"
++    if hashes != {f: hashlib.sha256(blobs[f]).hexdigest() for f in OUT4}:
++        return "output hash mismatch"
++    rec = drv["rec"].get((name, tag))
++    if not rec or not rec.get("valid") or rec.get("out_sha256") != hashes:
++        return "owner record mismatch"
++    if not stp.get("attempt") or rec.get("attempt") != stp["attempt"]:
++        return "collection attempt mismatch"
++    return ""
+ 
+ 
+ R = {}
+-auth_fail, legacy, manifest = [], [], {}
+-BUNDLE = os.environ.get("CMDR_POST_BUNDLE")  # 16l 5.3: the frozen hand-over folder holding the release dependencies
+-HOLD_P = os.environ.get("CMDR_POST_HOLD") or (os.path.join(BUNDLE, "cmdr_post_hold.json") if BUNDLE else os.path.join(OUT, "cmdr_post_hold.json"))
+-HOLD_RAW = open(HOLD_P, "rb").read() if os.path.exists(HOLD_P) else None  # 16i 5.2: part of the input, compared at the end
+-try:
+-    HOLD = json.loads(HOLD_RAW.decode("utf-8")) if HOLD_RAW is not None else {}
+-except (UnicodeDecodeError, json.JSONDecodeError):
+-    HOLD = None
+-if (os.environ.get("CMDR_POST_HOLD") or BUNDLE) and (HOLD_RAW is None or not isinstance(HOLD, dict) or (
+-        os.environ.get("CMDR_POST_HOLD_SHA256") and hashlib.sha256(HOLD_RAW).hexdigest() != os.environ["CMDR_POST_HOLD_SHA256"])):
+-    print(f"HOLD LIST NOT USABLE: {HOLD_P} (missing, unreadable, not a record or not the expected bytes); nothing written", file=sys.stderr)
+-    sys.exit(6)  # 16l 3.4: a named hold list that is not there is never "no holds"
+-if not isinstance(HOLD, dict):
+-    print(f"HOLD LIST NOT USABLE: {HOLD_P}; nothing written", file=sys.stderr)
+-    sys.exit(6)
+-held, hold_released, hold_candidates, release_auth_fail = [], [], [], []
+-REL_KEYS = ("by", "why", "new_attempt", "out_sha256", "evidence", "evidence_sha256")
+-DEP_SEEN = {}  # 16l 3.3: dependency file -> hash of the bytes read; compared again at the end
+-
+-
+-def _read_dep(p):
+-    """the bytes of a release dependency, read once; the hash and the parse both come from them (16l 3.3)"""
++manifest = {}
++pair_groups = {}
++for tag in valid:
++    m, fam, cell, noise, seed = expected[tag]
++    blobs = read_run(tag)
++    why = auth(tag, m, blobs)
++    if why:
++        raise SystemExit(f"A authentication rejected: {tag}: {why}")
+     try:
+-        raw = open(p, "rb").read()
+-    except OSError:
+-        DEP_SEEN.setdefault(p, None)
+-        return None, None
+-    DEP_SEEN[p] = hashlib.sha256(raw).hexdigest()
+-    return raw, DEP_SEEN[p]
+-
+-
+-def release_check(tag, rel, blobs, entry):
+-    """16k 4 / 16l 3: "" when the release names a valid new collection that is on disk now, else the reason (stays held)."""
+-    miss = [k for k in REL_KEYS if not rel.get(k)]
+-    if miss:
+-        return f"release record lacks {miss}"
+-    if not isinstance(rel["out_sha256"], dict) or sorted(rel["out_sha256"]) != sorted(OUT4):
+-        return "release out_sha256 must name the four output files"
+-    now = {f: hashlib.sha256(blobs[f]).hexdigest() if blobs.get(f) is not None else None for f in OUT4}
+-    if now != rel["out_sha256"]:
+-        return "the output bytes on disk are not the released ones"
+-    try:
+-        stp = json.loads(blobs["driver_stamp.json"].decode("utf-8"))
+-    except (AttributeError, json.JSONDecodeError, UnicodeDecodeError):
+-        return "stamp unreadable"
+-    rec = drv.get("rec", {}).get((drv["owner"][tag], tag)) or {}
+-    if not isinstance(stp, dict) or stp.get("out_sha256") != now or rec.get("out_sha256") != now:
+-        return "the stamp or the owner record does not vouch for the released bytes"
+-    if stp.get("attempt") != rel["new_attempt"] or rec.get("attempt") != rel["new_attempt"]:  # 16l 3.1: no exception
+-        return "the stamp or the owner record names another collection than the released one"
+-    hp = (os.path.join(BUNDLE, "held_stamps", tag + ".json") if BUNDLE
+-          else os.path.join(OUT, entry.get("handover") or "_no_handover_", "stamps", tag + ".json"))
+-    raw_h, sha_h = _read_dep(hp)
+-    if sha_h is None or sha_h != entry.get("stamp_sha256"):
+-        return "the held original's stamp copy is not found by the held hash"
+-    try:
+-        held_att = (json.loads(raw_h.decode("utf-8")) or {}).get("attempt")
+-    except (AttributeError, json.JSONDecodeError, UnicodeDecodeError):
+-        return "the held original's stamp copy is unreadable"
+-    if (hashlib.sha256(blobs["driver_stamp.json"]).hexdigest() == entry.get("stamp_sha256")
+-            or held_att in (rel["new_attempt"], stp.get("attempt"), rec.get("attempt"))):
+-        return "the released collection is the held original"
+-    ep = os.path.join(BUNDLE, "evidence", tag + ".json") if BUNDLE else rel["evidence"]
+-    raw_e, sha_e = _read_dep(ep)
+-    if sha_e is None or sha_e != rel["evidence_sha256"]:
+-        return "the evidence file is missing or changed"
+-    try:
+-        e = json.loads(raw_e.decode("utf-8"))
+-    except (UnicodeDecodeError, json.JSONDecodeError):
+-        return "the evidence file is unreadable"
+-    if not (isinstance(e, dict) and e.get("comparison_ready") is True and e.get("new_run_valid") is True
+-            and not e.get("changed_while_reading") and e.get("new_attempt") == rel["new_attempt"]
+-            and e.get("new_out_sha256") == rel["out_sha256"]):
+-        return "the evidence does not show a valid new collection with this attempt and these hashes"
+-    return ""
+-for tag in valid:
+-    _, m, rest = tag.split("_", 2)
+-    blobs = read_run(tag)
+-    if tag in HOLD:
+-        cur = hashlib.sha256(blobs["driver_stamp.json"]).hexdigest() if blobs["driver_stamp.json"] is not None else None
+-        rel = HOLD[tag].get("released") if isinstance(HOLD[tag], dict) else None
+-        rel_why = release_check(tag, rel, blobs, HOLD[tag]) if isinstance(rel, dict) else ("no release record" if not rel else "release is not a record")
+-        ok_rel = not rel_why  # 16k 4 / 16l 3: bound to the collection attempt, its bytes and its evidence
+-        if not ok_rel:  # 16i 3: held until a valid explicit release; a changed stamp is not a new measurement by itself
+-            held.append({"tag": tag, "why": HOLD[tag].get("why"), "held_stamp": HOLD[tag].get("stamp_sha256"), "now_stamp": cur,
+-                         "release_rejected": bool(rel), "release_why": rel_why})
+-            if cur != HOLD[tag].get("stamp_sha256"):
+-                hold_candidates.append({"tag": tag, "held_stamp": HOLD[tag].get("stamp_sha256"), "now_stamp": cur})
+-            continue
+-        pending_release = {"tag": tag, "released": rel, "held_stamp": HOLD[tag].get("stamp_sha256"), "now_stamp": cur}
+-    else:
+-        pending_release = None
+-    why, form = auth(tag, m, blobs)
+-    if pending_release and not why:  # written only once the released run passed authentication (16j 5.3)
+-        hold_released.append(pending_release)
+-    if pending_release and why:  # 16k 4: counted with the holds as well as with the auth failures
+-        release_auth_fail.append({"tag": tag, "why": why})
+-    if why:
+-        auth_fail.append({"tag": tag, "why": why})
+-        continue
+-    if form == "legacy":
+-        legacy.append(tag)
+-    rest, seed = rest.rsplit("_s", 1)
+-    rest, noise = rest.rsplit("_", 1)
+-    fam, cell = rest.rsplit("_", 1)
+-    R[(m, fam, cell, noise, int(seed))] = load(tag, blobs)
+-    stp_ = json.loads(blobs["driver_stamp.json"].decode("utf-8"))
+-    rec_ = drv.get("rec", {}).get((drv["owner"][tag], tag)) or {}
+-    manifest[tag] = {"form": form, "origin": stp_.get("origin") or ("v3.2 legacy stamp" if form == "legacy" else "hashed (stamp has no origin field)"),
+-                     "owner": drv["owner"][tag], "record_attempt": rec_.get("attempt"), "stamp_attempt": stp_.get("attempt"),
++        meta = json.loads(blobs["meta.json"].decode("utf-8"))
++        ma = meta["args"]
++        model_key = expected_ckpt[m]
++        want_ckpt = CONTRACT["inputs"][model_key]
++        if (ma["tag"], ma["families"], ma["cells"], ma["obs_noise"], ma["eval_seed"], ma["episodes"]) != (
++                tag, fam, cell, noise == "on", seed, 100):
++            raise ValueError("meta job contract")
++        if (Path(ma["outdir"]).resolve() != Path(OUT).resolve() or
++                Path(ma["checkpoint"]).resolve() != Path(want_ckpt["path"]).resolve() or
++                meta["checkpoint_sha256"] != want_ckpt["sha256"] or
++                ma["policy"] != "student" or ma["difficulty"] != 0.5 or
++                ma["terrain_set"] != "train" or ma["heading_hold"] != 0 or
++                ma["spawn_offset"] != "" or not ma["physx_small_buffers"]):
++            raise ValueError("meta evaluator contract")
++        device = CONTRACT["device"]
++        if (device["gpu_index"] == "UNDECIDED" or device["gpu_uuid"] == "UNDECIDED") and not args.cpu_fixture:
++            raise ValueError("device undecided")
++        if device["gpu_index"] != "UNDECIDED":
++            if (ma["physics_gpu"] != device["gpu_index"] or ma["active_gpu"] != device["gpu_index"] or
++                    meta["devices"]["torch_cuda0_uuid"].removeprefix("GPU-") != str(device["gpu_uuid"]).removeprefix("GPU-")):
++                raise ValueError("device index or UUID")
++        pair = (meta["pairing_sha256"], meta["pairing_sha256_ext"], meta["terrain_mesh"],
++                meta["terrain_origins_sha256"], meta["obs_shapes"], meta["eval_changes"])
++        group = (fam, cell, noise, seed)
++        if group in pair_groups and pair_groups[group] != pair:
++            raise ValueError("pair fingerprint mismatch")
++        pair_groups[group] = pair
++    except (KeyError, TypeError, ValueError, UnicodeError) as exc:
++        raise SystemExit(f"A meta rejected: {tag}: {exc}")
++    parsed = load(tag, blobs)
++    if parsed["cell"] != cell:
++        raise SystemExit(f"A cell mismatch: {tag}")
++    R[(m, fam, cell, noise, seed)] = parsed
++    stp = json.loads(blobs["driver_stamp.json"].decode("utf-8"))
++    rec = drv["rec"][(name, tag)]
++    manifest[tag] = {"form": "new", "origin": stp["origin"], "owner": name,
++                     "record_attempt": rec["attempt"], "stamp_attempt": stp["attempt"],
+                      "stamp_sha256": hashlib.sha256(blobs["driver_stamp.json"]).hexdigest(),
+                      **{f: hashlib.sha256(blobs[f]).hexdigest() for f in OUT4}}
+-changed = [x["tag"] for x in auth_fail if x["why"] == "outputs changed after validation"]
++if len(R) != 45:
++    raise SystemExit("A requires 45 valid unique runs")
+ 
+ 
+ def paired(xs, ys):
+@@ -651,53 +607,37 @@
+ res["n_valid_runs"] = len(R)
+ res["as_of"] = time.strftime("%Y-%m-%d %H:%M:%S")
+ res["inputs"] = drv.get("inputs", {})
+-res["changed_after_validation"] = changed
++res["changed_after_validation"] = []
+ res["interval_method"] = "tango score (paired_ci.py); newcombe kept for comparison"
+-res["schema"] = "cmdr_post v10"
+-res["release_auth_fail"] = release_auth_fail
+-res["release_deps_sha256"] = dict(DEP_SEEN)
+-res["hold_list"] = {"path": HOLD_P, "sha256": hashlib.sha256(HOLD_RAW).hexdigest() if HOLD_RAW is not None else None}
+-res["auth_fail"] = auth_fail
+-res["legacy_stamps"] = len(legacy)
+-res["legacy_tags"] = legacy
+-res["held"] = held
+-res["hold_released"] = hold_released
+-res["hold_candidates"] = hold_candidates
++res["schema"] = "cmdr_post_s1043 A1"
++res["contract_sha256"] = MANIFEST["contract_sha256"]
++res["experiment"] = EXPERIMENT
++res["train_seed"] = 1043
++res["stage"] = "A"
++res["claim"] = CONTRACT["reporting"]["claim"]
++res["a_complete"] = len(R) == 45
++res["auth_fail"] = []
++res["legacy_stamps"] = 0
++res["legacy_tags"] = []
+ res["origin_counts"] = {}
+ for v_ in manifest.values():
+     res["origin_counts"][v_["origin"]] = res["origin_counts"].get(v_["origin"], 0) + 1
+ res["inputs_manifest"] = manifest
+-for name in LOGS:  # 16e 3.2: the logs must still be the bytes this aggregate started from
++for name in LOGS:
+     p = os.path.join(OUT, f"{name}.json")
+-    now = hashlib.sha256(open(p, "rb").read()).hexdigest() if os.path.exists(p) else None
+-    if now != drv.get("inputs", {}).get(name):
+-        print(f"INPUT CHANGED during the aggregate: {name}; nothing written", file=sys.stderr)
+-        sys.exit(3)
+-for tag_, st_ in STATS.items():  # 16g 3.2: every file read is still the file that was read
++    if hashlib.sha256(Path(p).read_bytes()).hexdigest() != drv["inputs"][name]:
++        raise SystemExit("INPUT CHANGED: driver log")
++for tag_, st_ in STATS.items():
+     for f_, s0 in st_.items():
+-        try:
+-            now = _st(os.path.join(OUT, tag_, f_))
+-        except FileNotFoundError:
+-            now = None
+-        if now != s0:
+-            print(f"INPUT CHANGED during the aggregate: {tag_}/{f_}; nothing written", file=sys.stderr)
+-            sys.exit(3)
+-for name_, raw0 in drv.get("sidecar", {}).items():  # 16i 5.2: the attempt files and the hold list are inputs too
+-    p_ = os.path.join(OUT, f"{name_}.attempt.json")
+-    if (open(p_, "rb").read() if os.path.exists(p_) else None) != raw0:
+-        print(f"INPUT CHANGED during the aggregate: {name_}.attempt.json; nothing written", file=sys.stderr)
+-        sys.exit(3)
+-if (open(HOLD_P, "rb").read() if os.path.exists(HOLD_P) else None) != HOLD_RAW:
+-    print("INPUT CHANGED during the aggregate: cmdr_post_hold.json; nothing written", file=sys.stderr)
+-    sys.exit(3)
+-for p_, h_ in DEP_SEEN.items():  # 16l 3.3: the held original stamps and the evidence are inputs too
+-    if (hashlib.sha256(open(p_, "rb").read()).hexdigest() if os.path.exists(p_) else None) != h_:
+-        print(f"INPUT CHANGED during the aggregate: {p_}; nothing written", file=sys.stderr)
+-        sys.exit(3)
++        if _st(os.path.join(OUT, tag_, f_)) != s0:
++            raise SystemExit("INPUT CHANGED: run file")
++for name_, raw0 in drv["sidecar"].items():
++    if (Path(OUT) / f"{name_}.attempt.json").read_bytes() != raw0:
++        raise SystemExit("INPUT CHANGED: attempt")
+ res["driver_logs"] = drv["logs"]
+ res["driver_pair_fail"] = drv.get("pair_fail", [])
+ res["driver_invalid"] = drv.get("skipped", [])
+-json.dump(res, open(os.path.join(DEST, "cmdr_post.json"), "w", encoding="utf-8"), ensure_ascii=False, indent=1, default=float)
++json_bytes = (json.dumps(res, ensure_ascii=False, indent=1, default=float) + "\n").encode("utf-8")
+ 
+ 
+ def pct(v):
+@@ -708,7 +648,8 @@
+     return "" if not p else f"{100 * p['diff']:+.0f} [{100 * p['lo']:+.0f}, {100 * p['hi']:+.0f}] p={p['p']:.2g}"
+ 
+ 
+-L = ["# CMD-R 표 (자동 생성 · cmdr_post_v8.py)", "",
++L = ["# CMD-R 표 (자동 생성 · cmdr_post_s1043.py)", "",
++     CONTRACT["reporting"]["claim"], "",
+      "주 통과 = span 정의 (stop03 span_q2 · fwd01/02 span_q1a · 그 밖 span_q1). 차이는 같은 시드 · 같은 episode 끼리 짝지은 %p 와 95 % 구간.",
+      "판정선은 팀장 확정 2(c) (10/13 01:10): 목표 칸마다 500 판 · 「개선」 = 세 칸 모두 95 % 구간 하한 > 0 이고 세 칸 평균 +10 %p 이상 · 퇴행은 100 판 훑기에서 점추정 −5 %p 이하 칸만 500 판으로 다시 재서 구간으로 판정 (−5 %p 를 걸치면 「비퇴행 미확인」) · MAE +10 % · 기본 계약 (생존 95 % · 통과 90 %) 은 따로. 이 표는 채택 · 기각을 쓰지 않는다.", "",
+      "## 목표 세 칸 (평지 · noise 켬 · 시드 묶음)", "",
+@@ -752,5 +693,12 @@
+             L.append(f"  - {k}: 생존 {v['surv_k']}/{v['n']} [{100 * v['surv_ci'][0]:.1f}, {100 * v['surv_ci'][1]:.1f}] · "
+                      f"통과 {v['pass_k']}/{v['n']} [{100 * v['pass_ci'][0]:.1f}, {100 * v['pass_ci'][1]:.1f}]")
+ L += ["", f"유효 실행 {res['n_valid_runs']} · 짝 불일치 {len(res['driver_pair_fail'])} · 무효 {len(res['driver_invalid'])} · 기록 {json.dumps(res['driver_logs'], ensure_ascii=False)}"]
+-open(os.path.join(DEST, "CMDR-tables.md"), "w", encoding="utf-8").write("\n".join(L) + "\n")
++table_bytes = ("\n".join(L) + "\n").encode("utf-8")
++Path(DEST).mkdir(parents=True, exist_ok=True)
++for filename, content in (("cmdr_post.json", json_bytes), ("CMDR-tables.md", table_bytes)):
++    target = Path(DEST) / filename
++    with tempfile.NamedTemporaryFile(dir=DEST, prefix=filename + ".", suffix=".tmp", delete=False) as f:
++        f.write(content)
++        temp = Path(f.name)
++    os.replace(temp, target)
+ print(f"valid runs {len(R)} · targets {[c for c in TARGETS if res['targets'][c]]} · holm {res['holm']}")

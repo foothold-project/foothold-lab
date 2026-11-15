@@ -1,0 +1,40 @@
+format: foothold-machine-profile/1
+machine_id: AI-WS01-windows
+paths:
+  isaaclab_root: C:/isaac/IsaacLab
+  isaac_sim_root: C:/Users/AI-WS01/anaconda3/envs/isaac311/Lib/site-packages/isaacsim
+  conda_python: C:/Users/AI-WS01/anaconda3/envs/isaac311/python.exe
+  rsl_rl_module: C:/Users/AI-WS01/anaconda3/envs/isaac311/Lib/site-packages/rsl_rl/__init__.py
+  s2_lab_root: C:/Users/AI-WS01/s2_lab
+  mai_tmp_root: D:/mai-tmp
+  mai_worktree_root: D:/mai-wt/foothold-lab
+  isaac_cache_root: D:/mai-cache/isaacsim-5.1/DerivedDataCache
+  git_bash: C:/Program Files/Git/bin/bash.exe
+  gpu_jobs_config: C:/Users/AI-WS01/s2_lab/gpu_jobs/jobs.json
+  gpu_queue: D:/mai-tmp/gpu/queue.json
+  playlist_root: C:/Users/AI-WS01/s2_lab/_playlists
+  c_layer_lock: C:/Users/AI-WS01/s2_lab/c_layer_m6000/out/c_layer.lock
+  a_layer_marker: C:/Users/AI-WS01/s2_lab/c_layer_m6000/priority/A_LAYER_BUSY
+  ex41_stage_video_source: D:/mai-wt/foothold-lab/scripter-ex41-stagevideo
+  ex41_stage_video_output: D:/mai-tmp/runner/ex41_stage_video
+  ex41_w78_video_root: D:/mai-tmp/ex41/w78_video
+  runner_home: D:/mai-tmp/runner
+  telegram_outbox: C:/ssd-cleanup-logs/tg-outbox.txt
+  telegram_script: C:/ssd-cleanup-logs/tg-send.ps1
+  gpu0_training_marker: C:/Users/AI-WS01/s2_lab/c_layer_m6000/priority/TRAINING_BUSY
+  gpu0_training_marker_alt: D:/mai-tmp/gpu/TRAINING_BUSY_GPU0
+  gpu1_training_marker: D:/mai-tmp/gpu/TRAINING_BUSY_GPU1
+  gpu0_eval_marker: D:/mai-tmp/gpu/PRIORITY_BUSY_GPU0
+  gpu1_eval_marker: D:/mai-tmp/gpu/PRIORITY_BUSY_GPU1
+  ex41_push250_output: D:/mai-tmp/runner/ex41_push250
+  ex42_gate_report: D:/mai-tmp/analyst/GATE-EX42-no-repeat-1106.md
+devices:
+  training:
+    cuda_index: 0
+    uuid: c08e23b0-62b6-a4f2-8eb2-11151c6a8c7b
+  p1_evaluation:
+    cuda_index: 1
+    uuid: 315d098f-5fe0-26a0-0d2e-26e2d4c1ae4f
+  screen:
+    cuda_index: 1
+    uuid: 315d098f-5fe0-26a0-0d2e-26e2d4c1ae4f

@@ -1,0 +1,38 @@
+{
+  "base_head": "9e93f3e4cccf6ce102d2859d8e1f575e5a6c3cb8",
+  "test_result": "62 passed in 2.31s",
+  "gpu_used": false,
+  "kit_started": false,
+  "scope": "CPU: actual installed Isaac boxes/rough kernel bodies + production build/join/NPZ writer; Kit TerrainGenerator layout and GPU measurement replaced at boundary; not a full 39-kind build",
+  "seed_runs": [
+    {
+      "case": "first",
+      "seed": 42,
+      "npz_sha256": "5f877f9b7ce0d28f03ace82fe1c7d994c6e559b211909dbb3a6d3af68ed1efc2",
+      "mesh_sha256": "e40be8ab4f83b13b8d70a04fa097396a87e3456732184f27c63092224045c8f9",
+      "rng_device": "cpu",
+      "rng_state_after_sha256": "6cd60b4910c9e4cafc6d577f7a9fe59b2cc465dd56393ef8da51cb840c3c4e2f"
+    },
+    {
+      "case": "second",
+      "seed": 42,
+      "npz_sha256": "5f877f9b7ce0d28f03ace82fe1c7d994c6e559b211909dbb3a6d3af68ed1efc2",
+      "mesh_sha256": "e40be8ab4f83b13b8d70a04fa097396a87e3456732184f27c63092224045c8f9",
+      "rng_device": "cpu",
+      "rng_state_after_sha256": "6cd60b4910c9e4cafc6d577f7a9fe59b2cc465dd56393ef8da51cb840c3c4e2f"
+    },
+    {
+      "case": "different",
+      "seed": 43,
+      "npz_sha256": "50236cf0d627165cd233ab7b14c36106aec5a38f6314e6b66ecceba9c49d9414",
+      "mesh_sha256": "6a88684e148e104049da2ff6389bb7fc4808f6dab7188f1617298ca8d4fd816a",
+      "rng_device": "cpu",
+      "rng_state_after_sha256": "9abf161325e71d81e3ea8b696e29f05ffa98ed4b07bf5e6153b66595ef446eb8"
+    }
+  ],
+  "initial_regression": "3 failed before implementation",
+  "mutation_checks": {
+    "missing_numpy_seed": "FAILED same-seed NPZ equality",
+    "missing_torch_seed": "FAILED same-seed NPZ equality"
+  }
+}

@@ -1,0 +1,21 @@
+RUN test_17r_b.py
+RESULT {'test': 'test_17r_b.py', 'exit_code': 0, 'wall_s': 3.78, 'log': 'C:\\Users\\AI-WS01\\.claude\\jobs\\09bbf294\\tmp\\codexE\\evidence_17s\\run_20261014_234848_102912\\test_17r_b.log'}
+RUN test_17r_c.py
+RESULT {'test': 'test_17r_c.py', 'exit_code': 0, 'wall_s': 1.19, 'log': 'C:\\Users\\AI-WS01\\.claude\\jobs\\09bbf294\\tmp\\codexE\\evidence_17s\\run_20261014_234848_102912\\test_17r_c.log'}
+RUN test_17r_d.py
+RESULT {'test': 'test_17r_d.py', 'exit_code': 0, 'wall_s': 0.44, 'log': 'C:\\Users\\AI-WS01\\.claude\\jobs\\09bbf294\\tmp\\codexE\\evidence_17s\\run_20261014_234848_102912\\test_17r_d.log'}
+RUN test_17r_e.py
+RESULT {'test': 'test_17r_e.py', 'exit_code': 0, 'wall_s': 25.84, 'log': 'C:\\Users\\AI-WS01\\.claude\\jobs\\09bbf294\\tmp\\codexE\\evidence_17s\\run_20261014_234848_102912\\test_17r_e.log'}
+RUN test_17r_post_cli.py
+RESULT {'test': 'test_17r_post_cli.py', 'exit_code': 0, 'wall_s': 3.03, 'log': 'C:\\Users\\AI-WS01\\.claude\\jobs\\09bbf294\\tmp\\codexE\\evidence_17s\\run_20261014_234848_102912\\test_17r_post_cli.log'}
+RUN test_17r_mutants.py
+RESULT {'test': 'test_17r_mutants.py', 'exit_code': 0, 'wall_s': 0.3, 'log': 'C:\\Users\\AI-WS01\\.claude\\jobs\\09bbf294\\tmp\\codexE\\evidence_17s\\run_20261014_234848_102912\\test_17r_mutants.log'}
+RUN test_17s_original.py
+RESULT {'test': 'test_17s_original.py', 'exit_code': 0, 'wall_s': 0.36, 'log': 'C:\\Users\\AI-WS01\\.claude\\jobs\\09bbf294\\tmp\\codexE\\evidence_17s\\run_20261014_234848_102912\\test_17s_original.log'}
+RUN test_17s_runtime.py
+RESULT {'test': 'test_17s_runtime.py', 'exit_code': 0, 'wall_s': 8.22, 'log': 'C:\\Users\\AI-WS01\\.claude\\jobs\\09bbf294\\tmp\\codexE\\evidence_17s\\run_20261014_234848_102912\\test_17s_runtime.log'}
+RUN test_17s_diagnostic.py
+RESULT {'test': 'test_17s_diagnostic.py', 'exit_code': 0, 'wall_s': 0.39, 'log': 'C:\\Users\\AI-WS01\\.claude\\jobs\\09bbf294\\tmp\\codexE\\evidence_17s\\run_20261014_234848_102912\\test_17s_diagnostic.log'}
+RUN test_17s_code_mutants.py
+RESULT {'test': 'test_17s_code_mutants.py', 'exit_code': 0, 'wall_s': 35.08, 'log': 'C:\\Users\\AI-WS01\\.claude\\jobs\\09bbf294\\tmp\\codexE\\evidence_17s\\run_20261014_234848_102912\\test_17s_code_mutants.log'}
+EVIDENCE C:\Users\AI-WS01\.claude\jobs\09bbf294\tmp\codexE\evidence_17s\run_20261014_234848_102912

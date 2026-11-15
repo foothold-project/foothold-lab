@@ -1,0 +1,2 @@
+9239dc784e3898784560d5f604a3f49fa75f6bffbd7002a94c204a36ab9cd0c6 *checkpoint_A_update000000.pt
+82450af6a3b4bef66be3bd5087c6245ec48585bebfb02bb2daa294f9c62196ad *checkpoint_B_update000000.pt

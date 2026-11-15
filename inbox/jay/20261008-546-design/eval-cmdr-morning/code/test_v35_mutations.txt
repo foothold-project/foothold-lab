@@ -1,0 +1,13 @@
+# test_v35.py 변이 시험 · 2026-10-13 10:54 · 소스 사본을 메모리에서 바꿔 돌림 (V35_MUTATE) · 실행본은 안 건드림
+P1 반복 입구 마감 검사 없앰               -> 시험 반복이 안 끝남 (RuntimeError) · 걸림
+P2 --log 토큰만 봄                        -> 5a 5b FAIL
+P3 경로 정규화 없앰                       -> 5a FAIL
+P4 선별 상태 누적 (다시 안 만듦)           -> 4a 4b FAIL
+P5 같은 바이트 두 번 규칙 없앰             -> 2a FAIL
+P6 base 잠금 무시                         -> 2c FAIL
+P7 재검사 중 종료가 옛 표를 덮음           -> 7a 에서 stopped.json 없음 (FileNotFoundError) · 걸림
+P8 guard 재시도 증거 안 옮김               -> 8a 에서 attempts 폴더 없음 (FileNotFoundError) · 걸림
+P9 stamp 재시도 없음                       -> 9 에서 PermissionError · 걸림
+P10 메모리 > 3000                         -> 10g FAIL
+P11 NIGHT DONE 위치 무시                  -> 10e FAIL
+P12 result.json 내용 무시                 -> 10b FAIL

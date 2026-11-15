@@ -1,0 +1,271 @@
+{
+  "format": "start-m13000-onnx/1",
+  "checkpoint": "C:\\Users\\AI-WS01\\s2_lab\\ex42_main_20261108_123914\\main\\EX-42-B-stagezero_20261108_123914\\model_1000.pt",
+  "checkpoint_sha256": "20365a2c6d70f94f65f1114471f7df198e56d86db6d02d89cea43c666b95e768",
+  "source": "inbox/jay/20261103-policy-handoff/make_start_app_bundle.py",
+  "source_sha256": "3cac552ab20e368f0246c4c1b678b1564fc65d4c155a79d13e203c7b5501cd8f",
+  "batch": 1,
+  "inputs": [
+    "obs45",
+    "hist",
+    "depth2",
+    "h_prop",
+    "h_terr",
+    "depth_tick",
+    "first_after_reset",
+    "use_gt",
+    "gt_map"
+  ],
+  "outputs": [
+    "action",
+    "h_prop_next",
+    "h_terr_next",
+    "recon_map"
+  ],
+  "actor_input_order": "obs45 + [mu16, v3, zf16, zb16] + pose_cmd2 (fixed 0 inside the graph)",
+  "map_on": "use_gt=false: reconstruction; use_gt=true: diagnostic ground truth",
+  "map_off": "map attention keys masked; TR-Net still runs",
+  "action": "raw Isaac-order 12-vector; clip +/-17 and default_joint_pos + 0.25*action outside ONNX",
+  "state": "external 10x45 history, delayed two depth frames, h_prop/h_terr 128, tick/reset flags",
+  "artifacts": {
+    "map_on": {
+      "name": "start-m13000_map_on.onnx",
+      "sha256": "4799677acdc9fbc22da28fd56fefa3181f24b38b198e3bea02270c1c1cd11d93",
+      "bytes": 5813202
+    },
+    "map_off": {
+      "name": "start-m13000_map_off.onnx",
+      "sha256": "8317548f51a046afb537c212eec47a12b2888b6ea049fa84361d83aa8c30849f",
+      "bytes": 5823033
+    }
+  },
+  "model": "start-m13000",
+  "input_shapes": {
+    "obs45": [
+      1,
+      45
+    ],
+    "hist": [
+      1,
+      10,
+      45
+    ],
+    "depth2": [
+      1,
+      2,
+      60,
+      60
+    ],
+    "h_prop": [
+      1,
+      128
+    ],
+    "h_terr": [
+      1,
+      128
+    ],
+    "depth_tick": [
+      1
+    ],
+    "first_after_reset": [
+      1
+    ],
+    "use_gt": [
+      1
+    ],
+    "gt_map": [
+      1,
+      32,
+      16
+    ]
+  },
+  "input_types": {
+    "obs45": "tensor(float)",
+    "hist": "tensor(float)",
+    "depth2": "tensor(float)",
+    "h_prop": "tensor(float)",
+    "h_terr": "tensor(float)",
+    "depth_tick": "tensor(bool)",
+    "first_after_reset": "tensor(bool)",
+    "use_gt": "tensor(bool)",
+    "gt_map": "tensor(float)"
+  },
+  "test_vectors": {
+    "reconstruction": "test_vectors_flat20_reconstruction.json",
+    "off": "test_vectors_flat20_off.json",
+    "gt": "test_vectors_flat20_gt.json"
+  },
+  "default_test_vectors": "test_vectors_flat20.json",
+  "app_onnx": {
+    "note": "foothold-app policy-adapters.js onnx 칸 꼴 그대로. 입력 순서 = ONNX session.inputNames 순서(실측)",
+    "inputs": [
+      {
+        "name": "obs45",
+        "dims": [
+          1,
+          45
+        ],
+        "type": "float32"
+      },
+      {
+        "name": "hist",
+        "dims": [
+          1,
+          10,
+          45
+        ],
+        "type": "float32"
+      },
+      {
+        "name": "depth2",
+        "dims": [
+          1,
+          2,
+          60,
+          60
+        ],
+        "type": "float32"
+      },
+      {
+        "name": "h_prop",
+        "dims": [
+          1,
+          128
+        ],
+        "type": "float32"
+      },
+      {
+        "name": "h_terr",
+        "dims": [
+          1,
+          128
+        ],
+        "type": "float32"
+      },
+      {
+        "name": "depth_tick",
+        "dims": [
+          1
+        ],
+        "type": "bool"
+      },
+      {
+        "name": "first_after_reset",
+        "dims": [
+          1
+        ],
+        "type": "bool"
+      },
+      {
+        "name": "use_gt",
+        "dims": [
+          1
+        ],
+        "type": "bool"
+      },
+      {
+        "name": "gt_map",
+        "dims": [
+          1,
+          32,
+          16
+        ],
+        "type": "float32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "action",
+        "dims": [
+          1,
+          12
+        ],
+        "type": "float32"
+      },
+      {
+        "name": "h_prop_next",
+        "dims": [
+          1,
+          128
+        ],
+        "type": "float32"
+      },
+      {
+        "name": "h_terr_next",
+        "dims": [
+          1,
+          128
+        ],
+        "type": "float32"
+      },
+      {
+        "name": "recon_map",
+        "dims": [
+          1,
+          32,
+          16
+        ],
+        "type": "float32"
+      }
+    ],
+    "action": "action",
+    "state": [
+      {
+        "out": "h_prop_next",
+        "in": "h_prop"
+      },
+      {
+        "out": "h_terr_next",
+        "in": "h_terr"
+      }
+    ],
+    "depth_delay": "10 Hz frames; depth2 = the two most recent frames delivered one frame (0.1 s) late; depth_tick true on the step a new frame arrives (every 5 steps)"
+  },
+  "label": "EX-42 stage 0 (EX42_0_T0_prime) model_1000 = cumulative m13000",
+  "checkpoint_iter": 1000,
+  "source_ref": "eae0bed799dce0e39b04d157ad4e3e79ecb87653",
+  "overlays": {
+    "foothold_s2/deploy/capture_ex40_real20.py": {
+      "commit": "a10af76f3631535468456917a88df07b0ef84e1b",
+      "sha256": "bb86262a57b893222e49a1cce4b8f970d9e3591a4aff806f576c29d3b0cadb8d"
+    },
+    "foothold_s2/deploy/export_ex40_w89.py": {
+      "commit": "34982e132b68ec1d62dbb3d7ab5a14fba2ed8a06",
+      "sha256": "3cac552ab20e368f0246c4c1b678b1564fc65d4c155a79d13e203c7b5501cd8f"
+    },
+    "foothold_s2/deploy/package_ex40_real20.py": {
+      "commit": "a10af76f3631535468456917a88df07b0ef84e1b",
+      "sha256": "5b609e1aa791d078d94ec7b434ffd3bce140697c6494c802311e9e24dfcd18ad"
+    },
+    "foothold_s2/deploy/verify_ex40_w89.py": {
+      "commit": "34982e132b68ec1d62dbb3d7ab5a14fba2ed8a06",
+      "sha256": "eca83d5bbd25425b2c9bbdb042c1f163322d7fbbd6f8f95497c3ebd32fb49157"
+    }
+  },
+  "actor_input_dim": 98,
+  "actor_hidden": [
+    512,
+    256,
+    128
+  ],
+  "perception_cfg": {
+    "contract": "start",
+    "map_input": "reconstruction",
+    "est_mode": "learned",
+    "force_gt": false,
+    "p_map_off": 0.1,
+    "critic_mode": "clean52",
+    "depth_dtype": "float16"
+  },
+  "pose_cmd": {
+    "columns": [
+      "height_delta_m",
+      "body_roll_rad"
+    ],
+    "value_in_graph": [
+      0.0,
+      0.0
+    ],
+    "why": "trained only with zero pose commands (D93 first stage); not an ONNX input"
+  }
+}

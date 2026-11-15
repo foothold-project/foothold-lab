@@ -1,0 +1,92 @@
+{
+  "run_dir": "C:\\Users\\AI-WS01\\s2_lab\\night-tools-20261013\\s2_runs\\plumbA-live-20261016-141747",
+  "copied": [
+    {
+      "path": "in/approval.json",
+      "bytes": 1683,
+      "sha256_of_original": "9a0523343eb55ccb43df3e214da60bfcd7a531d99b143f5db81e361a1dd2d336",
+      "tail_only": false
+    },
+    {
+      "path": "in/manifest.json",
+      "bytes": 6881,
+      "sha256_of_original": "0f28228dfc3df8411ccc78428a31fbc495d7f1c3ec0afbddcc8859a05da7bb41",
+      "tail_only": false
+    },
+    {
+      "path": "in/request.json",
+      "bytes": 3021,
+      "sha256_of_original": "91d3983e63d04276e0e04b2c49d8f0940f665b9f6e57f27c4b9921db9ff7d7f5",
+      "tail_only": false
+    },
+    {
+      "path": "ctl/claim/s2-plumbing-A-first-live-20261016-141747-A.claim/approval_digest.json",
+      "bytes": 77,
+      "sha256_of_original": "1325b8ea3e6b14e218bebc9fbe7a3a17a18133ffc4fab5a45de61d955d7395e7",
+      "tail_only": false
+    },
+    {
+      "path": "ctl/claim/s2-plumbing-A-first-live-20261016-141747-A.claim/chain.receipt.json",
+      "bytes": 4535,
+      "sha256_of_original": "52da2b9870e53c58d9cd2800e42b23ddbf7618de032385fd8e25c9ed125ee6f8",
+      "tail_only": false
+    },
+    {
+      "path": "ctl/claim/s2-plumbing-A-first-live-20261016-141747-A.claim/chain.receipt.sha256",
+      "bytes": 64,
+      "sha256_of_original": "6793c1a12290b101102ab5993c9175ef0075376a1e2958312f4150f80d09c313",
+      "tail_only": false
+    },
+    {
+      "path": "ctl/lease/9e94ec272b096fc0f3afe54f42401465e28b847e3f20d917c180fd91df52e611.lock",
+      "bytes": 1,
+      "sha256_of_original": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
+      "tail_only": false
+    },
+    {
+      "path": "ctl/prelaunch.json",
+      "bytes": 2590,
+      "sha256_of_original": "5c2519fd829cc29a8faddd8110f077d395c8b5ce30bb4d9dbf4c25ecacfb86c0",
+      "tail_only": false
+    },
+    {
+      "path": "ctl/status.json",
+      "bytes": 288,
+      "sha256_of_original": "208729574a6a984b53febe085289704667138203e1ed7c97867663ed6856082f",
+      "tail_only": false
+    },
+    {
+      "path": "logs/child.log",
+      "bytes": 6059,
+      "sha256_of_original": "cbbbdc105ffddb0ce6d3caca26e093f365c340548808a9ed274a60d4042b41fb",
+      "tail_only": false
+    },
+    {
+      "path": "out/PLUMBING_ONLY.txt",
+      "bytes": 207,
+      "sha256_of_original": "f8ea9d47c31ef2ce4afdd21bc9677f24879beddcda015302bb4aabdf56ba8c8c",
+      "tail_only": false
+    },
+    {
+      "path": "out/result.json",
+      "bytes": 1555,
+      "sha256_of_original": "68b79bb958edaadb2425014e217d559ece97ad4ed2dd7a1bb16b2d8603354e1b",
+      "tail_only": false
+    },
+    {
+      "path": "out/usd/device_binding.json",
+      "bytes": 262,
+      "sha256_of_original": "6dfd56426153173b254a6231767483cb60109fcaad754bb5c630088ce98876b2",
+      "tail_only": false
+    },
+    {
+      "path": "out/usd/isolate_state.json",
+      "bytes": 666,
+      "sha256_of_original": "6c92b2f1a7875e6504d4814a14803b57e92f442ad6da07d8b7aa0902dc64bf26",
+      "tail_only": false
+    }
+  ],
+  "listed_not_copied": [],
+  "raw_rows_count": 0,
+  "raw_rows_bytes": 0
+}

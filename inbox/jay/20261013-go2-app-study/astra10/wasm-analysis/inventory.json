@@ -1,0 +1,647 @@
+{
+  "targets": [
+    {
+      "path": "extracted/assets/dist/assets/libvoxel-Bqa6xB-f.wasm",
+      "bytes": 7410,
+      "sha256": "df28d833bc3045e58e110926dd87c312538a2e5b60a964a4fc5e99ff06d39b9c",
+      "git_blob_sha1": "e7694dcd11644d0c3ac3a3deaacb79f61816004a",
+      "sections": [
+        {
+          "id": 1,
+          "section_offset": 8,
+          "payload_offset": 10,
+          "size": 32
+        },
+        {
+          "id": 2,
+          "section_offset": 42,
+          "payload_offset": 44,
+          "size": 7
+        },
+        {
+          "id": 3,
+          "section_offset": 51,
+          "payload_offset": 53,
+          "size": 7
+        },
+        {
+          "id": 4,
+          "section_offset": 60,
+          "payload_offset": 62,
+          "size": 5
+        },
+        {
+          "id": 5,
+          "section_offset": 67,
+          "payload_offset": 69,
+          "size": 6
+        },
+        {
+          "id": 6,
+          "section_offset": 75,
+          "payload_offset": 77,
+          "size": 8
+        },
+        {
+          "id": 7,
+          "section_offset": 85,
+          "payload_offset": 87,
+          "size": 29
+        },
+        {
+          "id": 10,
+          "section_offset": 116,
+          "payload_offset": 119,
+          "size": 7280
+        },
+        {
+          "id": 11,
+          "section_offset": 7399,
+          "payload_offset": 7401,
+          "size": 9
+        }
+      ],
+      "types": [
+        {
+          "params": [
+            "i32"
+          ],
+          "results": [
+            "i32"
+          ]
+        },
+        {
+          "params": [],
+          "results": []
+        },
+        {
+          "params": [
+            "i32"
+          ],
+          "results": []
+        },
+        {
+          "params": [
+            "f32",
+            "f32",
+            "f32",
+            "f32",
+            "f32",
+            "f32",
+            "i32",
+            "i32",
+            "i32",
+            "i32",
+            "i32",
+            "i32",
+            "i32",
+            "i32",
+            "i32"
+          ],
+          "results": [
+            "i32"
+          ]
+        }
+      ],
+      "imports": [
+        {
+          "module": "a",
+          "name": "a",
+          "type": 0
+        }
+      ],
+      "function_types": [
+        0,
+        1,
+        2,
+        0,
+        3,
+        1
+      ],
+      "memories": [
+        {
+          "flags": 1,
+          "min_pages": 1536,
+          "max_pages": 1536
+        }
+      ],
+      "exports": [
+        {
+          "name": "b",
+          "kind": 2,
+          "index": 0
+        },
+        {
+          "name": "c",
+          "kind": 0,
+          "index": 2
+        },
+        {
+          "name": "d",
+          "kind": 0,
+          "index": 6
+        },
+        {
+          "name": "e",
+          "kind": 0,
+          "index": 5
+        },
+        {
+          "name": "f",
+          "kind": 0,
+          "index": 4
+        },
+        {
+          "name": "g",
+          "kind": 0,
+          "index": 3
+        },
+        {
+          "name": "h",
+          "kind": 1,
+          "index": 0
+        }
+      ],
+      "bodies": [
+        {
+          "function_index": 1,
+          "type_index": 0,
+          "size_field_offset": 120,
+          "body_offset": 121,
+          "instruction_offset": 124,
+          "size": 79,
+          "end_exclusive": 200,
+          "locals": [
+            {
+              "count": 2,
+              "type": "i32"
+            }
+          ]
+        },
+        {
+          "function_index": 2,
+          "type_index": 1,
+          "size_field_offset": 200,
+          "body_offset": 201,
+          "instruction_offset": 202,
+          "size": 2,
+          "end_exclusive": 203,
+          "locals": []
+        },
+        {
+          "function_index": 3,
+          "type_index": 2,
+          "size_field_offset": 203,
+          "body_offset": 205,
+          "instruction_offset": 208,
+          "size": 1497,
+          "end_exclusive": 1702,
+          "locals": [
+            {
+              "count": 7,
+              "type": "i32"
+            }
+          ]
+        },
+        {
+          "function_index": 4,
+          "type_index": 0,
+          "size_field_offset": 1702,
+          "body_offset": 1704,
+          "instruction_offset": 1707,
+          "size": 5088,
+          "end_exclusive": 6792,
+          "locals": [
+            {
+              "count": 12,
+              "type": "i32"
+            }
+          ]
+        },
+        {
+          "function_index": 5,
+          "type_index": 3,
+          "size_field_offset": 6792,
+          "body_offset": 6794,
+          "instruction_offset": 6799,
+          "size": 586,
+          "end_exclusive": 7380,
+          "locals": [
+            {
+              "count": 15,
+              "type": "i32"
+            },
+            {
+              "count": 3,
+              "type": "f64"
+            }
+          ]
+        },
+        {
+          "function_index": 6,
+          "type_index": 1,
+          "size_field_offset": 7380,
+          "body_offset": 7381,
+          "instruction_offset": 7382,
+          "size": 18,
+          "end_exclusive": 7399,
+          "locals": []
+        }
+      ]
+    },
+    {
+      "path": "extracted/assets/dist/assets/libvoxel-doIu-r8s.wasm",
+      "bytes": 9520,
+      "sha256": "1ba27f065199954dc562b233aa38ea775ac687118cce77b5c71bc14e17e05542",
+      "git_blob_sha1": "d80d9bf670ed519e644f9e2f3f2e7d8f108b2eca",
+      "sections": [
+        {
+          "id": 1,
+          "section_offset": 8,
+          "payload_offset": 10,
+          "size": 34
+        },
+        {
+          "id": 2,
+          "section_offset": 44,
+          "payload_offset": 46,
+          "size": 13
+        },
+        {
+          "id": 3,
+          "section_offset": 59,
+          "payload_offset": 61,
+          "size": 6
+        },
+        {
+          "id": 4,
+          "section_offset": 67,
+          "payload_offset": 69,
+          "size": 5
+        },
+        {
+          "id": 5,
+          "section_offset": 74,
+          "payload_offset": 76,
+          "size": 6
+        },
+        {
+          "id": 6,
+          "section_offset": 82,
+          "payload_offset": 84,
+          "size": 8
+        },
+        {
+          "id": 7,
+          "section_offset": 92,
+          "payload_offset": 94,
+          "size": 25
+        },
+        {
+          "id": 10,
+          "section_offset": 119,
+          "payload_offset": 122,
+          "size": 9181
+        },
+        {
+          "id": 11,
+          "section_offset": 9303,
+          "payload_offset": 9306,
+          "size": 214
+        }
+      ],
+      "types": [
+        {
+          "params": [
+            "i32"
+          ],
+          "results": [
+            "i32"
+          ]
+        },
+        {
+          "params": [
+            "i32",
+            "i32",
+            "i32"
+          ],
+          "results": []
+        },
+        {
+          "params": [],
+          "results": []
+        },
+        {
+          "params": [
+            "i32"
+          ],
+          "results": []
+        },
+        {
+          "params": [
+            "i32",
+            "i32",
+            "i32",
+            "i32",
+            "i32",
+            "i32",
+            "i32",
+            "i32",
+            "i32",
+            "i32",
+            "i32"
+          ],
+          "results": [
+            "i32"
+          ]
+        }
+      ],
+      "imports": [
+        {
+          "module": "a",
+          "name": "a",
+          "type": 0
+        },
+        {
+          "module": "a",
+          "name": "b",
+          "type": 1
+        }
+      ],
+      "function_types": [
+        0,
+        2,
+        3,
+        0,
+        4
+      ],
+      "memories": [
+        {
+          "flags": 1,
+          "min_pages": 1000,
+          "max_pages": 1000
+        }
+      ],
+      "exports": [
+        {
+          "name": "c",
+          "kind": 2,
+          "index": 0
+        },
+        {
+          "name": "d",
+          "kind": 0,
+          "index": 3
+        },
+        {
+          "name": "e",
+          "kind": 0,
+          "index": 6
+        },
+        {
+          "name": "f",
+          "kind": 0,
+          "index": 5
+        },
+        {
+          "name": "g",
+          "kind": 0,
+          "index": 4
+        },
+        {
+          "name": "h",
+          "kind": 1,
+          "index": 0
+        }
+      ],
+      "bodies": [
+        {
+          "function_index": 2,
+          "type_index": 0,
+          "size_field_offset": 123,
+          "body_offset": 124,
+          "instruction_offset": 127,
+          "size": 79,
+          "end_exclusive": 203,
+          "locals": [
+            {
+              "count": 2,
+              "type": "i32"
+            }
+          ]
+        },
+        {
+          "function_index": 3,
+          "type_index": 2,
+          "size_field_offset": 203,
+          "body_offset": 204,
+          "instruction_offset": 205,
+          "size": 3,
+          "end_exclusive": 207,
+          "locals": []
+        },
+        {
+          "function_index": 4,
+          "type_index": 3,
+          "size_field_offset": 207,
+          "body_offset": 209,
+          "instruction_offset": 212,
+          "size": 1490,
+          "end_exclusive": 1699,
+          "locals": [
+            {
+              "count": 7,
+              "type": "i32"
+            }
+          ]
+        },
+        {
+          "function_index": 5,
+          "type_index": 0,
+          "size_field_offset": 1699,
+          "body_offset": 1701,
+          "instruction_offset": 1704,
+          "size": 5148,
+          "end_exclusive": 6849,
+          "locals": [
+            {
+              "count": 11,
+              "type": "i32"
+            }
+          ]
+        },
+        {
+          "function_index": 6,
+          "type_index": 4,
+          "size_field_offset": 6849,
+          "body_offset": 6851,
+          "instruction_offset": 6854,
+          "size": 2452,
+          "end_exclusive": 9303,
+          "locals": [
+            {
+              "count": 22,
+              "type": "i32"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "public_tree_comparison": [
+    {
+      "metadata": "public-protocol/abizovnuralem__go2_ros2_sdk/metadata.json",
+      "entry": {
+        "path": "go2_robot_sdk/external_lib/libvoxel.wasm",
+        "mode": "100644",
+        "type": "blob",
+        "sha": "d80d9bf670ed519e644f9e2f3f2e7d8f108b2eca",
+        "size": 9520,
+        "url": "https://api.github.com/repos/abizovnuralem/go2_ros2_sdk/git/blobs/d80d9bf670ed519e644f9e2f3f2e7d8f108b2eca"
+      },
+      "matching_apk_members": [
+        "extracted/assets/dist/assets/libvoxel-doIu-r8s.wasm"
+      ]
+    },
+    {
+      "metadata": "public-protocol/legion1581__unitree_go2_ui/metadata.json",
+      "entry": {
+        "path": "public/libslam.wasm",
+        "mode": "100644",
+        "type": "blob",
+        "sha": "e7694dcd11644d0c3ac3a3deaacb79f61816004a",
+        "size": 7410,
+        "url": "https://api.github.com/repos/legion1581/unitree_ui/git/blobs/e7694dcd11644d0c3ac3a3deaacb79f61816004a"
+      },
+      "matching_apk_members": [
+        "extracted/assets/dist/assets/libvoxel-Bqa6xB-f.wasm"
+      ]
+    },
+    {
+      "metadata": "public-protocol/legion1581__unitree_go2_ui/metadata.json",
+      "entry": {
+        "path": "public/libvoxel.wasm",
+        "mode": "100644",
+        "type": "blob",
+        "sha": "d80d9bf670ed519e644f9e2f3f2e7d8f108b2eca",
+        "size": 9520,
+        "url": "https://api.github.com/repos/legion1581/unitree_ui/git/blobs/d80d9bf670ed519e644f9e2f3f2e7d8f108b2eca"
+      },
+      "matching_apk_members": [
+        "extracted/assets/dist/assets/libvoxel-doIu-r8s.wasm"
+      ]
+    },
+    {
+      "metadata": "public-protocol/legion1581__unitree_ui/branch-3d-tree.json",
+      "entry": {
+        "path": "public/libslam.wasm",
+        "mode": "100644",
+        "type": "blob",
+        "sha": "e7694dcd11644d0c3ac3a3deaacb79f61816004a",
+        "size": 7410,
+        "url": "https://api.github.com/repos/legion1581/unitree_ui/git/blobs/e7694dcd11644d0c3ac3a3deaacb79f61816004a"
+      },
+      "matching_apk_members": [
+        "extracted/assets/dist/assets/libvoxel-Bqa6xB-f.wasm"
+      ]
+    },
+    {
+      "metadata": "public-protocol/legion1581__unitree_ui/branch-3d-tree.json",
+      "entry": {
+        "path": "public/libvoxel.wasm",
+        "mode": "100644",
+        "type": "blob",
+        "sha": "d80d9bf670ed519e644f9e2f3f2e7d8f108b2eca",
+        "size": 9520,
+        "url": "https://api.github.com/repos/legion1581/unitree_ui/git/blobs/d80d9bf670ed519e644f9e2f3f2e7d8f108b2eca"
+      },
+      "matching_apk_members": [
+        "extracted/assets/dist/assets/libvoxel-doIu-r8s.wasm"
+      ]
+    },
+    {
+      "metadata": "public-protocol/legion1581__unitree_ui/metadata.json",
+      "entry": {
+        "path": "public/libslam.wasm",
+        "mode": "100644",
+        "type": "blob",
+        "sha": "e7694dcd11644d0c3ac3a3deaacb79f61816004a",
+        "size": 7410,
+        "url": "https://api.github.com/repos/legion1581/unitree_ui/git/blobs/e7694dcd11644d0c3ac3a3deaacb79f61816004a"
+      },
+      "matching_apk_members": [
+        "extracted/assets/dist/assets/libvoxel-Bqa6xB-f.wasm"
+      ]
+    },
+    {
+      "metadata": "public-protocol/legion1581__unitree_ui/metadata.json",
+      "entry": {
+        "path": "public/libvoxel.wasm",
+        "mode": "100644",
+        "type": "blob",
+        "sha": "d80d9bf670ed519e644f9e2f3f2e7d8f108b2eca",
+        "size": 9520,
+        "url": "https://api.github.com/repos/legion1581/unitree_ui/git/blobs/d80d9bf670ed519e644f9e2f3f2e7d8f108b2eca"
+      },
+      "matching_apk_members": [
+        "extracted/assets/dist/assets/libvoxel-doIu-r8s.wasm"
+      ]
+    },
+    {
+      "metadata": "public-protocol/legion1581__unitree_webrtc_connect/metadata.json",
+      "entry": {
+        "path": "unitree_webrtc_connect/lidar/libvoxel.wasm",
+        "mode": "100644",
+        "type": "blob",
+        "sha": "d80d9bf670ed519e644f9e2f3f2e7d8f108b2eca",
+        "size": 9520,
+        "url": "https://api.github.com/repos/legion1581/unitree_webrtc_connect/git/blobs/d80d9bf670ed519e644f9e2f3f2e7d8f108b2eca"
+      },
+      "matching_apk_members": [
+        "extracted/assets/dist/assets/libvoxel-doIu-r8s.wasm"
+      ]
+    },
+    {
+      "metadata": "public-protocol/phospho-app__go2_webrtc_connect/metadata.json",
+      "entry": {
+        "path": "go2_webrtc_driver/lidar/libvoxel.wasm",
+        "mode": "100644",
+        "type": "blob",
+        "sha": "d80d9bf670ed519e644f9e2f3f2e7d8f108b2eca",
+        "size": 9520,
+        "url": "https://api.github.com/repos/phospho-app/go2_webrtc_connect/git/blobs/d80d9bf670ed519e644f9e2f3f2e7d8f108b2eca"
+      },
+      "matching_apk_members": [
+        "extracted/assets/dist/assets/libvoxel-doIu-r8s.wasm"
+      ]
+    },
+    {
+      "metadata": "public-protocol/tfoldi__go2-webrtc/metadata.json",
+      "entry": {
+        "path": "python/go2_webrtc/libvoxel.wasm",
+        "mode": "100644",
+        "type": "blob",
+        "sha": "d80d9bf670ed519e644f9e2f3f2e7d8f108b2eca",
+        "size": 9520,
+        "url": "https://api.github.com/repos/tfoldi/go2-webrtc/git/blobs/d80d9bf670ed519e644f9e2f3f2e7d8f108b2eca"
+      },
+      "matching_apk_members": [
+        "extracted/assets/dist/assets/libvoxel-doIu-r8s.wasm"
+      ]
+    },
+    {
+      "metadata": "public-protocol/VectorRobotics__unitree_webrtc_connect/metadata.json",
+      "entry": {
+        "path": "go2_webrtc_driver/lidar/libvoxel.wasm",
+        "mode": "100644",
+        "type": "blob",
+        "sha": "d80d9bf670ed519e644f9e2f3f2e7d8f108b2eca",
+        "size": 9520,
+        "url": "https://api.github.com/repos/VectorRobotics/unitree_webrtc_connect/git/blobs/d80d9bf670ed519e644f9e2f3f2e7d8f108b2eca"
+      },
+      "matching_apk_members": [
+        "extracted/assets/dist/assets/libvoxel-doIu-r8s.wasm"
+      ]
+    }
+  ]
+}

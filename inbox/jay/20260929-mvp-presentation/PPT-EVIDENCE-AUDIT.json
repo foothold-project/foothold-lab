@@ -1,0 +1,184 @@
+{
+  "initial_diagnosis": {
+    "raw": "sim/eval/results/20260903-rough10-1.0mps/generalization_raw.csv",
+    "episodes": 1000,
+    "direction_threshold_m": 1.5,
+    "summary_matches": true,
+    "eval_spec": 1
+  },
+  "sim/eval/results/20260921-nvidia-axis1": {
+    "files": [
+      "sim/eval/results/20260921-nvidia-axis1/rough6/d0.5/v0.5/generalization_raw.csv",
+      "sim/eval/results/20260921-nvidia-axis1/rough6/d0.5/v1.0/generalization_raw.csv",
+      "sim/eval/results/20260921-nvidia-axis1/rough6/d0.5/v1.5/generalization_raw.csv",
+      "sim/eval/results/20260921-nvidia-axis1/unseen10/d0.5/v0.5/generalization_raw.csv",
+      "sim/eval/results/20260921-nvidia-axis1/unseen10/d0.5/v1.0/generalization_raw.csv",
+      "sim/eval/results/20260921-nvidia-axis1/unseen10/d0.5/v1.5/generalization_raw.csv"
+    ],
+    "terrain": "gap",
+    "success": 1,
+    "episodes": 300,
+    "percent": 0.33333333333333337
+  },
+  "sim/eval/results/maindata-v1/foothold-v1": {
+    "files": [
+      "sim/eval/results/maindata-v1/foothold-v1/rough6/d0.5/v0.5/generalization_raw.csv",
+      "sim/eval/results/maindata-v1/foothold-v1/rough6/d0.5/v1/generalization_raw.csv",
+      "sim/eval/results/maindata-v1/foothold-v1/rough6/d0.5/v1.5/generalization_raw.csv",
+      "sim/eval/results/maindata-v1/foothold-v1/unseen10/d0.5/v0.5/generalization_raw.csv",
+      "sim/eval/results/maindata-v1/foothold-v1/unseen10/d0.5/v1/generalization_raw.csv",
+      "sim/eval/results/maindata-v1/foothold-v1/unseen10/d0.5/v1.5/generalization_raw.csv"
+    ],
+    "terrain": "gap",
+    "success": 258,
+    "episodes": 300,
+    "percent": 86.0
+  },
+  "axis2/nvidia/stop": {
+    "fell": 0,
+    "envs": 64,
+    "checkpoint": "checkpoint.pt",
+    "seed": 42,
+    "what": "4초 전진 뒤 명령 0. 정지와 정지 유지"
+  },
+  "axis2/v1/stop": {
+    "fell": 13,
+    "envs": 64,
+    "checkpoint": "foothold-v1.pt",
+    "seed": 42,
+    "what": "4초 전진 뒤 명령 0. 정지와 정지 유지"
+  },
+  "axis2/nvidia/hold": {
+    "fell": 0,
+    "envs": 64,
+    "checkpoint": "checkpoint.pt",
+    "seed": 42,
+    "what": "20초 내내 전 명령 0. 얼음"
+  },
+  "axis2/v1/hold": {
+    "fell": 5,
+    "envs": 64,
+    "checkpoint": "foothold-v1.pt",
+    "seed": 42,
+    "what": "20초 내내 전 명령 0. 얼음"
+  },
+  "axis2/nvidia/turn": {
+    "fell": 4,
+    "envs": 64,
+    "checkpoint": "checkpoint.pt",
+    "seed": 42,
+    "what": "제자리 요레이트 계단 다섯. 회전 추종비"
+  },
+  "axis2/v1/turn": {
+    "fell": 64,
+    "envs": 64,
+    "checkpoint": "foothold-v1.pt",
+    "seed": 42,
+    "what": "제자리 요레이트 계단 다섯. 회전 추종비"
+  },
+  "sim/eval/results/20260918-D-axis1": {
+    "files": [
+      "sim/eval/results/20260918-D-axis1/rough6/d0.5/v0.5/generalization_raw.csv",
+      "sim/eval/results/20260918-D-axis1/rough6/d0.5/v1.0/generalization_raw.csv",
+      "sim/eval/results/20260918-D-axis1/rough6/d0.5/v1.5/generalization_raw.csv",
+      "sim/eval/results/20260918-D-axis1/unseen10/d0.5/v0.5/generalization_raw.csv",
+      "sim/eval/results/20260918-D-axis1/unseen10/d0.5/v1.0/generalization_raw.csv",
+      "sim/eval/results/20260918-D-axis1/unseen10/d0.5/v1.5/generalization_raw.csv"
+    ],
+    "terrain": "gap",
+    "success": 100,
+    "episodes": 300,
+    "percent": 33.33333333333333
+  },
+  "sim/eval/results/20260920-E-axis1": {
+    "files": [
+      "sim/eval/results/20260920-E-axis1/rough6/d0.5/v0.5/generalization_raw.csv",
+      "sim/eval/results/20260920-E-axis1/rough6/d0.5/v1.0/generalization_raw.csv",
+      "sim/eval/results/20260920-E-axis1/rough6/d0.5/v1.5/generalization_raw.csv",
+      "sim/eval/results/20260920-E-axis1/unseen10/d0.5/v0.5/generalization_raw.csv",
+      "sim/eval/results/20260920-E-axis1/unseen10/d0.5/v1.0/generalization_raw.csv",
+      "sim/eval/results/20260920-E-axis1/unseen10/d0.5/v1.5/generalization_raw.csv"
+    ],
+    "terrain": "gap",
+    "success": 299,
+    "episodes": 300,
+    "percent": 99.66666666666667
+  },
+  "sim/eval/results/20260920-F-axis1": {
+    "files": [
+      "sim/eval/results/20260920-F-axis1/rough6/d0.5/v0.5/generalization_raw.csv",
+      "sim/eval/results/20260920-F-axis1/rough6/d0.5/v1.0/generalization_raw.csv",
+      "sim/eval/results/20260920-F-axis1/rough6/d0.5/v1.5/generalization_raw.csv",
+      "sim/eval/results/20260920-F-axis1/unseen10/d0.5/v0.5/generalization_raw.csv",
+      "sim/eval/results/20260920-F-axis1/unseen10/d0.5/v1.0/generalization_raw.csv",
+      "sim/eval/results/20260920-F-axis1/unseen10/d0.5/v1.5/generalization_raw.csv"
+    ],
+    "terrain": "gap",
+    "success": 297,
+    "episodes": 300,
+    "percent": 99.0
+  },
+  "axis2/v2/stop": {
+    "fell": 0,
+    "envs": 64,
+    "checkpoint": "model_3000.pt",
+    "seed": 42,
+    "what": "4초 전진 뒤 명령 0. 정지와 정지 유지"
+  },
+  "axis2/v2/hold": {
+    "fell": 0,
+    "envs": 64,
+    "checkpoint": "model_3000.pt",
+    "seed": 42,
+    "what": "20초 내내 전 명령 0. 얼음"
+  },
+  "axis2/v2/turn": {
+    "fell": 7,
+    "envs": 64,
+    "checkpoint": "model_3000.pt",
+    "seed": 42,
+    "what": "제자리 요레이트 계단 다섯. 회전 추종비"
+  },
+  "sim/eval/results/20260923-v2rs/v2b-r-iter3000": {
+    "files": [
+      "sim/eval/results/20260923-v2rs/v2b-r-iter3000/rough6/d0.5/v0.5/generalization_raw.csv",
+      "sim/eval/results/20260923-v2rs/v2b-r-iter3000/rough6/d0.5/v1.0/generalization_raw.csv",
+      "sim/eval/results/20260923-v2rs/v2b-r-iter3000/rough6/d0.5/v1.5/generalization_raw.csv",
+      "sim/eval/results/20260923-v2rs/v2b-r-iter3000/unseen10/d0.5/v0.5/generalization_raw.csv",
+      "sim/eval/results/20260923-v2rs/v2b-r-iter3000/unseen10/d0.5/v1.0/generalization_raw.csv",
+      "sim/eval/results/20260923-v2rs/v2b-r-iter3000/unseen10/d0.5/v1.5/generalization_raw.csv"
+    ],
+    "terrain": null,
+    "success": 4454,
+    "episodes": 4800,
+    "percent": 92.79166666666666
+  },
+  "sim/eval/results/20260923-v2rs/v2g-feetair1-iter3000": {
+    "files": [
+      "sim/eval/results/20260923-v2rs/v2g-feetair1-iter3000/rough6/d0.5/v0.5/generalization_raw.csv",
+      "sim/eval/results/20260923-v2rs/v2g-feetair1-iter3000/rough6/d0.5/v1.0/generalization_raw.csv",
+      "sim/eval/results/20260923-v2rs/v2g-feetair1-iter3000/rough6/d0.5/v1.5/generalization_raw.csv",
+      "sim/eval/results/20260923-v2rs/v2g-feetair1-iter3000/unseen10/d0.5/v0.5/generalization_raw.csv",
+      "sim/eval/results/20260923-v2rs/v2g-feetair1-iter3000/unseen10/d0.5/v1.0/generalization_raw.csv",
+      "sim/eval/results/20260923-v2rs/v2g-feetair1-iter3000/unseen10/d0.5/v1.5/generalization_raw.csv"
+    ],
+    "terrain": null,
+    "success": 4468,
+    "episodes": 4800,
+    "percent": 93.08333333333333
+  },
+  "sim/eval/results/20260923-v2rs/v2g2-feetair01-iter3000": {
+    "files": [
+      "sim/eval/results/20260923-v2rs/v2g2-feetair01-iter3000/rough6/d0.5/v0.5/generalization_raw.csv",
+      "sim/eval/results/20260923-v2rs/v2g2-feetair01-iter3000/rough6/d0.5/v1.0/generalization_raw.csv",
+      "sim/eval/results/20260923-v2rs/v2g2-feetair01-iter3000/rough6/d0.5/v1.5/generalization_raw.csv",
+      "sim/eval/results/20260923-v2rs/v2g2-feetair01-iter3000/unseen10/d0.5/v0.5/generalization_raw.csv",
+      "sim/eval/results/20260923-v2rs/v2g2-feetair01-iter3000/unseen10/d0.5/v1.0/generalization_raw.csv",
+      "sim/eval/results/20260923-v2rs/v2g2-feetair01-iter3000/unseen10/d0.5/v1.5/generalization_raw.csv"
+    ],
+    "terrain": null,
+    "success": 4521,
+    "episodes": 4800,
+    "percent": 94.1875
+  }
+}

@@ -1,0 +1,44 @@
+format: foothold-machine-profile/1
+machine_id: AI-WS01-linux
+# Set these in the WSL/Linux launcher environment to the actual Linux installs.
+# Deliberately no guessed /home or mounted-drive paths are provided.
+paths:
+  isaaclab_root: ${ISAACLAB_ROOT}
+  isaac_sim_root: ${ISAAC_SIM_ROOT}
+  conda_python: ${ISAAC311_PYTHON}
+  rsl_rl_module: ${RSL_RL_MODULE}
+  s2_lab_root: ${S2_LAB_ROOT}
+  mai_tmp_root: ${MAI_TMP_ROOT}
+  mai_worktree_root: ${MAI_WORKTREE_ROOT}
+  isaac_cache_root: ${ISAAC_CACHE_ROOT}
+  git_bash: ${FOOTHOLD_BASH}
+  gpu_jobs_config: ${GPU_JOBS_CONFIG}
+  gpu_queue: ${GPU_JOBS_QUEUE}
+  playlist_root: ${PLAYLIST_ROOT}
+  c_layer_lock: ${C_LAYER_LOCK}
+  a_layer_marker: ${A_LAYER_MARKER}
+  ex41_stage_video_source: ${EX41_STAGE_VIDEO_SOURCE}
+  ex41_stage_video_output: ${EX41_STAGE_VIDEO_OUTPUT}
+  ex41_w78_video_root: ${EX41_W78_VIDEO_ROOT}
+  runner_home: ${RUNNER_HOME}
+  telegram_outbox: ${TELEGRAM_OUTBOX}
+  telegram_script: ${TELEGRAM_SCRIPT}
+  gpu0_training_marker: ${GPU0_TRAINING_MARKER}
+  gpu0_training_marker_alt: ${GPU0_TRAINING_MARKER_ALT}
+  gpu1_training_marker: ${GPU1_TRAINING_MARKER}
+  gpu0_eval_marker: ${GPU0_EVAL_MARKER}
+  gpu1_eval_marker: ${GPU1_EVAL_MARKER}
+  ex41_push250_output: ${EX41_PUSH250_OUTPUT}
+  ex42_gate_report: ${FOOTHOLD_EX42_GATE_REPORT}
+devices:
+  training:
+    cuda_index: 0
+    uuid: ${GPU0_UUID}
+  # Team lead 2026-11-09 10:0x: evaluation on GPU1 for now, same as Windows (screen and
+  # evaluation share GPU1). Revisit after dual-GPU training is measured on Linux.
+  p1_evaluation:
+    cuda_index: 1
+    uuid: ${GPU1_UUID}
+  screen:
+    cuda_index: 1
+    uuid: ${GPU1_UUID}

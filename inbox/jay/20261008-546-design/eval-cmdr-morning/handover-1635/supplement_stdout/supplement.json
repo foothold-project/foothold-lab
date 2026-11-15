@@ -1,0 +1,19 @@
+{
+ "made": "2026-10-13 16:56:45",
+ "why": "VERIFY-astra-16m 5: the freeze copied the older .out names; these are the v3.7 runs' stdout",
+ "freeze_manifest_sha256": "971be24b842714e4c2ea013496f31b0071e11e81898a3ce65d3478e5a717d58a",
+ "files": {
+  "cmdr_eval_driver_v37.out": {
+   "sha256": "6a15b45b4159b886b502df8fe6638718e45ee15dbecdf849d0d2bae5f28f9f9f",
+   "same_as_out": true,
+   "attempt": "g1-162660-1013140618",
+   "last_end": "16:33:40 END complete=True runs=555 not_run=0 not_valid=0"
+  },
+  "cmdr_eval_driver_g0_v37.out": {
+   "sha256": "281628d30161e09ccae8f832d945437e5e665b2e24e2ddf010958847cab0a16e",
+   "same_as_out": true,
+   "attempt": "g0-134176-1013140624",
+   "last_end": "16:35:09 END complete=True flagged=2 unmeasured=0 missing=0"
+  }
+ }
+}

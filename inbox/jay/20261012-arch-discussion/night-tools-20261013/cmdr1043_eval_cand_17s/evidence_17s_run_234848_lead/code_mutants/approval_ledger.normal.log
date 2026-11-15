@@ -1,0 +1,27 @@
+PASS normal approval binding
+PASS attempt-only mutation rejected
+PASS retry zero approved
+PASS retry -1 rejected
+PASS retry '0' rejected
+PASS retry False rejected
+23:49:47 RUN retry_zero try 1 EXIT 99 0s · slot {'state': 'missing slot record', 'held_s': None, 'rc': 99} · usd []
+23:49:47 GUARD STOP retry_zero: free < 4096 MiB on GPU UNDECIDED, waiting 0s
+PASS retry zero makes exactly one launch
+23:49:49 RUN wall_guarded try 1 EXIT 124 2s · slot {'state': 'missing slot record', 'held_s': None, 'rc': 124} · usd []
+PASS guarded wall returns nonzero held result
+PASS claim binds id digest attempt log
+PASS second start refused
+PASS attempt-only reuse refused
+PASS concurrent start one claim
+PASS normal lease held through tree exit
+PASS normal lease released
+PASS normal child unaffected
+PASS wall lease held through tree exit
+PASS wall lease released
+PASS wall kills owned child near limit
+PASS grandchild lease held through tree exit
+PASS grandchild lease released
+PASS wall kills observed grandchild
+PASS stop lease held through tree exit
+PASS stop lease released
+PASS STOP kills owned child

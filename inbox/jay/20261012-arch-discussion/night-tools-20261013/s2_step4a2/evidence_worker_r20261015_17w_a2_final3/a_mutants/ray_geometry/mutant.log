@@ -1,0 +1,6 @@
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+    from test_s2_connect_17v import fixture;from s2_connect_check_17v import check_arrays,Criteria;m,d=fixture();d['ray_hits_w'][0,0,0]=d['ray_hits_w'][0,0,1];r=check_arrays(m,d,Criteria(.002,.002,.005,256,16));ok='grid_or_yaw' in r['reasons'];print(('PASS' if ok else 'FAIL')+' ray_order_rejected');assert ok
+                                                                                                                                                                                                                                                                                                                   ^^
+AssertionError
+FAIL ray_order_rejected

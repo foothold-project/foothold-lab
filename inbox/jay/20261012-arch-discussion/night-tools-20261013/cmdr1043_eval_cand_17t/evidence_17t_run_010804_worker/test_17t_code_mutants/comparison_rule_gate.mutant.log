@@ -1,0 +1,10 @@
+PASS approved strict rule accepted with full file checks
+FAIL comparison_pass_rule 0 rejected
+Traceback (most recent call last):
+  File "C:\Users\AI-WS01\.claude\jobs\09bbf294\tmp\codexE\cand\test_17t_approval.py", line 119, in <module>
+    main()
+  File "C:\Users\AI-WS01\.claude\jobs\09bbf294\tmp\codexE\cand\test_17t_approval.py", line 82, in main
+    check(f"{field} {index} rejected", want in got)
+  File "C:\Users\AI-WS01\.claude\jobs\09bbf294\tmp\codexE\cand\test_17t_approval.py", line 27, in check
+    raise AssertionError(label)
+AssertionError: comparison_pass_rule 0 rejected

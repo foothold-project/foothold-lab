@@ -1,0 +1,77 @@
+/* U208 · 레이아웃 재검사 (2026-10-02 팀장 지적)
+   기준 셋: 1) 장끼리 통일성 2) 글·선 사이 간격이 안정감 있는 비율 3) 빈 곳·몰린 곳 없이 균형.
+   덧붙여 4) 같은 장 안에서 단계가 바뀔 때 요소가 자리를 옮기지 않는다.
+   이 시트는 «마지막» 에 로드된다. 수치는 검사기(layout_audit)로 재서 정했다. */
+
+/* ── 12쪽 · 단계가 바뀌어도 설명 상자는 그 자리, 카운터는 사라지지 않는다 ──
+   실측: 상자가 1단계에서 45px 위로, 문장은 127px 이동. 카운터 h3 가 1단계에서 숨겨졌다. */
+.army-page .army-caption{transform:none!important}
+.army-page[data-current-step="1"] .army-caption h3{display:block!important}
+.army-page[data-current-step="1"] .army-caption,.army-page[data-current-step="2"] .army-caption{background:#f5f5f0ec}
+
+/* ── 11쪽 4단계 · 흐름 줄(행동 → 새 상태·보상 → PPO 갱신 → 다음 행동)이 주석과 4px ──
+   줄을 위로 당기고 아래 여백을 준다. */
+.policy-page .policy-loop{margin-top:8px;padding:14px 0 30px}
+
+/* ── 8쪽 · 절충 문장이 아래 선 위에 얹혀 있었고(1px) 마무리 문장과 9px ── */
+.mobility-option p{margin:10px 0}
+.mobility-option .tradeoff{margin-top:12px}
+.mobility-scene + p{margin-top:30px!important;padding-top:18px!important}
+.mobility-bottom{margin-top:40px;padding-top:24px}
+
+/* ── 4쪽 · 작은 머리글(INSPECTION TARGET)과 제목 사이 7px ── */
+.mission-target small{display:block;margin-bottom:12px}
+
+/* ── 13·19쪽 · 마무리 문장이 위 선에서 2~3px ── */
+.finding{padding-top:16px!important}
+.rr-wrap .rr-bottom{padding-top:16px}
+
+/* ── 18쪽 · 영상 아래 캡션 7px · 장부 안 줄 간격 9~12px ── */
+.evidence-videos figcaption{margin-top:12px}
+.lineage-ledger span{margin-bottom:10px}
+.lineage-ledger small{margin-top:10px}
+.content:has(.lineage-ledger) .condition{padding-top:14px}
+
+/* ── 17·20쪽 · 장부 표 행 10px → 조금 숨 쉬게 (틀 예산 안에서) ── */
+.content .lineage-ledger table td,.content .lineage-ledger table th{padding:4px 6px}
+
+/* ── 31쪽 · 캡션 안 설명과 제목 11px · 결과 상자 머리와 본문 ── */
+.poc-comparison figcaption span{margin-top:12px}
+.poc-result-note>b{display:block;margin-bottom:10px}
+
+/* ── 34쪽 · 로드맵 행의 이름과 TRACK 표기 12px ── */
+.roadmap-row>div{gap:12px}
+
+/* ── 33쪽 · 왼쪽 열이 짧아 아래가 비었다 → 오른쪽 열과 가운데 맞춤 ── */
+.closing-experiments{align-items:center}
+
+/* ── 10쪽 · 선이 다 그려진 «다음» 에 카드가 나타난다 (팀장: 라인은 되는데 박스는 안 함) ── */
+.tech-layer .tech-label{opacity:0;transform:translateY(8px);transition:opacity .45s ease 1.05s,transform .45s ease 1.05s}
+.tech-layer.is-current .tech-label{opacity:1;transform:none}
+.tech-leaders circle{transform-box:fill-box;transform-origin:center;transform:scale(0);transition:transform .3s ease}
+.tech-layer.is-current .tech-leaders circle{transform:scale(1)}
+@media print{.tech-layer .tech-label{opacity:1!important;transform:none!important}.tech-leaders circle{transform:none!important}}
+
+/* ── 12쪽 2단계 · 숫자가 1 → 4,096 으로 커지며 「개 환경」이 134px 밀렸다. 자리 예약 ── */
+.army-caption h3 .env-counter{display:inline-block;min-width:4.2ch;text-align:left}
+
+/* ── 8쪽 · 절충 문장이 아래 결론 선에 5px. 결론은 바닥 고정(absolute)이라 위를 줄인다 ──
+   실측: 그림 330px → 290px 이면 절충 문장이 40px 올라간다. */
+.mobility-option figure{height:290px!important}
+.mobility-conclusion{padding-top:20px!important}
+
+/* ── 11쪽 4단계 · 흐름 줄(absolute top 794)이 주석(819~)과 겹침. 26px 위로 ── */
+.policy-page .learning-loop{top:768px!important}
+
+/* ── 18쪽 · 영상 아래 숫자 7px · 장부 아래 조건 선 2px ── */
+.evidence-videos .result-value{margin-top:16px!important}
+.lineage-ledger{margin-bottom:14px}
+
+/* ── 17·18쪽 · 장부 때문에 영상 높이를 172px 로 눌러 4:1 상자가 되고 검은 여백이 생겼다.
+   영상은 16:9 를 지킨다. 높이는 폭이 정한다 (열 폭 안에서). */
+.content:has(.lineage-ledger) .evidence-videos .film video{height:auto!important;max-height:none!important;aspect-ratio:16/9;width:100%}
+
+/* ── 6쪽 · 로봇이 링 안으로 «순간 이동» 했다. 미끄러져 들어가고, 선이 다 그려진 뒤 상자가 뜬다 ──
+   실측: 링 1.0s · 리더 0.3s 뒤 0.8s · 상자는 0.25s 만에 떴다. */
+.industry-map .go2-disc,.industry-page .go2-disc{transition:left .8s ease,top .8s ease,width .8s ease,height .8s ease,opacity .5s!important}
+.industry-box{transition:opacity .45s ease 1.15s,transform .45s ease 1.15s!important}

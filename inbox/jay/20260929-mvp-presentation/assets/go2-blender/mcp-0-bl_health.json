@@ -1,0 +1,27 @@
+{
+  "result": {
+    "content": [
+      {
+        "type": "text",
+        "text": "{\"job_id\":\"2148ed8ef7d2114c3b2f3a03e388b0df\",\"state\":\"completed\",\"ok\":true,\"result\":{\"version\":\"4.5.10 LTS\",\"pid\":122412,\"background\":true,\"file\":\"\",\"dirty\":true,\"scene\":\"Scene\"},\"stdout\":\"\",\"stderr\":\"\"}"
+      }
+    ],
+    "structuredContent": {
+      "job_id": "2148ed8ef7d2114c3b2f3a03e388b0df",
+      "state": "completed",
+      "ok": true,
+      "result": {
+        "version": "4.5.10 LTS",
+        "pid": 122412,
+        "background": true,
+        "file": "",
+        "dirty": true,
+        "scene": "Scene"
+      },
+      "stdout": "",
+      "stderr": ""
+    }
+  },
+  "jsonrpc": "2.0",
+  "id": 2
+}

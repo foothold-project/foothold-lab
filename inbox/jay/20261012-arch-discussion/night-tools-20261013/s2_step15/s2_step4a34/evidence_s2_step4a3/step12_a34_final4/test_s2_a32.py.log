@@ -1,0 +1,76 @@
+PASS A32 eight_case cfg: gravity off for the robot
+PASS A33 eight_case cfg: illegal_contact termination removed, time_out kept
+PASS A32 the caller's cfg is not modified (deep copy)
+PASS A32 missing rigid_props is refused, not silently skipped
+PASS A33 missing illegal_contact termination is refused
+PASS A32 scheduled reset: fixture passes
+PASS A32 same-episode clock regress -> sensor_timestamp
+PASS A32 same-episode clock stall (constant time) -> sensor_timestamp
+PASS A32 clock jumps two control steps in one row -> sensor_timestamp
+PASS A32 scheduled reset without a clock rewind (old buffer reused) -> sensor_timestamp
+PASS A32 clock after the reset not at one control step -> sensor_timestamp
+PASS A32 fake episode increment (no reset marker, no rewind) -> stale_packet
+PASS A32 episode jumps by 2 at the scheduled reset -> stale_packet
+PASS A32 an unscheduled termination with a real reset is its own HOLD
+PASS A32 a timeout flag -> unscheduled_termination
+PASS A32 scheduled reset with no reset marker -> reset_marker
+PASS A32 a reset marker outside step 128 -> reset_marker
+PASS A32 ray start XY 1 cm off the analysis XY -> ray_start_xy
+PASS A32 tilted ray direction -> ray_direction
+PASS A32 rays that start below the terrain surface -> ray_start_height
+PASS A32 scene_expectation edge equals the fixture's boundary mask
+PASS A32 oracle edge distance reads 4.9 / 5.1 mm on either side of the step edge, so the 5 mm cut separates them
+PASS A32 a one-sample boundary difference is still caught
+PASS A32 fixed_pose_ok true for a still pose
+PASS A32 fixed_pose_ok false when the pose moves 5 cm in warmup
+PASS A32 terrain_assignment_ok true for the fixture
+PASS A32 terrain_assignment_ok false for a wrong case
+PASS A32 warp float32 copy of the USD points agrees
+PASS A32 a 1 cm point offset disagrees
+PASS A32 different face order disagrees
+PASS A32 different point count disagrees
+PASS A32 sha_array depends on dtype and shape
+PASS A32 physx: every fake ray is a terrain hit and the raw answers are kept
+PASS A32 physx: a ray the robot collider takes is occluded, not a ground sample
+PASS A32 physx: a failing query is recorded per ray and the loop goes on
+PASS A32 PhysxSampler records only the pre-registered steps
+PASS A32 PhysxSampler stops at its time budget and says so
+PASS A32 branches: a scene where PhysX, the RayCaster and the known scene agree satisfies every required branch
+PASS A32 branches: every hole ray occluded -> not ok (the occluded-holes counterexample)
+PASS A32 branches: PhysX finds ground in a hole -> not ok, counted as oracle and hit/miss mismatch
+PASS A32 branches: a 5 cm height difference on the step top -> not ok
+PASS A32 branches: a query error inside a required branch -> not ok
+PASS A32 branches: a scene sample that never looks into a hole -> missing_required, not ok
+PASS A32 branches: boundary rays are skipped, and a branch left with too few rays is not satisfied
+PASS A32 branches: classify_oracle labels hole / deep / raised / ground
+PASS A32 raw query arrays keep steps, status, hit z, path index and the path table
+PASS A32 the query fingerprint changes when one answer changes
+PASS A32 evidence is observed_collision_mesh, sampled scope, only when everything agrees
+PASS A32 evidence says the collision hash is a query-response fingerprint, not a mesh byte hash
+PASS A32 evidence is unverified when: mesh disagrees
+PASS A32 evidence is unverified when: mesh probe missing
+PASS A32 evidence is unverified when: branches not ok
+PASS A32 evidence is unverified when: no report
+PASS A32 evidence is unverified when: no collision api
+PASS A32 evidence is unverified when: collision disabled
+PASS A32 evidence is unverified when: probe error text
+PASS A32 finalize_provenance: derived flags true, mesh verified
+PASS A32 diag-built meta plus the real checker -> PASS
+PASS A32 the raw query file is written and its hash is in the evidence
+PASS A32 probe report keeps the sensor frame facts and the recorded-mask differences
+PASS A32 meta without isaac_version -> provenance_missing
+PASS A32 meta without driver_version -> provenance_missing
+PASS A32 meta without asset_sha256 -> provenance_missing
+PASS A32 meta without root_sensor_offset_b -> provenance_missing
+PASS A32 meta without mesh_evidence_sha256 -> provenance_missing
+PASS A32 meta without collision_mesh_sha256 -> provenance_missing
+PASS A32 mesh_collision_verified false -> case_assignment
+PASS A32 wrong boundary_count -> boundary_unreported
+PASS A32 unverified evidence leaves mesh_collision_verified false and the checker HOLDs
+PASS A32 evidence without the sampled-scope statement is refused by the checker
+PASS A32 no evidence at all: no mesh keys, checker HOLDs provenance_missing
+PASS A32 moving pose: flag false and the checker HOLDs fixed_pose_evidence
+PASS A32 asset digest of a local file is its sha256
+PASS A32 asset digest of an unreachable https reference is empty, not invented
+PASS A32 a missing local path gives an empty digest
+SUMMARY ALL PASS

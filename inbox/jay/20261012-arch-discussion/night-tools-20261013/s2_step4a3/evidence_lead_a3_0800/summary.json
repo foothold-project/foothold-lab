@@ -1,0 +1,131 @@
+{
+  "run_id": "lead_a3_0800",
+  "complete": true,
+  "results": [
+    {
+      "name": "test_s2_scene_a2.py",
+      "exit_code": 0,
+      "seconds": 0.22,
+      "passes": 4
+    },
+    {
+      "name": "test_s2_connect_a2.py",
+      "exit_code": 0,
+      "seconds": 1.0,
+      "passes": 10
+    },
+    {
+      "name": "test_s2_connect_17v.py",
+      "exit_code": 0,
+      "seconds": 1.02,
+      "passes": 10
+    },
+    {
+      "name": "test_s2_17v_core.py",
+      "exit_code": 0,
+      "seconds": 2.23,
+      "passes": 17
+    },
+    {
+      "name": "test_s2_sensor_tracker_17v.py",
+      "exit_code": 0,
+      "seconds": 2.28,
+      "passes": 7
+    },
+    {
+      "name": "test_s2_capture_journal_a2.py",
+      "exit_code": 0,
+      "seconds": 1.03,
+      "passes": 9
+    },
+    {
+      "name": "test_s2_device_binding_a2.py",
+      "exit_code": 0,
+      "seconds": 0.08,
+      "passes": 9
+    },
+    {
+      "name": "test_s2_stage0_contract_a2.py",
+      "exit_code": 0,
+      "seconds": 0.38,
+      "passes": 21
+    },
+    {
+      "name": "test_s2_job_owner.py",
+      "exit_code": 0,
+      "seconds": 0.11,
+      "passes": 5
+    },
+    {
+      "name": "test_s2_job_object_os.py",
+      "exit_code": 0,
+      "seconds": 0.17,
+      "passes": 2
+    },
+    {
+      "name": "test_s2_resource_lease.py",
+      "exit_code": 0,
+      "seconds": 0.11,
+      "passes": 4
+    },
+    {
+      "name": "test_s2_zero_supervisor.py",
+      "exit_code": 0,
+      "seconds": 1.24,
+      "passes": 6
+    },
+    {
+      "name": "test_s2_capture_to_check_a3.py",
+      "exit_code": 0,
+      "seconds": 0.38,
+      "passes": 4
+    },
+    {
+      "name": "test_s2_prelaunch_competing_a3.py",
+      "exit_code": 0,
+      "seconds": 2.47,
+      "passes": 7
+    },
+    {
+      "name": "test_s2_hard_watchdog.py",
+      "exit_code": 0,
+      "seconds": 15.77,
+      "passes": 13
+    },
+    {
+      "name": "a_mutants",
+      "exit_code": 0,
+      "seconds": 11.77,
+      "caught": 5,
+      "total": 5,
+      "expected": 5
+    },
+    {
+      "name": "a2_mutants",
+      "exit_code": 0,
+      "seconds": 8.28,
+      "caught": 6,
+      "total": 6,
+      "expected": 6
+    },
+    {
+      "name": "a3_mutants",
+      "exit_code": 0,
+      "seconds": 8.97,
+      "summary_line": "SUMMARY 7/7 CAUGHT"
+    },
+    {
+      "name": "watchdog_mutants",
+      "exit_code": 0,
+      "seconds": 230.06,
+      "summary_line": "SUMMARY 4/4 CAUGHT"
+    },
+    {
+      "name": "frozen_clean_import",
+      "exit_code": 0,
+      "hashes_match": true,
+      "lines": 47,
+      "imported": 22
+    }
+  ]
+}

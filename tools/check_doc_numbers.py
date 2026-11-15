@@ -40,6 +40,17 @@ sys.stdout.reconfigure(encoding='utf-8')
 HERE = os.path.dirname(os.path.abspath(__file__))
 LAB = os.path.dirname(HERE)
 SITE = os.path.join(os.path.dirname(LAB), 'foothold-site')
+if not os.path.isdir(SITE):
+    # 2026-11-08: 작업 사본이 D:/mai-wt 아래면 옆 폴더에 배포본이 없다. build.py 와
+    # 같은 후보(roots.site_candidates · 홈의 인공지능사관학교/foothold-site)를 쓴다.
+    sys.path.insert(0, os.path.join(LAB, 'web', '_build'))
+    try:
+        import roots as _roots
+        _cands = list(_roots.site_candidates())
+    except Exception:
+        _cands = []
+    _cands.append(os.path.expanduser(os.path.join('~', 'Desktop', 'jay', '인공지능사관학교', 'foothold-site')))
+    SITE = next((c for c in _cands if os.path.isdir(c)), SITE)
 DOC = os.path.join(LAB, 'docs', 'research',
                    'generalization-benchmark-10-terrains.md')
 RAW = os.path.join(LAB, 'sim', 'eval', 'results', 'maindata-v1')

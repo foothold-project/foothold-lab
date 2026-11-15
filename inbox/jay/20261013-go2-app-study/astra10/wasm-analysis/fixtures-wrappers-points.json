@@ -1,0 +1,272 @@
+{
+  "mode": "points",
+  "node": "v24.13.0",
+  "worker": "three.worker-VAdOurOh.js",
+  "sha256": "fb87c81e68b0958cfce39065cbf7764d298eb875769cfd65d4ea16a022967143",
+  "manifest_matches": true,
+  "wasm": "libvoxel-Bqa6xB-f.wasm",
+  "wasm_sha256": "df28d833bc3045e58e110926dd87c312538a2e5b60a964a4fc5e99ff06d39b9c",
+  "source_changed": false,
+  "fetches": [
+    "/assets/libvoxel-Bqa6xB-f.wasm"
+  ],
+  "allocations": [
+    {
+      "size": 200000,
+      "ptr": 67080
+    },
+    {
+      "size": 300000,
+      "ptr": 267088
+    },
+    {
+      "size": 4,
+      "ptr": 567096
+    },
+    {
+      "size": 4,
+      "ptr": 567112
+    },
+    {
+      "size": 67108864,
+      "ptr": 567128
+    },
+    {
+      "size": 4000000,
+      "ptr": 67676000
+    },
+    {
+      "size": 12000000,
+      "ptr": 71676008
+    }
+  ],
+  "generate_calls": [
+    [
+      0,
+      64,
+      0,
+      64,
+      0,
+      64,
+      2,
+      67080,
+      1000000,
+      567128,
+      67676000,
+      267088,
+      71676008,
+      567112,
+      567096
+    ],
+    [
+      0,
+      64,
+      0,
+      64,
+      0,
+      64,
+      1,
+      67080,
+      1000000,
+      567128,
+      67676000,
+      267088,
+      71676008,
+      567112,
+      567096
+    ],
+    [
+      0,
+      64,
+      0,
+      64,
+      0,
+      64,
+      1,
+      67080,
+      1000000,
+      567128,
+      67676000,
+      267088,
+      71676008,
+      567112,
+      567096
+    ]
+  ],
+  "reset_calls": 3,
+  "events": [
+    "check",
+    "check",
+    "newMap",
+    "newMap",
+    "newMap",
+    "preview",
+    "navigation-path"
+  ],
+  "tests": [
+    {
+      "name": "actual-newMap-forwards-both-outputs",
+      "input": [
+        [
+          1000,
+          2000,
+          0
+        ],
+        [
+          1000,
+          2000,
+          4000
+        ]
+      ],
+      "output": {
+        "directCount": 2,
+        "directOutput": [
+          1,
+          2,
+          0,
+          1,
+          2,
+          4
+        ],
+        "outputCount": 1,
+        "output": [
+          1,
+          2,
+          0
+        ],
+        "addedCount": 1
+      }
+    },
+    {
+      "name": "actual-clear-normal-key",
+      "before": {
+        "dict_ptr": 567128,
+        "dict_intended_end": 67675992,
+        "dict_actual_fill_end": 67108864,
+        "indices_ptr": 67676000,
+        "indices_intended_end": 71676000,
+        "indices_actual_fill_end": 4000000,
+        "key": 274213381,
+        "key_byte_address": 34843800,
+        "key_bit": 32,
+        "counters": [
+          1,
+          1
+        ]
+      },
+      "after": {
+        "dict_ptr": 567128,
+        "dict_intended_end": 67675992,
+        "dict_actual_fill_end": 67108864,
+        "indices_ptr": 67676000,
+        "indices_intended_end": 71676000,
+        "indices_actual_fill_end": 4000000,
+        "key": 274213381,
+        "key_byte_address": 34843800,
+        "key_bit": 0,
+        "counters": [
+          0,
+          0
+        ]
+      }
+    },
+    {
+      "name": "actual-clear-leaves-high-key",
+      "input": [
+        [
+          51000,
+          0,
+          0
+        ]
+      ],
+      "before": {
+        "dict_ptr": 567128,
+        "dict_intended_end": 67675992,
+        "dict_actual_fill_end": 67108864,
+        "indices_ptr": 67676000,
+        "indices_intended_end": 71676000,
+        "indices_actual_fill_end": 4000000,
+        "key": 536347391,
+        "key_byte_address": 67610551,
+        "key_bit": 128,
+        "counters": [
+          1,
+          1
+        ]
+      },
+      "after": {
+        "dict_ptr": 567128,
+        "dict_intended_end": 67675992,
+        "dict_actual_fill_end": 67108864,
+        "indices_ptr": 67676000,
+        "indices_intended_end": 71676000,
+        "indices_actual_fill_end": 4000000,
+        "key": 536347391,
+        "key_byte_address": 67610551,
+        "key_bit": 128,
+        "counters": [
+          0,
+          0
+        ]
+      },
+      "output_after_reinput": {
+        "directCount": 1,
+        "directOutput": [
+          51,
+          0,
+          0
+        ],
+        "outputCount": 0,
+        "output": [],
+        "addedCount": 0
+      }
+    },
+    {
+      "name": "preview-bypasses-WASM",
+      "output": [
+        1.5,
+        2.5,
+        3.5
+      ],
+      "additional_wasm_calls": 0
+    },
+    {
+      "name": "navigation-path-bypasses-WASM",
+      "output": [
+        1.5,
+        2.5,
+        3.5
+      ],
+      "additional_wasm_calls": 0
+    }
+  ],
+  "memory_bytes": 100663296,
+  "assertions_passed": true,
+  "snippets": [
+    {
+      "anchor": "m=new URL",
+      "char_offset": 1765,
+      "text": "m=new URL(\"/assets/libvoxel-Bqa6xB-f.wasm\",self.location.href).href;function q(e){if(e==m&&o)return new Uint8Array(o);if(u)return u(e);throw\"both async and sync fetching of the wasm failed\"}function rt(e){return!o&&A&&ty"
+    },
+    {
+      "anchor": "clear(){",
+      "char_offset": 4543,
+      "text": "clear(){this._module.HEAPU8.fill(0,this._outputDict,67108864),this._module.HEAPU8.fill(0,this._outputIndices,E*4),this._module._reset()}generate(l,t,i,c,y,A,a){this._module.HEAPU8.set(a,this._input);const f=a.length/6;th"
+    },
+    {
+      "anchor": "generate(l,t,i,c,y,A,a)",
+      "char_offset": 4679,
+      "text": "generate(l,t,i,c,y,A,a){this._module.HEAPU8.set(a,this._input);const f=a.length/6;this._module._generate(l,t,i,c,y,A,f,this._input,E,this._outputDict,this._outputIndices,this._directOutput,this._output,this._addedCount,t"
+    },
+    {
+      "anchor": "if(t==\"newMap\")",
+      "char_offset": 5464,
+      "text": "if(t==\"newMap\"){const i=l.data,c=P.generate(i.xmin,i.xmax,i.ymin,i.ymax,i.zmin,i.zmax,new Uint8Array(i.data));w.postMessage({type:t,data:c})}else if([\"preview\",\"navigation-path\"].includes(t)){const i=l.data,c=i.width,y=i"
+    },
+    {
+      "anchor": "[\"preview\",\"navigation-path\"]",
+      "char_offset": 5613,
+      "text": "[\"preview\",\"navigation-path\"].includes(t)){const i=l.data,c=i.width,y=i.height,A=c*y,a=new DataView(i.data),f=i.fields,u=i.point_step,s=new Float32Array(A*3);for(let o=0;o<A;o++){const v=a.getFloat32(o*u+f[0].offset,!0),"
+    }
+  ]
+}

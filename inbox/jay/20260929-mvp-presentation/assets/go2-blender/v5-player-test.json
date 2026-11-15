@@ -1,0 +1,65 @@
+{
+  "states": [
+    {
+      "state": "front",
+      "frame": 1
+    },
+    {
+      "state": "three_quarter",
+      "frame": 97
+    },
+    {
+      "state": "four_legs",
+      "frame": 145
+    },
+    {
+      "state": "assembled",
+      "frame": 193
+    },
+    {
+      "state": "side_grid",
+      "frame": 241
+    },
+    {
+      "state": "scan",
+      "frame": 265
+    }
+  ],
+  "segments": [
+    {
+      "state": "turntable",
+      "frame": 97
+    },
+    {
+      "state": "four_legs",
+      "frame": 145
+    },
+    {
+      "state": "assemble",
+      "frame": 193
+    },
+    {
+      "state": "to_side",
+      "frame": 241
+    },
+    {
+      "state": "scan",
+      "frame": 289
+    }
+  ],
+  "reverse": {
+    "state": "to_side",
+    "frame": 193
+  },
+  "afterCancellation": {
+    "state": "front",
+    "frame": 1
+  },
+  "canvas": [
+    1600,
+    1200
+  ],
+  "onFrameCalls": 124,
+  "cacheSize": 110,
+  "errors": []
+}

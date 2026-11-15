@@ -1,0 +1,166 @@
+{
+ "kind": "approval",
+ "attempt": "v2_native_a1path_20261014_093859-20261014-094020-150232",
+ "which": "v2",
+ "tag": "v2_native_a1path_20261014_093859",
+ "target": {
+  "which": "v2",
+  "tag": "v2_native_a1path_20261014_093859",
+  "attempt": "v2_native_a1path_20261014_093859-20261014-094020-150232",
+  "checkpoint": "C:/Users/AI-WS01/Desktop/jay/\uc778\uacf5\uc9c0\ub2a5\uc0ac\uad00\ud559\uad50/foothold-lab/models/foothold-v2.pt",
+  "checkpoint_sha256": "e5c213219b4529464b7d3f3cce8f7a61c78fa4f2f7df7c64cfe12944c5ab2fee",
+  "model": "v2"
+ },
+ "run_provenance": {
+  "run_dump.py": "b9438e984a3df78f9ea7ae364271fe6bd1311af4747d6295d84d3e31d3e08dda",
+  "cells.py": "6d9f61bb9d472505ea59c7b7b43bbc7e2f2f9142bb7886b2394bd77f558c48e4",
+  "isaac_slot_v3.py": "974919b0717b684fb9f0a57a0282aeb5a0b321f4bc7d4131aedcc461e2d3945a",
+  "usd_isolate_run_v3.py": "30dc2ea930f400948474b11c648aa389ff495d2a1bd764b4b9b984b931d11efb",
+  "gpu_guard.py": "7fabec30704830a410878e4244190a4e62c60f3828ad5908fbf9ee264c30cbd4",
+  "dump_native_v2.py": "a3da62b8185f4a28aa8623997094c245f603f8cdec7820efaa57ba194ff97c16",
+  "adapters.py": "39c1a2930a5992a65229529c49d8e5c278b202c12c534461f24c7ec26dea00c6"
+ },
+ "compare_provenance": {
+  "adapters.py": "39c1a2930a5992a65229529c49d8e5c278b202c12c534461f24c7ec26dea00c6",
+  "compare_native.py": "c71ad42c7b55f0dde68889ab20a0478722868632348b7352f2b2637bb319c007",
+  "cells.py": "6d9f61bb9d472505ea59c7b7b43bbc7e2f2f9142bb7886b2394bd77f558c48e4"
+ },
+ "code_bundle": {
+  "path": "C:/Users/AI-WS01/Desktop/jay/\uc778\uacf5\uc9c0\ub2a5\uc0ac\uad00\ud559\uad50/foothold-lab/inbox/jay/20261012-arch-discussion/night-tools-20261013/ce12_a1path/v2_bundle_17p.sha256",
+  "sha256": "46fc5d31569928f80909afa9ef6156e7ea0f55a8abc737c91036cbe4e34f2d16"
+ },
+ "checks": [
+  "R1",
+  "R2",
+  "R3",
+  "R4",
+  "S1",
+  "S2",
+  "S3",
+  "S4",
+  "S5",
+  "S6",
+  "S7",
+  "S8",
+  "S9",
+  "S10",
+  "S11",
+  "G1",
+  "L1",
+  "L2",
+  "N1",
+  "N2",
+  "M1",
+  "M2",
+  "A1",
+  "A2",
+  "A3",
+  "A4",
+  "A5",
+  "A6",
+  "A7",
+  "A8",
+  "A9"
+ ],
+ "coverage": {
+  "reset_events": 2,
+  "post_reset_action_steps": 60,
+  "command_switch_events": 1,
+  "post_switch_action_steps": 20,
+  "ray_miss_count": 0,
+  "reset_pairs_step_env": [
+   [
+    29,
+    1
+   ],
+   [
+    29,
+    6
+   ]
+  ],
+  "switch_pairs_obs_env": [
+   [
+    40,
+    0
+   ]
+  ],
+  "unverified_paths": [
+   "height miss (+1) 0 \ud68c"
+  ]
+ },
+ "files": {
+  "log": [
+   "C:/isaac/ext/go2_rl_robotlab/_eval/out_ce12/native/v2_native_a1path_20261014_093859.log",
+   "c84db57de21ccf4c2be572a8a80b849bad9c051242a3825323a64af6b6abe0ed"
+  ],
+  "guard": [
+   "C:/isaac/ext/go2_rl_robotlab/_eval/out_ce12/native/v2_native_a1path_20261014_093859.guard.json",
+   "a790e5e7a9b9b26fd5dc4cdbe4887436a2ca35d1e4e3ccc39b2c76897b4c5588"
+  ],
+  "slot": [
+   "C:/isaac/ext/go2_rl_robotlab/_eval/out_ce12/native/v2_native_a1path_20261014_093859.slot.json",
+   "67012e2ed219d956f3706c73ae47cad99be281069177289f6f20e157801d760c"
+  ],
+  "npz": [
+   "C:/isaac/ext/go2_rl_robotlab/_eval/out_ce12/native/v2_native_a1path_20261014_093859/native.npz",
+   "c9a87ea527d4f26dcbb46c487ead2924de11f3237a2533fd791bd52b2fb9087f"
+  ],
+  "meta": [
+   "C:/isaac/ext/go2_rl_robotlab/_eval/out_ce12/native/v2_native_a1path_20261014_093859/meta.json",
+   "72ca7417615e755286983cff98d8969c4c450ebb258898d0ab52e2deb7009c57"
+  ],
+  "signature": [
+   "C:/isaac/ext/go2_rl_robotlab/_eval/out_ce12/native/v2_native_a1path_20261014_093859/signature.json",
+   "9039b7d2b8462f8c8d76f31c4f12a9f29da37e9912e3d259192d184d60c666b4"
+  ],
+  "run": [
+   "C:/isaac/ext/go2_rl_robotlab/_eval/out_ce12/native/_attempts/v2_native_a1path_20261014_093859-20261014-094020-150232/run.json",
+   "d2be7ff8270d58cccdb2c0b801c96f0c2057707f281fb40817c92946693a912d"
+  ],
+  "compare_report": [
+   "C:/isaac/ext/go2_rl_robotlab/_eval/out_ce12/native/v2_native_a1path_20261014_093859/compare_report_20261014-094103.json",
+   "aba2decb3cb874c8d5ce10f69a3037760d056d9e64a3db7f18fc7b21024e46fb"
+  ],
+  "checkpoint": [
+   "C:/Users/AI-WS01/Desktop/jay/\uc778\uacf5\uc9c0\ub2a5\uc0ac\uad00\ud559\uad50/foothold-lab/models/foothold-v2.pt",
+   "e5c213219b4529464b7d3f3cce8f7a61c78fa4f2f7df7c64cfe12944c5ab2fee"
+  ],
+  "code_bundle": [
+   "C:/Users/AI-WS01/Desktop/jay/\uc778\uacf5\uc9c0\ub2a5\uc0ac\uad00\ud559\uad50/foothold-lab/inbox/jay/20261012-arch-discussion/night-tools-20261013/ce12_a1path/v2_bundle_17p.sha256",
+   "46fc5d31569928f80909afa9ef6156e7ea0f55a8abc737c91036cbe4e34f2d16"
+  ],
+  "config_0": [
+   "C:/Users/AI-WS01/Desktop/jay/\uc778\uacf5\uc9c0\ub2a5\uc0ac\uad00\ud559\uad50/foothold-lab/models/foothold-v2.agent.yaml",
+   "a8d9071bdc1dd3eb313b0442a760e22fea7704cb097067a637b1ddcbd30f12f0"
+  ],
+  "config_1": [
+   "C:/Users/AI-WS01/Desktop/jay/\uc778\uacf5\uc9c0\ub2a5\uc0ac\uad00\ud559\uad50/foothold-lab/models/foothold-v2.env.yaml",
+   "a5ef31d626f8cabe850de37bae0aa26782e14e9db3ba61d678dd1210105323e7"
+  ],
+  "code_adapters.py": [
+   "C:\\isaac\\ext\\go2_rl_robotlab\\_eval\\ce12\\adapters.py",
+   "39c1a2930a5992a65229529c49d8e5c278b202c12c534461f24c7ec26dea00c6"
+  ],
+  "code_compare_native.py": [
+   "C:\\isaac\\ext\\go2_rl_robotlab\\_eval\\ce12\\compare_native.py",
+   "c71ad42c7b55f0dde68889ab20a0478722868632348b7352f2b2637bb319c007"
+  ],
+  "code_cells.py": [
+   "C:\\isaac\\ext\\go2_rl_robotlab\\_eval\\ce12\\cells.py",
+   "6d9f61bb9d472505ea59c7b7b43bbc7e2f2f9142bb7886b2394bd77f558c48e4"
+  ],
+  "code_validate_dump.py": [
+   "C:\\isaac\\ext\\go2_rl_robotlab\\_eval\\ce12\\validate_dump.py",
+   "dae3d93d6827903549043a58fdf20ee0ee2e7ad31780ff6e05ef36382421240e"
+  ],
+  "code_run_dump.py": [
+   "C:\\isaac\\ext\\go2_rl_robotlab\\_eval\\ce12\\run_dump.py",
+   "b9438e984a3df78f9ea7ae364271fe6bd1311af4747d6295d84d3e31d3e08dda"
+  ],
+  "code_dump_native_v2.py": [
+   "C:\\isaac\\ext\\go2_rl_robotlab\\_eval\\ce12\\dump_native_v2.py",
+   "a3da62b8185f4a28aa8623997094c245f603f8cdec7820efaa57ba194ff97c16"
+  ]
+ },
+ "t": "2026-10-14 09:41:08"
+}

@@ -1,0 +1,28 @@
+{
+  "source": "C:\\mai\\wt\\foothold-lab\\lead-tmp-start-b\\logs\\rsl_rl\\foothold_s2_23f_topdown\\2026-10-24_08-20-33_ex29-td-main\\training_trace\\update_000100.npz",
+  "sha256": "fdd92d58c0deffadd1839c67504ddef697415313fa4805d3d4326514c7c4cd5a",
+  "run": "EX-29 START-TD",
+  "update_index": 100,
+  "step_index": 0,
+  "sample_index": 6,
+  "env_id": 4,
+  "terrain_column": 1,
+  "terrain_level": 0,
+  "policy_used_gt": true,
+  "depth_finite_min_max_m": [
+    0.3779453933238983,
+    3.4986953735351562
+  ],
+  "depth_display_limits_m": [
+    0.2,
+    3.0
+  ],
+  "height_display_limits_m": [
+    -1,
+    1
+  ],
+  "selection": "env 4, step 0, update 100: upright sample for sensor explanation, not an aggregate or performance verdict",
+  "timing": "raw latest sensor frame; perception can hold a prior delivered frame between 10 Hz updates; height maps recorded in the same trace step",
+  "modification": "raw arrays unchanged; plotting only; depth >=3 m displayed white; invalid pixels magenta",
+  "image_sha256": "bb2a45932be862fa772fcc06bf06315b9ef4a28d1b03a2c40a1762d248f69eab"
+}

@@ -1,0 +1,20 @@
+{
+  "astra": {
+    "path": "C:/mai/wt/foothold-lab/astra-23a/inbox/jay/20261023-experiments/VERIFY-astra-24i-b1500.md",
+    "sha256": "05fb7c54a653ca5c6c589a2cd5a1dcbc256ca09a7ff064c8071b811dee1cc0f1",
+    "bytes": 26202,
+    "scope": "Completed review read by lead_tmp; claims used only after primary-data checks"
+  },
+  "sol": {
+    "path": "C:/mai/wt/foothold-lab/sol-23a/inbox/jay/20261023-experiments/NOTE-sol-24l-b1500-training.md",
+    "sha256": "4862806bd8b8e87da3314e6319a797d33585c3bb96261814594977710f41c6c9",
+    "bytes": 6289,
+    "scope": "Completed review read by lead_tmp; claims used only after primary-data checks"
+  },
+  "luna": {
+    "path": "C:/mai/wt/foothold-lab/luna-23eval/inbox/jay/20261023-experiments/NOTE-luna-24g-b1500.md",
+    "sha256": "0b50a3085ee0ee5a132b5378884db16d6b1c6fb7619253a87fa59a9947e4f3e1",
+    "bytes": 7450,
+    "scope": "Completed review read by lead_tmp; claims used only after primary-data checks"
+  }
+}

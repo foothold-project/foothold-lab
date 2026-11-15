@@ -1,0 +1,101 @@
+{
+  "before_head": "08a8c99c",
+  "fix_origin": "38ee51df",
+  "checkpoint": "C:\\Users\\AI-WS01\\s2_lab\\ex40_main_20261031_041313\\main\\EX-40-B-main_20261031_041337_26240\\model_2500.pt",
+  "checkpoint_sha256": "86a22c3f5f9b8a3fbade6ef46dde8ae543a6491ba55d44e4cf85317c4ed15e1c",
+  "evidence": "C:\\Users\\AI-WS01\\s2_lab\\ex40_main_20261031_041313\\score-watch-b\\model_2500_86a22c3f5f9b",
+  "config_sha256": "a6cc9abc0a6263ee581daf8181216d39702d3480fbd99e27daf169f5cd345dca",
+  "table_sha256": "66a519b28f5597ff41cec09f286d4cdd66af5d3877ecb1580005ca5a13a70585",
+  "before": {
+    "verdict": "HOLD",
+    "problems": [
+      {
+        "kind": "HOLD",
+        "cell": "evidence",
+        "reason": "W15 sequence eval_gt/spin_left_to_right incomplete"
+      }
+    ]
+  },
+  "after": {
+    "verdict": "PASS",
+    "problems": [],
+    "sequences": {
+      "eval_gt/spin_left_to_right_diagnostic_only": {
+        "alive_by_phase": [
+          64,
+          64
+        ]
+      },
+      "eval_gt/spin_right_to_left_diagnostic_only": {
+        "alive_by_phase": [
+          64,
+          64
+        ]
+      },
+      "eval_gt/stop_and_restart_diagnostic_only": {
+        "alive_by_phase": [
+          64,
+          64,
+          64,
+          64
+        ]
+      },
+      "probe_prop_only/spin_left_to_right_diagnostic_only": {
+        "alive_by_phase": [
+          64,
+          64
+        ]
+      },
+      "probe_prop_only/spin_right_to_left_diagnostic_only": {
+        "alive_by_phase": [
+          64,
+          64
+        ]
+      },
+      "probe_prop_only/stop_and_restart_diagnostic_only": {
+        "alive_by_phase": [
+          64,
+          64,
+          64,
+          64
+        ]
+      }
+    }
+  },
+  "raw_sources": {
+    "map64": {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex40_main_20261031_041313\\score-watch-b\\model_2500_86a22c3f5f9b\\map64\\map_modes.json",
+      "sha256": "c98a32ced5c2a56b7be953ba07df2700033f051310d38e8d2ed16ebb400b30ff"
+    },
+    "stand_eval_gt": {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex40_main_20261031_041313\\score-watch-b\\model_2500_86a22c3f5f9b\\stand_eval_gt\\stand.json",
+      "sha256": "6f6b48c57484c202d0eed6efc7d24f65e967fc2b1b8e60b121085c6e188f1c4e"
+    },
+    "stand_probe_prop_only": {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex40_main_20261031_041313\\score-watch-b\\model_2500_86a22c3f5f9b\\stand_probe_prop_only\\stand.json",
+      "sha256": "ab0927940bda7aa18d8499cc0607b6d22af03ae1a4349ed5b665e72a2e593f2f"
+    },
+    "stand_eval_pred": {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex40_main_20261031_041313\\score-watch-b\\model_2500_86a22c3f5f9b\\stand_eval_pred\\stand.json",
+      "sha256": "f95b7146094e5486756c0b9676ce371fd1fe05520d585ce892b11d1b21fd6f62"
+    },
+    "map64_b3": {
+      "path": "C:\\Users\\AI-WS01\\s2_lab\\ex40_main_20261031_041313\\score-watch-b\\model_2500_86a22c3f5f9b\\map64_b3\\map_modes.json",
+      "sha256": "f11c19e119557218e902f3fa00f173983b16bfcaaf1c518be8cda80657f93cb6"
+    }
+  },
+  "parent6000": {
+    "checkpoint": "C:\\Users\\AI-WS01\\s2_lab\\ex40_main_20261031_041313\\main\\EX-40-B-main_20261031_041337_26240\\model_6000.pt",
+    "checkpoint_sha256": "d5e9ec400f33d74d97e7c69d4ab2092d4980195141bb8b30e683730eecd6b6f5",
+    "iter": 6000,
+    "adasmpl": {
+      "p": 1.0,
+      "count": 0.0,
+      "sum": 0.0,
+      "sumsq": 0.0,
+      "force_gt": true
+    },
+    "agent_yaml": "C:\\Users\\AI-WS01\\s2_lab\\ex40_main_20261031_041313\\main\\EX-40-B-main_20261031_041337_26240\\params\\agent.yaml",
+    "agent_yaml_sha256": "5fa66e94e7c4f0c1f87d5f113423b6b46e9ca633fb5e61ebece12ce5c98aaadd"
+  }
+}

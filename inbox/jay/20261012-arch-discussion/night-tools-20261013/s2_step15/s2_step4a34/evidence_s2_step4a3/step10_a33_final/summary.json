@@ -1,0 +1,149 @@
+{
+  "run_id": "step10_a33_final",
+  "complete": true,
+  "results": [
+    {
+      "name": "test_s2_scene_a2.py",
+      "exit_code": 0,
+      "seconds": 0.28,
+      "passes": 4
+    },
+    {
+      "name": "test_s2_connect_a2.py",
+      "exit_code": 0,
+      "seconds": 1.19,
+      "passes": 10
+    },
+    {
+      "name": "test_s2_connect_17v.py",
+      "exit_code": 0,
+      "seconds": 1.33,
+      "passes": 10
+    },
+    {
+      "name": "test_s2_17v_core.py",
+      "exit_code": 0,
+      "seconds": 2.55,
+      "passes": 17
+    },
+    {
+      "name": "test_s2_sensor_tracker_17v.py",
+      "exit_code": 0,
+      "seconds": 2.66,
+      "passes": 7
+    },
+    {
+      "name": "test_s2_capture_journal_a2.py",
+      "exit_code": 0,
+      "seconds": 1.2,
+      "passes": 9
+    },
+    {
+      "name": "test_s2_device_binding_a2.py",
+      "exit_code": 0,
+      "seconds": 0.09,
+      "passes": 9
+    },
+    {
+      "name": "test_s2_stage0_contract_a2.py",
+      "exit_code": 0,
+      "seconds": 0.5,
+      "passes": 23
+    },
+    {
+      "name": "test_s2_job_owner.py",
+      "exit_code": 0,
+      "seconds": 0.12,
+      "passes": 5
+    },
+    {
+      "name": "test_s2_job_object_os.py",
+      "exit_code": 0,
+      "seconds": 0.27,
+      "passes": 2
+    },
+    {
+      "name": "test_s2_resource_lease.py",
+      "exit_code": 0,
+      "seconds": 0.12,
+      "passes": 4
+    },
+    {
+      "name": "test_s2_zero_supervisor.py",
+      "exit_code": 0,
+      "seconds": 1.48,
+      "passes": 6
+    },
+    {
+      "name": "test_s2_capture_to_check_a3.py",
+      "exit_code": 0,
+      "seconds": 0.52,
+      "passes": 4
+    },
+    {
+      "name": "test_s2_prelaunch_competing_a3.py",
+      "exit_code": 0,
+      "seconds": 2.92,
+      "passes": 7
+    },
+    {
+      "name": "test_s2_hard_watchdog.py",
+      "exit_code": 0,
+      "seconds": 16.28,
+      "passes": 13
+    },
+    {
+      "name": "test_s2_a32.py",
+      "exit_code": 0,
+      "seconds": 3.69,
+      "passes": 75
+    },
+    {
+      "name": "test_s2_a33.py",
+      "exit_code": 0,
+      "seconds": 0.41,
+      "passes": 3
+    },
+    {
+      "name": "a_mutants",
+      "exit_code": 0,
+      "seconds": 14.08,
+      "caught": 5,
+      "total": 5,
+      "expected": 5
+    },
+    {
+      "name": "a2_mutants",
+      "exit_code": 0,
+      "seconds": 9.98,
+      "caught": 6,
+      "total": 6,
+      "expected": 6
+    },
+    {
+      "name": "a3_mutants",
+      "exit_code": 0,
+      "seconds": 10.64,
+      "summary_line": "SUMMARY 7/7 CAUGHT"
+    },
+    {
+      "name": "watchdog_mutants",
+      "exit_code": 0,
+      "seconds": 227.06,
+      "summary_line": "SUMMARY 4/4 CAUGHT"
+    },
+    {
+      "name": "a32_mutants",
+      "exit_code": 0,
+      "seconds": 185.78,
+      "summary_line": "SUMMARY 28/28 CAUGHT"
+    },
+    {
+      "name": "frozen_clean_import",
+      "exit_code": 0,
+      "hashes_match": true,
+      "lines": 50,
+      "imported": 22
+    }
+  ]
+}

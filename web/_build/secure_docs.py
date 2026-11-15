@@ -18,7 +18,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 VAULT = os.path.dirname(HERE)
 SRC = __import__('roots').chosun() or os.path.join(VAULT, '07_chosun')
 OUT_DIR = os.path.join(VAULT, 'assets', 'secure')
-PASS_FILE = os.path.expanduser(r'~\.claude\channels\foothold-docs-pass.txt')
+PASS_FILE = os.path.join(os.path.expanduser('~'), '.claude', 'channels', 'foothold-docs-pass.txt')  # Linux 에서도 찾게 (역슬래시 경로는 Windows 만)
 
 PBKDF2_ITERS = 250000
 

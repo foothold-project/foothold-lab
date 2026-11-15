@@ -1,0 +1,54 @@
+{
+  "arm": "A",
+  "completed_iteration": 0,
+  "cpu_dry": false,
+  "encounters": "unmeasured",
+  "ended_epoch": 1792127896.5996084,
+  "environment_steps": 0,
+  "executed_updates": 0,
+  "function_only_probe": {
+    "first_xy": [
+      -0.8,
+      -0.5
+    ],
+    "height_valid": 0.25,
+    "last_xy": [
+      0.8,
+      0.5
+    ],
+    "mask_miss": 1,
+    "mask_valid": 186,
+    "rays": 187,
+    "shape": [
+      1,
+      374
+    ],
+    "tensor_sha256": "2eb28c7f015586bffec9522b10239fbddda23c5ed366d82772310e18f1429209"
+  },
+  "gradient_norm_max": null,
+  "gradient_norm_min": null,
+  "input_limitation": "synthetic known-answer input; no terrain performance claim",
+  "input_path": "synthetic_known_answer",
+  "manifest_sha256": "0f28228dfc3df8411ccc78428a31fbc495d7f1c3ec0afbddcc8859a05da7bb41",
+  "nonfinite_count": 0,
+  "num_envs": 32,
+  "optimizer_steps_actual": 0,
+  "parameter_changed": false,
+  "parameter_sha256_after": null,
+  "parameter_sha256_before": null,
+  "parent_sha256_after": "c8951b797dbe41570009e9de35589d56b7ea1d10092728af17761d46a2df47e8",
+  "parent_sha256_before": "c8951b797dbe41570009e9de35589d56b7ea1d10092728af17761d46a2df47e8",
+  "performance_verified": false,
+  "planned_updates": 1,
+  "plumbing_checks": "HOLD",
+  "plumbing_only": true,
+  "records": [],
+  "rollout_steps": 2,
+  "roundtrip": null,
+  "stage": "plumbing",
+  "stage0_passed": false,
+  "start_iteration": 0,
+  "status": "HOLD",
+  "stop_reason": "PlumbingHold: training_cfg_physics_unknown",
+  "vector_steps": 0
+}

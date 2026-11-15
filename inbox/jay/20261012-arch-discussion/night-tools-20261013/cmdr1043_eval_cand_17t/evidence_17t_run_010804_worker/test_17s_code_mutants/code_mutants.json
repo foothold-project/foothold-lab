@@ -1,0 +1,84 @@
+{
+  "input_tamper_17r": 12,
+  "code_check_disabled": 6,
+  "records": [
+    {
+      "name": "original_field",
+      "normal_exit": 0,
+      "normal_s": 0.33,
+      "normal_log": "C:\\Users\\AI-WS01\\.claude\\jobs\\09bbf294\\tmp\\codexE\\evidence_17t\\run_20261015_010804_121484\\test_17s_code_mutants\\original_field.normal.log",
+      "mutant_exit": 1,
+      "mutant_s": 0.34,
+      "mutant_log": "C:\\Users\\AI-WS01\\.claude\\jobs\\09bbf294\\tmp\\codexE\\evidence_17t\\run_20261015_010804_121484\\test_17s_code_mutants\\original_field.mutant.log",
+      "failed": "original q meta accepted",
+      "want": "original q meta accepted",
+      "caught": true,
+      "mutant_sha256": "4fad6910826ba4db42c3493311e4f3577a1ddf270241b76061f469751732a825"
+    },
+    {
+      "name": "wall_enforcement",
+      "normal_exit": 0,
+      "normal_s": 8.45,
+      "normal_log": "C:\\Users\\AI-WS01\\.claude\\jobs\\09bbf294\\tmp\\codexE\\evidence_17t\\run_20261015_010804_121484\\test_17s_code_mutants\\wall_enforcement.normal.log",
+      "mutant_exit": 1,
+      "mutant_s": 4.84,
+      "mutant_log": "C:\\Users\\AI-WS01\\.claude\\jobs\\09bbf294\\tmp\\codexE\\evidence_17t\\run_20261015_010804_121484\\test_17s_code_mutants\\wall_enforcement.mutant.log",
+      "failed": "guarded wall returns nonzero held result",
+      "want": "guarded wall returns nonzero held result",
+      "caught": true,
+      "mutant_sha256": "dadee51cd18d725f0bd532cfeb44cb96b4aeaeb9f7903d14e65e96d50f59fd61"
+    },
+    {
+      "name": "approval_ledger",
+      "normal_exit": 0,
+      "normal_s": 8.39,
+      "normal_log": "C:\\Users\\AI-WS01\\.claude\\jobs\\09bbf294\\tmp\\codexE\\evidence_17t\\run_20261015_010804_121484\\test_17s_code_mutants\\approval_ledger.normal.log",
+      "mutant_exit": 1,
+      "mutant_s": 2.86,
+      "mutant_log": "C:\\Users\\AI-WS01\\.claude\\jobs\\09bbf294\\tmp\\codexE\\evidence_17t\\run_20261015_010804_121484\\test_17s_code_mutants\\approval_ledger.mutant.log",
+      "failed": "second start refused",
+      "want": "second start refused",
+      "caught": true,
+      "mutant_sha256": "41aca7d18fefb1e9d6e7409186fa22828a0806c7bedbc1c5c0b612eb24f0cd53"
+    },
+    {
+      "name": "retry_zero",
+      "normal_exit": 0,
+      "normal_s": 8.17,
+      "normal_log": "C:\\Users\\AI-WS01\\.claude\\jobs\\09bbf294\\tmp\\codexE\\evidence_17t\\run_20261015_010804_121484\\test_17s_code_mutants\\retry_zero.normal.log",
+      "mutant_exit": 1,
+      "mutant_s": 0.22,
+      "mutant_log": "C:\\Users\\AI-WS01\\.claude\\jobs\\09bbf294\\tmp\\codexE\\evidence_17t\\run_20261015_010804_121484\\test_17s_code_mutants\\retry_zero.mutant.log",
+      "failed": "retry zero approved",
+      "want": "retry zero approved",
+      "caught": true,
+      "mutant_sha256": "92b9f334813557297cf6634a0bd897a13cb1ecbf220eb6124f01d2fe91155920"
+    },
+    {
+      "name": "byte_only_reason",
+      "normal_exit": 0,
+      "normal_s": 0.38,
+      "normal_log": "C:\\Users\\AI-WS01\\.claude\\jobs\\09bbf294\\tmp\\codexE\\evidence_17t\\run_20261015_010804_121484\\test_17s_code_mutants\\byte_only_reason.normal.log",
+      "mutant_exit": 1,
+      "mutant_s": 0.3,
+      "mutant_log": "C:\\Users\\AI-WS01\\.claude\\jobs\\09bbf294\\tmp\\codexE\\evidence_17t\\run_20261015_010804_121484\\test_17s_code_mutants\\byte_only_reason.mutant.log",
+      "failed": "byte-only JSON reason",
+      "want": "byte-only JSON reason",
+      "caught": true,
+      "mutant_sha256": "2a231a51cab00b8ec491ce9a48f82ba512799d485cae5f9469556fca81c251c4"
+    },
+    {
+      "name": "common_allowlist",
+      "normal_exit": 0,
+      "normal_s": 0.38,
+      "normal_log": "C:\\Users\\AI-WS01\\.claude\\jobs\\09bbf294\\tmp\\codexE\\evidence_17t\\run_20261015_010804_121484\\test_17s_code_mutants\\common_allowlist.normal.log",
+      "mutant_exit": 1,
+      "mutant_s": 0.38,
+      "mutant_log": "C:\\Users\\AI-WS01\\.claude\\jobs\\09bbf294\\tmp\\codexE\\evidence_17t\\run_20261015_010804_121484\\test_17s_code_mutants\\common_allowlist.mutant.log",
+      "failed": "_eval slot without allowlist rejected",
+      "want": "_eval slot without allowlist rejected",
+      "caught": true,
+      "mutant_sha256": "b7dc8fe9af6456ea24337c3ab33f23feb7b41441af75de5fdcc51a1bec205db0"
+    }
+  ]
+}

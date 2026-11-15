@@ -1,0 +1,32 @@
+{
+  "gpu_uuid": "GPU-c08e23b0-62b6-a4f2-8eb2-11151c6a8c7b",
+  "mode": "record",
+  "run": "C:\\Users\\AI-WS01\\s2_lab\\s2_step20_run\\runs\\plumbA-live-20261017-135123-b3c8e0c2",
+  "snapshot": {
+    "epoch": 1792212695.598,
+    "gpu": {
+      "limits": [
+        "an empty NVML list on WDDM can mean 'not reported', not 'none'"
+      ],
+      "nvml": [
+        126692
+      ],
+      "nvml_error": null,
+      "smi": [
+        126692
+      ]
+    },
+    "locks": null,
+    "process_list_unreadable_count": 0,
+    "processes": [
+      {
+        "cmd_head": "c:/users/ai-ws01/anaconda3/envs/isaac311-moects/python.exe -b c:/users/ai-ws01/s2_lab/s2_step20_run/launch/s2_family_observer.py record --run c:/users/ai-ws01/s2_lab/s2_step20_run/runs/plumba-live-202",
+        "create_time": 1792212686.055,
+        "exe": "C:\\Users\\AI-WS01\\anaconda3\\envs\\isaac311-moects\\python.exe",
+        "name": "python.exe",
+        "pid": 57712
+      }
+    ],
+    "time": "2026-10-17 13:51:35"
+  }
+}

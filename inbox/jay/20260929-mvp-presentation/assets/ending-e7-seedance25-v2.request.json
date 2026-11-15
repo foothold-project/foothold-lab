@@ -1,0 +1,23 @@
+{
+  "model": "seedance_2_5",
+  "mode": "omni_reference",
+  "duration": 5,
+  "resolution": "480p",
+  "aspect_ratio": "16:9",
+  "count": 1,
+  "generate_audio": true,
+  "bitrate_mode": "standard",
+  "draft": false,
+  "folder_id": "bb3b8052-bde7-4b9b-b750-694e133479fb",
+  "medias": [
+    {
+      "role": "start_image",
+      "value": "67fcfd6c-2baa-424f-9c5a-59a3720bb33c"
+    },
+    {
+      "role": "image",
+      "value": "31ebb14a-344e-4afe-a88c-95a2d9545278"
+    }
+  ],
+  "prompt": "E7, final FIVE-second shot of this fictional robot-inspection concept film. Use image 1 as the exact first frame: green data-transfer interface over the same stationary cabinet. Image 2 defines the exact RED completion interface to appear later, NOT the ending frame because the final frame must be BLACK. Preserve cabinet geometry, locked camera, soft natural contrast and existing subdued surface materials. No robot or human appears.\n\nTIMING:\n0.0–2.6 seconds: remain at the SAME stationary cabinet camera view. Animate the existing transmission bar smoothly forward and change its existing percentage in a clearly readable ascending sequence 68%, 78%, 89%, 96%, 100%. No backwards progression, duplicate numbers, additional panels or gibberish. Keep other English labels and monospaced font from the image.\n2.6–3.0 seconds: transfer is at 100%; brief subtle receipt-confirmation pulse. Existing green interface elements dim and clear, replaced by the exact red completion design from reference image 2.\n3.0–4.25 seconds: hold readable red MISSION COMPLETE and 100%, matching reference image 2 layout. Red is the GRAPHIC accent; do not wash all concrete and metal red or brighten the room. This is successful completion, not a warning alarm.\n4.25–4.65 seconds: two or three very brief horizontal signal-tear glitches and broken scanlines disrupt the displayed feed. Interrupt graphics and background together as a camera transmission shutting off, not a dramatic explosion, lightning or random new shot.\n4.65–5.0 seconds: COMPLETE BLACK with no remaining text, logo, object or glowing dot. Hold the black. No new end card.\n\nAUDIO: continue the same quiet industrial room ambience and drips from inspection. Soft data ticks during progress; one restrained lower-pitched two-tone acknowledgement on receipt, no siren. Short dry electronic interference clicks at the signal tears, then room tone and electronic sound decay into silence in the black tail. No dialogue, lyrics or background music. The previous separate scene inspects and records the cabinet; after this clip the presenter advances to a separate Q&A slide, which must not be generated here.\n\nNatural low-key photographic background, diffuse concrete with uneven dry/damp patches, dull rust, soft highlights. No HDR, harsh microcontrast, glitter, universal mirror wetness, plastic gloss, camera movement, exposure pumping or new ceiling lights. All animated text must preserve reference spelling and alignment."
+}

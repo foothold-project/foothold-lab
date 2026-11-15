@@ -1,0 +1,26 @@
+PASS ray index x-fast and no 20m re-add
+PASS yaw 90 ray geometry
+PASS ray order mismatch rejected
+PASS A terrain information blocked
+PASS B terrain information changes
+PASS rollout map snapshot and bootstrap time
+PASS reset uses new episode map
+PASS runner logs assigned and encountered separately
+PASS all minibatches use saved map
+PASS fixed step count and PPO-only loss
+PASS adaptive LR parent thresholds
+PASS reset stale sensor frame invalid before update
+PASS sensor NaN holds both-arm gate
+PASS critic NaN holds before update
+PASS reward NaN gate blocks update
+PASS A and B same update plan and control rule
+PASS checkpoint during update refused
+PASS resume bit identical policy optimizer env and RNG
+PASS different arm resume rejected
+PASS different encoder rule resume rejected
+PASS terrain geometry from CPU probe and parent untouched
+PASS allocation distinct from encounter and outcome
+PASS outcome without approach rejected
+PASS approval draft gate known answer
+PASS approval plan mutation rejected
+PASS unapproved launch denied

@@ -1,0 +1,557 @@
+{
+ "missing": [],
+ "pairing": {
+  "flat": {
+   "pairing_sha256_equal": true,
+   "terrain_mesh_equal": true,
+   "terrain_mesh_sha256": "f255a51e4d7585ec56648c461b427fd38f2f0d56a46d57ec9aa7d08715a7a5b3",
+   "checks_pre": [
+    {
+     "teacher_input_randomized_max_abs_action_change": 0.0,
+     "policy_history_perturbed_max_abs_action_change": 1.513340950012207,
+     "single_obs_perturbed_max_abs_action_change": 1.0502785444259644,
+     "manual_student_path_vs_act_inference_max_abs": 0.0
+    },
+    {
+     "teacher_input_randomized_max_abs_action_change": 0.0,
+     "policy_history_perturbed_max_abs_action_change": 1.425473690032959,
+     "single_obs_perturbed_max_abs_action_change": 0.9792824983596802,
+     "manual_student_path_vs_act_inference_max_abs": 0.0
+    }
+   ],
+   "checks_run": [
+    {
+     "obs_single_cmd_vs_target_max_abs": 0.0,
+     "obs_history_latest_cmd_vs_target_max_abs": 0.0,
+     "nonfinite_action_or_obs_count": 0
+    },
+    {
+     "obs_single_cmd_vs_target_max_abs": 0.0,
+     "obs_history_latest_cmd_vs_target_max_abs": 0.0,
+     "nonfinite_action_or_obs_count": 0
+    }
+   ],
+   "devices": [
+    {
+     "env_device": "cuda:0",
+     "sim_device": "cuda:0",
+     "runner_device": "cuda:0",
+     "policy_param_device": "cuda:0",
+     "torch_cuda0_name": "NVIDIA GeForce RTX 5080",
+     "torch_cuda0_uuid": "315d098f-5fe0-26a0-0d2e-26e2d4c1ae4f",
+     "torch_device_count": 1
+    },
+    {
+     "env_device": "cuda:0",
+     "sim_device": "cuda:0",
+     "runner_device": "cuda:0",
+     "policy_param_device": "cuda:0",
+     "torch_cuda0_name": "NVIDIA GeForce RTX 5080",
+     "torch_cuda0_uuid": "315d098f-5fe0-26a0-0d2e-26e2d4c1ae4f",
+     "torch_device_count": 1
+    }
+   ],
+   "smi_after_env": [
+    [
+     "0, GPU-c08e23b0-62b6-a4f2-8eb2-11151c6a8c7b, 14611 MiB, 72 %",
+     "1, GPU-315d098f-5fe0-26a0-0d2e-26e2d4c1ae4f, 10462 MiB, 5 %"
+    ],
+    [
+     "0, GPU-c08e23b0-62b6-a4f2-8eb2-11151c6a8c7b, 14611 MiB, 37 %",
+     "1, GPU-315d098f-5fe0-26a0-0d2e-26e2d4c1ae4f, 10402 MiB, 5 %"
+    ]
+   ],
+   "checkpoint_sha256": [
+    "c8951b797dbe41570009e9de35589d56b7ea1d10092728af17761d46a2df47e8",
+    "7e52a5026086660308fbc270f30ebf983064b1cb8695aca73652136ebf02f904"
+   ],
+   "rollout_wall_s": [
+    55.13658165931702,
+    55.11309218406677
+   ]
+  },
+  "wave": {
+   "pairing_sha256_equal": true,
+   "terrain_mesh_equal": true,
+   "terrain_mesh_sha256": "50ec02004d56108875f05e37cc6d86ba8bfc6100712044cd0b5d15eec6e407ef",
+   "checks_pre": [
+    {
+     "teacher_input_randomized_max_abs_action_change": 0.0,
+     "policy_history_perturbed_max_abs_action_change": 1.513340950012207,
+     "single_obs_perturbed_max_abs_action_change": 1.0502785444259644,
+     "manual_student_path_vs_act_inference_max_abs": 0.0
+    },
+    {
+     "teacher_input_randomized_max_abs_action_change": 0.0,
+     "policy_history_perturbed_max_abs_action_change": 1.425473690032959,
+     "single_obs_perturbed_max_abs_action_change": 0.9792824983596802,
+     "manual_student_path_vs_act_inference_max_abs": 0.0
+    }
+   ],
+   "checks_run": [
+    {
+     "obs_single_cmd_vs_target_max_abs": 0.0,
+     "obs_history_latest_cmd_vs_target_max_abs": 0.0,
+     "nonfinite_action_or_obs_count": 0
+    },
+    {
+     "obs_single_cmd_vs_target_max_abs": 0.0,
+     "obs_history_latest_cmd_vs_target_max_abs": 0.0,
+     "nonfinite_action_or_obs_count": 0
+    }
+   ],
+   "devices": [
+    {
+     "env_device": "cuda:0",
+     "sim_device": "cuda:0",
+     "runner_device": "cuda:0",
+     "policy_param_device": "cuda:0",
+     "torch_cuda0_name": "NVIDIA GeForce RTX 5080",
+     "torch_cuda0_uuid": "315d098f-5fe0-26a0-0d2e-26e2d4c1ae4f",
+     "torch_device_count": 1
+    },
+    {
+     "env_device": "cuda:0",
+     "sim_device": "cuda:0",
+     "runner_device": "cuda:0",
+     "policy_param_device": "cuda:0",
+     "torch_cuda0_name": "NVIDIA GeForce RTX 5080",
+     "torch_cuda0_uuid": "315d098f-5fe0-26a0-0d2e-26e2d4c1ae4f",
+     "torch_device_count": 1
+    }
+   ],
+   "smi_after_env": [
+    [
+     "0, GPU-c08e23b0-62b6-a4f2-8eb2-11151c6a8c7b, 14611 MiB, 58 %",
+     "1, GPU-315d098f-5fe0-26a0-0d2e-26e2d4c1ae4f, 10376 MiB, 5 %"
+    ],
+    [
+     "0, GPU-c08e23b0-62b6-a4f2-8eb2-11151c6a8c7b, 14611 MiB, 45 %",
+     "1, GPU-315d098f-5fe0-26a0-0d2e-26e2d4c1ae4f, 10352 MiB, 8 %"
+    ]
+   ],
+   "checkpoint_sha256": [
+    "c8951b797dbe41570009e9de35589d56b7ea1d10092728af17761d46a2df47e8",
+    "7e52a5026086660308fbc270f30ebf983064b1cb8695aca73652136ebf02f904"
+   ],
+   "rollout_wall_s": [
+    60.733829975128174,
+    60.66691827774048
+   ]
+  },
+  "slope_up": {
+   "pairing_sha256_equal": true,
+   "terrain_mesh_equal": true,
+   "terrain_mesh_sha256": "389ca4f478dd0e64d3a4b2ec1deb4860ee7fd1a324d50fd86ea946732cf81ddc",
+   "checks_pre": [
+    {
+     "teacher_input_randomized_max_abs_action_change": 0.0,
+     "policy_history_perturbed_max_abs_action_change": 1.513340950012207,
+     "single_obs_perturbed_max_abs_action_change": 1.0502785444259644,
+     "manual_student_path_vs_act_inference_max_abs": 0.0
+    },
+    {
+     "teacher_input_randomized_max_abs_action_change": 0.0,
+     "policy_history_perturbed_max_abs_action_change": 1.425473690032959,
+     "single_obs_perturbed_max_abs_action_change": 0.9792824983596802,
+     "manual_student_path_vs_act_inference_max_abs": 0.0
+    }
+   ],
+   "checks_run": [
+    {
+     "obs_single_cmd_vs_target_max_abs": 0.0,
+     "obs_history_latest_cmd_vs_target_max_abs": 0.0,
+     "nonfinite_action_or_obs_count": 0
+    },
+    {
+     "obs_single_cmd_vs_target_max_abs": 0.0,
+     "obs_history_latest_cmd_vs_target_max_abs": 0.0,
+     "nonfinite_action_or_obs_count": 0
+    }
+   ],
+   "devices": [
+    {
+     "env_device": "cuda:0",
+     "sim_device": "cuda:0",
+     "runner_device": "cuda:0",
+     "policy_param_device": "cuda:0",
+     "torch_cuda0_name": "NVIDIA GeForce RTX 5080",
+     "torch_cuda0_uuid": "315d098f-5fe0-26a0-0d2e-26e2d4c1ae4f",
+     "torch_device_count": 1
+    },
+    {
+     "env_device": "cuda:0",
+     "sim_device": "cuda:0",
+     "runner_device": "cuda:0",
+     "policy_param_device": "cuda:0",
+     "torch_cuda0_name": "NVIDIA GeForce RTX 5080",
+     "torch_cuda0_uuid": "315d098f-5fe0-26a0-0d2e-26e2d4c1ae4f",
+     "torch_device_count": 1
+    }
+   ],
+   "smi_after_env": [
+    [
+     "0, GPU-c08e23b0-62b6-a4f2-8eb2-11151c6a8c7b, 14611 MiB, 41 %",
+     "1, GPU-315d098f-5fe0-26a0-0d2e-26e2d4c1ae4f, 10347 MiB, 4 %"
+    ],
+    [
+     "0, GPU-c08e23b0-62b6-a4f2-8eb2-11151c6a8c7b, 14611 MiB, 48 %",
+     "1, GPU-315d098f-5fe0-26a0-0d2e-26e2d4c1ae4f, 10377 MiB, 3 %"
+    ]
+   ],
+   "checkpoint_sha256": [
+    "c8951b797dbe41570009e9de35589d56b7ea1d10092728af17761d46a2df47e8",
+    "7e52a5026086660308fbc270f30ebf983064b1cb8695aca73652136ebf02f904"
+   ],
+   "rollout_wall_s": [
+    55.409801959991455,
+    55.38671278953552
+   ]
+  },
+  "slope_down": {
+   "pairing_sha256_equal": true,
+   "terrain_mesh_equal": true,
+   "terrain_mesh_sha256": "5c53f64766b3f01722c6d5d71796b269f21c0ae0fa3bac4e996c3ea7225789e7",
+   "checks_pre": [
+    {
+     "teacher_input_randomized_max_abs_action_change": 0.0,
+     "policy_history_perturbed_max_abs_action_change": 1.513340950012207,
+     "single_obs_perturbed_max_abs_action_change": 1.0502785444259644,
+     "manual_student_path_vs_act_inference_max_abs": 0.0
+    },
+    {
+     "teacher_input_randomized_max_abs_action_change": 0.0,
+     "policy_history_perturbed_max_abs_action_change": 1.425473690032959,
+     "single_obs_perturbed_max_abs_action_change": 0.9792824983596802,
+     "manual_student_path_vs_act_inference_max_abs": 0.0
+    }
+   ],
+   "checks_run": [
+    {
+     "obs_single_cmd_vs_target_max_abs": 0.0,
+     "obs_history_latest_cmd_vs_target_max_abs": 0.0,
+     "nonfinite_action_or_obs_count": 0
+    },
+    {
+     "obs_single_cmd_vs_target_max_abs": 0.0,
+     "obs_history_latest_cmd_vs_target_max_abs": 0.0,
+     "nonfinite_action_or_obs_count": 0
+    }
+   ],
+   "devices": [
+    {
+     "env_device": "cuda:0",
+     "sim_device": "cuda:0",
+     "runner_device": "cuda:0",
+     "policy_param_device": "cuda:0",
+     "torch_cuda0_name": "NVIDIA GeForce RTX 5080",
+     "torch_cuda0_uuid": "315d098f-5fe0-26a0-0d2e-26e2d4c1ae4f",
+     "torch_device_count": 1
+    },
+    {
+     "env_device": "cuda:0",
+     "sim_device": "cuda:0",
+     "runner_device": "cuda:0",
+     "policy_param_device": "cuda:0",
+     "torch_cuda0_name": "NVIDIA GeForce RTX 5080",
+     "torch_cuda0_uuid": "315d098f-5fe0-26a0-0d2e-26e2d4c1ae4f",
+     "torch_device_count": 1
+    }
+   ],
+   "smi_after_env": [
+    [
+     "0, GPU-c08e23b0-62b6-a4f2-8eb2-11151c6a8c7b, 14611 MiB, 68 %",
+     "1, GPU-315d098f-5fe0-26a0-0d2e-26e2d4c1ae4f, 10367 MiB, 5 %"
+    ],
+    [
+     "0, GPU-c08e23b0-62b6-a4f2-8eb2-11151c6a8c7b, 14611 MiB, 68 %",
+     "1, GPU-315d098f-5fe0-26a0-0d2e-26e2d4c1ae4f, 10341 MiB, 4 %"
+    ]
+   ],
+   "checkpoint_sha256": [
+    "c8951b797dbe41570009e9de35589d56b7ea1d10092728af17761d46a2df47e8",
+    "7e52a5026086660308fbc270f30ebf983064b1cb8695aca73652136ebf02f904"
+   ],
+   "rollout_wall_s": [
+    54.65727710723877,
+    55.07841444015503
+   ]
+  },
+  "rough_slope": {
+   "pairing_sha256_equal": true,
+   "terrain_mesh_equal": true,
+   "terrain_mesh_sha256": "7b83cd3ed5cca78f99677f11704fbb1e4bccd37919d77aaf5c3254b45e847207",
+   "checks_pre": [
+    {
+     "teacher_input_randomized_max_abs_action_change": 0.0,
+     "policy_history_perturbed_max_abs_action_change": 1.513340950012207,
+     "single_obs_perturbed_max_abs_action_change": 1.0502785444259644,
+     "manual_student_path_vs_act_inference_max_abs": 0.0
+    },
+    {
+     "teacher_input_randomized_max_abs_action_change": 0.0,
+     "policy_history_perturbed_max_abs_action_change": 1.425473690032959,
+     "single_obs_perturbed_max_abs_action_change": 0.9792824983596802,
+     "manual_student_path_vs_act_inference_max_abs": 0.0
+    }
+   ],
+   "checks_run": [
+    {
+     "obs_single_cmd_vs_target_max_abs": 0.0,
+     "obs_history_latest_cmd_vs_target_max_abs": 0.0,
+     "nonfinite_action_or_obs_count": 0
+    },
+    {
+     "obs_single_cmd_vs_target_max_abs": 0.0,
+     "obs_history_latest_cmd_vs_target_max_abs": 0.0,
+     "nonfinite_action_or_obs_count": 0
+    }
+   ],
+   "devices": [
+    {
+     "env_device": "cuda:0",
+     "sim_device": "cuda:0",
+     "runner_device": "cuda:0",
+     "policy_param_device": "cuda:0",
+     "torch_cuda0_name": "NVIDIA GeForce RTX 5080",
+     "torch_cuda0_uuid": "315d098f-5fe0-26a0-0d2e-26e2d4c1ae4f",
+     "torch_device_count": 1
+    },
+    {
+     "env_device": "cuda:0",
+     "sim_device": "cuda:0",
+     "runner_device": "cuda:0",
+     "policy_param_device": "cuda:0",
+     "torch_cuda0_name": "NVIDIA GeForce RTX 5080",
+     "torch_cuda0_uuid": "315d098f-5fe0-26a0-0d2e-26e2d4c1ae4f",
+     "torch_device_count": 1
+    }
+   ],
+   "smi_after_env": [
+    [
+     "0, GPU-c08e23b0-62b6-a4f2-8eb2-11151c6a8c7b, 14611 MiB, 42 %",
+     "1, GPU-315d098f-5fe0-26a0-0d2e-26e2d4c1ae4f, 10347 MiB, 4 %"
+    ],
+    [
+     "0, GPU-c08e23b0-62b6-a4f2-8eb2-11151c6a8c7b, 14611 MiB, 54 %",
+     "1, GPU-315d098f-5fe0-26a0-0d2e-26e2d4c1ae4f, 10353 MiB, 5 %"
+    ]
+   ],
+   "checkpoint_sha256": [
+    "c8951b797dbe41570009e9de35589d56b7ea1d10092728af17761d46a2df47e8",
+    "7e52a5026086660308fbc270f30ebf983064b1cb8695aca73652136ebf02f904"
+   ],
+   "rollout_wall_s": [
+    58.05896544456482,
+    56.37774991989136
+   ]
+  },
+  "stairs_up": {
+   "pairing_sha256_equal": true,
+   "terrain_mesh_equal": true,
+   "terrain_mesh_sha256": "b2648d90cce05d6abde5403d520c6d9413f01ed1022562d1c2652f5c72267373",
+   "checks_pre": [
+    {
+     "teacher_input_randomized_max_abs_action_change": 0.0,
+     "policy_history_perturbed_max_abs_action_change": 1.513340950012207,
+     "single_obs_perturbed_max_abs_action_change": 1.0502785444259644,
+     "manual_student_path_vs_act_inference_max_abs": 0.0
+    },
+    {
+     "teacher_input_randomized_max_abs_action_change": 0.0,
+     "policy_history_perturbed_max_abs_action_change": 1.425473690032959,
+     "single_obs_perturbed_max_abs_action_change": 0.9792824983596802,
+     "manual_student_path_vs_act_inference_max_abs": 0.0
+    }
+   ],
+   "checks_run": [
+    {
+     "obs_single_cmd_vs_target_max_abs": 0.0,
+     "obs_history_latest_cmd_vs_target_max_abs": 0.0,
+     "nonfinite_action_or_obs_count": 0
+    },
+    {
+     "obs_single_cmd_vs_target_max_abs": 0.0,
+     "obs_history_latest_cmd_vs_target_max_abs": 0.0,
+     "nonfinite_action_or_obs_count": 0
+    }
+   ],
+   "devices": [
+    {
+     "env_device": "cuda:0",
+     "sim_device": "cuda:0",
+     "runner_device": "cuda:0",
+     "policy_param_device": "cuda:0",
+     "torch_cuda0_name": "NVIDIA GeForce RTX 5080",
+     "torch_cuda0_uuid": "315d098f-5fe0-26a0-0d2e-26e2d4c1ae4f",
+     "torch_device_count": 1
+    },
+    {
+     "env_device": "cuda:0",
+     "sim_device": "cuda:0",
+     "runner_device": "cuda:0",
+     "policy_param_device": "cuda:0",
+     "torch_cuda0_name": "NVIDIA GeForce RTX 5080",
+     "torch_cuda0_uuid": "315d098f-5fe0-26a0-0d2e-26e2d4c1ae4f",
+     "torch_device_count": 1
+    }
+   ],
+   "smi_after_env": [
+    [
+     "0, GPU-c08e23b0-62b6-a4f2-8eb2-11151c6a8c7b, 14611 MiB, 44 %",
+     "1, GPU-315d098f-5fe0-26a0-0d2e-26e2d4c1ae4f, 10321 MiB, 4 %"
+    ],
+    [
+     "0, GPU-c08e23b0-62b6-a4f2-8eb2-11151c6a8c7b, 14611 MiB, 73 %",
+     "1, GPU-315d098f-5fe0-26a0-0d2e-26e2d4c1ae4f, 10332 MiB, 4 %"
+    ]
+   ],
+   "checkpoint_sha256": [
+    "c8951b797dbe41570009e9de35589d56b7ea1d10092728af17761d46a2df47e8",
+    "7e52a5026086660308fbc270f30ebf983064b1cb8695aca73652136ebf02f904"
+   ],
+   "rollout_wall_s": [
+    69.50763630867004,
+    72.84516525268555
+   ]
+  },
+  "stairs_down": {
+   "pairing_sha256_equal": true,
+   "terrain_mesh_equal": true,
+   "terrain_mesh_sha256": "a3273b9dc5a3868d763e8865f9c107e9d63a93c50706f3ab10655dc5e2708e91",
+   "checks_pre": [
+    {
+     "teacher_input_randomized_max_abs_action_change": 0.0,
+     "policy_history_perturbed_max_abs_action_change": 1.513340950012207,
+     "single_obs_perturbed_max_abs_action_change": 1.0502785444259644,
+     "manual_student_path_vs_act_inference_max_abs": 0.0
+    },
+    {
+     "teacher_input_randomized_max_abs_action_change": 0.0,
+     "policy_history_perturbed_max_abs_action_change": 1.425473690032959,
+     "single_obs_perturbed_max_abs_action_change": 0.9792824983596802,
+     "manual_student_path_vs_act_inference_max_abs": 0.0
+    }
+   ],
+   "checks_run": [
+    {
+     "obs_single_cmd_vs_target_max_abs": 0.0,
+     "obs_history_latest_cmd_vs_target_max_abs": 0.0,
+     "nonfinite_action_or_obs_count": 0
+    },
+    {
+     "obs_single_cmd_vs_target_max_abs": 0.0,
+     "obs_history_latest_cmd_vs_target_max_abs": 0.0,
+     "nonfinite_action_or_obs_count": 0
+    }
+   ],
+   "devices": [
+    {
+     "env_device": "cuda:0",
+     "sim_device": "cuda:0",
+     "runner_device": "cuda:0",
+     "policy_param_device": "cuda:0",
+     "torch_cuda0_name": "NVIDIA GeForce RTX 5080",
+     "torch_cuda0_uuid": "315d098f-5fe0-26a0-0d2e-26e2d4c1ae4f",
+     "torch_device_count": 1
+    },
+    {
+     "env_device": "cuda:0",
+     "sim_device": "cuda:0",
+     "runner_device": "cuda:0",
+     "policy_param_device": "cuda:0",
+     "torch_cuda0_name": "NVIDIA GeForce RTX 5080",
+     "torch_cuda0_uuid": "315d098f-5fe0-26a0-0d2e-26e2d4c1ae4f",
+     "torch_device_count": 1
+    }
+   ],
+   "smi_after_env": [
+    [
+     "0, GPU-c08e23b0-62b6-a4f2-8eb2-11151c6a8c7b, 14611 MiB, 55 %",
+     "1, GPU-315d098f-5fe0-26a0-0d2e-26e2d4c1ae4f, 10318 MiB, 4 %"
+    ],
+    [
+     "0, GPU-c08e23b0-62b6-a4f2-8eb2-11151c6a8c7b, 14611 MiB, 46 %",
+     "1, GPU-315d098f-5fe0-26a0-0d2e-26e2d4c1ae4f, 10297 MiB, 3 %"
+    ]
+   ],
+   "checkpoint_sha256": [
+    "c8951b797dbe41570009e9de35589d56b7ea1d10092728af17761d46a2df47e8",
+    "7e52a5026086660308fbc270f30ebf983064b1cb8695aca73652136ebf02f904"
+   ],
+   "rollout_wall_s": [
+    62.23666572570801,
+    61.748672008514404
+   ]
+  },
+  "obstacles": {
+   "pairing_sha256_equal": true,
+   "terrain_mesh_equal": true,
+   "terrain_mesh_sha256": "ebaaf6637449d4406b5c3a25cd1c4ed9e6045aa970be6fbf53eeb299181cf5e6",
+   "checks_pre": [
+    {
+     "teacher_input_randomized_max_abs_action_change": 0.0,
+     "policy_history_perturbed_max_abs_action_change": 1.513340950012207,
+     "single_obs_perturbed_max_abs_action_change": 1.0502785444259644,
+     "manual_student_path_vs_act_inference_max_abs": 0.0
+    },
+    {
+     "teacher_input_randomized_max_abs_action_change": 0.0,
+     "policy_history_perturbed_max_abs_action_change": 1.425473690032959,
+     "single_obs_perturbed_max_abs_action_change": 0.9792824983596802,
+     "manual_student_path_vs_act_inference_max_abs": 0.0
+    }
+   ],
+   "checks_run": [
+    {
+     "obs_single_cmd_vs_target_max_abs": 0.0,
+     "obs_history_latest_cmd_vs_target_max_abs": 0.0,
+     "nonfinite_action_or_obs_count": 0
+    },
+    {
+     "obs_single_cmd_vs_target_max_abs": 0.0,
+     "obs_history_latest_cmd_vs_target_max_abs": 0.0,
+     "nonfinite_action_or_obs_count": 0
+    }
+   ],
+   "devices": [
+    {
+     "env_device": "cuda:0",
+     "sim_device": "cuda:0",
+     "runner_device": "cuda:0",
+     "policy_param_device": "cuda:0",
+     "torch_cuda0_name": "NVIDIA GeForce RTX 5080",
+     "torch_cuda0_uuid": "315d098f-5fe0-26a0-0d2e-26e2d4c1ae4f",
+     "torch_device_count": 1
+    },
+    {
+     "env_device": "cuda:0",
+     "sim_device": "cuda:0",
+     "runner_device": "cuda:0",
+     "policy_param_device": "cuda:0",
+     "torch_cuda0_name": "NVIDIA GeForce RTX 5080",
+     "torch_cuda0_uuid": "315d098f-5fe0-26a0-0d2e-26e2d4c1ae4f",
+     "torch_device_count": 1
+    }
+   ],
+   "smi_after_env": [
+    [
+     "0, GPU-c08e23b0-62b6-a4f2-8eb2-11151c6a8c7b, 14611 MiB, 47 %",
+     "1, GPU-315d098f-5fe0-26a0-0d2e-26e2d4c1ae4f, 10271 MiB, 3 %"
+    ],
+    [
+     "0, GPU-c08e23b0-62b6-a4f2-8eb2-11151c6a8c7b, 14611 MiB, 45 %",
+     "1, GPU-315d098f-5fe0-26a0-0d2e-26e2d4c1ae4f, 10274 MiB, 3 %"
+    ]
+   ],
+   "checkpoint_sha256": [
+    "c8951b797dbe41570009e9de35589d56b7ea1d10092728af17761d46a2df47e8",
+    "7e52a5026086660308fbc270f30ebf983064b1cb8695aca73652136ebf02f904"
+   ],
+   "rollout_wall_s": [
+    56.81639075279236,
+    57.09597301483154
+   ]
+  }
+ }
+}

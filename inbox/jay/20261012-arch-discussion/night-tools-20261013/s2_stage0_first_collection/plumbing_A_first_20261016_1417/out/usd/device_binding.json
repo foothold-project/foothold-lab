@@ -1,0 +1,1 @@
+{"evidence": {"kit_observed": {"/physics/cudaDevice": 0, "/renderer/activeGpu": 0}, "torch_device_name": "NVIDIA GeForce RTX 5080", "torch_uuid_raw": "<torch._C._CUuuid object at 0x000001EA3FF4EFF0>"}, "expected_uuid": "GPU-c08e23b0-62b6-a4f2-8eb2-11151c6a8c7b"}

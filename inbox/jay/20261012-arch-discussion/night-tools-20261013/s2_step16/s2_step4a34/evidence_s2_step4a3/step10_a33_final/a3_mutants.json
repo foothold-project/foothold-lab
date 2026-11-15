@@ -1,0 +1,79 @@
+[
+  {
+    "name": "device_uuid_compare_removed",
+    "source": "s2_device_binding_a2.py",
+    "test": "test_s2_device_binding_a2.py",
+    "want": "other_gpu_uuid_rejected",
+    "first_fail": "other_gpu_uuid_rejected",
+    "baseline_rc": 0,
+    "mutant_rc": 1,
+    "meaning": "child GPU identity mismatch is no longer rejected",
+    "caught": true
+  },
+  {
+    "name": "stage_failure_not_recorded",
+    "source": "s2_connect_diag_17v.py",
+    "test": "test_s2_capture_journal_a2.py",
+    "want": "step_failure_note_exists",
+    "first_fail": "step_failure_note_exists",
+    "baseline_rc": 0,
+    "mutant_rc": 1,
+    "meaning": "failures outside map derivation lose their stage note and emergency raw",
+    "caught": true
+  },
+  {
+    "name": "ray_index_not_collapsed",
+    "source": "s2_connect_diag_17v.py",
+    "test": "test_s2_capture_to_check_a3.py",
+    "want": "capture_shapes_match_fixture",
+    "first_fail": "capture_shapes_match_fixture",
+    "baseline_rc": 0,
+    "mutant_rc": 1,
+    "meaning": "collector hands the checker a (256,187) ray_index again",
+    "caught": true
+  },
+  {
+    "name": "scene_step_height_precheck_removed",
+    "source": "s2_stage0_contract_a2.py",
+    "test": "test_s2_stage0_contract_a2.py",
+    "want": "step_height_manifest_differs_from_answer_rejected",
+    "first_fail": "step_height_manifest_differs_from_answer_rejected",
+    "baseline_rc": 0,
+    "mutant_rc": 1,
+    "meaning": "prelaunch no longer rejects a step height that differs from the answer scene",
+    "caught": true
+  },
+  {
+    "name": "usd_root_env_not_passed",
+    "source": "s2_zero_supervisor.py",
+    "test": "test_s2_stage0_contract_a2.py",
+    "want": "usd_isolation_env_and_wrapper_reach_child",
+    "first_fail": "usd_isolation_env_and_wrapper_reach_child",
+    "baseline_rc": 0,
+    "mutant_rc": 1,
+    "meaning": "the isolated USD root is not given to the child",
+    "caught": true
+  },
+  {
+    "name": "nested_output_counted_twice",
+    "source": "s2_zero_supervisor.py",
+    "test": "test_s2_stage0_contract_a2.py",
+    "want": "non_overlapping_counts_nested_once",
+    "first_fail": "non_overlapping_counts_nested_once",
+    "baseline_rc": 0,
+    "mutant_rc": 1,
+    "meaning": "nested output roots are counted twice in the disk budget",
+    "caught": true
+  },
+  {
+    "name": "python_isaac_scan_removed",
+    "source": "s2_stage0_prelaunch.py",
+    "test": "test_s2_prelaunch_competing_a3.py",
+    "want": "python_branch_run_found",
+    "first_fail": "python_branch_run_found",
+    "baseline_rc": 0,
+    "mutant_rc": 1,
+    "meaning": "python-launched Isaac tools are no longer seen as competing processes",
+    "caught": true
+  }
+]

@@ -1,0 +1,56 @@
+{
+ "attempt": "smoke-smoke_gate_s1043_on-1013185102-895427",
+ "cmd": [
+  "C:/Users/AI-WS01/anaconda3/envs/isaac311-moects/python.exe",
+  "../gpu_guard.py",
+  "--gpu",
+  "0",
+  "--min_free_mib",
+  "256",
+  "--log",
+  "../out_smoke/branch/smoke_gate_s1043_on.log",
+  "--summary",
+  "../out_smoke/branch/smoke_gate_s1043_on.guard.json",
+  "--",
+  "C:/Users/AI-WS01/anaconda3/envs/isaac311-moects/python.exe",
+  "../usd_isolate_run.py",
+  "branch_run.py",
+  "--headless",
+  "--gate",
+  "--tag",
+  "smoke_gate_s1043_on",
+  "--parent",
+  "C:/isaac/ext/go2_rl_robotlab/logs/rsl_rl/go2_moe_cts/2026-10-10_12-47-48_e1_seed42_n8192/model_20000.pt",
+  "--seed",
+  "1043",
+  "--num_envs",
+  "1024",
+  "--updates",
+  "3",
+  "--cmdr",
+  "on"
+ ],
+ "watch_log": "c:/isaac/ext/go2_rl_robotlab/_eval/out_smoke/branch/smoke_gate_s1043_on.log",
+ "usd_root": "c:/isaac/ext/go2_rl_robotlab/_eval/out_smoke/branch/_usd/smoke-smoke_gate_s1043_on-1013185102-895427",
+ "lock": "../slot/isaac_convert.lock",
+ "t_request": "2026-10-13 18:51:02",
+ "t_request_epoch": 1791885062.9458828,
+ "lock_wait_s": 0.0,
+ "pid": 23028,
+ "state_at_release": "scene_built",
+ "hold_s": 17.1,
+ "usd_at_release": [
+  "20261013_185115_9514"
+ ],
+ "child_rc": 0,
+ "usd_final": [
+  "20261013_185115_9514"
+ ],
+ "usd_outside_root": [
+  "20261013_185115_9514"
+ ],
+ "conflicts": {},
+ "usd_changed_after_release": false,
+ "slot_rc": 94,
+ "t_end": "2026-10-13 18:51:39"
+}

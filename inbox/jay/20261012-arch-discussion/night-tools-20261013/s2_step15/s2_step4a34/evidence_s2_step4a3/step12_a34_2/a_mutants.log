@@ -1,0 +1,5 @@
+CAUGHT yaw_finite FAIL nonfinite_yaw_rejected
+CAUGHT independent_sensor_receipt FAIL old_raw_new_numbers_rejected
+CAUGHT ray_geometry FAIL ray_order_rejected
+CAUGHT claim_exclusive FAIL approval_claim_once
+CAUGHT job_assign_before_resume FAIL assign_before_resume

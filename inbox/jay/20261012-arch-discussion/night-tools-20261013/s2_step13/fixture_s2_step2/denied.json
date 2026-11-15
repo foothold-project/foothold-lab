@@ -1,0 +1,1 @@
+{"approved": false, "by": "CPU_FIXTURE", "approved_at": "fixture", "reviewed": {"plan_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "env_config_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb", "code_sha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc", "deadline_epoch": 9999999999.0}}

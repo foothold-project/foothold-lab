@@ -40,8 +40,13 @@ GATES = [
     ]),
     # ★ 2026-09-29 팀장 지시. 제출본(PDF · HTML)을 이 표에서 바로 열 수 있게 한다.
     #   요약 2장짜리는 뺐다 (「큰 의미 없는 파일」).
+    # ★ 2026-10-02 팀장 지시. 발표에서 실제로 띄우는 화면을 밖에서 볼 수 있게
+    #   건다. 이것은 단일 html 이 아니라 영상·프레임이 딸린 «묶음» 이라
+    #   `-presented.html` 경로(copy_presented)로는 못 건다. 문서 안에서
+    #   `/assets/mvp-deck/index.html?v=20261002b` 로 직접 링크한다.
     ('MVP · 중간발표', datetime.date(2026, 9, 30), '트랙 A 완결', [
         ('deliverables/midterm/mvp-submission.md', 'MVP 종합보고서 (제출본)'),
+        ('deliverables/midterm/mvp-presentation.md', 'MVP 발표 화면 (43장)'),
         ('deliverables/midterm/generalization-report.md', '일반화 평가표'),
         ('deliverables/midterm/twin-render.md', '디지털 트윈 · 렌더 시연물'),
     ]),
@@ -63,6 +68,16 @@ GATES = [
 
 CLS = {'대기': ('wait', '대기'), '초안': ('go', '진행중'),
        '검토중': ('go', '진행중'), '확정': ('done', '완료')}
+
+# ★ 2026-10-02 팀장 지적: 「산출물에서 클릭하면 바로 새창으로 뜨게 하지?
+#   굳이 문서 페이지 만들었네?」. 발표 화면처럼 «열어서 쓰는» 산출물은 이름을
+#   누르면 바로 새 창에서 실물이 뜬다. 문서 페이지는 사용법·상태용으로 남겨
+#   «안내» 로만 건다. (lab 경로 -> (실물 주소, 부속 링크들))
+DIRECT = {
+    'deliverables/midterm/mvp-presentation.md': (
+        '/assets/mvp-deck/index.html?v=20261002b',
+        [('모바일 대본', '/assets/mvp-deck/script.html?v=20261002b')]),
+}
 
 
 def lab_root():
@@ -257,8 +272,19 @@ def body_html(rows):
                 href = dd.page_of(rel)
             except Exception:
                 href = ''
-            name = ('<a href="%s"><b>%s</b></a>' % (href, H.escape(label))) if href \
-                else '<b>%s</b>' % H.escape(label)
+            if rel in DIRECT:
+                direct, extras = DIRECT[rel]
+                name = ('<a href="%s" target="_blank" rel="noopener"><b>%s</b></a>'
+                        % (direct, H.escape(label)))
+                tail = [('<a href="%s" target="_blank" rel="noopener">%s</a>'
+                         % (u, H.escape(t))) for t, u in extras]
+                if href:
+                    tail.append('<a href="%s">안내</a>' % href)
+                if tail:
+                    name += ' <small style="color:var(--ink-3)">· ' + ' · '.join(tail) + '</small>'
+            else:
+                name = ('<a href="%s"><b>%s</b></a>' % (href, H.escape(label))) if href \
+                    else '<b>%s</b>' % H.escape(label)
             # 납품한 PDF 를 여기서 바로 연다. 2026-09-05 까지 사이트 전체에
             # PDF 링크가 0개였다. 문서는 웹으로 읽고 제출본은 원본 그대로 본다.
             try:

@@ -1,0 +1,59 @@
+{
+  "step1_code_mutants": 68,
+  "step1_input_gate_mutants": 1,
+  "code_mutants_step2": 4,
+  "records": [
+    {
+      "name": "map_snapshot",
+      "normal_exit": 0,
+      "normal_s": 4.11,
+      "normal_log": "C:\\Users\\AI-WS01\\.claude\\jobs\\09bbf294\\tmp\\codexE\\evidence_s2_step2\\run_20261015_024740_59720\\step2_code_mutants\\map_snapshot.normal.log",
+      "mutant_exit": 1,
+      "mutant_s": 3.98,
+      "mutant_log": "C:\\Users\\AI-WS01\\.claude\\jobs\\09bbf294\\tmp\\codexE\\evidence_s2_step2\\run_20261015_024740_59720\\step2_code_mutants\\map_snapshot.mutant.log",
+      "first_failed": "rollout map snapshot and bootstrap time",
+      "want": "rollout map snapshot and bootstrap time",
+      "caught": true,
+      "mutant_sha256": "627fc0fe6e25b9a04e05a8b7e0ce7a803a849469ae92a4271c3961ee19a745d2"
+    },
+    {
+      "name": "validity_gate",
+      "normal_exit": 0,
+      "normal_s": 4.03,
+      "normal_log": "C:\\Users\\AI-WS01\\.claude\\jobs\\09bbf294\\tmp\\codexE\\evidence_s2_step2\\run_20261015_024740_59720\\step2_code_mutants\\validity_gate.normal.log",
+      "mutant_exit": 1,
+      "mutant_s": 3.94,
+      "mutant_log": "C:\\Users\\AI-WS01\\.claude\\jobs\\09bbf294\\tmp\\codexE\\evidence_s2_step2\\run_20261015_024740_59720\\step2_code_mutants\\validity_gate.mutant.log",
+      "first_failed": "reward NaN gate blocks update",
+      "want": "reward NaN gate blocks update",
+      "caught": true,
+      "mutant_sha256": "30b6427a04da697d18fb295da6a5dee0d5de279cd8e427c957fac384b8ee6abe"
+    },
+    {
+      "name": "terrain_geometry",
+      "normal_exit": 0,
+      "normal_s": 4.03,
+      "normal_log": "C:\\Users\\AI-WS01\\.claude\\jobs\\09bbf294\\tmp\\codexE\\evidence_s2_step2\\run_20261015_024740_59720\\step2_code_mutants\\terrain_geometry.normal.log",
+      "mutant_exit": 1,
+      "mutant_s": 4.03,
+      "mutant_log": "C:\\Users\\AI-WS01\\.claude\\jobs\\09bbf294\\tmp\\codexE\\evidence_s2_step2\\run_20261015_024740_59720\\step2_code_mutants\\terrain_geometry.mutant.log",
+      "first_failed": "terrain geometry from CPU probe and parent untouched",
+      "want": "terrain geometry from CPU probe and parent untouched",
+      "caught": true,
+      "mutant_sha256": "3612bb70a58e1ad03224ccae6243f95aaab71dc5bdf0327aabd881b176d3f0ea"
+    },
+    {
+      "name": "approval_gate",
+      "normal_exit": 0,
+      "normal_s": 4.03,
+      "normal_log": "C:\\Users\\AI-WS01\\.claude\\jobs\\09bbf294\\tmp\\codexE\\evidence_s2_step2\\run_20261015_024740_59720\\step2_code_mutants\\approval_gate.normal.log",
+      "mutant_exit": 1,
+      "mutant_s": 4.05,
+      "mutant_log": "C:\\Users\\AI-WS01\\.claude\\jobs\\09bbf294\\tmp\\codexE\\evidence_s2_step2\\run_20261015_024740_59720\\step2_code_mutants\\approval_gate.mutant.log",
+      "first_failed": "unapproved launch denied",
+      "want": "unapproved launch denied",
+      "caught": true,
+      "mutant_sha256": "6e91cec415f2c9c715b40d9b0e60b0d45364696ed3a17bc93ac95ca75d667b0e"
+    }
+  ]
+}

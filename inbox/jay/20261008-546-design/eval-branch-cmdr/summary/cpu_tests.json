@@ -1,0 +1,116 @@
+{
+ "n": 22,
+ "failed": 0,
+ "results": [
+  {
+   "name": "found the three sampler expressions in commands.py",
+   "pass": true,
+   "detail": ""
+  },
+  {
+   "name": "terrain length 8 m (9 m tile - 2 x 0.5 border): remaining distance 5 m",
+   "pass": true,
+   "detail": ""
+  },
+  {
+   "name": "time-out reset, pre-reset age 1250: lower bound 5 / (1 x 0.02) = 250",
+   "pass": true,
+   "detail": ""
+  },
+  {
+   "name": "same reset with age 0: lower bound 5 / (1251 x 0.02) = 0.19984",
+   "pass": true,
+   "detail": ""
+  },
+  {
+   "name": "zero branch time: age 1250 -> 0 (zero impossible), age 0 -> clip(25 - 5/0.8, 0, 5) = 5",
+   "pass": true,
+   "detail": ""
+  },
+  {
+   "name": "age 1250: all 10,000 samples in [+1, +1 + 1e-6] (the +bound bias)",
+   "pass": true,
+   "detail": ""
+  },
+  {
+   "name": "age 0: both signs, |v| >= 0.19984, inside [-1, 1]",
+   "pass": true,
+   "detail": ""
+  },
+  {
+   "name": "age 0: negative share about (1-0.2)/(2*(1-0.2)) = 0.5",
+   "pass": true,
+   "detail": ""
+  },
+  {
+   "name": "lower bound > upper bound (1.0) also happens near the end without the reset bug: age 1240 -> 5/(11 x 0.02) = 22.7",
+   "pass": true,
+   "detail": ""
+  },
+  {
+   "name": "adapter: sampler sees age 0 for the reset envs",
+   "pass": true,
+   "detail": ""
+  },
+  {
+   "name": "adapter: buffer restored for everything after the command reset",
+   "pass": true,
+   "detail": ""
+  },
+  {
+   "name": "adapter: return value passed through, calls counted",
+   "pass": true,
+   "detail": ""
+  },
+  {
+   "name": "adapter removed: original age seen again",
+   "pass": true,
+   "detail": ""
+  },
+  {
+   "name": "L=20000: next 20001, counter 480,024, stage 20000 applied, 50000 left",
+   "pass": true,
+   "detail": ""
+  },
+  {
+   "name": "L=99: next 100, counter 2,400, no stage applied",
+   "pass": true,
+   "detail": ""
+  },
+  {
+   "name": "zero prob: iter 100 -> 0.0066667, iter 20001 -> 0.1",
+   "pass": true,
+   "detail": ""
+  },
+  {
+   "name": "base_height (-1 -> -10 over 0..5000): iter 100 -> -1.18, 20001 -> -10",
+   "pass": true,
+   "detail": ""
+  },
+  {
+   "name": "lin_vel_z (-2 -> 0 over 0..1500): iter 100 -> -1.86667, 20001 -> 0",
+   "pass": true,
+   "detail": ""
+  },
+  {
+   "name": "curriculums.py still divides by the literal 24 (lines 163 and 186)",
+   "pass": true,
+   "detail": ""
+  },
+  {
+   "name": "stratified levels: every column holds levels 0..5 with counts differing by at most 1",
+   "pass": true,
+   "detail": ""
+  },
+  {
+   "name": "stratified levels are a pure function of the column layout",
+   "pass": true,
+   "detail": ""
+  },
+  {
+   "name": "gate policy: allow (1024,3) and rollout-only 4096; refuse 4 updates, 2048 envs, no-gate without contract; allow confirmed experiment",
+   "pass": true,
+   "detail": ""
+  }
+ ]
+}

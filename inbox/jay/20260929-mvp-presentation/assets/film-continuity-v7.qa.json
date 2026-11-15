@@ -1,0 +1,186 @@
+{
+  "players": [
+    {
+      "file": "film-master-v7.mp4",
+      "duration": 80.625
+    },
+    {
+      "file": "film-e5pre-outpoint-comparison-v6.mp4",
+      "duration": 14.5
+    },
+    {
+      "file": "film-o1-o2-matched-v5.mp4",
+      "duration": 10.291667
+    },
+    {
+      "file": "film-e5pre-footsteps-comparison-v4.mp4",
+      "duration": 30
+    },
+    {
+      "file": "film-opening-v7.mp4",
+      "duration": 31.125
+    },
+    {
+      "file": "film-ending-v7.mp4",
+      "duration": 49.5
+    }
+  ],
+  "plan": {
+    "fps": 24,
+    "beacon": [
+      427,
+      215
+    ],
+    "clips": [
+      {
+        "shot": "O1",
+        "file": "opening-o1-seedance25-v4.mp4",
+        "url": "https://d8j0ntlcm91z4.cloudfront.net/user_2vTkMQm9Kz0TWEHiovxqGSzlE6v/hf_20261001_015642_9af80866-fc3e-4b09-a56e-dcd0e22b5cc9.mp4",
+        "at": 0,
+        "from": 0,
+        "dur": 8
+      },
+      {
+        "shot": "O2",
+        "file": "opening-o2-seedance25-v1.mp4",
+        "url": "https://d8j0ntlcm91z4.cloudfront.net/user_2vTkMQm9Kz0TWEHiovxqGSzlE6v/hf_20260930_202808_1d8ff642-092d-4958-afc2-827e828cfb62.mp4",
+        "at": 8,
+        "from": 0,
+        "dur": 2.2916666666666665
+      },
+      {
+        "shot": "O3",
+        "file": "opening-o3-seedance25-v1.mp4",
+        "url": "https://d8j0ntlcm91z4.cloudfront.net/user_2vTkMQm9Kz0TWEHiovxqGSzlE6v/hf_20260930_202809_5832dc5f-d566-4220-b74f-f0fd56987541.mp4",
+        "at": 10.291666666666666,
+        "from": 0,
+        "dur": 2
+      },
+      {
+        "shot": "O3b",
+        "file": "opening-o3b-seedance25-v1.mp4",
+        "url": "https://d8j0ntlcm91z4.cloudfront.net/user_2vTkMQm9Kz0TWEHiovxqGSzlE6v/hf_20260930_202808_8811eb72-765f-45e1-b344-a0b06b107fb6.mp4",
+        "at": 12.291666666666666,
+        "from": 0,
+        "dur": 2.5
+      },
+      {
+        "shot": "O4",
+        "file": "opening-o4-seedance25-v1.mp4",
+        "url": "https://d8j0ntlcm91z4.cloudfront.net/user_2vTkMQm9Kz0TWEHiovxqGSzlE6v/hf_20260930_202808_c2394f0c-6570-41a2-ad5e-42bea464a597.mp4",
+        "at": 15.041666666666666,
+        "from": 0,
+        "dur": 3.5
+      },
+      {
+        "shot": "O5",
+        "file": "opening-o5-seedance25-v3.mp4",
+        "url": "https://d8j0ntlcm91z4.cloudfront.net/user_2vTkMQm9Kz0TWEHiovxqGSzlE6v/hf_20260930_210114_2fb8f0fd-d1eb-441c-a2ff-1f3bcc3f933a.mp4",
+        "at": 18.541666666666668,
+        "from": 0,
+        "dur": 4.5
+      },
+      {
+        "shot": "O6",
+        "file": "opening-o6-seedance25-v1.mp4",
+        "url": "https://d8j0ntlcm91z4.cloudfront.net/user_2vTkMQm9Kz0TWEHiovxqGSzlE6v/hf_20260930_202809_9099bc74-bb12-404c-bb78-39d18c2d0dcb.mp4",
+        "at": 23.041666666666668,
+        "from": 0,
+        "dur": 3
+      },
+      {
+        "shot": "O7",
+        "file": "opening-o7-seedance25-v1.mp4",
+        "url": "https://d8j0ntlcm91z4.cloudfront.net/user_2vTkMQm9Kz0TWEHiovxqGSzlE6v/hf_20260930_160759_1f390a3c-e96a-407b-88ec-0e79b33a6d8b.mp4",
+        "at": 26.041666666666668,
+        "from": 0,
+        "dur": 5
+      },
+      {
+        "shot": "E2",
+        "file": "ending-e2-seedance25-test-v1.mp4",
+        "url": "https://d8j0ntlcm91z4.cloudfront.net/user_2vTkMQm9Kz0TWEHiovxqGSzlE6v/hf_20260930_154101_aab71324-38b7-4b9d-86e1-5c9071bbbba6.mp4",
+        "at": 31.291666666666668,
+        "from": 0,
+        "dur": 5
+      },
+      {
+        "shot": "E3",
+        "file": "ending-e3-seedance25-v1.mp4",
+        "url": "https://d8j0ntlcm91z4.cloudfront.net/user_2vTkMQm9Kz0TWEHiovxqGSzlE6v/hf_20260930_203205_03e65646-50d8-448f-865e-364b9701f9ee.mp4",
+        "at": 36.291666666666664,
+        "from": 0,
+        "dur": 4
+      },
+      {
+        "shot": "E4",
+        "file": "ending-e4-seedance25-v1.mp4",
+        "url": "https://d8j0ntlcm91z4.cloudfront.net/user_2vTkMQm9Kz0TWEHiovxqGSzlE6v/hf_20260930_203205_2e241d00-5897-43dc-a4e1-bb91dfbc70f8.mp4",
+        "at": 40.291666666666664,
+        "from": 0,
+        "dur": 5
+      },
+      {
+        "shot": "E5pre",
+        "file": "ending-e5pre-seedance25-v3.mp4",
+        "url": "https://d8j0ntlcm91z4.cloudfront.net/user_2vTkMQm9Kz0TWEHiovxqGSzlE6v/hf_20260930_211841_ed3ce25b-cb6a-4de3-a0c1-23c5d47087d4.mp4",
+        "at": 45.291666666666664,
+        "from": 0,
+        "dur": 4.416666666666667
+      },
+      {
+        "shot": "E5",
+        "file": "ending-e5-seedance25-v1.mp4",
+        "url": "https://d8j0ntlcm91z4.cloudfront.net/user_2vTkMQm9Kz0TWEHiovxqGSzlE6v/hf_20260930_203204_66633ecd-c928-4165-b344-9b001b894dd6.mp4",
+        "at": 49.708333333333336,
+        "from": 0,
+        "dur": 4.75
+      },
+      {
+        "shot": "E5b",
+        "file": "ending-e5b-seedance25-v1.mp4",
+        "url": "https://d8j0ntlcm91z4.cloudfront.net/user_2vTkMQm9Kz0TWEHiovxqGSzlE6v/hf_20260930_180336_6715a7eb-c9d0-458c-bfdb-5b0fdf387a33.mp4",
+        "at": 54.458333333333336,
+        "from": 0,
+        "dur": 5
+      },
+      {
+        "shot": "E6",
+        "file": "ending-e6-seedance25-v1.mp4",
+        "url": "https://d8j0ntlcm91z4.cloudfront.net/user_2vTkMQm9Kz0TWEHiovxqGSzlE6v/hf_20260930_203205_b48da068-0b56-4ceb-80b1-7a2960133f91.mp4",
+        "at": 59.458333333333336,
+        "from": 0,
+        "dur": 4.5
+      }
+    ],
+    "e7": 63.958333333333336,
+    "split": 31.125,
+    "total": 80.625,
+    "images": [
+      {
+        "file": "transfer.png",
+        "url": "https://d8j0ntlcm91z4.cloudfront.net/user_2vTkMQm9Kz0TWEHiovxqGSzlE6v/hf_20260930_180137_67fcfd6c-2baa-424f-9c5a-59a3720bb33c.png"
+      },
+      {
+        "file": "complete.png",
+        "url": "https://d8j0ntlcm91z4.cloudfront.net/user_2vTkMQm9Kz0TWEHiovxqGSzlE6v/hf_20260930_180136_31ebb14a-344e-4afe-a88c-95a2d9545278.png"
+      }
+    ],
+    "status": "User requested replacement with new O1 and trimmed E5pre; lighting seam locally matched",
+    "e7dur": 4.958333333333333,
+    "brand_at": 68.91666666666667,
+    "revision": 7
+  },
+  "activeCutFiles": [
+    "film-master-v7.mp4"
+  ],
+  "e5Modal": {
+    "file": "film-master-v7.mp4",
+    "time": 49.898563
+  },
+  "presentationFilms": [
+    "../assets/film-opening-v7.mp4",
+    "../assets/film-ending-v7.mp4"
+  ],
+  "errors": []
+}

@@ -1,0 +1,227 @@
+{
+  "cpu_only": true,
+  "cuda_visible_devices": "-1",
+  "legacy_mutants_caught": 7,
+  "legacy_normal_pass_labels": 53,
+  "new_mutants_caught": 11,
+  "new_normal_pass_labels": 42,
+  "normal_first": true,
+  "normal_ok": true,
+  "passed": true,
+  "records": [
+    {
+      "exit_code": 0,
+      "first_failure": null,
+      "labels": [
+        "PASS launch_parity_17",
+        "PASS child_env_exact",
+        "PASS manifest_seal_known_answer",
+        "PASS approved_manifest",
+        "PASS short_barrier_approval_bound",
+        "PASS reject_short_barrier_wrong_approval",
+        "PASS reject_missing_approval",
+        "PASS reject_eula_unaccepted",
+        "PASS reject_wrong_env_count",
+        "PASS reject_wrong_terrain",
+        "PASS reject_wrong_arm",
+        "PASS reject_wrong_device",
+        "PASS reject_undecided_uuid",
+        "PASS reject_wrong_argv",
+        "PASS reject_wrong_code",
+        "PASS fake_prelaunch_GO",
+        "PASS fake_run_receipt",
+        "PASS single_claim_reuse_rejected"
+      ],
+      "test": "test_s2_step5_live.py"
+    },
+    {
+      "exit_code": 0,
+      "first_failure": null,
+      "labels": [
+        "PASS arm_A_parent_action_bit_equal_16",
+        "PASS deterministic_live_boundary_200_finite_and_checkpoints",
+        "PASS deterministic_short_2000_plus_500_same_runner"
+      ],
+      "test": "test_s2_step5_smoke.py"
+    },
+    {
+      "exit_code": 0,
+      "first_failure": null,
+      "labels": [
+        "PASS clean_runtime_closure_import_20"
+      ],
+      "test": "test_s2_step5_clean_import.py"
+    },
+    {
+      "exit_code": 0,
+      "first_failure": null,
+      "labels": [
+        "PASS real_E1_cpu_dry_one_update",
+        "PASS checkpoint_nonzero",
+        "PASS environment_resume_fail_closed",
+        "PASS timeout_channel_exposed",
+        "PASS real_E1_same_runner_two_segments"
+      ],
+      "test": "test_s2_17v_entry.py"
+    },
+    {
+      "exit_code": 0,
+      "first_failure": null,
+      "labels": [
+        "PASS short_common_boundary",
+        "PASS same_learner_objects_increment",
+        "PASS grant_consumed_once",
+        "PASS grant_reuse_rejected",
+        "PASS no_unapproved_extra_update",
+        "PASS wrong_arm_grant_rejected",
+        "PASS partial_pair_not_executed",
+        "PASS STOP_at_barrier"
+      ],
+      "test": "test_s2_increment_barrier.py"
+    },
+    {
+      "exit_code": 0,
+      "first_failure": null,
+      "labels": [
+        "PASS timeout_parent_2_98_terminal_1_nonterminal_2_98",
+        "PASS timeout_not_done_rejected",
+        "PASS same_xy_new_height_reset_packet",
+        "PASS old_raw_new_numbers_rejected_by_independent_source",
+        "PASS same_yaw_movement_old_hit_rejected",
+        "PASS partial_env_reset_episode_contract",
+        "PASS nonfinite_yaw_rejected",
+        "PASS nonfinite_yaw_rejected",
+        "PASS nonfinite_or_unnormalized_quaternion_rejected",
+        "PASS nonfinite_or_unnormalized_quaternion_rejected",
+        "PASS duplicate_pass_rejected",
+        "PASS conflicting_fall_rejected",
+        "PASS post_pass_fall_distinct",
+        "PASS minibatch_divisibility",
+        "PASS invalid_collect_persistent_hold",
+        "PASS environment_resume_unsupported"
+      ],
+      "test": "test_s2_17v_core.py"
+    },
+    {
+      "exit_code": 0,
+      "first_failure": null,
+      "labels": [
+        "PASS parent_sample_std_known_answer",
+        "PASS degenerate_sample_rejected"
+      ],
+      "test": "test_s2_ppo_diff.py"
+    },
+    {
+      "exit_code": 0,
+      "first_failure": null,
+      "labels": [
+        "PASS known_tensor_axes_mask_finite",
+        "PASS training_cfg_gravity_contact_on",
+        "PASS reject_diagnostic_gravity",
+        "PASS reject_diagnostic_contact",
+        "PASS plumbing_manifest_seal_approval",
+        "PASS reject_plumbing_to_smoke_promotion",
+        "PASS reject_updates_3",
+        "PASS reject_checkpoint_interval",
+        "PASS reject_wall_over_600",
+        "PASS reject_plumbing_only_false",
+        "PASS reject_plumbing_only_missing",
+        "PASS reject_stage0_true",
+        "PASS reject_stage0_missing",
+        "PASS reject_input_missing",
+        "PASS reject_input_wrong",
+        "PASS reject_plumbing_parent",
+        "PASS reject_parent_hash_pin",
+        "PASS reject_second_arm_concurrent_start",
+        "PASS first_arm_fake_job_receipt_parent_immutable",
+        "PASS reject_unclean_first_family",
+        "PASS second_arm_after_clean_receipt",
+        "PASS reject_shared_arm_output",
+        "PASS sequential_two_arms_distinct_outputs",
+        "PASS parent_sha_after_mismatch_HOLD_without_mutating_parent"
+      ],
+      "test": "test_s2_step6_contract.py"
+    },
+    {
+      "exit_code": 0,
+      "first_failure": null,
+      "labels": [
+        "PASS actual_E1_CPU_A_1_PPO_iterations_roundtrip",
+        "PASS actual_E1_CPU_B_2_PPO_iterations_roundtrip"
+      ],
+      "test": "test_s2_step6_execution.py"
+    },
+    {
+      "exit_code": 0,
+      "first_failure": null,
+      "labels": [
+        "PASS plumbing_result_known_answer",
+        "PASS reject_weights_unchanged",
+        "PASS reject_parameter_hash_equal",
+        "PASS reject_nan_count",
+        "PASS reject_nan_loss",
+        "PASS reject_zero_gradient",
+        "PASS reject_roundtrip_false",
+        "PASS reject_environment_steps_mixed",
+        "PASS reject_rollout_steps_missing",
+        "PASS reject_wrong_freeze"
+      ],
+      "test": "test_s2_step6_proof.py"
+    },
+    {
+      "exit_code": 0,
+      "first_failure": null,
+      "labels": [
+        "PASS suspended_assigned_before_resume",
+        "PASS pid_reuse_never_looked_up",
+        "PASS family_empty_before_handle_close",
+        "PASS access_denied_suspended_owned_handle_only",
+        "PASS new_descendant_blocks_lease_release"
+      ],
+      "test": "test_s2_job_owner.py"
+    },
+    {
+      "exit_code": 0,
+      "first_failure": null,
+      "labels": [
+        "PASS job_object_suspended_assign_natural_exit 162908"
+      ],
+      "test": "test_s2_job_object_os.py"
+    },
+    {
+      "exit_code": 0,
+      "first_failure": null,
+      "labels": [
+        "PASS normal_first_launch_parity_17",
+        "CAUGHT missing_eula_env first_FAIL=candidate_eula want=candidate_eula",
+        "CAUGHT missing_unbuffered_env first_FAIL=candidate_unbuffered want=candidate_unbuffered",
+        "CAUGHT wrong_visible_gpu first_FAIL=candidate_visible_zero want=candidate_visible_zero",
+        "CAUGHT h5py_after_kit first_FAIL=candidate_preload_h5py want=candidate_preload_h5py",
+        "CAUGHT tensordict_after_kit first_FAIL=candidate_preload_tensordict want=candidate_preload_tensordict",
+        "CAUGHT unapproved_argv first_FAIL=candidate_argv want=candidate_argv",
+        "CAUGHT no_job_assign first_FAIL=candidate_owned_family want=candidate_owned_family"
+      ],
+      "test": "test_s2_step5_mutants.py"
+    },
+    {
+      "exit_code": 0,
+      "first_failure": null,
+      "labels": [
+        "PASS normal_first_plumbing_audit_11",
+        "CAUGHT allow_updates_3 first_FAIL=updates_3_guard want=updates_3_guard",
+        "CAUGHT remove_plumbing_only first_FAIL=plumbing_only_guard want=plumbing_only_guard",
+        "CAUGHT allow_stage0_passed first_FAIL=stage0_false_guard want=stage0_false_guard",
+        "CAUGHT remove_parent_rehash first_FAIL=parent_remeasurement want=parent_remeasurement",
+        "CAUGHT allow_plumbing_parent first_FAIL=plumbing_parent_guard want=plumbing_parent_guard",
+        "CAUGHT remove_input_path first_FAIL=input_path_guard want=input_path_guard",
+        "CAUGHT allow_diagnostic_cfg first_FAIL=training_cfg_guard want=training_cfg_guard",
+        "CAUGHT allow_parallel_arms first_FAIL=sequential_arm_guard want=sequential_arm_guard",
+        "CAUGHT remove_weight_change_check first_FAIL=weight_change_guard want=weight_change_guard",
+        "CAUGHT remove_nan_check first_FAIL=nan_guard want=nan_guard",
+        "CAUGHT mix_environment_steps first_FAIL=iteration_step_receipt want=iteration_step_receipt"
+      ],
+      "test": "test_s2_step6_mutants.py"
+    }
+  ],
+  "run_id": "r20261015_step6_final2"
+}

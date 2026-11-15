@@ -1,0 +1,171 @@
+{
+  "classification": "START_FAILURE",
+  "label": "attended or unattended single information collection, HOLD_INFORMATION_ONLY, optimizer 0, no follow-up training",
+  "run_dir": "C:\\Users\\AI-WS01\\s2_lab\\night-tools-20261013\\s2_runs\\live-20261015-142719",
+  "normal_completed_steps": 0,
+  "raw_rows": 0,
+  "emergency_row": null,
+  "stage_failure": null,
+  "first_error": null,
+  "traceback_tail": [],
+  "cleanup": null,
+  "device_binding": {
+    "evidence": {
+      "kit_observed": {
+        "/physics/cudaDevice": 0,
+        "/renderer/activeGpu": 0
+      },
+      "torch_device_name": "NVIDIA GeForce RTX 5080",
+      "torch_uuid_raw": "<torch._C._CUuuid object at 0x0000028BBA5325B0>"
+    },
+    "expected_uuid": "GPU-c08e23b0-62b6-a4f2-8eb2-11151c6a8c7b",
+    "kit_observation_status": "verified",
+    "kit_observed": {
+      "/physics/cudaDevice": 0,
+      "/renderer/activeGpu": 0
+    },
+    "kit_requested_device": 0,
+    "torch_logical_device": 0,
+    "torch_uuid": "c08e23b0-62b6-a4f2-8eb2-11151c6a8c7b",
+    "torch_uuid_normalized": "c08e23b062b6a4f28eb211151c6a8c7b"
+  },
+  "child_started_epoch": 1792042041.2259705,
+  "child_ended_epoch": null,
+  "child_seconds": null,
+  "mesh_probe_present": false,
+  "final_cfg_present": false,
+  "asset_path_in_cfg": null,
+  "checker_verdict": null,
+  "meta_flags": {
+    "terrain_assignment_verified": null,
+    "mesh_collision_verified": null,
+    "fixed_pose_verified": null,
+    "control_steps": null
+  },
+  "usd_isolate_state": {
+    "t": "2026-10-15 14:27:27",
+    "pid": 184448,
+    "version": "v3",
+    "root": "c:/users/ai-ws01/s2_lab/night-tools-20261013/s2_runs/live-20261015-142719/usd",
+    "expect_conversions": "0",
+    "conversions": 0,
+    "patched_by": "loader",
+    "patched": [
+      "loader"
+    ],
+    "terrain_patched_by": "",
+    "blocked": [],
+    "warnings": [],
+    "meta_path": [
+      "builtins.type",
+      "__main__._Finder",
+      "_distutils_hack.DistutilsMetaFinder",
+      "builtins.type",
+      "builtins.type",
+      "builtins.type",
+      "builtins.type",
+      "builtins.type",
+      "builtins.type",
+      "builtins.type",
+      "builtins.type",
+      "builtins.type",
+      "builtins.type",
+      "builtins.type"
+    ]
+  },
+  "usd_assigned_lines": null,
+  "supervisor_receipt": {
+    "verdict": {
+      "reasons": [
+        "artifact_missing",
+        "exit_code",
+        "information_only_no_downstream",
+        "step_count"
+      ],
+      "record_sha256": "278788eb9f8eafb9c405d463230d10ae2c72fe61a49f4144a4315965ef93c8b6",
+      "stage": "connect",
+      "verdict": "HOLD_INFORMATION_ONLY"
+    },
+    "exit_code": 3221225477,
+    "family_active_count": 0,
+    "control_steps_reported_by_supervisor": 0
+  },
+  "supervisor_final_status": {
+    "chain_id": "s2-stage0-a3-live-20261015-142719",
+    "device": {
+      "bus": "41:00.0",
+      "driver_version": "591.86",
+      "free_vram_bytes": 16337170432,
+      "index": 0,
+      "total_vram_bytes": 17094934528,
+      "uuid": "GPU-c08e23b0-62b6-a4f2-8eb2-11151c6a8c7b"
+    },
+    "family_active_count": 0,
+    "free_disk_bytes": 641088024576,
+    "heartbeat_epoch": 1792042056.0635424,
+    "last_artifact_epoch": 1792042056.0635424,
+    "last_packet_epoch": null,
+    "last_verdict": "HOLD_INFORMATION_ONLY",
+    "next_boundary": "stage0_verdict",
+    "output_bytes": 4808704,
+    "pid": 184448,
+    "reasons": [
+      "artifact_missing",
+      "exit_code",
+      "information_only_no_downstream",
+      "step_count"
+    ],
+    "remaining_s": 884.8429999998771,
+    "stage": "connect",
+    "state": "HOLD_INFORMATION_ONLY",
+    "update": 0
+  },
+  "attempt_start_argv_head": [
+    "C:\\Users\\AI-WS01\\anaconda3\\envs\\isaac311-moects\\python.exe",
+    "-B",
+    "C:\\isaac\\ext\\go2_rl_robotlab\\_eval\\usd_isolate_run_v3.py",
+    "C:\\Users\\AI-WS01\\s2_lab\\night-tools-20261013\\s2_step4a3\\s2_connect_diag_17v.py"
+  ],
+  "gate_result": null,
+  "kill_receipt": null,
+  "launch_record": null,
+  "child_log_tail": [
+    "2026-10-15T05:27:35Z [1,989ms] [Fatal] [carb.crashreporter-breakpad.plugin] 199: python311.dll!PyObject_Call_Prepend+0xa5",
+    "2026-10-15T05:27:35Z [1,989ms] [Fatal] [carb.crashreporter-breakpad.plugin] 200: python311.dll!PyType_Ready+0x41b4",
+    "2026-10-15T05:27:35Z [1,989ms] [Fatal] [carb.crashreporter-breakpad.plugin] 201: python311.dll!PyType_Name+0x1756",
+    "2026-10-15T05:27:35Z [1,990ms] [Fatal] [carb.crashreporter-breakpad.plugin] 202: python311.dll!PyObject_MakeTpCall+0x12a",
+    "2026-10-15T05:27:35Z [1,990ms] [Fatal] [carb.crashreporter-breakpad.plugin] 203: python311.dll!PyEval_GetFuncDesc+0x22d",
+    "2026-10-15T05:27:35Z [1,991ms] [Fatal] [carb.crashreporter-breakpad.plugin] 204: python311.dll!PyEval_EvalFrameDefault+0x49b9",
+    "2026-10-15T05:27:35Z [1,991ms] [Fatal] [carb.crashreporter-breakpad.plugin] 205: python311.dll!PyEval_EvalCode+0x139",
+    "2026-10-15T05:27:35Z [1,992ms] [Fatal] [carb.crashreporter-breakpad.plugin] 206: python311.dll!PyWarnings_Init+0xb0c6",
+    "2026-10-15T05:27:35Z [1,992ms] [Fatal] [carb.crashreporter-breakpad.plugin] 207: python311.dll!PyWarnings_Init+0x8b3f",
+    "2026-10-15T05:27:35Z [1,992ms] [Fatal] [carb.crashreporter-breakpad.plugin] 208: python311.dll!PyCFunction_GetFlags+0xa88",
+    "2026-10-15T05:27:35Z [1,993ms] [Fatal] [carb.crashreporter-breakpad.plugin] 209: python311.dll!PyBytes_Repeat+0xf9",
+    "2026-10-15T05:27:35Z [1,993ms] [Fatal] [carb.crashreporter-breakpad.plugin] 210: python311.dll!PyObject_Vectorcall+0x21",
+    "2026-10-15T05:27:35Z [1,993ms] [Fatal] [carb.crashreporter-breakpad.plugin] 211: python311.dll!PyEval_EvalFrameDefault+0x49d3",
+    "2026-10-15T05:27:35Z [1,994ms] [Fatal] [carb.crashreporter-breakpad.plugin] 212: python311.dll!PyEval_EvalCode+0x139",
+    "2026-10-15T05:27:35Z [1,994ms] [Fatal] [carb.crashreporter-breakpad.plugin] 213: python311.dll!PyRun_FileExFlags+0x33e",
+    "2026-10-15T05:27:35Z [1,995ms] [Fatal] [carb.crashreporter-breakpad.plugin] 214: python311.dll!PyRun_FileExFlags+0x408",
+    "2026-10-15T05:27:35Z [1,995ms] [Fatal] [carb.crashreporter-breakpad.plugin] 215: python311.dll!PyRun_StringFlags+0x178",
+    "2026-10-15T05:27:35Z [1,995ms] [Fatal] [carb.crashreporter-breakpad.plugin] 216: python311.dll!PyRun_SimpleFileObject+0x2bc",
+    "2026-10-15T05:27:35Z [1,996ms] [Fatal] [carb.crashreporter-breakpad.plugin] 217: python311.dll!Py_gitidentifier+0x8700",
+    "2026-10-15T05:27:35Z [1,996ms] [Fatal] [carb.crashreporter-breakpad.plugin] 218: python311.dll!Py_gitidentifier+0x939d",
+    "2026-10-15T05:27:35Z [1,997ms] [Fatal] [carb.crashreporter-breakpad.plugin] 219: python311.dll!Py_RunMain+0xa5",
+    "2026-10-15T05:27:35Z [1,997ms] [Fatal] [carb.crashreporter-breakpad.plugin] 220: python311.dll!Py_Main+0x26",
+    "2026-10-15T05:27:35Z [1,997ms] [Fatal] [carb.crashreporter-breakpad.plugin] 221: python.exe!OPENSSL_Applink+0x380",
+    "2026-10-15T05:27:35Z [1,998ms] [Fatal] [carb.crashreporter-breakpad.plugin] 222: KERNEL32.DLL!BaseThreadInitThunk+0x17",
+    "2026-10-15T05:27:35Z [1,998ms] [Fatal] [carb.crashreporter-breakpad.plugin] 223: ntdll.dll!RtlUserThreadStart+0x2c"
+  ],
+  "note": "control_steps in the supervisor receipt counts raw rows (partial_rows), not completed control steps"
+}
+
+----
+결과: 시작 실패 (수집 0 행)
+정상 완료 걸음 0 · 보존된 원시 행 0 · 비상 저장 행 None
+첫 오류: 기록 없음
+자식 실행 시간(초): None
+장치 UUID 원 값 기록: {'kit_observed': {'/physics/cudaDevice': 0, '/renderer/activeGpu': 0}, 'torch_device_name': 'NVIDIA GeForce RTX 5080', 'torch_uuid_raw': '<torch._C._CUuuid object at 0x0000028BBA5325B0>'}
+변환 기록: isolate_state={'t': '2026-10-15 14:27:27', 'pid': 184448, 'version': 'v3', 'root': 'c:/users/ai-ws01/s2_lab/night-tools-20261013/s2_runs/live-20261015-142719/usd', 'expect_conversions': '0', 'conversions': 0, 'patched_by': 'loader', 'patched': ['loader'], 'terrain_patched_by': '', 'blocked': [], 'warnings': [], 'meta_path': ['builtins.type', '__main__._Finder', '_distutils_hack.DistutilsMetaFinder', 'builtins.type', 'builtins.type', 'builtins.type', 'builtins.type', 'builtins.type', 'builtins.type', 'builtins.type', 'builtins.type', 'builtins.type', 'builtins.type', 'builtins.type']} · assigned 줄=None
+감독기 영수증: {'verdict': {'reasons': ['artifact_missing', 'exit_code', 'information_only_no_downstream', 'step_count'], 'record_sha256': '278788eb9f8eafb9c405d463230d10ae2c72fe61a49f4144a4315965ef93c8b6', 'stage': 'connect', 'verdict': 'HOLD_INFORMATION_ONLY'}, 'exit_code': 3221225477, 'family_active_count': 0, 'control_steps_reported_by_supervisor': 0}
+정리: None
+문구: 참석 단회 정보 수집, HOLD_INFORMATION_ONLY, optimizer 0, 후속 학습 없음. 256 행이나 종료 코드만으로 S2 통과 또는 0 단계 PASS 라고 쓰지 않는다.

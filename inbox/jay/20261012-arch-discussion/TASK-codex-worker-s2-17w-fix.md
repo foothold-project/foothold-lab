@@ -1,0 +1,32 @@
+> 분류: A/정책학습 · Codex Worker(sol) 작업서 · ASTRA 17w 가 찾은 0 단계 묶음 A 의 결함 고침과 첫 GPU 정보 수집 한 번의 준비 (CPU 전용)
+> 작성: 오흥재 (lead 세션 · Claude 작성) · 2026-10-15 05:31
+> 근거: `VERIFY-astra-17w.md` 전문 (특히 본문 첫머리 · 2 · 4 · 5 절) · `REPORT-s2-step4a.md` · 팀장 「GPU 는 절대 놀면 안 된다 · lead 권한 위임」
+> 요지: 17w 는 현재 묶음 그대로의 기동을 보류했다. 누락 의존 파일, 잘못된 환경 연결, 검사기의 거짓 PASS, 장치 · 자원 보호, 실패 자료 보존을 고치면 **lead 권한으로 GPU 0 단회 정보 수집(최대 15 분)** 을 띄울 수 있다고 했다. 이것이 첫 GPU 가동의 임계 경로다. **B(학습 연결 나머지) 작업은 현재 단위가 끝나는 즉시 멈추고 이 작업을 먼저 한다**
+> 상태: 의뢰 (CPU 전용 · `_eval` 은 읽기만 · GPU · Isaac 실행 금지)
+
+# Codex Worker 작업서 · ASTRA 17w 반영 (A2)
+
+## 0. 규칙
+- 앞 작업서 규칙 그대로(커밋 금지 · 삭제 금지 · GPU · Isaac 실행 금지 · `CUDA_VISIBLE_DEVICES=-1` · `_eval` 과 `source` 쓰기 금지 · 기존 slot / guard / 부모 파일 수정 금지 · 정직한 보고 · em dash 금지 · 변이는 정상 소스의 같은 시험 통과 뒤 지정 라벨 실패만 CAUGHT, 변이의 **실제 의미**를 정확히 적기 · 입력 변조와 코드 변이를 따로 셈).
+- **`VERIFY-astra-17w.md` 를 먼저 끝까지 읽는다.** 아래는 요약이고 다르면 17w 가 이긴다. 수치(8 GiB · 2 GiB · 1 GiB · 900 초 등)는 ASTRA 출발 권고이며 승인값이 아니다. 팀장은 GPU 사용과 실험 계획을 lead 권한으로 위임했다.
+- **고정 묶음은 폴더째 닫는다.** 이 작업이 끝나면 완결된 A2 묶음을 `codexE/s2_step4a2_frozen/` 에 **복사해 두고 그 뒤로는 고치지 않는다**(B 작업은 `s2_step4/` 에서만 계속). 이번에 lead 가 해시 목록 대로만 복사해 의존 파일(`s2_terrain_overlay_17v.py` · `s2_runner_17v.py` · `s2_ppo_17v.py` 등)이 빠졌다는 17w 지적을 반복하지 않도록, 고정 폴더에서 **깨끗한 임시 폴더로 복사해 `import` 가 되는지 실제로 확인**하는 시험을 묶음 실행기에 넣는다.
+- Codex 한도가 낮다(14 %, reset 권 있음). 같은 문서 되풀이 읽기를 줄이고, 압축이 오면 `HANDOFF.md` 와 이 작업서를 읽고 이어 간다. **중간에 멈추지 말고 끝까지.**
+
+## 1. 먼저 고칠 것 (첫 수집 전 필수 · 17w 2 · 4 절)
+1. **환경 연결.** 현재 `s2_env_config_17v.py:17,60` · `s2_connect_diag_17v.py:56` 은 `Isaac-Velocity-Rough-Unitree-Go2-v0` 를 불러오는데 설치 registry 의 rough 지형 여섯 키에는 `gap` · `stepping_stones` · `flat` · `obstacles` 가 없어 `TerrainOverlayError` 가 난다(17w 가 재현). 기존 승인 도구(`_eval/ce12/dump_native_v2.py` · `rand_scenes/rand_lib.py` · `unseen_driver_cmdr_v6.py`)가 E1 환경을 어떻게 만드는지를 따라 **실제 E1 환경 설정을 명시적으로 연결**하거나, 별도의 **알려진 답 장면**(필요한 지형 키를 명시한 cfg)을 만들고 그 선택과 최종 cfg 해시를 고정한다. 부모 checkpoint 는 이 0 단계에서 추론에 쓰지 않는다(해시 기록만으로 정책 실행 검증이라 부르지 않음).
+2. **장면 설계.** 단차 · 돌 높이 표식이 실제로 -0.2 m 로 드러나는 장면인지(설정의 stones 높이 최대 0.06 m 와 검사기의 -0.2 탐색이 맞지 않음), gap 의 「정상 miss(전체 +inf)」 와 「깊은 유한 바닥」 두 종류가 **의도적으로 노출**되는 배치인지, 비대칭 표식(x / y 뒤바뀜 검출)을 해시로 고정한 별도 장면을 만든다. 눈에 보이는 구멍 아래에 숨은 plane 이 없어야 한다.
+3. **검사기 거짓 PASS 반례를 거절하게(17w 2 절 표).** 정상 8×256 fixture 가 PASS 하는 것을 먼저 확인한 뒤 한 요소씩: `height[0,2,0]=NaN`(유한성 · 범위 검사) · 고정 구간을 16 에서 1 로(정확한 **16 / 240 일정** 과 실제 자세 유지 증거) · root X 만 sensor 보다 100 m(**root-sensor 변환과 시점 대조**; 두 위치가 항상 같다고 가정하지 말 것) · step_90 / stones_90 환경의 장애물 높이를 전부 제거(**두 env 를 합친 `any` 가 아니라 각 case / 개입 구간별 사전 표식 답 비교**) · 평지 world Z=0 유지에서 reset 뒤 root / sensor Z=.7 이면 height=.2 가 정답(**정적 세계 지형과 바뀐 sensor 높이로 정답 계산**, height=0 을 전 구간 강제하지 않음). `test_s2_connect_17v.fixture` 가 로봇 이동과 함께 바닥을 올려 답을 맞춰 놓은 합성 방식을 고친다. `s2_connect_check_17v.py:120~129` 의 「-0.2 점 하나 찾기」 를 비대칭 위치 · 형상 재구성으로. 경계 hash 와 mesh hash 는 존재 여부가 아니라 **외부 근거 파일의 hash 와 실제 대조**. `boundary_exclusion_m=.005` 를 실제 경계 거리 계산에 사용. 동적 로봇 구간과 고정 자세 구간은 다른 정답식. 이 수정으로 진단 메타의 false 세 개를 true 로 채우기만 하면 통과하는 길이 막혀야 한다.
+4. **센서 출처 결박 보강(17w 1 절).** `s2_sensor_tracker_17v.py:24~52` 가 갱신 완료 시점의 raw / pose digest · physics timestamp · env 별 세대를 **그 순간 고정**하고 읽기 때 대조한다(지금은 `snapshot()` 과 `source_receipt()` 가 같은 현재 버퍼를 다시 읽어 해시: 버퍼를 직전 자료로 돌려놓아도 재봉인됨). `sample()` 이 env 별 세대를 `min(generation)` 하나로 복제하는 것을 원 벡터 저장으로. private hook 의 원 함수 / 설치 소스 해시와 실제 import 경로를 동결하고 불일치 · 미호출 · 시점 불일치는 HOLD. `AtomicPacket.validate` 의 root-sensor 위치 모양만 비교하는 것을 실제 변환 대조로.
+5. **정보 수집 전용 실행의 자료 보존(17w 2 절 끝).** (가) 세션 / attempt ID · 시작 시각 · 실제 argv · import 경로 · 환경 cfg · 장치 UUID · 초기 자산 경로를 **생성 즉시** 저장(`started_epoch` 는 캡처 종료 뒤가 아니라 시작 시각) (나) raw pos / root quaternion / hit · ray starts / directions / index · clip 전 높이 · 최종 지도와 mask · env origin / type / level · physics / control step · env 별 세대 · sensor timestamp · obs / episode / reset / termination / timeout 을 **검사 전에** 보존: 최소 첫 행 · 63 / 64 · 127 / 128 · 191 / 192 와 오류 행, 가능하면 256 행 전체를 단계적으로 (다) 실패 예외 / traceback · 마지막 유효 step · 부분 자료 수 · 정리 결과를 로그와 receipt 에 (라) 자식 stdout / stderr 를 지정 로그 파일로 연결 (마) 결과는 강제로 `HOLD_INFORMATION_ONLY`, 다음 학습 단계 없음, 자동 재시도 0. mesh 증거는 가능한 원본 prim 경로 · RayCaster 선택 mesh 와 cache 키 · 설정 · timestamp 를 먼저 저장하고 못 읽은 항목은 이름과 오류를 남긴다. 256 행 미달을 완주로 보고하지 않는다.
+
+## 2. 장치 · 자원 보호 (17w 4 · 5 절 · 직접 기동의 대가)
+1. **UUID → index → PCI bus → 실제 torch / Kit 장치 결박.** 자식은 `CUDA_VISIBLE_DEVICES` 로 노출된 논리 `cuda:0` 만 쓴다(UUID 문자열을 lock 이름과 receipt 에 복사만 하지 말고 매핑 검증). 충돌하는 CLI 장치 옵션과 중복 옵션 거절. Kit / renderer 의 물리 장치 선택도 확인(기존 메모: 렌더가 화면용 GPU 를 쓰는 문제가 있었음 → 실제 선택을 기록하고 어긋나면 HOLD). 반례(17w): GPU UUID 를 다른 값으로 바꾸고 `--device cuda:1`, `max_disk_bytes=1` 을 줘도 PASS 한 것 → 거절.
+2. **호스트 USD 변환 lock 을 실제로 획득**(`usd_conversion_lock()` 이 정의만 있고 호출되지 않음). 기존 참여자와 같은 잠금 규약 · 경로(`_eval/slot/isaac_convert.lock`, 기존 `isaac_slot_v3.py` 의 잠금 방식을 **읽기만** 해서 호환되게)를 쓰고 자식 / 자산별 격리 USD 루트와 실제 변환 경로를 기록한다. 변환이 0 이라는 계획이면 최종 asset cfg 와 실제 0 회 기록을 남기고 예기치 않은 변환을 거절한다(기본 Go2 는 USD 를 직접 참조하므로 URDF 변환이 반드시 일어난다고 단정하지 말 것).
+3. **VRAM / 디스크:** 기동 전 장치 여유 ≥ 8 GiB, 실행 중 장치 여유 < 2 GiB 이면 보류(측정 오류 · 무응답도 보류), 출력 상한 1 GiB · 기동 전 여유 2 GiB 이상을 **실제로 재고** 초과 감시를 구현(지금 `max_disk_bytes` 는 양수 여부만 확인). stdout / Kit / 중간 raw 포함.
+4. **승인 결박 범위:** python · 진단 · criteria · parent 네 파일만이 아니라 **supervisor / validator / adapter / overlay / 모든 import 의존 파일** 의 바이트를 승인 hash 에 묶고, 실제 parser 가 요구하는 모든 필수 인자(seed · 비율 · 단차 크기 · tolerance)를 검증한다(지금 validate 가 누락을 못 잡음). 승인 JSON 에서 기존 argv 복사로 끝내지 않는다.
+5. **기동 직전 확인 스크립트 `s2_stage0_prelaunch.py`:** 위 항목을 읽기 전용으로 점검하고 go / no-go 기록을 남긴다(누락 import 없음 · registry / terrain / 전체 필수 CLI · hash 일치 · UUID / bus 매핑 · 공통 잠금 / 경쟁 기동 배제(다른 Isaac · 예약 실행 없음) · 새 output / STOP 없음 · 남은 시간 / 공간 · 종료 경로와 로그 기록). lead 가 실행해서 쓴다.
+6. **독립 마감 장치 또는 한시 수용 근거(17w 3 절):** 무인 단회로 돌릴 경우 감독기 hang 에 대비한 독립 hard deadline 감시(소유한 가족만 종료)를 갖추거나, 갖추지 못하면 「참석자가 터미널을 유지하는 단회 관찰로 한정」 으로 문서화한다. 후자로 가면 lead 가 그 제약에서만 기동한다.
+
+## 3. 시험과 보고
+- 모든 고침에 정상 + 반례, 새 코드 변이(실제 의미 표기). 17w 반례 표(거짓 PASS 다섯)를 그대로 시험으로. 묶음 실행기 `run_all_s2_step4a2.py` 새 run-id, 고정 폴더 clean-import 시험 포함. A 의 기존 시험 · 변이 회귀도 같은 묶음에서.
+- 보고서 `codexE/REPORT-s2-step4a2.md`: 머리 다섯 줄 · 격리 단언 · 고정 폴더 해시(전체 목록, 의존 파일 포함) · 항목별 「고침 · 시험 · 정상 로그 · 반례 위치 · 변이 want 와 실제 의미」 · 환경 연결 선택과 근거(줄 번호) · 아직 못 채운 accessor 목록(mesh · 고정 자세 · Kit / driver 판) · 시험이 못 보는 것 · lead 가 채울 승인값 목록과 ASTRA 권고값 대응표 · 기동 직전 확인 스크립트 사용법. `ISSUE-550-s2-step4a2-comment.md` 짧은 요약. 사본 · 커밋 · #550 댓글은 lead 가 한다.

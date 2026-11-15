@@ -1,0 +1,902 @@
+{
+  "approximation": null,
+  "branches_ok": false,
+  "collision_api": true,
+  "collision_enabled": true,
+  "collision_sha256": "9c6127d5512c509b2900d560dc8d42f9869d7b68c3fc4fbce635e09683924922",
+  "collision_sha256_kind": "sampled_query_response_fingerprint",
+  "faces_sha256": "9751771d6c5f064f3f190c07242e999518b2682075021782810e196ca8f5222e",
+  "kind": "unverified_collision_mesh",
+  "physx_raw_samples": {
+    "0": [
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}"
+    ],
+    "100": [
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}"
+    ],
+    "104": [
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}"
+    ],
+    "108": [
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}"
+    ],
+    "112": [
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}"
+    ],
+    "116": [
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}"
+    ],
+    "12": [
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}"
+    ],
+    "120": [
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}"
+    ],
+    "124": [
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}"
+    ],
+    "127": [
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}"
+    ],
+    "128": [
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}"
+    ],
+    "132": [
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}"
+    ],
+    "136": [
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}"
+    ],
+    "140": [
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}"
+    ],
+    "144": [
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}"
+    ],
+    "148": [
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}"
+    ],
+    "15": [
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}"
+    ],
+    "152": [
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}"
+    ],
+    "156": [
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}"
+    ],
+    "16": [
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}"
+    ],
+    "160": [
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}"
+    ],
+    "164": [
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}"
+    ],
+    "168": [
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}"
+    ],
+    "172": [
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}"
+    ],
+    "176": [
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}"
+    ],
+    "180": [
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}"
+    ],
+    "184": [
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}"
+    ],
+    "188": [
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}"
+    ],
+    "191": [
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}"
+    ],
+    "192": [
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}"
+    ],
+    "196": [
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}"
+    ],
+    "20": [
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}"
+    ],
+    "200": [
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}"
+    ],
+    "204": [
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}"
+    ],
+    "208": [
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}"
+    ],
+    "212": [
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}"
+    ],
+    "216": [
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}"
+    ],
+    "220": [
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}"
+    ],
+    "224": [
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}"
+    ],
+    "228": [
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}"
+    ],
+    "232": [
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}"
+    ],
+    "236": [
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}"
+    ],
+    "24": [
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}"
+    ],
+    "240": [
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}"
+    ],
+    "244": [
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}"
+    ],
+    "248": [
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}"
+    ],
+    "252": [
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}"
+    ],
+    "255": [
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}"
+    ],
+    "28": [
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}"
+    ],
+    "32": [
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}"
+    ],
+    "36": [
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}"
+    ],
+    "4": [
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}"
+    ],
+    "40": [
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}"
+    ],
+    "44": [
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}"
+    ],
+    "48": [
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}"
+    ],
+    "52": [
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}"
+    ],
+    "56": [
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}"
+    ],
+    "60": [
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}"
+    ],
+    "63": [
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}"
+    ],
+    "64": [
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}"
+    ],
+    "68": [
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}"
+    ],
+    "72": [
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}"
+    ],
+    "76": [
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}"
+    ],
+    "8": [
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}"
+    ],
+    "80": [
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}"
+    ],
+    "84": [
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}"
+    ],
+    "88": [
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}"
+    ],
+    "92": [
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}"
+    ],
+    "96": [
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}",
+      "{'hit': False}"
+    ]
+  },
+  "physx_vs_raycaster": {
+    "branches": [
+      {
+        "boundary_skipped": 0,
+        "class": "ground",
+        "compared": 12903,
+        "env": 0,
+        "errors": 0,
+        "hit_miss_mismatch": 12903,
+        "hit_z_bad": 0,
+        "occluded": 0,
+        "oracle_mismatch": 12903,
+        "planned": 12903,
+        "required_here": true,
+        "satisfied": false,
+        "terrain_hits_compared": 0
+      },
+      {
+        "boundary_skipped": 0,
+        "class": "ground",
+        "compared": 12903,
+        "env": 1,
+        "errors": 0,
+        "hit_miss_mismatch": 12903,
+        "hit_z_bad": 0,
+        "occluded": 0,
+        "oracle_mismatch": 12903,
+        "planned": 12903,
+        "required_here": true,
+        "satisfied": false,
+        "terrain_hits_compared": 0
+      },
+      {
+        "boundary_skipped": 207,
+        "class": "raised",
+        "compared": 207,
+        "env": 2,
+        "errors": 0,
+        "hit_miss_mismatch": 207,
+        "hit_z_bad": 0,
+        "occluded": 0,
+        "oracle_mismatch": 207,
+        "planned": 414,
+        "required_here": true,
+        "satisfied": false,
+        "terrain_hits_compared": 0
+      },
+      {
+        "boundary_skipped": 207,
+        "class": "ground",
+        "compared": 12282,
+        "env": 2,
+        "errors": 0,
+        "hit_miss_mismatch": 12282,
+        "hit_z_bad": 0,
+        "occluded": 0,
+        "oracle_mismatch": 12282,
+        "planned": 12489,
+        "required_here": true,
+        "satisfied": false,
+        "terrain_hits_compared": 0
+      },
+      {
+        "boundary_skipped": 192,
+        "class": "raised",
+        "compared": 222,
+        "env": 3,
+        "errors": 0,
+        "hit_miss_mismatch": 222,
+        "hit_z_bad": 0,
+        "occluded": 0,
+        "oracle_mismatch": 222,
+        "planned": 414,
+        "required_here": true,
+        "satisfied": false,
+        "terrain_hits_compared": 0
+      },
+      {
+        "boundary_skipped": 192,
+        "class": "ground",
+        "compared": 12297,
+        "env": 3,
+        "errors": 0,
+        "hit_miss_mismatch": 12297,
+        "hit_z_bad": 0,
+        "occluded": 0,
+        "oracle_mismatch": 12297,
+        "planned": 12489,
+        "required_here": true,
+        "satisfied": false,
+        "terrain_hits_compared": 0
+      },
+      {
+        "boundary_skipped": 0,
+        "class": "hole",
+        "compared": 690,
+        "env": 4,
+        "errors": 0,
+        "hit_miss_mismatch": 0,
+        "hit_z_bad": 0,
+        "occluded": 0,
+        "oracle_mismatch": 0,
+        "planned": 690,
+        "required_here": true,
+        "satisfied": true,
+        "terrain_hits_compared": 0
+      },
+      {
+        "boundary_skipped": 0,
+        "class": "deep",
+        "compared": 690,
+        "env": 4,
+        "errors": 0,
+        "hit_miss_mismatch": 690,
+        "hit_z_bad": 0,
+        "occluded": 0,
+        "oracle_mismatch": 690,
+        "planned": 690,
+        "required_here": true,
+        "satisfied": false,
+        "terrain_hits_compared": 0
+      },
+      {
+        "boundary_skipped": 0,
+        "class": "ground",
+        "compared": 11523,
+        "env": 4,
+        "errors": 0,
+        "hit_miss_mismatch": 11523,
+        "hit_z_bad": 0,
+        "occluded": 0,
+        "oracle_mismatch": 11523,
+        "planned": 11523,
+        "required_here": true,
+        "satisfied": false,
+        "terrain_hits_compared": 0
+      },
+      {
+        "boundary_skipped": 0,
+        "class": "hole",
+        "compared": 690,
+        "env": 5,
+        "errors": 0,
+        "hit_miss_mismatch": 0,
+        "hit_z_bad": 0,
+        "occluded": 0,
+        "oracle_mismatch": 0,
+        "planned": 690,
+        "required_here": true,
+        "satisfied": true,
+        "terrain_hits_compared": 0
+      },
+      {
+        "boundary_skipped": 0,
+        "class": "deep",
+        "compared": 690,
+        "env": 5,
+        "errors": 0,
+        "hit_miss_mismatch": 690,
+        "hit_z_bad": 0,
+        "occluded": 0,
+        "oracle_mismatch": 690,
+        "planned": 690,
+        "required_here": true,
+        "satisfied": false,
+        "terrain_hits_compared": 0
+      },
+      {
+        "boundary_skipped": 0,
+        "class": "ground",
+        "compared": 11523,
+        "env": 5,
+        "errors": 0,
+        "hit_miss_mismatch": 11523,
+        "hit_z_bad": 0,
+        "occluded": 0,
+        "oracle_mismatch": 11523,
+        "planned": 11523,
+        "required_here": true,
+        "satisfied": false,
+        "terrain_hits_compared": 0
+      },
+      {
+        "boundary_skipped": 77,
+        "class": "raised",
+        "compared": 324,
+        "env": 6,
+        "errors": 0,
+        "hit_miss_mismatch": 324,
+        "hit_z_bad": 0,
+        "occluded": 0,
+        "oracle_mismatch": 324,
+        "planned": 401,
+        "required_here": true,
+        "satisfied": false,
+        "terrain_hits_compared": 0
+      },
+      {
+        "boundary_skipped": 105,
+        "class": "ground",
+        "compared": 12397,
+        "env": 6,
+        "errors": 0,
+        "hit_miss_mismatch": 12397,
+        "hit_z_bad": 0,
+        "occluded": 0,
+        "oracle_mismatch": 12397,
+        "planned": 12502,
+        "required_here": true,
+        "satisfied": false,
+        "terrain_hits_compared": 0
+      },
+      {
+        "boundary_skipped": 0,
+        "class": "raised",
+        "compared": 380,
+        "env": 7,
+        "errors": 0,
+        "hit_miss_mismatch": 380,
+        "hit_z_bad": 0,
+        "occluded": 0,
+        "oracle_mismatch": 380,
+        "planned": 380,
+        "required_here": true,
+        "satisfied": false,
+        "terrain_hits_compared": 0
+      },
+      {
+        "boundary_skipped": 138,
+        "class": "ground",
+        "compared": 12385,
+        "env": 7,
+        "errors": 0,
+        "hit_miss_mismatch": 12385,
+        "hit_z_bad": 0,
+        "occluded": 0,
+        "oracle_mismatch": 12385,
+        "planned": 12523,
+        "required_here": true,
+        "satisfied": false,
+        "terrain_hits_compared": 0
+      }
+    ],
+    "branches_ok": false,
+    "max_hit_z_abs_m": 0.0,
+    "missing_required": [],
+    "steps": [
+      0,
+      4,
+      8,
+      12,
+      15,
+      16,
+      20,
+      24,
+      28,
+      32,
+      36,
+      40,
+      44,
+      48,
+      52,
+      56,
+      60,
+      63,
+      64,
+      68,
+      72,
+      76,
+      80,
+      84,
+      88,
+      92,
+      96,
+      100,
+      104,
+      108,
+      112,
+      116,
+      120,
+      124,
+      127,
+      128,
+      132,
+      136,
+      140,
+      144,
+      148,
+      152,
+      156,
+      160,
+      164,
+      168,
+      172,
+      176,
+      180,
+      184,
+      188,
+      191,
+      192,
+      196,
+      200,
+      204,
+      208,
+      212,
+      216,
+      220,
+      224,
+      228,
+      232,
+      236,
+      240,
+      244,
+      248,
+      252,
+      255
+    ],
+    "totals": {
+      "boundary_skipped": 1118,
+      "compared": 102106,
+      "errors": 0,
+      "hit_miss_mismatch": 100726,
+      "hit_z_bad": 0,
+      "occluded": 0,
+      "oracle_mismatch": 100726,
+      "planned": 103224,
+      "terrain_hits_compared": 0
+    },
+    "unsatisfied_required": [
+      [
+        0,
+        "ground"
+      ],
+      [
+        1,
+        "ground"
+      ],
+      [
+        2,
+        "ground"
+      ],
+      [
+        2,
+        "raised"
+      ],
+      [
+        3,
+        "ground"
+      ],
+      [
+        3,
+        "raised"
+      ],
+      [
+        4,
+        "deep"
+      ],
+      [
+        4,
+        "ground"
+      ],
+      [
+        5,
+        "deep"
+      ],
+      [
+        5,
+        "ground"
+      ],
+      [
+        6,
+        "ground"
+      ],
+      [
+        6,
+        "raised"
+      ],
+      [
+        7,
+        "ground"
+      ],
+      [
+        7,
+        "raised"
+      ]
+    ]
+  },
+  "prim_path": "/World/ground",
+  "raw_query_file": "C:\\Users\\AI-WS01\\s2_lab\\night-tools-20261013\\s2_runs\\live-20261016-141535\\out\\physx_queries.npz",
+  "raw_query_file_sha256": "39ea5e3aaa99cebeb7e66ada0a80088c9f2e6142f0f0e713857ad6d185d27b72",
+  "reasons": [
+    "physx_branches_not_satisfied_or_missing"
+  ],
+  "root_layer": "anon:00000204BBCF5A50:World0.usd",
+  "scope": "sampled_collision_response",
+  "vertices_sha256": "cb1c73d973f81d760bd23deac706ff5453970eea01127649e2817f80d6e24325",
+  "warp_vs_usd": {
+    "agree": true,
+    "indices_equal": true,
+    "indices_usd": 180,
+    "indices_warp": 180,
+    "max_point_abs_m": 0.0,
+    "points_usd": 88,
+    "points_warp": 88,
+    "same_shape": true
+  },
+  "world_transform_sha256": "eba91ea447c2a18c1510229bb460a99bcd030ed6bde4091c466992e0dbafb3d1"
+}

@@ -1,0 +1,451 @@
+{
+ "onnxruntime": "1.31.0",
+ "onnx": "1.22.0",
+ "cpu": "AMD64 Family 25 Model 24 Stepping 1, AuthenticAMD",
+ "cpu_count": 64,
+ "CUDA_VISIBLE_DEVICES": "",
+ "models": {
+  "m6000_map_on": {
+   "file": "start-demo-app/start-demo_map_on.onnx",
+   "bytes": 5808798,
+   "sha256": "81c7e079516058ee6243f6edd11efa8f0da239c6cc86fbca791bda5bcd82f110",
+   "nodes_top": 287,
+   "params": 1440448,
+   "mac": {
+    "Conv": 16979008,
+    "ConvTranspose": 524288,
+    "Gemm": 2189504,
+    "MatMul": 15884544,
+    "GRU": 0,
+    "unknown_shape_nodes": 0,
+    "total_MAC": 35577344
+   },
+   "inputs": {
+    "obs45": {
+     "shape": [
+      1,
+      45
+     ],
+     "type": "tensor(float)"
+    },
+    "hist": {
+     "shape": [
+      1,
+      10,
+      45
+     ],
+     "type": "tensor(float)"
+    },
+    "depth2": {
+     "shape": [
+      1,
+      2,
+      60,
+      60
+     ],
+     "type": "tensor(float)"
+    },
+    "h_prop": {
+     "shape": [
+      1,
+      128
+     ],
+     "type": "tensor(float)"
+    },
+    "h_terr": {
+     "shape": [
+      1,
+      128
+     ],
+     "type": "tensor(float)"
+    },
+    "depth_tick": {
+     "shape": [
+      1
+     ],
+     "type": "tensor(bool)"
+    },
+    "first_after_reset": {
+     "shape": [
+      1
+     ],
+     "type": "tensor(bool)"
+    },
+    "use_gt": {
+     "shape": [
+      1
+     ],
+     "type": "tensor(bool)"
+    },
+    "gt_map": {
+     "shape": [
+      1,
+      32,
+      16
+     ],
+     "type": "tensor(float)"
+    }
+   },
+   "input_floats": 8463,
+   "input_bytes": 33852,
+   "cpu_1thread": {
+    "median_ms": 0.9811,
+    "p95_ms": 1.0895,
+    "max_ms": 1.283,
+    "calls": 500,
+    "threads": 1
+   },
+   "cpu_default": {
+    "median_ms": 1.9039,
+    "p95_ms": 2.0654,
+    "max_ms": 2.4442,
+    "calls": 500,
+    "threads": "default"
+   }
+  },
+  "m6000_map_off": {
+   "file": "start-demo-app/start-demo_map_off.onnx",
+   "bytes": 5818629,
+   "sha256": "5d1b7bf39aa0d9fb8ae33bf33dad82902165d53679ccd7ec5df727a0b70fe037",
+   "nodes_top": 352,
+   "params": 1440448,
+   "mac": {
+    "Conv": 16979008,
+    "ConvTranspose": 524288,
+    "Gemm": 2189504,
+    "MatMul": 15884544,
+    "GRU": 0,
+    "unknown_shape_nodes": 0,
+    "total_MAC": 35577344
+   },
+   "inputs": {
+    "obs45": {
+     "shape": [
+      1,
+      45
+     ],
+     "type": "tensor(float)"
+    },
+    "hist": {
+     "shape": [
+      1,
+      10,
+      45
+     ],
+     "type": "tensor(float)"
+    },
+    "depth2": {
+     "shape": [
+      1,
+      2,
+      60,
+      60
+     ],
+     "type": "tensor(float)"
+    },
+    "h_prop": {
+     "shape": [
+      1,
+      128
+     ],
+     "type": "tensor(float)"
+    },
+    "h_terr": {
+     "shape": [
+      1,
+      128
+     ],
+     "type": "tensor(float)"
+    },
+    "depth_tick": {
+     "shape": [
+      1
+     ],
+     "type": "tensor(bool)"
+    },
+    "first_after_reset": {
+     "shape": [
+      1
+     ],
+     "type": "tensor(bool)"
+    },
+    "use_gt": {
+     "shape": [
+      1
+     ],
+     "type": "tensor(bool)"
+    },
+    "gt_map": {
+     "shape": [
+      1,
+      32,
+      16
+     ],
+     "type": "tensor(float)"
+    }
+   },
+   "input_floats": 8463,
+   "input_bytes": 33852,
+   "cpu_1thread": {
+    "median_ms": 1.03,
+    "p95_ms": 1.1878,
+    "max_ms": 1.4025,
+    "calls": 500,
+    "threads": 1
+   },
+   "cpu_default": {
+    "median_ms": 1.9212,
+    "p95_ms": 2.1799,
+    "max_ms": 2.4559,
+    "calls": 500,
+    "threads": "default"
+   }
+  },
+  "m13000_map_on": {
+   "file": "start-m13000-app/start-m13000_map_on.onnx",
+   "bytes": 5813202,
+   "sha256": "4799677acdc9fbc22da28fd56fefa3181f24b38b198e3bea02270c1c1cd11d93",
+   "nodes_top": 289,
+   "params": 1441472,
+   "mac": {
+    "Conv": 16979008,
+    "ConvTranspose": 524288,
+    "Gemm": 2190528,
+    "MatMul": 15884544,
+    "GRU": 0,
+    "unknown_shape_nodes": 0,
+    "total_MAC": 35578368
+   },
+   "inputs": {
+    "obs45": {
+     "shape": [
+      1,
+      45
+     ],
+     "type": "tensor(float)"
+    },
+    "hist": {
+     "shape": [
+      1,
+      10,
+      45
+     ],
+     "type": "tensor(float)"
+    },
+    "depth2": {
+     "shape": [
+      1,
+      2,
+      60,
+      60
+     ],
+     "type": "tensor(float)"
+    },
+    "h_prop": {
+     "shape": [
+      1,
+      128
+     ],
+     "type": "tensor(float)"
+    },
+    "h_terr": {
+     "shape": [
+      1,
+      128
+     ],
+     "type": "tensor(float)"
+    },
+    "depth_tick": {
+     "shape": [
+      1
+     ],
+     "type": "tensor(bool)"
+    },
+    "first_after_reset": {
+     "shape": [
+      1
+     ],
+     "type": "tensor(bool)"
+    },
+    "use_gt": {
+     "shape": [
+      1
+     ],
+     "type": "tensor(bool)"
+    },
+    "gt_map": {
+     "shape": [
+      1,
+      32,
+      16
+     ],
+     "type": "tensor(float)"
+    }
+   },
+   "input_floats": 8463,
+   "input_bytes": 33852,
+   "cpu_1thread": {
+    "median_ms": 0.9883,
+    "p95_ms": 1.1799,
+    "max_ms": 1.2719,
+    "calls": 500,
+    "threads": 1
+   },
+   "cpu_default": {
+    "median_ms": 1.8566,
+    "p95_ms": 2.1117,
+    "max_ms": 2.4386,
+    "calls": 500,
+    "threads": "default"
+   }
+  },
+  "m13000_map_off": {
+   "file": "start-m13000-app/start-m13000_map_off.onnx",
+   "bytes": 5823033,
+   "sha256": "8317548f51a046afb537c212eec47a12b2888b6ea049fa84361d83aa8c30849f",
+   "nodes_top": 354,
+   "params": 1441472,
+   "mac": {
+    "Conv": 16979008,
+    "ConvTranspose": 524288,
+    "Gemm": 2190528,
+    "MatMul": 15884544,
+    "GRU": 0,
+    "unknown_shape_nodes": 0,
+    "total_MAC": 35578368
+   },
+   "inputs": {
+    "obs45": {
+     "shape": [
+      1,
+      45
+     ],
+     "type": "tensor(float)"
+    },
+    "hist": {
+     "shape": [
+      1,
+      10,
+      45
+     ],
+     "type": "tensor(float)"
+    },
+    "depth2": {
+     "shape": [
+      1,
+      2,
+      60,
+      60
+     ],
+     "type": "tensor(float)"
+    },
+    "h_prop": {
+     "shape": [
+      1,
+      128
+     ],
+     "type": "tensor(float)"
+    },
+    "h_terr": {
+     "shape": [
+      1,
+      128
+     ],
+     "type": "tensor(float)"
+    },
+    "depth_tick": {
+     "shape": [
+      1
+     ],
+     "type": "tensor(bool)"
+    },
+    "first_after_reset": {
+     "shape": [
+      1
+     ],
+     "type": "tensor(bool)"
+    },
+    "use_gt": {
+     "shape": [
+      1
+     ],
+     "type": "tensor(bool)"
+    },
+    "gt_map": {
+     "shape": [
+      1,
+      32,
+      16
+     ],
+     "type": "tensor(float)"
+    }
+   },
+   "input_floats": 8463,
+   "input_bytes": 33852,
+   "cpu_1thread": {
+    "median_ms": 1.0896,
+    "p95_ms": 1.2393,
+    "max_ms": 1.5044,
+    "calls": 500,
+    "threads": 1
+   },
+   "cpu_default": {
+    "median_ms": 1.9467,
+    "p95_ms": 2.1845,
+    "max_ms": 2.4927,
+    "calls": 500,
+    "threads": "default"
+   }
+  },
+  "ame2": {
+   "file": "ame2-demo-app/ame2-demo.onnx",
+   "bytes": 5038171,
+   "sha256": "830595df1e78072c0606b5193d1ba787720ff6777edc7cabe496b8c1a9d25de6",
+   "nodes_top": 236,
+   "params": 1251982,
+   "mac": {
+    "Conv": 1611096,
+    "ConvTranspose": 0,
+    "Gemm": 1199744,
+    "MatMul": 2987136,
+    "GRU": 0,
+    "unknown_shape_nodes": 1,
+    "total_MAC": 5797976
+   },
+   "inputs": {
+    "prop": {
+     "shape": [
+      1,
+      49
+     ],
+     "type": "tensor(float)"
+    },
+    "mapping": {
+     "shape": [
+      1,
+      29,
+      13,
+      3
+     ],
+     "type": "tensor(float)"
+    }
+   },
+   "input_floats": 1180,
+   "input_bytes": 4720,
+   "cpu_1thread": {
+    "median_ms": 0.3228,
+    "p95_ms": 0.3396,
+    "max_ms": 0.4302,
+    "calls": 500,
+    "threads": 1
+   },
+   "cpu_default": {
+    "median_ms": 0.6862,
+    "p95_ms": 0.7918,
+    "max_ms": 0.9362,
+    "calls": 500,
+    "threads": "default"
+   }
+  }
+ }
+}

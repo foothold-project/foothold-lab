@@ -1,0 +1,5 @@
+PASS plumbing active termination function and physics guard
+CAUGHT gravity first_FAIL=diagnostic_gravity_leak want=diagnostic_gravity_leak
+CAUGHT root_fixed first_FAIL=diagnostic_root_fix_leak want=diagnostic_root_fix_leak
+CAUGHT contact_disabled first_FAIL=active_contact_term_missing want=active_contact_term_missing
+PASS pre-optimizer hook precedes make_optimizer

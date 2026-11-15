@@ -1,0 +1,51 @@
+{
+ "made": "2026-10-13 17:02:56",
+ "why": "VERIFY-astra-16k 7 / 16m 7: what the published page was built from",
+ "code": {
+  "cmdr_post_v10.py": "dea9ca7bfe01b92b634aa85048ff0cb4128b4eaa3b7943030a9a9b5660332dc2",
+  "handover_1400.py": "fa677df9ba82e81813f5969993ac2c45fe742f70f2f9058c3d817c0fcc6550b5",
+  "compare_frozen.py": "1f5fddc5a6c2600ce66b84e0ce656952c359a5abf8eb0ca0cb318c3595a90e30",
+  "compare_stand.py": "0f5241d956a8a380c8c0c727b3a6653475b5bfc48d651128660366a5b9dd4ec9"
+ },
+ "aggregator_v7": "98ebe33ecba7c660e0d287e2d319e66ca672d60de409017c3292861f93dff9d1",
+ "paired_ci": "3056f6b364d8f4499a52d23839a901931d9ef0496dbdbb9e49e13da5665cdc2d",
+ "freeze": {
+  "manifest.json": "971be24b842714e4c2ea013496f31b0071e11e81898a3ce65d3478e5a717d58a",
+  "scans.json": "8e47deec47a1490041e595e6b00c4587921b0aca847ba83ff403891aab0e6ba5",
+  "cmdr_post_hold.json": "1097249777017523f7d0bd8281a1834119da26b7e0fba3036c08f352775e371c",
+  "supplement_stdout/supplement.json": "d96bbc105cc109e65b0d3a4bb1310a621b4e79bb1c4a766a158f6ba7dda4162d"
+ },
+ "release_deps": {
+  "held_stamps/cq_on24000_flat_stand_on_s1000.json": "7fda7daf0d62836e13ffcb678033b18375d0b285a2d80a12f7d36cf5e4ff106d",
+  "evidence/cq_on24000_flat_stand_on_s1000.json": "d77c68b2978bee914b991563df89dadb0bc8706f23bafbab911b77f66fe43b27"
+ },
+ "outputs": {
+  "v7/cmdr_post.json": "d9f37416b16c9d774dd4a8f1909503472c369ee2052be45e8a84c2d272ba613b",
+  "v10/cmdr_post.json": "4f6699eb1f4fba1eb52c275b59f9441fd6ae0279b6f6be0eb34819b66155dec0",
+  "compare_frozen.json": "407755625e277c5467df4fa3c72e2efc49dcfdde9f0e514842c3d2f640793316"
+ },
+ "page_input": {
+  "_eval/out/cmdr_post.json": "4f6699eb1f4fba1eb52c275b59f9441fd6ae0279b6f6be0eb34819b66155dec0",
+  "same_as_v10": true
+ },
+ "page_generators": {
+  "facts5_cmdr.py": "e9abdedeaaa1bbf642ab59cede2fd2060d5b76e67a3c82517e63831d06a99873",
+  "facts5_night.py": "f067350b6242e577327107a8d5ee90c3275a425b35d1310e106f64082ba511ea",
+  "assemble_v5.py": "869eb58f6ee32f635c1268e78313c03d9d3d104dcf2bf8177d3d86df97db49f4",
+  "build.py": "204d8a68868fa46e3f63afab482a1fdc5c47d96d70a37072a80f38fae756d38b",
+  "rg_fragment.py": "7de539fa2c86170a1f496cd506fe158a814dfc7559e90ceb94b60da465ddea47",
+  "rg_videos.py": "044f66037e249f564a56106f907f6b9c1a4e470205aed6391a827152d0db2dd6",
+  "rg_videos.json": "24fee81682c21cff349621c0484a6a37a3154cfabe0f71032655069a47a1d78d",
+  "v5_rg.html": "10cb4264a07c9b6d9866a6438c7008f6ce2bb74cd5f077c46c9b291bd6450c41",
+  "v5_night.html": "23d05e7e30225659a606a9618ff538b4509a312fb8fb805dc009465461ac684c",
+  "v5_cmdr.html": "2f054d306e95940ef13d33ae1fc7074a62ff47d4819140249949110ebe8a5a8d"
+ },
+ "assembled_html": "0632191cf3b051aaad864d90b96f224eadcfb43b5486dac99fd10fcbbb6db900",
+ "published": {
+  "url": "https://claude.ai/artifact/BYuAVDuVJuRWVkAs5mGJSN",
+  "version": 20,
+  "version_id": "1791878539-de45",
+  "check": "published HTML contains the local assembled HTML whole (+370 chars wrapper); 412 published files",
+  "sharing": "anyone with the link (reported by the Artifact tool)"
+ }
+}

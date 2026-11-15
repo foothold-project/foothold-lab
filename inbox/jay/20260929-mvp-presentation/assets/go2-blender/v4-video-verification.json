@@ -1,0 +1,52 @@
+[
+  {
+    "id": "hip",
+    "frames": 48,
+    "duration": 2.0
+  },
+  {
+    "id": "thigh",
+    "frames": 48,
+    "duration": 2.0
+  },
+  {
+    "id": "calf",
+    "frames": 48,
+    "duration": 2.0
+  },
+  {
+    "id": "fl",
+    "frames": 36,
+    "duration": 1.5
+  },
+  {
+    "id": "fr",
+    "frames": 36,
+    "duration": 1.5
+  },
+  {
+    "id": "rl",
+    "frames": 36,
+    "duration": 1.5
+  },
+  {
+    "id": "rr",
+    "frames": 36,
+    "duration": 1.5
+  },
+  {
+    "id": "forward",
+    "frames": 48,
+    "duration": 2.0
+  },
+  {
+    "id": "lateral",
+    "frames": 48,
+    "duration": 2.0
+  },
+  {
+    "id": "yaw",
+    "frames": 48,
+    "duration": 2.0
+  }
+]

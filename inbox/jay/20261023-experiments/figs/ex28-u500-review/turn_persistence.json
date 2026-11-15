@@ -1,0 +1,30 @@
+[
+  {
+    "label": "EX23 평지",
+    "left_last2_wz": 0.01522649168386124,
+    "right_last2_wz": -0.003049592896131799,
+    "left_all_feet_contact": 0.94,
+    "right_all_feet_contact": 1.0
+  },
+  {
+    "label": "B 평지",
+    "left_last2_wz": 0.07532663643360138,
+    "right_last2_wz": -0.012603317378088832,
+    "left_all_feet_contact": 0.9666666666666667,
+    "right_all_feet_contact": 0.96
+  },
+  {
+    "label": "EX23 험지",
+    "left_last2_wz": 0.01599909454547742,
+    "right_last2_wz": -0.006983201241819188,
+    "left_all_feet_contact": 0.94,
+    "right_all_feet_contact": 1.0
+  },
+  {
+    "label": "B 험지",
+    "left_last2_wz": 0.049387920978479084,
+    "right_last2_wz": -0.01551442286814563,
+    "left_all_feet_contact": 0.96,
+    "right_all_feet_contact": 0.9666666666666667
+  }
+]

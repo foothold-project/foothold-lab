@@ -1,0 +1,19 @@
+{
+  "node": "v24.13.0",
+  "tests": [
+    {
+      "test": "live-renderer-empty-frame-keeps-previous",
+      "line": 10609,
+      "result": "pass",
+      "scope": "exact method body with geometry holder spy, not pixel output"
+    },
+    {
+      "test": "accumulated-and-direct-both-forwarded-to-renderer",
+      "line": 17954,
+      "result": "pass",
+      "filtered_points": 1,
+      "direct_points": 2
+    }
+  ],
+  "scope": "isolated exact JavaScript methods, no network/filesystem imports in VM"
+}

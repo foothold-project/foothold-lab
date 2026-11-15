@@ -1,0 +1,31 @@
+{
+ "held": [
+  "cq_on24000_flat_stand_on_s1000"
+ ],
+ "checks": {
+  "targets": true,
+  "target_verdict": true,
+  "holm": true,
+  "regression rows except held cells": true,
+  "contract cells except held cells": true,
+  "valid runs differ by the held count": true
+ },
+ "other_differences": [
+  "cells",
+  "completion",
+  "driver_logs",
+  "hold_candidates",
+  "regression_coverage"
+ ],
+ "regression rows (v7, v8)": [
+  77,
+  76
+ ],
+ "held cell rows (v7 has, v8 has)": {
+  "flat/stand/on": [
+   true,
+   false
+  ]
+ },
+ "pass": true
+}

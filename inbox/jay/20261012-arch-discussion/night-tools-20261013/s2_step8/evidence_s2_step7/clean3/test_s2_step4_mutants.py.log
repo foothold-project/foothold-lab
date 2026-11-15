@@ -1,0 +1,2 @@
+usage: test_s2_step4_mutants.py [-h] --out OUT [--only [ONLY ...]]
+test_s2_step4_mutants.py: error: the following arguments are required: --out

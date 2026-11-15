@@ -1,0 +1,209 @@
+"""v28g: every update the runner records, for envs whose velocity COMMAND magnitude is in [0.05, 0.15), the mean / p10 / p90 of
+(the velocity columns of the est the actor actually received, est[16:19] in learned mode - true body velocity). Record only, on by default. CPU only: the real StartRunner on the
+fake env (real collection loop, real _ppo_obs, real _vbias_collect / _vbias_finish); only the all_gather collective is replaced in the 2 rank test."""
+from __future__ import annotations
+
+import json
+
+import pytest
+import torch
+
+from foothold_s2.models import start_perception as sp
+from foothold_s2.runners.start_runner import StartRunner
+from foothold_s2.tests.start_fake_env import FakeStartEnv, train_cfg
+
+OLD_KEYS = {"l_tr", "l_ie", "kl", "o_next", "v", "hf", "hb"}
+
+
+def _runner(seed=3, perception=None):
+    torch.manual_seed(seed)
+    return StartRunner(FakeStartEnv(num_envs=8, seed=seed), train_cfg(24, {"microbatch_envs": 4, **(perception or {})}), log_dir=None, device="cpu")
+
+
+def _crafted(runner, cmd_rows, vel_rows, est_rows=None):
+    """one real raw observation with chosen commands (policy[:, 6:9]), body velocities and perception est."""
+    raw = runner.env.get_observations().clone()
+    n = raw.batch_size[0]
+    pol = raw["policy"].clone()
+    pol[:, 6:9] = 0.0
+    for i, c in enumerate(cmd_rows):
+        pol[i, 6:9] = torch.tensor(c)
+    raw["policy"] = pol
+    vel = torch.zeros(n, 3)
+    for i, v in enumerate(vel_rows):
+        vel[i] = torch.tensor(v)
+    raw["base_vel"] = vel
+    est = torch.zeros(n, 51)
+    est[:, :sp.Z_DIM] = 7.0                                             # the latent z occupies est[0:16]: a record that reads the front 3 columns sees 7.0, not the velocity
+    if est_rows is not None:
+        for i, e in enumerate(est_rows):
+            est[i, sp.Z_DIM:sp.Z_DIM + sp.V_DIM] = torch.tensor(e)      # the velocity estimate: est[16:19]
+    return raw, est, vel
+
+
+def test_defaults():
+    assert sp.PERCEPTION_V_BIAS_LOWBAND == (0.05, 0.15)
+    assert sp.PERCEPTION_V_BIAS_MIN_N == 10
+
+
+def test_summary_values_and_small_n_handling():
+    x = torch.linspace(-0.1, 0.1, 21)                                     # 21 samples, known percentiles
+    s = torch.stack([x, torch.full_like(x, 0.02), torch.zeros_like(x)], -1)
+    r = sp.lowband_bias_summary(s)
+    assert r["n"] == 21 and abs(r["mean"]) < 1e-9 and abs(r["mean_y"] - 0.02) < 1e-9
+    assert r["p10"] == pytest.approx(float(torch.quantile(x.double(), 0.1)), abs=1e-9) == pytest.approx(-0.08, abs=1e-6)
+    assert r["p90"] == pytest.approx(0.08, abs=1e-6) and r["p10"] < r["p90"]
+    ys = torch.stack([torch.zeros(21), x * 2.0, torch.zeros(21)], -1)                                  # the side column has its own n / mean / p10 / p90
+    ry = sp.lowband_bias_summary(ys)
+    assert ry["mean_y"] == pytest.approx(0.0, abs=1e-9) and ry["p10_y"] == pytest.approx(-0.16, abs=1e-6) and ry["p90_y"] == pytest.approx(0.16, abs=1e-6)
+    assert ry["p10"] == pytest.approx(0.0, abs=1e-9) and ry["p90"] == pytest.approx(0.0, abs=1e-9)    # and the forward column is not mixed with it
+    few = sp.lowband_bias_summary(s[:9])
+    assert few["n"] == 9 and few["mean"] is not None and few["p10"] is None and few["p90"] is None   # n < 10: no percentiles
+    assert few["p10_y"] is None and few["p90_y"] is None and few["mean_y"] is not None
+    ten = sp.lowband_bias_summary(s[:10])
+    assert ten["p10"] is not None and ten["p90"] is not None                                         # n == 10: percentiles are given
+    none = sp.lowband_bias_summary(torch.zeros(0, 3))
+    assert none == {"n": 0, "mean": None, "mean_y": None, "p10": None, "p90": None, "p10_y": None, "p90_y": None}
+    assert sp.lowband_bias_summary(None)["n"] == 0
+
+
+def test_band_edges_use_the_command_xy_norm_lower_edge_in_upper_edge_out_and_the_sign_is_est_minus_truth():
+    r = _runner()
+    cmds = [(0.05, 0.0, 0.0), (0.15, 0.0, 0.0), (0.0499, 0.0, 0.0), (0.06, 0.08, 0.0),   # 0.05 in, 0.15 out, just below out, norm 0.10 in
+            (0.0, 0.0, 0.5), (0.10, 0.0, 9.0), (-0.1, 0.0, 0.0), (0.1499, 0.0, 0.0)]    # yaw only out (z not counted), yaw ignored in, negative in, just below 0.15 in
+    vel = [(0.0, 0.0, 0.0)] * 8
+    est = [(0.01 * (i + 1), -0.005 * (i + 1), 0.0) for i in range(8)]
+    raw, est51, v = _crafted(r, cmds, vel, est)
+    r._vbias_samples = []
+    r._vbias_collect(raw["policy"], r._ppo_obs(raw, est51), v)
+    got = torch.cat(r._vbias_samples)
+    assert got.shape == (5, 3)
+    want = torch.tensor([est[i] for i in (0, 3, 5, 6, 7)])                  # est - 0
+    assert torch.allclose(got, want, atol=1e-6)
+    r._vbias_samples = []
+    r._vbias_collect(raw["policy"], r._ppo_obs(raw, est51), torch.ones(8, 3))   # truth 1 everywhere: est - truth
+    assert torch.allclose(torch.cat(r._vbias_samples), want - 1.0, atol=1e-6)
+
+
+def test_the_est_layout_is_z_then_v_and_the_record_reads_the_v_columns_of_the_real_assembled_actor_input():
+    """the real collection step (ingest -> step -> _ppo_obs -> _vbias_collect) with a spy on the real perception head output v. The truth is chosen as
+    v_est - 0.07, so the recorded est - truth is exactly 0.07 in every column when the right columns are read and not when est[:3] (z) is read."""
+    r = _runner()
+    raw = r.env.get_observations().clone()
+    pol = raw["policy"].clone()
+    pol[:, 6:9] = 0.0
+    pol[:, 6] = 0.1                                                         # every env is in the low command band
+    raw["policy"] = pol
+    seen = {}
+    orig = r.perception._advance
+
+    def spy(*a, **k):
+        out = orig(*a, **k)
+        seen["v"] = out[2]["v"].detach().clone()
+        seen["z"] = out[2]["mu"].detach().clone()
+        return out
+
+    r.perception._advance = spy
+    r.pstate = r.perception.init_state(raw.batch_size[0], r.device)               # what learn() does before the first collection step
+    o, depth, gmap, gfeet, vel, _ = r._split(raw)
+    with torch.inference_mode():
+        inp = r.perception.ingest(r.pstate, o, depth)
+        est = r.perception.step(r.pstate, inp, gmap)
+        ppo_obs = r._ppo_obs(raw, est)
+    k = o.shape[-1]
+    from foothold_s2.models.start_policy import ACTOR_KEY
+    actor_est = ppo_obs[ACTOR_KEY][:, k:k + 51]
+    assert torch.allclose(actor_est[:, sp.Z_DIM:sp.Z_DIM + 3], seen["v"], atol=1e-6)      # the velocity head output sits at est[16:19]
+    assert not torch.allclose(actor_est[:, :3], seen["v"], atol=1e-3)                    # and the front 3 columns are the latent, not the velocity
+    truth = seen["v"] - 0.07
+    r._vbias_samples = []
+    r._vbias_collect(o, ppo_obs, truth)
+    got = torch.cat(r._vbias_samples)
+    assert got.shape == (8, 3) and torch.allclose(got, torch.full((8, 3), 0.07), atol=1e-5)
+
+
+def test_oracle_vel_mode_reads_the_columns_where_that_mode_puts_the_velocity():
+    r = _runner(perception={"est_mode": "oracle_vel", "oracle_vel_noise": 0.0})
+    raw, est51, v = _crafted(r, [(0.1, 0.0, 0.0)] * 8, [(0.04, -0.02, 0.01)] * 8)
+    r._vbias_samples = []
+    r._vbias_collect(raw["policy"], r._ppo_obs(raw, est51), v)
+    assert torch.allclose(torch.cat(r._vbias_samples), torch.zeros(8, 3), atol=1e-7)      # the actor got the true velocity in est[0:3]: no bias
+
+
+def test_the_estimate_is_the_one_the_actor_received_not_the_raw_perception_output():
+    r = _runner(perception={"est_mode": "zero"})                            # the actor's est columns are all zero in this mode
+    raw, est51, v = _crafted(r, [(0.1, 0.0, 0.0)] * 8, [(0.04, 0.0, 0.0)] * 8, [(0.9, 0.9, 0.9)] * 8)
+    r._vbias_samples = []
+    r._vbias_collect(raw["policy"], r._ppo_obs(raw, est51), v)
+    got = torch.cat(r._vbias_samples)
+    assert torch.allclose(got[:, 0], torch.full((8,), -0.04), atol=1e-7)    # 0 (what the actor got) - 0.04, not 0.9 - 0.04
+
+
+def test_two_ranks_merge_the_samples_not_the_means(monkeypatch):
+    r = _runner()
+    r.is_distributed = True
+    r.gpu_world_size = 2
+    r.disable_logs = True
+    mine = torch.tensor([[0.1, 0.0, 0.0]] * 3)                              # 3 samples at +0.1
+    other = torch.tensor([[-0.05, 0.0, 0.0]] * 12)                          # 12 samples at -0.05, so the mean of means would be 0.025
+    seen = {}
+
+    def fake_gather(out, obj):
+        seen.setdefault("mine", obj)                                        # the first gather is the all-env record (the FWD01 gathers come after it)
+        out[0], out[1] = obj, other
+
+    monkeypatch.setattr(torch.distributed, "all_gather_object", fake_gather)
+    r._vbias_samples = [mine]
+    r._vbias_finish(5)
+    rec = r.last_perception_v_bias
+    assert rec["n"] == 15 and rec["mean"] == pytest.approx((3 * 0.1 + 12 * -0.05) / 15, abs=1e-7)
+    assert rec["p10"] is not None                                           # 15 >= 10 only after the merge (mine alone has 3)
+    assert torch.equal(seen["mine"], mine)
+
+
+def test_a_real_learn_loop_records_the_line_every_update_and_every_old_key_stays(capsys, tmp_path):
+    r = _runner()
+    r.log_dir = str(tmp_path)
+    r.learn(3)
+    out = capsys.readouterr().out
+    lines = [l for l in out.splitlines() if l.startswith("EX42_PERCEPTION_V_BIAS ")]
+    assert len(lines) == 3 and all("band=cmd_0.05_0.15" in l and " n=" in l and " mean=" in l and " p10=" in l and " p90=" in l and " mean_y=" in l and " p10_y=" in l and " p90_y=" in l for l in lines), lines
+    rec = r.last_perception_v_bias
+    assert isinstance(rec["n"], int) and rec["n"] >= 0
+    assert OLD_KEYS <= set(r.last_perception_losses)
+    assert not any(k.startswith("v_bias_lowband") for k in r.last_perception_losses)       # the new record lives in its own place, the old dict is only added to by the band keys
+    extra = [json.loads(l) for l in (tmp_path / "train_extra.jsonl").read_text(encoding="utf-8").splitlines()]
+    assert len(extra) == 3 and all("perception_v_bias" in e and set(e["perception_v_bias"]["lowband"]) == {"n", "mean", "mean_y", "p10", "p90", "p10_y", "p90_y"} for e in extra)
+    status = json.loads((tmp_path / "status.json").read_text(encoding="utf-8")) if (tmp_path / "status.json").is_file() else None
+    if status is not None:
+        assert "perception_v_bias" in status and "perception" in status
+
+
+def test_the_record_does_not_touch_training():
+    a, b = _runner(seed=4), _runner(seed=4)
+    torch.manual_seed(9)
+    a.learn(2)
+    orig = StartRunner._vbias_collect
+    try:
+        StartRunner._vbias_collect = lambda self, o, ppo_obs, vel: self._vbias_samples.append(torch.zeros(0, 3))
+        torch.manual_seed(9)
+        b.learn(2)
+    finally:
+        StartRunner._vbias_collect = orig
+    for k, v in a.alg.policy.state_dict().items():
+        assert torch.equal(v, b.alg.policy.state_dict()[k]), k
+    for k, v in a.perception.state_dict().items():
+        assert torch.equal(v, b.perception.state_dict()[k]), k
+
+
+def test_the_printed_line_carries_the_forward_and_the_side_values_each_in_its_own_field(capsys):
+    r = _runner()
+    x = torch.linspace(-0.1, 0.1, 21)
+    r._vbias_samples = [torch.stack([x, 3.0 * x + 0.5, torch.zeros(21)], -1)]
+    r._vbias_finish(7)
+    line = [l for l in capsys.readouterr().out.splitlines() if l.startswith("EX42_PERCEPTION_V_BIAS ")][0]
+    fields = dict(kv.split("=") for kv in line.split()[1:])
+    assert fields["it"] == "7" and fields["n"] == "21"
+    assert float(fields["mean"]) == pytest.approx(0.0, abs=1e-4) and float(fields["mean_y"]) == pytest.approx(0.5, abs=1e-4)
+    assert float(fields["p10"]) == pytest.approx(-0.08, abs=1e-4) and float(fields["p90"]) == pytest.approx(0.08, abs=1e-4)
+    assert float(fields["p10_y"]) == pytest.approx(0.26, abs=1e-4) and float(fields["p90_y"]) == pytest.approx(0.74, abs=1e-4)

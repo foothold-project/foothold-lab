@@ -1,0 +1,27 @@
+{
+  "model": "seedance_2_5",
+  "mode": "omni_reference",
+  "duration": 5,
+  "resolution": "480p",
+  "aspect_ratio": "16:9",
+  "count": 1,
+  "generate_audio": true,
+  "bitrate_mode": "standard",
+  "draft": false,
+  "folder_id": "bb3b8052-bde7-4b9b-b750-694e133479fb",
+  "medias": [
+    {
+      "role": "start_image",
+      "value": "6af8dc4d-6188-488d-b067-39adddcaadb4"
+    },
+    {
+      "role": "video",
+      "value": "9099bc74-bb12-404c-bb78-39d18c2d0dcb"
+    },
+    {
+      "role": "audio",
+      "value": "567dae6b-c111-4e54-a0c6-80a241851d0f"
+    }
+  ],
+  "prompt": "E5pre revision. One continuous FIRST-PERSON front-mounted camera view of a quadruped traversing rough ground. The observer is behind the lens and entirely invisible throughout. The frame contains ONLY the supplied empty industrial approach, cabinet, threshold and the surface scan. No visible robot, body, legs, feet, people, hands, shoes or camera housing. No third-person reveal.\n\nREFERENCE ROLES: The START IMAGE fixes this exact environment, framing and approach to the cabinet. The VIDEO reference supplies ONLY the appearance of the green surface-height sampling dots and fine terrain-conforming grid. Do not copy the video's different gap geometry, viewpoint, color grade or camera movement. The AUDIO reference supplies the preceding shot's rubber-foot contacts, servo timbre and room acoustics.\n\nCAMERA MOTION IS THE PRIMARY CHANGE: visibly unstabilized rigid head-mounted locomotion, NOT a cinematic dolly, gimbal, wheeled vehicle, floating drone or smoothly eased push-in. Starting within the first 0.2 seconds, the image clearly bobs vertically and rocks in pitch/roll with alternating weight transfers as the camera advances. Unequal successive steps over irregular ground: a brief downward jolt at each contact, a small rebound, then an opposing roll into the next support. In framing terms use noticeable roughly 3–5 percent frame-height vertical displacement, several degrees pitch and alternating roll, rather than imperceptible vibration. These are artistic motion targets, not measured sensor data. Contact rhythm follows the audio reference, with short higher-frequency settling vibrations after contacts. Keep the cabinet recognizable and the rigid walls geometrically stable: camera movement must cause the apparent shake, not melting or rubbery scene warping. No digital zoom. Don't stabilize away the motion. Maintain low camera height near 40 cm. Move cautiously forward on supported ground toward the existing low riser; slow near it and stop before climbing. The final half second has residual damped body settling, not an abrupt frozen still. Do not reveal limbs even when the camera pitches.\n\nSCAN: from about 1 second, use the SAME visual language as the supplied scan VIDEO: many small separated luminous green sample POINTS in staggered sampling rows with fine subdued connecting mesh lines conforming to the actual surface heights. Spread across the foreground concrete, then refresh progressively onto the riser and upper landing as they approach. The point field must remain legible during the middle and latter parts, not flash once as one horizontal laser line or outline a rectangular box. Points are fixed to their physical 3D surface positions and move in perspective with the visibly rocking camera; correctly occlude at edges. No screen-locked grid, no glowing plane spanning water or void, no invented support. Keep thin subdued grid and points below the brightness of a neon sign. No peripheral HUD, text or full-frame night-vision tint.\n\nPreserve original rough diffuse concrete, uneven dry/damp patches, dull rust and soft highlight roll-off. Restrained contrast, no HDR crunch, glitter, uniform wet plastic gloss or exposure changes. Existing red beacon pulses softly, subtle water ripples and low haze. Native audio follows the supplied foot-contact timbre and cadence with short servo motion, room drips and faint scan ticks. No music, voice, large metallic stomps or human heel clicks. Previous separate shot crosses a gap, next separate shot climbs this threshold from behind; do not insert those external views here. Five seconds, no cut."
+}

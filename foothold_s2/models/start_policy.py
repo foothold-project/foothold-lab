@@ -1,0 +1,49 @@
+"""START 정책 (13-POLICY): 비대칭 actor-critic. actor 96 = o_t 45 + 지각 추정 51, critic 664 = o_t 45 + 특권 619.
+
+설치 rsl_rl 3.1.2 의 `ActorCritic`(MLP) 를 그대로 물려받는다. 두 GRU 는 지각(start_perception) 안에 있고, actor 는 runner 가
+수집 때 만든 96 차원 입력만 본다. 그래서 PPO 재평가는 rollout 버퍼에 저장된 그 입력으로만 ratio 를 낸다(12 §6.1 PPO 입력
+고정). 지각 파라미터는 이 모듈에 없으므로 PPO optimizer 와 gradient 가 지각에 닿을 길이 구조적으로 없다(12 §6).
+
+설치 `ActorCriticRecurrent` 는 1 차원 관측만 받고 actor · critic 에 GRU 를 붙이므로 쓰지 않는다(VERIFY-astra-final 5).
+"""
+
+from __future__ import annotations
+
+import torch
+from torch.distributions import Normal
+
+from rsl_rl.modules import ActorCritic
+
+from foothold_s2.models.start_perception import ACTOR_IN, FOOT_CELLS, MAP_CELLS, OBS_DIM
+
+CRITIC_IN = OBS_DIM + 3 + 4 + MAP_CELLS + FOOT_CELLS  # 13 §2: o_t · v · 발 접촉 · H^b · H^f = 664
+ACTOR_KEY = "actor_in"
+CRITIC_KEY = "critic_in"
+OBS_GROUPS = {"policy": [ACTOR_KEY], "critic": [CRITIC_KEY]}
+
+
+class StartActorCritic(ActorCritic):
+    def __init__(self, obs, obs_groups, num_actions, **kwargs) -> None:
+        pose_command_dim = kwargs.pop("pose_command_dim", 0)
+        if pose_command_dim not in (0, 2):
+            raise ValueError("pose_command_dim must be 0 or 2")
+        kwargs.setdefault("actor_hidden_dims", [512, 256, 128])  # 선행 Table V 353 행 · Isaac Lab Go2 cfg
+        kwargs.setdefault("critic_hidden_dims", [512, 256, 128])
+        kwargs.setdefault("activation", "elu")
+        super().__init__(obs, obs_groups, num_actions, **kwargs)
+        a = sum(obs[g].shape[-1] for g in obs_groups["policy"])
+        c = sum(obs[g].shape[-1] for g in obs_groups["critic"])
+        if a != ACTOR_IN + pose_command_dim or c != CRITIC_IN + pose_command_dim:
+            raise ValueError(f"actor {a} · critic {c} 이 계약값 {ACTOR_IN + pose_command_dim} · {CRITIC_IN + pose_command_dim} 과 다르다")
+
+    # Per-sample multiplier of the action std (None = off). It is part of the policy: the sampled distribution, the stored
+    # log-prob and sigma (rollout) and the re-evaluated log-prob and KL (update) all use std * noise_scale, so PPO's ratio
+    # compares the same family on both sides (the runner sets it per env, the mirror update per minibatch row).
+    noise_scale: torch.Tensor | None = None
+
+    def _update_distribution(self, obs) -> None:
+        super()._update_distribution(obs)
+        # A call on another batch size (probe, test) has no per-env meaning: it keeps the plain std. Rollouts and updates always
+        # match (the runner and the mirror update set the scale for exactly their batch).
+        if self.noise_scale is not None and self.noise_scale.shape[0] == self.distribution.mean.shape[0]:
+            self.distribution = Normal(self.distribution.mean, self.distribution.stddev * self.noise_scale)

@@ -1,0 +1,9 @@
+B4_TEST_PATHS_OK C:\Users\AI-WS01\.claude\jobs\09bbf294\tmp\codexB4 C:\Users\AI-WS01\.claude\jobs\09bbf294\tmp\codexB4\ce12_candidate C:\Users\AI-WS01\.claude\jobs\09bbf294\tmp\codexB4\fixture_real C:\Users\AI-WS01\.claude\jobs\09bbf294\tmp\codexB4\lead_check\m_wrong_direction.py
+sys.executable C:\Users\AI-WS01\anaconda3\envs\isaac311-moects\python.exe
+adapters.__file__ C:\Users\AI-WS01\.claude\jobs\09bbf294\tmp\codexB4\ce12_candidate\adapters.py
+adapters.sha256 39c1a2930a5992a65229529c49d8e5c278b202c12c534461f24c7ec26dea00c6
+FAIL P1 AssertionError: P1_DEFAULT_VS_APPROVER
+FAIL P2 AssertionError: P2_CANDIDATE_VS_APPROVER
+FAIL P3 AssertionError: P3_CANON_PATH
+PASS P4
+SUMMARY 1/4 PASS failed ['P1', 'P2', 'P3']

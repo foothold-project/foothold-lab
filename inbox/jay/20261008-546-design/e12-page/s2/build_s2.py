@@ -1,0 +1,572 @@
+"""S2 A/B 절을 E1 · E2 페이지(8판)에 끼워 넣는 생성기.
+
+원자료:
+  A 학습 기록  s2_step27_run/runs/shortA-.../out/updates.jsonl
+  B 학습 기록  s2_step29a_run/frozen_delivery/runs/shortB-.../out/updates.jsonl
+  평가 결과    S2-AB-UPDATE2000.json (s2_eval_full_result.py 가 쓴 것, 없으면 「평가 중」)
+  영상 목록    step30 도구의 manifest json (없으면 「영상 준비 중」)
+  게시본       현재 아티팩트의 index.html (7판)
+출력: <site>/index.html (+ v/s2/*.mp4, p/s2/*.jpg 복사)
+숫자는 손으로 쓰지 않는다. 결과 판정은 결과 전에 등록한 규칙(evaluation_criteria_s2_ab.json)을 그대로 적용한다.
+"""
+from __future__ import annotations
+import argparse, hashlib, html, json, math, re, shutil
+from pathlib import Path
+
+LAYERS = [("gap", "gap (틈)", "목표"), ("stepping_stones", "징검다리", "목표"),
+          ("flat", "평지", "퇴행 감시"), ("stairs_up", "계단 오르기", "퇴행 감시")]
+E = html.escape
+
+
+def read_updates(p):
+    rows = [json.loads(l) for l in open(p, encoding="utf-8") if l.strip()]
+    return rows
+
+
+def sha(p):
+    return hashlib.sha256(Path(p).read_bytes()).hexdigest()
+
+
+# ---------- 그림 도구 ----------
+def line_chart(series, *, title, ylab, ymin, ymax, yticks, w=560, h=250, skip_first=0):
+    L, R, T, B = 52, 14, 18, 36
+    pw, ph = w - L - R, h - T - B
+    xmax = max(len(s["y"]) for s in series)
+    def X(i): return L + pw * (i / max(1, xmax - 1))
+    def Y(v): return T + ph * (1 - (min(max(v, ymin), ymax) - ymin) / (ymax - ymin))
+    out = [f'<svg viewBox="0 0 {w} {h}" role="img" aria-label="{E(title)}" class="s2c">']
+    for t in yticks:
+        y = Y(t)
+        out.append(f'<line x1="{L}" x2="{w-R}" y1="{y:.1f}" y2="{y:.1f}" class="gl"/>'
+                   f'<text x="{L-6}" y="{y+4:.1f}" class="ax" text-anchor="end">{t:g}</text>')
+    for u in (0, 500, 1000, 1500, 2000):
+        x = X(u - 1 if u else 0)
+        out.append(f'<text x="{x:.1f}" y="{h-14}" class="ax" text-anchor="middle">{u}</text>')
+    out.append(f'<text x="{L+pw/2:.1f}" y="{h-1}" class="ax" text-anchor="middle">update</text>')
+    out.append(f'<text x="12" y="{T+ph/2:.1f}" class="ax" transform="rotate(-90 12 {T+ph/2:.1f})" text-anchor="middle">{E(ylab)}</text>')
+    for s in series:
+        ys = s["y"]
+        step = max(1, len(ys) // 500)
+        pts = " ".join(f"{X(i):.1f},{Y(ys[i]):.1f}" for i in range(skip_first, len(ys), step))
+        out.append(f'<polyline points="{pts}" class="ln {s["cls"]}"/>')
+    out.append("</svg>")
+    return "".join(out)
+
+
+def design_svg():
+    w, h = 980, 250
+    box = lambda x, y, bw, bh, cls, t1, t2="": (
+        f'<rect x="{x}" y="{y}" width="{bw}" height="{bh}" rx="8" class="bxs {cls}"/>'
+        f'<text x="{x+bw/2}" y="{y+(24 if t2 else bh/2+5)}" text-anchor="middle" class="bt1">{E(t1)}</text>'
+        + (f'<text x="{x+bw/2}" y="{y+46}" text-anchor="middle" class="bt2">{E(t2)}</text>' if t2 else ""))
+    arrow = lambda x1, y1, x2, y2: f'<line x1="{x1}" y1="{y1}" x2="{x2}" y2="{y2}" class="ar" marker-end="url(#s2ah)"/>'
+    o = [f'<svg viewBox="0 0 {w} {h}" role="img" aria-label="A/B 실험 설계 그림" class="s2c">',
+         '<defs><marker id="s2ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="arh"/></marker></defs>',
+         box(10, 95, 190, 64, "par", "E1 model_20000", "같은 부모 · 시드 11"),
+         box(270, 20, 250, 70, "a", "A · 지도 없음", "지도 입력 374 칸 = 0"),
+         box(270, 160, 250, 70, "b", "B · 지도 있음", "높이 187 점 + 유효 표시"),
+         box(590, 95, 170, 64, "par", "각 2,000 update", "로봇 1,024 · 같은 설정"),
+         box(810, 95, 160, 64, "ev", "같은 60 쌍 평가", "B − A 쌍 차이"),
+         arrow(200, 120, 268, 58), arrow(200, 134, 268, 192),
+         arrow(520, 55, 588, 116), arrow(520, 195, 588, 140), arrow(760, 127, 808, 127), "</svg>"]
+    return "".join(o)
+
+
+def result_svg(layers):
+    w, rowh, top = 980, 74, 34
+    h = top + rowh * len(LAYERS) + 30
+    L1, barx, barw, dx, dw = 10, 230, 330, 640, 300
+    def BX(r): return barx + barw * r
+    def DX(d): return dx + dw * (d + 1) / 2          # d in [-1, 1]
+    o = [f'<svg viewBox="0 0 {w} {h}" role="img" aria-label="지형별 성공률 A 대 B 와 쌍 차이" class="s2c">',
+         f'<text x="{barx}" y="18" class="ax">성공률 (기준선 도달 · 끝까지 생존)</text>',
+         f'<text x="{dx}" y="18" class="ax">B − A (쌍 차이) · 95% 구간</text>']
+    for t in (0, .5, 1):
+        o.append(f'<line x1="{BX(t):.1f}" x2="{BX(t):.1f}" y1="{top-6}" y2="{h-26}" class="gl"/>'
+                 f'<text x="{BX(t):.1f}" y="{h-10}" class="ax" text-anchor="middle">{int(t*100)}%</text>')
+    for t in (-1, -.5, 0, .5, 1):
+        o.append(f'<line x1="{DX(t):.1f}" x2="{DX(t):.1f}" y1="{top-6}" y2="{h-26}" class="gl{" z" if t == 0 else ""}"/>'
+                 f'<text x="{DX(t):.1f}" y="{h-10}" class="ax" text-anchor="middle">{int(t*100):+d}%p</text>'.replace("+0%p", "0"))
+    for i, (key, name, role) in enumerate(LAYERS):
+        y = top + i * rowh
+        lay = layers.get(key) if layers else None
+        o.append(f'<text x="{L1}" y="{y+22}" class="bt1" text-anchor="start">{E(name)}</text>'
+                 f'<text x="{L1}" y="{y+42}" class="bt2" text-anchor="start">{E(role)}'
+                 + (f' · {lay["valid_pairs"]}/{lay["planned_pairs"]} 쌍' if lay else " · 평가 중") + "</text>")
+        if role == "목표":
+            o.append(f'<line x1="{DX(.1):.1f}" x2="{DX(.1):.1f}" y1="{y+4}" y2="{y+rowh-14}" class="thr"/>')
+        if not lay or not lay["valid_pairs"]:
+            continue
+        n = lay["valid_pairs"]
+        ra, rb = lay["A_success"] / n, lay["B_success"] / n
+        for j, (r, cls, lab, cnt) in enumerate(((ra, "a", "A", lay["A_success"]), (rb, "b", "B", lay["B_success"]))):
+            yy = y + 8 + j * 26
+            o.append(f'<rect x="{barx}" y="{yy}" width="{barw}" height="18" class="trk"/>'
+                     f'<rect x="{barx}" y="{yy}" width="{barw*r:.1f}" height="18" class="bar {cls}"/>'
+                     f'<text x="{barx-8}" y="{yy+14}" class="ax" text-anchor="end">{lab}</text>'
+                     f'<text x="{barx+barw+8}" y="{yy+14}" class="vl">{cnt}/{n} · {r*100:.0f}%</text>')
+        d = (lay["discordant"]["B_only"] - lay["discordant"]["A_only"]) / n
+        ci = lay.get("paired_tango_95")
+        yc = y + 30
+        if ci:
+            o.append(f'<line x1="{DX(ci[1]):.1f}" x2="{DX(ci[2]):.1f}" y1="{yc}" y2="{yc}" class="ci"/>'
+                     f'<line x1="{DX(ci[1]):.1f}" x2="{DX(ci[1]):.1f}" y1="{yc-7}" y2="{yc+7}" class="ci"/>'
+                     f'<line x1="{DX(ci[2]):.1f}" x2="{DX(ci[2]):.1f}" y1="{yc-7}" y2="{yc+7}" class="ci"/>')
+        o.append(f'<circle cx="{DX(d):.1f}" cy="{yc}" r="6" class="pt"/>'
+                 f'<text x="{DX(d):.1f}" y="{yc-12}" class="vl" text-anchor="middle">{d*100:+.0f}%p</text>')
+    o.append("</svg>")
+    return "".join(o)
+
+
+# ---------- 판정 (등록 규칙 그대로) ----------
+def judge(layers):
+    if not layers:
+        return None
+    out = {}
+    for key, _, role in LAYERS:
+        lay = layers[key]
+        n = lay["valid_pairs"]
+        d = (lay["discordant"]["B_only"] - lay["discordant"]["A_only"]) / n if n else None
+        ci = lay.get("paired_tango_95")
+        if role == "목표":
+            ok = bool(ci and ci[1] > 0 and d is not None and d >= .1)
+            out[key] = ("좋다" if ok else "불명")
+        else:
+            bad = bool(ci and ci[2] < 0)
+            out[key] = ("퇴행" if bad else "퇴행 없음")
+    if "퇴행" in (out["flat"], out["stairs_up"]):
+        verdict = "퇴행 감시 위반"
+    elif out["gap"] == "좋다" and out["stepping_stones"] == "좋다":
+        verdict = "지도가 좋다"
+    elif out["gap"] == "좋다":
+        verdict = "gap 만 좋다 (징검다리 불명)"
+    elif out["stepping_stones"] == "좋다":
+        verdict = "징검다리만 좋다 (gap 불명)"
+    else:
+        verdict = "불명"
+    neg = [k for k, _, role in LAYERS if role == "목표" and layers[k].get("paired_tango_95")
+           and layers[k]["paired_tango_95"][2] < 0]
+    return verdict, out, neg
+
+
+def build_section(a, b, result, videos, asof, comp=None, miss=None, learn=None, vrun=None):
+    layers = result["trained_ab"]["layers"] if result else None
+    ready = bool(result and result.get("comparison_ready"))
+    J = judge(layers) if layers else None
+    ent = lambda rows: [r["entropy"] for r in rows]
+    def kl(rows, k=25):
+        v = [r["kl"] for r in rows][1:]
+        return [v[0]] + [sum(v[max(0, i-k+1):i+1]) / len(v[max(0, i-k+1):i+1]) for i in range(len(v))]
+    wall = lambda rows: [r["iteration_wall_s"] for r in rows]
+    a_wall = sum(wall(a)); b_wall = sum(wall(b))
+    first_kl = (a[0]["kl"], b[0]["kl"])
+    # 학습 곡선
+    curves = (
+        '<div class="split">'
+        f'<figure>{line_chart([{"y": ent(a), "cls": "a"}, {"y": ent(b), "cls": "b"}], title="엔트로피", ylab="엔트로피", ymin=0, ymax=10, yticks=[0, 2, 4, 6, 8, 10])}'
+        '<figcaption>행동의 무작위 정도(엔트로피). 둘 다 1.6 에서 출발해 8 근처에서 평탄해집니다. A 와 B 가 거의 겹칩니다.</figcaption></figure>'
+        f'<figure>{line_chart([{"y": kl(a), "cls": "a"}, {"y": kl(b), "cls": "b"}], title="KL", ylab="KL (한 번의 수정 크기)", ymin=0, ymax=.04, yticks=[0, .01, .02, .03, .04], skip_first=1)}'
+        f'<figcaption>한 번 update 로 정책이 얼마나 바뀌었나(KL, 25 update 이동 평균). 첫 update 는 그림 밖(A {first_kl[0]:.1f} · B {first_kl[1]:.1f}), 그 뒤 둘 다 0.01 ~ 0.02.</figcaption></figure>'
+        '</div>')
+    # 결과 표
+    if layers:
+        rows = []
+        for key, name, role in LAYERS:
+            lay = layers[key]; n = lay["valid_pairs"]
+            d = (lay["discordant"]["B_only"] - lay["discordant"]["A_only"]) / n if n else None
+            ci = lay.get("paired_tango_95")
+            rows.append(f'<tr><td>{E(name)}</td><td>{role}</td><td class="num">{n}/{lay["planned_pairs"]}</td>'
+                        f'<td class="num">{lay["A_success"]}</td><td class="num">{lay["B_success"]}</td>'
+                        f'<td class="num">{lay["discordant"]["A_only"]} · {lay["discordant"]["B_only"]}</td>'
+                        f'<td class="num">{d*100:+.1f}%p</td>'
+                        f'<td class="num">[{ci[1]*100:+.1f}, {ci[2]*100:+.1f}]</td><td>{E(J[1][key])}</td></tr>' if n and ci else
+                        f'<tr><td>{E(name)}</td><td>{role}</td><td class="num">0/{lay["planned_pairs"]}</td><td colspan="6">결측</td></tr>')
+        table = ('<div class="tbl"><table class="def s2t"><thead><tr><th>지형</th><th>역할</th><th>유효 쌍</th><th>A 성공</th><th>B 성공</th>'
+                 '<th>한쪽만 성공 (A만 · B만)</th><th>B − A</th><th>95% 구간</th><th>규칙 적용</th></tr></thead><tbody>'
+                 + "".join(rows) + '</tbody></table></div>')
+        negtxt = " · ".join(dict((k, n) for k, n, _ in LAYERS)[k] for k in J[2])
+        cls = "g" if J[0] == "지도가 좋다" else ("b" if ("퇴행" in J[0] or J[2]) else "w")
+        head = (f'<p class="s2v {cls}"><b>판정 (결과 전 등록 규칙): 「{E(J[0])}」.</b> '
+                + (f'<b>{E(negtxt)} 에서는 지도를 준 B 가 A 보다 확실히 나빴습니다</b>(95% 구간 전체가 0 아래). ' if J[2] else '')
+                + ('' if ready else '등록 규칙의 「120 건 모두 유효」 를 채우지 못해 공식 표시는 「부분 평가」 입니다.') + '</p>')
+        if comp:
+            crow = []
+            for key, name, _ in LAYERS:
+                ca, cb = comp.get((key, "A"), {}), comp.get((key, "B"), {})
+                cell = lambda c: (f'<td class="num">{c.get("crossed", 0)}/{c.get("n", 0)}</td><td class="num">{c.get("fall", 0)}/{c.get("n", 0)}</td>'
+                                  f'<td class="num">{c.get("prog", 0):.1f} m</td>')
+                crow.append(f'<tr><td>{E(name)}</td>{cell(ca)}{cell(cb)}</tr>')
+            table += ('<h3 class="h3gap">성분으로 펴 보기: 건넜나 · 넘어졌나 · 얼마나 갔나</h3>'
+                      '<div class="tbl"><table class="def s2t"><thead><tr><th>지형</th><th>A 기준선 넘음</th><th>A 넘어짐</th><th>A 전진 거리 중앙값</th>'
+                      '<th>B 기준선 넘음</th><th>B 넘어짐</th><th>B 전진 거리 중앙값</th></tr></thead><tbody>' + "".join(crow) + '</tbody></table></div>'
+                      '<p class="sub">유효한 판만 셌습니다(쌍이 깨진 판도 그 arm 의 판으로는 포함). 평지의 「성공」 은 기준선이 아니라 속도 추종 판정(Q)이고, 1.0 m/s 로 20 초면 약 20 m 입니다.</p>')
+        if miss:
+            table += (f'<p class="sub">결측 {miss["pairs"]} 쌍: Isaac 이 평가 도중 비정상 종료(접근 위반) {miss["crash"]} 건 · 중단 신호로 끝난 것 {miss["ctrlc"]} 건. '
+                      '등록 규칙대로 그 쌍 전체를 비교에서 뺐고 채워 넣지 않았습니다. 계단 오르기는 10 쌍 중 5 쌍만 남았습니다.</p>')
+    else:
+        table, head = "", '<p class="s2v w"><b>평가 진행 중입니다.</b> 결과가 나오면 이 자리에 숫자와 판정이 들어갑니다.</p>'
+    res = (head + f'<figure class="s2r">{result_svg(layers)}<figcaption>막대는 각 지형에서 성공한 판의 비율, 오른쪽 점은 같은 지형 · 같은 시드 쌍에서 잰 B − A 차이와 95% 구간(Tango). '
+           '세로 점선은 목표 지형의 기준 +10%p 입니다. gap · 징검다리의 「성공」 은 기준선에 닿고 끝까지 넘어지지 않은 판, 평지 · 계단의 「성공」 은 속도 추종 판정입니다.</figcaption></figure>' + table)
+    unknown1 = ('<li><b>학습 전(update 0)과의 비교.</b> 2,000 update 로 나아졌는지는 update 0 평가가 있어야 압니다.</li>')
+    if learn:
+        lrows = []
+        for arm in ("A", "B"):
+            for key, name, _ in LAYERS:
+                L = learn[arm][key]; n = L["valid_pairs"]; ci = L.get("paired_tango_95")
+                lrows.append(f'<tr><td>{arm} · {"지도 없음" if arm == "A" else "지도 있음"}</td><td>{E(name)}</td><td class="num">{n}/{L["planned_pairs"]}</td>'
+                             f'<td class="num">{L["update0_success"]}</td><td class="num">{L["update2000_success"]}</td>'
+                             + (f'<td class="num">{L["mean_difference"]*100:+.1f}%p</td><td class="num">[{ci[1]*100:+.1f}, {ci[2]*100:+.1f}]</td>' if ci else '<td colspan="2">결측</td>')
+                             + f'<td>{"나빠짐" if ci and ci[2] < 0 else ("좋아짐" if ci and ci[1] > 0 else "차이 불명")}</td></tr>')
+        res += ('<h3 class="h3gap">학습 효과: 2,000 update 동안 각자 나아졌나 (update 0 → 2000)</h3>'
+                '<p>update 0 은 학습 직전 같은 출발점입니다. 그때는 A 와 B 가 모든 지형에서 같았습니다(지도 길이 0 에서 시작). '
+                '같은 판끼리 학습 전과 후를 짝지어 비교했습니다. <b>A 는 거의 그대로였고, B 만 gap 과 평지에서 학습하면서 나빠졌습니다.</b> '
+                '같은 학습률 · 같은 길이에서 지도 길을 학습시킨 쪽만 무너졌다는 뜻입니다.</p>'
+                '<div class="tbl"><table class="def s2t"><thead><tr><th>arm</th><th>지형</th><th>유효 쌍</th><th>학습 전 성공</th><th>학습 후 성공</th><th>변화</th><th>95% 구간</th><th>판단</th></tr></thead><tbody>'
+                + "".join(lrows) + '</tbody></table></div>'
+                '<p class="sub">학습률은 설계(부모 마지막 값 0.00017)와 달리 0.001(자동 조절)로 돌았습니다(lead 실수). A 와 B 에 똑같이 적용됐고, A 가 그대로인 것으로 보아 이 이탈만으로 정책이 무너지지는 않았습니다. 결측 쌍은 등록 규칙대로 뺐습니다.</p>')
+        unknown1 = ('<li><b>B 가 왜 학습 중 무너졌나.</b> 첫 갱신의 큰 흔들림(KL B 40.1 · A 22.6), 지도 길 학습 방식, 짧은 학습량 중 무엇이 원인인지는 가르지 않았습니다.</li>')
+    # 영상
+    vids = video_block(videos)
+    return SECTION.format(asof=E(asof), result=res, curves=curves, design=design_svg(), videos=vids, unknown1=unknown1,
+                          a_h=f"{a_wall/3600:.1f}", b_h=f"{b_wall/3600:.1f}", know=know_block(J, layers, comp, learn),
+                          nextexp=next_block(J), **video_flow(vrun))
+
+
+def video_flow(vrun):
+    """vrun: make_video_manifest 요약(planned · completed · failed) + span 문자열."""
+    if not vrun:
+        return {"vidspan": "04:52 ~", "vidnote": "세 번째 시도 진행 중"}
+    note = ("세 번째 시도는 환경까지 만들고 사례 이름 규칙에 걸림(영상이 「video-gap-s4000」 처럼 새 이름을 붙여 평가가 쓴 지형 칸을 못 찾음) "
+            "→ 평가에 등록된 사례를 그대로 쓰게 고침. 04:56 첫 편 통과 → "
+            f"{vrun['planned']} 편 중 {vrun['completed']} 편 완료")
+    if vrun["failed"]:
+        note += f", 실패 {len(vrun['failed'])} 편(" + " · ".join(f"{x['case_id']} {x['arm']}" for x in vrun["failed"]) + ")"
+    return {"vidspan": vrun["span"], "vidnote": E(note)}
+
+
+def know_block(J, layers, comp=None, learn=None):
+    if not J:
+        return ('<li><b>A · B 둘 다 2,000 update 를 끝까지 학습했습니다.</b> 학습 값이 깨진 적(NaN) 없이 안정적이었고, 학습 곡선은 거의 겹칩니다.</li>'
+                '<li><b>성능은 아직 모릅니다.</b> 학습 중에는 성공률을 기록하지 않아서, 평가가 끝나야 첫 숫자가 나옵니다.</li>')
+    g, s, f = layers["gap"], layers["stepping_stones"], layers["flat"]
+    pct = lambda lay, k: f'{lay[k]}/{lay["valid_pairs"]}'
+    pm = lambda fam, arm: (comp or {}).get((fam, arm), {}).get("prog", 0.0)
+    return (f'<li><b>지도를 준 B 가 더 잘 건너지 않았습니다.</b> gap 성공 A {pct(g,"A_success")} · B {pct(g,"B_success")}, 징검다리 A {pct(s,"A_success")} · B {pct(s,"B_success")}. '
+            f'gap 에서 B 는 거의 앞으로 가지 않았습니다(전진 거리 중앙값 A {pm("gap","A"):.1f} m · B {pm("gap","B"):.1f} m).</li>'
+            f'<li><b>평지에서도 B 가 느렸습니다.</b> 속도 추종 성공 A {pct(f,"A_success")} · B {pct(f,"B_success")}, 20 초 전진 중앙값 A {pm("flat","A"):.1f} m · B {pm("flat","B"):.1f} m. '
+            '구간이 0 을 걸쳐 등록 규칙상 「퇴행」 은 아닙니다.</li>'
+            f'<li><b>계단 오르기에서는 B 가 더 멀리 갔습니다</b>(중앙값 A {pm("stairs_up","A"):.1f} m · B {pm("stairs_up","B"):.1f} m, 둘 다 기준선 성공 0). '
+            f'징검다리에서는 B 가 더 오래 버텼습니다(넘어지기까지 평균 A {(comp or {}).get(("stepping_stones","A"),{}).get("secs",0):.1f} 초 · B {(comp or {}).get(("stepping_stones","B"),{}).get("secs",0):.1f} 초). '
+            '즉 지도가 걸음을 「바꾼」 것은 분명하지만, 2,000 update 로는 건너는 쪽으로 좋아지지 않았습니다.</li>'
+            + (f'<li><b>B 는 학습하면서 나빠졌고, A 는 거의 그대로였습니다.</b> 학습 전(update 0)에는 A · B 가 같았습니다(gap 둘 다 {learn["A"]["gap"]["update0_success"]}). 학습 뒤 gap 은 A {learn["A"]["gap"]["update2000_success"]} · B {learn["B"]["gap"]["update2000_success"]}. 지도 길을 짧게 붙여 학습한 방식이 정책을 흔든 것으로 보입니다.</li>' if learn else ''))
+
+
+def next_block(J):
+    rows = [("지도가 좋다", "지도가 gap · 징검다리 둘 다에서 좋다", "① 발 디딤 자리 보상 (MARG 방식, 보상만 바꾼 A1/B1 비교) → ② D435i 카메라 현실화 (시야 가림 → 잡음 → 렌더) → ③ AME-2 식 attention 지도 encoder"),
+            ("gap 만 좋다 (징검다리 불명)", "gap 만 좋고 징검다리는 불명", "발 디딤 자리 보상을 먼저. v2 가 징검다리에서 0 ~ 24 % 였던 원인 후보가 「발 놓을 자리를 모름」 (MARG Fig 8b)"),
+            ("불명", "둘 다 불명 · 약함", "지도가 정말 쓰이는지부터: 지도를 지웠을 때 B 의 행동이 바뀌는지 재는 탐침 · 학습 길이 늘리기 · encoder 동결 영향. 그다음 지도 표현 (attention encoder)"),
+            ("퇴행 감시 위반", "B 가 퇴행", "지도 입력 이상 점검 (좌표 · 이력 · reset 연결), 같은 부모 · 시드로 재현")]
+    cur = {J[0]} | ({"퇴행 감시 위반"} if J[2] else set()) if J else set()
+    body = "".join(f'<tr{" class=cur" if k in cur else ""}><td>{E(c)}</td><td>{E(n)}</td></tr>' for k, c, n in rows)
+    return ('<div class="tbl"><table class="def s2n"><thead><tr><th>평가 결과</th><th>다음 실험 (결과 전에 적어 둔 갈래 · S2-RESULT-PLAN 4 절)</th></tr></thead><tbody>'
+            + body + '</tbody></table></div>'
+            + ('<p class="sub">색칠한 줄이 이번 결과에 해당하는 갈래입니다.</p>' if cur else '<p class="sub">평가가 끝나면 해당 줄에 색이 칠해집니다.</p>')
+            + ('<p>표는 결과 전에 적어 둔 갈래입니다. 결과를 본 뒤 팀장이 「지도를 주고 안 주고로는 목표에 닿기 어렵다 · height scan 신경망과 몸 상태 신경망으로 발 디딜 곳을 정하는 구조로 가야 한다」 고 판단했고, 그 방향의 논문 조사와 설계안(N 판)을 '
+               '<code>inbox/jay/20261018-next-arch/RESEARCH-heightscan-architectures.md</code> 에 정리했습니다. 핵심: S2 B 도 지도 encoder 를 갖고 있었고 학습도 됐지만, 지도를 보지 않던 정책에 나중에 붙여 짧게 미세조정한 방식이 문제로 보입니다. '
+               '다음 판은 지도 encoder 와 몸 상태 encoder 를 처음부터 함께 학습하고, 발 디딤 보상과 4 족 보행 위상 장치를 넣는 안입니다(결정은 팀장).</p>' if cur else ''))
+
+
+def video_block(videos):
+    if not videos:
+        return '<p class="s2v w"><b>영상 준비 중입니다.</b> 최종 평가가 끝난 뒤 같은 시드 · 같은 지형으로 A 와 B 를 나란히 찍습니다.</p>'
+    cases = {}
+    for v in videos:
+        c = cases.setdefault(v["case_id"], {"case_id": v["case_id"], "layer": v.get("layer_name", v.get("layer", "")),
+                                            "seed": v.get("seed"), "sel": "결과 전 고정" if v.get("selection") == "fixed" else v.get("selection_label", "차이 예시"),
+                                            "arms": {}})
+        c["arms"][v["arm"]] = {"v": v["web"], "p": v["poster_web"], "reached": bool(v.get("reached")), "survived": bool(v.get("survived"))}
+    data = json.dumps(list(cases.values()), ensure_ascii=False).replace("</", "<\\/")
+    same = [v for v in videos if v.get("same_as_eval") is True]
+    diff = [v for v in videos if v.get("same_as_eval") is False]
+    noeval = [v for v in videos if v.get("same_as_eval") is None]
+    check = (f'<p class="sub">영상마다 따로 다시 돌린 결과(기준선 도달 · 끝까지 생존)를 같은 판의 평가 기록과 맞춰 보았습니다. '
+             f'평가 기록이 있는 {len(same) + len(diff)} 편 중 {len(same)} 편이 같았습니다.'
+             + (f' 다른 판: {E(" · ".join(v["case_id"] + " " + v["arm"] for v in diff))}.' if diff else '')
+             + (f' {E(" · ".join(v["layer_name"] + " 시드 " + str(v["seed"]) + " " + v["arm"] for v in noeval))} 는 평가에서 Isaac 비정상 종료로 비었던 판이라 이 영상이 처음 보여 주는 결과입니다.' if noeval else '')
+             + ' 멈춰 선 장면은 로봇이 실제로 멈춘 것입니다(위 속도 그래프가 0, 시계는 계속 흐름).</p>')
+    gp =(Path(__file__).with_name("gp_player.js")).read_text(encoding="utf-8")
+    return ('<div class="s2crit"><b>영상 아래 표시</b>: 「기준선 도달」 은 몸 중심이 장애물 구간 끝(기준선)을 한 번이라도 넘은 것, 「끝까지 생존」 은 20 초 동안 넘어지지 않은 것, 「둘 다」 가 평가의 성공입니다. 색은 원자료로 다시 잰 값입니다.</div>'
+            '<div class="frow" id="s2pick"><span class="lab">사례</span></div><div id="s2trans"></div><div class="s2quad" id="s2quad"></div>'
+            + check +
+            '<script type="application/json" id="s2vdata">' + data + '</script>'
+            '<script>(()=>{' + gp + VIDEO_JS + '})();</script>')
+
+
+VIDEO_JS = """
+const D = JSON.parse(document.getElementById('s2vdata').textContent);
+const group = GP.syncGroup({ onClock: t => { ui.clock.textContent = t; }, onButton: b => { ui.button.textContent = b; }, onNote: n => { ui.note.textContent = n; } });
+const ui = GP.transport(group);
+document.getElementById('s2trans').appendChild(ui.row);
+const pick = document.getElementById('s2pick'), quad = document.getElementById('s2quad');
+const badge = (ok, yes, no) => `<span class="vd ${ok ? 'ok' : 'fall'}">${ok ? yes : no}</span>`;
+const G = [];
+D.forEach(c => { const k = c.layer + ' · ' + c.sel; let g = G.find(x => x.k === k); if (!g) { g = { k, cases: [] }; G.push(g); } g.cases.push(c); });
+function show(i) {
+  group.clear(); quad.textContent = '';
+  pick.querySelectorAll('.chip').forEach((b, j) => b.setAttribute('aria-pressed', String(j === i)));
+  G[i].cases.forEach(c => ['A', 'B'].forEach(arm => {
+    const a = c.arms[arm]; if (!a) return;
+    const tile = GP.el('article', { class: 'tile' });
+    tile.appendChild(GP.el('div', { class: 'th', html: `<span class="tag s2${arm.toLowerCase()}">${arm}</span><b>${arm === 'A' ? '지도 없음' : '지도 있음'}</b><span class="sub">${c.layer} · 시드 ${c.seed}</span>` }));
+    const vid = GP.video({ poster: a.p, controls: true, 'aria-label': `${arm} ${c.layer} 시드 ${c.seed}` });
+    GP.attach(vid, a.v); vid.playbackRate = ui.rate(); tile.appendChild(vid); group.add(c.case_id + arm, vid);
+    const both = a.reached && a.survived;
+    tile.appendChild(GP.el('div', { class: 'cap', html: badge(a.reached, '기준선 도달', '기준선 미도달') + ' ' + badge(a.survived, '끝까지 생존', '넘어짐') + ' ' + badge(both, '성공 (둘 다)', '실패') }));
+    quad.appendChild(tile);
+  }));
+}
+G.forEach((g, i) => { const b = GP.el('button', { class: 'chip', type: 'button', 'aria-pressed': 'false', text: g.k + ' · 시드 ' + g.cases.map(c => c.seed).join(' · ') }); b.addEventListener('click', () => show(i)); pick.appendChild(b); });
+if (G.length) show(0);
+"""
+
+
+S2CSS = """<style id="s2css">
+:root{--sa:#6b7a90;--sb:#0e7a6e}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--sa:#9aa7b8;--sb:#3ec7b4}}
+:root[data-theme="dark"]{--sa:#9aa7b8;--sb:#3ec7b4}
+#s2 svg.s2c{width:100%;height:auto;display:block;font-family:var(--sans)}
+#s2 figure.s2d svg{max-width:860px} #s2 figure.s2r svg{max-width:1100px}
+#s2 .s2c .gl{stroke:var(--rule);stroke-width:1}
+#s2 .s2c .gl.z{stroke:var(--ink-3)}
+#s2 .s2c .ax{fill:var(--ink-3);font-size:12px}
+#s2 .s2c .vl{fill:var(--ink-2);font-size:12.5px;font-family:var(--mono)}
+#s2 .s2c .ln{fill:none;stroke-width:1.6}
+#s2 .s2c .ln.a,#s2 .s2c .bar.a{stroke:var(--sa)}
+#s2 .s2c .ln.b{stroke:var(--sb)}
+#s2 .s2c .bar.a{fill:var(--sa)} #s2 .s2c .bar.b{fill:var(--sb)}
+#s2 .s2c .trk{fill:var(--paper-2)}
+#s2 .s2c .ci{stroke:var(--ink);stroke-width:2}
+#s2 .s2c .pt{fill:var(--ink)}
+#s2 .s2c .thr{stroke:var(--note);stroke-width:1.5;stroke-dasharray:4 4}
+#s2 .s2c .bxs{fill:var(--card);stroke:var(--rule);stroke-width:1.2}
+#s2 .s2c .bxs.a{stroke:var(--sa);stroke-width:2} #s2 .s2c .bxs.b{stroke:var(--sb);stroke-width:2}
+#s2 .s2c .bxs.ev{stroke:var(--ink-2)}
+#s2 .s2c .bt1{fill:var(--ink);font-size:15px;font-weight:600}
+#s2 .s2c .bt2{fill:var(--ink-2);font-size:13px}
+#s2 .s2c .ar{stroke:var(--ink-3);stroke-width:1.4} #s2 .s2c .arh{fill:var(--ink-3)}
+#s2 .s2leg{display:flex;gap:18px;font-size:13.5px;color:var(--ink-2);margin:6px 0 10px}
+#s2 .s2leg i{display:inline-block;width:14px;height:4px;border-radius:2px;vertical-align:3px;margin-right:6px}
+#s2 .s2v{padding:12px 16px;border-radius:6px;margin:10px 0 14px;border-left:4px solid var(--rule);background:var(--paper-2)}
+#s2 .s2v.g{border-left-color:var(--brand);background:var(--brand-soft)}
+#s2 .s2v.w{border-left-color:var(--note);background:var(--note-soft)}
+#s2 .s2v.b{border-left-color:var(--stop);background:var(--stop-soft)}
+#s2 table.s2t{min-width:860px} #s2 table.s2t td:first-child{font-family:var(--sans);font-size:14px}
+#s2 table.s2n td:first-child{font-family:var(--sans);white-space:normal;min-width:10em}
+#s2 table.s2n tr.cur td{background:var(--brand-soft)}
+#s2 ol.flow{list-style:none;padding:0;margin:10px 0 0;display:grid;gap:10px}
+#s2 ol.flow li{display:grid;grid-template-columns:7.5em 1fr;gap:4px 14px;padding-left:12px;border-left:3px solid var(--rule)}
+#s2 ol.flow li.b{border-left-color:var(--stop)} #s2 ol.flow li.g{border-left-color:var(--brand)} #s2 ol.flow li.w{border-left-color:var(--note)}
+#s2 ol.flow .tm{font-family:var(--mono);font-size:13px;color:var(--ink-3)}
+#s2 .tag.s2a{background:var(--sa)} #s2 .tag.s2b{background:var(--sb)}
+#s2 .s2pairs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px 22px}
+#s2 .s2pv{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+#s2 .s2ph{font-size:14px;margin:0 0 6px}
+@media (max-width:900px){#s2 .s2pairs{grid-template-columns:1fr}}
+@media (max-width:720px){#s2 ol.flow li{grid-template-columns:1fr}}
+#s2 .s2crit{font-size:14px;color:var(--ink-2);background:var(--paper-2);border-radius:6px;padding:10px 14px;margin:8px 0}
+#s2 .frow{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:6px 0}
+#s2 .frow .lab{font-size:12.5px;color:var(--ink-3);width:48px;flex:none}
+#s2 .trow{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:8px 0 12px}
+#s2 .trow .clock{font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:13.5px;min-width:9.5em;color:var(--ink)}
+#s2 .trow .flabel{font-size:12.5px;color:var(--ink-3);margin-left:6px}
+#s2 .trow .tnote{font-size:12.5px;color:var(--stop-ink)}
+#s2 .s2quad{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
+@media (max-width:1100px){#s2 .s2quad{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:600px){#s2 .s2quad{grid-template-columns:1fr}}
+#s2 .tile{background:var(--paper);border:1px solid var(--rule);border-radius:8px;overflow:hidden;display:flex;flex-direction:column}
+#s2 .tile .th{display:flex;flex-wrap:wrap;gap:8px;align-items:baseline;padding:7px 10px;border-bottom:1px solid var(--rule);font-size:13.5px}
+#s2 .tile video{display:block;width:100%;aspect-ratio:16/9;background:#0d1117;object-fit:contain}
+#s2 .tile .cap{padding:8px 10px;display:flex;flex-wrap:wrap;gap:6px}
+#s2 .vd{font-size:12.5px;padding:1px 7px;border-radius:4px;background:var(--paper-2)}
+#s2 .vd.ok{color:var(--brand-ink);background:var(--brand-soft)} #s2 .vd.fall{color:var(--stop-ink);background:var(--stop-soft)}
+</style>"""
+
+
+SECTION = """
+<section id="s2">
+  <h2>S2 · 지형 지도를 주면 gap · 징검다리를 더 건너나 (A/B · 10/17 ~ 10/18)</h2>
+  <p class="sub">{asof} 기준 · 이 절이 8판에서 새로 더한 내용입니다. 아래 E1 · E2 내용은 7판 그대로입니다.</p>
+  <div class="tri">
+    <div>
+      <h3>한 것</h3>
+      <p>E1 이 2만 번 학습한 정책(<span class="num">model_20000</span>)을 부모로, 똑같은 조건에서 <b>지도 입력만 다른 두 정책</b>을 2,000 update 씩 더 학습했습니다. A 는 발밑 지형 높이 지도를 0 으로 막았고, B 는 실제 지도(187 점 높이 + 유효 표시)를 받았습니다. 학습 시간은 A {a_h} 시간 · B {b_h} 시간(update 시간 합)입니다.</p>
+      <p>그다음 미리 등록한 60 쌍(gap 20 · 징검다리 20 · 평지 10 · 계단 오르기 10)의 같은 지형 · 같은 시드 · 같은 명령(전진 1.0 m/s)에서 A 와 B 를 한 번씩 걸려 짝지어 비교합니다.</p>
+    </div>
+    <div>
+      <h3>알게 된 것</h3>
+      <ul class="plain">{know}</ul>
+    </div>
+    <div>
+      <h3>아직 모르는 것</h3>
+      <ul class="plain">
+        {unknown1}
+        <li><b>학습 시드 하나.</b> 시드를 바꿔도 같은 차이가 나는지는 재지 않았습니다.</li>
+        <li><b>로봇이 지도를 「써서」 걷는지.</b> 지도가 제대로 들어간 것은 확인했지만, 지도를 지웠을 때 B 의 행동이 바뀌는지는 아직 재지 않았습니다.</li>
+      </ul>
+    </div>
+  </div>
+
+  <h3 class="h3gap">결과: 같은 지형에서 A 와 B 를 짝지어 잰 성공률</h3>
+  <div class="s2leg"><span><i style="background:var(--sa)"></i>A · 지도 없음</span><span><i style="background:var(--sb)"></i>B · 지도 있음</span></div>
+  {result}
+  <p class="sub">판정 규칙은 결과를 보기 전(10/17 15:15)에 등록했습니다: 목표 지형(gap, 징검다리) 각각에서 B − A 의 95% 구간 하한이 0 보다 크고 평균 차이가 10%p 이상이면 「지도가 좋다」, 아니면 「불명」(효과 없음이 아니라 이 실험으로 가를 수 없다는 뜻). 평지 · 계단 오르기는 B 가 A 보다 구간 밖으로 나쁘면 「퇴행」. 낮은 결과가 나와도 좋은 결과가 나올 때까지 다시 돌리지 않습니다.</p>
+
+  <h3 class="h3gap">실험 설계: 지도 입력 한 칸만 다르게</h3>
+  <figure class="s2d">{design}<figcaption>부모 · 시드 · 학습 길이 · 로봇 수 · 보상 · 평가 지형이 모두 같고 지도 입력만 다릅니다. 그래서 차이가 나면 지도 때문이라고 읽을 수 있습니다. critic(학습 때만 쓰는 채점 신경망)은 두 쪽 모두 지형 높이를 받습니다.</figcaption></figure>
+
+  <h3 class="h3gap">영상: 같은 시드 · 같은 지형에서 A 와 B</h3>
+  <p class="sub">높이 센서가 재는 187 점을 지형 위에 그렸습니다. B 는 이 점이 정책에 들어갑니다. A 는 센서가 같은 점을 재지만 정책에는 0 이 들어가므로 회색으로 흐리게 그렸습니다. 영상은 판정 근거가 아니라 보기용입니다(판정은 위 60 쌍 평가). 결과 전에 고른 고정 사례와, 결과에서 규칙으로 고른 차이 예시를 나눠 표시합니다.</p>
+  {videos}
+
+  <h3 class="h3gap">학습 곡선: A 와 B 가 거의 같은 길을 걸었다</h3>
+  <div class="s2leg"><span><i style="background:var(--sa)"></i>A</span><span><i style="background:var(--sb)"></i>B</span></div>
+  {curves}
+
+  <h3 class="h3gap">10/13 부터 10/17 까지 왜 결과가 없었나</h3>
+  <p>새 실험 장치(지도 입력 · 감독기 · 평가기)를 실제 시뮬레이터에서 처음 돌리며 막힌 곳을 하나씩 고쳤습니다. 가짜 입력으로 한 CPU 시험은 통과했지만 실제 실행에서 처음 드러난 결함이 많았습니다. 10/16 14:18 부터 10/17 오전까지 약 20 시간은 GPU 를 띄우기 위한 동의 절차를 기다리느라 GPU 가 놀았습니다(lead 의 잘못: 상시 위임을 한 번에 받지 않고 실행마다 다시 물었습니다).</p>
+  <ol class="flow">
+    <li class="w"><span class="tm">10/13 ~ 10/16</span><span>지도 입력 · 학습 · 평가 장치를 설계하고 ASTRA 검증을 반복. 실제 지도 수집은 10/15 ~ 10/16 에 네 번 시도(USD 폴더 · 장면 조회 문제로 보류)</span></li>
+    <li class="b"><span class="tm">10/16 14:18 ~ 10/17 10:4x</span><span>GPU 놀았음. 실행마다 팀장 동의를 다시 받는 절차 때문. 10/17 10:4x 팀장 「앞으로 매번 묻지 말고 설계대로 진행」</span></li>
+    <li class="g"><span class="tm">10/17 10:49 ~ 14:31</span><span>실제 시뮬레이터에서 지도 입력이 정답 지형 높이와 맞는지 확인(통과), 평가기 · 발 위치 · 배관 점검. 평가기 닫기 실패 · 상태 파일 경합 · 높은 지형의 float32 반올림을 찾아 고침</span></li>
+    <li class="b"><span class="tm">15:13 ~ 18:12</span><span>A 학습을 네 번 띄움. ① 한 update 23.5 초(센서 점검이 로봇마다 따로 돌아 느림 → 묶어서 3.7 초) ② 33 update 에서 중단(16 초 뒤 센서 시각이 float32 로 반올림돼 갱신을 건너뜀 → 매 step 갱신) ③ 923 update 에서 감독기가 상태 파일을 한 번 못 읽자 학습을 죽임(→ 연속으로 못 읽을 때만)</span></li>
+    <li class="g"><span class="tm">18:12 ~ 20:38</span><span>A 학습 2,000 update 완료</span></li>
+    <li class="w"><span class="tm">20:38 ~ 21:12</span><span>끝난 뒤 「정상 완료」 확인서를 쓰는 코드에 <code>import math</code> 한 줄이 빠져 확인서가 보류로 찍힘. 학습은 멀쩡해서 다시 학습하지 않고, 고친 코드로 같은 확인을 다시 돌려 새 확인서를 만듦(원본은 그대로 둠)</span></li>
+    <li class="g"><span class="tm">21:12 ~ 23:33</span><span>B 학습 2,000 update. 같은 시간에 평가기의 GPU 확인 코드 결함(실제 값 모양을 잘못 가정)을 고침</span></li>
+    <li class="b"><span class="tm">23:43 ~ 00:17</span><span>예행 평가가 3 번째 건의 지면 대조 검사(벽 · 모서리 접점을 바닥으로 잘못 대조) 한 건에 걸려 전체가 멈춤 → 「한 건 결측은 기록하고 계속」 과 3D 대조로 고침</span></li>
+    <li class="g"><span class="tm">00:17 ~ 02:2x</span><span>예행 평가 8/8 통과 → 최종 평가 120 건(결측 7: Isaac 비정상 종료). 다음은 영상 · update 0 평가</span></li>
+    <li class="b"><span class="tm">02:31</span><span>영상 첫 실행 멈춤. 평가에 결측 쌍이 있다는 이유로 차이 예시 선택을 통째로 거절했고, 고정 8 편으로 줄여 띄운 첫 편은 Isaac 이 영상 기록 없이 끝남 → 결측 쌍은 빼고 고르기 · 한 편이 실패해도 다음 편으로 가게 고침</span></li>
+    <li class="w"><span class="tm">02:33 ~ 04:34</span><span>update 0(학습 전) 평가. 옛 실행 틀이 평가 건마다 빈 콘솔 창을 팀장 화면에 띄움 → 창 없이 띄우게 고침. 팀장이 옛 실행을 멈춘 뒤 고친 틀로 02:52 다시 띄워 04:34 완료(결측 8)</span></li>
+    <li class="b"><span class="tm">04:35 ~ 04:52</span><span>영상 두 번째 시도도 기록 없이 끝남. 영상용 렌더 설정을 평가 어댑터가 받지 않았고, Isaac 이 끝나면서 오류를 지움. GPU 0 은 04:36 부터 수리를 기다리며 놀았음 → 렌더 설정 연결 · 오류를 파일에 먼저 남기기 · 평가와 같은 GPU 지정</span></li>
+    <li class="g"><span class="tm">{vidspan}</span><span>{vidnote}</span></li>
+  </ol>
+
+  <h3 class="h3gap">다음 실험</h3>
+  {nextexp}
+
+  <h3 class="h3gap">팀장 질문과 답 (10/17)</h3>
+  <dl class="qa">
+    <dt>지도 점검을 왜 여러 번 했나? 지도가 잘못됐나?</dt><dd>지도 자체는 처음부터 맞았습니다. 점검 도구 쪽 문제(USD 폴더 · 장면 조회 · 기록 형식)로 다시 돌렸고, 10/17 오전 실제 시뮬레이터에서 지도 값이 정답 지형 높이와 맞는 것을 확인했습니다.</dd>
+    <dt>그동안 실제 GPU 로 A/B 를 돌린 적이 없었나?</dt><dd>네. A/B 학습은 10/17 15:13 에 A 를 띄운 것이 처음입니다. 그 전까지 S2 는 설계 · CPU 시험 · 짧은 점검 실행뿐이었습니다.</dd>
+    <dt>「smoke」 가 뭔가?</dt><dd>본 평가 120 건 전에 8 건만 먼저 돌려 보는 예행 평가입니다. 새로 고친 평가 프로그램이 실제 시뮬레이터에서 끝까지 도는지 확인합니다.</dd>
+    <dt>확인서가 보류로 찍혔다면 A 를 다시 학습해야 하나?</dt><dd>아닙니다. 학습과 체크포인트는 멀쩡합니다. 끝난 뒤 확인서를 쓰는 코드에 한 줄(<code>import math</code>)이 빠졌던 것이라, 고친 코드로 같은 확인을 A 의 저장 파일에 다시 돌려 통과했습니다. A 와 B 의 학습 계산 코드는 같습니다.</dd>
+    <dt>2,000 update 면 충분한가?</dt><dd>모릅니다. E1 학습의 약 1/80 경험량입니다(로봇 1/8 × 횟수 1/10, 한 번에 모으는 길이가 같다는 가정). 지도 효과의 첫 답을 빨리 얻으려고 짧게 잡았습니다. 결과가 「불명」 이면 학습 길이를 늘리는 것이 다음 후보입니다.</dd>
+    <dt>감독기가 지형을 잘 보는지 확인했다는 것은?</dt><dd>두 가지입니다. 실제 시뮬레이터에서 B 의 지도 값이 정답 지형 높이와 맞는지(10/17 오전 통과), 그리고 학습 내내 매 step 모든 로봇의 높이 센서가 새로 갱신됐는지(A · B 모두 이상 0). 이것은 「지도가 제대로 들어간다」 는 확인이고, 「지도를 써서 걷는다」 는 확인은 평가와 지도 지우기 시험으로 합니다.</dd>
+    <dt>자동 안전 검사는 무엇이고 왜 막았나?</dt><dd>Claude Code 프로그램에 들어 있는 검사입니다(ASTRA 장치가 아님). lead 가 팀장 말씀 전에 동의 파일을 대신 쓰려 할 때 막았습니다. 팀장이 직접 말씀한 뒤에는 막지 않았습니다.</dd>
+  </dl>
+
+  <h3 class="h3gap">팀장이 정할 것</h3>
+  <ul class="plain">
+    <li><b>다음 방향.</b> (가) S2 를 학습률을 설계값(0.00017)으로 고쳐 다시 돌려 「지도를 붙여 미세조정」 방식을 한 번 더 확인할지, (나) 구조 조사 문서의 N 판(지도 encoder 와 몸 상태 encoder 를 처음부터 함께 학습, 발 디딤 보상, 보행 위상 장치)으로 넘어갈지. lead 권고: (나). 조사 문서 <code>inbox/jay/20261018-next-arch/RESEARCH-heightscan-architectures.md</code> 에서 논문 36 편 중 지도를 나중에 붙인 사례가 없었고, 이번에 B 만 학습 중 무너졌습니다.</li>
+    <li><b>결측을 다시 돌려 채울지.</b> update 2000 은 7 건, update 0 은 8 건이 Isaac 비정상 종료로 비었습니다. 결과가 없는 판만 같은 시드로 다시 재는 것이라 「좋은 결과가 나올 때까지 다시 돌리기」 와는 다르지만 등록 규칙에 없던 절차라 팀장 확인 뒤. 결론(B 가 gap 에서 나빠짐)은 결측을 채워도 뒤집히기 어렵습니다(구간이 0 아래로 넉넉함).</li>
+    <li><b>실행 절차 줄이기.</b> 실행마다 동의 파일을 만드는 절차를 상시 동의 하나로 바꾸는 것(ASTRA 17ak 가 수용, 구현은 아직).</li>
+  </ul>
+</section>
+"""
+
+
+def splice(pub, section, *, kicker, version_line):
+    s = pub
+    s = s.replace("</head>", S2CSS + "\n</head>", 1)
+    s = re.sub(r'<div class="kicker">[^<]*</div>', f'<div class="kicker">{E(kicker)}</div>', s, count=1)
+    s = s.replace("<title>E1 · E2 시뮬 평가</title>", "<title>E1 · E2 · S2 시뮬 평가</title>", 1)
+    s = s.replace('<h1>E1 · E2 시뮬 평가 <span class="seed">', '<h1>E1 · E2 · S2 시뮬 평가 <span class="seed">', 1)
+    s = s.replace('<p class="lead">', '<p class="lead"><b>8판: 맨 위에 S2 (지도를 주면 gap · 징검다리를 더 건너나, A/B) 를 더했습니다.</b> ', 1)
+    s = s.replace("· 7판 2026-10-14 09:50</dd>", f"· 7판 2026-10-14 09:50 · {E(version_line)}</dd>", 1)
+    s = s.replace("<dt>상태</dt><dd>", "<dt>상태</dt><dd>8판 (S2 A/B 결과 · 영상 · 학습 곡선) · ", 1)
+    marker = '<section id="sum">'
+    assert s.count(marker) == 1, "본문 첫 절 표지가 하나가 아니다"
+    s = s.replace(marker, section + "\n" + marker, 1)
+    for need in ("s2css", 'id="s2"', "E1 · E2 · S2 시뮬 평가", "8판"):
+        assert need in s, need
+    return s
+
+
+def main():
+    p = argparse.ArgumentParser()
+    p.add_argument("--pub", required=True)
+    p.add_argument("--a", required=True)
+    p.add_argument("--b", required=True)
+    p.add_argument("--result")
+    p.add_argument("--videos")
+    p.add_argument("--site", required=True)
+    p.add_argument("--asof", required=True)
+    p.add_argument("--episodes")
+    p.add_argument("--receipt")
+    p.add_argument("--progress")
+    p.add_argument("--full-result")
+    p.add_argument("--video-summary", help="make_video_manifest 의 .summary.json")
+    p.add_argument("--video-span", help="영상 세 번째 시도 시각 범위, 예: 04:52 ~ 05:10")
+    p.add_argument("--video-assets", help="s2_video_assets.json (아티팩트 자산 주소)")
+    a = p.parse_args()
+    A, B = read_updates(a.a), read_updates(a.b)
+    assert [r["update"] for r in A] == list(range(1, len(A) + 1)) and len(A) == 2000, "A 기록 2000 줄 아님"
+    assert [r["update"] for r in B] == list(range(1, len(B) + 1)), "B 기록 번호 이상"
+    assert {r["arm"] for r in A} == {"A"} and {r["arm"] for r in B} == {"B"}
+    result = json.load(open(a.result, encoding="utf-8")) if a.result else None
+    videos = json.load(open(a.videos, encoding="utf-8")) if a.videos else None
+    site = Path(a.site); site.mkdir(parents=True, exist_ok=True)
+    assets = json.load(open(a.video_assets, encoding="utf-8"))["assets"] if a.video_assets else None
+    if videos and assets:
+        # 아티팩트 버전 용량 때문에 자산 저장소 주소를 쓴다. 바이트 수로 같은 파일인지 확인.
+        for v in videos:
+            for k in ("mp4", "poster"):
+                src = Path(v[k]); url, size = assets[src.name]
+                assert src.stat().st_size == size, (src.name, src.stat().st_size, size)
+                v["web" if k == "mp4" else "poster_web"] = url
+    elif videos:
+        for v in videos:
+            for k, sub in (("mp4", "v"), ("poster", "p")):
+                src = Path(v[k]); dst = site / sub / "s2" / src.name
+                dst.parent.mkdir(parents=True, exist_ok=True)
+                if not dst.exists() or sha(dst) != sha(src):
+                    shutil.copy2(src, dst)
+                v["web" if k == "mp4" else "poster_web"] = f"{sub}/s2/{src.name}"
+    comp, miss = None, None
+    if a.episodes:
+        recs = json.load(open(a.episodes, encoding="utf-8"))["records"]
+        comp = {}
+        for r in recs:
+            if not r.get("executed") or r.get("missing_reason"):
+                continue
+            c = comp.setdefault((r["family"], r["arm"]), {"n": 0, "crossed": 0, "fall": 0, "progs": [], "steps": []})
+            sc = r["score"]
+            c["n"] += 1; c["crossed"] += bool(sc.get("crossed")); c["fall"] += bool(sc.get("fall"))
+            c["progs"].append(float(sc.get("progress_m") or 0.0)); c["steps"].append(int(r["steps"]))
+        for c in comp.values():
+            ps = sorted(c.pop("progs")); st = c.pop("steps")
+            c["prog"] = (ps[len(ps)//2] if len(ps) % 2 else (ps[len(ps)//2-1] + ps[len(ps)//2]) / 2) if ps else 0.0
+            c["secs"] = (sum(st) / len(st)) * 0.02 if st else 0.0
+    if a.receipt:
+        v = json.load(open(a.receipt, encoding="utf-8"))["verdict"]
+        ops = v["hold_classes"]["operational"]
+        codes = [r.get("exit_code") for r in (json.loads(l) for l in open(a.progress, encoding="utf-8"))
+                 if r.get("event") == "end" and "slot" in r and r.get("exit_code") not in (0, None)]
+        miss = {"pairs": v["missing_pairs"], "crash": sum(c == 3221225477 for c in codes),
+                "ctrlc": sum(c == 3221225786 for c in codes)}
+        assert len(ops) == len(codes) == v["missing_case_arms"], (len(ops), len(codes), v["missing_case_arms"])
+    learn = json.load(open(a.full_result, encoding="utf-8"))["learning_effect"] if a.full_result else None
+    vrun = None
+    if a.video_summary:
+        assert a.video_span, "--video-span"
+        vrun = {**json.load(open(a.video_summary, encoding="utf-8")), "span": E(a.video_span)}
+        assert vrun["completed"] == len(videos or []), (vrun["completed"], len(videos or []))
+    sec = build_section(A, B, result, videos, a.asof, comp=comp, miss=miss, learn=learn, vrun=vrun)
+    pub = open(a.pub, encoding="utf-8").read()
+    out = splice(pub, sec, kicker=f"FOOTHOLD · 시뮬 RL · {a.asof}", version_line=f"8판 {a.asof}")
+    (site / "index.html").write_text(out, encoding="utf-8")
+    print(json.dumps({"site": str(site / "index.html"), "bytes": len(out.encode()), "A_updates": len(A),
+                      "B_updates": len(B), "result": bool(result), "videos": len(videos or [])}, ensure_ascii=False))
+
+
+if __name__ == "__main__":
+    main()

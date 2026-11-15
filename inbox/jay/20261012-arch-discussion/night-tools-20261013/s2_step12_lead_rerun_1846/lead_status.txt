@@ -1,0 +1,5 @@
+B start 18:31:30
+B rc=1 end 18:31:48
+A34 rc=0 end 18:39:22
+B2 start 18:39:30
+B2 rc=0 end 18:45:09

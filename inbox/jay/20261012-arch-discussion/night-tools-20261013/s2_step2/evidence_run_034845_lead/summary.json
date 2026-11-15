@@ -1,0 +1,49 @@
+{
+  "cpu_only": true,
+  "results": [
+    {
+      "test": "step1_14",
+      "exit_code": 0,
+      "wall_s": 6.53,
+      "log": "C:\\Users\\AI-WS01\\.claude\\jobs\\09bbf294\\tmp\\codexE\\evidence_s2_step2\\run_20261015_034845_150772\\step1_14.log"
+    },
+    {
+      "test": "step1_69_mutants",
+      "exit_code": 0,
+      "wall_s": 417.52,
+      "log": "C:\\Users\\AI-WS01\\.claude\\jobs\\09bbf294\\tmp\\codexE\\evidence_s2_step2\\run_20261015_034845_150772\\step1_69_mutants.log"
+    },
+    {
+      "test": "step2_known_answers",
+      "exit_code": 0,
+      "wall_s": 4.05,
+      "log": "C:\\Users\\AI-WS01\\.claude\\jobs\\09bbf294\\tmp\\codexE\\evidence_s2_step2\\run_20261015_034845_150772\\step2_known_answers.log"
+    },
+    {
+      "test": "step2_code_mutants",
+      "exit_code": 0,
+      "wall_s": 48.61,
+      "log": "C:\\Users\\AI-WS01\\.claude\\jobs\\09bbf294\\tmp\\codexE\\evidence_s2_step2\\run_20261015_034845_150772\\step2_code_mutants.log"
+    }
+  ],
+  "expected_tests": [
+    "step1_14",
+    "step1_69_mutants",
+    "step2_known_answers",
+    "step2_code_mutants"
+  ],
+  "step1_hashes_match": true,
+  "regression_readback": {
+    "step1_14": true,
+    "step1_69": true
+  },
+  "parent_hashes_unchanged": true,
+  "parent_hashes": {
+    "C:\\isaac\\ext\\go2_rl_robotlab\\source\\rsl_rl\\rsl_rl\\algorithms\\moe_cts.py": "136a1c1082243ae1c6654307ffcf32de2a99cf6c4d6581419ada59f288a058f6",
+    "C:\\isaac\\ext\\go2_rl_robotlab\\source\\rsl_rl\\rsl_rl\\runners\\on_policy_runner_cts.py": "6800c7866edd03f7deb2bf38a00c6683922a96cbd1d7909ea55989a5eed844a9"
+  },
+  "shell_syntax": {
+    "exit_code": 0,
+    "stderr": ""
+  }
+}

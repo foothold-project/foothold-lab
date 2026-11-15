@@ -1,0 +1,12 @@
+# 분류: B/항법 · 벤치마크 방 명세 (임시 배치)
+# 작성: sonnet-code-lx · 2026-11-12
+# 근거: PLAN-HIPAN-V2 §5.1 「벤치마크 방 넷은 손으로 적은 배치 파일」 · 논문 치수는 미기재라 analyst 가 값을 제안하기 전 자리표
+# 요지: Complex-2. Complex-1 에 우리 지형 패치 (틈 · 평균대) 를 더한 방. 치수는 임시.
+# 상태: 임시 · analyst 치수 제안 전
+seed: 0
+size_m: 20.0
+primitives:
+  - {type: patch, kind: gaps, level: 2, x: 6.0, y: 0.0}
+  - {type: patch, kind: balance_beams, level: 2, x: 6.0, y: 10.0}
+  - {type: wall, x0: 14.0, y0: 0.2, x1: 14.2, y1: 12.0, h: 1.2}
+  - {type: table, x: 16.0, y: 15.0, w: 0.8, top: 0.7}

@@ -1,0 +1,4 @@
+CAUGHT variant_missing first_FAIL=variants want=variants
+CAUGHT raw_rewrite first_FAIL=raw_repr want=raw_repr
+CAUGHT double_offset first_FAIL=start_z want=start_z
+CAUGHT no_forces first_FAIL=foot_forces want=foot_forces

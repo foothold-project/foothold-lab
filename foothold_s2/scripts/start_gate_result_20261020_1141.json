@@ -1,0 +1,77 @@
+{
+ "started": "2026-10-20T11:41:53",
+ "num_envs": 64,
+ "iterations": 2,
+ "device": "cuda:0",
+ "seed": 42,
+ "gt_map_rays": 512,
+ "obs_shapes": {
+  "policy": [
+   64,
+   45
+  ],
+  "depth": [
+   64,
+   3600
+  ],
+  "gt_map": [
+   64,
+   512
+  ],
+  "gt_feet": [
+   64,
+   100
+  ],
+  "base_vel": [
+   64,
+   3
+  ],
+  "contacts": [
+   64,
+   4
+  ]
+ },
+ "memory_GiB": {
+  "1_sensors": 0.02879047393798828,
+  "2_rollout": 0.6394782066345215,
+  "3_ppo_update": 0.6394782066345215,
+  "4_perception_update": 0.6424107551574707
+ },
+ "learn_seconds": 15.851369619369507,
+ "resets": 2,
+ "perception_losses": {
+  "l_tr": 0.05166875086724758,
+  "l_ie": 0.4130005300045013,
+  "kl": 0.010170270316302776,
+  "o_next": 0.37152130007743833,
+  "v": 0.026497628632932903,
+  "hf": 0.001801086129853502,
+  "hb": 0.003010246710618958
+ },
+ "adasmpl_p": 0.2722675862761242,
+ "ckpt_keys": [
+  "adasmpl",
+  "env_seed",
+  "env_state",
+  "format",
+  "infos",
+  "iter",
+  "model_state_dict",
+  "optimizer_state_dict",
+  "perception_cfg",
+  "perception_optimizer_state_dict",
+  "perception_state_dict",
+  "ppo_learning_rate",
+  "rng"
+ ],
+ "restore_max_abs_diff": 0.0,
+ "restore_same": true,
+ "adasmpl_same": true,
+ "checks": {
+  "traceback": false,
+  "collected_and_two_losses": true,
+  "reset_happened": true,
+  "restore_same": true,
+  "edge_reward_connected": "s2_env_cfg 대기"
+ }
+}

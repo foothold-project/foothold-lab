@@ -1,0 +1,51 @@
+/* Research evidence scenes. Scope prevents changes to intro/technical/cover. */
+.research-revision .content{top:216px;bottom:94px}
+.rr-wrap{height:590px;max-height:100%;font-size:22px;line-height:1.4;color:var(--p-ink);display:flex;flex-direction:column;gap:16px}
+.rr-wrap p{font-size:22px;margin:0}.rr-wrap h3{font-size:24px;margin:0 0 12px;line-height:1.25}.rr-wrap figure{margin:0}.rr-wrap figcaption{font-size:22px;line-height:1.25}.rr-wrap b,.rr-wrap strong{color:var(--p-brand-text)}
+.rr-wrap .rr-bottom{font-size:24px;border-top:2px solid var(--p-rule);padding-top:14px;margin-top:auto;font-weight:600}.rr-wrap .rr-condition{font-size:22px;color:var(--p-muted);margin-top:auto}
+.rr-terrain-compare{display:grid;grid-template-columns:1.1fr 1fr;gap:42px;flex:1;min-height:0}.rr-six{display:grid;grid-template-columns:repeat(3,1fr);gap:18px 16px}.rr-six figure{height:180px}.rr-six img{height:140px;object-fit:cover;background:#172126}.rr-six figcaption{margin-top:5px}.rr-gap-hero img{height:320px;object-fit:cover}.rr-gap-hero p{margin-top:16px;font-weight:600}
+.rr-ray-svg{width:100%;height:230px;flex-shrink:0}.rr-code-compare{display:grid;grid-template-columns:1fr 1fr;gap:58px}.rr-code-compare>div{border-top:2px solid var(--p-rule);padding-top:18px}.rr-code-compare p{margin:12px 0}.rr-code-compare b{font-size:32px}.rr-wrap .rr-note{font-size:19px;line-height:1.5;color:var(--p-muted);margin-top:18px}
+.rr-eval{display:grid;grid-template-columns:1.18fr 1fr;gap:56px}.rr-eval>div{padding-top:16px;border-top:3px solid var(--p-brand)}.rr-eval p{margin:24px 0}.rr-axis-chain{display:flex;gap:10px;align-items:center;font-size:24px}.rr-axis-chain span{padding:13px 15px;background:var(--p-panel,#e6ece8)}.rr-protocol{display:grid;grid-template-columns:.62fr 1.2fr 1.15fr;gap:30px;padding:34px 0 8px;border-top:1px solid var(--p-rule);margin-top:auto}
+.rr-overall{display:grid;grid-template-columns:repeat(3,1fr);gap:45px;border-bottom:1px solid var(--p-rule);padding-bottom:14px}.rr-overall>div{display:flex;align-items:baseline;gap:22px}.rr-overall span{font-size:24px}.rr-overall strong{font-size:36px;line-height:1}.rr-double{display:grid;grid-template-columns:1fr 1fr;gap:38px}.rr-double h3{font-size:22px;margin:0 0 8px}.rr-wrap .rr-matrix{font-size:22px;line-height:1.1;width:100%;table-layout:fixed}.rr-matrix th,.rr-matrix td{height:43px;padding:5px 9px;vertical-align:middle;border-bottom:1px solid var(--p-rule)}.rr-matrix th:first-child,.rr-matrix td:first-child{width:43%;padding-left:0}.rr-matrix th:not(:first-child),.rr-matrix td:not(:first-child){text-align:right}.rr-matrix td:not(:first-child){position:relative;background:none}.rr-matrix td:not(:first-child)::after{content:'';position:absolute;left:9px;right:9px;bottom:3px;height:3px;border-radius:2px;background:linear-gradient(90deg,#0e7a6e var(--rr-fill),rgba(14,122,110,.16) var(--rr-fill))}.rr-matrix th:not(:first-child){padding-bottom:9px}.rr-matrix td span{position:relative;font-variant-numeric:tabular-nums;color:#133b35;font-weight:600}
+.rr-triple{display:grid;grid-template-columns:repeat(3,1fr);gap:28px}.rr-film video{width:100%;height:310px;object-fit:contain;display:block;background:#172126}.rr-film figcaption{padding:10px 0 0;font-weight:600}.rr-video-rate{font-size:44px!important;font-weight:650;color:var(--p-brand-text);padding-top:12px}.rr-video-rate span{font-size:22px;font-weight:400;color:var(--p-muted)}
+.rr-reward-intro{display:grid;grid-template-columns:.6fr 1.6fr;gap:30px;border-bottom:1px solid var(--p-rule);padding-bottom:24px}.rr-reward-intro h3{font-size:30px}.rr-reward-chart{display:grid;gap:27px;padding:22px 0}.rr-reward-row{display:grid;grid-template-columns:170px 1fr 130px 180px;gap:20px;align-items:center}.rr-reward-row strong{font-size:30px}.rr-bar{height:28px;background:#dbe2dd}.rr-bar i{display:block;height:100%;background:var(--p-brand)}.rr-reward-row:nth-child(2){font-weight:650}
+.rr-regression-videos{display:grid;grid-template-columns:1fr 1fr;gap:32px}.rr-regression-videos video{height:245px}.rr-wrap .rr-failure-table{font-size:23px;line-height:1.1}.rr-failure-table th,.rr-failure-table td{padding:9px 12px;text-align:center}.rr-failure-table th:first-child,.rr-failure-table td:first-child{text-align:left}.rr-failure-table tr:last-child td:nth-child(2),.rr-failure-table tr:last-child td:nth-child(5){font-weight:700;color:#913f26}
+.rr-adoption-note{font-size:20px;font-weight:500}.rr-gap-hero img{height:290px}.rr-gap-hero p{font-size:21px;margin-top:12px}
+
+/* 계보의 「얻은 것 / 잃은 것」. 2026-10-02 팀장 지적으로 신설. */
+.lineage-ledger{display:grid;grid-template-columns:.85fr 1.15fr;gap:40px;margin-top:22px}
+.lineage-ledger.wide{grid-template-columns:1fr 1fr}
+.lineage-ledger>div{border-top:3px solid var(--p-rule);padding-top:14px}
+.lineage-ledger .led-gain{border-top-color:var(--p-brand)}
+.lineage-ledger span{display:block;font-size:19px;font-weight:700;color:var(--p-ink);margin-bottom:10px}
+.lineage-ledger .led-gain span{color:var(--p-brand-text)}
+.lineage-ledger p{font-size:23px;line-height:1.45;margin:0 0 8px}
+.lineage-ledger p i{font-style:normal;color:var(--p-muted)}
+.lineage-ledger p b{font-size:30px;color:var(--p-brand-text)}
+.lineage-ledger small{display:block;font-size:17px;line-height:1.45;color:var(--p-muted);margin-top:8px}
+.lineage-ledger table{width:100%;font-size:20px;border-collapse:collapse;table-layout:fixed}
+.lineage-ledger th,.lineage-ledger td{padding:5px 6px;border-bottom:1px solid var(--p-rule);vertical-align:middle}
+.lineage-ledger th:first-child,.lineage-ledger td:first-child{text-align:left;padding-left:0}
+.lineage-ledger th:not(:first-child),.lineage-ledger td:not(:first-child){text-align:right;width:23%;font-variant-numeric:tabular-nums}
+.lineage-ledger td b{font-size:22px;color:var(--p-brand-text)}
+
+/* ★ 장부를 넣었더니 17·18·20쪽이 틀 밖으로 넘쳤다 (실측 784·666·788 /   예산 609). 내용은 그대로 두고 영상과 장부를 줄여 넣는다.   :has() 로 «장부가 있는 장» 에만 건다. 다른 증거 장은 그대로다. */
+.content:has(.lineage-ledger) .evidence-videos .film video{height:172px;max-height:172px}
+.content:has(.lineage-ledger) .evidence-videos figcaption{font-size:17px}
+.content:has(.lineage-ledger) .evidence-videos .result-value{font-size:38px;margin-top:8px}
+.content:has(.lineage-ledger) .settings-proof{height:246px}
+.content:has(.lineage-ledger) .settings-proof img{height:192px}
+.content:has(.lineage-ledger) .settings-proof td{font-size:18px;line-height:1.45}
+.lineage-ledger{margin-top:16px}
+.lineage-ledger th,.lineage-ledger td{padding:2px 6px}
+.lineage-ledger table{font-size:18px}
+.lineage-ledger small{margin-top:6px;font-size:16px}
+.lineage-ledger p{font-size:22px;margin-bottom:6px}
+.lineage-ledger span{font-size:18px;margin-bottom:6px}
+.lineage-ledger td b{font-size:20px}
+.lineage-ledger>div{padding-top:11px}
+.content:has(.lineage-ledger) .condition{padding-top:4px}
+/* ★ `.evidence table td{padding:12px 14px}` (deck.css:74) 이 특이도에서
+   이겨 한 줄이 57px 이 됐고 장부가 285px 로 불었다. 특이도를 올린다. */
+.content .lineage-ledger table td,.content .lineage-ledger table th{padding:3px 6px;line-height:1.35;vertical-align:middle}
+.content .lineage-ledger table th{padding-bottom:5px}

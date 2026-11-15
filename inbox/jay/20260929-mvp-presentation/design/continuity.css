@@ -1,0 +1,64 @@
+/* 2026-10-05 팀장: 8쪽부터 13쪽 초입까지 Go2 가 한 객체로 보이게. 10~13쪽의 Go2 캔버스 자리를 하나(440,265 · 720×540)로 못 박고,
+   장이 바뀔 때는 이전 장의 끝 포즈에서 시작해 «그 자리에서 돈다» (build_v6.py cmd_to_side · scan_to_walk · cmd_to_front). */
+/* 10쪽: 0단계에는 공유 그림(technical-robot)이 캔버스와 같은 자리·같은 그림으로 겹쳐 있고(9쪽에서 날아온다), 1단계부터 캔버스만 */
+.technical-world .technical-robot{left:440px!important;top:265px!important;width:720px!important;height:540px!important;z-index:3}
+.hardware-page[data-current-step="0"] .technical-robot{opacity:1!important}
+.hardware-page:not([data-current-step="0"]) .technical-robot{opacity:0!important}
+/* 11쪽: 캔버스 자리 통일 (단계별 top 이동 없음) */
+.policy-v5-player{left:440px!important;top:265px!important;width:720px!important;height:540px!important}
+/* 12쪽: 같은 자리에서 시작해, 걷기 트랙으로 옮겨 갈 때만 줄어든다(520×390 자리 = 전과 같음) */
+.axes-player{left:440px!important;top:265px!important;width:720px!important;height:540px!important;transform-origin:0 0!important}
+.axes-page[data-pos="0"] .axes-track,.axes-page[data-pos="0"] .lane-dot{opacity:0}
+.axes-page[data-pos="w0"] .axes-player{transform:translate(0,86px) scale(.72222)}
+.axes-page[data-pos="w1"] .axes-player{transform:translate(560px,86px) scale(.72222)}
+.axes-page[data-pos="w1"] .lane-dot{transform:translateX(560px)}
+.axes-page[data-pos="2"] .axes-player{transform:translate(87px,116px) scale(.75833)}
+.axes-page.axes-turning .axes-player{transition:transform .9s ease}
+.axes-page.axes-animating .axes-player,.axes-page.axes-animating .lane-dot{transition:transform 4.5s linear}
+/* 13쪽: 정지 그림 대신 캔버스. 명령 장면 끝에서 정면으로 돈 뒤(cmd_to_front) 대군 속으로 줄어든다 */
+.army-single{left:440px!important;top:265px!important;width:720px!important;height:540px!important;transition:transform 1.8s cubic-bezier(.22,.7,.25,1),opacity .7s!important;transform-origin:50% 50%}
+.army-player{position:absolute;inset:0;width:100%;height:100%;z-index:2}
+.army-page[data-current-step="1"] .army-single,.army-page[data-current-step="2"] .army-single{display:block!important;transform:none;opacity:1}
+.army-page .army-single.shrunk{transform:scale(.18)!important;opacity:0!important}
+.army-page[data-current-step="2"] .army-single{opacity:0!important}
+@media print{.army-single{display:none!important}}
+/* 12쪽 끝(명령 장면 · 작게 둔 자리)과 13쪽 0단계가 같은 자리·같은 크기. 1단계에서 정면으로 돌며 제 크기로 커졌다가 대군 속으로 */
+.army-single{transform-origin:0 0!important}
+.army-single:not(.arrived){transform:translate(87px,116px) scale(.75833)!important}
+.army-single.arrived{transform:none!important}
+.army-page .army-single.shrunk{display:none!important}   /* 팀장: 디졸브 말고 컷 · 600개 환경 영상과 겹치지 않게 */
+.army-page[data-current-step="1"] .army-film,.army-page[data-current-step="2"] .army-film{transition:none!important;opacity:1}
+/* 12쪽 0단계: 11쪽 격자 그대로인 로봇 위로 조건 카드가 걸치지 않게 카드는 1단계부터 */
+.axes-page[data-pos="0"] .cond-cards{opacity:0}
+.axes-page .cond-cards{transition:opacity .45s}
+
+/* 10쪽 6단계 · 모듈 사진 띠는 3D 에서 그 모듈이 장착되는 프레임에 켜진다 */
+.module-strip figure{opacity:.35;transition:opacity .45s}
+.module-strip figure.on{opacity:1}
+@media print{.module-strip figure{opacity:1!important}}
+/* 10쪽 6단계 · 모듈 사진 세 장이 3D 캔버스(440~1160)를 덮고 있었다 → 왼쪽 세로 열로. 3D 장착 장면이 가운데 보인다. (2026-10-06) */
+.module-strip{left:80px!important;right:auto!important;width:330px!important;top:236px!important;grid-template-columns:1fr!important;gap:12px!important;z-index:3}
+.module-strip figure{width:330px!important;padding-bottom:8px!important}
+.module-strip figure:nth-child(2){grid-column:auto!important}
+.module-strip figure img{width:330px!important;height:112px!important;object-fit:contain}
+.module-strip figcaption{flex-direction:row!important;align-items:baseline;gap:10px!important;padding-top:6px!important;font-size:18px!important}
+.module-strip figcaption span{font-size:14px!important}
+.hardware-page[data-current-step="6"] .continuous-player{opacity:1!important;visibility:visible!important}
+/* 2026-10-06 팀장: 6단계만 균형이 없다 → 다른 단계와 같은 «좌우 카드» 틀로. 왼쪽 열에 센서 둘(D435i · HESAI) 위아래, 오른쪽 열에 연산 모듈(Orin) 하나가 같은 높이로. 카드 폭·top 은 .tech-label(360 · 306)과 같다. */
+.hardware-page .module-strip{left:80px!important;right:80px!important;width:auto!important;top:306px!important;display:grid!important;grid-template-columns:360px 1fr 360px!important;grid-template-rows:auto auto;gap:14px 0!important;align-items:stretch}
+.hardware-page .module-strip figure{box-sizing:border-box;width:360px!important;margin:0;border:1px solid #b3c7ba!important;background:var(--p-bg)!important;padding:16px 20px 14px!important;display:flex;flex-direction:column;justify-content:center;text-align:left!important}
+.hardware-page .module-strip figure:nth-child(1){grid-column:1;grid-row:1}
+.hardware-page .module-strip figure:nth-child(2){grid-column:1!important;grid-row:2}
+.hardware-page .module-strip figure:nth-child(3){grid-column:3;grid-row:1/3}
+.hardware-page .module-strip figure img{width:100%!important;height:108px!important;padding:6px 0!important;object-fit:contain}
+.hardware-page .module-strip figure:nth-child(3) img{height:150px!important}
+.hardware-page .module-strip figcaption{flex-direction:column!important;align-items:flex-start;gap:4px!important;padding-top:10px!important;border-top:1px solid #b3c7ba;margin-top:6px;font-size:20px!important}
+.hardware-page .module-strip figcaption span{font-size:15px!important;color:#55705f}
+/* 2026-10-06 재검토: 6단계 카드가 306~747 로 아래로 쏠렸다(3·4·5단계 카드는 306~566). 사진을 글 옆에 두어 카드를 낮추고 같은 띠(306~580)에 맞춘다. */
+.hardware-page .module-strip{gap:14px 0!important}
+.hardware-page .module-strip figure{flex-direction:row!important;align-items:center!important;gap:16px;padding:14px 16px!important;min-height:0}
+.hardware-page .module-strip figure img{flex:none;width:118px!important;height:92px!important;padding:0!important}
+.hardware-page .module-strip figcaption{border-top:0!important;border-left:1px solid #b3c7ba;padding:2px 0 2px 16px!important;margin:0!important;font-size:19px!important;line-height:1.3}
+.hardware-page .module-strip figure:nth-child(3){flex-direction:column!important;align-items:stretch!important;justify-content:center;gap:0}
+.hardware-page .module-strip figure:nth-child(3) img{width:100%!important;height:132px!important}
+.hardware-page .module-strip figure:nth-child(3) figcaption{border-left:0!important;border-top:1px solid #b3c7ba!important;padding:10px 0 0!important;margin-top:8px!important}

@@ -1,0 +1,191 @@
+{
+  "runtime_assets_verified": 38,
+  "runtime_assets": [
+    "blank.html",
+    "index.html",
+    "simulator.html",
+    "time.json",
+    "assets/ammo-CP2eG2rD.js",
+    "assets/libvoxel-Bqa6xB-f.wasm",
+    "assets/libvoxel-doIu-r8s.wasm",
+    "assets/main-FYv2bfEa.css",
+    "assets/main-legacy-BlHXLDVj.js",
+    "assets/main-LIOZh9o1.js",
+    "assets/polyfills-legacy-CIX-2_z7.js",
+    "assets/Programming-BxEGB6eR.css",
+    "assets/Programming-ZcDV7Q1Z.css",
+    "assets/simulator-Bxhs7pUL.js",
+    "assets/simulator-legacy-EfG6DwLd.js",
+    "assets/simulator-u4Eq8cr9.css",
+    "assets/Slam-D-IFyZ7q.css",
+    "assets/slam.worker-B9-NnJ09.js",
+    "assets/three.worker-BhnsyeGz.js",
+    "assets/three.worker-VAdOurOh.js",
+    "assets/urdfDecompress.worker-BNHxDSaX.js",
+    "assets/videoTransform.worker-CGkZlAPM.js",
+    "js/js-interpreter/js-interpreter.DyyHBBps.js",
+    "js/js-interpreter-legacy/js-interpreter.D06BjnY5.js",
+    "js/pages/Bluetooth-legacy.DkelVCFj.js",
+    "js/pages/Bluetooth.ThA-74kd.js",
+    "js/PCDLoader/PCDLoader.iHBBdeRw.js",
+    "js/PCDLoader-legacy/PCDLoader.CAhWERou.js",
+    "js/Programming/Programming-legacy.CoCDfGBQ.js",
+    "js/Programming/Programming.CGDBEjKn.js",
+    "js/ProgrammingSuperstar/Programming-legacy.DovvhtN5.js",
+    "js/ProgrammingSuperstar/Programming.D4_yR-vy.js",
+    "js/robot/RobotModelLoader-legacy.DHwjlNCt.js",
+    "js/robot/RobotModelLoader.BK0VqEMu.js",
+    "js/slam/Slam-legacy.D9-iF549.js",
+    "js/slam/Slam.BsJuOfhQ.js",
+    "js/store/store.-Ml-K330.js",
+    "js/store-legacy/store.BXbPScYF.js"
+  ],
+  "public_wasm_comparison": [
+    {
+      "url": "https://raw.githubusercontent.com/legion1581/unitree_ui/8beafb4200965b33c64718e2717f975eff06d54e/public/libslam.wasm",
+      "official_file": "libvoxel-Bqa6xB-f.wasm",
+      "bytes": 7410,
+      "sha256": "df28d833bc3045e58e110926dd87c312538a2e5b60a964a4fc5e99ff06d39b9c",
+      "byte_identical": true
+    },
+    {
+      "url": "https://raw.githubusercontent.com/legion1581/unitree_ui/8beafb4200965b33c64718e2717f975eff06d54e/public/libvoxel.wasm",
+      "official_file": "libvoxel-doIu-r8s.wasm",
+      "bytes": 9520,
+      "sha256": "1ba27f065199954dc562b233aa38ea775ac687118cce77b5c71bc14e17e05542",
+      "byte_identical": true
+    }
+  ],
+  "coordinate_fixture": {
+    "centers": [
+      {
+        "cell": [
+          0,
+          0
+        ],
+        "world": [
+          9.975,
+          20.025
+        ],
+        "inverse": [
+          0.4999999999999716,
+          0.5000000000000071
+        ]
+      },
+      {
+        "cell": [
+          1,
+          0
+        ],
+        "world": [
+          9.975,
+          20.075
+        ],
+        "inverse": [
+          1.4999999999999858,
+          0.5000000000000071
+        ]
+      },
+      {
+        "cell": [
+          2,
+          0
+        ],
+        "world": [
+          9.975,
+          20.125
+        ],
+        "inverse": [
+          2.5,
+          0.5000000000000072
+        ]
+      },
+      {
+        "cell": [
+          0,
+          1
+        ],
+        "world": [
+          9.925,
+          20.025
+        ],
+        "inverse": [
+          0.49999999999997147,
+          1.4999999999999858
+        ]
+      },
+      {
+        "cell": [
+          1,
+          1
+        ],
+        "world": [
+          9.925,
+          20.075
+        ],
+        "inverse": [
+          1.4999999999999858,
+          1.4999999999999858
+        ]
+      },
+      {
+        "cell": [
+          2,
+          1
+        ],
+        "world": [
+          9.925,
+          20.125
+        ],
+        "inverse": [
+          2.5,
+          1.499999999999986
+        ]
+      }
+    ],
+    "canvas_rows": [
+      50,
+      0,
+      100,
+      0,
+      100,
+      -1
+    ],
+    "fov_synthetic_degrees": 90,
+    "grid_cells": 496800,
+    "assertions_passed": true
+  },
+  "key_files": [
+    {
+      "path": "downloads/UnitreeGo.apk",
+      "bytes": 191452888,
+      "sha256": "7a36e9a847997ebea02d88fde6ccdd6e5c4c8d3f7e57619584b3c6718bfa2cf1"
+    },
+    {
+      "path": "downloads/UnitreeGo-cn.apk",
+      "bytes": 191839281,
+      "sha256": "c97b9784057e2391e3bc35715a1dda72f7b064160e210e6bbad9d99fd8b822ad"
+    },
+    {
+      "path": "downloads/Unitree-EULA.docx",
+      "bytes": 26548,
+      "sha256": "bc664d6de5cde927d4e287eef686ed7a830de8b7cb1617e31341c410bba8dc97"
+    },
+    {
+      "path": "runtime-web/assets/main-LIOZh9o1.js",
+      "bytes": 11785671,
+      "sha256": "cebfc3e7e2d7838cf8adf650d0a32edbf7fbd32df8ede486d7521f96afb6ab15"
+    },
+    {
+      "path": "runtime-web/js/store/store.-Ml-K330.js",
+      "bytes": 1387923,
+      "sha256": "fcd48d6ea8fe411fe9ca6ea639b70b86f8dd5be515005d06aa655d466e529884"
+    },
+    {
+      "path": "runtime-web/js/slam/Slam.BsJuOfhQ.js",
+      "bytes": 250437,
+      "sha256": "7970f500718ef578421e5553e2696f2a30d4caaa9f3e56c2780f4cbb164b4148"
+    }
+  ],
+  "limits": "Synthetic inputs and file equality only. No robot/ROS runtime or map GUI validation."
+}

@@ -1,0 +1,27 @@
+{
+  "mode": "rehearse",
+  "run": "C:\\Users\\AI-WS01\\s2_lab\\night-tools-20261013\\s2_runs\\rehearse-20261015-085500",
+  "prelaunch_rc": 0,
+  "prelaunch_report": {
+    "checked_epoch": 1792022101.1325967,
+    "device": {
+      "bus": "41:00.0",
+      "driver_version": "591.86",
+      "free_vram_bytes": 16740401152,
+      "index": 0,
+      "total_vram_bytes": 17094934528,
+      "uuid": "GPU-c08e23b0-62b6-a4f2-8eb2-11151c6a8c7b"
+    },
+    "free_disk_bytes": 643955585024,
+    "logs": "C:\\Users\\AI-WS01\\s2_lab\\night-tools-20261013\\s2_runs\\rehearse-20261015-085500\\logs\\child.log",
+    "manifest_sha256": "b6859214c6ddeac563c7fec5beabb61ae6e2990e22cd2f6b0f28614ed1fa4bc6",
+    "observer_mode": "attended",
+    "output": "C:\\Users\\AI-WS01\\s2_lab\\night-tools-20261013\\s2_runs\\rehearse-20261015-085500\\out",
+    "retry_count": 0,
+    "status": "GO",
+    "termination": "Job Object owner only",
+    "usd_root": "C:\\Users\\AI-WS01\\s2_lab\\night-tools-20261013\\s2_runs\\rehearse-20261015-085500\\usd"
+  },
+  "prelaunch_seconds": 0.8650498390197754,
+  "manifest_sha256": "b6859214c6ddeac563c7fec5beabb61ae6e2990e22cd2f6b0f28614ed1fa4bc6"
+}

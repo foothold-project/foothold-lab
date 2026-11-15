@@ -1,0 +1,1119 @@
+"""EX-42 maintenance evaluator. Plan is CPU only; --execute starts Kit children."""
+from __future__ import annotations
+
+import argparse
+import json
+import os
+from pathlib import Path
+import re
+import subprocess
+import sys
+import threading
+import time
+from concurrent.futures import ThreadPoolExecutor
+
+from foothold_s2.ex42_score import MODES, config, digest, measure
+from foothold_s2.ex42_stage_judges import retained_paper_cells
+from foothold_s2.experiment_registry import load_experiment, device_contract, queue_gpu_identity
+from foothold_s2.machine_profile import machine_path
+
+ROOT = Path(__file__).resolve().parents[1]
+
+
+def commands(checkpoint, output, device, cfg=None, *, eval_seed=None, mesh_dir=None, shard=None, evaluation_plan=None):
+    """Phase commands for one device. `shard` ({"map64": [modes], "axis_v2": [modes], "stand": [modes]})
+    restricts the modes each phase measures; None is the whole one-device bundle."""
+    cfg = cfg or config()[0]
+    shard = shard or {"map64": list(MODES), "axis_v2": list(MODES), "stand": list(MODES)}
+    if any(set(shard.get(phase, ())) - set(MODES) for phase in ("map64", "axis_v2", "stand")):
+        raise ValueError("EX-42 shard names a mode that is not a score mode")
+    seed = cfg["eval_seed"] if eval_seed is None else eval_seed
+    if type(seed) is not int or seed < 0:
+        raise ValueError("EX-42 evaluation seed must be a nonnegative integer")
+    queue_gpu_identity(device)  # Only the two registered physical GPU ordinals are supported.
+    from foothold_s2.eval.ex42_friction import DEFAULT_PLAN, load_policy
+    friction = load_policy(evaluation_plan or DEFAULT_PLAN)
+    common = ["--ex42-evaluation-plan", friction["plan_path"], "--task", cfg["task"], "--checkpoint", str(checkpoint),
+              "--envs", str(cfg["envs"])]
+    def maps_for(phase):
+        row = [*common, "--modes", ",".join(shard[phase]), "--fixed-terrain", "--eval-seed", str(seed)]
+        return row + (["--mesh-dir", str(mesh_dir)] if mesh_dir is not None else [])
+    kit = ["--headless", f"--kit_args=--/UJITSO/datastore/localCachePath={machine_path('isaac_cache_root')}"]
+    rows = []
+    if shard["map64"]:
+        rows.append(("map64", "foothold_s2.eval.eval_map_modes", [*maps_for("map64"), "--steps", str(cfg["steps"]),
+                     "--command-suite", "extended", "--commands", "all"]))
+    for mode in shard["stand"]:
+        rows.append((f"stand_{mode}", "foothold_s2.eval.ex40_stand_eval",
+                     [*common, "--mode", mode, "--seconds", str(cfg["stand_seconds"]),
+                      "--skip-seconds", str(cfg["stand_skip_seconds"]),
+                      "--contact-n", str(cfg["stand_contact_n"]),
+                      "--seed", str(seed)]))
+    if shard["axis_v2"]:
+        rows.append(("axis_v2", "foothold_s2.eval.eval_map_modes",
+                     [*maps_for("axis_v2"), "--axis-v2", "--ex42-maintenance", "--fixed-level",
+                      str(cfg["axis_fixed_level"]), "--terrain-set", "default",
+                      "--steps", str(cfg["steps"])]))
+    return [{"name": name, "device": device,
+             "argv": [str(machine_path("conda_python")), "-m", module, *args, "--out", str(Path(output) / name),
+                      "--device", device, *kit]} for name, module, args in rows]
+
+
+def _atomic(path, value):
+    path = Path(path)
+    temp = path.with_suffix(path.suffix + ".tmp")
+    temp.write_text(json.dumps(value, ensure_ascii=False, indent=2, allow_nan=False) + "\n", encoding="utf-8")
+    os.replace(temp, path)
+
+
+def gpu_identity(device, *, query=None):
+    """Check the PCI-ordered physical ordinal before Kit starts; no CUDA context is made."""
+    index, registered_uuid = queue_gpu_identity(device)
+    if query is None:
+        query = lambda: subprocess.check_output(
+            ["nvidia-smi", "--query-gpu=index,uuid,pci.bus_id", "--format=csv,noheader,nounits"],
+            text=True, timeout=20)
+    rows = {}
+    for line in query().splitlines():
+        fields = [field.strip() for field in line.split(",")]
+        if len(fields) != 3:
+            raise ValueError("nvidia-smi GPU identity row malformed")
+        rows[int(fields[0])] = {"gpu_uuid": fields[1], "pci_bus_id": fields[2]}
+    actual = rows.get(index)
+    if not actual or actual["gpu_uuid"].lower().removeprefix("gpu-") != registered_uuid.lower():
+        raise ValueError(f"EX-42 {device} physical GPU UUID differs from registry")
+    return {"device": device, "gpu_index": index, **actual}
+
+
+def child_env(parent=None):
+    env = dict(os.environ if parent is None else parent)
+    env.pop("CUDA_VISIBLE_DEVICES", None)
+    env.update(PYTHONPATH=str(ROOT), CUDA_DEVICE_ORDER="PCI_BUS_ID", PYTHONUNBUFFERED="1",
+               KMP_DUPLICATE_LIB_OK="TRUE", OMNI_KIT_ACCEPT_EULA="YES")
+    return env
+
+
+def receipt_device_fields(device, physical_gpu):
+    registered = device_contract(load_experiment("EX-42"))["evaluation"]
+    fields = {"device": device, "registered_evaluation_device": registered,
+              "physical_gpu": physical_gpu}
+    if device != registered:
+        fields["device_override"] = {"registered": registered, "used": device}
+    return fields
+
+
+def observed_child_identity(output, name, expected):
+    """Verify Kit's own CUDA identity where its result exports one."""
+    basename = ("map_modes.json" if name == "map64" else "axis_v2.json" if name == "axis_v2"
+                else "d44_cells.json" if name == "d44" else "stand.json")
+    path = Path(output) / name / basename
+    row = json.loads(path.read_text(encoding="utf-8-sig"))
+    identity = row.get("run_identity") or {}
+    observed = identity.get("gpu_uuid")
+    if identity.get("device") != expected["device"] or observed in (None, "", "None"):
+        raise ValueError(f"{name} Kit device identity missing")
+    if str(observed).lower().removeprefix("gpu-") != expected["gpu_uuid"].lower().removeprefix("gpu-"):
+        raise ValueError(f"{name} Kit physical GPU UUID differs from preflight")
+    return {"device": identity["device"], "gpu_uuid": observed}
+
+
+def flag_kit_commands(checkpoint, output, device, *, task, plan_path, mesh_dir,
+                      mesh_sha256, seed):
+    """E1F adds one and four flag counts after the fixed maintenance bundle."""
+    if type(seed) is not int or seed < 0:
+        raise ValueError("E1F flag evaluation seed must be a nonnegative integer")
+    kit = ["--headless", f"--kit_args=--/UJITSO/datastore/localCachePath={machine_path('isaac_cache_root')}"]
+    return [(count, [str(machine_path("conda_python")), "-m", "foothold_s2.eval.ex42_flag_eval",
+                    "--task", task, "--checkpoint", str(checkpoint), "--plan", str(plan_path),
+                    "--mesh-dir", str(mesh_dir), "--expected-mesh-sha256", mesh_sha256,
+                    "--count", count, "--seed", str(seed), "--envs", "64",
+                    "--out", str(Path(output) / "flag_cells" / count), "--device", device, *kit])
+            for count in ("flag_one", "flag_four")]
+
+
+def e2_kind_kit_commands(checkpoint, output, device, *, task, plan_path,
+                         plan, mesh_dir, mesh_sha256, seed):
+    """Pinned E2 L0 forward and four-flag subcells, each in all three map modes."""
+    from foothold_s2.eval.ex42_flag_cells import MODES
+
+    spec = plan["evaluation"]["e2_kind_cells"]
+    if (spec.get("family") != "A" or spec.get("kind") != "stepping_stones_low" or
+            spec.get("level") != 0 or spec.get("forward_command") != "fwd1.0" or
+            spec.get("flag_count") != "flag_four" or
+            spec.get("judge_modes") != ["eval_gt", "eval_pred"] or
+            spec.get("record_modes") != ["probe_prop_only"] or
+            type(spec.get("forward_steps")) is not int or spec["forward_steps"] < 1 or
+            type(seed) is not int or seed < 0):
+        raise ValueError("EX-42 E2 named-kind evaluation plan differs")
+    kit = ["--headless", f"--kit_args=--/UJITSO/datastore/localCachePath={machine_path('isaac_cache_root')}"]
+    common = [str(machine_path("conda_python")), "-m"]
+    forward = [*common, "foothold_s2.eval.eval_map_modes", "--task", task,
+               "--checkpoint", str(checkpoint), "--envs", "64", "--steps", str(spec["forward_steps"]),
+               "--modes", ",".join(MODES), "--command-suite", "core", "--commands", "fwd1.0",
+               "--fixed-terrain", "--fixed-level", str(spec["level"]),
+               "--mesh-dir", str(mesh_dir), "--ex42-kind-family", spec["family"],
+               "--ex42-kind-name", spec["kind"], "--eval-seed", str(seed),
+               "--out", str(Path(output) / "kind_cells" / "forward"), "--device", device, *kit]
+    flag = [*common, "foothold_s2.eval.ex42_flag_eval", "--task", task,
+            "--checkpoint", str(checkpoint), "--plan", str(plan_path),
+            "--mesh-dir", str(mesh_dir), "--expected-mesh-sha256", mesh_sha256,
+            "--kind-family", spec["family"], "--kind-name", spec["kind"],
+            "--kind-level", str(spec["level"]), "--count", spec["flag_count"],
+            "--seed", str(seed), "--envs", "64", "--out",
+            str(Path(output) / "kind_cells" / "flag_four"), "--device", device, *kit]
+    return [("e2_kind_forward", forward), ("e2_kind_flag_four", flag)]
+
+
+def execute_flag_children(checkpoint, output, device, *, task, plan_path, mesh_dir,
+                          mesh_sha256, checkpoint_sha256, seed, plan, process, env,
+                          physical_gpu, record):
+    """Run both E1F counts; a failed child is a recorded HOLD, not a lost P1 boundary."""
+    from foothold_s2.eval.ex42_flag_cells import contract, read_evidence
+
+    contract(plan.document)
+    failures = {}
+    for count, argv in flag_kit_commands(checkpoint, output, device, task=task,
+                                          plan_path=plan_path, mesh_dir=mesh_dir,
+                                          mesh_sha256=mesh_sha256, seed=seed):
+        try:
+            child = process.hidden_child(argv, Path(output) / "children" / count, env=env)
+            if child.get("state") == "done":
+                receipt = json.loads((Path(output) / "flag_cells" / count / "flag_cells.json").read_text(
+                    encoding="utf-8-sig"))
+                identity = receipt.get("run_identity") or {}
+                observed = str(identity.get("gpu_uuid") or "").lower().removeprefix("gpu-")
+                if (identity.get("device") != device or
+                        observed != physical_gpu["gpu_uuid"].lower().removeprefix("gpu-")):
+                    raise ValueError("E1F flag Kit physical GPU identity differs")
+                read_evidence(Path(output) / "flag_cells" / count, plan=plan.document,
+                              plan_sha256=plan.sha256, checkpoint_sha256=checkpoint_sha256,
+                              seed=seed, count=count)
+                child["observed_gpu"] = {"device": device, "gpu_uuid": identity["gpu_uuid"]}
+        except (OSError, ValueError, KeyError, subprocess.SubprocessError) as exc:
+            child = {"state": "HOLD", "reason": f"{type(exc).__name__}: {exc}"}
+        if child.get("state") != "done":
+            failures[count] = str(child.get("reason") or f"child state {child.get('state')}")
+            child["state"] = "HOLD"
+        record(count, child)
+    return failures
+
+
+def execute_e2_kind_children(checkpoint, output, device, *, task, plan_path, plan,
+                             mesh_dir, mesh, checkpoint_sha256, seed, process, env,
+                             physical_gpu, record):
+    """Both E2 subcells must finish with pinned raw evidence before scoring."""
+    from foothold_s2.eval.ex42_kind_completion import read_start_kind_cell
+    from foothold_s2.eval.ex42_kind_flag_cells import read_kind_flag_cell
+
+    spec = plan.document["evaluation"]["e2_kind_cells"]
+    for phase, argv in e2_kind_kit_commands(checkpoint, output, device, task=task,
+                                            plan_path=plan_path, plan=plan.document,
+                                            mesh_dir=mesh_dir, mesh_sha256=mesh["mesh_sha256"], seed=seed):
+        child = process.hidden_child(argv, Path(output) / "children" / phase, env=env)
+        if child.get("state") == "done":
+            folder = Path(output) / "kind_cells" / ("forward" if phase == "e2_kind_forward" else "flag_four")
+            receipt = json.loads((folder / ("map_modes.json" if phase == "e2_kind_forward"
+                                          else "flag_cells.json")).read_text(encoding="utf-8-sig"))
+            identity = receipt.get("run_identity") or {}
+            observed = str(identity.get("gpu_uuid") or "").lower().removeprefix("gpu-")
+            if (identity.get("device") != device or
+                    observed != physical_gpu["gpu_uuid"].lower().removeprefix("gpu-")):
+                raise ValueError(f"EX-42 {phase} physical GPU identity differs")
+            if phase == "e2_kind_forward":
+                for mode in ("eval_gt", "eval_pred", "probe_prop_only"):
+                    read_start_kind_cell(folder, mesh=mesh, checkpoint_sha256=checkpoint_sha256,
+                                         seed=seed, family=spec["family"], kind=spec["kind"],
+                                         level=spec["level"], mode=mode,
+                                         seconds=spec["forward_seconds"],
+                                         settle_s=spec["completion_settle_s"])
+            else:
+                read_kind_flag_cell(folder, plan=plan.document, plan_sha256=plan.sha256,
+                                    mesh=mesh, checkpoint_sha256=checkpoint_sha256,
+                                    seed=seed, family=spec["family"], kind=spec["kind"],
+                                    level=spec["level"])
+            child["observed_gpu"] = {"device": device, "gpu_uuid": identity["gpu_uuid"]}
+        record(phase, child)
+        if child.get("state") != "done":
+            raise ValueError(f"EX-42 {phase} Kit child failed or lacks durable receipt")
+
+
+G1_SUITES = ("hipan_g1", "hipan_g1b")
+
+
+def e1_v2_commands(checkpoint, output, device, cfg, *, eval_seed, mesh_dir, evaluation_plan):
+    """The six low-speed commands, two pinned A levels and all three map modes."""
+    if mesh_dir is None:
+        raise ValueError("E1 v2 requires the pinned combined evaluation mesh")
+    from foothold_s2.eval.ex42_friction import DEFAULT_PLAN, load_policy
+    friction = load_policy(evaluation_plan or DEFAULT_PLAN)
+    kit = ["--headless", f"--kit_args=--/UJITSO/datastore/localCachePath={machine_path('isaac_cache_root')}"]
+    return [(f"e1_v2_L{level}",
+             [str(machine_path("conda_python")), "-m", "foothold_s2.eval.eval_map_modes",
+              "--ex42-evaluation-plan", friction["plan_path"], "--task", cfg["task"],
+              "--checkpoint", str(checkpoint), "--envs", "64", "--modes", "eval_gt,eval_pred,probe_prop_only",
+              "--fixed-terrain", "--fixed-level", str(level), "--mesh-dir", str(mesh_dir),
+              "--eval-seed", str(eval_seed), "--steps", "300", "--command-suite", "e1_v2",
+              "--commands", "all", "--out", str(Path(output) / "e1_v2" / f"L{level}"),
+              "--device", device, *kit]) for level in (0, 5)]
+
+
+def run_e1_repeat_seeds(checkpoint, output, devices, cfg, *, seeds, mesh_dir,
+                        policy_path, expected_sha256, physical, process, env,
+                        stagger_s=30, sleep=time.sleep):
+    """Run the two near-threshold seeds on distinct GPUs with isolated Kit paths."""
+    from foothold_s2.ex42_e1_v2 import measure_cells
+    from foothold_s2.scripts.ex42_flag_baseline_chain import isolated_kit_argv
+    if len(seeds) != 2 or len(devices) != 2 or len(set(seeds)) != 2 or len(set(devices)) != 2:
+        raise ValueError("E1 v2 repeat needs two distinct seeds and GPUs")
+    started = threading.Event()
+
+    def one(seed, device, first):
+        repeat_root = Path(output) / f"e1_v2_repeat_seed{seed}"
+        repeat_root.mkdir(parents=True, exist_ok=False)
+        rows = e1_v2_commands(checkpoint, repeat_root, device, cfg, eval_seed=seed,
+                              mesh_dir=mesh_dir, evaluation_plan=policy_path)
+        rows += [(phase["name"], phase["argv"]) for phase in commands(
+            checkpoint, repeat_root, device, cfg, eval_seed=seed, mesh_dir=mesh_dir,
+            evaluation_plan=policy_path,
+            shard={"map64": list(MODES), "axis_v2": list(MODES), "stand": []})]
+        children = {}
+        for phase, argv in rows:
+            process.prepare_phase_output(argv)
+            name = f"{phase}@{device}"
+            runtime = repeat_root / "kit_runtime" / device.replace(":", "_") / phase
+            temporary, cache = runtime / "tmp", runtime / "cache"
+            temporary.mkdir(mode=0o700, parents=True, exist_ok=False)
+            cache.mkdir()
+            isolated_env = dict(env, TMPDIR=str(temporary), TEMP=str(temporary),
+                                TMP=str(temporary), XDG_CACHE_HOME=str(cache),
+                                XDG_RUNTIME_DIR=str(temporary))
+            isolated_argv = isolated_kit_argv(argv, repeat_root, device, phase)
+            if first and not started.is_set():
+                started.set()
+            child = process.hidden_child(isolated_argv, repeat_root / "children" / phase,
+                                         env=isolated_env)
+            child["isolated_runtime"] = {"tmpdir": str(temporary), "kit_cache": str(cache)}
+            if child.get("state") == "done":
+                if phase.startswith("e1_v2_L"):
+                    source = json.loads((repeat_root / "e1_v2" /
+                                         phase.removeprefix("e1_v2_") /
+                                         "map_modes.json").read_text(encoding="utf-8-sig"))
+                    identity = source.get("run_identity") or {}
+                    observed = str(identity.get("gpu_uuid") or "").lower().removeprefix("gpu-")
+                    if identity.get("device") != device or observed != physical[device]["gpu_uuid"].lower().removeprefix("gpu-"):
+                        raise ValueError("E1 v2 repeat low physical GPU identity differs")
+                else:
+                    observed_child_identity(repeat_root, phase, physical[device])
+            children[name] = child
+            if child.get("state") != "done":
+                raise ValueError(f"E1 v2 repeat {name} Kit child failed")
+        measure_cells(repeat_root, expected_sha256, seed)
+        return children
+
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        first = pool.submit(one, seeds[0], devices[0], True)
+        if not started.wait(timeout=60):
+            first.result() if first.done() else None
+            raise ValueError("E1 v2 first repeat Kit child did not start")
+        sleep(stagger_s)
+        second = pool.submit(one, seeds[1], devices[1], False)
+        a, b = first.result(), second.result()
+    return {**a, **b}
+
+
+def g1_record_commands(checkpoint, output, device, cfg, *, eval_seed, mesh_dir, evaluation_plan):
+    """HiPAN G1 / G1b command bundles (eval_gt only). Record-only: the scorer never reads them, a failure is noted not held."""
+    from foothold_s2.eval.ex42_friction import DEFAULT_PLAN, load_policy
+    friction = load_policy(evaluation_plan or DEFAULT_PLAN)
+    kit = ["--headless", f"--kit_args=--/UJITSO/datastore/localCachePath={machine_path('isaac_cache_root')}"]
+    rows = []
+    for suite in G1_SUITES:
+        args = ["--ex42-evaluation-plan", friction["plan_path"], "--task", cfg["task"], "--checkpoint", str(checkpoint),
+                "--envs", str(cfg["envs"]), "--modes", "eval_gt", "--fixed-terrain", "--eval-seed", str(eval_seed),
+                "--steps", str(cfg["steps"]), "--command-suite", suite, "--commands", "all"]
+        if mesh_dir is not None:
+            args += ["--mesh-dir", str(mesh_dir)]
+        rows.append({"name": suite, "device": device,
+                     "argv": [str(machine_path("conda_python")), "-m", "foothold_s2.eval.eval_map_modes", *args,
+                              "--out", str(Path(output) / "record_only" / suite), "--device", device, *kit]})
+    return rows
+
+
+def write_boundary_brief(output, *, label, iteration, score_path, events_dir, prev_brief=None):
+    """brief.json next to the boundary score. Never raises: a missing source stays 없음, a tool failure is returned."""
+    from foothold_s2.tools import ex42_boundary_brief as brief
+    output = Path(output)
+    argv = ["--label", label, "--at", str(iteration), "--score", str(score_path), "--d44", str(output / "d44"),
+            "--g1", str(output / "record_only" / "hipan_g1" / "map_modes.json"),
+            "--g1b", str(output / "record_only" / "hipan_g1b" / "map_modes.json"),
+            "--out", str(output / "brief.json")]
+    if events_dir is not None:
+        argv += ["--events", str(events_dir)]
+    if prev_brief is not None:
+        argv += ["--prev", str(prev_brief)]
+    try:
+        brief.main(argv)
+    except Exception as exc:          # the brief is a reading aid, it must never stop the boundary
+        return {"state": "failed", "reason": f"{type(exc).__name__}: {exc}"}
+    return {"state": "done", "path": str(output / "brief.json")}
+
+
+RECORD_ONLY_TIMEOUT_SECONDS = 900
+
+
+def run_record_only(checkpoint, output, device, cfg, *, seed, mesh_dir, policy_path, process, env, row, label,
+                    iteration, score_path, prev_brief, split_device=None, timeout=RECORD_ONLY_TIMEOUT_SECONDS):
+    """After the next stage has been handed off: G1 / G1b children (each under `timeout`), then brief.json.
+    Nothing here raises or holds the boundary; every outcome is written to the receipt."""
+    output = Path(output)
+    if split_device is None:
+        row["record_only"] = {}
+        try:
+            phases = g1_record_commands(checkpoint, output, device, cfg, eval_seed=seed, mesh_dir=mesh_dir,
+                                        evaluation_plan=policy_path)
+        except (OSError, ValueError, KeyError) as exc:
+            phases = []
+            row["record_only"]["commands"] = {"state": "failed", "reason": f"{type(exc).__name__}: {exc}"}
+        for phase in phases:
+            try:
+                process.prepare_phase_output(phase["argv"])
+                child = process.hidden_child(phase["argv"], output / "children" / ("record_" + phase["name"]),
+                                             env=env, timeout=timeout)
+            except Exception as exc:     # record only: whatever a child does, the boundary is already handed off
+                child = {"state": "failed", "reason": f"{type(exc).__name__}: {exc}"}
+            row["record_only"][phase["name"]] = child
+            _atomic(output / "eval_receipt.json", row)
+    row["boundary_brief"] = write_boundary_brief(output, label=label, iteration=iteration, score_path=score_path,
+                                                  events_dir=Path(checkpoint).parent, prev_brief=prev_brief)
+    _atomic(output / "eval_receipt.json", row)
+
+
+def d44_kit_command(checkpoint, output, device, *, task, plan_path, mesh_dir,
+                    replica_dir, replica_sha256, seed):
+    """One pinned D44 Kit child; the parent builds its 64-tile replica first."""
+    return [str(machine_path("conda_python")), "-m", "foothold_s2.eval.ex42_d44_eval",
+            "--task", task, "--checkpoint", str(checkpoint), "--plan", str(plan_path),
+            "--mesh-dir", str(mesh_dir), "--replica-dir", str(replica_dir),
+            "--expected-replica-sha256", replica_sha256, "--envs", "64",
+            "--seed", str(seed), "--out", str(Path(output) / "d44"),
+            "--device", device, "--headless",
+            f"--kit_args=--/UJITSO/datastore/localCachePath={machine_path('isaac_cache_root')}"]
+
+
+def d44_argv_builder(checkpoint, output, *, plan, plan_path, cfg, seed):
+    """Build the D44 64-tile replica once and return `device -> argv`; raises like the in-line code used to."""
+    from foothold_s2.eval.ex42_d44_cells import contract
+    from foothold_s2.eval.ex42_eval_tile_mesh import build_replicas
+    settings = contract(plan.document)
+    source_mesh = Path(settings["source_mesh_dir"]).resolve(strict=True)
+    if not settings["source_mesh_sha256"]:
+        raise ValueError("D44 source mesh SHA is absent from prep")
+    replica = build_replicas(source_mesh, output / "d44_mesh", anchor="landing_center")
+    return lambda device: d44_kit_command(checkpoint, output, device, task=cfg["task"], plan_path=plan_path,
+                                          mesh_dir=source_mesh, replica_dir=output / "d44_mesh",
+                                          replica_sha256=replica["mesh_sha256"], seed=seed)
+
+
+class SequentialPool:
+    """Results of the single-device phases (D44, e1_v2 low speed, widened E1) run on two lanes.
+
+    `children[name]` is the child of a unit that ran; `errors[group]` is the exception its group raised while it was
+    being built, re-raised by `take` where the one-device code would have raised it."""
+
+    def __init__(self, children, errors):
+        self.children, self.errors = children, errors
+
+    def take(self, group, name):
+        if group in self.errors:
+            raise self.errors[group]
+        return self.children[name]
+
+
+def run_sequential_pool(checkpoint, output, devices, cfg, *, seed, mesh_dir, policy, policy_path, p1_stage_id,
+                        evaluation_plan, retained, process, env, record):
+    """Run D44, the two e1_v2 levels and the widened E1 cells on the two evaluation GPUs instead of one after another.
+
+    Same commands, same output folders (`d44`, `e1_v2/L*`, `wide/*`), same child folders; only the device of some of
+    them differs, so `ex42_score.measure` and the cell readers see the folders they always saw. Returns a SequentialPool
+    (None when no such phase applies)."""
+    from foothold_s2 import ex42_eval_split as split
+    builders, errors = {}, {}
+    if "d44" in retained:
+        from foothold_s2.curriculum.ex42_prep import EX42Plan
+        plan = EX42Plan.load(policy_path)
+        if plan.document["evaluation"]["paper_cells"]["stairs_landing"].get("judge_cases") is not None:
+            try:
+                argv_for = d44_argv_builder(checkpoint, output, plan=plan, plan_path=policy_path, cfg=cfg, seed=seed)
+                builders["d44"] = ("d44", lambda device, _f=argv_for: (_f(device), False))
+            except (OSError, ValueError, KeyError) as exc:
+                errors["d44"] = exc
+    if p1_stage_id == "E1" and policy.document["stages"][next(
+            i for i, stage in enumerate(policy.document["stages"]) if stage["id"] == "E1")].get(
+            "exit_judge") == "map39_e1_v2_two_window":
+        try:
+            for phase, _ in e1_v2_commands(checkpoint, output, devices[0], cfg, eval_seed=seed,
+                                           mesh_dir=mesh_dir, evaluation_plan=policy_path):
+                builders[phase] = ("e1_v2", lambda device, _p=phase: (next(
+                    argv for name, argv in e1_v2_commands(checkpoint, output, device, cfg, eval_seed=seed,
+                                                          mesh_dir=mesh_dir, evaluation_plan=policy_path)
+                    if name == _p), True))
+        except (OSError, ValueError, KeyError, TypeError) as exc:
+            errors["e1_v2"] = exc
+    if (p1_stage_id == "E1" and evaluation_plan is not None
+            and policy.document["evaluation"].get("e1_widened", {}).get("active") is True):
+        from foothold_s2.ex42_e1_wide import kit_commands as wide_commands
+        try:
+            for phase, _ in wide_commands(checkpoint, output, devices[0], task=cfg["task"], plan_path=policy_path,
+                                          plan=policy.document, mesh_dir=mesh_dir, seed=seed):
+                builders[phase] = ("wide", lambda device, _p=phase: (next(
+                    argv for name, argv in wide_commands(checkpoint, output, device, task=cfg["task"],
+                                                         plan_path=policy_path, plan=policy.document,
+                                                         mesh_dir=mesh_dir, seed=seed) if name == _p), True))
+        except (OSError, ValueError, KeyError, TypeError) as exc:
+            errors["wide"] = exc
+    if not builders and not errors:
+        return None
+    lanes, _ = split.assign_units(list(builders), devices)
+    children = split.run_units(lanes, build=lambda name, device: builders[name][1](device), output=output,
+                               env=env, process=process, record=record) if builders else {}
+    return SequentialPool(children, errors)
+
+
+def manifest_checkpoint_sha(checkpoint):
+    checkpoint = Path(checkpoint).resolve(strict=True)
+    match = re.fullmatch(r"model_(\d+)\.pt", checkpoint.name)
+    if not match:
+        raise ValueError("EX-42 P1 checkpoint must be a named model_N.pt")
+    iteration = int(match.group(1))
+    manifest = json.loads((checkpoint.parent / "manifest.json").read_text(encoding="utf-8-sig"))
+    sha = digest(checkpoint)
+    from foothold_s2.ex42_gate_checks import checkpoint_ready
+    if not checkpoint_ready(manifest, iteration=iteration,
+                            checkpoint_exists=True, checkpoint_sha256=sha):
+        raise ValueError("EX-42 P1 checkpoint differs from the published manifest SHA")
+    return sha, iteration
+
+
+def p1_score_from_measure(score, *, checkpoint, iteration, plan_path, approvals_path,
+                          stage_id, output, evaluation_plan_path=None):
+    from foothold_s2.curriculum.ex42_prep import EX42Plan
+    from foothold_s2.curriculum.ex42_runtime import read_approved_dr_schedule
+    from foothold_s2.ex42_gate_checks import validate_ex42_map_score
+
+    if score.get("checkpoint_sha256") != digest(checkpoint):
+        raise ValueError("EX-42 P1 measured score checkpoint SHA differs")
+    plan = EX42Plan.load(plan_path)
+    if stage_id == "E2" and score.get("execution_plan_sha256") != plan.sha256:
+        raise ValueError("EX-42 E2 learned_cells execution plan SHA differs")
+    policy_path = Path(evaluation_plan_path or plan_path).resolve(strict=True)
+    policy = EX42Plan.load(policy_path)
+    if evaluation_plan_path is not None and score.get("maintenance_source_sha256") != policy.sha256:
+        raise ValueError("EX-42 P1 measured evaluation policy SHA differs")
+    judgment = score.get("judgement", "HOLD")
+    if judgment in ("PASS", "FAIL"):
+        from foothold_s2.ex42_stage_judges import adapter_for
+        adapter = adapter_for(policy.document, stage_id)
+        if adapter is None:
+            raise ValueError("EX-42 P1 judged E0 cell evidence missing or stage differs")
+        verdicts = [v["judgment"] for mode in ("eval_gt", "eval_pred")
+                    for v in (score.get("cell_judgments") or {}).get(mode, {}).values() if isinstance(v, dict)]
+        extra_fields = adapter.verify(score, judgment, "FAIL" if "FAIL" in verdicts else "HOLD" if "HOLD" in verdicts else "PASS",
+                                      plan=policy.document)
+    else:
+        extra_fields = {}
+    if stage_id not in plan.runtime_stage_ids:
+        raise ValueError("EX-42 P1 running stage ID is not in the pinned plan")
+    read_approved_dr_schedule(approvals_path, plan.runtime_stage_ids)
+    roles = {"eval_gt": "judge", "eval_pred": "judge", "probe_prop_only": "record_only"}
+    matrix = [{"map_mode": mode, "command": command, "role": roles[mode], **row}
+              for mode, commands in score["map64"].items()
+              for command, row in commands.items()]
+    result = {"state": "complete", "checkpoint_sha256": score["checkpoint_sha256"],
+              "checkpoint_iteration": iteration, "plan_sha256": plan.sha256,
+              "evaluation_plan": {"path": str(policy_path), "sha256": policy.sha256},
+              "stage_id": stage_id, "judgment": judgment,
+              "map_matrix": matrix, "judge_count": 26, "record_only_count": 13,
+              "cell_judgments": score.get("cell_judgments"),
+              **extra_fields,
+              "measurement": str(Path(output) / "ex42_score.json"),
+              "measurement_sha256": digest(Path(output) / "ex42_score.json")}
+    validate_ex42_map_score(result, plan.document["evaluation"]["map_modes"])
+    return result
+
+
+def next_stage_notice(plan_path, stage_id, iteration, p1):
+    """After the stage's last boundary only: say whether the next stage is ready to be asked for.
+
+    CG D146 / `automatic_launch_allowed: false`: nothing starts by itself. A PASS gate yields a notice that
+    the lead reads and takes to the team lead; HOLD yields a notice that says it is not ready.
+    """
+    from foothold_s2.curriculum.ex42_prep import EX42Plan
+    plan = plan_path if isinstance(plan_path, EX42Plan) else EX42Plan.load(plan_path)
+    stages = plan.document["stages"]
+    index = next((i for i, row in enumerate(stages) if row.get("id") == stage_id), None)
+    if index is None or iteration != stages[index].get("minimum_updates"):
+        return None
+    following = plan.following_stage_id(stage_id)
+    ready = p1.get("judgment") == "PASS"
+    return {"format": "foothold-ex42-next-stage-notice/1", "stage_id": stage_id, "boundary_iteration": iteration,
+            "checkpoint_sha256": p1.get("checkpoint_sha256"), "judgment": p1.get("judgment"),
+            "next_stage_id": following, "state": "next_stage_ready_for_approval" if ready and following else "not_ready",
+            "automatic_launch_started": False,
+            "note": "No automatic start (CG D146, automatic_launch_allowed false): the lead asks the team lead and fills "
+                    "the next stage approval cell."}
+
+
+def _hand_off(plan_path, approvals_path, stage_id, iteration, p1, checkpoint, output, launcher, gpu_wait=None,
+              register=None):
+    """Every boundary writes a notice. The gate passed (at or after the stage minimum) and the next stage has its
+    bounded approval cell (#639): the lead's launcher starts the next stage. Otherwise an E1 boundary goes on with
+    the same stage from this save (continue) inside the E1 cell's bounds. Each start happens once; every other case
+    stays a notice with its reason. The launched training is not in the GPU queue, so `gpu_wait` (every GPU free of
+    other compute processes) runs first: boundary evaluations still queued or running must not share a GPU with it."""
+    from foothold_s2.ex42_stage_handoff import decide_next_stage, materializer_from_env, start_launcher
+    manifest = Path(checkpoint).parent / "manifest.json"
+    decision = decide_next_stage(plan_path, approvals_path, stage_id, iteration, output / "p1_score.json", manifest,
+                                 materialize=materializer_from_env(os.environ))
+    if decision is None:
+        return None
+    notice = {"format": "foothold-ex42-next-stage-notice/1", "stage_id": stage_id, "boundary_iteration": iteration,
+              "checkpoint_sha256": p1.get("checkpoint_sha256"), "judgment": p1.get("judgment"),
+              "next_stage_id": decision["next_stage_id"], "state": decision["state"],
+              "automatic_launch_started": False, "notification_required": True, "reason": decision.get("reason")}
+    if decision.get("extension_evidence") is not None:
+        notice["extension_evidence"] = decision["extension_evidence"]
+    if decision["action"] == "continue":
+        notice.update(segment_end=decision["segment_end"], resume_checkpoint=decision["resume_checkpoint"])
+    if decision["action"] not in ("launch", "continue"):
+        return notice
+    if launcher is None:
+        notice.update(state=decision["state"] + "_no_launcher", reason="no --next-stage-launcher was given")
+        return notice
+    try:
+        if gpu_wait is not None:
+            gpu_wait()
+        record = start_launcher(decision, launcher, output, parent_manifest=manifest,
+                                parent_checkpoint=checkpoint, gate_receipt=output / "p1_score.json")
+    except (ValueError, OSError) as exc:
+        notice.update(state=decision["state"] + "_launch_failed", reason=str(exc))
+        return notice
+    notice.update(state="stage_continued" if decision["action"] == "continue" else "next_stage_started",
+                  automatic_launch_started=True, launcher_pid=record["pid"])
+    if register is not None:                      # the started training goes into the GPU queue (no P1 over it)
+        try:
+            notice["queue_registration"] = register(record["pid"], output / "next_stage_launcher.log",
+                                                    f"EX-42 auto start after {stage_id} m{iteration}")
+        except (ValueError, OSError) as exc:
+            notice["queue_registration_error"] = str(exc)
+    return notice
+
+
+def run(checkpoint, expected_sha256, output, device, *, eval_seed=None, mesh_dir=None,
+        expected_mesh_sha256=None, p1_plan=None, p1_approvals=None,
+        evaluation_plan=None,
+        p1_stage_id=None, checkpoint_iteration=None, split_device=None, next_stage_launcher=None,
+        next_stage_queue=None):
+    from foothold_s2 import ex41_eval_once as process
+    checkpoint, output = Path(checkpoint).resolve(strict=True), Path(output).resolve()
+    if digest(checkpoint) != expected_sha256:
+        raise ValueError("EX-42 checkpoint SHA differs")
+    if p1_plan is not None and (p1_approvals is None or p1_stage_id is None or checkpoint_iteration is None
+                                or mesh_dir is None or expected_mesh_sha256 is None):
+        raise ValueError("EX-42 P1 requires plan, approvals, iteration and pinned mesh")
+    if evaluation_plan is not None and p1_plan is None:
+        raise ValueError("EX-42 evaluation plan requires a P1 execution plan")
+    policy_path = Path(evaluation_plan or p1_plan).resolve(strict=True) if p1_plan is not None else None
+    from foothold_s2.eval.ex42_friction import DEFAULT_PLAN, load_policy
+    friction_policy = load_policy(policy_path or DEFAULT_PLAN)
+    if policy_path is not None:
+        from foothold_s2.curriculum.ex42_prep import EX42Plan
+        policy = EX42Plan.load(policy_path)
+        if p1_stage_id not in policy.runtime_stage_ids:
+            raise ValueError("EX-42 evaluation policy lacks the running stage")
+        if evaluation_plan is not None and policy.document["evaluation"].get("e1_widened", {}).get("active") is True:
+            from foothold_s2.ex42_e1_wide_plan import validate_evaluation_scope
+            validate_evaluation_scope(Path(p1_plan), policy_path)
+    if output.exists():
+        raise ValueError("EX-42 evaluation requires fresh output directory")
+    if Path(sys.executable).resolve() != machine_path("conda_python").resolve():
+        raise ValueError("EX-42 Kit requires configured isaac311 Python")
+    if subprocess.check_output(["git", "status", "--short", "--", "foothold_s2", "experiments/EX-42.yaml"],
+                               cwd=ROOT, text=True).strip():
+        raise ValueError("EX-42 evaluator source must be committed before execution")
+    head = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=ROOT, text=True).strip()
+    physical_gpu = gpu_identity(device)
+    split_gpu = None
+    if split_device is not None:
+        if split_device == device:
+            raise ValueError("EX-42 split device must differ from the evaluation device")
+        split_gpu = gpu_identity(split_device)
+    cfg, cfg_path = config()
+    seed = cfg["eval_seed"] if eval_seed is None else eval_seed
+    if (policy_path is not None and p1_stage_id == "E1" and
+            next(stage for stage in policy.document["stages"] if stage["id"] == "E1").get(
+                "exit_judge") == "map39_e1_v2_two_window" and
+            seed != policy.document["evaluation"]["e1_exit_v2"]["repeat_seeds"][0]):
+        raise ValueError("EX-42 E1 v2 primary evaluation seed differs from approved plan")
+    mesh = None
+    if mesh_dir is not None:
+        from foothold_s2.eval.ex42_mesh_eval import preflight
+        mesh = preflight(mesh_dir)
+        if expected_mesh_sha256 is not None and mesh["mesh_sha256"] != expected_mesh_sha256:
+            raise ValueError("EX-42 P1 E0 mesh SHA differs")
+    output.mkdir(parents=True)
+    row = {"format": "foothold-ex42-eval/1", "state": "running", "source_git_head": head,
+           "checkpoint": str(checkpoint), "checkpoint_sha256": expected_sha256,
+           "score_config_sha256": digest(cfg_path), "eval_seed": seed,
+           "ex42_mesh": mesh, "stand_terrain": "plane z=0", "steps": {},
+           "evaluation_friction_requested": friction_policy,
+           **receipt_device_fields(device, physical_gpu)}
+    if policy_path is not None:
+        row["evaluation_plan"] = {"path": str(policy_path), "sha256": policy.sha256}
+    if split_gpu is not None:
+        row["split"] = {"devices": [device, split_device], "split_physical_gpu": split_gpu}
+    _atomic(output / "eval_receipt.json", row)
+    env = child_env()
+    row["child_cuda_visible_devices"] = None
+    row["child_cuda_device_order"] = env["CUDA_DEVICE_ORDER"]
+    row["parent_cuda_visible_devices"] = os.environ.get("CUDA_VISIBLE_DEVICES")
+    _atomic(output / "eval_receipt.json", row)
+    if split_device is not None:
+        from foothold_s2 import ex42_eval_split as split
+        shards, load = split.assign_shards([device, split_device])
+        row["split"].update(assignment=shards, estimated_seconds=load)
+        _atomic(output / "eval_receipt.json", row)
+        try:
+            split.wait_gpus_free([physical_gpu["gpu_uuid"], split_gpu["gpu_uuid"]])
+        except ValueError as exc:
+            row.update(state="HOLD", reason=str(exc))
+            _atomic(output / "eval_receipt.json", row)
+            return 5
+        lock = threading.Lock()
+
+        def record(key, child):
+            with lock:
+                row["steps"][key] = child
+                _atomic(output / "eval_receipt.json", row)
+
+        failed = split.run_shards(
+            shards, output=output,
+            commands_for=lambda dev, shard, out: commands(checkpoint, out, dev, cfg, eval_seed=seed,
+                                                          mesh_dir=mesh_dir, shard=shard, evaluation_plan=policy_path),
+            env=env, physical={device: physical_gpu, split_device: split_gpu}, process=process,
+            observed=observed_child_identity, record=record)
+        if failed:
+            row.update(state="HOLD", reason=f"{', '.join(failed)} failed or lacks durable receipt")
+            _atomic(output / "eval_receipt.json", row)
+            return 5
+        try:
+            merge = split.merge_shards(output, [output / "shards" / split.shard_tag(d) for d in (device, split_device)])
+            _atomic(output / "eval_split_merge.json", merge)
+        except (OSError, ValueError) as exc:
+            row.update(state="HOLD", reason=f"EX-42 split merge failed: {exc}")
+            _atomic(output / "eval_receipt.json", row)
+            return 5
+    for phase in ([] if split_device is not None else
+                  commands(checkpoint, output, device, cfg, eval_seed=seed, mesh_dir=mesh_dir, evaluation_plan=policy_path)):
+        name = phase["name"]
+        process.prepare_phase_output(phase["argv"])
+        child = process.hidden_child(phase["argv"], output / "children" / name, env=env)
+        child = process.reconcile_child_result(name, child, output / name)
+        if child.get("state") == "done":
+            try:
+                child["observed_gpu"] = observed_child_identity(output, name, physical_gpu)
+            except (OSError, ValueError, KeyError) as exc:
+                child.update(state="HOLD", gpu_identity_error=str(exc))
+        row["steps"][name] = child
+        _atomic(output / "eval_receipt.json", row)
+        if child.get("state") != "done":
+            row.update(state="HOLD", reason=f"{name} failed or lacks durable receipt")
+            _atomic(output / "eval_receipt.json", row)
+            return 5
+    retained = retained_paper_cells(policy.document, p1_stage_id) if policy_path is not None else ()
+    physical_by_device = {device: physical_gpu} if split_device is None else {device: physical_gpu,
+                                                                              split_device: split_gpu}
+    pool = None
+    if split_device is not None and policy_path is not None:
+        # D44, e1_v2 low speed and the widened E1 cells are independent children: two lanes, not one GPU idle.
+        def record_unit(name, child):          # called under run_units' lock
+            row["steps"][name] = child
+            _atomic(output / "eval_receipt.json", row)
+
+        pool = run_sequential_pool(checkpoint, output, [device, split_device], cfg, seed=seed, mesh_dir=mesh_dir,
+                                   policy=policy, policy_path=policy_path, p1_stage_id=p1_stage_id,
+                                   evaluation_plan=evaluation_plan, retained=retained, process=process, env=env,
+                                   record=record_unit)
+    if "d44" in retained:
+        from foothold_s2.curriculum.ex42_prep import EX42Plan
+        from foothold_s2.eval.ex42_d44_cells import read_evidence
+        plan = EX42Plan.load(policy_path)
+        landing = plan.document["evaluation"]["paper_cells"]["stairs_landing"]
+        if landing.get("judge_cases") is not None:
+            try:
+                if pool is not None:
+                    child = pool.take("d44", "d44")
+                else:
+                    argv = d44_argv_builder(checkpoint, output, plan=plan, plan_path=policy_path, cfg=cfg,
+                                            seed=seed)(device)
+                    child = process.hidden_child(argv, output / "children" / "d44", env=env)
+                if child.get("state") == "done":
+                    child["observed_gpu"] = observed_child_identity(
+                        output, "d44", physical_by_device[child.get("lane_device", device)])
+                    read_evidence(output / "d44", plan=plan.document,
+                                  plan_sha256=plan.sha256, checkpoint_sha256=expected_sha256,
+                                  seed=seed)
+                row["steps"]["d44"] = child
+                if child.get("state") != "done":
+                    raise ValueError("D44 Kit child failed or lacks durable receipt")
+            except (OSError, ValueError, KeyError) as exc:
+                row.update(state="HOLD", reason=f"EX-42 D44 evaluation failed: {exc}")
+                _atomic(output / "eval_receipt.json", row)
+                return 5
+            _atomic(output / "eval_receipt.json", row)
+        else:
+            row["steps"]["d44"] = {"state": "HOLD", "reason": "D44 판정 칸 계약 없음"}
+            _atomic(output / "eval_receipt.json", row)
+    if p1_stage_id == "E1" and policy.document["stages"][next(
+            i for i, stage in enumerate(policy.document["stages"]) if stage["id"] == "E1")].get(
+            "exit_judge") == "map39_e1_v2_two_window":
+        try:
+            for phase, argv in e1_v2_commands(checkpoint, output, device, cfg, eval_seed=seed,
+                                               mesh_dir=mesh_dir, evaluation_plan=policy_path):
+                if pool is not None:
+                    child = pool.take("e1_v2", phase)
+                else:
+                    process.prepare_phase_output(argv)
+                    child = process.hidden_child(argv, output / "children" / phase, env=env)
+                lane = child.get("lane_device", device)
+                if child.get("state") == "done":
+                    path = output / "e1_v2" / phase.removeprefix("e1_v2_") / "map_modes.json"
+                    source = json.loads(path.read_text(encoding="utf-8-sig"))
+                    identity = source.get("run_identity") or {}
+                    if (identity.get("device") != lane or not identity.get("gpu_uuid") or
+                            str(identity["gpu_uuid"]).lower().removeprefix("gpu-") !=
+                            physical_by_device[lane]["gpu_uuid"].lower().removeprefix("gpu-")):
+                        raise ValueError("E1 v2 child physical GPU identity differs")
+                    child["observed_gpu"] = {"device": lane, "gpu_uuid": identity["gpu_uuid"]}
+                row["steps"][phase] = child
+                _atomic(output / "eval_receipt.json", row)
+        except (OSError, ValueError, KeyError) as exc:
+            row["e1_v2_child_failure"] = {"state": "HOLD", "reason": str(exc)}
+            _atomic(output / "eval_receipt.json", row)
+        else:
+            # Only boundary-close evidence needs the two additional seeds. Each
+            # seed gets its own complete map/axis/low bundle and raw receipt.
+            from foothold_s2.ex42_e1_v2 import judge_cells, measure_cells
+            try:
+                measured_v2 = measure_cells(output, expected_sha256, seed)
+                from foothold_s2.ex42_e1_judge import previous_e1_score
+                prior = previous_e1_score(checkpoint, output,
+                                          policy.document["evaluation"]["interval_updates"],
+                                          digest(cfg_path))
+                boundary_close = any(item.get("near_threshold") for item in
+                                     judge_cells(measured_v2, policy.document,
+                                                 previous_cells=(prior or {}).get("e1_v2_cells"))["items"].values())
+                if boundary_close:
+                    repeat_seeds = policy.document["evaluation"]["e1_exit_v2"]["repeat_seeds"][1:]
+                    if split_device is not None:
+                        row["steps"].update(run_e1_repeat_seeds(
+                            checkpoint, output, [split_device, device], cfg, seeds=repeat_seeds,
+                            mesh_dir=mesh_dir, policy_path=policy_path,
+                            expected_sha256=expected_sha256,
+                            physical={device: physical_gpu, split_device: split_gpu},
+                            process=process, env=env))
+                        _atomic(output / "eval_receipt.json", row)
+                    else:
+                        for repeat_seed in repeat_seeds:
+                          repeat_root = output / f"e1_v2_repeat_seed{repeat_seed}"
+                          repeat_rows = [(name, argv) for name, argv in e1_v2_commands(
+                              checkpoint, repeat_root, device, cfg, eval_seed=repeat_seed,
+                              mesh_dir=mesh_dir, evaluation_plan=policy_path)]
+                          repeat_rows += [(entry["name"], entry["argv"]) for entry in commands(
+                              checkpoint, repeat_root, device, cfg, eval_seed=repeat_seed,
+                              mesh_dir=mesh_dir, evaluation_plan=policy_path,
+                              shard={"map64": list(MODES), "axis_v2": list(MODES), "stand": []})]
+                          for phase, argv in repeat_rows:
+                              process.prepare_phase_output(argv)
+                              child = process.hidden_child(argv, output / "children" /
+                                                           f"e1_v2_repeat_seed{repeat_seed}_{phase}", env=env)
+                              if child.get("state") == "done":
+                                  if phase.startswith("e1_v2_L"):
+                                      source = json.loads((repeat_root / "e1_v2" /
+                                                           phase.removeprefix("e1_v2_") /
+                                                           "map_modes.json").read_text(encoding="utf-8-sig"))
+                                      identity = source.get("run_identity") or {}
+                                      if (identity.get("device") != device or not identity.get("gpu_uuid") or
+                                              str(identity["gpu_uuid"]).lower().removeprefix("gpu-") !=
+                                              physical_gpu["gpu_uuid"].lower().removeprefix("gpu-")):
+                                          raise ValueError("E1 v2 repeat low physical GPU identity differs")
+                                  else:
+                                      observed_child_identity(repeat_root, phase, physical_gpu)
+                              row["steps"][f"e1_v2_repeat_seed{repeat_seed}_{phase}"] = child
+                              if child.get("state") != "done":
+                                  break
+                          else:
+                              measure_cells(repeat_root, expected_sha256, repeat_seed)
+                          _atomic(output / "eval_receipt.json", row)
+            except (OSError, ValueError, KeyError, TypeError) as exc:
+                row["e1_v2_repeat_failure"] = {"state": "HOLD", "reason": str(exc)}
+                _atomic(output / "eval_receipt.json", row)
+    if (p1_stage_id == "E1" and evaluation_plan is not None
+            and policy.document["evaluation"].get("e1_widened", {}).get("active") is True):
+        from foothold_s2.ex42_e1_wide import kit_commands as wide_commands, read_cells as read_wide
+        try:
+            for phase, argv in wide_commands(checkpoint, output, device, task=cfg["task"],
+                                             plan_path=policy_path, plan=policy.document,
+                                             mesh_dir=mesh_dir, seed=seed):
+                if pool is not None:
+                    child = pool.take("wide", phase)
+                else:
+                    process.prepare_phase_output(argv)
+                    child = process.hidden_child(argv, output / "children" / phase, env=env)
+                lane = child.get("lane_device", device)
+                if child.get("state") == "done":
+                    source = json.loads((output / "wide" /
+                                         ("endpoints" if phase == "wide_endpoints" else phase.removeprefix("wide_")) /
+                                         "map_modes.json").read_text(encoding="utf-8-sig"))
+                    identity = source.get("run_identity") or {}
+                    if (identity.get("device") != lane or not identity.get("gpu_uuid") or
+                            str(identity["gpu_uuid"]).lower().removeprefix("gpu-") !=
+                            physical_by_device[lane]["gpu_uuid"].lower().removeprefix("gpu-")):
+                        raise ValueError("E1 C1 child physical GPU identity differs")
+                    child["observed_gpu"] = {"device": lane, "gpu_uuid": identity["gpu_uuid"]}
+                row["steps"][phase] = child
+                _atomic(output / "eval_receipt.json", row)
+                if child.get("state") != "done":
+                    raise ValueError(f"{phase} Kit child failed or lacks durable receipt")
+            read_wide(output, expected_sha256, seed, policy.document, mesh["mesh_sha256"])
+        except (OSError, ValueError, KeyError, TypeError) as exc:
+            row["e1_wide_child_failure"] = {"state": "HOLD", "reason": str(exc)}
+            _atomic(output / "eval_receipt.json", row)
+    if "flag_cells" in retained:
+        from foothold_s2.curriculum.ex42_prep import EX42Plan
+        try:
+            plan = EX42Plan.load(policy_path)
+            def record_flag(count, child):
+                row["steps"][count] = child
+                _atomic(output / "eval_receipt.json", row)
+
+            flag_failures = execute_flag_children(
+                checkpoint, output, device, task=cfg["task"], plan_path=policy_path,
+                mesh_dir=mesh_dir, mesh_sha256=expected_mesh_sha256,
+                checkpoint_sha256=expected_sha256, seed=seed, plan=plan, process=process,
+                env=env, physical_gpu=physical_gpu, record=record_flag)
+            if flag_failures:
+                marker = output / "flag_cells" / "child_failures.json"
+                marker.parent.mkdir(parents=True, exist_ok=True)
+                _atomic(marker, {"format": "foothold-ex42-e1f-child-failures/1",
+                                 "checkpoint_sha256": expected_sha256,
+                                 "failures": flag_failures})
+                row["flag_child_failures"] = {"path": str(marker), "failures": flag_failures}
+                _atomic(output / "eval_receipt.json", row)
+        except (OSError, ValueError, KeyError) as exc:
+            row.update(state="HOLD", reason=f"EX-42 E1F flag evaluation failed: {exc}")
+            _atomic(output / "eval_receipt.json", row)
+            return 5
+    if p1_stage_id == "E2" and p1_plan is not None:
+        from foothold_s2.curriculum.ex42_prep import EX42Plan
+        try:
+            kind_plan = EX42Plan.load(policy_path)
+
+            def record_kind(phase, child):
+                row["steps"][phase] = child
+                _atomic(output / "eval_receipt.json", row)
+
+            execute_e2_kind_children(
+                checkpoint, output, device, task=cfg["task"], plan_path=policy_path,
+                plan=kind_plan, mesh_dir=mesh_dir, mesh=mesh,
+                checkpoint_sha256=expected_sha256, seed=seed, process=process,
+                env=env, physical_gpu=physical_gpu, record=record_kind)
+        except (OSError, ValueError, KeyError, subprocess.SubprocessError) as exc:
+            marker = output / "kind_cells" / "child_failures.json"
+            marker.parent.mkdir(parents=True, exist_ok=True)
+            _atomic(marker, {"format": "foothold-ex42-e2-child-failures/1",
+                             "checkpoint_sha256": expected_sha256,
+                             "reason": f"{type(exc).__name__}: {exc}"})
+            row["e2_kind_child_failure"] = {"path": str(marker), "sha256": digest(marker)}
+            _atomic(output / "eval_receipt.json", row)
+    try:
+        score = measure(checkpoint, output, expected_seed=seed,
+                        expected_mesh_sha256=mesh["mesh_sha256"] if mesh else None,
+                        stage_id=p1_stage_id, evaluation_plan_path=policy_path,
+                        execution_plan_path=p1_plan)
+        _atomic(output / "ex42_score.json", score)
+        if p1_plan is not None:
+            p1 = p1_score_from_measure(
+                score, checkpoint=checkpoint, iteration=checkpoint_iteration,
+                plan_path=p1_plan, approvals_path=p1_approvals,
+                stage_id=p1_stage_id, output=output,
+                evaluation_plan_path=policy_path if evaluation_plan is not None else None)
+            _atomic(output / "p1_score.json", p1)
+            row["p1_score"] = str(output / "p1_score.json")
+            from foothold_s2 import ex42_eval_split as split
+            from foothold_s2 import ex42_stage_handoff as handoff
+            notice = _hand_off(p1_plan, p1_approvals, p1_stage_id, checkpoint_iteration, p1, checkpoint, output,
+                               next_stage_launcher, gpu_wait=lambda: split.wait_gpus_free(split.all_gpu_uuids()),
+                               register=None if next_stage_queue is None else (
+                                   lambda pid, log, title: handoff.register_launched_training(
+                                       *next_stage_queue, pid=pid, log=log, title=title)))
+            if notice is not None:
+                _atomic(output / "next_stage_notice.json", notice)
+                row["next_stage_notice"] = notice["state"]
+                print("EX42_NEXT_STAGE_NOTICE " + json.dumps(notice, ensure_ascii=False, sort_keys=True), flush=True)
+        row.update(state="done", score=str(output / "ex42_score.json"), judgement=score["judgement"])
+    except (ValueError, KeyError, OSError) as exc:
+        row.update(state="HOLD", reason=f"EX-42 evidence invalid: {exc}")
+    _atomic(output / "eval_receipt.json", row)
+    return 0 if row["state"] == "done" else 5
+
+
+def main(argv=None):
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--checkpoint", type=Path, required=True)
+    sha_group = parser.add_mutually_exclusive_group(required=True)
+    sha_group.add_argument("--expected-sha256")
+    sha_group.add_argument("--sha-from-manifest", action="store_true")
+    parser.add_argument("--out", type=Path, required=True)
+    parser.add_argument("--device", choices=("cuda:0", "cuda:1"), required=True)
+    parser.add_argument("--split-device", choices=("cuda:0", "cuda:1"), default=None,
+                        help="second GPU: map modes are split over --device and this one, then merged")
+    parser.add_argument("--eval-seed", type=int, default=None)
+    parser.add_argument("--mesh-dir", type=Path, default=None)
+    parser.add_argument("--expected-mesh-sha256")
+    parser.add_argument("--p1-plan", type=Path)
+    parser.add_argument("--evaluation-plan", type=Path)
+    parser.add_argument("--p1-approvals", type=Path)
+    parser.add_argument("--p1-stage-id")
+    parser.add_argument("--next-stage-launcher", type=Path, default=None,
+                        help="executable that starts the next stage; run only after a gate PASS with an approved cell")
+    parser.add_argument("--next-stage-queue", type=Path, default=None,
+                        help="GPU queue file: the auto-started training is registered there as an external process")
+    parser.add_argument("--next-stage-dispatch", type=Path, default=None,
+                        help="the dispatcher script that owns --next-stage-queue (required with it)")
+    parser.add_argument("--execute", action="store_true")
+    parser.add_argument("--score-existing", action="store_true")
+    args = parser.parse_args(argv)
+    if args.split_device == args.device:
+        parser.error("--split-device must differ from --device")
+    if args.execute and args.score_existing:
+        parser.error("select either --execute or --score-existing")
+    if len([x for x in (args.p1_plan, args.p1_approvals, args.p1_stage_id) if x is not None]) not in (0, 3):
+        parser.error("P1 plan, approvals and running stage ID must be supplied together")
+    if args.evaluation_plan is not None and args.p1_plan is None:
+        parser.error("--evaluation-plan requires --p1-plan")
+    if args.next_stage_launcher is not None and (args.p1_plan is None or not args.next_stage_launcher.is_absolute()
+                                                  or not args.next_stage_launcher.is_file()):
+        parser.error("--next-stage-launcher needs P1 and an absolute path to an existing file")
+    if (args.next_stage_queue is None) != (args.next_stage_dispatch is None) or (
+            args.next_stage_queue is not None and args.next_stage_launcher is None):
+        parser.error("--next-stage-queue and --next-stage-dispatch go together and need --next-stage-launcher")
+    if args.p1_plan is not None and (not args.sha_from_manifest or not args.mesh_dir
+                                      or not args.expected_mesh_sha256 or args.eval_seed != 42):
+        parser.error("P1 requires manifest SHA, pinned E0 mesh and eval seed 42")
+    try:
+        expected_sha, iteration = (manifest_checkpoint_sha(args.checkpoint) if args.sha_from_manifest
+                                   else (args.expected_sha256, None))
+    except (OSError, ValueError, KeyError) as exc:
+        parser.error(str(exc))
+    if not args.checkpoint.is_file() or digest(args.checkpoint) != expected_sha:
+        parser.error("checkpoint missing or SHA differs")
+    if args.eval_seed is not None and args.eval_seed < 0:
+        parser.error("evaluation seed must be nonnegative")
+    if args.mesh_dir is not None:
+        from foothold_s2.eval.ex42_mesh_eval import preflight
+        try:
+            mesh = preflight(args.mesh_dir)
+            if args.expected_mesh_sha256 is not None and mesh["mesh_sha256"] != args.expected_mesh_sha256:
+                parser.error("EX-42 P1 E0 mesh SHA differs")
+        except (OSError, ValueError, KeyError) as exc:
+            parser.error(str(exc))
+    if args.score_existing:
+        mesh_sha = preflight(args.mesh_dir)["mesh_sha256"] if args.mesh_dir else None
+        score = measure(args.checkpoint, args.out, expected_seed=args.eval_seed,
+                        expected_mesh_sha256=mesh_sha, stage_id=args.p1_stage_id,
+                        evaluation_plan_path=args.evaluation_plan,
+                        execution_plan_path=args.p1_plan)
+        _atomic(args.out / "ex42_score.json", score)
+        print(json.dumps({"state": "measured", "judgement": score["judgement"]}))
+        return 0
+    if not args.execute:
+        policy_path = args.evaluation_plan or args.p1_plan
+        plan = {"state": "plan", "score_config": str(config()[1])}
+        if args.p1_plan is not None:
+            from foothold_s2.curriculum.ex42_prep import EX42Plan
+            policy_path = Path(args.evaluation_plan or args.p1_plan).resolve(strict=True)
+            policy = EX42Plan.load(policy_path)
+            if args.evaluation_plan is not None and policy.document["evaluation"].get("e1_widened", {}).get("active") is True:
+                from foothold_s2.ex42_e1_wide_plan import validate_evaluation_scope
+                validate_evaluation_scope(args.p1_plan, policy_path)
+            plan["evaluation_plan"] = {"path": str(policy_path), "sha256": policy.sha256}
+        if args.split_device is None:
+            plan["commands"] = commands(args.checkpoint, args.out, args.device,
+                                        eval_seed=args.eval_seed, mesh_dir=args.mesh_dir, evaluation_plan=policy_path)
+        else:
+            from foothold_s2.ex42_eval_split import assign_shards, shard_tag
+            shards, load = assign_shards([args.device, args.split_device])
+            plan.update(split=shards, estimated_seconds=load, commands={
+                dev: commands(args.checkpoint, args.out / "shards" / shard_tag(dev), dev,
+                              eval_seed=args.eval_seed, mesh_dir=args.mesh_dir, shard=shard, evaluation_plan=policy_path)
+                for dev, shard in shards.items()})
+        retained = retained_paper_cells(policy.document, args.p1_stage_id) if args.p1_plan is not None else ()
+        if "d44" in retained:
+            from foothold_s2.curriculum.ex42_prep import EX42Plan
+            from foothold_s2.eval.ex42_d44_cells import contract
+            landing = policy.document["evaluation"]["paper_cells"]["stairs_landing"]
+            if landing.get("judge_cases") is None:
+                plan["d44"] = {"state": "HOLD", "reason": "D44 판정 칸 계약 없음"}
+            else:
+                settings = contract(policy.document)
+                plan["d44"] = {"state": "planned", "judge_cases": settings["judge_cases"],
+                               "record_cases": settings["record_cases"],
+                               "source_mesh_dir": settings["source_mesh_dir"]}
+        if args.p1_stage_id == "E1" and args.p1_plan is not None and next(
+                stage for stage in policy.document["stages"] if stage["id"] == "E1").get(
+                "exit_judge") == "map39_e1_v2_two_window":
+            plan["e1_v2"] = {"state": "planned", "commands": [argv for _, argv in
+                              e1_v2_commands(args.checkpoint, args.out, args.device, config()[0],
+                                             eval_seed=config()[0]["eval_seed"] if args.eval_seed is None else args.eval_seed,
+                                             mesh_dir=args.mesh_dir, evaluation_plan=policy_path)]}
+        if (args.p1_stage_id == "E1" and args.evaluation_plan is not None
+                and policy.document["evaluation"].get("e1_widened", {}).get("active") is True):
+            from foothold_s2.ex42_e1_wide import kit_commands as wide_commands
+            plan["e1_widened"] = {"state": "planned", "commands": [argv for _, argv in
+                                   wide_commands(args.checkpoint, args.out, args.device,
+                                                 task=config()[0]["task"], plan_path=policy_path,
+                                                 plan=policy.document, mesh_dir=args.mesh_dir,
+                                                 seed=config()[0]["eval_seed"] if args.eval_seed is None else args.eval_seed)]}
+        if "flag_cells" in retained:
+            from foothold_s2.curriculum.ex42_prep import EX42Plan
+            from foothold_s2.eval.ex42_flag_cells import contract
+            settings = contract(policy.document)
+            plan["flag_cells"] = {"state": "planned", "judge_cases": settings["judge_cases"],
+                                  "record_cases": settings["record_cases"],
+                                  "commands": [argv for _, argv in flag_kit_commands(
+                                      args.checkpoint, args.out, args.device,
+                                      task=config()[0]["task"], plan_path=policy_path,
+                                      mesh_dir=args.mesh_dir, mesh_sha256=args.expected_mesh_sha256,
+                                      seed=config()[0]["eval_seed"] if args.eval_seed is None else args.eval_seed)]}
+        if args.p1_stage_id == "E2" and args.p1_plan is not None:
+            plan["e2_kind_cells"] = {"state": "planned", "commands": [argv for _, argv in
+                e2_kind_kit_commands(args.checkpoint, args.out, args.device,
+                                     task=config()[0]["task"], plan_path=policy_path,
+                                     plan=policy.document, mesh_dir=args.mesh_dir,
+                                     mesh_sha256=args.expected_mesh_sha256,
+                                     seed=config()[0]["eval_seed"] if args.eval_seed is None else args.eval_seed)]}
+        print(json.dumps(plan))
+        return 0
+    return run(args.checkpoint, expected_sha, args.out, args.device,
+               eval_seed=args.eval_seed, mesh_dir=args.mesh_dir,
+               expected_mesh_sha256=args.expected_mesh_sha256,
+               p1_plan=args.p1_plan, p1_approvals=args.p1_approvals,
+               evaluation_plan=args.evaluation_plan,
+               p1_stage_id=args.p1_stage_id,
+               checkpoint_iteration=iteration, split_device=args.split_device,
+               next_stage_launcher=args.next_stage_launcher,
+               next_stage_queue=((args.next_stage_queue, args.next_stage_dispatch) if args.next_stage_queue else None))
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

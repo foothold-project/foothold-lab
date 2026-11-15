@@ -1,0 +1,390 @@
+"""D101 value-only Go2 mirror for the 666-wide EX-41 critic.
+
+The first 52 entries are o45, body linear velocity3, contacts4.  Both
+legacy and clean52 assemble those groups in this order.  Ground map is
+32x16; foot maps are FL, FR, RL, RR, each 5x5 (start_obs.py).
+"""
+
+from __future__ import annotations
+
+import torch
+from torch import nn
+
+from rsl_rl.algorithms import PPO
+
+from foothold_s2.models.start_policy import CRITIC_KEY
+from foothold_s2.runners.ex41_valid_storage import ValidRolloutStorage, safe_minibatch_advantage
+
+
+LEG_SWAP = (1, 0, 3, 2)
+JOINT_IDS = tuple(4 * joint + LEG_SWAP[leg] for joint in range(3) for leg in range(4))
+JOINT_SIGNS = (-1,) * 4 + (1,) * 8
+EXPECTED_JOINT_NAMES = tuple(
+    f"{leg}_{joint}_joint"
+    for joint in ("hip", "thigh", "calf")
+    for leg in ("FL", "FR", "RL", "RR")
+)
+
+
+def assert_joint_order(joint_names) -> None:
+    """Reject an env whose policy joint order differs from EX-40 evidence."""
+    if tuple(joint_names) != EXPECTED_JOINT_NAMES:
+        raise ValueError("EX-41 critic mirror joint_names differ from EX-40 coordinate metadata")
+
+
+def mirror_critic(x: torch.Tensor) -> torch.Tensor:
+    if x.shape[-1] != 666:
+        raise ValueError("EX-41 mirror needs 666 critic entries")
+    y = x.clone()
+    # Angular velocity is an axial vector under left-right reflection.
+    y[..., 0:3] = x[..., 0:3] * x.new_tensor((-1, 1, -1))
+    y[..., 3:6] = x[..., 3:6] * x.new_tensor((1, -1, 1))
+    y[..., 6:9] = x[..., 6:9] * x.new_tensor((1, -1, -1))
+    joint_signs = x.new_tensor(JOINT_SIGNS)
+    for lo in (9, 21, 33):
+        y[..., lo:lo + 12] = x[..., lo:lo + 12][..., JOINT_IDS] * joint_signs
+    y[..., 45:48] = x[..., 45:48] * x.new_tensor((1, -1, 1))
+    y[..., 48:52] = x[..., 48:52][..., list(LEG_SWAP)]
+    y[..., 52:564] = x[..., 52:564].reshape(*x.shape[:-1], 32, 16).flip(-1).flatten(-2)
+    y[..., 564:664] = x[..., 564:664].reshape(*x.shape[:-1], 4, 5, 5)[..., list(LEG_SWAP), :, :].flip(-1).flatten(-3)
+    y[..., 664] = x[..., 664]   # body height delta
+    y[..., 665] = -x[..., 665]  # body roll
+    return y
+
+
+def value_loss(value: torch.Tensor, old_value: torch.Tensor, returns: torch.Tensor,
+               clip_param: float, clipped: bool) -> torch.Tensor:
+    if clipped:
+        limited = old_value + (value - old_value).clamp(-clip_param, clip_param)
+        return torch.maximum((value - returns).square(), (limited - returns).square()).mean()
+    return (value - returns).square().mean()
+
+
+SCHEDULER_KL_CLIP = None  # off: a per-sample cap of 1.0 moved the lr path of it 0..223 in 15 % of the minibatches
+BOUNDS_LOSS_COEF = 0.1  # weight of the action-mean bounds loss (lead 11/14 16:51: about 10 to 20 % of the surrogate gradient)
+
+
+# ON by default since lead 11/14 19:28 (set the share to 0 to turn it off: the update is then bit-identical to before):
+# a share of the training envs rolls out with a smaller action noise so that
+# their reward sees the walk of the mean action (the v28 probe of the mean action drifted 0.10 to 0.81 while every training
+# record stayed flat). The scale is part of the policy of those envs, so PPO stays on-policy for each env group (see
+# StartActorCritic.noise_scale).
+SMALL_NOISE_ENV_SHARE = 0.25     # v28p (lead 11/15 09:26): back to the v28f share while the low-speed rule below is off
+SMALL_NOISE_SIGMA_SCALE = 0.2
+# v28m (lead 11/15 07:02, ON by default; set the threshold to 0 to turn it off: the share above then applies as in v28l):
+# an env whose command has |(vx, vy)| below the threshold rolls out with the small noise for that step, decided again at
+# every step from the command it acts on (so on every command resample); the other envs keep a fixed spread share.
+SMALL_NOISE_LOWSPEED_CMD = 0.0   # v28p: OFF (v28n had 0.3); set 0.3 to bring the v28n rule back (then the rest share below applies)
+SMALL_NOISE_REST_SHARE = 0.25
+# v28p (lead 11/15 09:26, ON by default; set the share to 0 to turn it off: nothing below changes then, bit-identical to v28n/v28f):
+# this share of the envs (spread evenly over the env index, same on every rank) acts with the MEAN action (noise exactly 0).
+# Their rows are marked invalid for PPO (the existing quarantine mask): no surrogate, value, entropy, bounds, scheduler KL
+# and no advantage normalisation statistics. The perception replay is filled for every env, so the perception loss
+# (velocity head included) still sees them: the velocity estimate is trained on the walk the noise-free evaluation shows.
+MEAN_ACTION_PERCEPTION_SHARE = 0.0
+
+
+def small_noise_static_share() -> float:
+    """Share of the index-spread envs that are always small-noise: the rest share while the low-speed rule is on, else the v28l share."""
+    return SMALL_NOISE_REST_SHARE if SMALL_NOISE_LOWSPEED_CMD > 0 else SMALL_NOISE_ENV_SHARE
+
+
+def lowspeed_noise_mask(cmd_xy: torch.Tensor, threshold: float) -> torch.Tensor:
+    """[num_envs] bool: the command speed (vx vy norm) is below the threshold (a standing command counts); threshold 0 selects none."""
+    return cmd_xy.norm(dim=-1) < threshold
+
+
+def small_noise_mask(num_envs: int, share: float) -> torch.Tensor:
+    """Which envs roll out with the small noise: spread evenly over the env index (no rng, same on every rank).
+    Exactly floor(num_envs * share) envs; share 0 selects none."""
+    if not 0.0 <= share < 1.0:
+        raise ValueError("small noise env share must be in [0, 1)")
+    index = torch.arange(num_envs, dtype=torch.float64)
+    return torch.floor((index + 1) * share + 1e-9) > torch.floor(index * share + 1e-9)
+
+
+def mean_action_mask(num_envs: int, share: float, device=None) -> torch.Tensor | None:
+    """[num_envs] bool: the envs that act with the mean action (and stay out of PPO), or None when the share is 0."""
+    if not share:
+        return None
+    return small_noise_mask(num_envs, share).to(device)
+
+
+def small_noise_scale(num_envs: int, share: float, scale: float, device=None) -> torch.Tensor | None:
+    """[num_envs, 1] action-std multiplier, or None when the share is 0 (nothing changes)."""
+    if not share:
+        return None
+    if not 0.0 < scale < 1.0:
+        raise ValueError("small noise sigma scale must be in (0, 1)")
+    mask = small_noise_mask(num_envs, share)
+    return torch.where(mask, torch.tensor(scale), torch.tensor(1.0)).to(torch.float32).reshape(-1, 1).to(device)
+
+
+def clip_scheduler_kl(kl: torch.Tensor, clip: float | None) -> torch.Tensor:
+    """Per-sample KL as the adaptive-lr input: one sample far past the cap must not decide the mean for the batch
+    (v28 it 224: three samples of one env at KL 3,700 to 4,700 moved the mean to 0.14 and the lr to its floor)."""
+    return kl if clip is None else kl.clamp(max=clip)
+
+
+class CriticMirrorPPO(PPO):
+    """Ordinary PPO while off; when enabled only the value loss gets mirrors.
+
+    Mirrored old values were never stored.  Therefore the mirror branch uses
+    an unclipped squared return loss.  The original branch retains PPO's
+    configured clipping.  The two value losses are averaged to keep scale.
+    The actor uses the original all-parameter PPO gradient clip before mirror
+    critic gradients are substituted and clipped separately.  Actor data are
+    neither mirrored nor repeated.  Symmetry, RND and recurrence are rejected for
+    this specialized update.  Multi-GPU averages the actor gradient and the
+    mirrored critic gradient across ranks; an empty mini batch contributes zero
+    gradients, so every rank exchanges and steps the same number of times.
+    """
+
+    mirror_enabled = False
+    kl_audit = None
+    # Per-sample KL cap for the adaptive learning rate only (PPO loss, ratio clip and the audited KL stay raw).
+    # None restores the installed uncapped mean.
+    scheduler_kl_clip = SCHEDULER_KL_CLIP
+    # Mean actions past the env clip never reach the env (they only move the log-prob), so nothing stops them from
+    # growing. sum_dims relu(|mu| - limit)^2 is zero inside the limit. The runner sets the limit from clip_actions (None = off).
+    bounds_loss_coef = BOUNDS_LOSS_COEF
+    bounds_loss_limit = None
+    mean_action_mask = None      # [num_envs] bool set by the runner: these envs act with the mean action and are not PPO samples
+
+    def act(self, obs):
+        if self.kl_audit is not None:
+            self.kl_audit.observe("capture_rollout", self.storage.step)
+        if self.storage.noise_scale_env is not None:      # the update sets per-row scales; a rollout is per env
+            self.policy.noise_scale = self.storage.noise_scale_env
+            if self.storage.noise_scale_steps is not None:   # low-speed rule: the scale of every step is kept for the update
+                self.storage.noise_scale_steps[self.storage.step] = self.storage.noise_scale_env
+        actions = super().act(obs)
+        if self.mean_action_mask is not None:             # noise exactly 0: the policy mean; the rows are invalid for PPO (see process_env_step)
+            actions[self.mean_action_mask] = self.transition.action_mean[self.mean_action_mask]
+        return actions
+
+    def init_storage(self, training_type, num_envs, num_transitions_per_env, obs, actions_shape):
+        self.storage = ValidRolloutStorage(training_type, num_envs, num_transitions_per_env,
+                                           obs, actions_shape, self.device)
+
+    def process_env_step(self, obs, rewards, dones, extras):
+        valid = extras.get("ex41_ppo_valid")
+        if valid is None:
+            raise ValueError("EX-41 PPO validity mask missing from quarantine step")
+        valid = torch.as_tensor(valid, device=self.storage.valid.device, dtype=torch.bool).flatten()
+        if valid.shape != (self.storage.num_envs,):
+            raise ValueError("EX-41 PPO validity mask shape differs from env count")
+        if self.mean_action_mask is not None:
+            valid = valid & ~self.mean_action_mask.to(valid.device)
+        step = self.storage.step
+        self.storage.valid[step].copy_(valid)
+        super().process_env_step(obs, rewards, dones, extras)
+        if self.kl_audit is not None:
+            self.kl_audit.observe("after_env_step", dones)
+        if not bool(valid.all()):
+            # A quarantined transition is a terminal boundary.  This also
+            # prevents its next-state value from entering the previous GAE.
+            bad = ~valid
+            self.storage.rewards[step, bad] = 0
+            self.storage.values[step, bad] = 0
+            self.storage.dones[step, bad] = 1
+            self.storage.actions_log_prob[step, bad] = 0
+            self.storage.mu[step, bad] = 0
+            self.storage.sigma[step, bad] = 1
+
+    def compute_returns(self, obs):
+        last_valid = self.storage.valid[-1]
+        if bool(last_valid.all()):
+            last_values = self.policy.evaluate(obs).detach()
+        else:
+            # Never evaluate a quarantined final observation.  An extreme but
+            # finite critic input can overflow to Inf, and PPO's 0 * Inf in
+            # the terminal bootstrap would then poison earlier valid GAE.
+            last_values = torch.zeros_like(self.storage.values[-1])
+            if bool(last_valid.any()):
+                last_values[last_valid] = self.policy.evaluate(obs[last_valid]).detach()
+        self.storage.compute_returns(last_values, self.gamma, self.lam, normalize_advantage=False)
+        valid = self.storage.valid.unsqueeze(-1)
+        if not self.normalize_advantage_per_mini_batch:
+            # Preserve the installed normalization path when all rows are valid.
+            if bool(valid.all()):
+                advantage = self.storage.advantages
+                self.storage.advantages = (advantage - advantage.mean()) / (advantage.std() + 1e-8)
+            elif bool(valid.any()):
+                advantage = self.storage.advantages[valid]
+                mean = advantage.mean()
+                std = advantage.std() if advantage.numel() > 1 else advantage.new_zeros(())
+                self.storage.advantages = torch.where(valid, (self.storage.advantages - mean) / (std + 1e-8), 0)
+            else:
+                self.storage.advantages.zero_()
+
+    def _average_gradients(self, parameters) -> None:
+        """Mean of the ranks' gradients; a missing gradient counts as zero so every rank sends the same size."""
+        if not self.is_multi_gpu:
+            return
+        parameters = tuple(parameters)
+        flat = torch.cat([(p.grad if p.grad is not None else torch.zeros_like(p)).reshape(-1) for p in parameters])
+        torch.distributed.all_reduce(flat, op=torch.distributed.ReduceOp.SUM)
+        flat /= self.gpu_world_size
+        offset = 0
+        for param in parameters:
+            param.grad = flat[offset:offset + param.numel()].view_as(param).clone()
+            offset += param.numel()
+
+    def _exchange_empty_batch(self) -> None:
+        """This rank had no valid row for a slot. It repeats the other ranks' exchanges in the same order with
+        zero contributions (adaptive-lr KL, actor gradient, critic gradient) and takes the same step."""
+        if self.desired_kl is not None and self.schedule == "adaptive":
+            kl = torch.zeros((), device=self.device)
+            torch.distributed.all_reduce(kl, op=torch.distributed.ReduceOp.SUM)
+            kl /= self.gpu_world_size
+            if self.gpu_global_rank == 0:
+                if kl > self.desired_kl * 2.0:
+                    self.learning_rate = max(1e-5, self.learning_rate / 1.5)
+                elif 0 < kl < self.desired_kl / 2.0:
+                    self.learning_rate = min(1e-2, self.learning_rate * 1.5)
+            lr_tensor = torch.tensor(self.learning_rate, device=self.device)
+            torch.distributed.broadcast(lr_tensor, src=0)
+            self.learning_rate = lr_tensor.item()
+            for group in self.optimizer.param_groups:
+                group["lr"] = self.learning_rate
+        for param in self.policy.parameters():
+            param.grad = torch.zeros_like(param)
+        self._average_gradients(self.policy.parameters())
+        nn.utils.clip_grad_norm_(self.policy.parameters(), self.max_grad_norm)
+        critic_params = tuple(self.policy.critic.parameters())
+        for param in critic_params:
+            param.grad = torch.zeros_like(param)
+        self._average_gradients(critic_params)
+        nn.utils.clip_grad_norm_(critic_params, self.max_grad_norm)
+        self.optimizer.step()
+
+    def update(self) -> dict[str, float]:
+        if self.kl_audit is None:
+            return self._update_impl()
+        self.kl_audit.observe("begin_update")
+        try:
+            return self._update_impl()
+        finally:
+            self.kl_audit.observe("end_update")
+
+    def _update_impl(self) -> dict[str, float]:
+        parameters = tuple(self.policy.parameters())
+        if not bool(torch.stack([torch.isfinite(param).all() for param in parameters]).all()):
+            skipped = float(self.num_learning_epochs * self.num_mini_batches)
+            self.storage.clear()
+            result = {"value_function": 0.0, "surrogate": 0.0, "entropy": 0.0,
+                      "ppo_skipped_batches": skipped, "ppo_nonfinite_parameters": 1.0}
+            if self.mirror_enabled:
+                result.update(value_mirror=0.0, value_combined=0.0)
+            return result
+        if not self.mirror_enabled:
+            safe_norm = self.normalize_advantage_per_mini_batch
+            if safe_norm:
+                # Installed PPO normalizes after sampling.  Move the same
+                # operation into the valid-row generator so a singleton can
+                # bypass its undefined unbiased standard deviation.
+                self.storage.normalize_per_batch_safely = True
+                self.normalize_advantage_per_mini_batch = False
+            try:
+                result = super().update()
+            finally:
+                self.storage.normalize_per_batch_safely = False
+                self.normalize_advantage_per_mini_batch = safe_norm
+            actual = self.storage.yielded_batches
+            expected = self.num_learning_epochs * self.num_mini_batches
+            if actual:
+                result = {key: value * expected / actual for key, value in result.items()}
+            result["ppo_skipped_batches"] = float(self.storage.skipped_batches)
+            return result
+        if self.symmetry or self.rnd or self.policy.is_recurrent:
+            raise ValueError("EX-41 critic mirror supports feed-forward PPO without symmetry or RND")
+        total_v = total_m = total_combined = total_s = total_e = total_b = total_over = mu_max = 0.0
+        self.storage.yield_skipped = self.is_multi_gpu
+        batches = self.storage.mini_batch_generator(self.num_mini_batches, self.num_learning_epochs)
+        for batch in batches:
+            if batch is None:
+                self._exchange_empty_batch()
+                continue
+            (obs, actions, old_value, advantage, returns, old_logp, old_mu, old_sigma, hidden, masks) = batch
+            if self.normalize_advantage_per_mini_batch:
+                with torch.no_grad():
+                    advantage = safe_minibatch_advantage(advantage)
+            if self.storage.noise_scale_env is not None:
+                self.policy.noise_scale = self.storage.batch_noise_scale
+            self.policy.act(obs, masks=masks, hidden_state=hidden[0])
+            logp = self.policy.get_actions_log_prob(actions)
+            value = self.policy.evaluate(obs, masks=masks, hidden_state=hidden[1])
+            mu, sigma, entropy = self.policy.action_mean, self.policy.action_std, self.policy.entropy
+            if self.desired_kl is not None and self.schedule == "adaptive":
+                with torch.inference_mode():
+                    kl = clip_scheduler_kl(torch.sum(torch.log(sigma / old_sigma + 1.0e-5)
+                                                     + (old_sigma.square() + (old_mu - mu).square())
+                                                     / (2.0 * sigma.square()) - 0.5, dim=-1),
+                                           self.scheduler_kl_clip).mean()
+                    if self.is_multi_gpu:
+                        torch.distributed.all_reduce(kl, op=torch.distributed.ReduceOp.SUM)
+                        kl /= self.gpu_world_size
+                    if self.gpu_global_rank == 0:
+                        if kl > self.desired_kl * 2.0:
+                            self.learning_rate = max(1e-5, self.learning_rate / 1.5)
+                        elif 0 < kl < self.desired_kl / 2.0:
+                            self.learning_rate = min(1e-2, self.learning_rate * 1.5)
+                    if self.is_multi_gpu:
+                        lr_tensor = torch.tensor(self.learning_rate, device=self.device)
+                        torch.distributed.broadcast(lr_tensor, src=0)
+                        self.learning_rate = lr_tensor.item()
+                    for group in self.optimizer.param_groups:
+                        group["lr"] = self.learning_rate
+            ratio = torch.exp(logp - old_logp.squeeze())
+            surrogate = torch.maximum(-advantage.squeeze() * ratio,
+                                      -advantage.squeeze() * ratio.clamp(1.0 - self.clip_param, 1.0 + self.clip_param)).mean()
+            original_value = value_loss(value, old_value, returns, self.clip_param, self.use_clipped_value_loss)
+            mirrored = obs.clone()
+            mirrored[CRITIC_KEY] = mirror_critic(obs[CRITIC_KEY])
+            mirror_value = self.policy.evaluate(mirrored, masks=masks, hidden_state=hidden[1])
+            mirror_loss = (mirror_value - returns).square().mean()
+            combined_value = 0.5 * (original_value + mirror_loss)
+            base_loss = surrogate + self.value_loss_coef * original_value - self.entropy_coef * entropy.mean()
+            if self.bounds_loss_limit is not None and self.bounds_loss_coef:
+                excess = torch.relu(mu.abs() - self.bounds_loss_limit)
+                bounds = excess.square().sum(dim=-1).mean()      # sum over action dims, mean over samples (rl_games shape)
+                base_loss = base_loss + self.bounds_loss_coef * bounds
+                total_b += float(bounds.detach())
+                total_over += float((excess > 0).float().mean().detach())
+                mu_max = max(mu_max, float(mu.detach().abs().max()))
+            self.optimizer.zero_grad()
+            base_loss.backward(retain_graph=True)
+            self._average_gradients(self.policy.parameters())
+            # Preserve the exact unaugmented PPO clip for actor and std.
+            nn.utils.clip_grad_norm_(self.policy.parameters(), self.max_grad_norm)
+            critic_params = tuple(self.policy.critic.parameters())
+            critic_grads = torch.autograd.grad(self.value_loss_coef * combined_value, critic_params)
+            for param, grad in zip(critic_params, critic_grads, strict=True):
+                param.grad = grad
+            self._average_gradients(critic_params)
+            nn.utils.clip_grad_norm_(critic_params, self.max_grad_norm)
+            self.optimizer.step()
+            total_v += float(original_value.detach())
+            total_m += float(mirror_loss.detach())
+            total_combined += float(combined_value.detach())
+            total_s += float(surrogate.detach())
+            total_e += float(entropy.mean().detach())
+        self.storage.yield_skipped = False
+        if self.storage.noise_scale_env is not None:
+            self.policy.noise_scale = self.storage.noise_scale_env
+        count = self.storage.yielded_batches
+        skipped = self.storage.skipped_batches
+        self.storage.clear()
+        count = max(count, 1)
+        result = {"value_function": total_v / count, "value_mirror": total_m / count,
+                  "value_combined": total_combined / count,
+                  "surrogate": total_s / count, "entropy": total_e / count,
+                  "ppo_skipped_batches": float(skipped)}
+        if self.storage.noise_scale_env is not None:
+            shown = self.storage.noise_scale_env if self.storage.noise_scale_steps is None else self.storage.noise_scale_steps
+            result.update(small_noise_env_share=float((shown < 1).float().mean()),
+                          small_noise_sigma_scale=float(shown.min()))
+        if self.bounds_loss_limit is not None and self.bounds_loss_coef:
+            result.update(bounds_loss=total_b / count, mu_over_limit_frac=total_over / count, mu_abs_max=mu_max)
+        return result

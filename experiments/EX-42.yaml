@@ -1,0 +1,69 @@
+format: foothold-experiment-definition/1
+experiment_id: EX-42
+status: preparation_only
+devices:
+  training: cuda:0
+  evaluation: cuda:1
+  video: cuda:1
+  w78: cuda:1
+issue: foothold-project/foothold-lab#555
+worklist: inbox/jay/20261104-ex41-restart/WORKLIST.tsv
+paths:
+  slug: ex42
+  root_template: '{slug}_{stamp}'
+  directories:
+    main: main/{run}
+    scores: eval/scores
+    push250: eval/push250
+    score_watch: eval/score-watch
+    stage_end: eval/stage-end
+    stage_video: eval/stage-video
+files:
+  curriculum: foothold_s2/curriculum/ex42-prep.yaml
+  boundary: foothold_s2/curriculum/ex42-boundary.yaml
+  approvals: foothold_s2/curriculum/ex42-approvals.yaml
+  score_config: foothold_s2/curriculum/ex42_score_config.json
+  push_baseline: eval/push250/e0_flat_push_baseline.json
+  push_baseline_status: planned_after_e0_local_update0
+  maintenance_baseline: foothold_s2/curriculum/ex42_e0_baseline_a23.json
+  stage_video_source: null
+operational_values:
+  # Stage zero (EX42_0_T0_prime) started from m12000 = EX-41 run model_6000.pt.
+  # Must stay identical to ex42-prep.yaml stage_zero.parent (ex42_ops ops-check compares them).
+  # The earlier update 6000 / d5e9ec40 value was EX-40 m6000 copied from EX-41.yaml.
+  parent:
+    cumulative_update: 12000
+    manifest_local_update: 6000
+    sha256: 1c6af6319c823c718af4965064f1c312b0d25177f5223a49c323aab3b6f1e613
+  # E0 and later start from m13000 = stage-zero model_1000.pt (team lead 2026-11-09 10:0x,
+  # decisions.tsv b48afdf5). sha256 and params yaml SHAs measured on that run directory.
+  e_stage_parent:
+    cumulative_update: 13000
+    manifest_local_update: 1000
+    checkpoint_key: model_1000.pt
+    manifest: machine:s2_lab_root/ex42_main_20261108_123914/main/EX-42-B-stagezero_20261108_123914/manifest.json
+    sha256: 20365a2c6d70f94f65f1114471f7df198e56d86db6d02d89cea43c666b95e768
+    env_yaml_sha256: 4464400ce9dc4d33594d5099a1d932b969fddf839a8b26e8f6c2c58a799d4b7d
+    agent_yaml_sha256: 035b3f586c6a728256d6a5777740fa9c7cefc758607d2729784f3ff8b4eb1e6f
+  training:
+    environments: 6144
+    gpus: 2
+    per_gpu_envs: 3072
+    launch: M3
+    nccl_shm_disable: 1
+    seed: 42
+    status: preparation_only
+    initial_stage: EX42_0_T0_prime
+    initial_stage_updates: 1000
+    stages_from: foothold_s2/curriculum/ex42-prep.yaml
+    dr_schedule_from: foothold_s2/curriculum/ex42-approvals.yaml
+  score_watch:
+    stage_identity_module: foothold_s2.ex42_score_watch
+    applied_transition_log: eval/ex42_application.jsonl
+  evaluation:
+    environments: 64
+    seed: 42
+    judged_cells: 26
+    recorded_cells: 39
+    modes: [gt, pred, off]
+  operations_enabled: false

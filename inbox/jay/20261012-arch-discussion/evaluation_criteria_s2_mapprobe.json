@@ -1,0 +1,34 @@
+{
+  "schema": "s2-mapprobe-evaluation-criteria-v1",
+  "registered_before_results": true,
+  "registered_at_kst": "2026-10-18 05:02",
+  "registered_by": "lead session. Unit 「지도 지우기 탐침」 is listed in the team lead's night scope statement typed in the lead window at 2026-10-18 00:12 (NIGHT-PLAN 「팀장 직접 입력 · 밤 허용 범위 원문 기록」).",
+  "question": "B (map arm) got worse during 2000 updates on gap and flat while A stayed level. Is the damage carried by the live map signal, or by the actor weights themselves?",
+  "checkpoint": {
+    "B_update2000_sha256": "9e7328198aff8c587c22ef25d9bcc6398a7ae8f8384e85234deb5602368026bc",
+    "path": "C:/Users/AI-WS01/s2_lab/s2_step29a_run/frozen_delivery/runs/shortB-20261017-211253-3bfaf5cd/out/checkpoint_002000.pt"
+  },
+  "probe_arms": {
+    "B0": "B weights, policy mode B, but the 374-column map input is exactly what A receives (map zeros and validity zeros). Reads: what B does when it is not shown the terrain.",
+    "Bc": "B weights, the map branch contribution to the actor first layer (actor_in_map output) forced to zero for every step. Reads: what the fine-tuned actor body does with no map pathway at all."
+  },
+  "references": {
+    "A_and_B": "existing update-2000 evaluation run evalfull-u2000-live-20261018-002543-8bb6a76b episodes (no rerun). Pairs are matched by case_id. A pair missing on either side is excluded and counted, never imputed."
+  },
+  "evaluation": {
+    "cases": "the same 60 registered cases as the A/B evaluation (evaluation_seeds_s2_ab.json, same cases_sha256), fwd10 1.0 m/s, act_inference deterministic, one Kit process per case-arm, missing cases recorded and the run continues",
+    "success": "identical to the A/B evaluation score (crossed baseline and survived)"
+  },
+  "decision_rules": {
+    "primary_layers": ["gap", "flat"],
+    "secondary_layers_report_only": ["stepping_stones", "stairs_up"],
+    "per_probe_arm_and_primary_layer": {
+      "signal_hurts": "Tango 95% paired interval of (probe - B) has lower bound > 0. Removing the map improves B, so the live map signal is part of the damage.",
+      "weights_damaged": "interval of (probe - B) includes 0 AND interval of (probe - A) has upper bound < 0. Removing the map does not help and the probe stays below A, so the damage sits in the weights.",
+      "unclear": "anything else. Reported as unclear, not as no effect."
+    },
+    "recovery_report": "interval of (probe - A) is reported for every layer as the size of recovery. It is not a separate verdict.",
+    "no_selective_repetition": "one run per probe arm. A low or unexpected result is a valid result. Missing pairs are not refilled without the team lead.",
+    "power_note": "gap has about 19 valid pairs and flat about 10, so only large differences can be separated."
+  }
+}

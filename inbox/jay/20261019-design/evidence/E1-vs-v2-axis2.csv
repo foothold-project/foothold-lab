@@ -1,0 +1,10 @@
+cell,threshold,e1_value,e1_pass,v2_value,v2_pass
+turn/fell_ratio,<= 0.1,0.0,True,0.109375,False
+stop/fell_ratio,<= 0.03,0.0,True,0.0,True
+hold/fell_ratio,<= 0.03,0.0,True,0.0,True
+hold/residual_speed_mps,<= 0.005,0.0008821476750833797,True,0.0004943147904356212,True
+hold/joint_target_delta_tail,<= 0.01,0.0026453010784462097,True,0.0002566416934132576,True
+turn/yaw_follow/+0.50,>= 0.4,0.9353242843722303,True,0.46739501935103556,True
+turn/yaw_follow/+1.00,>= 0.4,0.9838826627656819,True,0.43161722079469367,True
+turn/yaw_follow/-0.50,>= 0.4,0.8369073878042397,True,0.40182125460843976,True
+turn/yaw_follow/-1.00,>= 0.4,0.9351841759184996,True,0.7603568540187555,True

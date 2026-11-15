@@ -1,0 +1,14 @@
+06:52:41 start
+CAUGHT   M02 no re-render loop
+CAUGHT   M15 handover path allowed
+CAUGHT   M62 gate v2 script
+CAUGHT   M77 unknown GPU free launches
+CAUGHT   M79 one env again
+CAUGHT   M80 teacher push
+CAUGHT   M81 command batch one
+CAUGHT   M82 joint fingerprint includes teacher
+CAUGHT   M83 command check includes teacher
+CAUGHT   M84 layout gate accepts one
+CAUGHT   M85 manifest omits layout
+{"caught": 11, "total": 11, "report": "C:\\Users\\AI-WS01\\.claude\\jobs\\09bbf294\\tmp\\codexB2\\mutations_20261014-065242.json"}
+mut exit 0
