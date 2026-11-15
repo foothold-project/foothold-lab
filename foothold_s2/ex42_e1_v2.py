@@ -348,6 +348,8 @@ def treatment(checkpoint: Path, iteration: int, plan: dict, *, expected_plan_sha
         actual = {"commands": stage["commands"], "rewards": stage["rewards"],
                   "low_forward_fraction": stage.get("low_forward_fraction"),
                   "live_adjustments": live_adjustments}
+        if stage.get("low_side_fraction") is not None:      # only a plan that uses the cell: every other fingerprint is unchanged
+            actual["low_side_fraction"] = stage["low_side_fraction"]
         fingerprint = hashlib.sha256(json.dumps(actual, sort_keys=True, separators=(",", ":")).encode()).hexdigest()
         return {"state": "complete", "source": "plan", "boundary_index": 0, "sha256": fingerprint,
                 "live_adjustments": live_adjustments}
@@ -377,6 +379,8 @@ def treatment(checkpoint: Path, iteration: int, plan: dict, *, expected_plan_sha
         raise ValueError("E1 v2 treatment slow-forward share missing")
     actual = {"commands": commands["commands"], "rewards": rewards["live"],
               "low_forward_fraction": low["value"], "live_adjustments": live_adjustments}
+    if isinstance(commands.get("low_side_fraction"), dict):
+        actual["low_side_fraction"] = commands["low_side_fraction"]["value"]
     fingerprint = hashlib.sha256(json.dumps(actual, sort_keys=True, separators=(",", ":")).encode()).hexdigest()
     return {"state": "complete", "source": "segment_receipt", "boundary_index": boundary, "sha256": fingerprint,
             "live_adjustments": live_adjustments,

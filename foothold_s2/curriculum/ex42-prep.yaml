@@ -297,7 +297,7 @@ stages:
     initial: {slow_forward: learning, side_left: learning, side_right: learning}
   live_adjustment:
     file_env: EX42_UPDATE_ADJUST
-    segment_reward_limits_sha256: 15dfcdcdf464fab34db1829d82ac95048d45b686f16cb54244655458314ee04e
+    segment_reward_limits_sha256: 8a52e9e814adea6fb89d30b38ee79f2089321a46d7488a19242949e907a08dc8
     # Repeated cells must equal the segment fence; this plan SHA pins that agreement.
     extra_reward_limits:
       zero_yaw: [-2.0, -0.5]
@@ -308,6 +308,7 @@ stages:
       slow_track_speed_max: [0.3, 0.3]
     command_limits:
       low_forward_fraction: [0.2, 0.5]
+      low_side_fraction: [0.0, 0.5]
     # Run-time cells, registered off at the start (decisions.tsv 2026-11-14 12:42, lead; planner review block 1): a run
     # that has started cannot change this plan or the limits file, so the knobs the lead may need are here now. The two
     # copies (here and `runtime_cells` of the limits file) must agree. policy_std_cap 0 = off.
