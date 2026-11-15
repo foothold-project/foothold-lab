@@ -71,3 +71,7 @@ W69	lead 11/14 19:2x	P1	at:2026-11-15T02:00	lead		open	v28b m400 (탐침 fwd0.1 
 W70	팀장 11/13 · lead	P1	at:2026-11-15T12:00	lead	decisions.tsv · FAILURE-LOG.md	open	문서 동기화: 계보 7 절 (planner DRAFT-LINEAGE-S7-E1-V27-1114) · CG E.11 · FAILURE-LOG 에 11/14 실수 (승인 대기 · 처방 늦음 · 작은 잡음 안 켜짐 · mai-watch 표식 셋 · pkill · 시각) · #555 댓글		
 W71	lead 11/14	P1	at:2026-11-16T12:00	lead	PR #809 #810 #811	open	E1F/E2 인계 PR 을 v2x 줄로 옮기고 승인 재고정 (E1 졸업 전)		
 W72	팀장 11/14 20:08	P3		lead	decisions.tsv 2026-11-14 20:09	dropped	보행 박자 입력 · 주기 보상 (Walk These Ways 방식) · 이번 E1 에서 안 함 (입력 차원 · 보상 구성 변경)	팀장 20:08 「지금 우리가 풀 수 있는 방식으로 최대한」	2026-11-14T20:58:00+09:00
+W73	팀장 11/15 11:39 · 13:44	P0		lead	decisions.tsv 2026-11-15 14:03 · b17741f5	open	E1 v29c m0 부터 다시 쌓기 (지각 lr 2.5e-4 고정 · 무인 · 경계 판정 틀 A~E) · 저속 0.8 · 졸업 판정은 보정본		
+W74	팀장 11/15 12:35	P0		lead · super2	decisions.tsv 2026-11-15 13:35 · af2d0212	done	디스크 정리 87%→19% · wt.py add/gc · 디스크 경보 · AGENTS 4 절 · Orca Cleanup		
+W75	팀장 11/15 13:44	P1		super2	super-lx INBOX-AUDIT-1115.md	open	받은편지함 지연 (Orca 이틀 배달 멈춤 원인 미확인) · 미수신 경보 47ddfdeb		
+W76	lead 11/15	P2		lead	decisions.tsv 2026-11-15 14:14	open	/home/jay/mai/tmp 나머지 · /home/jay/mai/wt 정리 (저속 단계 끝난 뒤 · 팀장)		
