@@ -17,7 +17,7 @@ import torch.nn.functional as F
 from torch.func import functional_call
 from torch.nn.utils.rnn import pack_padded_sequence, pad_packed_sequence
 
-from foothold_s2.models.start_perception import MAP_X, MAP_Y, kl_standard_normal, loss_tr, velocity_band_sums, velocity_loss
+from foothold_s2.models.start_perception import MAP_X, MAP_Y, kl_standard_normal, loss_tr, v_loss_term, velocity_band_sums, velocity_loss
 
 _GRU_CACHE: dict = {}
 
@@ -176,7 +176,7 @@ def sequence_loss_fast(p, b: dict, eps: torch.Tensor, impl: str) -> dict:
     scan = scan_cudnn if impl in ("a2", "a3") else scan_loop
     H_prop, H_terr = _gru_states(p, b, scan)
     res = (_losses_flat if impl in ("a1", "a3") else _losses_stepwise)(p, b, eps, H_prop, H_terr)
-    res["l_ie"] = res["kl"] + res["o_next"] + res["v"] + res["hf"] + res["hb"]
+    res["l_ie"] = res["kl"] + res["o_next"] + v_loss_term(res["v"]) + res["hf"] + res["hb"]
     res["l_tr"] = res["tr"]
     res["loss"] = res["l_tr"] + res["l_ie"]
     return res

@@ -198,8 +198,18 @@ def loss_tr(rough: torch.Tensor, refined: torch.Tensor, hb: torch.Tensor) -> tor
 # 가중이 정규화되지 않아 저속 축이 있는 만큼 손실이 커진다.
 PERCEPTION_V_LOWSPEED_WEIGHT = 1.0
 PERCEPTION_V_LOWSPEED_THRESHOLD = 0.3
+# EX-42 v29-9 (P-v): 지각 손실 l_ie 의 속도(v) 항에만 곱하는 계수. 1.0 = 꺼짐 (이전 동작과 비트 동일, 곱셈 자체를 하지 않는다). 켜려면 이 한 줄을 5.0 으로.
+# res["v"] (로그되는 Mean perception/v loss 와 v 띠 기록) 는 곱하기 전 값 그대로이고, l_ie 와 loss 에만 곱해진 값이 들어간다. 다른 항 (kl, o_next, hf, hb, l_tr) 은 그대로.
+PERCEPTION_V_LOSS_COEF = 1.0
 # 기록 (항상 켜짐, 학습에 쓰이지 않음): 정답 xy 속력 띠별 (추정 - 실제) 의 몸 틀 x · y 평균과 표본 수. 띠는 [a, b).
 PERCEPTION_V_BAND_EDGES = (0.0, 0.05, 0.15, 0.3, float("inf"))
+
+
+def v_loss_term(v: torch.Tensor) -> torch.Tensor:
+    """l_ie 에 들어가는 속도 항. 계수가 1.0 이면 v 그대로 (곱하지 않음), 아니면 PERCEPTION_V_LOSS_COEF * v. 호출 때마다 모듈 상수를 읽는다."""
+    if PERCEPTION_V_LOSS_COEF == 1.0:
+        return v
+    return PERCEPTION_V_LOSS_COEF * v
 
 
 def velocity_loss(v_est: torch.Tensor, v_gt: torch.Tensor) -> torch.Tensor:
@@ -499,7 +509,7 @@ class StartPerception(nn.Module):
             sums["o_next"] = sums["o_next"] + (per * valid).sum()
             o_valid_total += float(valid.sum())
         res = {k: (v / T if k != "o_next" else v / max(o_valid_total, 1.0)) for k, v in sums.items()}
-        res["l_ie"] = res["kl"] + res["o_next"] + res["v"] + res["hf"] + res["hb"]  # 식 3, 계수 1
+        res["l_ie"] = res["kl"] + res["o_next"] + v_loss_term(res["v"]) + res["hf"] + res["hb"]  # 식 3, 계수 1 (v 항만 PERCEPTION_V_LOSS_COEF, 1.0 이면 계수 1)
         res["l_tr"] = res["tr"] if self.trnet is not None else torch.zeros(())
         res["loss"] = res["l_tr"] + res["l_ie"]
         res["_v_band"] = v_band
