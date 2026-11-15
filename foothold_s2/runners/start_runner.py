@@ -973,6 +973,7 @@ class StartRunner(OnPolicyRunner):
             ploss = ({"fast_gt_only": 1.0}
                      if self.pcfg["fast_gt_only"] else self.update_perception())
             self._perception_ema_step()
+            self._gradnorm_print(it)
             if self.pcfg["stop_on_nonfinite"]:
                 self._check_finite(it, **{f"perception/{k}": torch.as_tensor(v, dtype=torch.float32) for k, v in ploss.items()})
                 self._check_params_finite(it)
@@ -1501,6 +1502,7 @@ class StartRunner(OnPolicyRunner):
         acc: dict[str, float] = {}
         v_band_sum = None  # 속도 띠별 (추정 - 실제) 합과 표본 수 (기록만, 학습에 안 쓰임)
         n_updates = 0
+        grad_norms: list = []
         for idx in self.replay.env_batches(pc["num_mini_batches"], pc["num_learning_epochs"]):
             self.perception_optimizer.zero_grad(set_to_none=True)
             chunks = torch.split(idx, pc["microbatch_envs"])  # microbatch + gradient accumulation (18 §5.2)
@@ -1515,12 +1517,26 @@ class StartRunner(OnPolicyRunner):
                     v_band_sum = vb if v_band_sum is None else v_band_sum + vb
             if self.is_distributed:
                 self._allreduce_grads(params)
-            nn.utils.clip_grad_norm_(params, pc["max_grad_norm"])
+            grad_norms.append(nn.utils.clip_grad_norm_(params, pc["max_grad_norm"]).detach().float())   # the returned total norm is the one before clipping (record only)
             self.perception_optimizer.step()
             n_updates += 1
+        if grad_norms:                                          # record only: not part of last_perception_losses, nothing reads it back into the training
+            g = torch.stack(grad_norms)
+            self.last_perception_gradnorm = {"n": int(g.numel()), "mean": float(g.mean()), "max": float(g.max()),
+                                             "clipped": int((g > pc["max_grad_norm"]).sum()), "threshold": float(pc["max_grad_norm"])}
         self.last_perception_losses = {k: v / n_updates for k, v in acc.items()}
         self.last_perception_losses.update(velocity_band_records(v_band_sum, n_updates))
         return self.last_perception_losses
+
+    def _gradnorm_print(self, it: int) -> None:
+        """Record only: one line per update of the perception gradient norm BEFORE the clip (mean and max over this update's minibatch steps),
+        the clip threshold and how many steps were above it. The v term alone is not recorded: its norm needs a second backward through the loss graph."""
+        r = getattr(self, "last_perception_gradnorm", None)
+        if r is None or self.disable_logs:
+            return
+        print("EX42_PERCEPTION_GRADNORM it=%d n=%d mean=%.4f max=%.4f clip_threshold=%g clipped=%d" % (
+            it, r["n"], r["mean"], r["max"], r["threshold"], r["clipped"]), flush=True)
+        self.last_perception_gradnorm = None
 
     def _autocast(self):
         if self.pcfg.get("replay_autocast") == "bf16" and self._cuda():
