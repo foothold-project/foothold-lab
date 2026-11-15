@@ -48,9 +48,11 @@ def assign_shards(devices, modes=MODES):
 
 # Screen and remote-desktop sessions (this machine: sunshine 262 MiB per GPU; rustdesk --server ~600 MiB on GPU 0, 11/11) hold a compute context but are not the
 # training or evaluation processes this wait is about; they never free up, so counting them blocks forever. Only these
-# names are skipped, by basename. Everything else on the GPU still blocks, whatever its memory: a Kit or python
+# names are skipped, by the basename of the first word of the command line (nvidia-smi can print the whole command
+# line, e.g. "/opt/Orca/orca-ide --type=utility"; a path containing a space is cut at the space and stays blocking).
+# Everything else on the GPU still blocks, whatever its memory: a Kit or python
 # process that has just started also uses little memory.
-DISPLAY_PROCESS_NAMES = frozenset({"sunshine", "Xorg", "Xwayland", "gnome-shell", "gnome-remote-desktop-daemon", "rustdesk"})
+DISPLAY_PROCESS_NAMES = frozenset({"sunshine", "Xorg", "Xwayland", "gnome-shell", "gnome-remote-desktop-daemon", "rustdesk", "orca-ide"})
 
 
 def _gpu_busy_uuids(query=None):
@@ -63,7 +65,8 @@ def _gpu_busy_uuids(query=None):
     for line in query().splitlines():
         fields = [field.strip() for field in line.split(",")]
         if len(fields) >= 2 and fields[0]:
-            name = os.path.basename(fields[3]) if len(fields) >= 4 else ""
+            words = fields[3].split() if len(fields) >= 4 else []
+            name = os.path.basename(words[0]) if words else ""
             if name in DISPLAY_PROCESS_NAMES:
                 continue
             memory = fields[2] if len(fields) >= 3 else "?"
