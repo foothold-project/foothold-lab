@@ -70,7 +70,7 @@ def kit_commands(checkpoint, output, device, *, task, plan_path, plan, mesh_dir,
     result = []
     for level in cfg["fixed_forward_levels"]:
         result.append((f"wide_L{level}", [*common, "--fixed-level", str(level),
-                       "--steps", "475", "--command-suite", "e1_wide_fixed",
+                       "--steps", "475", "--command-suite", "e1_wide_fixed", "--start-yaw-zero",
                        "--out", str(Path(output) / "wide" / f"L{level}"), *kit]))
     result.append(("wide_endpoints", [*common, "--steps", "300",
                    "--command-suite", "e1_wide_endpoint",
@@ -117,7 +117,36 @@ def _geometry(plan: dict, mesh_sha: str) -> tuple[dict, dict]:
     return rows, {"path": str(path), "sha256": pin["sha256"]}
 
 
-def _fixed_forward(folder: Path, doc: dict, mode: str, level: int, rows: dict) -> dict:
+# 팀장 11/15 21:49 ⑤ (b): 넓힌 칸 fwd1.0 의 성공 = 출발 방향 전진 3.5 m (옛 규칙의 출구선 7.5 - 원점 4.0 과 같은 거리).
+# 옛 규칙은 지도 +x 의 출구선을 셌고 reset 의 무작위 시작 yaw 때문에 +x 쪽으로 출발한 env 만 성공했다.
+# 새 규칙은 몸 좌표 전진 속도의 살아 있는 구간 적분 (평가 원자료 body_vx_integral_m 과 같은 양) 으로 센다.
+FORWARD_SUCCESS_M = 3.5
+
+
+def forward_reach(vx, alive, dt: float, stop: int, hold: int, need_m: float = FORWARD_SUCCESS_M):
+    """Per env: first step where alive-masked body-forward travel reaches need_m, and success = still alive hold steps later.
+
+    Same timing window (stop) and hold as the old exit-line rule, so only the distance definition changes.
+    """
+    travel = np.cumsum(np.asarray(vx, dtype=np.float64)[:stop] * alive[:stop], axis=0) * float(dt)
+    out = []
+    for i in range(alive.shape[1]):
+        arrived = np.flatnonzero((travel[:, i] >= need_m) & alive[:stop, i])
+        first = int(arrived[0]) if len(arrived) else None
+        success = (first is not None and first + hold < stop
+                   and bool(alive[first:first + hold + 1, i].all()))
+        out.append((first, bool(success), float(travel[stop - 1, i])))
+    return out
+
+
+def _fixed_forward(folder: Path, doc: dict, mode: str, level: int, rows: dict, *, rule: str | None = None) -> dict:
+    """rule None: use the heading-forward rule only when the evaluation set the start yaw (doc start_yaw_override == 0.0).
+
+    rule 'heading_forward' forces it (re-scoring old raw arrays); old documents keep the exit-line rule and their exact output.
+    """
+    if rule not in (None, "exit_line", "heading_forward"):
+        raise ValueError("E1 C1 fixed success rule unknown")
+    heading = rule == "heading_forward" or (rule is None and doc.get("start_yaw_override") == 0.0)
     array_name = doc["env_arrays"][f"{mode}/fwd1.0"]
     if array_name != f"env_arrays_{mode}_fwd1.0.npz":
         raise ValueError("E1 C1 fixed array name differs")
@@ -126,6 +155,7 @@ def _fixed_forward(folder: Path, doc: dict, mode: str, level: int, rows: dict) -
         x, y, alive = (arrays[key] for key in ("root_x_local_m", "root_y_local_m", "alive"))
         kinds, levels, columns = (arrays[key] for key in ("kind", "terrain_level", "terrain_col"))
         dt = float(arrays["dt"])
+        vx = arrays["vx"] if heading else None
         if (x.shape != (475, 64) or y.shape != x.shape or alive.shape != x.shape
                 or alive.dtype != bool or levels.shape != (64,) or columns.shape != (64,)
                 or not np.all(levels == level)
@@ -136,6 +166,9 @@ def _fixed_forward(folder: Path, doc: dict, mode: str, level: int, rows: dict) -
                 or not np.array_equal(alive[-1], arrays["alive_end"])
                 or not np.array_equal(alive.sum(0), arrays["alive_steps"])):
             raise ValueError("E1 C1 fixed trace differs")
+        if heading and (vx.shape != x.shape or not np.isfinite(vx).all()
+                        or not np.allclose((vx * alive).sum(0) * dt, arrays["body_vx_integral_m"], rtol=0, atol=1e-3)):
+            raise ValueError("E1 C1 fixed forward evidence differs")
         tiles = doc["terrain_tiles"]
         if len(tiles) != 64 or any(tile["kind"] != str(kinds[i]) or
                                   tile["level"] != level or tile["env"] != i or
@@ -150,13 +183,20 @@ def _fixed_forward(folder: Path, doc: dict, mode: str, level: int, rows: dict) -
             stop = timing["steps"]
             if not 1 <= stop <= 475 or not math.isclose(timing["dt"], dt, abs_tol=1e-8):
                 raise ValueError("E1 C1 geometry step window differs")
+            hold = math.ceil(timing["hold_s"] / dt)
+            if heading:
+                first, success, forward_m = forward_reach(vx[:, i:i + 1], alive[:, i:i + 1], dt, stop, hold)[0]
+                per_env.append({"env": i, "kind": str(kind), "level": level,
+                                "time_steps": stop, "first_reach_step": first,
+                                "success": success, "survival": bool(alive[stop - 1, i]),
+                                "forward_m": forward_m})
+                continue
             anchor = timing["anchors"]
             line = anchor["exit_x"] - timing["origin_m"][0]
             lo, hi = [v - timing["origin_m"][1] for v in anchor["exit_bounds_y"]]
             arrived = np.flatnonzero((x[:stop, i] >= line) & (y[:stop, i] >= lo)
                                      & (y[:stop, i] <= hi) & alive[:stop, i])
             first = int(arrived[0]) if len(arrived) else None
-            hold = math.ceil(timing["hold_s"] / dt)
             success = (first is not None and first + hold < stop
                        and bool(alive[first:first + hold + 1, i].all()))
             per_env.append({"env": i, "kind": str(kind), "level": level,
@@ -166,10 +206,13 @@ def _fixed_forward(folder: Path, doc: dict, mode: str, level: int, rows: dict) -
                       "success": sum(r["success"] for r in per_env if r["kind"] == kind),
                       "survival": sum(r["survival"] for r in per_env if r["kind"] == kind)}
                for kind in CONTINUOUS}
-    return {"valid_count": 64, "success_count": sum(r["success"] for r in per_env),
-            "survival_count": sum(r["survival"] for r in per_env),
-            "by_kind": by_kind, "per_env": per_env,
-            "raw_file": str(path), "raw_sha256": sha(path)}
+    result = {"valid_count": 64, "success_count": sum(r["success"] for r in per_env),
+              "survival_count": sum(r["survival"] for r in per_env),
+              "by_kind": by_kind, "per_env": per_env,
+              "raw_file": str(path), "raw_sha256": sha(path)}
+    if heading:                                                              # 새 규칙 표시는 새 규칙의 결과에만 (옛 창의 기록과 같은 모양을 지킨다)
+        result["success_rule"] = f"heading_forward_{FORWARD_SUCCESS_M}m"
+    return result
 
 
 def _endpoint(folder: Path, doc: dict, mode: str, case: str) -> dict:

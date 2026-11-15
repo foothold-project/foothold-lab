@@ -66,6 +66,7 @@ parser.add_argument("--push-ladder-map-mode", choices=("eval_gt", "eval_pred", "
 parser.add_argument("--push-ladder-command", choices=("walk_0.5", "walk_1.0", "walk_1.5", "stand_turn_1.2", "stand"), default="walk_0.5")
 parser.add_argument("--push-ladder-directions", choices=("full", "cardinal"), default="full")
 parser.add_argument("--eval-seed", type=int, default=42, help="명령마다 env.reset 앞에서 torch.manual_seed 에 주는 값(시작 위치 · 관측 잡음, 행동은 평균). 기본 42 = 기존과 같음. 지형 기하 시드(SPARSE_GEOMETRY_SEED)는 따로 고정이라 안 바뀐다")
+parser.add_argument("--start-yaw-zero", action="store_true", help="E1 wide fixed cells only: set every env start yaw to +x (0 rad) after the fixed-terrain reset; position and joints stay (lead 11/15 팀장 21:49)")
 parser.add_argument("--out", required=True)
 AppLauncher.add_app_launcher_args(parser)
 args = parser.parse_args()
@@ -122,6 +123,8 @@ if args.fixed_level is not None and not 0 <= args.fixed_level <= 9:
     parser.error("--fixed-level 은 0..9 정수(지형 레벨 행 수 10)")                                  # 행 수 대조는 apply 에서 한 번 더
 if args.eval_seed < 0:
     parser.error("--eval-seed 는 0 이상 정수(Kit 기동 전 거절)")
+if args.start_yaw_zero and (args.command_suite != "e1_wide_fixed" or not args.fixed_terrain or args.fixed_level is None or parser_sparse):
+    parser.error("--start-yaw-zero 는 --command-suite e1_wide_fixed 와 --fixed-terrain --fixed-level N 에만 쓴다(Kit 기동 전 거절)")
 CMD_NAMES = tuple(_command_cells.commands(args.command_suite))
 WANT_CMDS = CMD_NAMES if args.commands == "all" else tuple(args.commands.split(","))
 
@@ -526,6 +529,17 @@ for mode in args.modes.split(","):
             START_SUPPORT = _gh.start_support(_sp2.SIDE_TABLE, _names, int(_gen.num_rows), res["fixed_terrain"]["tiles"],
                                               (robot.data.root_pos_w[:, :2] - raw.scene.env_origins[:, :2]).cpu().numpy())      # 시작 자리가 발판 위인가(빔 밖 · 구덩이 시작 판별): reset · yaw 맞춤 뒤 이 명령의 실제 시작 xy(아래 offset 과 같은 값)
             res["terrain_geometry_sha256"] = _gh.geometry_record(_sp2.SIDE_TABLE, _names, int(_gen.num_rows), [(t["level"], t["col"]) for t in res["fixed_terrain"]["tiles"]])
+        if args.start_yaw_zero:                                                          # 넓힌 칸: reset 이 뽑는 무작위 yaw 로는 «전진» 이 지도 +x 와 어긋난다. 시작 yaw 만 0 으로(위치 · 관절은 그대로), 듬성 평가와 같은 방식
+            st = robot.data.root_state_w.clone()
+            st[:, 3:7] = torch.tensor([1.0, 0.0, 0.0, 0.0], device=dev)               # 쿼터니언 w x y z
+            st[:, 7:] = 0.0
+            robot.write_root_pose_to_sim(st[:, :7])
+            robot.write_root_velocity_to_sim(st[:, 7:])
+            q = robot.data.root_quat_w
+            yaw0 = torch.atan2(2.0 * (q[:, 0] * q[:, 3] + q[:, 1] * q[:, 2]), 1.0 - 2.0 * (q[:, 2] ** 2 + q[:, 3] ** 2))
+            if yaw0.abs().max().item() > 1.0e-3:
+                raise RuntimeError("넓힌 칸 평가: 시작 yaw 를 0 으로 맞추지 못했다(최대 %.4f rad)" % yaw0.abs().max().item())
+            res["start_yaw_override"] = 0.0
         offset = (robot.data.root_pos_w[:, :2] - raw.scene.env_origins[:, :2]).abs().max().item()      # 로봇이 (고정한) 새 원점 근처에서 시작했는지: B 의 reset 은 원점 기준 x · y ±0.5 m
 
         if offset > START_OFFSET_MAX_M + 1.0e-3:
