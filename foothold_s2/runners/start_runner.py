@@ -452,6 +452,14 @@ class StartRunner(OnPolicyRunner):
                 it, row["lowspeed_envs"], row["small_noise_envs"], row["num_envs"], row["lowspeed_cmd"]), flush=True)
         return row
 
+    def _slow_hold_log(self, it: int) -> None:
+        """v29-5, record only: per update the number of envs holding a slow command (long time_left) and their mean time_left."""
+        summary = getattr(self._command_term(), "slow_hold_summary", None)
+        if summary is None or self.disable_logs:
+            return
+        count, mean_left = summary()
+        print("EX42_SLOW_HOLD it=%d envs=%d of=%d mean_time_left=%.2f" % (it, count, self.env.num_envs, mean_left), flush=True)
+
     def _assert_ex41_joint_order(self) -> None:
         from foothold_s2.runners.ex41_critic_mirror import assert_joint_order
 
@@ -876,6 +884,7 @@ class StartRunner(OnPolicyRunner):
                 self.alg.compute_returns(self._ppo_obs(raw, torch.zeros(n, 51, device=self.device)))
                 self._vbias_finish(it)
                 noise_row = self._small_noise_finish(it)
+                self._slow_hold_log(it)
             if trace is not None:
                 trace.end_update()
             if contract_bad is not None and bool(contract_bad.any()):

@@ -150,6 +150,7 @@ def test_actual_mixed_term_reset_resample_and_flag_hook(monkeypatch, tmp_path):
             self.cfg,self._env=cfg,env
             self.num_envs,self.device=env.num_envs,env.device
             self.metrics={}
+            self.time_left=torch.full((env.num_envs,),4.0)      # Isaac's base sets it before _resample_command (v29-5 slow hold writes it)
         def reset(self,env_ids=None):
             self._resample_command(torch.arange(self.num_envs) if env_ids is None else env_ids)
             return {}
@@ -167,7 +168,8 @@ def test_actual_mixed_term_reset_resample_and_flag_hook(monkeypatch, tmp_path):
     scene.robot=NS(data=NS(root_pos_w=torch.zeros(1000,3),heading_w=torch.zeros(1000)))
     raw.scene=scene;raw.common_step_counter=0
     cfg=NS(asset_name='robot',params={'curriculum_mode':True},seed=42,flag_stride=0,dynamic_flags=True,
-           force_flag_provider=None,flag_provider=None,flag_count=4,fixed_cmd=None,clock_scatter=False,steps_per_iter=24)
+           force_flag_provider=None,flag_provider=None,flag_count=4,fixed_cmd=None,clock_scatter=False,steps_per_iter=24,
+           resampling_time_range=(4.0,4.0))
     t=module.MixedVelocityCommand(cfg,raw)
     source,old=entry.load_ex42_stage_zero_source(p)
     view=entry.make_ex42_stage_zero_plan_view(source,old,{'parent_sha256':'b'*64},ex42_plan=p,stage_id='E3')
