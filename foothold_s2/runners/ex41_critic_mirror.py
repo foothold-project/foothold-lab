@@ -87,7 +87,7 @@ MEAN_ACTION_PERCEPTION_SHARE = 0.12
 # (action delay, actuator gains, motor strength, base COM) and the interval push are skipped on their rows, and this share of them (spread evenly
 # over those envs, 0 turns it off) is commanded the one point forward vx = FIXED_CMD_VX (vy 0, wz 0, slot forward, no heading, no stand/spin)
 # at every command resample. Mass and friction are startup-mode per env and stay as they are.
-MEAN_ACTION_ENV_DR_OFF = False
+MEAN_ACTION_ENV_DR_OFF = True
 MEAN_ACTION_ENV_FIXED_CMD_SHARE = 0.5
 MEAN_ACTION_ENV_FIXED_CMD_VX = 0.1
 

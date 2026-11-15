@@ -25,8 +25,8 @@ PKG = Path(__file__).parents[1]
 MASK = mirror.small_noise_mask(N, 0.25)
 
 
-def test_constants_default_off_and_the_fixed_mask_is_half_of_the_mean_envs():
-    assert mirror.MEAN_ACTION_ENV_DR_OFF is False
+def test_constants_v28r_on_and_the_fixed_mask_is_half_of_the_mean_envs():
+    assert mirror.MEAN_ACTION_ENV_DR_OFF is True
     assert mirror.MEAN_ACTION_ENV_FIXED_CMD_SHARE == 0.5 and mirror.MEAN_ACTION_ENV_FIXED_CMD_VX == 0.1
     mean = mirror.small_noise_mask(1024, 0.12)
     fixed = mirror.mean_env_fixed_cmd_mask(1024, 0.12, 0.5)
@@ -39,8 +39,9 @@ def test_constants_default_off_and_the_fixed_mask_is_half_of_the_mean_envs():
 def test_runner_puts_the_masks_on_the_env_only_while_the_constant_is_on(monkeypatch):
     alg, _ = _alg(None)
     runner = _runner(alg)
+    monkeypatch.setattr(mirror, "MEAN_ACTION_ENV_DR_OFF", False)                                   # v28r ships it on: the off value is checked explicitly
     runner._apply_small_noise()
-    assert runner.env._ex42_nominal_dr_rows is None and runner.env._ex42_fixed_cmd_rows is None       # default: nothing on the env
+    assert runner.env._ex42_nominal_dr_rows is None and runner.env._ex42_fixed_cmd_rows is None       # off: nothing on the env
     monkeypatch.setattr(mirror, "MEAN_ACTION_ENV_DR_OFF", True)
     runner._apply_small_noise()
     assert torch.equal(runner.env._ex42_nominal_dr_rows, runner._mean_action)
