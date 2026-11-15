@@ -98,14 +98,14 @@ PERCEPTION_EMA_DECAY = 0.98
 # The band is decided by est vx ALONE (no command, no body state), so a deployed ONNX graph applies the same formula without a command input.
 # The unattended boundary device passes only REPO, CODE_SHA_FILE and SOURCE_REF, so the default has to be the ON state. Env keys (read at every call):
 #   EX42_PERCEPTION_VX_CORR    "1" (default) or "0" = OFF (the output is the input object, byte for byte)
-#   EX42_PERCEPTION_VX_CORR_B  b in m/s, default 0.012
+#   EX42_PERCEPTION_VX_CORR_B  b in m/s, default 0.016
 # The boundary evaluation runs as a dispatcher unit that does NOT see the training process's environment: with the defaults, training and evaluation agree
 # (both run this code); setting either key only on the training side would make the boundary score differ from the training.
 VX_CORR_ENV = "EX42_PERCEPTION_VX_CORR"
 VX_CORR_ENV_B = "EX42_PERCEPTION_VX_CORR_B"
 VX_CORR_BAND = 0.3
 VX_CORR_RAMP = 0.05
-VX_CORR_B_DEFAULT = 0.012
+VX_CORR_B_DEFAULT = 0.016
 VX_CORR_VX_COL = sp.Z_DIM            # est[..., 16]
 
 
