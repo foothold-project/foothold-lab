@@ -163,3 +163,13 @@ def test_record_cells_accept_only_the_four_l5_side_04_cells():
                 [RECORDS[0], RECORDS[0]], "low/L5/eval_gt/side+0.4", [1]):
         with pytest.raises(ValueError, match="unapproved"):
             check_graduation({"record_cells": bad})
+
+
+def test_official_judge_e1_v2_applies_record_cells_around_judge_cells():
+    """The official path (_judge_e1_v2) wraps its judge_cells result in apply_record_cells; the plan field decides."""
+    import ast
+    import inspect
+    tree = ast.parse(inspect.getsource(ex42_e1_v2._judge_e1_v2).lstrip())
+    wrapped = [n for n in ast.walk(tree) if isinstance(n, ast.Call) and getattr(n.func, "id", "") == "apply_record_cells"
+               and n.args and isinstance(n.args[0], ast.Call) and getattr(n.args[0].func, "id", "") == "judge_cells"]
+    assert len(wrapped) == 1

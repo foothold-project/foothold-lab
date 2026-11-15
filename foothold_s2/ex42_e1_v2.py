@@ -586,9 +586,10 @@ def _judge_e1_v2(score: dict, baseline: dict, measured: dict, plan: dict,
     if previous_cells:
         _verified_cells(previous, Path(previous["e1_v2_evaluation"]), seed, plan_mae_window_s(plan))
     expected_repeats = set(plan["evaluation"]["e1_exit_v2"]["repeat_seeds"][1:])
-    current_v2 = judge_cells(result["e1_v2_cells"], plan,
-                             repeats=repeats if set(repeats) == expected_repeats else None,
-                             previous_cells=previous_cells)
+    # A graduation plan lists record_cells (L5 side +-0.4); apply_record_cells is a no-op for every other plan.
+    current_v2 = apply_record_cells(judge_cells(result["e1_v2_cells"], plan,
+                                                repeats=repeats if set(repeats) == expected_repeats else None,
+                                                previous_cells=previous_cells), plan)
     if repeats and set(repeats) != expected_repeats:
         current_v2["repeat_evidence"] = {"judgement": "HOLD", "reason": "세 시드 자료 일부 결측"}
     # The prior P1 receipt has already judged its own seed 42/7/13 bundle.
