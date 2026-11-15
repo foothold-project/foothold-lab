@@ -17,6 +17,32 @@ MODES = ("eval_gt", "eval_pred", "probe_prop_only")
 JUDGE_MODES = MODES[:2]
 LOW_CASES = ("fwd0.1", "fwd0.2", "side+0.2", "side-0.2", "side+0.4", "side-0.4")
 YAW_CASES = ("fwd0.5", "fwd1.0")
+# E1 exit MAE definition (team lead 2026-11-15 21:11, ledger 9cf03f93): None keeps the per-step
+# |vx - command| mean. A number of seconds (0.5) judges |window mean vx - command| instead.
+# Off by default so every locked copy and every cached score keeps its old evidence.
+MAE_WINDOW_S = None
+
+
+def window_mae_per_env(vx, alive, command_v: float, dt: float, window_s: float):
+    """Per-env mean of |window-mean speed - command| over fully alive windows.
+
+    Windows are window_s/dt steps long, laid end to end from step 0; a tail shorter than a window is
+    dropped and a window with any dead step is skipped. Returns (mae, windows); an env with no fully
+    alive window has windows == 0 and mae == 0 (the caller decides what that means)."""
+    steps = window_s / dt
+    if not (window_s > 0 and dt > 0 and abs(steps - round(steps)) < 1e-6 and round(steps) >= 1):
+        raise ValueError(f"E1 v2 MAE window {window_s}s is not a whole number of {dt}s steps")
+    steps = int(round(steps))
+    vx, alive = np.asarray(vx, dtype=np.float64), np.asarray(alive, dtype=bool)
+    count = vx.shape[0] // steps
+    if count < 1:
+        raise ValueError("E1 v2 MAE window longer than the evaluation")
+    cut = count * steps
+    mean = vx[:cut].reshape(count, steps, -1).mean(1)
+    full = alive[:cut].reshape(count, steps, -1).all(1)
+    windows = full.sum(0)
+    mae = (np.abs(mean - command_v) * full).sum(0) / np.maximum(windows, 1)
+    return mae, windows
 
 
 def _sha(path: Path) -> str:
@@ -60,7 +86,7 @@ def _source(path: Path, checkpoint_sha: str, seed: int, modes: tuple[str, ...],
     return doc
 
 
-def _map_cell(path: Path, doc: dict, mode: str, case: str) -> dict:
+def _map_cell(path: Path, doc: dict, mode: str, case: str, *, mae_window_s: float | None = None) -> dict:
     command = doc["commands"][case]
     speed = math.hypot(command[0], command[1])
     if speed <= 0 or command[2] != 0:
@@ -94,6 +120,15 @@ def _map_cell(path: Path, doc: dict, mode: str, case: str) -> dict:
             raw_mae = (np.abs(z["vx"] - command[0]) * alive).sum(0) / np.maximum(alive_steps, 1)
             if not np.allclose(raw_mae, errors, rtol=2e-5, atol=1e-6):
                 raise ValueError(f"E1 v2 body-forward MAE differs: {raw}")
+        window_record = {}
+        if mae_window_s is not None and command[0]:
+            # Only body-forward cells: env_arrays keep vx alone, so the vy cells have no raw to window.
+            window, windows = window_mae_per_env(z["vx"], alive, command[0], dt, mae_window_s)
+            # An env that never completes a fully alive window keeps its per-step MAE (no free zero).
+            window = np.where(windows > 0, window, errors)
+            window_record = {"mae_window_s": float(mae_window_s), "per_env_mae_step_mps": errors.tolist(),
+                             "per_env_mae_windows": windows.tolist(), "mae_step_mps": float(np.median(errors))}
+            errors = _finite(window, case)
         ratio = body_forward_per_env(z["vx"], alive, dt, speed) if command[0] else projection / (speed * alive.shape[0] * dt)
         if (not np.isfinite(ratio).all() or
                 int(alive[-1].sum()) != row["alive_envs_at_end"] or
@@ -105,7 +140,7 @@ def _map_cell(path: Path, doc: dict, mode: str, case: str) -> dict:
                 "command_mps": speed, "envs": 64,
                 "per_env_R": ratio.tolist(), "per_env_mae_mps": errors.tolist(),
                 "per_env_alive_end": alive[-1].astype(bool).tolist(),
-                "raw_file": str(raw), "raw_sha256": _sha(raw)}
+                "raw_file": str(raw), "raw_sha256": _sha(raw), **window_record}
 
 
 def _yaw_cell(path: Path, doc: dict, mode: str, case: str) -> dict:
@@ -139,8 +174,12 @@ def _yaw_cell(path: Path, doc: dict, mode: str, case: str) -> dict:
                 "raw_file": str(raw), "raw_sha256": _sha(raw)}
 
 
-def measure_cells(evaluation: Path, checkpoint_sha: str, seed: int, *, require_low: bool = True) -> dict:
-    """Read exact per-env raw. Missing sources are explicit HOLD inputs, never guessed from briefs."""
+def measure_cells(evaluation: Path, checkpoint_sha: str, seed: int, *, require_low: bool = True,
+                  mae_window_s: float | None = None) -> dict:
+    """Read exact per-env raw. Missing sources are explicit HOLD inputs, never guessed from briefs.
+
+    mae_window_s None uses the module MAE_WINDOW_S (None = legacy per-step MAE)."""
+    mae_window_s = MAE_WINDOW_S if mae_window_s is None else mae_window_s
     evaluation = Path(evaluation)
     result = {"format": "foothold-ex42-e1-v2-cells/1", "checkpoint_sha256": checkpoint_sha,
               "seed": seed, "low": {}, "side05": {}, "yaw": {}, "sources": {}}
@@ -154,13 +193,13 @@ def measure_cells(evaluation: Path, checkpoint_sha: str, seed: int, *, require_l
         if doc.get("command_suite") != "e1_v2" or set(doc.get("commands", {})) != set(LOW_CASES):
             raise ValueError("E1 v2 low command coverage differs")
         result["sources"][f"low_L{level}"] = {"path": str(path), "sha256": _sha(path)}
-        result["low"][f"L{level}"] = {mode: {case: _map_cell(path, doc, mode, case)
+        result["low"][f"L{level}"] = {mode: {case: _map_cell(path, doc, mode, case, mae_window_s=mae_window_s)
                                              for case in LOW_CASES} for mode in MODES}
     map_path = evaluation / "map64" / "map_modes.json"
     if map_path.is_file():
         doc = _source(map_path, checkpoint_sha, seed, MODES, level=None)
         result["sources"]["map64"] = {"path": str(map_path), "sha256": _sha(map_path)}
-        result["side05"] = {mode: {case: _map_cell(map_path, doc, mode, case)
+        result["side05"] = {mode: {case: _map_cell(map_path, doc, mode, case, mae_window_s=mae_window_s)
                                    for case in ("side+0.5", "side-0.5")} for mode in MODES}
     axis_path = evaluation / "axis_v2" / "axis_v2.json"
     if axis_path.is_file():
