@@ -331,3 +331,20 @@ def test_the_phi_ema_before_snapshot_comes_from_the_averaged_weights(monkeypatch
     mu_e, _ = r._phi_dist(snap, r.perception_ema)
     assert torch.equal(snap["mu_ema"], mu_e)
     assert not torch.equal(snap["mu_ema"], snap["mu"])
+
+
+def test_the_averaged_copy_does_not_call_back_into_the_online_module_when_the_map_stats_recorder_is_attached(capsys, tmp_path, monkeypatch):
+    """v29-7: MapStatsRecorder.attach() (the real training entry attaches it) puts _advance and step on the online module's instance as closures over
+    the online module. A plain deepcopy took them along, so the averaged copy computed est with the ONLINE weights (est_diff exactly 0 in v29-6)."""
+    from foothold_s2.runners.map_stats import MapStatsRecorder
+
+    r = _runner(monkeypatch=monkeypatch)
+    r.log_dir = str(tmp_path)
+    MapStatsRecorder(r, None).attach()
+    assert "_advance" in r.perception.__dict__ and "step" in r.perception.__dict__
+    _learn(r, 2)
+    assert r.perception_ema._advance is not r.perception._advance and r.perception_ema.step is not r.perception.step   # not the online closures
+    assert r._map_stats_recorder.calls > 0                                                 # the recorder still counts the rollout steps (through the averaged copy)
+    lines = [l for l in capsys.readouterr().out.splitlines() if l.startswith("EX42_PERCEPTION_EMA it=")]
+    fields = dict(kv.split("=") for kv in lines[-1].split()[1:])
+    assert float(fields["est_diff_mean"]) > 0.0 and float(fields["v_diff_mean"]) > 0.0

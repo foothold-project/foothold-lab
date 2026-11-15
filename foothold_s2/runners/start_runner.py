@@ -1278,6 +1278,10 @@ class StartRunner(OnPolicyRunner):
         self.perception_wema = WeightEma({pema.NAME: self.perception}, decay)
         status = self.perception_wema.restore(self._saved_perception_ema)
         self.perception_ema = copy.deepcopy(self.perception).eval()
+        for _name in ("_advance", "step"):        # v29-7: MapStatsRecorder.attach() puts closures over the ONLINE module on the instance; deepcopy keeps them, so the copy would run the online weights (est_diff exactly 0 in v29-6)
+            self.perception_ema.__dict__.pop(_name, None)
+        if getattr(self, "_map_stats_recorder", None) is not None:           # keep the map-input statistics of the rollout (they now come from the averaged copy)
+            self._map_stats_recorder.attach(self.perception_ema)
         for p in self.perception_ema.parameters():
             p.requires_grad_(False)
         self.perception_ema.load_state_dict(self.perception_wema.module_state(pema.NAME))
