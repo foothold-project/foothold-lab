@@ -804,7 +804,9 @@ def run(checkpoint, expected_sha256, output, device, *, eval_seed=None, mesh_dir
             # seed gets its own complete map/axis/low bundle and raw receipt.
             from foothold_s2.ex42_e1_v2 import judge_cells, measure_cells
             try:
-                measured_v2 = measure_cells(output, expected_sha256, seed)
+                from foothold_s2.ex42_e1_v2 import plan_mae_window_s
+                measured_v2 = measure_cells(output, expected_sha256, seed,
+                                            mae_window_s=plan_mae_window_s(policy.document))
                 from foothold_s2.ex42_e1_judge import previous_e1_score
                 prior = previous_e1_score(checkpoint, output,
                                           policy.document["evaluation"]["interval_updates"],

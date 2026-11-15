@@ -315,8 +315,9 @@ def read_evidence(folder: Path, *, plan: dict, plan_sha256: str,
         spec = settings["case_specs"][case_id]
         source = folder / f"{case_id}.json"
         trace = folder / f"{case_id}.npz"
-        if (indexed.get("raw_file") != str(source)
-                or indexed.get("trace_file") != str(trace)
+        # Paths compare after resolving links: a rejudge tree links the saved folder; the SHA below still binds the bytes.
+        if (not indexed.get("raw_file") or Path(indexed["raw_file"]).resolve() != source.resolve()
+                or not indexed.get("trace_file") or Path(indexed["trace_file"]).resolve() != trace.resolve()
                 or indexed.get("raw_sha256") != _sha(source)
                 or indexed.get("trace_sha256") != _sha(trace)):
             raise ValueError(f"D44 {case_id} evidence path or SHA differs")

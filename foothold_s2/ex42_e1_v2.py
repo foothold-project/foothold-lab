@@ -21,6 +21,35 @@ YAW_CASES = ("fwd0.5", "fwd1.0")
 # |vx - command| mean. A number of seconds (0.5) judges |window mean vx - command| instead.
 # Off by default so every locked copy and every cached score keeps its old evidence.
 MAE_WINDOW_S = None
+# Graduation evaluation plan (team lead 2026-11-15 22:12): the same decisions travel inside the evaluation plan itself,
+# evaluation.e1_widened.graduation, so the plan sha pins them. No block = the plan judges exactly as before.
+GRADUATION_KEYS = {"mae_window_s", "near_R_0p1", "l3_fwd10_role", "fixed_fwd10_rule", "parent_evaluation_plan_sha256"}
+
+
+def graduation(plan: dict) -> dict:
+    block = (plan.get("evaluation", {}).get("e1_widened") or {}).get("graduation")
+    return block if isinstance(block, dict) else {}
+
+
+def plan_mae_window_s(plan: dict):
+    """Window seconds the plan asks for (None = module MAE_WINDOW_S / legacy per-step MAE)."""
+    return graduation(plan).get("mae_window_s")
+
+
+def check_graduation(block) -> dict:
+    """Approved values only; anything else in the graduation block is refused."""
+    if block is None:
+        return {}
+    num = lambda v: type(v) in (int, float) and math.isfinite(v)
+    if (not isinstance(block, dict) or not set(block) <= GRADUATION_KEYS
+            or ("mae_window_s" in block and not (num(block["mae_window_s"]) and 0 < block["mae_window_s"] <= 3))
+            or ("near_R_0p1" in block and not (num(block["near_R_0p1"]) and 0 < block["near_R_0p1"] < .5))
+            or block.get("l3_fwd10_role", "judge_if_exposed") not in ("judge_if_exposed", "record_only")
+            or block.get("fixed_fwd10_rule", "heading_forward") not in ("heading_forward", "exit_line")
+            or ("parent_evaluation_plan_sha256" in block and
+                re.fullmatch(r"[0-9a-f]{64}", str(block["parent_evaluation_plan_sha256"])) is None)):
+        raise ValueError("E1 graduation block has an unapproved key or value")
+    return block
 
 
 def window_mae_per_env(vx, alive, command_v: float, dt: float, window_s: float):
@@ -215,7 +244,9 @@ def judge_cells(cells: dict, plan: dict, *, repeats: dict[int, dict] | None = No
                 _ignore_near: bool = False) -> dict:
     """Judge GT and PRED per cell. OFF is retained as record only."""
     cfg = plan["evaluation"]["e1_exit_v2"]
-    near = cfg["near_threshold"]
+    near = dict(cfg["near_threshold"])
+    if "near_R_0p1" in graduation(plan):
+        near["R_0p1"] = graduation(plan)["near_R_0p1"]
     repeats = repeats or {}
     states, rows = [], {}
 
@@ -448,8 +479,8 @@ def canonical_evidence(value):
     return value
 
 
-def _verified_cells(score: dict, evaluation: Path, seed: int) -> dict:
-    actual = measure_cells(evaluation, score["checkpoint_sha256"], seed)
+def _verified_cells(score: dict, evaluation: Path, seed: int, mae_window_s=None) -> dict:
+    actual = measure_cells(evaluation, score["checkpoint_sha256"], seed, mae_window_s=mae_window_s)
     if ("e1_v2_cells" in score
             and canonical_evidence(actual) != canonical_evidence(score["e1_v2_cells"])):
         raise ValueError("E1 v2 cached cells differ from source identity or raw values")
@@ -489,16 +520,17 @@ def _judge_e1_v2(score: dict, baseline: dict, measured: dict, plan: dict,
     previous_filtered = {**previous, "d44_cells": previous_turn} if previous is not None else None
     result = judge_e1(current_filtered, baseline, measured, legacy_plan, previous=previous_filtered)
     result["d44_cells"] = score["d44_cells"]
-    score = {**score, "e1_v2_cells": _verified_cells(score, evaluation, seed)}
+    score = {**score, "e1_v2_cells": _verified_cells(score, evaluation, seed, plan_mae_window_s(plan))}
     result["e1_v2_cells"] = score["e1_v2_cells"]
     repeats = {}
     for repeat_seed in plan["evaluation"]["e1_exit_v2"]["repeat_seeds"][1:]:
         folder = evaluation / f"e1_v2_repeat_seed{repeat_seed}"
         if folder.exists():
-            repeats[repeat_seed] = measure_cells(folder, score["checkpoint_sha256"], repeat_seed)
+            repeats[repeat_seed] = measure_cells(folder, score["checkpoint_sha256"], repeat_seed,
+                                                mae_window_s=plan_mae_window_s(plan))
     previous_cells = previous.get("e1_v2_cells", {}) if previous is not None else {}
     if previous_cells:
-        _verified_cells(previous, Path(previous["e1_v2_evaluation"]), seed)
+        _verified_cells(previous, Path(previous["e1_v2_evaluation"]), seed, plan_mae_window_s(plan))
     expected_repeats = set(plan["evaluation"]["e1_exit_v2"]["repeat_seeds"][1:])
     current_v2 = judge_cells(result["e1_v2_cells"], plan,
                              repeats=repeats if set(repeats) == expected_repeats else None,

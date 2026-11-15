@@ -15,8 +15,10 @@ from foothold_s2.eval.map_mode_cells import commands as command_suite
 from foothold_s2.ex42_e1_v2 import LOW_CASES
 
 
-def widened_contract(source: dict) -> dict:
+def widened_contract(source: dict, graduation: dict | None = None) -> dict:
+    """graduation: the approved decisions block (ex42_e1_v2.check_graduation); only l3_fwd10_role changes the contract."""
     evaluation = source["evaluation"]
+    graduation = graduation or {}
     levels = evaluation["fixed_levels"]
     if levels != [3, 6, 9] or evaluation["promotion"]["window_episodes"] != 64:
         raise ValueError("C1 source fixed levels or denominator differs")
@@ -26,7 +28,7 @@ def widened_contract(source: dict) -> dict:
         "fixed_commands": list(E1_WIDE_FIXED_COMMANDS),
         "endpoint_commands": list(E1_WIDE_ENDPOINT_COMMANDS),
         "judge_modes": ["eval_gt", "eval_pred"], "record_modes": ["probe_prop_only"],
-        "fixed_forward_roles": {3: "judge_if_exposed", 6: "judge_if_exposed",
+        "fixed_forward_roles": {3: graduation.get("l3_fwd10_role", "judge_if_exposed"), 6: "judge_if_exposed",
                                 9: "record_only_pending_decision"},
         "endpoint_roles": {case: "judge" if case in ("side+0.8", "side-0.8")
                            else "record_only" for case in E1_WIDE_ENDPOINT_COMMANDS},
@@ -42,7 +44,8 @@ def widened_contract(source: dict) -> dict:
     }
 
 
-def write_evaluation_plan(source_path: Path, destination: Path, expected_source_sha256: str) -> EX42Plan:
+def write_evaluation_plan(source_path: Path, destination: Path, expected_source_sha256: str,
+                          graduation: dict | None = None) -> EX42Plan:
     source = EX42Plan.load(source_path)
     if source.sha256 != expected_source_sha256 or "e1_widened" in source.document["evaluation"]:
         raise ValueError("C1 source training plan SHA or evaluation scope differs")
@@ -50,7 +53,11 @@ def write_evaluation_plan(source_path: Path, destination: Path, expected_source_
     root = source.path.parents[2]
     if destination.is_relative_to(root) or destination.exists() or destination.parent.exists():
         raise ValueError("C1 evaluation plan needs a fresh output outside the source checkout")
-    cfg = widened_contract(source.document)
+    from foothold_s2.ex42_e1_v2 import check_graduation
+    graduation = check_graduation(graduation) or None
+    cfg = widened_contract(source.document, graduation)
+    if graduation:
+        cfg["graduation"] = dict(graduation)
     # A single insertion preserves every training byte and lets the parsed
     # before/after check reject any field outside evaluation.e1_widened.
     marker = "  directions:\n"
@@ -83,8 +90,11 @@ def validate_evaluation_scope(source_path: Path, evaluation_path: Path) -> None:
     before, after = copy.deepcopy(source.document), copy.deepcopy(policy.document)
     if "e1_widened" in before["evaluation"]:
         raise ValueError("C1 training plan already contains an evaluation override")
-    cfg = widened_contract(before)
-    if after["evaluation"].pop("e1_widened", None) != cfg or before != after:
+    from foothold_s2.ex42_e1_v2 import check_graduation
+    block = after["evaluation"].pop("e1_widened", None)
+    graduation = check_graduation(block.pop("graduation", None) if isinstance(block, dict) else None)
+    cfg = widened_contract(before, graduation)
+    if block != cfg or before != after:
         raise ValueError("C1 evaluation plan differs outside approved evaluation fields")
 
 
@@ -93,8 +103,11 @@ def main(argv=None):
     parser.add_argument("--source", type=Path, required=True)
     parser.add_argument("--expected-source-sha256", required=True)
     parser.add_argument("--out", type=Path, required=True)
+    parser.add_argument("--graduation-json", help="approved graduation decisions, e.g. "
+                        '{"mae_window_s": 0.5, "near_R_0p1": 0.06}')
     args = parser.parse_args(argv)
-    plan = write_evaluation_plan(args.source, args.out, args.expected_source_sha256)
+    plan = write_evaluation_plan(args.source, args.out, args.expected_source_sha256,
+                                 json.loads(args.graduation_json) if args.graduation_json else None)
     print(json.dumps({"state": "complete", "evaluation_plan": str(plan.path),
                       "evaluation_plan_sha256": plan.sha256,
                       "source_sha256": args.expected_source_sha256}, sort_keys=True))
