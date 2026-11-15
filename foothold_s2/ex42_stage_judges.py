@@ -240,13 +240,13 @@ class _E1V2(_E1):
             raise ValueError("EX-42 P1 E1 v2 raw cell evidence differs")
         from foothold_s2.ex42_e1_wide import active as wide_active
         if wide_active(score, plan):
-            from foothold_s2.ex42_e1_wide import read_cells, cap_from_training
+            from foothold_s2.ex42_e1_wide import read_cells, cap_from_training, same_evidence
             from foothold_s2.ex42_score import _json
             mesh_sha = _json(evaluation / "map64" / "map_modes.json")["ex42_mesh"]["mesh_sha256"]
             counted_wide = read_cells(evaluation, score["checkpoint_sha256"],
                                       score["conditions"]["eval_seed"], plan, mesh_sha)
             counted_cap = cap_from_training(checkpoint, score["execution_plan_sha256"], mesh_sha)
-            if (counted_wide != score.get("e1_wide_cells") or counted_cap != score.get("e1_wide_cap")
+            if (not same_evidence(counted_wide, score.get("e1_wide_cells")) or counted_cap != score.get("e1_wide_cap")
                     or score.get("e1_wide_evaluation") != str(evaluation)):
                 raise ValueError("EX-42 P1 E1 C1 raw cell or cap evidence differs")
         prior = previous_e1_score(checkpoint, evaluation, plan["evaluation"]["interval_updates"],

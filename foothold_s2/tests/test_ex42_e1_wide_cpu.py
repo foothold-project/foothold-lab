@@ -272,3 +272,17 @@ def test_c1_previous_raw_accepts_moved_geometry_file_only_with_same_sha():
     changed_raw = json.loads(json.dumps(moved))
     changed_raw["sources"]["L3"]["sha256"] = "c" * 64
     assert not same_evidence(changed_raw, previous)
+
+
+def test_p1_verify_compares_the_counted_c1_cells_by_same_evidence_not_by_equality():
+    """ex42_stage_judges' P1 verify (C1 raw cell or cap evidence) must use same_evidence so a moved worktree geometry path
+    does not refuse a stored score; same_evidence itself is pinned above (moved path passes, a different sha is refused)."""
+    import ast
+    import inspect
+    from foothold_s2 import ex42_stage_judges
+    tree = ast.parse(inspect.getsource(ex42_stage_judges).lstrip())
+    names = {n.func.id for n in ast.walk(tree) if isinstance(n, ast.Call) and isinstance(n.func, ast.Name)}
+    assert "same_evidence" in names
+    plain = [n for n in ast.walk(tree) if isinstance(n, ast.Compare) and isinstance(n.left, ast.Name)
+             and n.left.id == "counted_wide"]
+    assert plain == []
