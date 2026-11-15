@@ -388,6 +388,8 @@ class StartRunner(OnPolicyRunner):
         print("EX42_PERCEPTION_LR where=%s lr=%s override=%s" % (
             where, ",".join("%g" % g["lr"] for g in self.perception_optimizer.param_groups), PERCEPTION_LR_OVERRIDE), flush=True)
         print("EX42_PERCEPTION_V_LOSS_COEF where=%s value=%g" % (where, sp.PERCEPTION_V_LOSS_COEF), flush=True)
+        print("EX42_PERCEPTION_V_LOWSPEED_WEIGHT where=%s value=%g threshold=%g" % (
+            where, sp.PERCEPTION_V_LOWSPEED_WEIGHT, sp.PERCEPTION_V_LOWSPEED_THRESHOLD), flush=True)
 
     def _apply_small_noise(self) -> None:
         """Put the small-noise env scale on the storage and the policy while the mirror update is on, take it off when it is

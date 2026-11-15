@@ -18,6 +18,7 @@ ROOT = pathlib.Path(__file__).resolve().parents[2]
 PLAN_SHA = "1f4ff70d8820e2e754ed1120b821fafb22a04e40d7f84f1ff0a9a9cfedff8a92"
 APPROVALS_SHA = "80a6079b5d77f6f65e7be71c120982f8e7f1379666bc890f68e2c267a7d10696"
 OLD_KEYS = {"l_tr", "l_ie", "kl", "o_next", "v", "hf", "hb"}
+_W0 = sp.PERCEPTION_V_LOWSPEED_WEIGHT   # the committed value of the module constant; every test puts it back to this, not to a literal
 
 
 def _runner(seed=3):
@@ -66,7 +67,7 @@ def test_off_is_bit_identical_to_mse_loss_and_on_is_the_per_axis_weighted_mean()
         assert (gt[:, 0].abs() < 0.3).any() and (gt[:, 0].abs() >= 0.3).any() and (gt[:, 1].abs() < 0.3).any() and (gt[:, 1].abs() >= 0.3).any()
         assert torch.allclose(sp.velocity_loss(est, gt), _want(est, gt, 3.0), atol=1e-7)
     finally:
-        sp.PERCEPTION_V_LOWSPEED_WEIGHT = 1.0
+        sp.PERCEPTION_V_LOWSPEED_WEIGHT = _W0
 
 
 def test_each_axis_is_weighted_by_its_own_truth_small_vx_big_vy_and_the_reverse_and_both_small_and_vz_never():
@@ -92,7 +93,7 @@ def test_each_axis_is_weighted_by_its_own_truth_small_vx_big_vy_and_the_reverse_
         assert float(sp.velocity_loss(g2 + torch.tensor([[0.0, 2.0, 0.0]]), g2)) == pytest.approx(3 * 4.0 / 3, abs=1e-6)
         assert float(sp.velocity_loss(g2 + torch.tensor([[2.0, 0.0, 0.0]]), g2)) == pytest.approx(1 * 4.0 / 3, abs=1e-6)
     finally:
-        sp.PERCEPTION_V_LOWSPEED_WEIGHT = 1.0
+        sp.PERCEPTION_V_LOWSPEED_WEIGHT = _W0
 
 
 def test_the_weight_follows_the_truth_not_the_estimate():
@@ -102,7 +103,7 @@ def test_the_weight_follows_the_truth_not_the_estimate():
         est = torch.tensor([[0.05, 0.05, 0.0]])                              # a small estimate must not switch the weight on
         assert float(sp.velocity_loss(est, g)) == pytest.approx((0.95 ** 2 * 2) / 3, abs=1e-6)
     finally:
-        sp.PERCEPTION_V_LOWSPEED_WEIGHT = 1.0
+        sp.PERCEPTION_V_LOWSPEED_WEIGHT = _W0
 
 
 def test_band_sums_have_the_sign_est_minus_truth_and_half_open_bands():
@@ -140,7 +141,7 @@ def test_real_runner_batch_the_weight_changes_the_velocity_loss_only_through_the
         try:
             return r.perception.sequence_loss(batch, eps=eps, impl=impl)
         finally:
-            sp.PERCEPTION_V_LOWSPEED_WEIGHT = 1.0
+            sp.PERCEPTION_V_LOWSPEED_WEIGHT = _W0
 
     hh = _truth(base, 1.0, 1.0)
     assert float(loss(hh, 3.0)["v"]) == float(loss(hh, 1.0)["v"])                         # no slow axis: the same number, bit for bit
@@ -188,7 +189,7 @@ def test_the_four_implementations_agree_with_the_weight_on_loss_gradient_and_ban
             g_new = torch.autograd.grad(new["loss"], params, allow_unused=True)
             assert max(float((u - v).abs().max()) for u, v in zip(g_ref, g_new) if u is not None) <= 1e-4, impl
     finally:
-        sp.PERCEPTION_V_LOWSPEED_WEIGHT = 1.0
+        sp.PERCEPTION_V_LOWSPEED_WEIGHT = _W0
 
 
 def test_the_weight_changes_the_gradient_of_a_real_batch_but_not_the_state_dict_layout():
@@ -202,7 +203,7 @@ def test_the_weight_changes_the_gradient_of_a_real_batch_but_not_the_state_dict_
     try:
         g_on = torch.autograd.grad(r.perception.sequence_loss(b, eps=eps, impl="loop")["loss"], params, allow_unused=True)
     finally:
-        sp.PERCEPTION_V_LOWSPEED_WEIGHT = 1.0
+        sp.PERCEPTION_V_LOWSPEED_WEIGHT = _W0
     assert any(not torch.equal(u, v) for u, v in zip(g_off, g_on) if u is not None)
     assert {k: tuple(v.shape) for k, v in r.perception.state_dict().items()} == keys           # checkpoints keep the same keys and shapes
 
@@ -229,7 +230,7 @@ def test_the_records_do_not_depend_on_the_weight_and_the_weight_does_not_change_
         r_on = _runner()
         r_on.learn(1)
     finally:
-        sp.PERCEPTION_V_LOWSPEED_WEIGHT = 1.0
+        sp.PERCEPTION_V_LOWSPEED_WEIGHT = _W0
     assert set(r_on.last_perception_losses) == set(r_off.last_perception_losses)
 
 
@@ -242,7 +243,7 @@ def test_the_ppo_optimizer_and_policy_are_not_touched_by_the_weight():
     try:
         r.update_perception()
     finally:
-        sp.PERCEPTION_V_LOWSPEED_WEIGHT = 1.0
+        sp.PERCEPTION_V_LOWSPEED_WEIGHT = _W0
     assert all(torch.equal(a_before[k], v) for k, v in r.alg.policy.state_dict().items())
     assert r.alg.learning_rate == lr_before
 
