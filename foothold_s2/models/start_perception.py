@@ -247,6 +247,17 @@ def velocity_band_records(band_sum, n_updates: int) -> dict[str, float]:
 PERCEPTION_V_BIAS_LOWBAND = (0.05, 0.15)
 PERCEPTION_V_BIAS_MIN_N = 10   # 이보다 표본이 적으면 p10 · p90 은 None
 
+# 기록 (항상 켜짐, v28p 위): 평가 탐침과 같은 자의 표본만 모은 x 치우침 (EX42_PERCEPTION_V_BIAS_FWD01).
+# 선택: |vy 명령| < VY_ABS_MAX, wz 명령 0 (|wz| <= WZ_EPS), heading 끔, vx 명령 [VX_LO, VX_HI] (양 끝 포함), 명령이 바뀐 뒤 AGE_S 초 이상 지난 표본.
+PERCEPTION_V_BIAS_FWD01 = {"vy_abs_max": 0.02, "wz_eps": 1.0e-6, "vx_lo": 0.08, "vx_hi": 0.12, "age_s": 2.0}
+
+
+def fwd01_mask(cmd: torch.Tensor, heading: torch.Tensor, age_s: torch.Tensor) -> torch.Tensor:
+    """cmd (N, 3) = 명령 vx vy wz (정규화 전 m/s, rad/s), heading (N,) 명령 항의 heading 모드 플래그, age_s (N,) 명령이 바뀐 뒤 경과 초. 반환: (N,) bool."""
+    c = PERCEPTION_V_BIAS_FWD01
+    return ((cmd[:, 1].abs() < c["vy_abs_max"]) & (cmd[:, 2].abs() <= c["wz_eps"]) & ~heading.bool()
+            & (cmd[:, 0] >= c["vx_lo"]) & (cmd[:, 0] <= c["vx_hi"]) & (age_s >= c["age_s"]))
+
 
 def lowband_bias_summary(samples: torch.Tensor | None, min_n: int | None = None) -> dict:
     """samples (M, 3) = est - 실제 몸 속도 (몸 틀 m/s). 키: n · mean (x, 몸 진행 방향) · mean_y (옆) · p10 · p90 (x, 선형 보간) · p10_y · p90_y (옆).

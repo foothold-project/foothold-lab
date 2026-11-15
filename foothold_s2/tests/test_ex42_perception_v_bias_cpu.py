@@ -149,7 +149,7 @@ def test_two_ranks_merge_the_samples_not_the_means(monkeypatch):
     seen = {}
 
     def fake_gather(out, obj):
-        seen["mine"] = obj
+        seen.setdefault("mine", obj)                                        # the first gather is the all-env record (the FWD01 gathers come after it)
         out[0], out[1] = obj, other
 
     monkeypatch.setattr(torch.distributed, "all_gather_object", fake_gather)
