@@ -88,7 +88,7 @@ MODE_DEFAULTS = {"est_mode": "learned", "critic_mode": "legacy"}   # 옛 체크�
 PERCEPTION_LR_OVERRIDE = 2.5e-4
 # v28u: decay of the averaged perception weights the rollout asks for est (0 = off: no object is built and the run is exactly the v28p one).
 # The line that turns it on is this one: PERCEPTION_EMA_DECAY = 0.98. The perception loss always updates the online weights.
-PERCEPTION_EMA_DECAY = 0.0
+PERCEPTION_EMA_DECAY = 0.98
 PERCEPTION_DEFAULTS = {
     "fast_gt_only": False,
     "learning_rate": 5e-4,

@@ -41,8 +41,8 @@ def _learn(r, k=1, seed=9):
     r.learn(k)
 
 
-def test_the_constant_is_off_by_default_and_the_helper_validates_the_decay():
-    assert start_runner.PERCEPTION_EMA_DECAY == 0.0
+def test_the_constant_is_on_at_0_98_in_v28v_and_the_helper_validates_the_decay():
+    assert start_runner.PERCEPTION_EMA_DECAY == 0.98
     assert pema.usable_decay(0.98) and not pema.usable_decay(0.0) and not pema.usable_decay(1.0) and not pema.usable_decay(True) and not pema.usable_decay(None)
 
 
