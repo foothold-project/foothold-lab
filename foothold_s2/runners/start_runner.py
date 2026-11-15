@@ -89,6 +89,57 @@ PERCEPTION_LR_OVERRIDE = 2.5e-4
 # v28u: decay of the averaged perception weights the rollout asks for est (0 = off: no object is built and the run is exactly the v28p one).
 # The line that turns it on is this one: PERCEPTION_EMA_DECAY = 0.98. The perception loss always updates the online weights.
 PERCEPTION_EMA_DECAY = 0.98
+
+# v29-14: correction of the forward-velocity estimate of the perception in the low est band. ON in this copy (b = 0.018, ramp 0.05, band 0.3, like the v29-9 value constant).
+# Only est[..., 16] (vx of est[16:19]) changes, only on the way into the actor (_est_in). The perception loss, the replay and the stored
+# perception outputs are not touched. Where 0 <= est_vx < VX_CORR_BAND:  est' = est_vx - b * min(est_vx / VX_CORR_RAMP, 1) * (1 - est_vx / VX_CORR_BAND).
+# Elsewhere (est_vx >= 0.3 or est_vx < 0) the value is unchanged. The correction is 0 at est_vx = 0 and at 0.3 (continuous at both), rises linearly over the
+# first VX_CORR_RAMP (no step at 0) and from est_vx >= VX_CORR_RAMP on equals the plain b * (1 - est_vx / band).
+# The band is decided by est vx ALONE (no command, no body state), so a deployed ONNX graph applies the same formula without a command input.
+# The unattended boundary device passes only REPO, CODE_SHA_FILE and SOURCE_REF, so the default has to be the ON state. Env keys (read at every call):
+#   EX42_PERCEPTION_VX_CORR    "1" (default) or "0" = OFF (the output is the input object, byte for byte)
+#   EX42_PERCEPTION_VX_CORR_B  b in m/s, default 0.018
+# The boundary evaluation runs as a dispatcher unit that does NOT see the training process's environment: with the defaults, training and evaluation agree
+# (both run this code); setting either key only on the training side would make the boundary score differ from the training.
+VX_CORR_ENV = "EX42_PERCEPTION_VX_CORR"
+VX_CORR_ENV_B = "EX42_PERCEPTION_VX_CORR_B"
+VX_CORR_BAND = 0.3
+VX_CORR_RAMP = 0.05
+VX_CORR_B_DEFAULT = 0.018
+VX_CORR_VX_COL = sp.Z_DIM            # est[..., 16]
+
+
+def vx_corr_params() -> tuple:
+    """(on, b, band) from the environment, validated."""
+    switch = os.environ.get(VX_CORR_ENV, "1")
+    if switch not in ("0", "1"):
+        raise ValueError("%s must be 0 or 1: %r" % (VX_CORR_ENV, switch))
+    raw = os.environ.get(VX_CORR_ENV_B)
+    try:
+        b = VX_CORR_B_DEFAULT if raw in (None, "") else float(raw)
+    except ValueError:
+        raise ValueError("%s must be a number: %r" % (VX_CORR_ENV_B, raw)) from None
+    if not math.isfinite(b) or abs(b) > 0.05:
+        raise ValueError("%s must be finite and within [-0.05, 0.05] m/s: %r" % (VX_CORR_ENV_B, raw))
+    return switch == "1", b, VX_CORR_BAND
+
+
+def vx_corr_mask(vx: torch.Tensor, band: float = VX_CORR_BAND) -> torch.Tensor:
+    return (vx >= 0.0) & (vx < band)
+
+
+def correct_est_vx(est: torch.Tensor, params: tuple | None = None) -> torch.Tensor:
+    """Pure function: est (..., 51). Returns est itself when off, else a copy whose column 16 is corrected (see above). Nothing else changes."""
+    on, b, band = vx_corr_params() if params is None else params
+    if not on:
+        return est
+    vx = est[..., VX_CORR_VX_COL]
+    out = est.clone()
+    amount = b * (vx / VX_CORR_RAMP).clamp(max=1.0) * (1.0 - vx / band)
+    out[..., VX_CORR_VX_COL] = torch.where(vx_corr_mask(vx, band), vx - amount, vx)
+    return out
+
+
 PERCEPTION_DEFAULTS = {
     "fast_gt_only": False,
     "learning_rate": 5e-4,
@@ -333,7 +384,7 @@ class StartRunner(OnPolicyRunner):
 
             return out
 
-        return est
+        return correct_est_vx(est)              # v29-14: off returns est itself; the one place every actor input passes
 
     def _ppo_obs(self, raw: TensorDict, est: torch.Tensor) -> TensorDict:
         """actor 입력 = o45 + est51 (est_mode=zero 면 est 칸이 0, oracle_vel 이면 앞 3 칸만 실제 선속도), critic 입력 664. 수집 · 부트스트랩 · 평가 adapter 가 모두 이 함수를 지난다."""
@@ -388,6 +439,8 @@ class StartRunner(OnPolicyRunner):
         print("EX42_PERCEPTION_LR where=%s lr=%s override=%s" % (
             where, ",".join("%g" % g["lr"] for g in self.perception_optimizer.param_groups), PERCEPTION_LR_OVERRIDE), flush=True)
         print("EX42_PERCEPTION_V_LOSS_COEF where=%s value=%g" % (where, sp.PERCEPTION_V_LOSS_COEF), flush=True)
+        _on, _b, _band = vx_corr_params()
+        print("EX42_PERCEPTION_VX_CORR where=%s on=%d b=%.3f ramp=%g band=%g" % (where, int(_on), _b, VX_CORR_RAMP, _band), flush=True)
 
     def _apply_small_noise(self) -> None:
         """Put the small-noise env scale on the storage and the policy while the mirror update is on, take it off when it is
@@ -776,6 +829,7 @@ class StartRunner(OnPolicyRunner):
                 self.replay.start(ps.h_prop, ps.h_terr)
             gt_steps.zero_()
             src_steps.zero_()
+            self._vxcorr_acc = None
             self._vbias_samples = []
             self._vbias_mean_samples = []
             self._fwd01_samples = []
@@ -796,6 +850,7 @@ class StartRunner(OnPolicyRunner):
                     else:
                         est = self.perception.step(self.pstate, inp, gmap)
                     ppo_obs = self._ppo_obs(raw, est)
+                    self._vxcorr_collect(o, est, ppo_obs)
                     self._vbias_collect(o, ppo_obs, vel)
                     self._step_small_noise(o)
                     if self.replay is not None:
@@ -1319,6 +1374,28 @@ class StartRunner(OnPolicyRunner):
             print("EX42_PERCEPTION_EMA it=%d decay=%g updates=%d est_diff_mean=%.5f v_diff_mean=%.5f v_online_minus_ema=%+.5f" % (
                 it, self.perception_wema.decay, r["updates"], r["est_diff_mean"], r["v_diff_mean"], r["v_online_minus_ema"]), flush=True)
 
+    def _vxcorr_collect(self, o: torch.Tensor, est: torch.Tensor, ppo_obs) -> None:
+        """Record only (EX42_PERCEPTION_VX_CORR): sums of est_vx before and after the correction over the envs inside the band. Nothing when off."""
+        on, b, band = vx_corr_params()
+        if not on or self.pcfg["est_mode"] != "learned":
+            return
+        m = vx_corr_mask(est[:, VX_CORR_VX_COL], band)
+        before = est[:, VX_CORR_VX_COL][m].double()
+        after = ppo_obs[ACTOR_KEY][:, o.shape[-1] + VX_CORR_VX_COL][m].double()
+        part = torch.stack([torch.tensor(float(before.numel()), dtype=torch.float64, device=before.device), before.sum(), after.sum()])
+        acc = getattr(self, "_vxcorr_acc", None)
+        self._vxcorr_acc = part if acc is None else acc + part
+
+    def _vxcorr_finish(self, it: int) -> None:
+        """Every 50 updates, when on: n, mean est_vx before, mean est_vx after (this rank's envs inside the band). Record only."""
+        acc = getattr(self, "_vxcorr_acc", None)
+        self._vxcorr_acc = None
+        if acc is None or self.disable_logs or it % 50 != 0:
+            return
+        n = float(acc[0])
+        before, after = (float(acc[1]) / n, float(acc[2]) / n) if n > 0 else (float("nan"), float("nan"))
+        print("EX42_PERCEPTION_VX_CORR it=%d on=1 n=%d est_vx_before=%+.5f est_vx_after=%+.5f" % (it, int(n), before, after), flush=True)
+
     def _vbias_collect(self, o: torch.Tensor, ppo_obs, vel: torch.Tensor) -> None:
         """기록만. 명령 속력 (o[:, 6:9] 의 vx vy 노름) 이 저속 띠인 env 의 «actor 가 받은 est 의 속도 3 칸 - 실제 몸 속도» 를 모은다.
         learned est 51 칸의 순서는 [z 0:16, v 16:19, zf 19:35, zb 35:51] (StartPerception.step) 이라 속도 추정은 est[16:19] 다 (앞 3 칸은 잠재 z).
@@ -1404,6 +1481,7 @@ class StartRunner(OnPolicyRunner):
                 print("EX42_PERCEPTION_V_BIAS_MEAN_ACTION it=%d band=cmd_%.2f_%.2f n=%d mean=%s p10=%s p90=%s mean_y=%s p10_y=%s p90_y=%s" % (
                     it, *sp.PERCEPTION_V_BIAS_LOWBAND, r["n"], f(r["mean"]), f(r["p10"]), f(r["p90"]), f(r["mean_y"]), f(r["p10_y"]), f(r["p90_y"])), flush=True)
         self._fwd01_finish(it)
+        self._vxcorr_finish(it)
 
     def _v_bias_record(self) -> dict:
         record = {"lowband": dict(self.last_perception_v_bias)}
