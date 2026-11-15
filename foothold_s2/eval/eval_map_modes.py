@@ -309,7 +309,7 @@ def _run_identity():
 
 
 def _save_env_arrays(mode, cname, vx, fw, al, dn, dt, start_xy, row, map_err=None,
-                     kind_foot_arrays=None):
+                     kind_foot_arrays=None, vy=None, wz=None):
     """X27j: env 별 기록 npz(env_arrays_<mode>_<cmd>.npz). 지형 종류 이름 · 열(terrain_types) · 레벨 행(terrain_levels) · 시작 위치 · 종료 사유 · 전진 거리 · 생존.
     종류 이름은 지형 생성기의 sub_terrain 비율과 열 수로 만든 열 -> 종류 표(columns.column_types)에서 계산한다(계산 근거는 map_modes.json 의 env_array_basis)."""
     terrain = raw.scene.terrain
@@ -366,6 +366,10 @@ def _save_env_arrays(mode, cname, vx, fw, al, dn, dt, start_xy, row, map_err=Non
     if args.command_suite == "e1_wide_fixed":
         extra["root_x_local_m"] = fw
         extra["root_y_local_m"] = POS[:, :, 1].cpu().numpy()
+    if vy is not None:        # v29-14c: body vy and yaw rate beside vx so the side and turn cells can be windowed like the forward ones
+        extra["vy"] = vy
+    if wz is not None:
+        extra["wz"] = wz
     np.savez(os.path.join(args.out, "env_arrays_%s_%s.npz" % (mode, cname)), env=np.arange(len(col)), terrain_level=lev, terrain_col=col, kind=kind, start_xy=start_xy,
              fwd_end_m=fw[-1], body_vx_integral_m=dist, alive_end=al[-1], alive_steps=al.sum(0), first_done_step=first_done, end_reason=reason,
              vx=vx, alive=al, dones=dn, dt=dt, assignment_sha256=fixed_terrain.assignment_sha256(lev, col),
@@ -714,7 +718,7 @@ for mode in args.modes.split(","):
         _save_env_arrays(mode, cname, vx, FW.cpu().numpy(), al, DN.cpu().numpy(), dt, START_XY0, row,
                          map_err=None if mode == "none" else ERR.cpu().numpy(),
                          kind_foot_arrays=(FOOT_CONTACT.cpu().numpy(), FOOT_POS.cpu().numpy())
-                         if kind_cell else None)  # EX-42 kind completion remains unjudged.
+                         if kind_cell else None, vy=vy, wz=wz)  # EX-42 kind completion remains unjudged. vy, wz: v29-14c raw for the side-cell window MAE.
         if parser_sparse:                                                                # 새 키 · 새 파일만 더한다. 기존 키 · 기존 칸은 그대로
             from foothold_s2.eval import kind_stats
 

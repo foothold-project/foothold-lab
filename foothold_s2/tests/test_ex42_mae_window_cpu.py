@@ -182,5 +182,6 @@ def test_real_m500_step_mae_reproduces_the_official_value_and_the_window_is_new(
     cell = window["low"]["L0"]["eval_gt"]["fwd0.1"]
     assert cell["per_env_mae_step_mps"] == legacy["low"]["L0"]["eval_gt"]["fwd0.1"]["per_env_mae_mps"]
     assert cell["mae_mps"] < cell["mae_step_mps"]
-    side = window["low"]["L0"]["eval_gt"]["side+0.2"]                  # vy cells are not windowed
-    assert side == legacy["low"]["L0"]["eval_gt"]["side+0.2"]
+    side = window["low"]["L0"]["eval_gt"]["side+0.2"]                  # this raw has no vy: the side cell keeps the step MAE, and says so
+    assert side["mae_basis"] == "step" and side["mae_window_mps"] is None
+    assert {k: v for k, v in side.items() if k in legacy["low"]["L0"]["eval_gt"]["side+0.2"]} == legacy["low"]["L0"]["eval_gt"]["side+0.2"]

@@ -139,7 +139,8 @@ def _source(path: Path, checkpoint_sha: str, seed: int, modes: tuple[str, ...],
     return doc
 
 
-def _map_cell(path: Path, doc: dict, mode: str, case: str, *, mae_window_s: float | None = None) -> dict:
+def _map_cell(path: Path, doc: dict, mode: str, case: str, *, mae_window_s: float | None = None,
+              record_window_s: float | None = None) -> dict:
     command = doc["commands"][case]
     speed = math.hypot(command[0], command[1])
     if speed <= 0 or command[2] != 0:
@@ -174,14 +175,26 @@ def _map_cell(path: Path, doc: dict, mode: str, case: str, *, mae_window_s: floa
             if not np.allclose(raw_mae, errors, rtol=2e-5, atol=1e-6):
                 raise ValueError(f"E1 v2 body-forward MAE differs: {raw}")
         window_record = {}
-        if mae_window_s is not None and command[0]:
-            # Only body-forward cells: env_arrays keep vx alone, so the vy cells have no raw to window.
-            window, windows = window_mae_per_env(z["vx"], alive, command[0], dt, mae_window_s)
-            # An env that never completes a fully alive window keeps its per-step MAE (no free zero).
-            window = np.where(windows > 0, window, errors)
-            window_record = {"mae_window_s": float(mae_window_s), "per_env_mae_step_mps": errors.tolist(),
-                             "per_env_mae_windows": windows.tolist(), "mae_step_mps": float(np.median(errors))}
-            errors = _finite(window, case)
+        # The velocity channel the command is along: vx for the forward cells, vy for the side cells. A raw written before
+        # v29-14c has vx only, so its side cells have no channel to window (they keep the per-step MAE, basis "step").
+        channel = z["vx"] if command[0] else (z["vy"] if "vy" in z else None)
+        command_v = command[0] or command[1]
+        wanted = mae_window_s if mae_window_s is not None else record_window_s
+        if wanted is not None:
+            step_errors = errors
+            window_mean = windows = None
+            if channel is not None:
+                window_mean, windows = window_mae_per_env(channel, alive, command_v, dt, wanted)
+                # An env that never completes a fully alive window keeps its per-step MAE (no free zero).
+                window_mean = np.where(windows > 0, window_mean, step_errors)
+            judged_window = mae_window_s is not None and window_mean is not None
+            window_record = {"mae_basis": "window" if judged_window else "step", "mae_window_s": float(wanted),
+                             "per_env_mae_step_mps": step_errors.tolist(), "mae_step_mps": float(np.median(step_errors)),
+                             "mae_window_mps": None if window_mean is None else float(np.median(_finite(window_mean, case))),
+                             "per_env_mae_window_mps": None if window_mean is None else window_mean.tolist(),
+                             "per_env_mae_windows": None if windows is None else windows.tolist()}
+            if judged_window:
+                errors = _finite(window_mean, case)
         ratio = body_forward_per_env(z["vx"], alive, dt, speed) if command[0] else projection / (speed * alive.shape[0] * dt)
         if (not np.isfinite(ratio).all() or
                 int(alive[-1].sum()) != row["alive_envs_at_end"] or
@@ -227,11 +240,28 @@ def _yaw_cell(path: Path, doc: dict, mode: str, case: str) -> dict:
                 "raw_file": str(raw), "raw_sha256": _sha(raw)}
 
 
+def mae_window_s_from_plan(plan: dict | None) -> float | None:
+    """The window the plan asks for (evaluation.e1_widened.graduation.mae_window_s); None when the plan has no such cell,
+    which is every plan an official boundary evaluation runs today (so they keep the per-step MAE, byte for byte)."""
+    graduation = (((plan or {}).get("evaluation") or {}).get("e1_widened") or {}).get("graduation") or {}
+    value = graduation.get("mae_window_s")
+    if value is None:
+        return None
+    if type(value) not in (int, float) or not math.isfinite(value) or value <= 0:
+        raise ValueError("E1 v2 plan mae_window_s must be a positive number of seconds")
+    return float(value)
+
+
 def measure_cells(evaluation: Path, checkpoint_sha: str, seed: int, *, require_low: bool = True,
-                  mae_window_s: float | None = None) -> dict:
+                  mae_window_s: float | None = None, plan: dict | None = None,
+                  record_window_s: float | None = None) -> dict:
     """Read exact per-env raw. Missing sources are explicit HOLD inputs, never guessed from briefs.
 
-    mae_window_s None uses the module MAE_WINDOW_S (None = legacy per-step MAE)."""
+    mae_window_s None uses the plan's graduation.mae_window_s when a plan is given, else the module MAE_WINDOW_S (None = legacy
+    per-step MAE, the result is then byte identical to the one before the window existed). record_window_s adds the window
+    values (mae_window_mps, mae_basis, ...) to every cell without changing the judged mae_mps."""
+    if mae_window_s is None and plan is not None:
+        mae_window_s = mae_window_s_from_plan(plan)
     mae_window_s = MAE_WINDOW_S if mae_window_s is None else mae_window_s
     evaluation = Path(evaluation)
     result = {"format": "foothold-ex42-e1-v2-cells/1", "checkpoint_sha256": checkpoint_sha,
@@ -246,13 +276,13 @@ def measure_cells(evaluation: Path, checkpoint_sha: str, seed: int, *, require_l
         if doc.get("command_suite") != "e1_v2" or set(doc.get("commands", {})) != set(LOW_CASES):
             raise ValueError("E1 v2 low command coverage differs")
         result["sources"][f"low_L{level}"] = {"path": str(path), "sha256": _sha(path)}
-        result["low"][f"L{level}"] = {mode: {case: _map_cell(path, doc, mode, case, mae_window_s=mae_window_s)
+        result["low"][f"L{level}"] = {mode: {case: _map_cell(path, doc, mode, case, mae_window_s=mae_window_s, record_window_s=record_window_s)
                                              for case in LOW_CASES} for mode in MODES}
     map_path = evaluation / "map64" / "map_modes.json"
     if map_path.is_file():
         doc = _source(map_path, checkpoint_sha, seed, MODES, level=None)
         result["sources"]["map64"] = {"path": str(map_path), "sha256": _sha(map_path)}
-        result["side05"] = {mode: {case: _map_cell(map_path, doc, mode, case, mae_window_s=mae_window_s)
+        result["side05"] = {mode: {case: _map_cell(map_path, doc, mode, case, mae_window_s=mae_window_s, record_window_s=record_window_s)
                                    for case in ("side+0.5", "side-0.5")} for mode in MODES}
     axis_path = evaluation / "axis_v2" / "axis_v2.json"
     if axis_path.is_file():
