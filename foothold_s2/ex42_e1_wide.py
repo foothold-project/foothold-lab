@@ -248,6 +248,8 @@ def read_cells(evaluation: Path, checkpoint_sha: str, seed: int, plan: dict,
     evaluation = Path(evaluation)
     cfg = contract(plan)
     rows, source = _geometry(plan, mesh_sha)
+    from foothold_s2.ex42_e1_v2 import graduation
+    rule = graduation(plan).get("fixed_fwd10_rule")   # graduation plan pins the success rule; no block = by document
     result = {"format": cfg["format"], "checkpoint_sha256": checkpoint_sha,
               "seed": seed, "mesh_sha256": mesh_sha, "geometry": source,
               "fixed": {}, "endpoints": {}, "sources": {}}
@@ -262,7 +264,7 @@ def read_cells(evaluation: Path, checkpoint_sha: str, seed: int, plan: dict,
         result["fixed"][f"L{level}"] = {}
         for mode in MODES:
             result["fixed"][f"L{level}"][mode] = {
-                "fwd1.0": _fixed_forward(folder, doc, mode, level, rows),
+                "fwd1.0": _fixed_forward(folder, doc, mode, level, rows, rule=rule),
                 **{case: {"survival_count": doc["modes"][mode][case]["alive_envs_at_end"],
                           "by_kind": doc["modes"][mode][case]["by_kind"],
                           "role": "record_only"} for case in cfg["fixed_commands"] if case != "fwd1.0"}}
