@@ -57,10 +57,10 @@ def _v_grads(runner, b, eps, impl):
     return {n: (p.grad.detach().clone() if p.grad is not None else torch.zeros_like(p)) for n, p in _params(runner.perception).items()}
 
 
-def test_v29_9_value_is_on_and_the_off_term_is_the_same_object():
-    assert sp.PERCEPTION_V_LOSS_COEF == 5.0   # v29-9 is the ON commit; the off commit (1.0) is its parent
+def test_v29_12_value_is_twenty_and_the_off_term_is_the_same_object():
+    assert sp.PERCEPTION_V_LOSS_COEF == 20.0   # v29-12 candidate; v29-9 had 5.0, the off value is 1.0
     x = torch.randn(())
-    assert torch.equal(sp.v_loss_term(x), 5.0 * x)
+    assert torch.equal(sp.v_loss_term(x), 20.0 * x)
     old = sp.PERCEPTION_V_LOSS_COEF
     sp.PERCEPTION_V_LOSS_COEF = 1.0
     try:
@@ -139,3 +139,32 @@ def test_start_record_line_prints_the_coefficient(capsys):
         sp.PERCEPTION_V_LOSS_COEF = old
     assert "EX42_PERCEPTION_V_LOSS_COEF where=start value=5\n" in text
     assert "EX42_PERCEPTION_LR where=start" in text
+
+
+@pytest.mark.parametrize("impl", ["loop", "a1"])
+def test_coef_twenty_is_four_times_coef_five_on_the_v_term_only(impl):
+    r = _runner()
+    b = _batch(r)
+    eps = _eps(b)
+    res5, g5 = _loss_and_grads(r, b, eps, impl, 5.0)
+    res20, g20 = _loss_and_grads(r, b, eps, impl, 20.0)
+    gv = _v_grads(r, b, eps, impl)
+    for k in ("v", "kl", "o_next", "hf", "hb", "l_tr"):
+        assert torch.equal(res5[k], res20[k]), k                    # the logged terms do not carry the coefficient
+    # the v part of l_ie is 20 v against 5 v: four times; everything else in l_ie is the same
+    rest = res5["kl"] + res5["o_next"] + res5["hf"] + res5["hb"]
+    assert torch.allclose(res20["l_ie"] - rest, 4.0 * (res5["l_ie"] - rest), rtol=1e-5, atol=1e-7)
+    assert torch.allclose(res20["loss"] - res5["loss"], 15.0 * res5["v"], rtol=1e-5, atol=1e-7)
+    for n in g5:                                                     # grad(loss_20) = grad(loss_5) + 15 grad(v)
+        want = g5[n] + 15.0 * gv[n]
+        scale = max(float(want.abs().max()), 1e-3)
+        assert float((g20[n] - want).abs().max()) <= 1e-4 * scale, n
+    dec = [n for n in g5 if ".dec_b." in n or ".dec_f." in n]       # parameters the v term does not reach keep the same gradient
+    assert dec and all(torch.equal(g5[n], g20[n]) for n in dec)
+
+
+def test_start_record_line_prints_twenty_by_default(capsys):
+    r = _runner()
+    capsys.readouterr()
+    r._pin_perception_lr("start")
+    assert "EX42_PERCEPTION_V_LOSS_COEF where=start value=20\n" in capsys.readouterr().out

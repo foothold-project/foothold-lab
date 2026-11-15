@@ -200,7 +200,7 @@ PERCEPTION_V_LOWSPEED_WEIGHT = 1.0
 PERCEPTION_V_LOWSPEED_THRESHOLD = 0.3
 # EX-42 v29-9 (P-v): 지각 손실 l_ie 의 속도(v) 항에만 곱하는 계수. 1.0 = 꺼짐 (이전 동작과 비트 동일, 곱셈 자체를 하지 않는다). 켜려면 이 한 줄을 5.0 으로.
 # res["v"] (로그되는 Mean perception/v loss 와 v 띠 기록) 는 곱하기 전 값 그대로이고, l_ie 와 loss 에만 곱해진 값이 들어간다. 다른 항 (kl, o_next, hf, hb, l_tr) 은 그대로.
-PERCEPTION_V_LOSS_COEF = 5.0   # v29-9: ON (planner 22:23). The off commit is the one before this (1.0).
+PERCEPTION_V_LOSS_COEF = 20.0   # v29-12: 20 (lead 02:59, m1500 candidate). v29-9 had 5.0, the off value is 1.0.
 # 기록 (항상 켜짐, 학습에 쓰이지 않음): 정답 xy 속력 띠별 (추정 - 실제) 의 몸 틀 x · y 평균과 표본 수. 띠는 [a, b).
 PERCEPTION_V_BAND_EDGES = (0.0, 0.05, 0.15, 0.3, float("inf"))
 
