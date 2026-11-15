@@ -263,6 +263,7 @@ class StartRunner(OnPolicyRunner):
         self._last_use_gt_frac: float | None = None
         self.git_status_repos = [rsl_rl.__file__]
         self.last_perception_losses: dict[str, float] = {}
+        self.last_perception_gradnorm: dict | None = None
         self.last_perception_v_bias: dict | None = None
         self._vbias_samples: list = []
         self._resumed = False
@@ -918,6 +919,10 @@ class StartRunner(OnPolicyRunner):
             ploss = ({"fast_gt_only": 1.0}
                      if self.pcfg["fast_gt_only"] else self.update_perception())
             self._perception_ema_step()
+            if not self.pcfg["fast_gt_only"] and self.last_perception_gradnorm is not None and not self.disable_logs:
+                g = self.last_perception_gradnorm
+                print("EX42_PERCEPTION_GRADNORM it=%d n=%d total_mean=%.4f total_max=%.4f clip=%.2f clipped=%d/%d first_total=%.4f first_v_term=%.4f" % (
+                    it, g["n"], g["total_mean"], g["total_max"], g["clip"], g["clipped"], g["n"], g["first_total"], g["first_v_term"]), flush=True)
             if self.pcfg["stop_on_nonfinite"]:
                 self._check_finite(it, **{f"perception/{k}": torch.as_tensor(v, dtype=torch.float32) for k, v in ploss.items()})
                 self._check_params_finite(it)
@@ -1423,12 +1428,18 @@ class StartRunner(OnPolicyRunner):
         acc: dict[str, float] = {}
         v_band_sum = None  # 속도 띠별 (추정 - 실제) 합과 표본 수 (기록만, 학습에 안 쓰임)
         n_updates = 0
+        norms, v_norm, first_norm = [], None, None   # EX42_PERCEPTION_GRADNORM (기록만): 클립 전 전체 노름, 첫 미니배치의 v 항 노름
         for idx in self.replay.env_batches(pc["num_mini_batches"], pc["num_learning_epochs"]):
             self.perception_optimizer.zero_grad(set_to_none=True)
             chunks = torch.split(idx, pc["microbatch_envs"])  # microbatch + gradient accumulation (18 §5.2)
+            v_grads = None
             for c in chunks:
                 with self._autocast():
                     res = self.perception.sequence_loss(self.replay.gather(c), impl=pc["replay_impl"])
+                if n_updates == 0:   # 첫 미니배치만: v 항 (계수 곱한 값, l_ie 에 들어가는 그대로) 의 기울기. .grad 에 쓰지 않고 그래프도 남긴다 (retain_graph)
+                    got = torch.autograd.grad(sp.v_loss_term(res["v"]) * (len(c) / len(idx)), params, retain_graph=True, allow_unused=True)
+                    v_grads = [None if g is None else g.detach() for g in got] if v_grads is None else [
+                        a if b is None else (b.detach() if a is None else a + b.detach()) for a, b in zip(v_grads, got)]
                 (res["loss"] * (len(c) / len(idx))).backward()
                 for k in ("l_tr", "l_ie", "kl", "o_next", "v", "hf", "hb"):
                     acc[k] = acc.get(k, 0.0) + float(res[k]) * len(c) / len(idx)
@@ -1437,9 +1448,16 @@ class StartRunner(OnPolicyRunner):
                     v_band_sum = vb if v_band_sum is None else v_band_sum + vb
             if self.is_distributed:
                 self._allreduce_grads(params)
-            nn.utils.clip_grad_norm_(params, pc["max_grad_norm"])
+            total = nn.utils.clip_grad_norm_(params, pc["max_grad_norm"])   # 반환값 = 클립 전 전체 노름 (기존 호출 그대로, 값만 읽음)
+            norms.append(float(total))
+            if v_grads is not None:
+                v_norm = float(torch.sqrt(sum((g.double() ** 2).sum() for g in v_grads if g is not None) + torch.zeros((), dtype=torch.float64)))
+                first_norm = norms[-1]
             self.perception_optimizer.step()
             n_updates += 1
+        self.last_perception_gradnorm = {"n": len(norms), "total_mean": sum(norms) / len(norms), "total_max": max(norms),
+                                         "clipped": sum(1 for x in norms if x > pc["max_grad_norm"]), "clip": float(pc["max_grad_norm"]),
+                                         "first_total": first_norm, "first_v_term": v_norm}
         self.last_perception_losses = {k: v / n_updates for k, v in acc.items()}
         self.last_perception_losses.update(velocity_band_records(v_band_sum, n_updates))
         return self.last_perception_losses
