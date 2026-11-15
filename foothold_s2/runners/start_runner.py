@@ -2046,7 +2046,17 @@ class StartRunner(OnPolicyRunner):
         if float(checkpoint["map_switch"]["p_map_off"]) != self.p_map_off:
             raise ValueError("EX-42 stage-zero map-switch probability differs from parent")
         self.alg.policy.load_state_dict(checkpoint["model_state_dict"], strict=True)
-        self.perception.load_state_dict(checkpoint["perception_state_dict"], strict=True)
+        parent_perception, perception_source = checkpoint["perception_state_dict"], "online"
+        if stage_id is not None and checkpoint.get("perception_ema") is not None:
+            # v29-11: a later stage (E1F on) starts from the weights the parent stage was scored with: the evaluation adapter reads perception_ema
+            # when the checkpoint has it (eval/adapters.py), so the parent loader takes the same averaged weights (same helper, buffers stay online).
+            ema_state, perception_source = pema.ema_state_dict(parent_perception, checkpoint["perception_ema"])
+            if ema_state is not None:
+                parent_perception, perception_source = ema_state, "ema"
+            else:
+                perception_source = "online (%s)" % perception_source
+        self.perception.load_state_dict(parent_perception, strict=True)
+        print("EX42_PARENT_PERCEPTION_SOURCE=%s" % perception_source, flush=True)
         self.adasmpl.load_state_dict(checkpoint["adasmpl"])
         self._apply_resume_adasmpl()
         self.alg.optimizer.load_state_dict(checkpoint["optimizer_state_dict"])
