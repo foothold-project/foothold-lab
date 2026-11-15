@@ -16,7 +16,7 @@ from foothold_s2.runners.start_runner import StartRunner, correct_est_vx, vx_cor
 from foothold_s2.tests.start_fake_env import FakeStartEnv, train_cfg
 
 VX = [-0.1, -0.001, -1.0e-6, 0.0, 0.001, 0.025, 0.05, 0.087, 0.1, 0.2, 0.29, 0.3, 0.31, 0.5]
-B = 0.018
+B = 0.012
 ROOT = Path(sr.__file__).resolve().parents[2]
 
 
@@ -53,7 +53,7 @@ def test_off_is_byte_identical_and_returns_the_input_object(monkeypatch):
     r = _runner()
     raw = r.env.get_observations().clone()
     est = _est()
-    assert vx_corr_params() == (False, 0.018, 0.3)
+    assert vx_corr_params() == (False, 0.012, 0.3)
     assert correct_est_vx(est) is est
     assert r._est_in(est, raw["base_vel"]) is est
     base = r._ppo_obs(raw, est)[ACTOR_KEY]
@@ -61,7 +61,7 @@ def test_off_is_byte_identical_and_returns_the_input_object(monkeypatch):
 
 
 def test_default_is_on_and_changes_only_vx_inside_the_band():
-    assert vx_corr_params() == (True, 0.018, 0.3)                      # nothing in the environment: the unattended device passes only REPO, CODE_SHA_FILE, SOURCE_REF
+    assert vx_corr_params() == (True, 0.012, 0.3)                      # nothing in the environment: the unattended device passes only REPO, CODE_SHA_FILE, SOURCE_REF
     r = _runner()
     raw = r.env.get_observations().clone()
     est = _est()
@@ -87,7 +87,7 @@ def test_from_the_ramp_end_up_it_equals_the_formula_before_the_ramp():
     est[:, sr.VX_CORR_VX_COL] = torch.tensor(x)
     got = correct_est_vx(est)[:, sr.VX_CORR_VX_COL]
     assert torch.allclose(got, _old(x), atol=1e-7)
-    assert float(got[1]) == pytest.approx(0.087 - 0.018 * (1 - 0.087 / 0.3), abs=1e-7)
+    assert float(got[1]) == pytest.approx(0.087 - B * (1 - 0.087 / 0.3), abs=1e-7)
 
 
 def test_continuous_at_zero():
@@ -96,7 +96,7 @@ def test_continuous_at_zero():
     got = correct_est_vx(est)[:, sr.VX_CORR_VX_COL]
     assert float(got[0]) == float(torch.tensor(-0.001))                                                          # x = -0.001: not one bit changed
     assert abs(float(got[1]) - 0.001) < 0.001                                               # x = +0.001: only b * 0.02 * (about 1) = 0.00036 is taken off
-    assert float(got[1]) == pytest.approx(0.001 - 0.018 * 0.02 * (1 - 0.001 / 0.3), abs=1e-7)
+    assert float(got[1]) == pytest.approx(0.001 - B * 0.02 * (1 - 0.001 / 0.3), abs=1e-7)
     grid = torch.zeros(4001, 51)
     grid[:, sr.VX_CORR_VX_COL] = torch.linspace(-0.01, 0.01, 4001)
     out = correct_est_vx(grid)[:, sr.VX_CORR_VX_COL]
@@ -184,7 +184,7 @@ def test_no_other_module_builds_an_actor_input_outside_ppo_obs():
 
 def test_start_line_and_the_50_update_record(monkeypatch, capsys):
     r = _runner()                                                        # default: on
-    assert "EX42_PERCEPTION_VX_CORR where=start on=1 b=0.018 ramp=0.05 band=0.3" in capsys.readouterr().out
+    assert "EX42_PERCEPTION_VX_CORR where=start on=1 b=0.012 ramp=0.05 band=0.3" in capsys.readouterr().out
     r.disable_logs = False
     raw = r.env.get_observations().clone()
     est = _est()
@@ -203,7 +203,7 @@ def test_start_line_and_the_50_update_record(monkeypatch, capsys):
 
     monkeypatch.setenv(sr.VX_CORR_ENV, "0")                              # the off key: start line says on=0, no record line
     r = _runner()
-    assert "EX42_PERCEPTION_VX_CORR where=start on=0 b=0.018 ramp=0.05 band=0.3" in capsys.readouterr().out
+    assert "EX42_PERCEPTION_VX_CORR where=start on=0 b=0.012 ramp=0.05 band=0.3" in capsys.readouterr().out
     r.disable_logs = False
     r._vxcorr_collect(o, est, r._ppo_obs(raw, est))
     r._vxcorr_finish(50)
