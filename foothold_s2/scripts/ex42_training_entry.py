@@ -1137,6 +1137,14 @@ def make_ex42_stage_zero_plan_view(source_plan: Any, stage: Any,
                 raise ValueError("EX-42 stage low_forward_fraction invalid")
             from dataclasses import replace
             stage = replace(stage, low_forward_fraction=float(slow_fraction))
+        side_fraction = row.get("low_side_fraction")
+        if side_fraction is not None:
+            if type(side_fraction) not in (int, float) or not 0 <= side_fraction <= 1:
+                raise ValueError("EX-42 stage low_side_fraction invalid")
+            if side_fraction and stage.ranges["side_vy_abs"][0] > 0.1 + 1e-9:
+                raise ValueError("EX-42 stage low_side_fraction needs side_vy_abs to start at 0.1 or below")
+            from dataclasses import replace
+            stage = replace(stage, low_side_fraction=float(side_fraction))
     return SimpleNamespace(
         command_contract=command_contract,
         is_ex41=True, stages=[stage], domain_randomization=source_plan.domain_randomization,

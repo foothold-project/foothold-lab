@@ -111,6 +111,7 @@ class Stage:
     heading_cfg: dict[str, float]
     adds: dict
     turn_overlay: tuple[float, float, float] | None = None      # (fraction, |wz| low, |wz| high) on reverse / side / diagonal
+    low_side_fraction: float = 0.0                              # share of the side commands with |vy| in [0.1, 0.3]; 0 = the sampler is unchanged
 
 
 class Plan:

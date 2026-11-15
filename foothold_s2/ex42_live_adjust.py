@@ -62,7 +62,8 @@ def limits_from_plan(config, *, segment_path=REWARD_LIMITS):
     repeated = {"zero_yaw", "feet_air_time_threshold", "slow_track", "slow_track_sigma",
                 "slow_track_speed_min", "slow_track_speed_max"}
     if (set(segment["cells"]) != set(REWARD_TERMS) or not isinstance(extra, dict) or set(extra) != repeated
-            or not isinstance(commands, dict) or set(commands) != {"low_forward_fraction"}):
+            or not isinstance(commands, dict)
+            or set(commands) not in ({"low_forward_fraction"}, {"low_forward_fraction", "low_side_fraction"})):
         raise ValueError("EX-42 live adjustment plan and segment fence name different cells")
     result = dict(segment["cells"])
     for name, pair in {**extra, **commands}.items():
@@ -77,7 +78,13 @@ def limits_from_plan(config, *, segment_path=REWARD_LIMITS):
     if not 0 <= low <= high <= 1:
         raise ValueError("EX-42 live adjustment low_forward_fraction limit invalid")
     runtime = _runtime_limits(config.get("runtime_limits"), segment["runtime_cells"])
-    return {"rewards": result, "commands": {"low_forward_fraction": (float(low), float(high))},
+    cells = {"low_forward_fraction": (float(low), float(high))}
+    if "low_side_fraction" in commands:
+        side_low, side_high = commands["low_side_fraction"]
+        if not 0 <= side_low <= side_high <= 1:
+            raise ValueError("EX-42 live adjustment low_side_fraction limit invalid")
+        cells["low_side_fraction"] = (float(side_low), float(side_high))
+    return {"rewards": result, "commands": cells,
             "runtime": runtime, "segment_limits_sha256": segment["sha256"]}
 
 
@@ -156,6 +163,8 @@ def live_values(runtime, changes):
         values["rewards"][name] = float(cfg.weight if field == "weight" else cfg.params[field])
     if "low_forward_fraction" in changes.get("commands", {}):
         values["commands"]["low_forward_fraction"] = float(runtime.plan.stages[0].low_forward_fraction)
+    if "low_side_fraction" in changes.get("commands", {}):
+        values["commands"]["low_side_fraction"] = float(runtime.plan.stages[0].low_side_fraction)
     for name in changes.get("runtime", {}):
         values["runtime"][name] = (float(getattr(runtime, "policy_std_cap", 0.0)) if name == "policy_std_cap"
                                    else int(runtime.level_cap))
@@ -193,6 +202,12 @@ def apply_values(runtime, changes):
     if "low_forward_fraction" in changes.get("commands", {}):
         updated = replace(runtime.plan.stages[0],
                           low_forward_fraction=changes["commands"]["low_forward_fraction"])
+        runtime.plan.stages[0] = updated
+        runtime.stage_config = updated
+        if getattr(runtime, "command_stats", None) is not None:
+            runtime.command_stats.plan.stages[0] = updated
+    if "low_side_fraction" in changes.get("commands", {}):
+        updated = replace(runtime.plan.stages[0], low_side_fraction=changes["commands"]["low_side_fraction"])
         runtime.plan.stages[0] = updated
         runtime.stage_config = updated
         if getattr(runtime, "command_stats", None) is not None:

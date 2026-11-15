@@ -294,6 +294,9 @@ def resample_stage(gen, n, stage, yaw):
     back_vx = _u(gen, (n,), *r["reverse_vx"])
     diag_vx = _u(gen, (n,), *(r.get("diag_vx_abs") or (0.3, 0.6)))
     side_vy = _u(gen, (n,), *r["side_vy_abs"])
+    if getattr(stage, "low_side_fraction", 0.0):        # same shape as low_forward_fraction: no draw at all while it is 0
+        low_side = _u(gen, (n,)) < stage.low_side_fraction
+        side_vy = torch.where(low_side, _u(gen, (n,), 0.1, 0.3), _u(gen, (n,), 0.3, r["side_vy_abs"][1]))
     diag_vy = _u(gen, (n,), *(r.get("diag_vy_abs") or (0.2, 0.5)))
     walk_wz = _u(gen, (n,), *r["walk_wz_abs"])
     spin_wz = _u(gen, (n,), *r["spin_wz_abs"])
