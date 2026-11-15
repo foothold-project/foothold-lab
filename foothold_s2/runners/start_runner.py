@@ -395,6 +395,13 @@ class StartRunner(OnPolicyRunner):
         mean = (mirror.mean_action_mask(self.env.num_envs, mirror.MEAN_ACTION_PERCEPTION_SHARE, device=self.device)
                 if self.ex41_critic_mirror else None)             # v28p: mean-action envs, outside PPO, inside the perception loss
         self._mean_action = mean
+        raw = getattr(self.env, "unwrapped", self.env)         # v28q: training-only env masks (the evaluation env never gets them)
+        nominal = mean if (mean is not None and mirror.MEAN_ACTION_ENV_DR_OFF) else None
+        raw._ex42_nominal_dr_rows = nominal
+        raw._ex42_fixed_cmd_rows = (mirror.mean_env_fixed_cmd_mask(
+            self.env.num_envs, mirror.MEAN_ACTION_PERCEPTION_SHARE, mirror.MEAN_ACTION_ENV_FIXED_CMD_SHARE, device=self.device)
+            if nominal is not None else None)
+        raw._ex42_fixed_cmd_vx = float(mirror.MEAN_ACTION_ENV_FIXED_CMD_VX)
         if hasattr(alg, "mean_action_mask"):
             alg.mean_action_mask = mean
         alg.storage.noise_scale_steps = (torch.ones(alg.storage.num_transitions_per_env, self.env.num_envs, 1, device=self.device)
@@ -1268,6 +1275,11 @@ class StartRunner(OnPolicyRunner):
             if not self.disable_logs:
                 print("EX42_MEAN_ACTION it=%d envs=%d of=%d share=%.2f" % (
                     it, int(self._mean_action.sum()), self.env.num_envs, float(self._mean_action.float().mean())), flush=True)
+                raw = getattr(self.env, "unwrapped", self.env)
+                nominal, fixed = getattr(raw, "_ex42_nominal_dr_rows", None), getattr(raw, "_ex42_fixed_cmd_rows", None)
+                if nominal is not None:                           # v28q: only while MEAN_ACTION_ENV_DR_OFF is on
+                    print("EX42_MEAN_ACTION_NOMINAL it=%d nominal_dr_envs=%d fixed_cmd_envs=%d vx=%.2f" % (
+                        it, int(nominal.sum()), 0 if fixed is None else int(fixed.sum()), float(raw._ex42_fixed_cmd_vx)), flush=True)
                 print("EX42_PERCEPTION_V_BIAS_MEAN_ACTION it=%d band=cmd_%.2f_%.2f n=%d mean=%s p10=%s p90=%s mean_y=%s p10_y=%s p90_y=%s" % (
                     it, *sp.PERCEPTION_V_BIAS_LOWBAND, r["n"], f(r["mean"]), f(r["p10"]), f(r["p90"]), f(r["mean_y"]), f(r["p10_y"]), f(r["p90_y"])), flush=True)
 

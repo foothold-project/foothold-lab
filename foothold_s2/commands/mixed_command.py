@@ -200,6 +200,31 @@ class MixedVelocityCommand(CommandTerm):
 
         return None if total == 0 else {"counts": dict(zip(self.slot_names, c)), "frac": {k: v / total for k, v in zip(self.slot_names, c)}}
 
+    def _pin_forward_command(self, group, stage_index, out):
+        """v28q: the envs of the training runner's `_ex42_fixed_cmd_rows` mask (a share of the mean-action envs; never set on an evaluation
+        env) get the one point command forward vx (vy 0, wz 0) in the forward slot, without heading, stand or spin, so that the slot
+        counts, the new-task mark, the exposure receipt and the W55 command_bad check all see the command that is actually used.
+        Skipped for a stage that has no forward slot or whose forward range does not hold that vx."""
+        rows = getattr(self._env, "_ex42_fixed_cmd_rows", None)
+        runtime = getattr(self, "stage_runtime", None)
+        if rows is None or runtime is None or stage_index is None or "slot" not in out:
+            return out
+        pin = rows.to(self.device)[group]
+        vx = float(getattr(self._env, "_ex42_fixed_cmd_vx", 0.1))
+        stage = runtime.plan.stages[stage_index]
+        low, high = stage.ranges["forward_vx"]
+        if not bool(pin.any()) or "forward" not in stage.shares or not low - 1e-5 <= vx <= high + 1e-5:
+            return out
+        out = dict(out)
+        pin = pin.to(out["cmd"].device)
+        cmd = out["cmd"].clone()
+        cmd[pin] = torch.tensor([vx, 0.0, 0.0], dtype=cmd.dtype, device=cmd.device)
+        out["cmd"] = cmd
+        for key in ("stand", "spin", "heading"):
+            out[key] = torch.where(pin, torch.zeros_like(out[key]), out[key])
+        out["slot"] = torch.where(pin.to(out["slot"].device), torch.full_like(out["slot"], self.slot_names.index("forward")), out["slot"])
+        return out
+
     def _resample_command(self, env_ids):
         env_ids = torch.as_tensor(env_ids, device=self.device, dtype=torch.long)
 
@@ -218,6 +243,7 @@ class MixedVelocityCommand(CommandTerm):
                        mc.resample_free_modes(self.gen, len(group), self.params, self.iteration,
                                               self.range_curriculum.vmax_x, self.range_curriculum.vmax_y,
                                               yaw=self._yaw(group)))
+                out = self._pin_forward_command(group, index, out)
                 self.vel_command_b[group] = out["cmd"].to(self.device)
                 self.stand[group] = out["stand"].to(self.device)
                 if not hasattr(self, "stop_elapsed_s"):

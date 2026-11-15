@@ -43,6 +43,9 @@ class DelayedJointPositionAction(JointPositionAction):
             self.max_delay_substeps = int(math.floor(
                 float(scale) * self.cfg.max_delay_s / self._env.physics_dt + 1e-9))
         self.delay[ids] = torch.randint(0, self.max_delay_substeps + 1, (n,), device=self.device)
+        nominal = getattr(self._env, "_ex42_nominal_dr_rows", None)     # v28q: the mean-action envs run without the action delay
+        if nominal is not None:
+            self.delay[ids] = torch.where(nominal.to(self.device)[ids], torch.zeros_like(self.delay[ids]), self.delay[ids])
         self._prev[ids] = self._asset.data.joint_pos[ids][:, self._joint_ids]
         if getattr(self.cfg, "dr_scale_from_env", False):
             histogram = torch.bincount(self.delay[ids].flatten(), minlength=self.max_delay_substeps + 1)

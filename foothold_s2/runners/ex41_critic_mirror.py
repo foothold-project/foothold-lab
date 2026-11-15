@@ -82,6 +82,14 @@ SMALL_NOISE_REST_SHARE = 0.25
 # and no advantage normalisation statistics. The perception replay is filled for every env, so the perception loss
 # (velocity head included) still sees them: the velocity estimate is trained on the walk the noise-free evaluation shows.
 MEAN_ACTION_PERCEPTION_SHARE = 0.12
+# v28q (lead 11/15 09:52, OFF by default; the training runner hands the two env masks below to the Isaac env only while this is on, so the
+# evaluation path and every run with it off are bit-identical to v28p): the mean-action envs also get the NOMINAL physics, i.e. the runtime DR
+# (action delay, actuator gains, motor strength, base COM) and the interval push are skipped on their rows, and this share of them (spread evenly
+# over those envs, 0 turns it off) is commanded the one point forward vx = FIXED_CMD_VX (vy 0, wz 0, slot forward, no heading, no stand/spin)
+# at every command resample. Mass and friction are startup-mode per env and stay as they are.
+MEAN_ACTION_ENV_DR_OFF = False
+MEAN_ACTION_ENV_FIXED_CMD_SHARE = 0.5
+MEAN_ACTION_ENV_FIXED_CMD_VX = 0.1
 
 
 def small_noise_static_share() -> float:
@@ -108,6 +116,19 @@ def mean_action_mask(num_envs: int, share: float, device=None) -> torch.Tensor |
     if not share:
         return None
     return small_noise_mask(num_envs, share).to(device)
+
+
+def mean_env_fixed_cmd_mask(num_envs: int, mean_share: float, fixed_share: float, device=None) -> torch.Tensor | None:
+    """[num_envs] bool: the mean-action envs that get the fixed command: `fixed_share` of them, spread evenly over those envs.
+    None when there are no mean-action envs or the share is 0."""
+    mean = small_noise_mask(num_envs, mean_share) if mean_share else None
+    if mean is None or not fixed_share:
+        return None
+    index = mean.nonzero(as_tuple=True)[0]
+    pick = small_noise_mask(len(index), fixed_share)
+    out = torch.zeros(num_envs, dtype=torch.bool)
+    out[index[pick]] = True
+    return out.to(device)
 
 
 def small_noise_scale(num_envs: int, share: float, scale: float, device=None) -> torch.Tensor | None:

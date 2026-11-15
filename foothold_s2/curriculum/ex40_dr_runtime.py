@@ -21,6 +21,17 @@ def _rows(env_ids: Any, num_envs: int, device: Any):
     return torch.as_tensor(env_ids, dtype=torch.long, device=device).flatten()
 
 
+def _nominal_split(env: Any, rows: Any):
+    """(random rows, nominal rows) of one reset or push call. v28q: the training runner puts a bool mask [num_envs] on the env
+    (`_ex42_nominal_dr_rows`, the mean-action envs, only while MEAN_ACTION_ENV_DR_OFF is on); without it every row is random,
+    which is exactly what the evaluation env and a run with the constant off do."""
+    mask = getattr(env, "_ex42_nominal_dr_rows", None)
+    if mask is None:
+        return rows, rows[:0]
+    nominal = mask.to(rows.device)[rows]
+    return rows[~nominal], rows[nominal]
+
+
 def _scaled_interval(target: tuple[float, float], scale: float, neutral: float) -> tuple[float, float]:
     result = interpolate_range((neutral, neutral), target, scale)
     return float(result[0]), float(result[1])
@@ -103,7 +114,9 @@ def reset_base_com(env, env_ids, asset_cfg, target_range):
     scale = float(getattr(env, "_ex40_dr_scale", 0.0))
     com_range = {axis: _scaled_interval(tuple(target_range[axis]), scale, 0.0)
                  for axis in ("x", "y", "z")}
-    events.randomize_rigid_body_com(env, rows_cpu, com_range, asset_cfg)
+    random_cpu, _nominal_cpu = _nominal_split(env, rows_cpu)
+    if random_cpu.numel():                                   # v28q: the nominal rows keep the restored baseline COM
+        events.randomize_rigid_body_com(env, rows_cpu if random_cpu.numel() == rows_cpu.numel() else random_cpu, com_range, asset_cfg)
     readback = asset.root_physx_view.get_coms()[rows_cpu, asset_cfg.body_ids, :3]
     baseline_cpu = baseline.to(device="cpu")
     _record(env, "base_com_offset_m",
@@ -128,9 +141,17 @@ def reset_actuator_gains(env, env_ids, asset_cfg, target_range):
                                   params={"asset_cfg": asset_cfg, "operation": "scale"})
         helper = events.randomize_actuator_gains(helper_cfg, env)
         env._ex40_dr_gain_event = helper
-    helper(env, env_ids, asset_cfg, stiffness_distribution_params=stiffness,
-           damping_distribution_params=damping, operation="scale", distribution="uniform")
     rows = _rows(env_ids, env.scene.num_envs, asset.device)
+    random_rows, nominal_rows = _nominal_split(env, rows)
+    if not nominal_rows.numel():
+        helper(env, env_ids, asset_cfg, stiffness_distribution_params=stiffness,
+               damping_distribution_params=damping, operation="scale", distribution="uniform")
+    else:                                                    # v28q: the nominal rows are set back to the default gains (scale exactly 1)
+        if random_rows.numel():
+            helper(env, random_rows, asset_cfg, stiffness_distribution_params=stiffness,
+                   damping_distribution_params=damping, operation="scale", distribution="uniform")
+        helper(env, nominal_rows, asset_cfg, stiffness_distribution_params=(1.0, 1.0),
+               damping_distribution_params=(1.0, 1.0), operation="scale", distribution="uniform")
     samples = []
     for actuator in asset.actuators.values():
         joints = actuator.joint_indices
@@ -173,6 +194,9 @@ def reset_motor_strength(env, env_ids, asset_cfg, target_range):
             }
         env._ex40_dr_motor_baselines = baselines
     sampled = torch.empty((len(rows),), device=asset.device).uniform_(low, high)
+    mask = getattr(env, "_ex42_nominal_dr_rows", None)
+    if mask is not None:                                     # v28q: the nominal rows keep the baseline torque limits (multiplier exactly 1)
+        sampled[mask.to(rows.device)[rows]] = 1.0
     for name, actuator in asset.actuators.items():
         baseline = baselines[name]
         effort = baseline["effort_limit"]
@@ -220,6 +244,7 @@ def interval_push(env, env_ids, asset_cfg, target_range):
         rows = torch.arange(env.scene.num_envs, device=asset.device)
     else:
         rows = torch.as_tensor(env_ids, dtype=torch.long, device=asset.device).flatten()
+    rows, _nominal_rows = _nominal_split(env, rows)           # v28q: the nominal rows are not pushed (and not recorded)
     if not rows.numel():
         return
     ex41_vmax = getattr(env, '_ex41_push_vmax_mps', None)
