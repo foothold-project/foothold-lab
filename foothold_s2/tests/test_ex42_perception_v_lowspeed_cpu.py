@@ -148,7 +148,7 @@ def test_real_runner_batch_the_weight_changes_the_velocity_loss_only_through_the
         b = _truth(base, vx, vy)
         off, on = loss(b, 1.0), loss(b, 3.0)
         assert float(on["v"]) > float(off["v"]), (vx, vy)
-        assert float(on["l_ie"]) - float(off["l_ie"]) == pytest.approx(float(on["v"]) - float(off["v"]), rel=1e-3)
+        assert float(on["l_ie"]) - float(off["l_ie"]) == pytest.approx(sp.PERCEPTION_V_LOSS_COEF * (float(on["v"]) - float(off["v"])), rel=1e-3)  # l_ie carries PERCEPTION_V_LOSS_COEF (v29-9 P-v) on its v term
         for k in ("kl", "o_next", "hf", "hb", "l_tr"):
             assert float(on[k]) == pytest.approx(float(off[k]), rel=1e-6)                 # nothing else moves
     # the increment is the sum of the per-axis increments: weighted vx only + weighted vy only = both, with the same estimate and truth in the other column

@@ -57,15 +57,16 @@ def _v_grads(runner, b, eps, impl):
     return {n: (p.grad.detach().clone() if p.grad is not None else torch.zeros_like(p)) for n, p in _params(runner.perception).items()}
 
 
-def test_default_is_off_and_the_off_term_is_the_same_object():
-    assert sp.PERCEPTION_V_LOSS_COEF == 1.0
+def test_v29_9_value_is_on_and_the_off_term_is_the_same_object():
+    assert sp.PERCEPTION_V_LOSS_COEF == 5.0   # v29-9 is the ON commit; the off commit (1.0) is its parent
     x = torch.randn(())
-    assert sp.v_loss_term(x) is x
-    sp.PERCEPTION_V_LOSS_COEF = 5.0
+    assert torch.equal(sp.v_loss_term(x), 5.0 * x)
+    old = sp.PERCEPTION_V_LOSS_COEF
+    sp.PERCEPTION_V_LOSS_COEF = 1.0
     try:
-        assert torch.equal(sp.v_loss_term(x), 5.0 * x)
+        assert sp.v_loss_term(x) is x
     finally:
-        sp.PERCEPTION_V_LOSS_COEF = 1.0
+        sp.PERCEPTION_V_LOSS_COEF = old
 
 
 @pytest.mark.parametrize("impl", ["loop", "a1"])
@@ -99,7 +100,8 @@ def test_coef_five_scales_only_the_v_term_in_l_ie_and_in_the_gradient(impl):
     some_v_grad = False
     for n in g1:
         want = g1[n] + 4.0 * gv[n]
-        assert torch.allclose(g5[n], want, rtol=1e-4, atol=1e-7), n
+        scale = max(float(want.abs().max()), 1e-3)   # float32 sums in different graph order: compare against the tensor's own scale, not per element
+        assert float((g5[n] - want).abs().max()) <= 1e-4 * scale, n
         some_v_grad = some_v_grad or bool(gv[n].abs().max() > 0)
     assert some_v_grad
     # parameters that only the non-v terms reach (the map and foot decoders) get exactly the same gradient
