@@ -53,6 +53,8 @@ from foothold_s2.runners.contracts import command_sample_bad, contract_bad_fn, f
 from foothold_s2.runners.action_stats import ActionStats, phys_probe
 from foothold_s2.runners.map_switch import ELIGIBLE_NAMES, MapSwitchRecorder, OffEligibilityStats, SPARSE_NAMES, check_column_names, is_sparse_name, draw_map_off, eligible_map_off, make_generator, nearest_tile_cols
 from foothold_s2.runners.perception_replay import PerceptionReplay
+from foothold_s2.runners import perception_ema as pema
+from foothold_s2.runners.weight_ema import WeightEma
 from foothold_s2.runners.reward_split import RewardSplit
 from foothold_s2.runners.status import write_status
 from foothold_s2.terrains import columns
@@ -84,6 +86,9 @@ MODE_DEFAULTS = {"est_mode": "learned", "critic_mode": "legacy"}   # 옛 체크�
 # 지각 optimizer 학습률을 이 값으로 고정한다 (v28f). None 이면 PERCEPTION_DEFAULTS / train_cfg 값 그대로(이전 동작과 같음).
 # 이어받기 때 저장본의 perception_optimizer 가 param_groups lr 까지 복원하므로 복원 직후마다 다시 덮는다 (_pin_perception_lr).
 PERCEPTION_LR_OVERRIDE = 2.5e-4
+# v28u: decay of the averaged perception weights the rollout asks for est (0 = off: no object is built and the run is exactly the v28p one).
+# The line that turns it on is this one: PERCEPTION_EMA_DECAY = 0.98. The perception loss always updates the online weights.
+PERCEPTION_EMA_DECAY = 0.0
 PERCEPTION_DEFAULTS = {
     "fast_gt_only": False,
     "learning_rate": 5e-4,
@@ -231,6 +236,10 @@ class StartRunner(OnPolicyRunner):
         )
         self._pin_perception_lr("start")
         self.adasmpl = AdaSmpl(self.perception.cfg.p_smpl_init, self.perception.cfg.cv_eps, self.perception.cfg.force_gt)
+        self.perception_wema = None            # v28u: WeightEma of the perception module (built in learn() when PERCEPTION_EMA_DECAY > 0)
+        self.perception_ema = None             # the averaged copy the rollout asks for est
+        self.pstate_ema = None                 # its own GRU state (h_prop, h_terr); the rest of the state is the online one
+        self._saved_perception_ema = None      # the perception_ema entry of the checkpoint this runner loaded
 
         raw = self.env.get_observations().to(device)
         self._check_raw(raw)
@@ -413,6 +422,7 @@ class StartRunner(OnPolicyRunner):
     _fwd01_mean_samples = None
     last_perception_v_bias_fwd01: dict | None = None
     last_perception_v_bias_fwd01_mean_action: dict | None = None
+    last_perception_ema: dict | None = None           # v28u: est_diff of the last probe (None while the average is off)
 
     _noise_counts = None      # [low-speed envs, small-noise envs] summed over the steps of one rollout (device tensor)
     _noise_steps = 0
@@ -674,6 +684,7 @@ class StartRunner(OnPolicyRunner):
 
         if self.is_distributed:
             self.broadcast_all()
+        self._perception_ema_init()
 
         # 재개 때는 저장된 iteration 이 «이미 끝난» 회차이므로 다음 회차부터 센다(설치 runner 는 같은 회차를 한 번 더 돈다)
         active_curriculum = getattr(self, "continuous_curriculum", None)
@@ -760,7 +771,8 @@ class StartRunner(OnPolicyRunner):
             start = time.time()
             self._phase_start()
             if self.replay is not None:
-                self.replay.start(self.pstate.h_prop, self.pstate.h_terr)
+                ps = self.pstate_ema if self.pstate_ema is not None else self.pstate      # v28u: the hidden state the rollout really runs from
+                self.replay.start(ps.h_prop, ps.h_terr)
             gt_steps.zero_()
             src_steps.zero_()
             self._vbias_samples = []
@@ -777,7 +789,11 @@ class StartRunner(OnPolicyRunner):
                 for step_k in range(self.num_steps_per_env):
                     o, depth, gmap, gfeet, vel, _ = self._split(raw)
                     inp = self.perception.ingest(self.pstate, o, depth)
-                    est = self.perception.step(self.pstate, inp, gmap)
+                    if self.perception_ema is not None:                  # v28u: the actor gets est from the averaged perception weights
+                        self.pstate_ema.use_gt, self.pstate_ema.map_off = self.pstate.use_gt, self.pstate.map_off
+                        est = self.perception_ema.step(self.pstate_ema, inp, gmap)
+                    else:
+                        est = self.perception.step(self.pstate, inp, gmap)
                     ppo_obs = self._ppo_obs(raw, est)
                     self._vbias_collect(o, ppo_obs, vel)
                     self._step_small_noise(o)
@@ -864,6 +880,10 @@ class StartRunner(OnPolicyRunner):
                         cur_episode_length[done_ids] = 0
                     self.perception.reset_envs(self.pstate, dones > 0, self.adasmpl.sample(n, self.device),
                                                self._restrict_map_off(draw_map_off(n, self.p_map_off, self.device, self.map_switch_gen), dones > 0) if self.p_map_off > 0.0 else None)
+                    if self.pstate_ema is not None:                       # a new episode starts both GRUs from zero (12 §6.1), the averaged one too
+                        _m = dones > 0
+                        self.pstate_ema.h_prop[_m] = 0
+                        self.pstate_ema.h_terr[_m] = 0
                     if done_ids.numel() and getattr(self, "continuous_curriculum", None) is not None:
                         if getattr(self.continuous_curriculum, "is_ex42_stage_zero", False):
                             self.continuous_curriculum.record_map_reset(
@@ -892,14 +912,18 @@ class StartRunner(OnPolicyRunner):
                 self._check_finite(it, **{k: torch.as_tensor(v, dtype=torch.float32) for k, v in loss_dict.items() if isinstance(v, (int, float)) or hasattr(v, "dtype")})
             # ③ 지각
             self._phase_start()
+            self._perception_ema_probe(it)
             klf = self._kl_phi_before(it) if self.pcfg["log_kl"] else None
             ploss = ({"fast_gt_only": 1.0}
                      if self.pcfg["fast_gt_only"] else self.update_perception())
+            self._perception_ema_step()
             if self.pcfg["stop_on_nonfinite"]:
                 self._check_finite(it, **{f"perception/{k}": torch.as_tensor(v, dtype=torch.float32) for k, v in ploss.items()})
                 self._check_params_finite(it)
             if klf is not None:
                 kl_info["phi"] = self._kl_phi_after(klf)
+                if "mu_ema" in klf:
+                    kl_info["phi_ema"] = self._kl_phi_ema_after(klf)
             self._mark("4_perception_update", it)
             loss_dict.update({f"perception/{k}": v for k, v in ploss.items()})
             if basic_lin_vel_z_weight is not None:
@@ -948,7 +972,9 @@ class StartRunner(OnPolicyRunner):
                 extra["ex40_stand_sensor"] = sensor_evidence.summary()
             if getattr(self, "last_perception_v_bias", None) is not None:
                 extra["perception_v_bias"] = self._v_bias_record()
-            if (kl_info or act_stats is not None or split is not None or nt_stats is not None or fc_stats is not None or slot_stats is not None or sensor_evidence is not None or ex40_dr_runtime is not None or "use_gt_frac" in extra or "small_noise" in extra or "ex42_live_metrics" in extra or "perception_v_bias" in extra) and self.log_dir is not None and not self.disable_logs:
+            if self.last_perception_ema is not None:
+                extra["perception_ema"] = dict(self.last_perception_ema, decay=self.perception_wema.decay)
+            if (kl_info or act_stats is not None or split is not None or nt_stats is not None or fc_stats is not None or slot_stats is not None or sensor_evidence is not None or ex40_dr_runtime is not None or "use_gt_frac" in extra or "small_noise" in extra or "ex42_live_metrics" in extra or "perception_v_bias" in extra or "perception_ema" in extra) and self.log_dir is not None and not self.disable_logs:
                 with open(os.path.join(self.log_dir, "train_extra.jsonl"), "a", encoding="utf-8") as fh:
                     fh.write(json.dumps(extra, ensure_ascii=False) + "\n")
             # ④ AdaSmpl
@@ -1210,10 +1236,12 @@ class StartRunner(OnPolicyRunner):
         eps = torch.randn(T, K, 16, generator=gen).to(self.device)
         snap = {"batch": batch, "eps": eps}
         snap["mu"], snap["std"] = self._phi_dist(snap)
+        if self.perception_ema is not None:                                  # v28u: the same probe through the averaged weights (before the average moves)
+            snap["mu_ema"], snap["std_ema"] = self._phi_dist(snap, self.perception_ema)
         return snap
 
-    def _phi_dist(self, snap):
-        est = self.perception.est_sequence(snap["batch"], snap["eps"])
+    def _phi_dist(self, snap, module=None):
+        est = (module or self.perception).est_sequence(snap["batch"], snap["eps"])
         est_in = self._est_in(est, snap["batch"]["base_vel"], noise=0.0)          # zero · oracle_vel 은 phi 와 무관하게 정해져 phi 전후 KL 이 0 이다(잡음 0: 전 · 후 같은 입력)
         o = snap["batch"]["obs"]
         T, K = o.shape[0], o.shape[1]
@@ -1231,6 +1259,60 @@ class StartRunner(OnPolicyRunner):
         mu1, std1 = self._phi_dist(snap)
         kl = kl_probe.gaussian_kl(snap["mu"], snap["std"], mu1, std1)
         return kl_probe.summarize(kl, kl_probe.command_branch(snap["batch"]["obs"].reshape(-1, snap["batch"]["obs"].shape[-1])[:, 6:9]))
+
+    def _kl_phi_ema_after(self, snap: dict) -> dict:
+        """v28u: the policy KL that the averaged perception weights cause between before and after this update's average step (what the actor really feels)."""
+        mu1, std1 = self._phi_dist(snap, self.perception_ema)
+        kl = kl_probe.gaussian_kl(snap["mu_ema"], snap["std_ema"], mu1, std1)
+        return kl_probe.summarize(kl, kl_probe.command_branch(snap["batch"]["obs"].reshape(-1, snap["batch"]["obs"].shape[-1])[:, 6:9]))
+
+    def _perception_ema_init(self) -> None:
+        """v28u: build the averaged copy once the loaded and broadcast online weights are final (learn() start). Off (decay 0) builds nothing."""
+        decay = PERCEPTION_EMA_DECAY
+        if not decay:
+            return
+        if not pema.usable_decay(decay):
+            raise ValueError("PERCEPTION_EMA_DECAY must be 0 (off) or a number in (0, 1): %r" % (decay,))
+        if self.pcfg["fast_gt_only"]:
+            raise ValueError("PERCEPTION_EMA_DECAY needs the learned perception (fast_gt_only has none)")
+        self.perception_wema = WeightEma({pema.NAME: self.perception}, decay)
+        status = self.perception_wema.restore(self._saved_perception_ema)
+        self.perception_ema = copy.deepcopy(self.perception).eval()
+        for p in self.perception_ema.parameters():
+            p.requires_grad_(False)
+        self.perception_ema.load_state_dict(self.perception_wema.module_state(pema.NAME))
+        n, ps = self.env.num_envs, self.pstate
+        self.pstate_ema = sp.PerceptionState(
+            h_prop=torch.zeros_like(ps.h_prop), h_terr=torch.zeros_like(ps.h_terr), hist=ps.hist, frames=ps.frames,
+            steps_since_reset=ps.steps_since_reset, use_gt=ps.use_gt, map_off=ps.map_off)
+        print("EX42_PERCEPTION_EMA where=start decay=%g status=%s" % (decay, status), flush=True)
+
+    def _perception_ema_step(self) -> None:
+        """v28u: after each perception update (every iteration) move the average and refresh the copy the rollout uses. A non-finite weight skips the step."""
+        if self.perception_wema is None:
+            return
+        if self.perception_wema.update():
+            self.perception_ema.load_state_dict(self.perception_wema.module_state(pema.NAME))
+
+    @torch.no_grad()
+    def _perception_ema_probe(self, it: int) -> None:
+        """v28u: how far the averaged est is from the online est on the same stored inputs (the update starts the online weights from the averaged hidden
+        state, so this is the size of that assumption). Once per iteration before the perception update, on kl_probe_envs envs, a fixed epsilon."""
+        if self.perception_ema is None or self.replay is None:
+            return
+        batch = self.replay.gather(self._kl_select())
+        gen = torch.Generator(device="cpu").manual_seed(4321 + it)
+        eps = torch.randn(batch["obs"].shape[0], batch["obs"].shape[1], 16, generator=gen).to(self.device)
+        a = self.perception.est_sequence(batch, eps)
+        b = self.perception_ema.est_sequence(batch, eps)
+        d = (a - b).abs()
+        v = slice(sp.Z_DIM, sp.Z_DIM + sp.V_DIM)
+        self.last_perception_ema = {"est_diff_mean": float(d.mean()), "v_diff_mean": float(d[..., v].mean()),
+                                    "v_online_minus_ema": float((a[..., v] - b[..., v]).mean()), "updates": self.perception_wema.updates}
+        if not self.disable_logs:
+            r = self.last_perception_ema
+            print("EX42_PERCEPTION_EMA it=%d decay=%g updates=%d est_diff_mean=%.5f v_diff_mean=%.5f v_online_minus_ema=%+.5f" % (
+                it, self.perception_wema.decay, r["updates"], r["est_diff_mean"], r["v_diff_mean"], r["v_online_minus_ema"]), flush=True)
 
     def _vbias_collect(self, o: torch.Tensor, ppo_obs, vel: torch.Tensor) -> None:
         """기록만. 명령 속력 (o[:, 6:9] 의 vx vy 노름) 이 저속 띠인 env 의 «actor 가 받은 est 의 속도 3 칸 - 실제 몸 속도» 를 모은다.
@@ -1516,6 +1598,7 @@ class StartRunner(OnPolicyRunner):
             "optimizer_state_dict": self.alg.optimizer.state_dict(),
             "ppo_learning_rate": self.alg.learning_rate,  # adaptive 학습률은 optimizer 밖 속성에도 있다
             "perception_state_dict": perception_state,
+            **({"perception_ema": self.perception_wema.save_state()} if getattr(self, "perception_wema", None) is not None else {}),   # v28u: only when the average is on
             "perception_optimizer_state_dict": self.perception_optimizer.state_dict(),
             "perception_cfg": dict(self.pcfg),
             "adasmpl": self.adasmpl.state_dict(),
@@ -1707,6 +1790,7 @@ class StartRunner(OnPolicyRunner):
                 raise ValueError(f"체크포인트의 {key}={saved.get(key, default)!r} 와 이 runner 의 {self.pcfg[key]!r} 가 다르다 (처치가 다른 체크포인트를 섞지 않는다)")
         self.alg.policy.load_state_dict(sd["model_state_dict"])
         self.perception.load_state_dict(sd["perception_state_dict"])
+        self._saved_perception_ema = sd.get("perception_ema")           # v28u: continued by learn() when the average is on, ignored otherwise
         self.adasmpl.load_state_dict(sd["adasmpl"])
         self._apply_resume_adasmpl()
         if load_optimizer:
