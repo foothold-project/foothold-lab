@@ -83,7 +83,7 @@ MODE_DEFAULTS = {"est_mode": "learned", "critic_mode": "legacy"}   # 옛 체크�
 # 지각 optimizer 수치: 전부 가정 (12 §6.1, START · 선행에 없음)
 # 지각 optimizer 학습률을 이 값으로 고정한다 (v28f). None 이면 PERCEPTION_DEFAULTS / train_cfg 값 그대로(이전 동작과 같음).
 # 이어받기 때 저장본의 perception_optimizer 가 param_groups lr 까지 복원하므로 복원 직후마다 다시 덮는다 (_pin_perception_lr).
-PERCEPTION_LR_OVERRIDE = 1e-4
+PERCEPTION_LR_OVERRIDE = 2.5e-4
 PERCEPTION_DEFAULTS = {
     "fast_gt_only": False,
     "learning_rate": 5e-4,
