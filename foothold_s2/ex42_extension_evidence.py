@@ -44,8 +44,20 @@ def _gaps(score: dict, plan: dict) -> dict[str, dict]:
     result = {}
     v2 = score.get("e1_exit_v2")
     if isinstance(v2, dict):
+        from foothold_s2.ex42_e1_v2 import judge_cells
         cfg = plan["evaluation"]["e1_exit_v2"]
-        for key, row in (v2.get("current") or {}).get("items", {}).items():
+        items = (v2.get("current") or {}).get("items")
+        if not isinstance(items, dict):
+            raise ValueError("extension E1 v2 judged cells missing")
+        expected = {key for key, row in judge_cells({}, plan)["items"].items()
+                    if row.get("role") != "record"}
+        observed = {key for key, row in items.items()
+                    if isinstance(row, dict) and row.get("role") != "record"}
+        if expected != observed:
+            missing = sorted(expected - observed)
+            extra = sorted(observed - expected)
+            raise ValueError(f"extension E1 v2 judged cell coverage differs: missing={missing} extra={extra}")
+        for key, row in items.items():
             if not isinstance(row, dict) or row.get("role") == "record":
                 continue
             if row.get("judgement") not in ("PASS", "FAIL", "HOLD"):
@@ -73,6 +85,16 @@ def _gaps(score: dict, plan: dict) -> dict[str, dict]:
                     "upper": high if math.isfinite(high) else None,
                     "gap": max(low - value, value - high, 0.0)}
     d44 = (score.get("e1_exit") or {}).get("d44") or {}
+    if isinstance(v2, dict):
+        specs = plan["evaluation"]["paper_cells"]["stairs_landing"]["case_specs"]
+        expected_turns = {case for case, spec in specs.items()
+                          if spec["role"] == "judge" and spec["task"] in ("turn_left", "turn_right")}
+        recorded_turns = {case for case in d44.get("required_cases", [])
+                          if not case.startswith("stop_restart_")}
+        if expected_turns != recorded_turns:
+            raise ValueError(f"extension D44 judged cell coverage differs: "
+                             f"missing={sorted(expected_turns - recorded_turns)} "
+                             f"extra={sorted(recorded_turns - expected_turns)}")
     for case in d44.get("required_cases", []):
         if v2 is not None and case.startswith("stop_restart_"):
             continue  # E1 v2 makes stop/restart record only.

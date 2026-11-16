@@ -21,13 +21,15 @@ def _score(forward, flag):
                       survival_min=60, weak_fraction=.5)
 
 
-def test_e2_combines_two_64_env_subcells_with_scaled_thresholds():
-    row = _score(_cell(60, 49, 57), _cell(56, 46, 52))
+def test_e2_requires_each_64_env_subcell_with_scaled_thresholds():
+    row = _score(_cell(60, 49, 57), _cell(56, 46, 53))
     assert (row["valid_count"], row["success_min"], row["survival_min"]) == (116, 95, 109)
     assert row["judgement"] == "PASS"
+    assert row["forward"]["judgement"] == row["flag_four"]["judgement"] == "PASS"
+    assert (row["forward"]["success_min"], row["flag_four"]["success_min"]) == (49, 46)
     assert row["weak_subcell_warnings"] == []
-    assert _score(_cell(60, 48, 57), _cell(56, 46, 52))["judgement"] == "FAIL"
-    assert _score(_cell(60, 49, 56), _cell(56, 46, 52))["judgement"] == "FAIL"
+    assert _score(_cell(60, 48, 57), _cell(56, 46, 53))["judgement"] == "FAIL"
+    assert _score(_cell(60, 49, 56), _cell(56, 46, 53))["judgement"] == "FAIL"
 
 
 def test_e2_each_subcell_needs_48_valid_even_when_combined_counts_pass():
@@ -36,12 +38,37 @@ def test_e2_each_subcell_needs_48_valid_even_when_combined_counts_pass():
     assert row["valid_count"] == 111
 
 
-def test_e2_half_floor_warns_and_preserves_combined_judgment():
+def test_e2_half_floor_warning_is_record_only():
     row = _score(_cell(48, 18, 48), _cell(64, 64, 64))
     assert row["judgement"] == "FAIL"
     assert row["weak_subcell_warnings"] == ["forward"]
     with pytest.raises(ValueError, match="invalid"):
         _score(_cell(64, 65, 64), _cell(64, 64, 64))
+
+
+@pytest.mark.parametrize("forward,flag,expected", [
+    (_cell(64, 40, 64), _cell(64, 64, 64), "FAIL"),
+    (_cell(64, 52, 60), _cell(64, 52, 60), "PASS"),
+    (_cell(64, 51, 64), _cell(64, 64, 64), "FAIL"),
+    (_cell(64, 64, 59), _cell(64, 64, 64), "FAIL"),
+    (_cell(47, 47, 47), _cell(64, 64, 64), "HOLD"),
+])
+def test_e2_each_subcell_counterexamples(forward, flag, expected):
+    row = _score(forward, flag)
+    assert row["judgement"] == expected
+    assert row["forward"]["judgement"] == ("HOLD" if forward["valid_count"] < 48 else
+                                                   "PASS" if forward["success_count"] >= row["forward"]["success_min"]
+                                                   and forward["survival_count"] >= row["forward"]["survival_min"] else "FAIL")
+
+
+def test_e2_gt_pass_does_not_cover_pred_failure_and_valid_floor_is_per_cell():
+    gt = _score(_cell(64, 52, 60), _cell(64, 52, 60))
+    pred = _score(_cell(56, 45, 53), _cell(64, 64, 64))
+    assert gt["judgement"] == "PASS"
+    assert pred["forward"]["success_min"] == 46
+    assert pred["forward"]["survival_min"] == 53
+    assert pred["forward"]["judgement"] == "FAIL"
+    assert pred["judgement"] == "FAIL"
 
 
 def test_e2_stage_registration_and_kit_commands_are_named_kind_and_three_modes(monkeypatch):
