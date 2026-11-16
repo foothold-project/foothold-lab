@@ -171,6 +171,38 @@ class _E1(_E0):
         return {"e1_exit": score["e1_exit"]}
 
 
+def _stored_mae_definition(cells, plan_window_s):
+    """(judged window, record window) the PRIOR window's saved cells were counted with, so its raw recount uses the same MAE definition.
+
+    The prior boundary was judged under its own definition (per-step MAE, or a window): the saved cells say which (mae_basis,
+    mae_window_s per cell). Cells that carry no basis are the per-step definition. Only when every MAE cell agrees is the saved
+    definition used; any disagreement keeps the current plan's window, so the recount differs and the prior stays refused."""
+    seen = set()
+
+    def walk(node):
+        if isinstance(node, dict):
+            if "mae_mps" in node:
+                basis = node.get("mae_basis")
+                seen.add((None, None) if basis is None else
+                         (node.get("mae_window_s"), None) if basis == "window" else (None, node.get("mae_window_s")))
+            else:
+                for child in node.values():
+                    walk(child)
+    walk(cells)
+    return next(iter(seen)) if len(seen) == 1 else (plan_window_s, None)
+
+
+def _check_prior_raw(prior, plan):
+    """The prior window's saved cells must equal its raw recount, counted with the MAE definition the saved cells carry."""
+    from pathlib import Path
+    from foothold_s2 import ex42_e1_v2
+    judged_s, record_s = _stored_mae_definition(prior["e1_v2_cells"], ex42_e1_v2.plan_mae_window_s(plan))
+    prior_raw = ex42_e1_v2.measure_cells(Path(prior["e1_v2_evaluation"]), prior["checkpoint_sha256"],
+                                         prior["conditions"]["eval_seed"], mae_window_s=judged_s, record_window_s=record_s)
+    if ex42_e1_v2.canonical_evidence(prior_raw) != ex42_e1_v2.canonical_evidence(prior["e1_v2_cells"]):
+        raise ValueError("EX-42 P1 prior E1 v2 raw cell evidence differs")
+
+
 class _E1V2(_E1):
     """Approved E1 exit v2; the six-cell D44 raw remains intact for diagnosis."""
     name = "map39_e1_v2_two_window"
@@ -252,10 +284,7 @@ class _E1V2(_E1):
         prior = previous_e1_score(checkpoint, evaluation, plan["evaluation"]["interval_updates"],
                                   score["score_config_sha256"])
         if prior is not None and "e1_v2_cells" in prior:
-            prior_raw = measure_cells(Path(prior["e1_v2_evaluation"]), prior["checkpoint_sha256"],
-                                      prior["conditions"]["eval_seed"], mae_window_s=plan_mae_window_s(plan))
-            if canonical_evidence(prior_raw) != canonical_evidence(prior["e1_v2_cells"]):
-                raise ValueError("EX-42 P1 prior E1 v2 raw cell evidence differs")
+            _check_prior_raw(prior, plan)
         recalculated = judge_e1_v2(score, baseline, measured, plan, previous=prior,
                                    checkpoint=checkpoint, evaluation=evaluation,
                                    seed=score["conditions"]["eval_seed"])
