@@ -134,7 +134,7 @@ EX42_STAGE_PARENT_UPDATES = ((EX42_STAGE_SPEC["parent_local"], EX42_STAGE_SPEC["
 # a stage whose parent is the previous stage's finished run (not the stage-zero m13000)
 EX42_CONTINUES_STAGE = bool(EX42_STAGE_SPEC and EX42_STAGE_SPEC["previous"] is not None)
 EX42_MIRROR_STAGE = bool(EX42_STAGE_SPEC and EX42_STAGE_SPEC["critic_mirror"])      # plan stages[].critic_mirror (D174), kept once on
-EX42_PARENT_MIRROR = bool(EX42_CONTINUES_STAGE and _E_STAGE_SPECS[EX42_STAGE_SPEC["previous"]]["critic_mirror"])
+EX42_PARENT_MIRROR = bool(EX42_CONTINUES_STAGE and EX42_STAGE_SPEC["previous_mirror"])      # the table row carries the previous row's mirror (E1F is a previous row that pins no parent, so it is not a key of the table)
 # ranks other than 0 write to a private scratch dir and build no chain: the speed probe and the two-rank E0 run
 EX42_RANK_SPLIT = bool(_pre_args.ex42_speed_probe or (EX42_E0_REQUESTED and _pre_args.distributed))
 EX42_SPEED_PROBE_RANK = int(os.environ.get("LOCAL_RANK", "0")) if EX42_RANK_SPLIT else 0

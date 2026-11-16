@@ -92,3 +92,11 @@ def test_e2_follows_e1f_even_when_the_plan_pins_no_e1f_parent():
     assert "E1F" not in table
     assert table["E2"]["previous"] == "E1F" and table["E2"]["previous_caps"] == {750, 1250}
     assert table["E2"]["previous_mirror"] is True and table["E1"]["previous"] == "E0"
+
+
+def test_train_start_reads_the_previous_mirror_from_the_row_not_by_looking_the_previous_stage_up():
+    """E2's previous row is E1F, which pins no parent and so is not a key of E_STAGE_SPECS: the smoke died with KeyError 'E1F' there."""
+    from pathlib import Path
+    text = (Path(__file__).resolve().parents[1] / "scripts" / "train_start.py").read_text(encoding="utf-8")
+    assert '_E_STAGE_SPECS[EX42_STAGE_SPEC["previous"]]' not in text
+    assert 'EX42_STAGE_SPEC["previous_mirror"]' in text
