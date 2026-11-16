@@ -52,6 +52,21 @@ def test_a_next_stage_command_takes_every_stage_value_from_the_plan_table_and_th
     assert child["PYTHONPATH"].startswith(str(L.SOURCE_ROOT))
 
 
+def test_a_real_launch_sets_the_two_rank_nccl_and_device_order_values(tmp_path):
+    _, child, _ = L.build(_env(tmp_path), now=0)
+    assert child["NCCL_SHM_DISABLE"] == "1" and child["CUDA_DEVICE_ORDER"] == "PCI_BUS_ID"
+
+
+def test_a_nccl_value_the_caller_set_is_kept(tmp_path):
+    _, child, _ = L.build({**_env(tmp_path), "NCCL_SHM_DISABLE": "0"}, now=0)
+    assert child["NCCL_SHM_DISABLE"] == "0"
+
+
+def test_the_one_rank_dry_run_does_not_get_the_nccl_value(tmp_path):
+    _, child, _ = L.build(_env(tmp_path), dry_run=True)
+    assert "NCCL_SHM_DISABLE" not in child
+
+
 def test_a_continue_command_resumes_in_the_checkpoint_folder_up_to_the_segment_end(tmp_path):
     env = _env(tmp_path, action="continue")
     argv, _, summary = L.build(env)
