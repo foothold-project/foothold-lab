@@ -330,15 +330,13 @@ stage_e3_authorization:
   critic_mirror: null
   exit_gate:
     cells: opened_kinds_at_level_cap
-    completion: last_support_0.5s_A_platform_B_C_E_tile_fraction
-    denominator: forward_per_kind
     success_min: 52
     survival_min: 60
     windows: 2
     learned_cells_min: 32
+    learned_cells_min_grade: assumption
     exchange_learning_watch: true
     maintenance_table: pass
-    learned_cells_min_grade: assumption
   draft_source: planner-lx/DRAFT-EX42-APPROVAL-CELLS-E2-E6B-1111.md
 
 # Team 13:07 approval; materialize measured evidence before launch.
@@ -380,15 +378,13 @@ stage_e4_authorization:
   critic_mirror: null
   exit_gate:
     cells: opened_kinds_at_level_cap
-    completion: last_support_0.5s_A_platform_B_C_E_tile_fraction
-    denominator: forward_per_kind
     success_min: 52
     survival_min: 60
     windows: 2
     learned_cells_min: 32
+    learned_cells_min_grade: assumption
     exchange_learning_watch: true
     maintenance_table: pass
-    learned_cells_min_grade: assumption
   draft_source: planner-lx/DRAFT-EX42-APPROVAL-CELLS-E2-E6B-1111.md
 
 # Team 13:07 approval; materialize measured evidence before launch.
@@ -425,15 +421,13 @@ stage_e5_authorization:
   critic_mirror: null
   exit_gate:
     cells: opened_kinds_at_level_cap
-    completion: last_support_0.5s_A_platform_B_C_E_tile_fraction
-    denominator: forward_per_kind
     success_min: 52
     survival_min: 60
     windows: 2
     learned_cells_min: 32
+    learned_cells_min_grade: assumption
     exchange_learning_watch: true
     maintenance_table: pass
-    learned_cells_min_grade: assumption
   draft_source: planner-lx/DRAFT-EX42-APPROVAL-CELLS-E2-E6B-1111.md
 
 # Team 13:07 approval; materialize measured evidence before launch.

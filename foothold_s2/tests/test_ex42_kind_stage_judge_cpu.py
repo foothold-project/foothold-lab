@@ -410,3 +410,12 @@ def test_center_max_counts_the_ring_distance_from_the_cell_origin_in_any_heading
     got = score_last_support(trace, center_max_m=3.5, settle_s=0.5, envs=envs)
     assert [r["success"] for r in got["per_env"]] == [True, False, True, False]
     assert (got["fell_before_reach_count"], got["timeout_count"]) == (1, 1)
+
+
+def test_the_approved_exit_gate_of_e3_to_e5_is_exactly_the_design_block_without_a_completion_line():
+    import yaml
+    doc = yaml.safe_load((pathlib.Path(__file__).resolve().parents[1] / "curriculum" / "ex42-approvals.yaml").read_text(encoding="utf-8"))
+    want = {"cells": "opened_kinds_at_level_cap", "success_min": 52, "survival_min": 60, "windows": 2, "learned_cells_min": 32,
+            "learned_cells_min_grade": "assumption", "exchange_learning_watch": True, "maintenance_table": "pass"}
+    for stage in ("e3", "e4", "e5"):
+        assert doc[f"stage_{stage}_authorization"]["exit_gate"] == want       # the pass rule per kind lives in the plan only
