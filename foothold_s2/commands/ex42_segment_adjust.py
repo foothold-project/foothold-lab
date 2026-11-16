@@ -197,13 +197,13 @@ def stage_low_forward(plan, stage_id, limits=None) -> float | None:
 
 # Reward cells a stage row may fence wider than the limits file (E1F, E2; 2026-11-16 lead 15:20, planner 15:17). The file keeps its bytes
 # (the source E1 row pins its sha, ex42_stage_materialize reads the template's file against it), so the wider fence is the row's own
-# `live_adjustment.extra_reward_limits.<cell>` (or `reward_fence.<cell>` on a stage without a live adjustment): it must contain the file's pair, never narrow it, and only these two cells may differ.
+# `live_adjustment.extra_reward_limits.<cell>` (or `reward_fence.<cell>` on a stage without a live adjustment): it widens the file's pair or leaves it (a narrower row pair is ignored here; limits_from_plan refuses it), and only these two cells may differ.
 PLAN_WIDENABLE = ("slow_progress", "slow_track_sigma")
 
 
 def row_reward_fence(row, base_cells, stage_id) -> dict:
     """{cell: (low, high)} the stage row widens beyond `base_cells` (the limits file's pairs); {} when it widens nothing.
-    A row pair that does not contain the file's pair is refused (a row cannot narrow the fence)."""
+    A row pair that does not contain the file's pair widens nothing (a row cannot narrow the fence)."""
     extra = {**(row.get("reward_fence") or {}), **((row.get("live_adjustment") or {}).get("extra_reward_limits") or {})}
     out = {}
     for name in PLAN_WIDENABLE:
@@ -215,7 +215,7 @@ def row_reward_fence(row, base_cells, stage_id) -> dict:
             raise ValueError(f"EX-42 {stage_id} plan row extra_reward_limits.{name} must be [low, high]")
         low, high = base_cells[name]
         if pair[0] > low + TOL or pair[1] < high - TOL:
-            raise ValueError(f"EX-42 {stage_id} plan row extra_reward_limits.{name} {list(pair)} does not contain the limits file's {[low, high]}")
+            continue            # a row pair inside the file's never widens: the file's fence stands (the live adjustment refuses such a row)
         if (float(pair[0]), float(pair[1])) != (low, high):
             out[name] = (float(pair[0]), float(pair[1]))
     return out

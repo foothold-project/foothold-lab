@@ -106,11 +106,13 @@ def _live_of(fake, stage_id):
 
 
 def test_a_row_cannot_narrow_the_file_fence(plan):
+    file_cells = adj.reward_limits()["cells"]
     for cells in ({"slow_progress": [0.0, 0.2]}, {"slow_progress": [0.1, 0.6]}, {"slow_track_sigma": [0.45, 0.49]}):
         fake = _with_extra(plan, "E1F", **cells)
-        with pytest.raises(ValueError, match="does not contain the limits file"):
-            adj._plan_fenced(None, fake, "E1F")
-        with pytest.raises(ValueError, match="narrower"):
+        fenced = adj._plan_fenced(None, fake, "E1F")["cells"]          # segment path: the narrower pair is ignored, the file's stands
+        name = next(iter(cells))
+        assert fenced[name] == file_cells[name]
+        with pytest.raises(ValueError, match="narrower"):               # live path: refused
             limits_from_plan(_live_of(fake, "E1F"))
 
 
