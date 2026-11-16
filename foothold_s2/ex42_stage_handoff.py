@@ -233,8 +233,12 @@ def measured_budget(template_path, source_path, manifest_path, gate_path):
     if gate.get("state") != "complete" or gate.get("plan_sha256") != source.sha256:
         raise ValueError("budget source gate plan/state differs")
     iteration = gate.get("checkpoint_iteration")
-    if type(iteration) is not int or iteration <= 0 or manifest.get("progress", {}).get("completed_updates") != iteration:
-        raise ValueError("budget source is not the completed boundary checkpoint")
+    done = manifest.get("progress", {}).get("completed_updates")
+    # The parent is a boundary checkpoint the manifest has PUBLISHED (named save with the scored sha, checked by validate_score_pair below).
+    # The run may have trained past it (an earlier boundary such as m500 of a stage that went on to 750): only a manifest that has not
+    # reached the checkpoint is refused. The budget counts the checkpoint's own iteration, never the manifest's progress.
+    if type(iteration) is not int or iteration <= 0 or type(done) is not int or done < iteration:
+        raise ValueError("budget source is not a completed boundary checkpoint (the manifest has not reached it)")
     checkpoint = Path(manifest_path).resolve().parent / f"model_{iteration}.pt"
     validate_score_pair(expected_iteration=iteration, score=gate, manifest=manifest,
                         checkpoint_exists=checkpoint.is_file(), checkpoint_sha256=_sha256(checkpoint))

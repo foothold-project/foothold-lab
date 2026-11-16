@@ -40,6 +40,26 @@ def test_budget_rejects_unpublished_or_mixed_exit(known,bad):
     with pytest.raises(ValueError):handoff.measured_budget(known['plan'],known['source_plan'],p,known['gate_receipt'])
 
 
+def test_budget_accepts_a_published_parent_the_run_trained_past(known):
+    """m500 as a parent while the stage went on to 750: the numbers are those of the checkpoint (iteration), not of the manifest's progress."""
+    p=known['parent_manifest'];m=json.loads(p.read_text())
+    before=handoff.measured_budget(known['plan'],known['source_plan'],p,known['gate_receipt'])
+    m['progress']['completed_updates']=m['progress']['completed_updates']+250
+    p.write_text(json.dumps(m))
+    after=handoff.measured_budget(known['plan'],known['source_plan'],p,known['gate_receipt'])
+    assert after['local_updates']==before['local_updates']==1750 and after['used']==before['used'] and after['limit']==before['limit']
+    assert after['manifest_sha256']!=before['manifest_sha256']          # the receipt still pins the real manifest bytes
+
+
+def test_budget_still_refuses_a_manifest_behind_the_checkpoint_and_an_unpublished_sha(known):
+    p=known['parent_manifest'];m=json.loads(p.read_text());m['progress']['completed_updates']+=250
+    m['checkpoints']['model_1750.pt']='1'*64                             # ahead of the checkpoint does not excuse a wrong sha
+    p.write_text(json.dumps(m))
+    with pytest.raises(ValueError,match='checkpoint'):handoff.measured_budget(known['plan'],known['source_plan'],p,known['gate_receipt'])
+    m['checkpoints']={};p.write_text(json.dumps(m))
+    with pytest.raises(ValueError):handoff.measured_budget(known['plan'],known['source_plan'],p,known['gate_receipt'])
+
+
 from foothold_s2.tests import test_ex42_calibration_materialize_cpu as flag_tests
 @pytest.fixture
 def ready(known, monkeypatch):
