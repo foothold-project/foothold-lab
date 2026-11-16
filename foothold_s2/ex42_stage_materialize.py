@@ -337,9 +337,18 @@ def _prepare(*, plan, source_plan, approvals, target, parent_manifest, gate_rece
         raise ValueError('scope differs from its table base cap; cannot enlarge authorization')
     ev_path = Path(evidence).resolve(strict=True); ev = _json(ev_path)
     gate_path = Path(gate_receipt).resolve(strict=True); gate = _json(gate_path)
-    cap_handoff = gate.get('state') == 'cap_handoff'
+    first_window = gate.get('state') == 'first_window_handoff'
+    cap_handoff = gate.get('state') == 'cap_handoff' or first_window      # the receipt kinds that carry a non-PASS boundary on the team lead's recorded approval
     score = gate
-    if cap_handoff:
+    if first_window:
+        # E1F's FIRST window (m250): no earlier window exists, so the previous-window items are HOLD by construction. The receipt reader recounts
+        # the raw flag cells and the maintenance table and demands exactly that situation plus the team lead's ledger line (ex42_e1f_first_window).
+        from foothold_s2.ex42_e1f_first_window import read_first_window_handoff
+        if gate.get('stage_id') != 'E1F' or (ev.get('predecessor_exit') or {}).get('mode') != 'first_window_handoff':
+            raise ValueError('first window handoff receipt needs an E1F gate and first_window_handoff predecessor evidence')
+        got = read_first_window_handoff(gate_path, policy_plan=EX42Plan.load(_checked_ref(ev['evaluation_plan'], ev_path.parent)) if ev.get('evaluation_plan') is not None else None)
+        score = _json(Path(got['p1_score_path']))
+    elif cap_handoff:
         # E1 handed over without a graduation PASS on the team lead's recorded approval (ex42_e1_cap_handoff reads the receipt back in
         # full: boundary score, missed cells recounted, maintenance PASS, survival floor, ledger line). Nothing below is relaxed
         # except the PASS requirement itself; the evidence must say so and must not claim a PASS.
@@ -357,7 +366,7 @@ def _prepare(*, plan, source_plan, approvals, target, parent_manifest, gate_rece
         raise ValueError('materialize evidence identity differs')
     stage = gate.get('stage_id')
     if (stage not in row['authorization_contract']['source_stage_ids']
-            or gate.get('judgment') != ('CAP_HANDOFF' if cap_handoff else 'PASS')
+            or gate.get('judgment') != ('FIRST_WINDOW_HANDOFF' if first_window else 'CAP_HANDOFF' if cap_handoff else 'PASS')
             or gate.get('plan_sha256') != source.sha256):
         raise ValueError('gate is not predecessor PASS under its actual source plan')
     source_row = _row(source, stage)
