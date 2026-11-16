@@ -19,13 +19,15 @@ class FakeEnv:
     def __init__(self, n=3, lag=1.0, done_at=None, time_outs=None):
         self.n, self.lag, self.done_at, self.calls, self.resets = n, lag, done_at or {}, 0, 0
         self.term = SimpleNamespace(vel_command_b=torch.zeros(n, 3), stand=torch.zeros(n, dtype=torch.bool),
-                                    heading=torch.zeros(n, dtype=torch.bool), is_flag_env=torch.zeros(n, dtype=torch.bool))
+                                    heading=torch.zeros(n, dtype=torch.bool), is_flag_env=torch.zeros(n, dtype=torch.bool),
+                                    psi_star=torch.zeros(n), params=SimpleNamespace(ex39_arm=1))
         self.data = SimpleNamespace(root_pos_w=torch.zeros(n, 3) + 10.0, root_quat_w=torch.tensor([[1.0, 0, 0, 0]]).repeat(n, 1),
                                     root_lin_vel_b=torch.zeros(n, 3), root_ang_vel_b=torch.zeros(n, 3))
         self.scene = SimpleNamespace(env_origins=torch.full((n, 3), 10.0))
         self.scene_robot = SimpleNamespace(data=self.data)
         self.seen_cmd = []
         self.time_outs = time_outs
+        self.heading_on_after_done = False
         env = self
         self.unwrapped = SimpleNamespace(
             command_manager=SimpleNamespace(get_term=lambda name: env.term), step_dt=DT,
@@ -55,6 +57,8 @@ class FakeEnv:
         self.data.root_ang_vel_b[:, 2] = self.data.root_ang_vel_b[:, 2] + self.lag * (cmd[:, 2] - self.data.root_ang_vel_b[:, 2])
         self.data.root_pos_w = self.data.root_pos_w + self.data.root_lin_vel_b * DT
         done = torch.zeros(self.n, dtype=torch.bool)
+        if self.heading_on_after_done:           # 끝난 env 의 명령 항이 다시 뽑히며 heading 이 켜지는 일을 흉내
+            self.term.heading[:] = True
         for (e, c), v in self.done_at.items():
             if c == self.calls and v:
                 done[e] = True
@@ -149,10 +153,25 @@ def test_refuses_step_before_reset_wrong_rows_heading_on_and_pose_mismatch(space
     nav.reset()
     with pytest.raises(ValueError, match="rows"):
         nav.step(np.zeros((2, 3)))
-    env.term.heading[0] = True
-    with pytest.raises(RuntimeError, match="heading"):
+    env.term.is_flag_env[0] = True
+    with pytest.raises(RuntimeError, match="flag mode"):
         nav.reset()
     with pytest.raises(ValueError, match="pose switch"):
         NavEnv(FakeEnv(), FakeLower(3, pose_active=True), cs.CommandSpace(space_args, "clip", pose_active=False))
     with pytest.raises(ValueError, match="envs"):
         NavEnv(FakeEnv(n=3), FakeLower(4), cs.CommandSpace(space_args, "clip"))
+
+
+def test_heading_switched_on_by_a_command_resample_is_cleared_before_the_next_override(space_args):
+    env, _lower, nav = _make(space_args)
+    nav.reset()
+    env.heading_on_after_done = True
+    nav.step(np.array([[0.5, 0.0, 0.0]] * 3))          # 안 끄면 두 번째 하위 스텝에서 apply_command 가 RuntimeError
+    assert env.calls == 5 and env.term.params.ex39_arm is None
+    # 대조: 끄는 일을 빼면 같은 장면에서 실제로 거절된다 (시험이 이 장치를 보고 있다는 증거)
+    env2 = FakeEnv()
+    nav2 = NavEnv(env2, FakeLower(env2.n), cs.CommandSpace(space_args, "clip"), fix_heading=lambda term: None)
+    nav2.reset()
+    env2.heading_on_after_done = True
+    with pytest.raises(RuntimeError, match="heading or flag"):
+        nav2.step(np.array([[0.5, 0.0, 0.0]] * 3))

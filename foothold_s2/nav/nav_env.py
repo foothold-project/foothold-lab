@@ -43,7 +43,7 @@ def _np(x):
 
 
 class NavEnv:
-    def __init__(self, env, lower, space: CommandSpace, *, term_name: str = TERM_NAME):
+    def __init__(self, env, lower, space: CommandSpace, *, term_name: str = TERM_NAME, fix_heading=None):
         if space.hold_steps < 1:
             raise ValueError("hold_steps must be >= 1")
         self.env, self.lower, self.space = env, lower, space
@@ -56,6 +56,9 @@ class NavEnv:
             raise ValueError("pose switch differs between the command space and the lower policy")
         self.hold = space.hold_steps
         self.obs = None
+        if fix_heading is None:
+            from foothold_s2.eval.map_mode_cells import disable_heading_for_fixed_eval as fix_heading
+        self._fix_heading = fix_heading        # 에피소드가 끝나 명령 항이 다시 뽑히면 heading 이 다시 켜질 수 있다: 덮어쓰기 전에 끈다
 
     # ---- 상태 읽기
     def _body(self):
@@ -69,8 +72,9 @@ class NavEnv:
         self.obs = self.env.get_observations()
         self.lower.reset(torch.ones(self.n, dtype=torch.bool, device=self.term.vel_command_b.device))
         self.space.reset()
+        self._fix_heading(self.term)
         if bool(self.term.heading.any()) or bool(self.term.is_flag_env.any()):
-            raise RuntimeError("heading or flag mode is on: lower commands would be rewritten (configure the env first)")
+            raise RuntimeError("flag mode is on: lower commands would be rewritten (configure the env first)")
         return self._state(None, np.zeros((self.hold, self.n, 3)), np.zeros(self.n, bool), np.full(self.n, -1, np.int32),
                            np.zeros(self.n, bool))
 
@@ -99,6 +103,7 @@ class NavEnv:
         errs, applied = [], None
         for k in range(self.hold):
             applied = self.space.step(a)
+            self._fix_heading(self.term)
             lower_adapter.apply_command(self.term, applied.cmd, applied.stand, self.lower.pose_active)
             action = self.lower.act(self.obs)
             self.obs, _reward, done, extras = self.env.step(action)
