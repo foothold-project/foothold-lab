@@ -80,9 +80,15 @@ W78	팀장 11/16 11:4x	P0		sonnet · reviewer	decisions.tsv 2026-11-16 12:18 81a
 W79	lead 11/16	P0		runner · reviewer	decisions.tsv 2026-11-16 12:34 0a99317a	done	경계 무인 장치 v4 (새 OUT · pending 지킴 · 점수 먼저) 걸음 12:34		
 W80	팀장 11/16 14:1x	P2		runner	decisions.tsv 2026-11-16 bda845af	dropped	부드러운 actor 대칭: 회당 시간 · 지도/카메라 대칭 먼저 재고 조건 맞을 때만 · 21:19 lead 권고 철회 (팀장 의심 · 비용 +27% 추정 · 계단 타일 E3 뒤 다시)		
 W81	lead 11/16 12:2x	P1		sonnet · planner	TABLE-EX42-SCHEDULE-E1-E5-1116.md	open	일정 줄이기 (묶어 열기 · 가벼운 평가 · 쉬운 종) 준비 사본 a9bbc0a9 · 팀장 일정 논의 (E1 결과 뒤) 대기		
-W82	팀장 11/16 18:01	P0		lead · sonnet	decisions.tsv 39382097	open	E1F 부모 m2000 (e1f8 dbff218f) 19:08 기동 · 750 회 · 23:45 끝 · 공식 m250·m500·m750 + 기록 평가 (e1f_after_train.sh) → 졸업 판정		
+W82	팀장 11/16 18:01	P0		lead · sonnet	decisions.tsv a5c60cdb (11/17 01:05 · 01:13 · 01:16 · 01:41)	done	E1F 부모 m2000 (e1f8 dbff218f) 19:08 기동 · 23:47 750 끝 · 공식 m500 · m750 PASS (m250 첫 창 HOLD) · 기록 평가 m750 저속 무너짐 (전진 0.1 L0 14|18) → E2 부모 m250 (팀장 01:13 · 첫 창 보류 넘김 reviewer 01:27 PASS) · m250 = 정본 3 (팀장 01:41)		
 W83	lead 11/16 19:1x	P0		sonnet · reviewer	decisions.tsv 39382097	done	단계 런처 NCCL_SHM_DISABLE (e1f13 d4931c70 · reviewer PASS · 잠금) · E2 래퍼에 실제 2 rank 첫 update 스모크 + 상태 곁 프로세스		
-W84	팀장 11/16 22:0x	P1	11/17 01:00	planner	decisions.tsv	open	HiPAN 설계 (모드 2 · 학습 진입점 · Runpod 595 깊이 렌더 시험 · 지형 필요 여부 · 일정)		
-W85	팀장 11/16 22:0x	P1	11/16 23:30	planner	decisions.tsv 3b3dd4f2	open	깃발 학습 확인 평가 (E1F 저장본 대 m2000) · 오른쪽 치우침 (vy -0.015) 경계 처방 후보 (전진 때 옆속도 벌)		
-W86	팀장 11/16 22:0x	P1		super-lx	RUNPOD-BACKUP-CHECK-1116.md	open	NAS Runpod 백업 실패 46 (링크 35 · 도중 변경 11) 고침 · 진짜 문제만 알림 · mai-watch GPU 판 EX-42 단계 · 누적 표시		
+W84	팀장 11/16 22:0x	P1	11/17 01:00	planner	decisions.tsv	open	HiPAN 설계 (모드 2 · 학습 진입점 · Runpod 깊이 렌더 시험 · 일정) · 초안 b1229ada · N2 고침 82967acc · N3 첫 묶음 69422909 (sonnet)		
+W85	팀장 11/16 22:0x	P1	11/16 23:30	planner	decisions.tsv a5c60cdb (11/17 01:34 · 01:48)	done	깃발 확인: 돌려 재기 GPU 부모 · m250 · m500 64/64 (맞춤 1.80~1.96 초) · 계단 회전은 지형이 정함 (원장 01:48) → E2 깃발 먼저 돌기 직접 처방		
+W86	팀장 11/16 22:0x	P1		super-lx	RUNPOD-BACKUP-CHECK-1116.md	open	NAS Runpod 백업 실패 46 고침 준비 끝 (links1 · mai-os#67) · 설치는 팀장 NAS sudo 한 줄 · 다시 칠 시각 07:15~08:25 (super 00:08) · mai-watch GPU 판 단계 · 누적 표시 고침 (23:41)		
 W87	팀장 11/16 21:4x	P2		lead	decisions.tsv dea871ee	done	모드 1 AME-2 (석헌 · 목표 지점) 는 앱 foothold-app A* 그대로 · HiPAN 은 모드 2 만 · S3 읽기 REPORT-AME2-S3-1116.md		
+W88	팀장 11/17 00:0x · 01:13	P0	at:2026-11-17T12:10	lead	decisions.tsv a5c60cdb	open	E2 학습 중 (02:40 기동 · unit e2-launch · 부모 E1F m250 13caeb4a · 깃발 먼저 돌기 · desired_kl 0.005 · b 0.009 · 끝 12:10 무렵)		
+W89	팀장 11/17 01:41 · 02:27	P1		planner	decisions.tsv a5c60cdb (01:41 · 02:27)	open	정본 3 (E1F m250) 묶음: git 문서 · 보고서 · 계보 (끝 c045d154) · ONNX (진행) · 처음부터 쌓은 pt 계보 등록		
+W90	lead 11/17 02:5x	P1		sonnet	82967acc · 69422909	open	HiPAN 코드: N2 고침 82967acc · N3 첫 묶음 69422909 · 검토 대기		
+W91	lead 11/17 02:5x	P1		runner	5baa59d4	open	G3 메시 5baa59d4 · 검토 대기		
+W92	lead 11/17 02:5x	P1		reviewer	lead 02:52 배정	open	검토 대기 셋 (HiPAN N2 · N3 · G3 메시)		
+W93	팀장 11/17 01:41 · 02:27	P1		lead · sonnet	decisions.tsv a5c60cdb (02:27 · 02:31) · /home/jay/data/foothold/hipan/runpod_r1/	open	Runpod R1 예행 (합계 1 달러 · jay-r1-* 만 · 다른 팀원 Pod 금지): 4090 1 차 끝 0.136 달러 · 카메라 Segfault → 4090b 재시험 02:51 · L40S · 5090 재고 대기		
