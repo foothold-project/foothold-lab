@@ -52,9 +52,10 @@ def yaw_from_quat_wxyz(q: np.ndarray) -> np.ndarray:
     return np.arctan2(2.0 * (w * z + x * y), 1.0 - 2.0 * (y * y + z * z))
 
 
-def to_room_frame(pos_local: np.ndarray) -> np.ndarray:
+def to_room_frame(pos_local: np.ndarray, origin_xy=None) -> np.ndarray:
+    """env 국소 위치 -> 방 틀. origin_xy = 그 env 의 origins 열의 x y ((2,) 또는 (n, 2)); 없으면 방 가운데 (옛 꼴)."""
     p = np.array(pos_local, dtype=np.float64, copy=True)
-    p[:, :2] += ROOM_ORIGIN_XY
+    p[:, :2] += ROOM_ORIGIN_XY if origin_xy is None else np.asarray(origin_xy, dtype=np.float64)
     return p
 
 

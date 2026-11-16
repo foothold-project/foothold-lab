@@ -342,19 +342,48 @@ def mesh_sha256(vertices: np.ndarray, faces: np.ndarray) -> str:
     return hashlib.sha256(vertices.astype(np.float32).tobytes() + faces.astype(np.int32).tobytes()).hexdigest()
 
 
-def write_room(room: Room, out_dir) -> dict:
-    """`terrain_mesh.npz` (vertices · faces · origins · column_family) + `room_manifest.json`. manifest 를 돌려준다."""
+START_MARGIN_M = 0.5                  # 시작점은 평지 셀이고 벽 · 장애물 · 구덩이 · 방 가장자리에서 이만큼 떨어진 곳 (planner F2)
+
+
+def start_points(room: Room, k: int, seed: int = 0, margin: float = START_MARGIN_M) -> np.ndarray:
+    """방 하나의 시작점 k 개 (방 틀 x y z, z = 바닥 높이). 큰 통과 영역 안의 평지 셀에서 시드 고정으로 겹치지 않게 뽑는다."""
+    from scipy import ndimage
+
+    if k < 1:
+        raise ValueError("k must be >= 1")
+    flat = np.pad(room.cell == CELL_FLAT, 1, constant_values=False)
+    clear = (ndimage.distance_transform_edt(flat)[1:-1, 1:-1] * RES) >= margin
+    lab, n = ndimage.label(room.cell != CELL_WALL)
+    if n == 0:
+        raise ValueError("room has no passable cell")
+    big = lab == (1 + int(np.argmax(np.bincount(lab.ravel())[1:])))
+    ok = np.argwhere(clear & big)
+    if len(ok) < k:
+        raise ValueError(f"only {len(ok)} start cells have {margin} m of flat clearance, {k} wanted")
+    pick = ok[np.random.default_rng(seed).choice(len(ok), size=k, replace=False)]
+    return np.array([[(j + 0.5) * RES, (i + 0.5) * RES, float(room.height[i, j])] for i, j in pick])
+
+
+def write_room(room: Room, out_dir, n_starts: int = 0, start_seed: int = 0) -> dict:
+    """`terrain_mesh.npz` (vertices · faces · origins · column_family) + `room_manifest.json`. manifest 를 돌려준다.
+    n_starts = 0: origins (1, 1, 3) 방 가운데 (옛 꼴). n_starts = K: origins (1, K, 3) = `start_points` 의 K 개 (column_family 는 \"room\" K 번)."""
     out = Path(out_dir)
     out.mkdir(parents=True, exist_ok=True)
     v, f = room_mesh(room)
-    origins = np.array([[[ROOM_M / 2, ROOM_M / 2, 0.0]]])
+    if n_starts:
+        starts = start_points(room, n_starts, start_seed)
+        origins = starts[None, :, :]
+    else:
+        starts = None
+        origins = np.array([[[ROOM_M / 2, ROOM_M / 2, 0.0]]])
     npz = out / "terrain_mesh.npz"
-    np.savez_compressed(npz, vertices=v, faces=f, origins=origins, column_family=np.array(["room"]))
+    np.savez_compressed(npz, vertices=v, faces=f, origins=origins, column_family=np.array(["room"] * origins.shape[1]))
     sha = mesh_sha256(v, f)
     manifest = {"format": "hipan-room/1", "seed": room.spec.get("seed"), "mesh_sha256": sha,
                 "vertices": int(len(v)), "faces": int(len(f)), "size_m": ROOM_M, "res_m": RES,
                 "tiles": room.spec.get("tiles"), "patches": [o for o in room.objects if o["kind"] == "patch"],
-                "primitives": room.spec["primitives"]}
+                "primitives": room.spec["primitives"],
+                "starts": None if starts is None else {"seed": int(start_seed), "margin_m": START_MARGIN_M, "xyz": starts.round(4).tolist()}}
     (out / "room_manifest.json").write_text(json.dumps(manifest, ensure_ascii=False, indent=1, sort_keys=True), encoding="utf-8")
     return manifest
 

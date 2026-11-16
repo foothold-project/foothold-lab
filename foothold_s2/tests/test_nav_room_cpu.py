@@ -187,3 +187,31 @@ def test_sparse_patch_kinds_limits_the_kinds_and_refuses_unknown_names():
     assert kinds == {"gaps"}
     with pytest.raises(ValueError, match="unknown sparse patch kinds"):
         rg.RoomConfig(sparse_patch_kinds=("stairs",))
+
+
+def test_start_points_are_flat_clear_of_walls_and_fixed_by_seed(tmp_path):
+    from scipy import ndimage
+
+    from foothold_s2.terrains.ex42_mesh_mount import load_combined_mesh
+
+    _, room = rg.make_room(3, grade_table=TABLE)
+    a, b = rg.start_points(room, 8, seed=1), rg.start_points(room, 8, seed=1)
+    assert (a == b).all() and not (a == rg.start_points(room, 8, seed=2)).all() and len({tuple(r[:2]) for r in a}) == 8
+    ij = np.floor(a[:, [1, 0]] / rg.RES).astype(int)
+    assert (room.cell[ij[:, 0], ij[:, 1]] == rg.CELL_FLAT).all()
+    dist = ndimage.distance_transform_edt(np.pad(room.cell == rg.CELL_FLAT, 1))[1:-1, 1:-1] * rg.RES      # 평지가 아닌 셀까지 거리
+    assert (dist[ij[:, 0], ij[:, 1]] >= rg.START_MARGIN_M).all()
+    m = rg.write_room(room, tmp_path, n_starts=8, start_seed=1)
+    d = load_combined_mesh(tmp_path / "terrain_mesh.npz", m["mesh_sha256"])
+    assert d["origins"].shape == (1, 8, 3) and d["column_family"] == ["room"] * 8
+    assert np.allclose(d["origins"][0], a) and m["starts"]["seed"] == 1 and len(m["starts"]["xyz"]) == 8
+    with pytest.raises(ValueError, match="start cells"):
+        rg.start_points(room, 10**6)
+
+
+def test_room_frame_uses_the_origin_of_that_env():
+    from foothold_s2.nav import teacher_obs as to
+
+    p = np.array([[1.0, 2.0, 0.3], [0.0, 0.0, 0.3]])
+    assert np.allclose(to.to_room_frame(p)[:, :2], [[11, 12], [10, 10]])                       # 옛 꼴: 방 가운데
+    assert np.allclose(to.to_room_frame(p, [[3.0, 4.0], [5.0, 6.0]])[:, :2], [[4, 6], [5, 6]])
