@@ -449,7 +449,7 @@ stages:
     turn_overlay: {fraction: 0.25, wz_abs: [0.2, 0.6]}
   # The slow-forward share E1 trains with stays in force in E1F, so that what E1 learns under slow commands is kept
   # (lead 2026-11-13 16:00; the value is inside the limits of decisions.tsv 2026-11-13 15:17, ledger commit a00ab2a8).
-  # The rows after E1F have no cell: they are decided from E1's final evidence.
+  # E2 carries the same cells (below, lead 2026-11-16 10:40); the rows from E3 on have no cell: they are decided from E1's final evidence.
   # v29-11 (lead 2026-11-15 22:46, planner work table 22:45): the four low-speed devices E1 trains with go on in E1F. The slow forward share is
   # 0.5 (the same value as E1's own row; inside the limits of decisions.tsv 2026-11-13 15:17), heading envs inside the slow band count for
   # ex42_slow_track, and the live monitor and live adjustment blocks are E1's, so the lead can still move the cells a boundary decides.
@@ -459,6 +459,8 @@ stages:
   # commands (0.1 <= |v_xy| < 0.3, no turn) are held for U(6, 8) s. The E1 row has neither cell: no slow-side draw and no long hold there.
   low_side_fraction: 0.4
   slow_hold_range_s: [6.0, 8.0]
+  # Fence of a boundary adjustment of slow_hold_range_s (EX42_SEGMENT_ADJUST): an entry is null (off) or a pair inside it, and 0 < lo <= hi <= 30.
+  slow_hold_fence_s: [4.0, 12.0]
   slow_track_heading: true
   live_monitor:
     enabled: true
@@ -602,9 +604,56 @@ stages:
   # `turn_overlay` are E1's plan values. `shares` here are the 13 free slots for environments outside the continuous
   # columns; inside them the split is the row's own `shares` (with flag), which this cell does not change.
   commands:
-    shares: {forward: 0.19, walk_left: 0.06, walk_right: 0.06, spin_left: 0.09, spin_right: 0.09, stand: 0.1, reverse: 0.14, side_left: 0.09, side_right: 0.09, diag_fwd_left: 0.02, diag_fwd_right: 0.02, diag_back_left: 0.025, diag_back_right: 0.025}
+    shares: {forward: 0.1888888889, walk_left: 0.0666666667, walk_right: 0.0666666667, spin_left: 0.0777777778, spin_right: 0.0777777778, stand: 0.1111111111, reverse: 0.1111111111, side_left: 0.1, side_right: 0.1, diag_fwd_left: 0.0222222222, diag_fwd_right: 0.0222222222, diag_back_left: 0.0277777778, diag_back_right: 0.0277777778}
     ranges: {forward_vx: [0.1, 1.5], walk_vx: [0.3, 1.2], walk_wz_abs: [0.1, 1.0], spin_wz_abs: [0.15, 1.5], reverse_vx: [-1.3, -0.2], side_vy_abs: [0.1, 0.8], diag_vx_abs: [0.3, 0.6], diag_vy_abs: [0.2, 0.5]}
     turn_overlay: {fraction: 0.25, wz_abs: [0.2, 0.6]}
+  # E1F low-speed devices carried into E2 (lead 2026-11-16 10:40, FRAME-E1F-E2-FIRST-SEGMENT-1116 2.1): the cells below are the E1F row's, copied as they
+  # are (same values, same fences, same live blocks). Without them E2 would fall back to the default slow-forward draw and lose the slow steps E1 and E1F
+  # trained. The rows from E3 on still have no cell.
+  # The slow-forward share E1 trains with stays in force in E1F, so that what E1 learns under slow commands is kept
+  # (lead 2026-11-13 16:00; the value is inside the limits of decisions.tsv 2026-11-13 15:17, ledger commit a00ab2a8).
+  # v29-11 (lead 2026-11-15 22:46, planner work table 22:45): the four low-speed devices E1 trains with go on in E1F. The slow forward share is
+  # 0.5 (the same value as E1's own row; inside the limits of decisions.tsv 2026-11-13 15:17), heading envs inside the slow band count for
+  # ex42_slow_track, and the live monitor and live adjustment blocks are E1's, so the lead can still move the cells a boundary decides.
+  low_forward_fraction: 0.5
+  # E1F new composition (lead 2026-11-16 09:26, planner 09:23): the side commands are drawn with |vy| in [0.1, 0.3] for 0.4 of the draws (the fence
+  # [0, 0.5] is the limits file's command_cells.low_side_fraction; the live adjustment may move it inside that fence), and the slow forward
+  # commands (0.1 <= |v_xy| < 0.3, no turn) are held for U(6, 8) s. The E1 row has neither cell: no slow-side draw and no long hold there.
+  low_side_fraction: 0.4
+  slow_hold_range_s: [6.0, 8.0]
+  # Fence of a boundary adjustment of slow_hold_range_s (EX42_SEGMENT_ADJUST): an entry is null (off) or a pair inside it, and 0 < lo <= hi <= 30.
+  slow_hold_fence_s: [4.0, 12.0]
+  slow_track_heading: true
+  live_monitor:
+    enabled: true
+    moving_updates: 20
+    decline_from_peak: null
+    map_off_survival_updates: 50
+    map_off_survival_drop_alert: null
+    # E1F starts with the slow_track value E1 ended with (the materialized reward cell, 0.3); configure_from_plan sets the term from this cell.
+    initial_slow_track_weight: 0.3
+    alert_run_env: EX42_ALERT_RUN_ID
+    initial: {slow_forward: learning, side_left: learning, side_right: learning}
+  live_adjustment:
+    file_env: EX42_UPDATE_ADJUST
+    segment_reward_limits_sha256: 15dfcdcdf464fab34db1829d82ac95048d45b686f16cb54244655458314ee04e
+    # Repeated cells must equal the segment fence; this plan SHA pins that agreement.
+    extra_reward_limits:
+      zero_yaw: [-2.0, -0.5]
+      feet_air_time_threshold: [0.04, 0.5]
+      slow_track: [0.0, 0.3]
+      slow_track_sigma: [0.5, 0.5]
+      slow_track_speed_min: [0.1, 0.1]
+      slow_track_speed_max: [0.3, 0.3]
+    command_limits:
+      low_forward_fraction: [0.2, 0.5]
+      low_side_fraction: [0.0, 0.5]
+    # policy_std_cap cannot start above 0 from the plan (the code refuses a non-zero runtime_start); the E1F adjust file sets 0.48 at update 1.
+    runtime_limits:
+      policy_std_cap: [0.0, 2.0]
+      terrain_level_cap: [5, 9]
+    runtime_start:
+      policy_std_cap: 0.0
   exit_judge: kind_two_window_e2
   training_mesh_profile: e2_named_flags_v2
   authorization_contract:
@@ -644,9 +693,9 @@ stages:
     spin_left: 0.07
     spin_right: 0.07
     stand: 0.1
-    reverse: 0.14
-    side_left: 0.07
-    side_right: 0.07
+    reverse: 0.1
+    side_left: 0.09
+    side_right: 0.09
     diag_fwd_left: 0.02
     diag_fwd_right: 0.02
     diag_back_left: 0.025

@@ -776,8 +776,9 @@ def test_the_shipped_e1_row_registers_low_forward_fraction_inside_the_limits(row
     assert adj.stage_low_forward(row_plan, "E1") == 0.5
     assert adj.stage_slow_track_heading(row_plan, "E1") is True and adj.stage_slow_track_heading(row_plan, "E1F") is True
     assert adj.stage_low_forward(row_plan, "E1F") == 0.5                    # lead 2026-11-13 16:00: E1F keeps it; v29-11 (2026-11-15 22:46): 0.4 -> 0.5
+    assert adj.stage_low_forward(row_plan, "E2") == 0.5                     # lead 2026-11-16 10:40: E2 carries the E1F cells
     assert all(adj.stage_low_forward(row_plan, stage_id) is None
-               for stage_id in ("E0", "E2", "E3", "E4", "E5", "M", "E6a", "E6b"))       # decided from E1's final evidence
+               for stage_id in ("E0", "E3", "E4", "E5", "M", "E6a", "E6b"))       # decided from E1's final evidence
 
 
 def test_the_row_share_holds_from_the_first_update_and_reaches_the_sampler(row_plan, tmp_path):

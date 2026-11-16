@@ -101,6 +101,8 @@ PERCEPTION_EMA_DECAY = 0.98
 #   EX42_PERCEPTION_VX_CORR_B  b in m/s, default 0.016
 # The boundary evaluation runs as a dispatcher unit that does NOT see the training process's environment: with the defaults, training and evaluation agree
 # (both run this code); setting either key only on the training side would make the boundary score differ from the training.
+V_FLAG_BANDS = (0.0, 0.15, 0.3, float("inf"))           # real |vx| bands of EX42_PERCEPTION_V_BIAS_FLAG
+V_FLAG_BAND_NAMES = ("0~0.15", "0.15~0.3", "0.3~")
 VX_CORR_ENV = "EX42_PERCEPTION_VX_CORR"
 VX_CORR_ENV_B = "EX42_PERCEPTION_VX_CORR_B"
 VX_CORR_BAND = 0.3
@@ -536,7 +538,9 @@ class StartRunner(OnPolicyRunner):
         if summary is None or self.disable_logs:
             return
         count, mean_left = summary()
-        print("EX42_SLOW_HOLD it=%d envs=%d of=%d mean_time_left=%.2f" % (it, count, self.env.num_envs, mean_left), flush=True)
+        hold = (getattr(self, "ex42_segment_commands", None) or {}).get("slow_hold_range_s")
+        source = "none" if hold is None else ("plan" if hold["source"] == "plan" else "adjust")      # where this segment's range came from
+        print("EX42_SLOW_HOLD it=%d envs=%d of=%d mean_time_left=%.2f source=%s" % (it, count, self.env.num_envs, mean_left, source), flush=True)
 
     def _assert_ex41_joint_order(self) -> None:
         from foothold_s2.runners.ex41_critic_mirror import assert_joint_order
@@ -873,6 +877,7 @@ class StartRunner(OnPolicyRunner):
                         est = self.perception.step(self.pstate, inp, gmap)
                     ppo_obs = self._ppo_obs(raw, est)
                     self._vxcorr_collect(o, est, ppo_obs, vel)
+                    self._vflag_collect(est, vel)
                     self._vbias_collect(o, ppo_obs, vel)
                     self._step_small_noise(o)
                     if self.replay is not None:
@@ -1425,6 +1430,35 @@ class StartRunner(OnPolicyRunner):
         acc = getattr(self, "_vxcorr_raw_acc", None)
         self._vxcorr_raw_acc = part if acc is None else acc + part
 
+    def _vflag_collect(self, est: torch.Tensor, vel: torch.Tensor | None) -> None:
+        """Record only (EX42_PERCEPTION_V_BIAS_FLAG): est_vx before the correction minus the real vx, flag (heading) envs only, summed per band of
+        the real |vx| (0~0.15, 0.15~0.3, 0.3~). Reads tensors, writes nothing back: the training numbers do not see it. Not gated by the correction."""
+        term = self._command_term()
+        if vel is None or term is None or self.pcfg["est_mode"] != "learned":
+            return
+        flag = term.heading.bool()
+        speed = vel[:, 0].abs()
+        bias = (est[:, VX_CORR_VX_COL] - vel[:, 0]).double()
+        edges = V_FLAG_BANDS
+        part = torch.zeros(len(edges) - 1, 2, dtype=torch.float64, device=bias.device)
+        for i in range(len(edges) - 1):
+            m = flag & (speed >= edges[i]) & (speed < edges[i + 1])
+            part[i, 0] = float(m.sum())
+            part[i, 1] = float(bias[m].sum())
+        acc = getattr(self, "_vflag_acc", None)
+        self._vflag_acc = part if acc is None else acc + part
+
+    def _vflag_finish(self, it: int) -> None:
+        """Every 50 updates: one line per band (this rank's flag envs). A band with no sample says n=0 mean=null."""
+        acc = getattr(self, "_vflag_acc", None)
+        self._vflag_acc = None
+        if acc is None or self.disable_logs or it % 50 != 0:
+            return
+        for i, name in enumerate(V_FLAG_BAND_NAMES):
+            n = int(acc[i, 0])
+            print("EX42_PERCEPTION_V_BIAS_FLAG it=%d band=%s n=%d mean=%s" % (
+                it, name, n, "%+.5f" % (float(acc[i, 1]) / n) if n > 0 else "null"), flush=True)
+
     def _vxcorr_finish(self, it: int) -> None:
         """Every 50 updates, when on: n, mean est_vx before, mean est_vx after (this rank's envs inside the band). Record only."""
         acc = getattr(self, "_vxcorr_acc", None)
@@ -1526,6 +1560,7 @@ class StartRunner(OnPolicyRunner):
                     it, *sp.PERCEPTION_V_BIAS_LOWBAND, r["n"], f(r["mean"]), f(r["p10"]), f(r["p90"]), f(r["mean_y"]), f(r["p10_y"]), f(r["p90_y"])), flush=True)
         self._fwd01_finish(it)
         self._vxcorr_finish(it)
+        self._vflag_finish(it)
 
     def _v_bias_record(self) -> dict:
         record = {"lowband": dict(self.last_perception_v_bias)}

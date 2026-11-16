@@ -87,8 +87,10 @@ def test_e3_start_block_is_the_e2_end_state_plus_the_entry_axis_only():
 def test_command_shares_follow_the_canon_c_boundaries():
     rows = _rows()
     e1f, e3, e4 = rows["E1F"]["shares"], rows["E3"], rows["E4"]
-    assert e3["shares"] == rows["E2"]["shares"] and e1f["flag"] == 0.1   # E2 -> E3 changes no command share
-    # E1F new composition (lead 2026-11-16 09:26): reverse 0.10 and side 0.09 in E1F only; the E2 and later rows still hold the earlier vector (open: lead)
+    assert e1f["flag"] == 0.1
+    # E1F new composition (lead 2026-11-16 09:26) and E2 carrying it (10:40): E1F and E2 hold the new vector; E3 and later rows still hold the
+    # earlier one, so E2 -> E3 moves reverse and side back (open: lead decides whether the E3 row follows)
+    assert rows["E2"]["shares"] == e1f
     assert {k for k in e1f if e1f[k] != e3["shares"][k]} == {"reverse", "side_left", "side_right"}
     after = e3["command_allocation_boundary"]["shares"]
     assert abs(sum(after.values()) - 1.0) < 1e-9 and after["flag"] == 0.15
@@ -116,8 +118,8 @@ def test_every_stage_the_share_contract_reads_has_an_explicit_vector():
 
     document = yaml.safe_load(PLAN.read_text(encoding="utf-8"))
     rows = {row["id"]: row for row in document["stages"]}
-    # CG E.2 E2: no command share moves at the K boundary. E1F's own vector changed on 2026-11-16 (reverse, side); E2 and later keep the earlier one (open: lead)
-    assert {k for k in rows["E1F"]["shares"] if rows["E1F"]["shares"][k] != rows["E2"]["shares"][k]} == {"reverse", "side_left", "side_right"}
+    # CG E.2 E2: no command share moves at the K boundary: E2 carries the E1F vector (2026-11-16 10:40); E3 and later keep the earlier one (open: lead)
+    assert rows["E2"]["shares"] == rows["E1F"]["shares"]
     plan = SimpleNamespace(document=document)
     for stage in ("E1F", "E2", "E3", "E4", "E5", "E6a", "E6b"):
         contract = read_contract(plan, stage)

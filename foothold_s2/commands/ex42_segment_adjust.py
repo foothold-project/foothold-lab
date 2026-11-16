@@ -33,6 +33,11 @@ kind until a later entry of the same kind. An entry for a boundary the run has n
   the rest from 0.3 to the upper end of side_vy_abs). Registered and changed exactly like low_forward_fraction, inside
   `command_cells.low_side_fraction` of the limits file. Off (no cell) draws nothing extra: the sampler is bit for bit the old one.
 
+* slow_hold_range_s (2026-11-16): how long the slow forward commands are held (`mixed_command._apply_slow_hold`). The stage's plan row
+  registers it (`slow_hold_range_s`: [lo, hi] seconds, or no cell = off); a file entry turns it off (null) or sets another range
+  at any boundary from 1 on, inside the row's own fence `slow_hold_fence_s: [low, high]` (a row without that cell takes no entry) and
+  0 < lo <= hi <= 30. Without a file the row's value stays. The record carries source plan | adjust_file.
+
 Each started segment leaves `segment_commands_b<k>.json` in the run folder, in the shape of the input (a record's
 `commands` / `rewards.values` can be pasted into the next file); a later start must reproduce what the earlier
 segments recorded.
@@ -76,6 +81,8 @@ def complete_cells(cell):
     if not isinstance(cell, dict):
         return cell
     return {**{name: default for name, default in OPTIONAL_CELLS.items() if name not in cell}, **cell}
+HOLD_CELL = "slow_hold_range_s"            # a [lo, hi] pair or null, fenced by the plan row (`slow_hold_fence_s`), not by the limits file
+HOLD_MAX_S = 30.0
 COMMAND_CELLS = ("low_forward_fraction", "low_side_fraction")          # command distribution cells outside the 13-slot profile
 # Run-time cells (decisions.tsv 2026-11-14 12:42, v28): off or at the first segment's value at the start of a run, changed
 # only through the update-boundary adjustment file. policy_std_cap: 0 = off, else a ceiling on the policy action std.
@@ -216,6 +223,40 @@ def stage_low_side(plan, stage_id, limits=None) -> float | None:
                          _plan_fenced(limits if limits is not None else reward_limits(), plan, stage_id), f"{stage_id} plan row")
 
 
+def _hold_pair(value, label, what="slow_hold_range_s"):
+    if (not isinstance(value, (list, tuple)) or len(value) != 2 or any(type(v) not in (int, float) or not math.isfinite(v) for v in value)
+            or not 0.0 < value[0] <= value[1] <= HOLD_MAX_S):
+        raise ValueError(f"EX-42 {label} {what} must be [lo, hi] with 0 < lo <= hi <= {HOLD_MAX_S:g} seconds")
+    return (float(value[0]), float(value[1]))
+
+
+def _hold_fence(plan, stage_id):
+    """The fence of `slow_hold_range_s` entries: the stage row's `slow_hold_fence_s`; None when the row has none."""
+    row = next((s for s in plan.document["stages"] if s["id"] == stage_id), {})
+    fence = row.get("slow_hold_fence_s")
+    return None if fence is None else _hold_pair(fence, f"{stage_id} plan row", "slow_hold_fence_s")
+
+
+def stage_slow_hold(plan, stage_id):
+    """(registered, value): the plan row's `slow_hold_range_s`. registered is False for a row with no cell (null = no cell: the E1 row)."""
+    row = next((s for s in plan.document["stages"] if s["id"] == stage_id), {})
+    if row.get(HOLD_CELL) is None:
+        return False, None
+    return True, _hold_pair(row[HOLD_CELL], f"{stage_id} plan row")
+
+
+def _hold_entry(value, fence, label):
+    """An entry value: None (off) or a pair inside the fence. A row without a fence takes no entry."""
+    if fence is None:
+        raise ValueError(f"EX-42 {label} {HOLD_CELL}: the plan row has no slow_hold_fence_s")
+    if value is None:
+        return None
+    pair = _hold_pair(value, label)
+    if pair[0] < fence[0] - TOL or pair[1] > fence[1] + TOL:
+        raise ValueError(f"EX-42 {label} {HOLD_CELL} leaves the approved fence {list(fence)}")
+    return pair
+
+
 def stage_rewards(plan, stage_id, limits=None) -> dict | None:
     """The reward cells the stage's own plan row registers (`rewards`): in force from the first update of the stage,
     inside the same limits as an adjustment. None when the row has no cell (the source stage's values stay)."""
@@ -246,6 +287,8 @@ def resolve(plan, stage_id, document, boundary_index, limits=None) -> dict:
            "rewards_entry": None, "low_forward_fraction": stage_low_forward(plan, stage_id, limits),
            "low_forward_fraction_entry": None, "low_side_fraction": stage_low_side(plan, stage_id, limits),
            "low_side_fraction_entry": None}
+    registered, hold = stage_slow_hold(plan, stage_id)
+    out.update(slow_hold_registered=registered, slow_hold_range_s=hold, slow_hold_range_s_entry=None)
     if document is None:
         return out
     if (not isinstance(document, dict) or set(document) != {"schema", "stage_id", "plan_sha256", "segments"}
@@ -263,11 +306,11 @@ def resolve(plan, stage_id, document, boundary_index, limits=None) -> dict:
         if int(key) > boundary_index:
             raise ValueError(f"EX-42 {stage_id} segment adjustment names boundary {key} before the run reached it")
         if (not isinstance(entry, dict) or not {"decided_at", "reason", "evidence"} <= set(entry)
-                or not set(entry) <= {"decided_at", "reason", "evidence", "commands", "rewards", *COMMAND_CELLS}
-                or not {"commands", "rewards", *COMMAND_CELLS} & set(entry)
+                or not set(entry) <= {"decided_at", "reason", "evidence", "commands", "rewards", *COMMAND_CELLS, HOLD_CELL}
+                or not {"commands", "rewards", *COMMAND_CELLS, HOLD_CELL} & set(entry)
                 or any(not isinstance(entry[name], str) or not entry[name].strip() for name in ("decided_at", "reason", "evidence"))):
             raise ValueError(f"EX-42 {label} needs decided_at, reason, evidence (written text) and commands, rewards "
-                             f"or low_forward_fraction or low_side_fraction")
+                             f"or low_forward_fraction or low_side_fraction or slow_hold_range_s")
         if "commands" in entry:
             if int(key) not in allowed:
                 raise ValueError(f"EX-42 {stage_id} segment adjustment may only name boundaries {list(allowed)} for commands")
@@ -288,6 +331,9 @@ def resolve(plan, stage_id, document, boundary_index, limits=None) -> dict:
                                  f"low_side_fraction")
             out.update(low_side_fraction=_command_cell("low_side_fraction", entry["low_side_fraction"], limits, label),
                        low_side_fraction_entry=int(key))
+        if HOLD_CELL in entry:         # any boundary from 1 on, like the rewards: the fence is the row's own
+            out.update(slow_hold_range_s=_hold_entry(entry[HOLD_CELL], _hold_fence(plan, stage_id), label),
+                       slow_hold_range_s_entry=int(key), slow_hold_registered=True)
     return out
 
 
@@ -312,6 +358,13 @@ def read(path, plan, stage_id, boundary_index, limits=None) -> dict:
             "entry": state["low_side_fraction_entry"], "value": state["low_side_fraction"],
             "decided_at": side_entry.get("decided_at"), "reason": side_entry.get("reason"),
             "evidence": side_entry.get("evidence"), "limits_sha256": limits["sha256"]}
+    if state["slow_hold_registered"]:        # same rule: only a run whose row has the cell records it
+        hold_entry = told(state["slow_hold_range_s_entry"])
+        low["slow_hold_range_s"] = {
+            "source": "plan" if state["slow_hold_range_s_entry"] is None else "adjust_file",
+            "entry": state["slow_hold_range_s_entry"],
+            "value": None if state["slow_hold_range_s"] is None else list(state["slow_hold_range_s"]),
+            "decided_at": hold_entry.get("decided_at"), "reason": hold_entry.get("reason"), "evidence": hold_entry.get("evidence")}
     # same rule: only a plan row that turns it on records it
     if stage_slow_track_heading(plan, stage_id):
         low["slow_track_heading"] = True
@@ -355,7 +408,9 @@ def start_segment(plan_view, plan, stage_id, *, boundary_index, path, log_dir, w
         ran = earlier.get(k) or {"commands": resolve(plan, stage_id, None, k, limits)["commands"]}
         if (said["commands"] != _plain(ran.get("commands")) or said["rewards"] != (ran.get("rewards") or {}).get("values")
                 or said["low_forward_fraction"] != (ran.get("low_forward_fraction") or {}).get("value")
-                or said["low_side_fraction"] != (ran.get("low_side_fraction") or {}).get("value")):
+                or said["low_side_fraction"] != (ran.get("low_side_fraction") or {}).get("value")
+                or (None if said["slow_hold_range_s"] is None else list(said["slow_hold_range_s"]))
+                != (ran.get("slow_hold_range_s") or {}).get("value")):
             raise ValueError(f"EX-42 {stage_id} segment adjustment differs from what segment {k} ran with")
     stage, commands, rewards = plan_view.stages[0], record["commands"], record["rewards"]["values"]
     if commands is not None:
@@ -369,6 +424,9 @@ def start_segment(plan_view, plan, stage_id, *, boundary_index, path, log_dir, w
         stage = replace(stage, low_forward_fraction=record["low_forward_fraction"]["value"])
     if "low_side_fraction" in record:
         stage = replace(stage, low_side_fraction=record["low_side_fraction"]["value"])
+    if "slow_hold_range_s" in record:
+        held = record["slow_hold_range_s"]["value"]
+        stage = replace(stage, slow_hold_range_s=None if held is None else (float(held[0]), float(held[1])))
     plan_view.stages = [stage]
     if write and boundary_index >= 1:
         target = Path(log_dir) / f"segment_commands_b{boundary_index}.json"

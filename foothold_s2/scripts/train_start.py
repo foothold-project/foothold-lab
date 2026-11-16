@@ -1311,6 +1311,7 @@ def main(env_cfg, agent_cfg):
         ex42_stage_zero_runtime.live_monitor_config = _live_stage.get("live_monitor")
         ex42_stage_zero_runtime.live_adjustment_config = _live_stage.get("live_adjustment")
         ex42_stage_zero_runtime.attach_runner(runner)
+        runner.ex42_segment_commands = EX42_SEGMENT_COMMANDS      # record only: EX42_SLOW_HOLD prints where the hold range came from
         runner.ex40_dr_runtime = ex42_dr_readback
         if EX42_STAGE_ZERO_RESUME:
             from foothold_s2.scripts.ex42_training_entry import build_resume_root_xy_readback
