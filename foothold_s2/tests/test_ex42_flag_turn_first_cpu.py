@@ -101,3 +101,41 @@ def test_a_bad_cell_value_is_refused(bad):
     next(r for r in plan.document["stages"] if r["id"] == "E2")["flag_turn_first_rad"] = bad      # the loaded document, in memory only
     with pytest.raises(ValueError, match="flag_turn_first_rad"):
         te.make_ex42_stage_zero_plan_view(source[0], source[1], {"parent_sha256": "0" * 64}, ex42_plan=plan, stage_id="E2")
+
+
+def test_turning_mask_matches_the_branch():
+    st, pos, yaw = _state([0.0, 0.3, 0.9, -1.2])
+    mc.flag_step(st, pos, yaw, 0.02, mc.CommandParams(), 0.5)
+    assert st.turning.tolist() == [False, False, True, True]
+    st2, pos2, yaw2 = _state([0.9])
+    mc.flag_step(st2, pos2, yaw2, 0.02, mc.CommandParams(), None)
+    assert st2.turning.tolist() == [False]
+
+
+def test_log_lines_start_and_fraction(capsys):
+    """The start line says the cell is on (or off) and the 50-update line carries flag_turn_fraction from the term's counters."""
+    from types import SimpleNamespace
+    from foothold_s2.runners.start_runner import StartRunner
+
+    class Term:                                       # the real term needs Kit; its counters are two floats
+        _turn_sum, _turn_cnt = 3.0, 12.0
+
+        def flag_turn_summary(self):
+            frac, count = self._turn_sum / self._turn_cnt, self._turn_cnt
+            self._turn_sum = self._turn_cnt = 0.0
+            return (stage.flag_turn_first_rad or None), frac, count
+    stage = SimpleNamespace(flag_turn_first_rad=0.5)
+    term = Term()
+    runner = SimpleNamespace(disable_logs=False, _command_term=lambda: term)
+    StartRunner._flag_turn_log(runner, 7)           # first update: start line only (not a multiple of 50)
+    StartRunner._flag_turn_log(runner, 8)           # nothing
+    term._turn_sum, term._turn_cnt = 3.0, 12.0
+    StartRunner._flag_turn_log(runner, 50)
+    out = capsys.readouterr().out.splitlines()
+    assert out == ["EX42_FLAG_TURN_FIRST where=start rad=0.5",
+                   "EX42_FLAG_TURN_FIRST it=50 rad=0.5 flag_turn_fraction=0.2500 steps=12"]
+    stage.flag_turn_first_rad = None
+    term._turn_sum, term._turn_cnt = 0.0, 1.0
+    runner2 = SimpleNamespace(disable_logs=False, _command_term=lambda: term)
+    StartRunner._flag_turn_log(runner2, 1)
+    assert capsys.readouterr().out.strip() == "EX42_FLAG_TURN_FIRST where=start rad=off"

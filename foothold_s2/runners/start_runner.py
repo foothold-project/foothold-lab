@@ -532,6 +532,23 @@ class StartRunner(OnPolicyRunner):
             it, float(getattr(stage, "low_side_fraction", 0.0)), float(stage.low_forward_fraction),
             "off" if not hold else "%g-%g" % (hold[0], hold[1])), flush=True)
 
+    def _flag_turn_log(self, it: int) -> None:
+        """Record only: `EX42_FLAG_TURN_FIRST where=start rad=<value|off>` once at the first update, then every 50 updates `flag_turn_fraction`
+        (share of this rank's flag-env steps since the last line that were on the turn-in-place branch). Always printed, so `off` is visible too."""
+        summary = getattr(self._command_term(), "flag_turn_summary", None)
+        if summary is None or self.disable_logs:
+            return
+        first = not getattr(self, "_flag_turn_logged", False)
+        if not first and it % 50 != 0:
+            return
+        rad, frac, count = summary()
+        shown = "off" if not rad else "%g" % rad
+        if first:
+            self._flag_turn_logged = True
+            print("EX42_FLAG_TURN_FIRST where=start rad=%s" % shown, flush=True)
+        if it % 50 == 0:
+            print("EX42_FLAG_TURN_FIRST it=%d rad=%s flag_turn_fraction=%.4f steps=%d" % (it, shown, frac, int(count)), flush=True)
+
     def _slow_hold_log(self, it: int) -> None:
         """v29-5, record only: per update the number of envs holding a slow command (long time_left) and their mean time_left."""
         summary = getattr(self._command_term(), "slow_hold_summary", None)
@@ -981,6 +998,7 @@ class StartRunner(OnPolicyRunner):
                 noise_row = self._small_noise_finish(it)
                 self._slow_hold_log(it)
                 self._command_cells_log(it)
+                self._flag_turn_log(it)
             if trace is not None:
                 trace.end_update()
             if contract_bad is not None and bool(contract_bad.any()):

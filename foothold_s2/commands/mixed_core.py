@@ -589,6 +589,8 @@ def flag_step(state, pos_xy, yaw, dt, params, turn_first_rad=None):
     back_cmd = torch.stack([back_unit[:, 0] * state.backoff_v, back_unit[:, 1] * state.backoff_v, zeros], dim=1)
     use_back = back & (state.passed >= 1) & (~finished)
     cmd = torch.where(use_back[:, None], back_cmd, cmd)
+    # record only: the walking envs that took the turn-in-place branch this step (the log's flag_turn_fraction)
+    state.turning = (moving & (angle.abs() > turn_first_rad) & ~use_back & ~finished) if turn_first_rad else torch.zeros_like(moving)
     state.backoff_left = torch.where(back, torch.clamp(state.backoff_left - dt, min=0.0), state.backoff_left)
 
     cmd = torch.where((finished | (state.n_flags <= 0))[:, None], torch.zeros_like(cmd), cmd)

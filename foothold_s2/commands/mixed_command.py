@@ -308,6 +308,16 @@ class MixedVelocityCommand(CommandTerm):
                 self.time_left[sel] = lo + (hi - lo) * u
                 self.slow_hold[sel] = True
 
+    _turn_sum = 0.0
+    _turn_cnt = 0.0
+
+    def flag_turn_summary(self):
+        """Record only: (the running row's flag_turn_first_rad or None, share of flag-env steps since the last call that were on the turn-in-place branch, steps counted)."""
+        frac = self._turn_sum / self._turn_cnt if self._turn_cnt else 0.0
+        count = self._turn_cnt
+        self._turn_sum = self._turn_cnt = 0.0
+        return self._flag_turn_first_rad(), frac, count
+
     def slow_hold_summary(self):
         """Record only: (number of envs now holding a slow command, their mean time_left in s)."""
         n = int(self.slow_hold.sum().item())
@@ -359,6 +369,8 @@ class MixedVelocityCommand(CommandTerm):
             st = self.flag_state
             spin_or_back = (st.v < self.params.flag_spin_threshold) | (st.backoff_left > 0)
             self.excluded_steps[self.flag_ids[sel]] += spin_or_back[sel].float()
+            self._turn_sum += float(st.turning[sel].sum().item())      # record only
+            self._turn_cnt += float(sel.sum().item())
 
         self.ep_steps += 1.0
 
