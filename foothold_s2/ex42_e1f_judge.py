@@ -100,8 +100,9 @@ def _flag_window(value: dict | None, plan: dict, case_id: str) -> dict:
             or not Path(trace_file).is_file() or _sha(Path(trace_file)) != trace_sha):
         raise ValueError("E1F flag trace SHA differs")
     valid_min = cells["valid_min"]
-    if type(valid_min) is not int or not 0 < valid_min <= n:
-        raise ValueError("E1F flag valid denominator floor invalid")
+    if type(valid_min) is not int or valid_min != n:
+        # Ledger de8a3b7f item 4 / CG:272: a window with fewer than 64 valid envs is HOLD, never a scaled PASS.
+        raise ValueError("E1F flag valid denominator floor must equal the whole window")
     valid = value["valid_count"]
     promotion = plan["evaluation"]["promotion"]
     success_min = math.ceil(promotion["success_min"] * valid / n)
@@ -122,7 +123,7 @@ def _aggregate(states) -> str:
 
 
 def judge_e1f(score: dict, baseline: dict, measured: dict, plan: dict,
-              *, previous: dict | None) -> dict:
+              *, previous: dict | None, previous_identity: dict | None = None) -> dict:
     """Two sequential 64-env windows, four judge cells, pinned five-repeat width."""
     cells = contract(plan)
     if plan["evaluation"]["promotion"]["windows"] != 2 or plan["evaluation"]["promotion"]["window_episodes"] != 64:
@@ -152,8 +153,42 @@ def judge_e1f(score: dict, baseline: dict, measured: dict, plan: dict,
     result.update(stage_id="E1F", judgement=overall,
                   reason="E1F flag two-window maintenance, flag cells and pinned five-repeat width",
                   stage_exit={"adapter": "flag_two_window", "judgement": overall, "windows": 2,
-                              "items": items})
+                              "items": items, "previous_identity": previous_identity})
     return result
+
+
+def _read_flag_folder(folder: Path, *, plan: dict, plan_sha256: str, checkpoint_sha256: str, seed: int) -> dict:
+    """Recount one window's flag cells from its raw files (the same reader the current window uses)."""
+    cells: dict = {}
+    marker = folder / "child_failures.json"
+    failed = {}
+    if marker.is_file():
+        failed = json.loads(marker.read_text(encoding="utf-8-sig")).get("failures") or {}
+    for count in ("flag_one", "flag_four"):
+        if count in failed:
+            continue
+        if (folder / count / "flag_cells.json").is_file():
+            cells.update(read_evidence(folder / count, plan=plan, plan_sha256=plan_sha256,
+                                       checkpoint_sha256=checkpoint_sha256, seed=seed, count=count))
+    return cells
+
+
+def previous_identity(prior: dict, *, evaluation: Path, plan: dict, plan_sha256: str, seed: int) -> dict:
+    """The immediately preceding window may help E1F exit only when it was measured under this evaluation plan
+    and seed and its flag cells recount from its own raw files for its own checkpoint (audit H1)."""
+    if (prior.get("maintenance_source_sha256") != plan_sha256
+            or (prior.get("conditions") or {}).get("eval_seed") != seed):
+        raise ValueError("E1F previous window evaluation plan or seed differs")
+    name = Path(prior.get("checkpoint", "")).stem
+    if re.fullmatch(r"model_\d+", name) is None or not isinstance(prior.get("checkpoint_sha256"), str):
+        raise ValueError("E1F previous window checkpoint identity invalid")
+    folder = Path(evaluation).parent / f"m{name.removeprefix('model_')}" / "flag_cells"
+    recounted = _read_flag_folder(folder, plan=plan, plan_sha256=plan_sha256,
+                                  checkpoint_sha256=prior["checkpoint_sha256"], seed=seed)
+    if recounted != (prior.get("flag_cells") or {}):
+        raise ValueError("E1F previous window flag cells differ from their raw evidence")
+    return {"plan_sha256": plan_sha256, "eval_seed": seed,
+            "checkpoint_sha256": prior["checkpoint_sha256"], "evaluation": str(folder)}
 
 
 class FlagTwoWindowJudge:
@@ -190,7 +225,11 @@ class FlagTwoWindowJudge:
                     subdir, plan=ctx.plan, plan_sha256=ctx.digest(ctx.plan_path),
                     checkpoint_sha256=ctx.checkpoint_sha,
                     seed=ctx.seed, count=count))
-        return judge_e1f(score, baseline, measured, ctx.plan, previous=previous_window(ctx))
+        prior = previous_window(ctx)
+        identity = (previous_identity(prior, evaluation=ctx.evaluation, plan=ctx.plan,
+                                      plan_sha256=ctx.digest(ctx.plan_path), seed=ctx.seed)
+                    if prior is not None else None)
+        return judge_e1f(score, baseline, measured, ctx.plan, previous=prior, previous_identity=identity)
 
     def verify(self, score, judgment, expected, plan=None):
         exit_row = score.get("stage_exit") or {}
@@ -209,12 +248,28 @@ class FlagTwoWindowJudge:
                 or any(item.get("judgement") not in ("PASS", "HOLD", "FAIL") for item in items.values())
                 or _aggregate(item["judgement"] for item in items.values()) != judgment):
             raise ValueError("EX-42 P1 E1F stage exit evidence differs")
+        identity = exit_row.get("previous_identity")
+        has_previous = any("evidence" in items[f"{case}_previous"] for case in cells["judge_cases"])
+        if has_previous and not isinstance(identity, dict):
+            raise ValueError("EX-42 P1 E1F previous window identity absent")
+        previous_cells = {}
+        if identity is not None:
+            if (not isinstance(identity, dict)
+                    or identity.get("plan_sha256") != score.get("maintenance_source_sha256")
+                    or identity.get("eval_seed") != (score.get("conditions") or {}).get("eval_seed")):
+                raise ValueError("EX-42 P1 E1F previous window plan or seed differs")
+            previous_cells = _read_flag_folder(Path(identity.get("evaluation", "")), plan=plan,
+                                               plan_sha256=identity["plan_sha256"],
+                                               checkpoint_sha256=identity.get("checkpoint_sha256", ""),
+                                               seed=identity["eval_seed"])
         for case_id in cells["judge_cases"]:
             for which in ("current", "previous"):
                 item = items[f"{case_id}_{which}"]
                 if item["judgement"] == "HOLD" and item.get("reason") in ("깃발 평가 열 없음", "직전 창 없음"):
                     continue
                 evidence = item.get("evidence") or {}
+                if which == "previous" and (previous_cells.get(case_id) or {}).get("raw_sha256") != evidence.get("sha256"):
+                    raise ValueError("EX-42 P1 E1F previous window cell is not from the checked previous window")
                 checked = _flag_window({"case_id": case_id, "envs": 64,
                                         "valid_count": item.get("valid_count"),
                                         "success_count": item.get("success_count"),

@@ -510,6 +510,26 @@ stages:
     required_boolean_paths:
     - critic_mirror
     required_stage_values: {}
+    # CG E.2 E2 one-axis row: the K boundary changes no continuous cap. The cap is the one E1 ended with and E1F
+    # inherited (5..9); it is measured from the E1F rank logs at materialize time, never an assumed 5.
+    inherited_stage_templates:
+    - stage_path: terrain.exposure_at_E2
+      approval_path: prerequisites.predecessor_exit.continuous_level_cap
+      allowed_values: [5, 6, 7, 8, 9]
+      template:
+        default:
+          exposure: 0.0
+          level_cap: 0
+        positive:
+        - family: A
+          kinds_of: continuous
+          exposure: 1.0
+          level_cap: null
+        - family: A
+          kind: stepping_stones_low
+          share: 0.05
+          level_cap: 0
+      value_path: positive.0.level_cap
   name: one_easy_new_terrain_kind
   minimum_updates: 250
   maximum_updates: 1500
@@ -538,7 +558,8 @@ stages:
   kind_choice: start_stones_l0
   hold_policy: hold_exposure_continue_training
   terrain:
-    # planner 14:5x 표 (CG:258~262 D163); 연속 상한 5 와 새 종류 L0 5 % 는 가정, E1F 끝 상한 증거로 바꿀 것
+    # planner 14:5x 표 (CG:258~262 D163); 새 종류 L0 5 % 는 가정. 연속 상한은 E1F 끝 상한 증거로 materialize 가 채운다
+    # (authorization_contract.inherited_stage_templates); null 인 채로는 기동하지 않는다
     exposure_at_E2:
       default:
         exposure: 0.0
@@ -547,7 +568,7 @@ stages:
       - family: A
         kinds_of: continuous
         exposure: 1.0
-        level_cap: 5
+        level_cap: null
       - family: A
         kind: stepping_stones_low
         share: 0.05
@@ -2907,7 +2928,7 @@ evaluation:
     stop_speed_mps: 0.05  # E1 D44 stop convention, assumption for E1F
     seconds: 12.0
     flag_speed_mps: 1.0
-    valid_min: 48
+    valid_min: 64  # ledger de8a3b7f item 4 / CG:272: valid < 64 is HOLD
     repeat_seeds: [42, 42, 43, 44, 45]
     calibration: {path: null, sha256: null}
     judge_cases: [flag_one_eval_gt, flag_one_eval_pred, flag_four_eval_gt, flag_four_eval_pred]
@@ -2930,7 +2951,7 @@ evaluation:
     forward_seconds: 12.0
     completion_settle_s: 0.5
     flag_count: flag_four
-    valid_min_each: 48
+    valid_min_each: 64  # ledger de8a3b7f item 4 / CG:272: valid < 64 is HOLD
     weak_subcell_warning_fraction_of_success_floor: 0.5
     judge_modes: [eval_gt, eval_pred]
     record_modes: [probe_prop_only]

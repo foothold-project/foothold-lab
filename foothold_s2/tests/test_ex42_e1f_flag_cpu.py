@@ -186,8 +186,13 @@ def test_flag_child_real_parser_accepts_parent_argv_before_mesh_preflight(tmp_pa
 def _judge(monkeypatch, plan, current, *, previous=None):
     monkeypatch.setattr("foothold_s2.ex42_e1f_judge.judge_maintenance",
                         lambda score, baseline, measured: {**score, "judgement": "PASS"})
-    return judge_e1f({"flag_cells": current}, {}, {}, plan,
-                     previous={"flag_cells": previous} if previous is not None else None)
+    identity = None
+    if previous:     # the previous window's folder, as FlagTwoWindowJudge.judge records it after its own recount
+        identity = {"plan_sha256": PLAN_SHA, "eval_seed": 42, "checkpoint_sha256": CHECKPOINT_SHA,
+                    "evaluation": str(Path(next(iter(previous.values()))["raw_file"]).parent.parent)}
+    return judge_e1f({"flag_cells": current, "maintenance_source_sha256": PLAN_SHA, "conditions": {"eval_seed": 42}},
+                     {}, {}, plan, previous={"flag_cells": previous} if previous is not None else None,
+                     previous_identity=identity)
 
 
 def test_flag_trace_requires_order_stop_and_survival():
@@ -239,26 +244,26 @@ def test_fail_overrides_hold_and_threshold_scales(tmp_path, monkeypatch):
     row = current["flag_one_eval_gt"]
     raw = tmp_path / "known_override.json"
     payload = json.loads(Path(row["raw_file"]).read_text(encoding="utf-8"))
-    payload["valid_count"] = 48
-    payload["success_count"] = 38
-    payload["survival_count"] = 45
+    payload["valid_count"] = 64
+    payload["success_count"] = 51
+    payload["survival_count"] = 60
     raw.write_text(json.dumps(payload), encoding="utf-8")
     altered = copy.deepcopy(current)
-    altered["flag_one_eval_gt"].update(valid_count=48, success_count=38,
-                                         survival_count=45, raw_file=str(raw), raw_sha256=_sha(raw))
+    altered["flag_one_eval_gt"].update(valid_count=64, success_count=51,
+                                         survival_count=60, raw_file=str(raw), raw_sha256=_sha(raw))
     result = _judge(monkeypatch, plan, altered, previous=current)
     assert result["judgement"] == "FAIL"
     from foothold_s2.ex42_e1f_judge import _flag_window
     check = _flag_window(altered["flag_one_eval_gt"], plan, "flag_one_eval_gt")
-    assert (check["success_min"], check["survival_min"], check["judgement"]) == (39, 45, "FAIL")
-    payload["valid_count"] = 47
-    payload["success_count"] = 47
-    payload["survival_count"] = 47
-    raw.write_text(json.dumps(payload), encoding="utf-8")
-    altered["flag_one_eval_gt"].update(valid_count=47, success_count=47,
-                                         survival_count=47, raw_sha256=_sha(raw))
-    held = _flag_window(altered["flag_one_eval_gt"], plan, "flag_one_eval_gt")
-    assert held["judgement"] == "HOLD" and held["reason"] == "깃발 유효 env 하한 미달"
+    assert (check["success_min"], check["survival_min"], check["judgement"]) == (52, 60, "FAIL")
+    # Ledger de8a3b7f item 4: fewer than 64 valid is HOLD even when every count clears its scaled floor.
+    for valid in (63, 48, 47):
+        payload.update(valid_count=valid, success_count=valid, survival_count=valid)
+        raw.write_text(json.dumps(payload), encoding="utf-8")
+        altered["flag_one_eval_gt"].update(valid_count=valid, success_count=valid,
+                                             survival_count=valid, raw_sha256=_sha(raw))
+        held = _flag_window(altered["flag_one_eval_gt"], plan, "flag_one_eval_gt")
+        assert held["judgement"] == "HOLD" and held["reason"] == "깃발 유효 env 하한 미달"
 
 
 def test_missing_calibration_and_plan_roles_hold_or_reject(tmp_path, monkeypatch):
@@ -354,9 +359,9 @@ def test_fail_precedes_calibration_hold_and_ceil_threshold(tmp_path, monkeypatch
     plan, _cal, current, _ = _full(tmp_path)
     plan["evaluation"]["flag_cells"]["calibration"] = {"path": None, "sha256": None}
     boundary = _rewrite_cell(tmp_path, current, "flag_one_eval_gt",
-                             valid_count=49, success_count=39, survival_count=46)
+                             valid_count=64, success_count=51, survival_count=60)
     result = _judge(monkeypatch, plan, boundary, previous=current)
-    assert result["stage_exit"]["items"]["flag_one_eval_gt_current"]["success_min"] == 40
+    assert result["stage_exit"]["items"]["flag_one_eval_gt_current"]["success_min"] == 52
     assert result["stage_exit"]["items"]["flag_one_eval_gt_current"]["judgement"] == "FAIL"
     assert result["stage_exit"]["items"]["flag_calibration"]["judgement"] == "HOLD"
     assert result["judgement"] == "FAIL"
@@ -411,8 +416,14 @@ def test_failed_child_marker_overrides_a_partial_durable_receipt(tmp_path, monke
     monkeypatch.setattr("foothold_s2.ex42_e1f_judge.judge_maintenance",
                         lambda score, baseline, measured: {**score, "judgement": "PASS"})
     monkeypatch.setattr("foothold_s2.ex42_e0_judge.load_baseline", lambda *args: {})
-    monkeypatch.setattr("foothold_s2.ex42_stage_judges.previous_window",
-                        lambda ctx: {"flag_cells": current})
+    _write_round(tmp_path / "m250" / "flag_cells", plan, 42)
+    earlier = {}
+    for count in ("flag_one", "flag_four"):
+        earlier.update(read_evidence(tmp_path / "m250" / "flag_cells" / count, plan=plan, plan_sha256=PLAN_SHA,
+                                     checkpoint_sha256=CHECKPOINT_SHA, seed=42, count=count))
+    prior = {"flag_cells": earlier, "checkpoint": str(tmp_path / "model_250.pt"), "checkpoint_sha256": CHECKPOINT_SHA,
+             "maintenance_source_sha256": PLAN_SHA, "conditions": {"eval_seed": 42}}
+    monkeypatch.setattr("foothold_s2.ex42_stage_judges.previous_window", lambda ctx: prior)
     ctx = SimpleNamespace(root=ROOT, cfg={"baseline": {"sha256": "a" * 64}},
                           plan=plan, evaluation=tmp_path / "evaluation",
                           checkpoint_sha=CHECKPOINT_SHA, plan_path=tmp_path / "plan.yaml",

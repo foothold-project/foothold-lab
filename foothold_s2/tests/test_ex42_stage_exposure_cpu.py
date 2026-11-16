@@ -1,6 +1,8 @@
 """The plan's per-stage start exposure (planner 11/11 table): every stage block resolves on the real mesh and respects the sparse cap."""
 from __future__ import annotations
 
+import copy
+
 import numpy as np
 import pytest
 import yaml
@@ -27,7 +29,10 @@ def test_each_stage_start_block_resolves_on_the_real_mesh_with_its_planned_share
     rows = _rows()
     data = np.load(REAL / "terrain_mesh.npz", allow_pickle=False)
     table = cr.build_column_table([str(v) for v in data["column_family"]])
-    terrain = {**rows[stage]["terrain"], "kind_task": rows["E0"]["terrain"]["kind_task"]}
+    terrain = copy.deepcopy({**rows[stage]["terrain"], "kind_task": rows["E0"]["terrain"]["kind_task"]})
+    for rule in terrain[f"exposure_at_{stage}"]["positive"]:
+        if "level_cap" in rule and rule["level_cap"] is None:      # E2 inherits it from E1F at materialize (audit H4)
+            rule["level_cap"] = 5
     exposure, caps = ex.exposure_by_column(terrain, table, stage)
     eligible, counts = ex.env_counts(6144, exposure)
     assert int(sum(counts)) == 6144
