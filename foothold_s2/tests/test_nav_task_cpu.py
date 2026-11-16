@@ -79,3 +79,55 @@ def test_origin_xy_shifts_the_room_position(assets):
     st.pos_local = np.c_[st.pos_local, [0.34]]
     t.step(st)
     assert t.pgcl[0]._i >= 1                                    # origin 을 쓰면 국소 위치가 부목표 위
+
+
+def test_start_is_the_actual_body_position_and_the_path_begins_there(assets):
+    """G1: Isaac reset places the body; the task takes that place as the start and only draws the goal."""
+    t = nt.NavTask(assets, 2, np.random.default_rng(5))
+    g = assets[0].grade
+    body = gm.sample_free_points(g, np.random.default_rng(11), 2)
+    out = t.reset_envs([0, 1], start_xy=body)
+    assert np.allclose(out["start_xy"], body) and np.allclose(t.start, body)
+    for i in range(2):
+        assert np.linalg.norm(t.path[i][0] - body[i]) < 0.2            # the first point of the path is within 0.2 m of the real start
+        assert np.linalg.norm(t.goal[i] - body[i]) >= 2.0
+
+
+def test_a_kept_task_is_replanned_from_the_new_body_position(assets):
+    t = nt.NavTask(assets, 1, np.random.default_rng(6))
+    first = gm.sample_free_points(assets[0].grade, np.random.default_rng(1), 1)
+    t.reset_envs([0], start_xy=first)
+    goal = t.goal[0].copy()
+    second = gm.sample_free_points(assets[0].grade, np.random.default_rng(2), 1)
+    t.reset_envs([0], start_xy=second)                                   # no new-task request: the goal stays, the start and path follow the body
+    assert np.allclose(t.goal[0], goal) and np.allclose(t.start[0], second[0]) and np.linalg.norm(t.path[0][0] - second[0]) < 0.2
+
+
+def test_an_env_that_ended_inside_the_window_gets_no_subgoal_update_no_visit_and_only_the_collision_reward(assets):
+    """G2: its body state is the already-reset new episode: it must not count as arrival or as a visit."""
+    t = nt.NavTask(assets, 2, np.random.default_rng(1))
+    t.reset_envs([0, 1])
+    pos_room = np.c_[t.subgoal, np.full(2, 0.34)]                        # both stand on their subgoal
+    st = _state(pos_room - [10.0, 10.0, 0.0], collision=np.array([True, False]))
+    st.done = np.array([True, False])
+    idx_before = [p._i for p in t.pgcl]
+    out = t.step(st)
+    assert t.pgcl[0]._i == idx_before[0] and t.pgcl[1]._i > idx_before[1]      # the ended env did not advance, the other did
+    assert t.visit.counts[0].sum() == 0 and t.visit.counts[1].sum() == 1
+    assert out["terms"]["r1"][0] == 0 and out["terms"]["r6"][0] == 0
+    assert out["terms"]["r10"][0] < 0 and out["reward"][0] == out["terms"]["r10"][0]
+    assert bool(out["done"][0]) and not bool(out["task_reached"][0])
+
+
+def test_room_numbers_come_from_the_rows_isaac_gave(assets):
+    """G3 (task side): env -> room is the terrain row, not i mod R."""
+    t = nt.NavTask(assets, 4, np.random.default_rng(3), room_rows=[1, 1, 0, 1])
+    assert list(t.room_id) == [1, 1, 0, 1] and [t.voxels[r] for r in t.room_id][0] is assets[1].voxels
+    t.reset_envs(np.arange(4))
+    for i in range(4):
+        assert t.assets[t.room_id[i]] is assets[[1, 1, 0, 1][i]]
+    t.set_rooms_from_rows([0, 1, 0, 1])                                  # a changed row draws a new task for that env
+    assert t.path[0] is None and t.path[1] is not None
+    for bad in ([0, 1, 2, 0], [0, 1, -1, 0], [0, 1]):
+        with pytest.raises(ValueError):
+            t.set_rooms_from_rows(bad)

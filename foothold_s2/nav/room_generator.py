@@ -342,7 +342,7 @@ def mesh_sha256(vertices: np.ndarray, faces: np.ndarray) -> str:
     return hashlib.sha256(vertices.astype(np.float32).tobytes() + faces.astype(np.int32).tobytes()).hexdigest()
 
 
-START_MARGIN_M = 0.5                  # 시작점은 평지 셀이고 벽 · 장애물 · 구덩이 · 방 가장자리에서 이만큼 떨어진 곳 (planner F2)
+START_MARGIN_M = 0.8                  # 시작점은 평지 셀이고 벽 · 장애물 · 구덩이 · 방 가장자리에서 이만큼 떨어진 곳 (planner F2 · 11/16 23:40: 열 reset 의 xy 흔들기 ±0.5 m 네모의 모서리 0.71 m 도 평지 안에 들어오게 0.5 -> 0.8)
 
 
 def start_points(room: Room, k: int, seed: int = 0, margin: float = START_MARGIN_M) -> np.ndarray:

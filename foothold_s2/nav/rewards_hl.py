@@ -32,13 +32,15 @@ class VisitGrid:
     def reset(self, env_ids) -> None:
         self.counts[np.asarray(env_ids, dtype=int)] = 0
 
-    def visit(self, pos_xy) -> np.ndarray:
-        """한 걸음 방문을 세고 (N,) η (이번 걸음 포함, >= 1) 를 돌려준다. 방 밖은 가장자리 칸으로 센다."""
+    def visit(self, pos_xy, active=None) -> np.ndarray:
+        """한 걸음 방문을 세고 (N,) η (이번 걸음 포함, >= 1) 를 돌려준다. 방 밖은 가장자리 칸으로 센다.
+        active (N,) bool 이 False 인 env 는 세지 않고 η = 1 (이미 끝나 되돌려진 env: 새 에피소드의 첫 위치를 옛 격자에 세지 않는다)."""
         p = np.asarray(pos_xy, float)
         cell = np.clip(np.floor(p / self.res).astype(int), 0, self.n - 1)
         idx = np.arange(len(p))
-        self.counts[idx, cell[:, 0], cell[:, 1]] += 1
-        return self.counts[idx, cell[:, 0], cell[:, 1]].astype(np.float64)
+        on = np.ones(len(p), bool) if active is None else np.asarray(active, bool)
+        self.counts[idx[on], cell[on, 0], cell[on, 1]] += 1
+        return np.where(on, self.counts[idx, cell[:, 0], cell[:, 1]], 1).astype(np.float64)
 
 
 def sample_v_des(rng: np.random.Generator, n: int, low_high=V_DES_RANGE) -> np.ndarray:
