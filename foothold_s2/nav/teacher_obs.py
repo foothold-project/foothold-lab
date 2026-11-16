@@ -67,7 +67,7 @@ def subgoal_in_body(pos_xy: np.ndarray, yaw: np.ndarray, subgoal_xy: np.ndarray)
 
 
 def build(voxels: dict, room_id, state, c_prev, subgoal_xy, layout: TeacherObsLayout = TeacherObsLayout(),
-          map_cfg: tm.TeacherMapConfig = tm.TeacherMapConfig()) -> dict:
+          map_cfg: tm.TeacherMapConfig = tm.TeacherMapConfig(), origin_xy=None) -> dict:
     """(부분 dict, 평탄 (n, total) float32). voxels = {방 번호: RoomVoxels}. state = `NavState`. subgoal_xy = 방 틀 (n, 2)."""
     n = len(state.pos_local)
     room_id = np.asarray(room_id)
@@ -77,7 +77,7 @@ def build(voxels: dict, room_id, state, c_prev, subgoal_xy, layout: TeacherObsLa
         raise ValueError("room_id (n,), c_prev (n, 3), subgoal_xy (n, 2) and a state with proprio (n, 45) are required")
     if not set(np.unique(room_id)) <= set(voxels):
         raise ValueError(f"room_id names rooms without voxels: {sorted(set(np.unique(room_id)) - set(voxels))}")
-    pos = to_room_frame(state.pos_local)
+    pos = to_room_frame(state.pos_local, origin_xy)
     yaw = yaw_from_quat_wxyz(state.quat_w)
     occ = np.empty((n, *layout.occ), bool)
     elev = np.empty((n, *layout.elev), np.float32)
