@@ -13,7 +13,17 @@ from dataclasses import dataclass
 import numpy as np
 
 from foothold_s2.nav import grade_map as gm
+from foothold_s2.nav import room_generator as rg
 from foothold_s2.nav import gvd_astar, hl_rewards_term, pgcl, rewards_hl, teacher_maps, teacher_obs
+
+
+def room_frame_origin_xy(env_origins_xy, rows, pitch_m: float = rg.ROOM_M + rg.ROOM_GAP_M) -> np.ndarray:
+    """여러 방 한 메시 (`room_generator.write_rooms`) 에서 env 원점 (메시 좌표 xy) -> 그 방 틀 (방 모서리 기준) 의 원점.
+    빼는 값은 env 원점이 아니라 그 env 의 방 줄의 x 이동량 (줄 x pitch) 이다: 원점 자체는 방 틀에서 시작점이어야 하고 (몸 국소 위치 + 이 값 = 방 틀 위치),
+    메시 좌표의 원점에서 줄 이동량만 걷어 낸다 (reviewer 03:35 주의 · runner 5baa59d4)."""
+    o = np.array(env_origins_xy, dtype=np.float64, copy=True).reshape(-1, 2)
+    o[:, 0] -= np.asarray(rows, dtype=np.float64).reshape(-1) * float(pitch_m)
+    return o
 
 
 @dataclass
@@ -47,7 +57,7 @@ class NavTask:
         self.voxels = {i: a.voxels for i, a in enumerate(assets)}
         self.origin_xy = origin_xy        # (n, 2) env 별 origins 열의 x y (방 틀). None = 방 가운데 (옛 꼴). 시작점 K 개 방은 이 값을 낸다
 
-    def set_rooms_from_rows(self, rows) -> None:
+    def set_rooms_from_rows(self, rows, env_origins_xy=None, pitch_m: float = rg.ROOM_M + rg.ROOM_GAP_M) -> None:
         """env 의 방 번호를 Isaac 이 준 줄 (`terrain.terrain_levels`, 줄 = 방) 에서 읽는다 (G3). 바뀐 env 는 새 과제를 뽑는다. 줄이 방 수 밖이면 거절."""
         rows = np.asarray(rows, dtype=int).reshape(-1)
         if rows.shape[0] != self.n or rows.min() < 0 or rows.max() >= len(self.assets):
@@ -56,6 +66,8 @@ class NavTask:
         self.room_id = rows.copy()
         for i in np.flatnonzero(changed):
             self.path[i] = None
+        if env_origins_xy is not None:      # 여러 방 한 메시: 몸 국소 위치 + origin_xy = 방 틀 위치 (줄 x 이동량을 걷어 낸 원점)
+            self.origin_xy = room_frame_origin_xy(env_origins_xy, rows, pitch_m)
 
     # ---- 과제
     def _plan(self, i: int, s, t):
@@ -118,6 +130,9 @@ class NavTask:
         done = np.asarray(getattr(state, "done", np.zeros(self.n, bool)), bool)
         # G2: 윈도 안에서 끝난 env 의 몸 상태는 이미 되돌려진 새 에피소드의 값이다. 그 틱은 PGCL · 방문 격자를 건드리지 않고
         # 보상은 충돌 (r10, 윈도 안에서 센 값) 만 남기고 나머지 항은 0 (planner 권고 (2)). 호출한 쪽이 곧바로 reset_envs 를 부른다.
+        # 알려진 두 가지 (reviewer 02:52 권고, 막지 않음): (1) 끝난 틱에는 r9 (명령 제한) 도 0 이고 넘어짐 · 시간 초과 자체에는 상위 보상 벌점 항이 없다:
+        # 「벌점 없는 에피소드 끝」 이 논문 (HiPAN) 의도인지는 논문 종료 벌점 유무를 대조해야 한다 (미확인, 첫 Kit 로그 뒤 결정).
+        # (2) 같은 윈도 안에서 마지막 부목표에 닿은 뒤 넘어지면 task_reached 에서 빠진다 (done 이 이긴다). done_step 이전 하위 스텝으로 판정하면 살릴 수 있다: 빈도를 보고 정한다.
         for i in range(self.n):
             if done[i]:
                 continue

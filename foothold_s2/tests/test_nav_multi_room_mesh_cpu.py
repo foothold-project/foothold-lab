@@ -44,3 +44,24 @@ def test_six_rooms_share_one_x_spaced_mesh_and_keep_their_starts_inside(tmp_path
     saved = json.loads((tmp_path / "room_manifest.json").read_text(encoding="utf-8"))
     assert saved["mesh_sha256"] == manifest["mesh_sha256"]
     assert saved["origins_shape"] == [6, 4, 3]
+
+
+def test_origin_xy_of_a_multi_room_mesh_drops_the_row_shift_and_keeps_the_start_point(tmp_path):
+    """reviewer 03:35: body -> room frame subtracts the room row's x shift (row x pitch), not the env origin."""
+    import numpy as np
+    from foothold_s2.nav import grade_map as gm, nav_task as nt, room_generator as rg
+    from pathlib import Path
+    table = gm.load_grade_table(Path(__file__).resolve().parents[1] / "nav" / "grade_table_draft.yaml")
+    rooms = [rg.make_room(s, rg.FIRST_ROUND_CFG, table)[1] for s in (3, 4)]
+    manifest = rg.write_rooms(rooms, tmp_path, n_starts=4)
+    origins = np.load(tmp_path / "terrain_mesh.npz")["origins"]                   # (rooms, K, 3), mesh frame
+    rows = np.array([1, 0, 1, 0]); cols = np.array([2, 3, 0, 1])
+    world_xy = origins[rows, cols, :2]
+    got = nt.room_frame_origin_xy(world_xy, rows, manifest["room_pitch_m"])
+    for k in range(4):
+        local = np.array(manifest["rooms"][rows[k]]["starts_local_xyz"])[cols[k], :2]
+        assert np.allclose(got[k], local, atol=1e-3)                              # the room-frame origin is the start point in room frame
+    assert not np.allclose(got[0], world_xy[0])                                   # row 1 was shifted by one pitch
+    task = nt.NavTask([nt.make_asset(r, table) for r in rooms], 4, np.random.default_rng(0))
+    task.set_rooms_from_rows(rows, env_origins_xy=world_xy, pitch_m=manifest["room_pitch_m"])
+    assert np.allclose(task.origin_xy, got) and list(task.room_id) == list(rows)

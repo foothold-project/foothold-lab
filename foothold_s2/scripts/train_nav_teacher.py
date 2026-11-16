@@ -34,7 +34,7 @@ def build_receipt(*, lower_checkpoint, lower_sha256, room_manifests, plan, vx_co
     rooms = []
     for path in room_manifests:
         manifest = json.loads(Path(path).read_text(encoding="utf-8"))
-        if manifest.get("format") != "hipan-room/1" or not isinstance(manifest.get("mesh_sha256"), str):
+        if manifest.get("format") not in ("hipan-room/1", "hipan-rooms/1") or not isinstance(manifest.get("mesh_sha256"), str):
             raise ValueError(f"{path} is not a hipan room manifest")
         rooms.append({"manifest": str(Path(path).resolve()), "manifest_sha256": _sha(path), "mesh_sha256": manifest["mesh_sha256"]})
     if not rooms:
