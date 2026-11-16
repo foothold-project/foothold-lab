@@ -463,6 +463,15 @@ def _prepare(*, plan, source_plan, approvals, target, parent_manifest, gate_rece
         flag_cells['calibration_sha256'] = flag_artifacts['flag_calibration']['sha256']
         flag_cells['flag_baseline'] = flag_artifacts['flag_baseline']
         artifacts.update(flag_artifacts)
+    else:
+        # The flag stage published these pins; the stages after it inherit them (the template carries none, and E3 and later
+        # entries read the calibration pin from the source plan).
+        carried = source.document['evaluation'].get('flag_cells') or {}
+        if (carried.get('calibration') or {}).get('path'):
+            flag_cells = document['evaluation']['flag_cells']
+            for key in ('calibration', 'calibration_sha256', 'flag_baseline'):
+                if key in carried:
+                    flag_cells[key] = deepcopy(carried[key])
     document['approval_file']='ex42-approvals.yaml'
     document['materialization']={'format':FORMAT,'target_stage':target,'transition_file':'transition.json'}
     approval_bytes=yaml.safe_dump(approvals_doc,sort_keys=False,allow_unicode=True).encode()

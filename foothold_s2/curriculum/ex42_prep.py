@@ -724,7 +724,9 @@ class EX42Plan:
         list names the first row by its stage-zero id, the document by "E0"). The last EX-42 stage has no following
         stage, so it goes on with the same stage; a J stage follows the document order."""
         ids = [row["id"] for row in self.document["stages"]]
-        order = [i for i in ids if i not in JUMP_STAGE_IDS] if stage_id not in JUMP_STAGE_IDS else ids
+        # A stage the table keeps disabled (the map-off branch M) is not a hand-off target: its approval cell enables it.
+        order = ([row["id"] for row in self.document["stages"] if row["id"] not in JUMP_STAGE_IDS and row.get("enabled") is not False]
+                 if stage_id not in JUMP_STAGE_IDS else ids)
         if stage_id not in order:
             return None
         return order[order.index(stage_id) + 1] if order.index(stage_id) + 1 < len(order) else None

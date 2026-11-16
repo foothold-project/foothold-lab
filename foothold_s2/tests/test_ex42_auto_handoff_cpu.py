@@ -291,6 +291,7 @@ def _template_with_limit(known, tmp_path, limit, count_from=None, plan_path=None
     2026-11-13 15:17, every stage from E0 on is counted)."""
     import shutil
     import yaml
+    import yaml
     plan_path = Path(plan_path or known['plan'])
     folder = tmp_path / f'budget-template-{limit}-{count_from}'
     shutil.copytree(plan_path.parent, folder)
@@ -338,6 +339,7 @@ def test_a_later_counted_stage_adds_to_what_its_materialization_recorded(known, 
     """The E1F exit at 500 with a template that counts from E1: what the E1F materialization recorded as used before
     E1F (its transition file, bound to the E1F plan by SHA) plus the 500 of E1F."""
     import shutil
+    import yaml
     source, _, manifest, gate, _ = e1f_exit
     before = json.loads((Path(source.path).parent / 'transition.json').read_text())['budget']['used']
     template = _template_with_limit(known, tmp_path, 20000, 'E1', plan_path=source.path)
@@ -359,3 +361,28 @@ def test_a_later_counted_stage_adds_to_what_its_materialization_recorded(known, 
     (moved / 'transition.json').unlink()
     with pytest.raises(ValueError, match='has no materialization transition'):
         handoff.measured_budget(template, moved / Path(source.path).name, manifest, gate)
+
+
+def test_e1f_pins_are_carried_into_the_next_stage_plan(e1f_exit,tmp_path):
+    """E2 and every later stage plan keeps the calibration and baseline pin the flag stage published (E3 evidence reads it)."""
+    source,approval,manifest,gate,bindings=e1f_exit
+    import shutil
+    import yaml
+    from foothold_s2.curriculum.ex42_prep import EX42Plan
+    # the real template carries no pin: only the source plan (the flag stage output) does
+    bare=tmp_path/'bare-template';shutil.copytree(source.path.parent,bare)
+    for q in bare.rglob('*'):
+        if q.is_file():q.chmod(0o644)
+    doc=yaml.safe_load((bare/source.path.name).read_text())
+    doc['evaluation']['flag_cells']['calibration']={'path':None,'sha256':None}
+    for key in ('calibration_sha256','flag_baseline'):doc['evaluation']['flag_cells'].pop(key,None)
+    (bare/source.path.name).write_text(yaml.safe_dump(doc,sort_keys=False,allow_unicode=True))
+    env={'EX42_MATERIALIZE_TEMPLATE_PLAN':str(bare/source.path.name),'EX42_MATERIALIZE_TEMPLATE_APPROVALS':str(approval),
+         'EX42_MATERIALIZE_EVIDENCE_DIR':str(tmp_path/'generated'),'EX42_MATERIALIZE_OUT_ROOT':str(tmp_path/'transitions'),
+         'EX42_MATERIALIZE_BINDINGS_FILE':str(bindings)}
+    decision=handoff.decide_next_stage(source.path,approval,'E1F',500,gate,manifest,materialize=handoff.materializer_from_env(env))
+    assert decision['action']=='launch',decision
+    got=EX42Plan.load(decision['plan']).document['evaluation']['flag_cells']
+    want=source.document['evaluation']['flag_cells']
+    assert got['calibration']==want['calibration'] and got['calibration']['path'] and got['calibration']['sha256']
+    assert got['calibration_sha256']==want['calibration_sha256'] and got['flag_baseline']==want['flag_baseline']
