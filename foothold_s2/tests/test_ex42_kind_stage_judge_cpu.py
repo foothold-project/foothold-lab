@@ -419,3 +419,24 @@ def test_the_approved_exit_gate_of_e3_to_e5_is_exactly_the_design_block_without_
             "learned_cells_min_grade": "assumption", "exchange_learning_watch": True, "maintenance_table": "pass"}
     for stage in ("e3", "e4", "e5"):
         assert doc[f"stage_{stage}_authorization"]["exit_gate"] == want       # the pass rule per kind lives in the plan only
+
+
+def test_an_approved_exit_gate_that_differs_from_the_plan_promotion_is_named_and_the_real_ones_agree():
+    import yaml
+    plan = _plan().document
+    doc = yaml.safe_load((pathlib.Path(__file__).resolve().parents[1] / "curriculum" / "ex42-approvals.yaml").read_text(encoding="utf-8"))
+    for stage in ("e3", "e4", "e5"):
+        gate = doc[f"stage_{stage}_authorization"]["exit_gate"]
+        assert ks.exit_gate_mismatch(plan, gate) == []
+        for key, other in (("success_min", 51), ("survival_min", 59), ("windows", 3)):
+            assert ks.exit_gate_mismatch(plan, {**gate, key: other}) == [key]
+        gate_without = {k: v for k, v in gate.items() if k != "windows"}
+        assert ks.exit_gate_mismatch(plan, gate_without) == ["windows"]       # an absent key is a difference, not a pass
+
+
+def test_a_differing_gate_turns_the_learned_cells_item_hold_and_the_exit_aggregate_with_it():
+    learned = {"role": "judge", "judgement": "PASS"}
+    assert ks.gate_checked(learned, []) is learned
+    held = ks.gate_checked(learned, ["windows"])
+    assert held["judgement"] == "HOLD" and held["exit_gate_mismatch"] == ["windows"] and learned["judgement"] == "PASS"
+    assert aggregate(i["judgement"] for i in (held, {"judgement": "PASS"})) == "HOLD"

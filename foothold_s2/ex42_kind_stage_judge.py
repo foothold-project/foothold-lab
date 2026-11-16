@@ -225,6 +225,17 @@ def ladder_outcomes(kinds: dict[str, int], now: dict, old: dict | None) -> dict:
     return out
 
 
+def exit_gate_mismatch(plan, exit_gate):
+    """Keys of the approved exit_gate that differ from the plan promotion the judge really uses (empty = same)."""
+    promotion = plan["evaluation"]["promotion"]
+    return sorted(key for key in ("success_min", "survival_min", "windows") if exit_gate.get(key) != promotion.get(key))
+
+
+def gate_checked(learned, mismatch):
+    """The learned_cells item, turned HOLD (naming the keys) when the approved gate differs from the plan promotion."""
+    return {**learned, "judgement": "HOLD", "exit_gate_mismatch": mismatch} if mismatch else learned
+
+
 class KindStageTwoWindowJudge(StageJudge):
     def __init__(self, stage_id: str):
         if stage_id not in STAGES:
@@ -267,6 +278,7 @@ class KindStageTwoWindowJudge(StageJudge):
         authorization = approvals[f"stage_{self.stage_id.lower()}_authorization"]
         if authorization.get("approved") is not True:
             raise ValueError("EX-42 named-kind learned_cells threshold authorization absent")
+        gate_mismatch = exit_gate_mismatch(ctx.plan, authorization["exit_gate"])
         learned = judge_two_boundaries(
             ctx.checkpoint, stage_id=self.stage_id, plan=ctx.plan, plan_sha256=current.get("execution_plan_sha256", ""),
             interval=ctx.plan["evaluation"]["interval_updates"], min_episodes=authorization["exit_gate"]["learned_cells_min"],
@@ -274,6 +286,7 @@ class KindStageTwoWindowJudge(StageJudge):
             named_kinds={tuple(kind.split("/", 1)): bool(old and kind in old and all(old[kind][m]["judgement"] == "PASS"
                                                                                   for m in ("eval_gt", "eval_pred")))
                          for kind in kinds})
+        learned = gate_checked(learned, gate_mismatch)
         items = {"maintenance_current": {"role": "judge", "judgement": current["judgement"]},
                  "maintenance_previous": {"role": "judge", "judgement": prior["judgement"] if prior else "HOLD"},
                  "learned_cells": learned, "exchange_watch": exchange,
