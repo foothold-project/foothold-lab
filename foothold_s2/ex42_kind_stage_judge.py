@@ -25,7 +25,7 @@ from foothold_s2.ex42_stage_judges import StageJudge, aggregate, previous_window
 
 MODES = ("eval_gt", "eval_pred", "probe_prop_only")
 STAGES = ("E3", "E4", "E5")
-RULES = ("travel", "center_max")
+RULES = ("travel", "center_max", "forward_x")
 
 
 def _sha(path: Path) -> str:
@@ -53,7 +53,7 @@ def _spec(plan: dict) -> dict:
             continue
         if (not re.fullmatch(r"[BCE]/\w+", key) or rule.get("rule") not in RULES or
                 type(rule.get("m")) not in (int, float) or not 0 < rule["m"] <= 12 or
-                rule.get("start_yaw_zero", True) is not True):
+                rule.get("start_yaw_zero", rule["rule"] != "forward_x") is not True):      # forward_x only makes sense with a +x start
             raise ValueError("EX-42 named-kind stage completion rule invalid")
     return spec
 
@@ -107,8 +107,12 @@ def finish_anchor(mesh: dict, *, family: str, kind: str, level: int, completion:
     if rule["rule"] == "center_max":
         return {"center_max_m": float(rule["m"]), "kind": kind, "level": level, "family": family,
                 "method": f"center_max_{rule['m']}m_from_the_cell_origin"}
-    anchor = {"travel_m": float(rule["m"]), "kind": kind, "level": level, "family": family,
-              "method": f"travel_{rule['m']}m_from_the_first_sample"}
+    if rule["rule"] == "forward_x":
+        anchor = {"forward_x_m": float(rule["m"]), "kind": kind, "level": level, "family": family,
+                  "method": f"forward_x_{rule['m']}m_from_the_first_sample"}
+    else:
+        anchor = {"travel_m": float(rule["m"]), "kind": kind, "level": level, "family": family,
+                  "method": f"travel_{rule['m']}m_from_the_first_sample"}
     if rule.get("start_yaw_zero"):                       # the kind's reset yaw is random: the cell must start facing +x (recorded, checked)
         anchor["start_yaw_zero"] = True
     return anchor

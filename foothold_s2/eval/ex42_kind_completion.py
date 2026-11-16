@@ -15,7 +15,8 @@ import numpy as np
 
 
 def score_last_support(trace: dict, *, finish_x_m: float | None = None, settle_s: float, envs: int = 64,
-                       travel_m: float | None = None, center_max_m: float | None = None) -> dict:
+                       travel_m: float | None = None, center_max_m: float | None = None,
+                       forward_x_m: float | None = None) -> dict:
     """Count first arrival followed by a continuous alive window.
 
     `root_x_local_m` is relative to the mesh origin, as recorded by the Kit
@@ -24,9 +25,9 @@ def score_last_support(trace: dict, *, finish_x_m: float | None = None, settle_s
     `travel_m` (instead of `finish_x_m`): arrival = the straight-line displacement from the env's first sample reaches
     `travel_m`, whatever the heading (kinds whose reset yaw is random have no map-forward direction).
     """
-    if sum(v is not None for v in (finish_x_m, travel_m, center_max_m)) != 1:
-        raise ValueError("EX-42 kind completion needs exactly one of finish_x_m, travel_m and center_max_m")
-    limit = next(v for v in (finish_x_m, travel_m, center_max_m) if v is not None)
+    if sum(v is not None for v in (finish_x_m, travel_m, center_max_m, forward_x_m)) != 1:
+        raise ValueError("EX-42 kind completion needs exactly one of finish_x_m, travel_m, center_max_m and forward_x_m")
+    limit = next(v for v in (finish_x_m, travel_m, center_max_m, forward_x_m) if v is not None)
     x = np.asarray(trace["root_x_local_m"], dtype=np.float64)
     alive = np.asarray(trace["alive"])
     dt = float(trace["dt"])
@@ -43,13 +44,16 @@ def score_last_support(trace: dict, *, finish_x_m: float | None = None, settle_s
     if following_steps >= len(x):
         raise ValueError("EX-42 kind trace is shorter than the support window")
     cases = []
-    if travel_m is not None or center_max_m is not None:
+    if travel_m is not None or center_max_m is not None or forward_x_m is not None:
         y = np.asarray(trace["root_y_local_m"], dtype=np.float64)
         if y.shape != x.shape or not np.isfinite(y).all():
             raise ValueError("EX-42 kind trace y shape or value differs")
         # travel: straight-line displacement from the first sample. center_max: max(|x|, |y|) of the position relative to
         # the cell origin (the pyramid-shaped kinds start at the tile center, so the ring distance is the axis maximum)
-        moved = np.hypot(x - x[0], y - y[0]) if travel_m is not None else np.maximum(np.abs(x), np.abs(y))
+        # forward_x: the x displacement from the first sample, for cells that start facing +x (start_yaw_zero): sideways or
+        # backward walking does not count, only getting past the obstacle along +x does
+        moved = (np.hypot(x - x[0], y - y[0]) if travel_m is not None else
+                 x - x[0] if forward_x_m is not None else np.maximum(np.abs(x), np.abs(y)))
     for env in range(envs):
         reached = np.flatnonzero(((x[:, env] >= finish_x_m) if finish_x_m is not None else (moved[:, env] >= limit)) & alive[:, env])
         first = int(reached[0]) if len(reached) else None
@@ -112,6 +116,13 @@ def finish_anchor_for_kind(mesh: dict, *, family: str, kind: str, level: int) ->
             "method": "three_vertical_rays_footprint_width_0.8m_final_contiguous_support"}
 
 
+def score_with_anchor(trace: dict, anchor: dict, *, settle_s: float, envs: int) -> dict:
+    """The one arrival rule the anchor names (finish_x_m, travel_m, center_max_m or forward_x_m) applied to the trace."""
+    return score_last_support(trace, finish_x_m=anchor.get("finish_x_m"), travel_m=anchor.get("travel_m"),
+                              center_max_m=anchor.get("center_max_m"), forward_x_m=anchor.get("forward_x_m"),
+                              settle_s=settle_s, envs=envs)
+
+
 def read_start_kind_cell(folder: Path, *, mesh: dict, checkpoint_sha256: str,
                          seed: int, family: str, kind: str, level: int,
                          mode: str, seconds: float, settle_s: float, envs: int = 64,
@@ -171,8 +182,7 @@ def read_start_kind_cell(folder: Path, *, mesh: dict, checkpoint_sha256: str,
         raise ValueError("EX-42 kind step arrays differ from pinned tile or duration")
     fixed_terrain.verify_kind_foot_arrays(a["foot_contact"], a["foot_pos_local"], a["alive"])
     anchor = anchor or finish_anchor_for_kind(mesh, family=family, kind=kind, level=level)
-    counted = score_last_support(a, finish_x_m=anchor.get("finish_x_m"), travel_m=anchor.get("travel_m"), center_max_m=anchor.get("center_max_m"),
-                                 settle_s=settle_s, envs=envs)
+    counted = score_with_anchor(a, anchor, settle_s=settle_s, envs=envs)
     return {"case_id": f"{family}/{kind}/L{level}/fwd1.0/{mode}",
             "role": "record_only" if mode == "probe_prop_only" else "judge",
             "completion": "last_support_0.5s", "completion_anchor": anchor, **counted,

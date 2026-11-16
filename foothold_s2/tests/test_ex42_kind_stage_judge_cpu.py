@@ -447,9 +447,10 @@ def test_climb_and_gap_of_b_are_x_based_cells_that_start_facing_plus_x_and_only_
     plan = _plan()
     completion = plan.document["evaluation"]["kind_stage_cells"]["completion"]
     assert {k: (v["rule"], v["m"], v.get("start_yaw_zero")) for k, v in completion.items() if k in ("B/climb_up", "B/climb_down", "B/gap")} == {
-        "B/climb_up": ("travel", 4.5, True), "B/climb_down": ("travel", 4.5, True), "B/gap": ("travel", 5.4, True)}
+        "B/climb_up": ("forward_x", 4.5, True), "B/climb_down": ("forward_x", 4.5, True), "B/gap": ("forward_x", 5.4, True)}
     assert [k for k, v in completion.items() if v.get("start_yaw_zero")] == ["B/climb_up", "B/climb_down", "B/gap"]
-    assert ks.finish_anchor({}, family="B", kind="gap", level=3, completion=completion)["start_yaw_zero"] is True
+    gap = ks.finish_anchor({}, family="B", kind="gap", level=3, completion=completion)
+    assert gap["start_yaw_zero"] is True and gap["forward_x_m"] == 5.4 and "travel_m" not in gap
     assert "start_yaw_zero" not in ks.finish_anchor({}, family="B", kind="rough", level=3, completion=completion)
     kinds = {"B/climb_up": 1, "B/gap": 1, "B/rough": 1, "C/flat": 0}
     commands = once.kind_stage_kit_commands("/x/model_500.pt", "/x/m500", "cuda:0", task="T", plan_path=plan.path, plan=plan.document,
@@ -485,3 +486,41 @@ def test_the_raw_reader_asks_the_cell_validator_for_the_yaw_record_only_when_the
             kc.read_start_kind_cell(tmp_path, mesh={"mesh_sha256": "m"}, checkpoint_sha256="c" * 64, seed=42, family="B",
                                     kind="gap", level=1, mode="eval_gt", seconds=12, settle_s=0.5, envs=32, anchor=anchor)
     assert asked == [True, False]
+
+
+def test_forward_x_counts_only_the_plus_x_displacement_so_walking_sideways_or_back_does_not_pass():
+    import numpy as np
+    from foothold_s2.eval.ex42_kind_completion import score_last_support
+    steps, envs, dt = 100, 4, 0.02
+    t = np.arange(steps)[:, None] * 0.08                             # 7.9 m in 100 steps (the 4.5 m line is reached with the settle window left)
+    x = 2.0 + t * np.array([1.0, 0.0, -1.0, 0.0])[None, :]           # +x, sideways (y), backward, standing
+    y = 6.0 + t * np.array([0.0, 1.0, 0.0, 0.0])[None, :]
+    trace = {"root_x_local_m": x, "root_y_local_m": y, "alive": np.ones((steps, envs), dtype=bool), "dt": dt}
+    got = score_last_support(trace, forward_x_m=4.5, settle_s=0.5, envs=envs)
+    assert [row["success"] for row in got["per_env"]] == [True, False, False, False]
+    assert score_last_support(trace, travel_m=4.5, settle_s=0.5, envs=envs)["success_count"] == 3     # the straight-line rule would pass three
+    with pytest.raises(ValueError, match="exactly one"):
+        score_last_support(trace, forward_x_m=1.0, travel_m=1.0, settle_s=0.5, envs=envs)
+
+
+def test_a_forward_x_rule_without_the_plus_x_start_mark_is_an_invalid_completion_rule():
+    import copy
+    doc = copy.deepcopy(_plan().document)
+    del doc["evaluation"]["kind_stage_cells"]["completion"]["B/gap"]["start_yaw_zero"]
+    with pytest.raises(ValueError, match="completion rule invalid"):
+        ks._spec(doc)
+
+
+def test_each_anchor_of_the_plan_reaches_its_own_arrival_rule_through_the_reader_helper():
+    import numpy as np
+    from foothold_s2.eval.ex42_kind_completion import score_with_anchor
+    steps, envs = 100, 2
+    t = np.arange(steps)[:, None] * 0.08
+    trace = {"root_x_local_m": 2.0 + 0 * t + np.zeros((1, envs)), "root_y_local_m": 6.0 + t * np.array([[1.0, 0.0]]),
+             "alive": np.ones((steps, envs), dtype=bool), "dt": 0.02}
+    trace["root_x_local_m"] = 2.0 + t * np.array([[0.0, 1.0]])         # env 0 walks along y, env 1 along +x
+    completion = _plan().document["evaluation"]["kind_stage_cells"]["completion"]
+    by = {kind: [r["success"] for r in score_with_anchor(trace, ks.finish_anchor({}, family="B", kind=kind, level=1, completion=completion),
+                                                        settle_s=0.5, envs=envs)["per_env"]] for kind in ("gap", "rough")}
+    assert by["gap"] == [False, True]             # forward_x: only the +x walker
+    assert by["rough"] == [True, True]            # travel: both walkers

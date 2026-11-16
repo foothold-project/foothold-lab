@@ -2943,9 +2943,9 @@ evaluation:
       B/obstacles: {rule: travel, m: 4.0}
       B/rough: {rule: travel, m: 4.0}
       B/boxes: {rule: travel, m: 4.0}
-      B/climb_up: {rule: travel, m: 4.5, start_yaw_zero: true}
-      B/climb_down: {rule: travel, m: 4.5, start_yaw_zero: true}
-      B/gap: {rule: travel, m: 5.4, start_yaw_zero: true}
+      B/climb_up: {rule: forward_x, m: 4.5, start_yaw_zero: true}
+      B/climb_down: {rule: forward_x, m: 4.5, start_yaw_zero: true}
+      B/gap: {rule: forward_x, m: 5.4, start_yaw_zero: true}
       C/gap: {rule: travel, m: 7.5}
       C/box: {rule: travel, m: 7.3}
       C/discrete_obstacles: {rule: travel, m: 7.0}
