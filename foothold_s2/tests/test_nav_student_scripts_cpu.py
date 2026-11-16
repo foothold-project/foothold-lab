@@ -87,3 +87,38 @@ def test_student_cli_resume_continues_in_the_same_out_dir(teacher_ckpt, tmp_path
     assert tns.main([*base, "--iterations", "2", "--resume", str(out / "student_2.pt")]) == 0 and (out / "student_4.pt").exists()
     with pytest.raises(SystemExit):
         tns.main([*base, "--iterations", "1", "--resume", str(out / "student_4.pt"), "--save-interval", "3"])
+
+
+def test_eval_counts_a_goal_reached_through_the_real_vec_env_that_resets_the_task():
+    """실제 TeacherVecEnv 는 도착한 env 의 과제를 같은 step 안에서 되돌린다 (PGCL all_reached -> False). 그래도 성공으로 세어야 한다."""
+    from foothold_s2.nav import hl_train
+    n = 2
+    state = SimpleNamespace(pos_local=np.zeros((n, 3)), done=np.zeros(n, bool), timed_out=np.zeros(n, bool), collision=np.zeros(n, bool))
+    pgcl = [SimpleNamespace(all_reached=False) for _ in range(n)]
+    grade = SimpleNamespace()
+
+    def task_step(s):
+        reached = np.array([bool(s.pos_local[0, 0] >= 3.0), False])
+        for i in range(n):
+            pgcl[i].all_reached = bool(reached[i])
+        return {"reward": np.ones(n), "task_reached": reached}
+
+    def reset_envs(ids, start_xy=None):
+        for i in ids:
+            pgcl[i].all_reached = False                               # PGCL.start_episode 와 같다
+    task = SimpleNamespace(n=n, origin_xy=np.zeros((n, 2)), goal=np.array([[3.0, 0.0]] * n), room_id=np.zeros(n, int), assets=[SimpleNamespace(grade=grade)],
+                           pgcl=pgcl, reset_envs=reset_envs, step=task_step, observation=lambda s: {"flat": np.zeros((n, D), np.float32)})
+
+    def nav_step(a):
+        state.pos_local = state.pos_local + np.array([[1.0, 0, 0], [0, 0, 0]])
+        return state
+    env = hl_train.TeacherVecEnv(SimpleNamespace(n=n, step=nav_step, reset=lambda: state), task)
+    o = env.reset()
+    import foothold_s2.nav.nav_score as ns
+    orig = ns.shortest_length
+    ns.shortest_length = lambda g, s, t: 3.0
+    try:
+        r = eval_nav.evaluate(env, lambda o: torch.zeros(n, 3), o, max_ticks=6)
+    finally:
+        ns.shortest_length = orig
+    assert r["sr"] == 0.5 and r["spl"] == pytest.approx(0.5)

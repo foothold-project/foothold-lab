@@ -90,3 +90,10 @@ def test_student_env_builds_the_observation_from_the_teacher_vector_and_goal():
     assert o["prop"].shape == (n, 47) and o["x_m"].shape == (n, 6) and o["done"].tolist() == [False, True]
     assert torch.allclose(o["prop"][:, 45:], torch.tensor([[1.0, 0.0], [0.0, 2.0]]))   # 방 가운데 (10, 10) 에서 본 목표의 몸 틀 위치
     assert float(o["depth"][0, 0, 0, 0]) == pytest.approx(0.3)
+
+
+def test_preprocess_depth_accepts_the_ray_caster_channel_last_shape():
+    import torch
+    from foothold_s2.nav import hl_student as hs
+    out = hs.preprocess_depth(torch.full((2, hs.DEPTH_H, hs.DEPTH_W, 1), 2.0), max_m=4.0)
+    assert tuple(out.shape) == (2, 1, hs.DEPTH_H, hs.DEPTH_W) and float(out[0, 0, 0, 0]) == 0.5

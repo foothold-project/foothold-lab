@@ -65,12 +65,14 @@ def depth_camera_cfg(num_envs: int = NUM_ENVS, mesh_prim_paths=("/World/ground",
 
 
 def preprocess_depth(depth, max_m: float):
-    """(n, H, W) 또는 (n, 1, H, W) -> (n, 1, H, W) 0..1 (inf · NaN 은 먼 쪽 1)."""
+    """(n, H, W) · (n, 1, H, W) · (n, H, W, 1) -> (n, 1, H, W) 0..1 (inf · NaN 은 먼 쪽 1)."""
     import torch
 
     d = torch.as_tensor(depth, dtype=torch.float32)
     if d.dim() == 3:
         d = d.unsqueeze(1)
+    elif d.dim() == 4 and d.shape[-1] == 1:                  # Isaac Lab RayCasterCamera distance_to_image_plane 은 (n, H, W, 1)
+        d = d.squeeze(-1).unsqueeze(1)
     if tuple(d.shape[-2:]) != (DEPTH_H, DEPTH_W):
         raise ValueError(f"depth must be {DEPTH_H}x{DEPTH_W}, got {tuple(d.shape[-2:])}")
     return torch.nan_to_num(d, nan=max_m, posinf=max_m, neginf=0.0).clamp(0, max_m) / max_m

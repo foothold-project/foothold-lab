@@ -30,7 +30,8 @@ def evaluate(env, act, o, *, max_ticks: int = 600) -> dict:
         o = o[0] if isinstance(o, tuple) else o
         p, st = pos(), env.state
         done = np.asarray(st.done, bool)
-        reached = np.array([q.all_reached for q in task.pgcl])
+        # TeacherVecEnv.step 은 도착한 env 의 PGCL 을 바로 새 과제로 되돌리므로 all_reached 는 늘 False 다 (reviewer 05:05). env 가 기록한 도착 배열을 먼저 쓴다.
+        reached = np.asarray(env.task_reached, bool) if hasattr(env, "task_reached") else np.array([q.all_reached for q in task.pgcl])
         for i in np.flatnonzero(~finished):
             if not done[i]:                                  # 끝난 틱의 위치는 새 에피소드 값이라 궤적에 넣지 않는다
                 traj[i].append(p[i])

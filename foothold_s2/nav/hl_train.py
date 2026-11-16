@@ -44,6 +44,7 @@ class TeacherVecEnv:
         state = self.state = self.nav.step(action.detach().cpu().numpy())
         out = self.task.step(state)
         done = np.asarray(state.done, bool)
+        self.task_reached = np.asarray(out["task_reached"], bool).copy()      # reset_envs 가 PGCL 을 되돌리기 전 값 (평가가 읽음)
         ids = np.flatnonzero(done | out["task_reached"])
         # 끝난 env: Isaac 이 이미 새 에피소드로 되돌렸으므로 지금 몸 위치가 새 시작 (G1). 과제를 끝낸 env 는 PGCL 이 새 과제를 요청한다.
         if len(ids):
