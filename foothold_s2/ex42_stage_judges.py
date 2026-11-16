@@ -192,6 +192,18 @@ def _stored_mae_definition(cells, plan_window_s):
     return next(iter(seen)) if len(seen) == 1 else (plan_window_s, None)
 
 
+def _int_seed_keys(value):
+    """Copy of the evidence with the keys of every repeat_seed_judgments dict as ints: the judge builds them as ints (42, 7, 13),
+    a score read back from JSON has them as the strings "42", "7", "13". Values and every other key are untouched."""
+    if isinstance(value, dict):
+        return {key: ({(int(k) if isinstance(k, str) and k.isdigit() else k): _int_seed_keys(v) for k, v in item.items()}
+                      if key == "repeat_seed_judgments" and isinstance(item, dict) else _int_seed_keys(item))
+                for key, item in value.items()}
+    if isinstance(value, list):
+        return [_int_seed_keys(item) for item in value]
+    return value
+
+
 def _check_prior_raw(prior, plan):
     """The prior window's saved cells must equal its raw recount, counted with the MAE definition the saved cells carry."""
     from pathlib import Path
@@ -289,7 +301,7 @@ class _E1V2(_E1):
                                    checkpoint=checkpoint, evaluation=evaluation,
                                    seed=score["conditions"]["eval_seed"])
         if (recalculated["judgement"] != judgment or
-                canonical_evidence(recalculated["e1_exit_v2"]) != canonical_evidence(score.get("e1_exit_v2")) or
+                _int_seed_keys(canonical_evidence(recalculated["e1_exit_v2"])) != _int_seed_keys(canonical_evidence(score.get("e1_exit_v2"))) or
                 canonical_evidence(recalculated["e1_exit"]) != canonical_evidence(score.get("e1_exit"))):
             raise ValueError("EX-42 P1 E1 v2 two-window judgment differs")
         return {"e1_exit": score["e1_exit"], "e1_exit_v2": score["e1_exit_v2"]}

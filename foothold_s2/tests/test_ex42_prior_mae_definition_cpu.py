@@ -75,3 +75,48 @@ def test_real_m1750_step_cells_recount_by_their_own_definition_and_not_by_the_pl
     prior_window = ex42_e1_v2.measure_cells(Path(prior["e1_v2_evaluation"]), prior["checkpoint_sha256"], prior["conditions"]["eval_seed"],
                                             mae_window_s=0.5)
     assert ex42_e1_v2.canonical_evidence(prior_window) != ex42_e1_v2.canonical_evidence(prior["e1_v2_cells"])   # the old check's failure
+
+
+# ---- repeat_seed_judgments keys: ints from the judge, strings after a JSON round trip (lead 2026-11-16 18:01) ----
+from foothold_s2.ex42_stage_judges import _int_seed_keys
+
+
+def _exit(keys, last="PASS"):
+    return {"current": {"items": {"yaw/eval_gt/fwd1.0": {"repeat_seed_judgments": dict(zip(keys, ("PASS", "PASS", last)))}}}}
+
+
+def test_string_and_int_seed_keys_are_the_same_evidence():
+    assert _int_seed_keys(_exit((42, 7, 13))) == _int_seed_keys(_exit(("42", "7", "13"))) == _exit((42, 7, 13))
+    assert _int_seed_keys(json.loads(json.dumps(_exit((42, 7, 13))))) == _exit((42, 7, 13))
+
+
+def test_a_really_different_seed_value_still_differs():
+    assert _int_seed_keys(_exit((42, 7, 13), "PASS")) != _int_seed_keys(_exit(("42", "7", "13"), "FAIL"))
+
+
+def test_only_the_seed_dict_keys_are_touched():
+    other = {"x": {"7": 1}, "repeat_seed_judgments": {"a": 2}}
+    assert _int_seed_keys(other) == other                    # other digit keys and non-digit seed keys stay as they are
+
+
+OLD = Path("/home/jay/data/foothold/s2_lab/ex42_main_20261115_135412/main/EX-42-B-E1-v29c_20261115_135412")
+
+
+@pytest.mark.skipif(not (OLD / "eval/scores/m2000/ex42_score.json").is_file(), reason="old OUT absent")
+def test_real_m2000_p1_is_built_from_the_saved_json_and_a_changed_value_is_refused(tmp_path):
+    """The saved m2000 score is read from JSON as is (string seed keys, step prior window); only the repaired code builds its p1."""
+    import shutil
+    from foothold_s2.curriculum.ex42_prep import EX42Plan
+    from foothold_s2.ex42_eval_once import p1_score_from_measure
+    scores = OLD / "eval/scores"
+    plan = EX42Plan.load(json.loads((scores / "m2250/p1_score.json").read_text())["evaluation_plan"]["path"])
+    approvals = Path(plan.path).parent / "ex42-approvals.yaml"
+    saved = json.loads((scores / "m2000/ex42_score.json").read_text())
+    shutil.copyfile(scores / "m2000/ex42_score.json", tmp_path / "ex42_score.json")
+    p1 = p1_score_from_measure(saved, checkpoint=OLD / "model_2000.pt", iteration=2000, plan_path=plan.path, approvals_path=approvals,
+                               stage_id="E1", output=tmp_path, evaluation_plan_path=plan.path)
+    assert p1["judgment"] == saved["judgement"] == "FAIL" and p1["e1_exit_v2"] == saved["e1_exit_v2"]
+    saved["e1_exit_v2"]["current"]["items"]["low/L5/eval_gt/side-0.2"]["success"] = 52          # a real value changed
+    with pytest.raises(ValueError, match="two-window judgment differs"):
+        p1_score_from_measure(saved, checkpoint=OLD / "model_2000.pt", iteration=2000, plan_path=plan.path, approvals_path=approvals,
+                              stage_id="E1", output=tmp_path, evaluation_plan_path=plan.path)
