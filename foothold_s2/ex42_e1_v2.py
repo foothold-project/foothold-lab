@@ -605,8 +605,34 @@ def canonical_evidence(value):
     return value
 
 
-def _verified_cells(score: dict, evaluation: Path, seed: int, mae_window_s=None) -> dict:
-    actual = measure_cells(evaluation, score["checkpoint_sha256"], seed, mae_window_s=mae_window_s)
+def stored_mae_definition(cells, plan_window_s):
+    """(judged window, record window) the PRIOR window's saved cells were counted with, so its raw recount uses the same MAE definition.
+
+    The prior boundary was judged under its own definition (per-step MAE, or a window): the saved cells say which (mae_basis,
+    mae_window_s per cell). Cells that carry no basis are the per-step definition. Only when every MAE cell agrees is the saved
+    definition used; any disagreement keeps the current plan's window, so the recount differs and the prior stays refused."""
+    seen = set()
+
+    def walk(node):
+        if isinstance(node, dict):
+            if "mae_mps" in node:
+                basis = node.get("mae_basis")
+                seen.add((None, None) if basis is None else
+                         (node.get("mae_window_s"), None) if basis == "window" else (None, node.get("mae_window_s")))
+            else:
+                for child in node.values():
+                    walk(child)
+    walk(cells)
+    return next(iter(seen)) if len(seen) == 1 else (plan_window_s, None)
+
+
+def _verified_cells(score: dict, evaluation: Path, seed: int, mae_window_s=None, *, saved_definition: bool = False) -> dict:
+    """Recount the raw files and compare with the score's cells. saved_definition: count with the MAE definition the saved cells
+    carry (a window judged under an older definition is checked by that definition); otherwise with mae_window_s."""
+    record_window_s = None
+    if saved_definition:
+        mae_window_s, record_window_s = stored_mae_definition(score.get("e1_v2_cells"), mae_window_s)
+    actual = measure_cells(evaluation, score["checkpoint_sha256"], seed, mae_window_s=mae_window_s, record_window_s=record_window_s)
     if ("e1_v2_cells" in score
             and canonical_evidence(actual) != canonical_evidence(score["e1_v2_cells"])):
         raise ValueError("E1 v2 cached cells differ from source identity or raw values")
@@ -656,7 +682,7 @@ def _judge_e1_v2(score: dict, baseline: dict, measured: dict, plan: dict,
                                                 mae_window_s=plan_mae_window_s(plan))
     previous_cells = previous.get("e1_v2_cells", {}) if previous is not None else {}
     if previous_cells:
-        _verified_cells(previous, Path(previous["e1_v2_evaluation"]), seed, plan_mae_window_s(plan))
+        _verified_cells(previous, Path(previous["e1_v2_evaluation"]), seed, plan_mae_window_s(plan), saved_definition=True)
     expected_repeats = set(plan["evaluation"]["e1_exit_v2"]["repeat_seeds"][1:])
     # A graduation plan lists record_cells (L5 side +-0.4); apply_record_cells is a no-op for every other plan.
     current_v2 = apply_conditional_record(apply_record_cells(judge_cells(
