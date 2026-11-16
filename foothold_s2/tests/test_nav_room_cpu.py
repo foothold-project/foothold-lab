@@ -161,3 +161,29 @@ def test_benchmark_and_known_room_files_all_build():
 def test_patch_area_over_60_seeds_averages_about_30_percent():
     fr = [(rg.make_room(s, grade_table=TABLE)[1].patch_kind >= 0).mean() for s in range(60)]
     assert 0.28 <= float(np.mean(fr)) <= 0.34 and min(fr) >= 0.15
+
+
+def _patches(spec):
+    return [p for p in spec["primitives"] if p["type"] == "patch"]
+
+
+def test_first_round_config_leaves_out_every_sparse_patch_even_with_a_grade_table():
+    from dataclasses import replace
+
+    for seed in range(8):
+        spec, room = rg.make_room(seed, rg.FIRST_ROUND_CFG, TABLE)
+        assert not _patches(spec) and (room.patch_kind < 0).all()
+    # 설정 칸 한 줄로 되돌린다: 같은 시드에서 패치가 다시 나온다
+    back = replace(rg.FIRST_ROUND_CFG, sparse_patch_kinds=rg.PATCH_KINDS)
+    assert any(_patches(rg.generate_spec(s, back, TABLE)) for s in range(8))
+    assert back.sparse_patch_kinds == rg.RoomConfig().sparse_patch_kinds       # 기본값은 그대로 (옛 시험이 쓰는 값)
+
+
+def test_sparse_patch_kinds_limits_the_kinds_and_refuses_unknown_names():
+    from dataclasses import replace
+
+    cfg = replace(rg.RoomConfig(), sparse_patch_kinds=("gaps",))
+    kinds = {p["kind"] for s in range(12) for p in _patches(rg.generate_spec(s, cfg, TABLE))}
+    assert kinds == {"gaps"}
+    with pytest.raises(ValueError, match="unknown sparse patch kinds"):
+        rg.RoomConfig(sparse_patch_kinds=("stairs",))

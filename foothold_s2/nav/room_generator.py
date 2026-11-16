@@ -45,6 +45,16 @@ class RoomConfig:
     n_patches: int = 2                         # 8 x 8 m 둘 = 방 면적의 32 % (30 % 안팎, 가정)
     min_free_fraction: float = 0.35
     max_tries: int = 50
+    sparse_patch_kinds: tuple = PATCH_KINDS    # 듬성한 패치 (징검돌 · 외나무 · 틈) 로 쓸 종류. () = 뺌 (HiPAN 1 차 방: 팀장 11/16 · FIRST_ROUND_CFG)
+
+    def __post_init__(self):
+        bad = [k for k in self.sparse_patch_kinds if k not in PATCH_KINDS]
+        if bad:
+            raise ValueError(f"unknown sparse patch kinds {bad}; allowed {PATCH_KINDS}")
+
+
+# HiPAN 모드 2 의 1 차 학습 방: 하위 (E1F) 가 안 배운 듬성한 패치를 뺀다. 다시 넣으려면 `replace(FIRST_ROUND_CFG, sparse_patch_kinds=PATCH_KINDS)` 한 줄
+FIRST_ROUND_CFG = RoomConfig(sparse_patch_kinds=())
 
 
 # ---------------------------------------------------------------- WFC
@@ -112,7 +122,7 @@ def generate_spec(seed: int, cfg: RoomConfig | None = None, grade_table: dict | 
     tiles = wfc_tiles(rng, cfg.weights)
     prims: list = []
     taken = np.zeros((NT, NT), dtype=bool)
-    kinds = [k for k in PATCH_KINDS if grade_table and grade_table.get(k, {}).get("max_passed_level", -1) >= 0]
+    kinds = [k for k in cfg.sparse_patch_kinds if grade_table and grade_table.get(k, {}).get("max_passed_level", -1) >= 0]
     if kinds:
         for _ in range(cfg.n_patches):
             cands = [(r, c) for r in range(1, NT - PATCH_TILES) for c in range(0, NT - PATCH_TILES + 1)
