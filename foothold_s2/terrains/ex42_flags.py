@@ -35,6 +35,7 @@ class MeshFlagProvider:
 
         self.flags = torch.as_tensor(flags, dtype=torch.float32)
         self.columns = int(self.flags.shape[1])
+        self.__name__ = type(self).__name__       # Isaac Lab's dump_yaml (callable_to_string) names a callable config value by module:__name__; an instance has no __name__ and the stage died there before the first update
 
     def __call__(self, terrain, env_ids, count):
         import torch
