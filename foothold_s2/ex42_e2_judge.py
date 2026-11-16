@@ -34,7 +34,7 @@ def _spec(plan: dict) -> dict:
 
 def score_mode(forward: dict, flag: dict, *, valid_min_each: int,
                success_min: int, survival_min: int, weak_fraction: float) -> dict:
-    """Each 64-env subcell must have >=48 valid; score the combined denominator."""
+    """Judge each 64-env subcell; combined counts are evidence only."""
     values = (forward, flag)
     if (any(type(row.get("valid_count")) is not int or not 0 <= row["valid_count"] <= 64 or
             any(type(row.get(key)) is not int or not 0 <= row[key] <= row["valid_count"]
@@ -50,15 +50,28 @@ def score_mode(forward: dict, flag: dict, *, valid_min_each: int,
     survival = sum(row["survival_count"] for row in values)
     success_floor = math.ceil(success_min * valid / 64)
     survival_floor = math.ceil(survival_min * valid / 64)
-    state = ("HOLD" if any(row["valid_count"] < valid_min_each for row in values)
-             else "PASS" if success >= success_floor and survival >= survival_floor else "FAIL")
+    def subcell(row: dict) -> dict:
+        # Keep the current proportional rule for valid counts below 64 in one place.
+        floor_success = math.ceil(success_min * row["valid_count"] / 64)
+        floor_survival = math.ceil(survival_min * row["valid_count"] / 64)
+        verdict = ("HOLD" if row["valid_count"] < valid_min_each else
+                   "PASS" if row["success_count"] >= floor_success and
+                             row["survival_count"] >= floor_survival else "FAIL")
+        return {**row, "success_min": floor_success, "survival_min": floor_survival,
+                "judgement": verdict}
+
+    forward_scored, flag_scored = (subcell(row) for row in values)
+    state = ("HOLD" if "HOLD" in (forward_scored["judgement"], flag_scored["judgement"])
+             else "PASS" if forward_scored["judgement"] == flag_scored["judgement"] == "PASS"
+             else "FAIL")
+    # The old weak-subcell plan key remains pinned; this warning is record only.
     warnings = [name for name, row in zip(("forward", "flag_four"), values)
                 if row["success_count"] < math.ceil(success_min * row["valid_count"] * weak_fraction / 64)]
     return {"judgement": state, "valid_count": valid, "success_count": success,
             "survival_count": survival, "success_min": success_floor,
             "survival_min": survival_floor, "subcell_valid_min": valid_min_each,
             "weak_subcell_warnings": warnings,
-            "forward": forward, "flag_four": flag}
+            "forward": forward_scored, "flag_four": flag_scored}
 
 
 def read_bundle(folder: Path, *, plan: dict, plan_sha256: str, mesh: dict,
