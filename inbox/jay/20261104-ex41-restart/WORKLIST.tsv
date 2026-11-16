@@ -78,5 +78,11 @@ W76	lead 11/15	P2		lead	decisions.tsv 2026-11-15 14:14	open	/home/jay/mai/tmp �
 W77	팀장 11/16 11:3x	P0		lead · planner · reviewer	decisions.tsv 2026-11-16 12:11 ae52bf3c	open	E1 m2000 재출발 (v28u OUT · progress 0.3 · b 0.016) · 졸업 두 창 m2250' · m2500'		
 W78	팀장 11/16 11:4x	P0		sonnet · reviewer	decisions.tsv 2026-11-16 12:18 81a37cc6	open	E3~E5 졸업 판정 (e1f5 55e64c98 잠금 · climb/gap +x 채점 고침 중) · E1F 넘김 장치 새 OUT 맞춤		
 W79	lead 11/16	P0		runner · reviewer	decisions.tsv 2026-11-16 12:34 0a99317a	done	경계 무인 장치 v4 (새 OUT · pending 지킴 · 점수 먼저) 걸음 12:34		
-W80	팀장 11/16 14:1x	P2		runner	decisions.tsv 2026-11-16 bda845af	open	부드러운 actor 대칭: 회당 시간 · 지도/카메라 대칭 먼저 재고 조건 맞을 때만		
+W80	팀장 11/16 14:1x	P2		runner	decisions.tsv 2026-11-16 bda845af	dropped	부드러운 actor 대칭: 회당 시간 · 지도/카메라 대칭 먼저 재고 조건 맞을 때만 · 21:19 lead 권고 철회 (팀장 의심 · 비용 +27% 추정 · 계단 타일 E3 뒤 다시)		
 W81	lead 11/16 12:2x	P1		sonnet · planner	TABLE-EX42-SCHEDULE-E1-E5-1116.md	open	일정 줄이기 (묶어 열기 · 가벼운 평가 · 쉬운 종) 준비 사본 a9bbc0a9 · 팀장 일정 논의 (E1 결과 뒤) 대기		
+W82	팀장 11/16 18:01	P0		lead · sonnet	decisions.tsv 39382097	open	E1F 부모 m2000 (e1f8 dbff218f) 19:08 기동 · 750 회 · 23:45 끝 · 공식 m250·m500·m750 + 기록 평가 (e1f_after_train.sh) → 졸업 판정		
+W83	lead 11/16 19:1x	P0		sonnet · reviewer	decisions.tsv 39382097	done	단계 런처 NCCL_SHM_DISABLE (e1f13 d4931c70 · reviewer PASS · 잠금) · E2 래퍼에 실제 2 rank 첫 update 스모크 + 상태 곁 프로세스		
+W84	팀장 11/16 22:0x	P1	11/17 01:00	planner	decisions.tsv	open	HiPAN 설계 (모드 2 · 학습 진입점 · Runpod 595 깊이 렌더 시험 · 지형 필요 여부 · 일정)		
+W85	팀장 11/16 22:0x	P1	11/16 23:30	planner	decisions.tsv 3b3dd4f2	open	깃발 학습 확인 평가 (E1F 저장본 대 m2000) · 오른쪽 치우침 (vy -0.015) 경계 처방 후보 (전진 때 옆속도 벌)		
+W86	팀장 11/16 22:0x	P1		super-lx	RUNPOD-BACKUP-CHECK-1116.md	open	NAS Runpod 백업 실패 46 (링크 35 · 도중 변경 11) 고침 · 진짜 문제만 알림 · mai-watch GPU 판 EX-42 단계 · 누적 표시		
+W87	팀장 11/16 21:4x	P2		lead	decisions.tsv dea871ee	done	모드 1 AME-2 (석헌 · 목표 지점) 는 앱 foothold-app A* 그대로 · HiPAN 은 모드 2 만 · S3 읽기 REPORT-AME2-S3-1116.md		
