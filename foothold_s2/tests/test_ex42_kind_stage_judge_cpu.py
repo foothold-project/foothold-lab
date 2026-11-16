@@ -524,3 +524,47 @@ def test_each_anchor_of_the_plan_reaches_its_own_arrival_rule_through_the_reader
                                                         settle_s=0.5, envs=envs)["per_env"]] for kind in ("gap", "rough")}
     assert by["gap"] == [False, True]             # forward_x: only the +x walker
     assert by["rough"] == [True, True]            # travel: both walkers
+
+
+def _run_the_real_judge(tmp_path, monkeypatch, survival_min):
+    """judge() end to end on CPU: everything that reads Kit files or training receipts is stubbed to PASS, the approvals file is a
+    real file next to the plan with the given survival_min; returns (score the judge made, kwargs judge_two_boundaries got)."""
+    from types import SimpleNamespace
+    import yaml
+    from foothold_s2 import ex42_e0_judge, ex42_exchange_watch, ex42_learned_cells_evidence
+    plan, score, _ = _verify_fixture(tmp_path, monkeypatch, required=["A/stepping_stones_low", "C/flat"])
+    kinds = score["kind_stage"]["opened_kinds"]
+    kinds = {k: kinds[k] for k in ("A/stepping_stones_low", "C/flat")}
+    gate = {"success_min": 52, "survival_min": survival_min, "windows": 2, "learned_cells_min": 32}
+    (tmp_path / plan["approval_file"]).write_text(yaml.safe_dump({"stage_e3_authorization": {"approved": True, "exit_gate": gate}}))
+    seen = {}
+    monkeypatch.setattr(ex42_e0_judge, "load_baseline", lambda *a, **k: {})
+    monkeypatch.setattr(ex42_e0_judge, "judge", lambda *a, **k: {"judgement": "PASS", "execution_plan_sha256": PSHA})
+    monkeypatch.setattr(ks, "previous_window", lambda ctx: {"stage_id": "E3"})
+    monkeypatch.setattr(ks, "opened_kinds", lambda *a, **k: kinds)
+    monkeypatch.setattr(ks, "write_ladder_evidence", lambda *a, **k: None)
+    monkeypatch.setattr(ex42_exchange_watch, "compare", lambda *a, **k: {"role": "judge", "judgement": "PASS"})
+
+    def learned(*args, **kwargs):
+        seen.update(kwargs)
+        return {"role": "judge", "judgement": "PASS"}
+
+    monkeypatch.setattr(ex42_learned_cells_evidence, "judge_two_boundaries", learned)
+    run = tmp_path / "m500"
+    ctx = SimpleNamespace(plan=plan, plan_path=tmp_path / "plan.yaml", evaluation=run, checkpoint=tmp_path / "model_500.pt",
+                          checkpoint_sha="c" * 64, seed=42, digest=lambda _p: PSHA, root=tmp_path, cfg={"baseline": {"sha256": "z" * 64}})
+    got = ks.KindStageTwoWindowJudge("E3").judge(ctx, {"execution_plan_sha256": PSHA, "judgement": "PASS"})
+    return got, seen
+
+
+@need_mesh
+def test_the_real_judge_holds_on_an_approved_gate_that_differs_from_the_plan_and_passes_with_the_same_gate(tmp_path, monkeypatch):
+    for survival_min, want, mismatch in ((59, "HOLD", ["survival_min"]), (60, "PASS", None)):
+        folder = tmp_path / f"s{survival_min}"
+        folder.mkdir()
+        got, seen = _run_the_real_judge(folder, monkeypatch, survival_min)
+        learned = got["stage_exit"]["items"]["learned_cells"]
+        assert got["judgement"] == want and got["stage_exit"]["judgement"] == want
+        assert learned["judgement"] == want and learned.get("exit_gate_mismatch") == mismatch
+        assert seen["min_episodes"] == 32 and seen["stage_id"] == "E3"                     # the approved learned_cells_min still reaches the evidence judge
+        assert set(seen["named_kinds"]) == {("A", "stepping_stones_low"), ("C", "flat")}   # the named-kind wiring is covered by the same run
