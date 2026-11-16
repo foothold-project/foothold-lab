@@ -24,8 +24,11 @@ MAE_WINDOW_S = None
 # Graduation evaluation plan (team lead 2026-11-15 22:12): the same decisions travel inside the evaluation plan itself,
 # evaluation.e1_widened.graduation, so the plan sha pins them. No block = the plan judges exactly as before.
 GRADUATION_KEYS = {"mae_window_s", "near_R_0p1", "l3_fwd10_role", "fixed_fwd10_rule", "parent_evaluation_plan_sha256",
-                   "record_cells"}
+                   "record_cells", "conditional_record"}
 RECORD_CELL_RE = re.compile(r"low/L5/(eval_gt|eval_pred)/side[+-]0\.4")
+CONDITIONAL_CELL_RE = re.compile(r"low/L5/(eval_gt|eval_pred)/side[+-]0\.2")
+CONDITIONAL_KEYS = {"cells", "success_min", "R_min", "survival_min", "companion", "decision"}
+CONDITIONAL_COMPANION = "L0_same_map_same_command_PASS"
 
 
 def graduation(plan: dict) -> dict:
@@ -36,6 +39,18 @@ def graduation(plan: dict) -> dict:
 def plan_mae_window_s(plan: dict):
     """Window seconds the plan asks for (None = module MAE_WINDOW_S / legacy per-step MAE)."""
     return graduation(plan).get("mae_window_s")
+
+
+def _conditional_ok(block) -> bool:
+    num = lambda v: type(v) in (int, float) and math.isfinite(v)
+    return (isinstance(block, dict) and set(block) == CONDITIONAL_KEYS
+            and isinstance(block["cells"], list) and block["cells"] and len(set(block["cells"])) == len(block["cells"])
+            and all(isinstance(k, str) and CONDITIONAL_CELL_RE.fullmatch(k) for k in block["cells"])
+            and type(block["success_min"]) is int and 1 <= block["success_min"] <= 64
+            and type(block["survival_min"]) is int and 1 <= block["survival_min"] <= 64
+            and num(block["R_min"]) and 0 < block["R_min"] <= 1
+            and block["companion"] == CONDITIONAL_COMPANION
+            and isinstance(block["decision"], str) and re.fullmatch(r"[0-9a-f]{8}", block["decision"]) is not None)
 
 
 def check_graduation(block) -> dict:
@@ -51,6 +66,7 @@ def check_graduation(block) -> dict:
             or ("record_cells" in block and not (
                 isinstance(block["record_cells"], list) and len(set(block["record_cells"])) == len(block["record_cells"])
                 and all(isinstance(k, str) and RECORD_CELL_RE.fullmatch(k) for k in block["record_cells"])))
+            or ("conditional_record" in block and not _conditional_ok(block["conditional_record"]))
             or ("parent_evaluation_plan_sha256" in block and
                 re.fullmatch(r"[0-9a-f]{64}", str(block["parent_evaluation_plan_sha256"])) is None)):
         raise ValueError("E1 graduation block has an unapproved key or value")
@@ -70,6 +86,36 @@ def apply_record_cells(result: dict, plan: dict) -> dict:
         if row.get("role") == "record":
             continue
         items[key] = {"role": "record", "judgement_if_judged": row.get("judgement"),
+                      **{k: v for k, v in row.items() if k not in ("judgement", "near_threshold", "reason")}}
+    states = [r["judgement"] for r in items.values() if r.get("role") != "record"]
+    verdict = "FAIL" if "FAIL" in states else "HOLD" if "HOLD" in states or not states else "PASS"
+    return {**result, "judgement": verdict, "items": items}
+
+
+def apply_conditional_record(result: dict, plan: dict) -> dict:
+    """Graduation plan v3 only (decision ledger conditional_record.decision): when EVERY judged FAIL is one of
+    conditional_record.cells, each such cell stands on the floor (success, R, survival) and its companion cell (same map mode,
+    same command, level L0) is PASS, those FAIL cells become record cells (value kept, judgement_if_judged FAIL, not in the
+    verdict). Any single miss changes nothing. HOLD cells are not looked at. No key = no-op (same object back)."""
+    block = graduation(plan).get("conditional_record")
+    if not block:
+        return result
+    items = result["items"]
+    failed = [k for k, v in items.items() if v.get("role") != "record" and v.get("judgement") == "FAIL"]
+    if not failed or not set(failed) <= set(block["cells"]):
+        return result
+    for key in failed:
+        row = items[key]
+        companion = items.get(key.replace("/L5/", "/L0/", 1))
+        if (type(row.get("success")) not in (int, float) or row["success"] < block["success_min"]
+                or type(row.get("R")) not in (int, float) or row["R"] < block["R_min"]
+                or type(row.get("survival")) not in (int, float) or row["survival"] < block["survival_min"]
+                or companion is None or companion.get("role") == "record" or companion.get("judgement") != "PASS"):
+            return result
+    items = dict(items)
+    for key in failed:
+        row = items[key]
+        items[key] = {"role": "record", "judgement_if_judged": "FAIL", "conditional_record": block["decision"],
                       **{k: v for k, v in row.items() if k not in ("judgement", "near_threshold", "reason")}}
     states = [r["judgement"] for r in items.values() if r.get("role") != "record"]
     verdict = "FAIL" if "FAIL" in states else "HOLD" if "HOLD" in states or not states else "PASS"
@@ -591,9 +637,9 @@ def _judge_e1_v2(score: dict, baseline: dict, measured: dict, plan: dict,
         _verified_cells(previous, Path(previous["e1_v2_evaluation"]), seed, plan_mae_window_s(plan))
     expected_repeats = set(plan["evaluation"]["e1_exit_v2"]["repeat_seeds"][1:])
     # A graduation plan lists record_cells (L5 side +-0.4); apply_record_cells is a no-op for every other plan.
-    current_v2 = apply_record_cells(judge_cells(result["e1_v2_cells"], plan,
-                                                repeats=repeats if set(repeats) == expected_repeats else None,
-                                                previous_cells=previous_cells), plan)
+    current_v2 = apply_conditional_record(apply_record_cells(judge_cells(
+        result["e1_v2_cells"], plan, repeats=repeats if set(repeats) == expected_repeats else None,
+        previous_cells=previous_cells), plan), plan)
     if repeats and set(repeats) != expected_repeats:
         current_v2["repeat_evidence"] = {"judgement": "HOLD", "reason": "세 시드 자료 일부 결측"}
     # The prior P1 receipt has already judged its own seed 42/7/13 bundle.
@@ -602,6 +648,8 @@ def _judge_e1_v2(score: dict, baseline: dict, measured: dict, plan: dict,
     prior_v2 = ((previous.get("e1_exit_v2") or {}).get("current") if previous is not None else None)
     if not isinstance(prior_v2, dict) or prior_v2.get("judgement") not in ("PASS", "HOLD", "FAIL"):
         prior_v2 = {"judgement": "HOLD", "reason": "직전 창 v2 판정 없음"}
+    elif isinstance(prior_v2.get("items"), dict):
+        prior_v2 = apply_conditional_record(prior_v2, plan)      # a previous window stored before v3 is read under the same rule (no key = unchanged)
     match = re.fullmatch(r"model_(\d+)\.pt", Path(checkpoint).name)
     if match is None:
         raise ValueError("E1 v2 checkpoint iteration missing")
