@@ -63,6 +63,20 @@ def _signed(name: str, ranges: dict) -> Slot:
     return Slot(name, (vx[0], vy[0], wz[0]), (vx[1], vy[1], wz[1]))
 
 
+def slots_from_stage_row(path, stage_id: str = "E1F") -> tuple:
+    """단계 행 (`stages[id]`) 의 `commands.ranges` + `commands.shares` 에서 읽는다 (설계 HIPAN 모드 2 §4: 하위는 E1F 행의 범위로 학습했다).
+    행에 칸이 없으면 거절: stage_zero 값으로 조용히 되돌아가지 않는다."""
+    d = yaml.safe_load(Path(path).read_text(encoding="utf-8"))
+    row = next((r for r in d.get("stages", []) if r.get("id") == stage_id), None)
+    commands = (row or {}).get("commands")
+    if not isinstance(commands, dict) or "ranges" not in commands or not isinstance(commands.get("shares"), dict):
+        raise ValueError(f"stage {stage_id!r} has no commands.ranges / commands.shares in {path}")
+    out = tuple(_signed(name, commands["ranges"]) for name in commands["shares"])
+    if len(out) != 13:
+        raise ValueError(f"expected 13 command slots, got {len(out)}")
+    return out
+
+
 def slots_from_prep(path, section: str = "stage_zero") -> tuple:
     d = yaml.safe_load(Path(path).read_text(encoding="utf-8"))
     sec = d.get(section)

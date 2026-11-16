@@ -132,3 +132,21 @@ def test_bad_inputs_are_refused(slots):
         sp.step(np.array([[0.1, 0, 0]]), np.array([[0.0, 0.0, 0.0]]))
     with pytest.raises(ValueError):
         cs.slots_from_prep(PREP, "evaluation")
+
+
+def test_e1f_row_slots_use_the_widened_ranges_not_stage_zero(slots):
+    e1f = cs.slots_from_stage_row(PREP, "E1F")
+    assert tuple(s.name for s in e1f) == tuple(s.name for s in slots) and len(e1f) == 13
+    assert (_by(e1f, "forward").lo[0], _by(e1f, "forward").hi[0]) == (0.1, 1.5)
+    assert (_by(e1f, "reverse").lo[0], _by(e1f, "reverse").hi[0]) == (-1.3, -0.2)
+    assert (_by(e1f, "side_left").lo[1], _by(e1f, "side_left").hi[1]) == (0.1, 0.8)      # stage_zero: 0.2 ~ 0.6
+    assert (_by(e1f, "spin_right").lo[2], _by(e1f, "spin_right").hi[2]) == (-1.5, -0.15)
+    assert (_by(e1f, "walk_left").lo[0], _by(e1f, "walk_left").hi[0]) == (0.3, 1.2)      # stage_zero: 0.3 ~ 0.8
+    assert (_by(slots, "side_left").lo[1], _by(slots, "side_left").hi[1]) == (0.2, 0.6)  # stage_zero 는 그대로
+
+
+def test_stage_row_without_commands_is_refused(tmp_path):
+    with pytest.raises(ValueError, match="no commands.ranges"):
+        cs.slots_from_stage_row(PREP, "E0")
+    with pytest.raises(ValueError, match="no commands.ranges"):
+        cs.slots_from_stage_row(PREP, "NOPE")
