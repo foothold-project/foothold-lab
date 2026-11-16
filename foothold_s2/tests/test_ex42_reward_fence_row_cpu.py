@@ -198,3 +198,29 @@ def test_e2_inherits_the_started_values_inside_its_own_fence(known):
     assert got["values"]["slow_progress"] == 0.4 and got["values"]["slow_track_sigma"] == 0.35
     with pytest.raises(ValueError, match="leaves the approved limits"):          # without the row fence the file refuses the same values
         inherited_rewards(e1f_plan, "E1F", known["parent_manifest"], 100, LIMITS)
+
+
+AFTER_E1F = ["E2", "E3", "E4", "E5", "M", "E6a", "E6b", "J0", "J1", "J2", "J3", "J4"]
+
+
+def test_every_stage_after_e1f_carries_the_same_two_row_fences(plan):
+    """Each stage inherits the last reward values of the one before (E1F start 0.4 / 0.35 on): without its own fence the limits file refuses them
+    at the next materialization (reviewer 16:35). The real plan, every row, the same two pairs, nothing else widened."""
+    file_cells = adj.reward_limits()["cells"]
+    for stage_id in AFTER_E1F:
+        fenced = adj._plan_fenced(None, plan, stage_id)["cells"]
+        assert fenced["slow_progress"] == (0.0, 0.6) and fenced["slow_track_sigma"] == (0.35, 0.5), stage_id
+        assert {k: v for k, v in fenced.items() if k not in adj.PLAN_WIDENABLE} == \
+            {k: v for k, v in file_cells.items() if k not in adj.PLAN_WIDENABLE}, stage_id
+    assert adj._plan_fenced(None, plan, "E1") is None
+
+
+@pytest.mark.parametrize("target", AFTER_E1F)
+def test_the_started_values_carry_into_every_later_stage_by_the_real_plan(known, target):
+    """The values E1F ends with (0.4 / 0.35 untouched) are accepted when the later stage materializes, by that row's fence (E5 -> E6a, M, J ...)."""
+    from foothold_s2.ex42_stage_materialize import inherited_rewards
+    result = run(known)
+    source_plan = EX42Plan.load(result["plan"])
+    got, _ = inherited_rewards(source_plan, "E1F", known["parent_manifest"], 100, LIMITS,
+                               target_plan=EX42Plan.load(PLAN), target_stage=target)
+    assert got["values"]["slow_progress"] == 0.4 and got["values"]["slow_track_sigma"] == 0.35

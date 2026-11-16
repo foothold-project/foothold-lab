@@ -1272,6 +1272,7 @@ stages:
       # The 30 is an assumption (CG marks 2 / 30 / 32 as assumptions); the planner contract 16:2x records it.
       continuous_low_level_floor: {levels: [0, 2], fraction_of_continuous: 0.30, class: assumption, source: CG:380}
 - id: M
+  reward_fence: {slow_progress: [0.0, 0.6], slow_track_sigma: [0.35, 0.5]}      # inherited from E2 on (see E3); limits file unchanged
   # The command ranges and the turn overlay reinforced in E1 stay in force after it (decisions.tsv 2026-11-12 12:52,
   # 13:03). Without this cell a stage falls back to the stage-zero ranges (ex42_shares.stage_commands). `ranges` and
   # `turn_overlay` are E1's plan values. `shares` here are the 13 free slots for environments outside the continuous
@@ -1461,6 +1462,7 @@ stages:
       # The 30 is an assumption (CG marks 2 / 30 / 32 as assumptions); the planner contract 16:2x records it.
       continuous_low_level_floor: {levels: [0, 2], fraction_of_continuous: 0.30, class: assumption, source: CG:380}
 - id: E6a
+  reward_fence: {slow_progress: [0.0, 0.6], slow_track_sigma: [0.35, 0.5]}      # inherited from E2 on (see E3); limits file unchanged
   # The command ranges and the turn overlay reinforced in E1 stay in force after it (decisions.tsv 2026-11-12 12:52,
   # 13:03). Without this cell a stage falls back to the stage-zero ranges (ex42_shares.stage_commands). `ranges` and
   # `turn_overlay` are E1's plan values. `shares` here are the 13 free slots for environments outside the continuous
@@ -1656,6 +1658,7 @@ stages:
       # The 30 is an assumption (CG marks 2 / 30 / 32 as assumptions); the planner contract 16:2x records it.
       continuous_low_level_floor: {levels: [0, 2], fraction_of_continuous: 0.30, class: assumption, source: CG:380}
 - id: E6b
+  reward_fence: {slow_progress: [0.0, 0.6], slow_track_sigma: [0.35, 0.5]}      # inherited from E2 on (see E3); limits file unchanged
   # The command ranges and the turn overlay reinforced in E1 stay in force after it (decisions.tsv 2026-11-12 12:52,
   # 13:03). Without this cell a stage falls back to the stage-zero ranges (ex42_shares.stage_commands). `ranges` and
   # `turn_overlay` are E1's plan values. `shares` here are the 13 free slots for environments outside the continuous
@@ -1868,6 +1871,7 @@ stages:
 # approved: false, so no automatic launch exists for them. Dimensions are the ladder of s2.2 (assumption, to be re-cut from the
 # measured EX-42 pass sizes). Family F is a separate mesh bundle (analyst); the kind names here are the code's contract.
 - id: J0
+  reward_fence: {slow_progress: [0.0, 0.6], slow_track_sigma: [0.35, 0.5]}      # inherited from E2 on (see E3); limits file unchanged
   authorization_contract:
     validator: bounded
     source_stage_ids:
@@ -2088,6 +2092,7 @@ stages:
         opens_in: J4
     jump_share_cap: 0.2
 - id: J1
+  reward_fence: {slow_progress: [0.0, 0.6], slow_track_sigma: [0.35, 0.5]}      # inherited from E2 on (see E3); limits file unchanged
   authorization_contract:
     validator: bounded
     source_stage_ids:
@@ -2260,6 +2265,7 @@ stages:
         class: assumption
         source: CG:380
 - id: J2
+  reward_fence: {slow_progress: [0.0, 0.6], slow_track_sigma: [0.35, 0.5]}      # inherited from E2 on (see E3); limits file unchanged
   authorization_contract:
     validator: bounded
     source_stage_ids:
@@ -2446,6 +2452,7 @@ stages:
         kind: jump_down_low
         level_cap: 0
 - id: J3
+  reward_fence: {slow_progress: [0.0, 0.6], slow_track_sigma: [0.35, 0.5]}      # inherited from E2 on (see E3); limits file unchanged
   authorization_contract:
     validator: bounded
     source_stage_ids:
@@ -2631,6 +2638,7 @@ stages:
         class: assumption
         source: CG:380
 - id: J4
+  reward_fence: {slow_progress: [0.0, 0.6], slow_track_sigma: [0.35, 0.5]}      # inherited from E2 on (see E3); limits file unchanged
   authorization_contract:
     validator: bounded
     source_stage_ids:
