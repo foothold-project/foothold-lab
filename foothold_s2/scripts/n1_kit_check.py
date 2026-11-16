@@ -9,6 +9,7 @@ import argparse
 import hashlib
 import json
 import sys
+import traceback
 from pathlib import Path
 
 import numpy as np
@@ -85,11 +86,27 @@ def main(argv=None) -> int:
     from isaaclab.app import AppLauncher
 
     app = AppLauncher(headless=True, device=a.device).app
+    return guarded_run(a, app)
+
+
+def guarded_run(a, app, runner=None) -> int:
+    """Isaac 의 app.close() 는 프로세스를 바로 끝내 예외 Traceback 이 사라지고 종료 코드도 0 이다 (11/17 05:06 결과 파일 없이 rc 0).
+    그래서 닫기 전에 Traceback 을 stderr 와 `<out>/<map_mode>.FAILED.txt` 에 먼저 남긴다."""
+    rc = 0
     try:
-        print(run(a))
+        print((runner or run)(a), flush=True)
+    except BaseException:
+        text = traceback.format_exc()
+        print(text, file=sys.stderr, flush=True)
+        try:
+            Path(a.out).mkdir(parents=True, exist_ok=True)
+            (Path(a.out) / f"{a.map_mode}.FAILED.txt").write_text(text, encoding="utf-8")
+        except OSError:
+            pass
+        rc = 1
     finally:
         app.close()
-    return 0
+    return rc
 
 
 if __name__ == "__main__":

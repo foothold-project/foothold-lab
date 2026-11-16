@@ -27,3 +27,21 @@ def test_compare_refuses_runs_with_different_commands(tmp_path):
     _write(tmp_path / "eval_gt.npz", "s1", 1.0); _write(tmp_path / "eval_pred.npz", "s2", 1.0)
     with pytest.raises(ValueError, match="different command"):
         k.compare(tmp_path)
+
+
+def test_failed_run_leaves_traceback_before_the_app_closes(tmp_path, capsys):
+    import types
+    from foothold_s2.scripts import n1_kit_check as k
+
+    closed = []
+    app = types.SimpleNamespace(close=lambda: closed.append((tmp_path / "eval_gt.FAILED.txt").exists()))
+    a = types.SimpleNamespace(out=str(tmp_path), map_mode="eval_gt")
+
+    def boom(_a):
+        raise RuntimeError("build failed")
+
+    assert k.guarded_run(a, app, runner=boom) == 1
+    assert closed == [True]
+    assert "build failed" in (tmp_path / "eval_gt.FAILED.txt").read_text()
+    assert "build failed" in capsys.readouterr().err
+    assert k.guarded_run(a, app, runner=lambda _a: "ok") == 0
