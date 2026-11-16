@@ -157,14 +157,15 @@ def test_the_hold_log_line_says_where_the_range_came_from(capsys):
 
 # ---------- (2) the flag-env bias line ----------
 
-def _flag_fix(heading, vel_x, est_vx):
-    n = len(heading)
+def _flag_fix(is_flag, vel_x, est_vx, heading=None):
+    n = len(is_flag)
+    heading = [False] * n if heading is None else heading
     from foothold_s2.runners import start_runner as sr
     est = torch.zeros(n, 51)
     est[:, sr.VX_CORR_VX_COL] = torch.tensor(est_vx)
     vel = torch.zeros(n, 3)
     vel[:, 0] = torch.tensor(vel_x)
-    term = types.SimpleNamespace(heading=torch.tensor(heading))
+    term = types.SimpleNamespace(is_flag_env=torch.tensor(is_flag), heading=torch.tensor(heading))
     fix = types.SimpleNamespace(_command_term=lambda: term, disable_logs=False, pcfg={"est_mode": "learned"})
     return fix, est, vel
 
@@ -173,17 +174,18 @@ def test_flag_bias_known_answer_per_real_speed_band(capsys):
     from foothold_s2.runners import start_runner as sr
 
     #            env: 0     1     2     3     4     5    6 (not flag)
-    heading = [True, True, True, True, True, True, False]
+    is_flag = [True, True, True, True, True, True, False]
+    heading = [False, False, False, False, False, False, True]       # a flag env's heading is False; env 6 is a free heading env: it must not be counted
     vel_x = [0.05, 0.10, 0.17, 0.25, 0.40, -0.50, 0.10]          # env 2 sits between the 0.15 edge and 0.2: a moved edge changes its band
     est_vx = [0.07, 0.14, 0.18, 0.31, 0.45, -0.40, 0.90]
-    fix, est, vel = _flag_fix(heading, vel_x, est_vx)
+    fix, est, vel = _flag_fix(is_flag, vel_x, est_vx, heading)
     sr.StartRunner._vflag_collect(fix, est, vel)
     sr.StartRunner._vflag_finish(fix, 49)
     assert capsys.readouterr().out == ""                                           # only every 50 updates
     sr.StartRunner._vflag_collect(fix, est, vel)
     sr.StartRunner._vflag_finish(fix, 50)
     out = [ln for ln in capsys.readouterr().out.splitlines() if ln.startswith("EX42_PERCEPTION_V_BIAS_FLAG")]
-    # the speed env (6) is not counted; bands by |real vx|: 0~0.15 holds envs 0 and 1, 0.15~0.3 envs 2 and 3, 0.3~ envs 4 and 5
+    # env 6 (heading only, not a flag env) is not counted; bands by |real vx|: 0~0.15 holds envs 0 and 1, 0.15~0.3 envs 2 and 3, 0.3~ envs 4 and 5
     assert out == ["EX42_PERCEPTION_V_BIAS_FLAG it=50 band=0~0.15 n=2 mean=+0.03000",
                    "EX42_PERCEPTION_V_BIAS_FLAG it=50 band=0.15~0.3 n=2 mean=+0.03500",
                    "EX42_PERCEPTION_V_BIAS_FLAG it=50 band=0.3~ n=2 mean=+0.07500"]

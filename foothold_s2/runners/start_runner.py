@@ -1431,12 +1431,12 @@ class StartRunner(OnPolicyRunner):
         self._vxcorr_raw_acc = part if acc is None else acc + part
 
     def _vflag_collect(self, est: torch.Tensor, vel: torch.Tensor | None) -> None:
-        """Record only (EX42_PERCEPTION_V_BIAS_FLAG): est_vx before the correction minus the real vx, flag (heading) envs only, summed per band of
+        """Record only (EX42_PERCEPTION_V_BIAS_FLAG): est_vx before the correction minus the real vx, flag envs only (term.is_flag_env), summed per band of
         the real |vx| (0~0.15, 0.15~0.3, 0.3~). Reads tensors, writes nothing back: the training numbers do not see it. Not gated by the correction."""
         term = self._command_term()
         if vel is None or term is None or self.pcfg["est_mode"] != "learned":
             return
-        flag = term.heading.bool()
+        flag = term.is_flag_env.bool()           # a flag env's `heading` is always False (mixed_command: heading[flag] = False); the flag mask is is_flag_env
         speed = vel[:, 0].abs()
         bias = (est[:, VX_CORR_VX_COL] - vel[:, 0]).double()
         edges = V_FLAG_BANDS

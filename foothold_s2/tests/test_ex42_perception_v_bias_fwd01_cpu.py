@@ -32,7 +32,7 @@ def _term(r, heading=None, age=None, period=4.0):
     """a command term stand-in: heading flags, and time_left chosen so that (period - time_left) == age."""
     heading = torch.zeros(N, dtype=torch.bool) if heading is None else torch.as_tensor(heading, dtype=torch.bool)
     age = torch.full((N,), 3.0) if age is None else torch.as_tensor(age, dtype=torch.float32)
-    t = SimpleNamespace(heading=heading, time_left=period - age, cfg=SimpleNamespace(resampling_time_range=(period, period)))
+    t = SimpleNamespace(heading=heading, is_flag_env=torch.zeros_like(heading), time_left=period - age, cfg=SimpleNamespace(resampling_time_range=(period, period)))
     r._command_term = lambda: t
     return t
 
