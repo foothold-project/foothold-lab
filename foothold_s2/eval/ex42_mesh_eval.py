@@ -19,7 +19,7 @@ def validate_eval_cell(result, mesh, *, fixed_level=None):
 
     record = result.get("fixed_terrain") or {}
     n = result.get("envs")
-    if (n != envs or record.get("rows") != 10 or record.get("cols") != EVAL_COLS
+    if (n != 64 or record.get("rows") != 10 or record.get("cols") != EVAL_COLS
             or record.get("num_envs") != n or record.get("fixed_level") != fixed_level
             or mesh.get("eval_cols") != EVAL_COLS):
         raise ValueError("EX-42 calibration fixed evaluation cell is not A continuous 23 x 64 env")
