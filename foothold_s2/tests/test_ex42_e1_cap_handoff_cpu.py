@@ -35,29 +35,39 @@ def _p1(plan, cp_sha, measurement, *, maintenance="PASS", judgment="FAIL", curre
                                         {"low/L5/eval_gt/side-0.2": _cell(success=49)}}}}
 
 
-def _ledger(tmp_path, cp_sha, *, round_="m1750", sha8=None, decision=DECISION, tag=None):
-    repo = tmp_path / "ledger"
+def _ledger(tmp_path, cp_sha, *, round_="m1750", sha8=None, decision=DECISION, tag=None, path=None, published=True, name="ledger"):
+    repo = tmp_path / name
     repo.mkdir()
+    rel = path or cap.LEDGER_PATH
     line = (f"2026-11-16 16:40\tlead\t{tag or cap.LINE_TAG} E1 · {round_} · {sha8 or cp_sha[:8]} · 근거 원장 {decision} · "
             f"「{cap.APPROVAL_PHRASE}」 · 유지 PASS")
-    (repo / "decisions.tsv").write_text("first line\n" + line + "\nlast line\n", encoding="utf-8")
+    (repo / rel).parent.mkdir(parents=True, exist_ok=True)
+    (repo / rel).write_text("first line\n" + line + "\nlast line\n", encoding="utf-8")
     env = {"GIT_AUTHOR_NAME": "t", "GIT_AUTHOR_EMAIL": "t@t", "GIT_COMMITTER_NAME": "t", "GIT_COMMITTER_EMAIL": "t@t",
            "PATH": "/usr/bin:/bin", "HOME": str(tmp_path)}
-    for argv in (["init", "-q"], ["add", "decisions.tsv"], ["commit", "-q", "-m", "ledger"]):
+    for argv in (["init", "-q"], ["add", rel], ["commit", "-q", "-m", "ledger"]):
         subprocess.run(["git", "-C", str(repo), *argv], check=True, env=env, capture_output=True)
+    if published:                                  # the commit is on the published ledger branch (a remote ref of this copy)
+        subprocess.run(["git", "-C", str(repo), "update-ref", f"refs/remotes/{cap.LEDGER_REMOTE_REF}", "HEAD"], check=True, env=env, capture_output=True)
     commit = subprocess.run(["git", "-C", str(repo), "rev-parse", "HEAD"], check=True, capture_output=True, text=True).stdout.strip()
     return repo, commit, line
 
 
-def _setup(tmp_path, *, p1_kw=None, ledger_kw=None, decision=DECISION):
+def _setup(tmp_path, *, p1_kw=None, ledger_kw=None, decision=DECISION, p1_tamper=None):
     plan, run, gate, log, mesh, baseline, cp_sha = _fixture(tmp_path)
     measurement = run / "eval/m1750/measurement.json"
     _write(measurement, {"checkpoint_sha256": cp_sha, "judgement": "FAIL", "maintenance_source_sha256": plan.sha256})
-    p1_path = _write(run / "eval/m1750/p1_score.json", _p1(plan, cp_sha, measurement, **(p1_kw or {})))
+    body = _p1(plan, cp_sha, measurement, **(p1_kw or {}))
+    _write(measurement, {"checkpoint_sha256": cp_sha, "judgement": "FAIL", "maintenance_source_sha256": plan.sha256,
+                         "cell_judgments": body["cell_judgments"], "e1_exit": body["e1_exit"], "e1_exit_v2": body["e1_exit_v2"]})
+    body["measurement_sha256"] = _sha(measurement)
+    if p1_tamper is not None:                       # an edit of the boundary score AFTER the measurement was written
+        p1_tamper(body)
+    p1_path = _write(run / "eval/m1750/p1_score.json", body)
     repo, commit, line = _ledger(tmp_path, cp_sha, **(ledger_kw or {}))
     out = run / "eval/m1750/e1_cap_handoff.json"
-    cap.build_cap_handoff(p1_path, out, repo=repo, commit=commit, ledger_path="decisions.tsv", line=2, line_text=line,
-                          decision_id=decision)
+    cap.build_cap_handoff(p1_path, out, repo=repo, commit=commit, ledger_path=(ledger_kw or {}).get("path") or cap.LEDGER_PATH,
+                          line=2, line_text=line, decision_id=decision)
     return plan, run, out, log, mesh, baseline, cp_sha, repo, p1_path, gate
 
 
@@ -66,9 +76,29 @@ def _evidence(run, out, log, mesh, baseline):
                           training_log_path=log, evaluation_mesh_path=mesh, w09_baseline_path=baseline)
 
 
+def _fake_recount(measured, p1, policy_plan):
+    """Stand-in for the E1 judge's raw-file recount on the small synthetic fixtures: the measurement's exit evidence is the score's."""
+    extras = {k: measured.get(k) for k in ("e1_exit", "e1_exit_v2")}
+    if any(p1.get(k) != v for k, v in extras.items()):
+        raise ValueError("cap handoff boundary score differs from the exit evidence recounted from its measurement")
+
+
+def _tamper_maintenance(body):
+    """A hand-edited boundary score: the maintenance table made PASS while the measurement says HOLD."""
+    body["cell_judgments"]["eval_gt"]["fwd0.5"]["judgment"] = "PASS"
+    body["e1_exit"]["maintenance"]["current"] = "PASS"
+
+
+def _tamper_survival(body):
+    """A hand-edited boundary score: a missed cell's survival 59 made 60 (the floor) while the measurement says 59."""
+    body["e1_exit_v2"]["current"]["items"]["low/L0/eval_gt/fwd0.1"]["survival"] = 60
+
+
 @pytest.fixture(autouse=True)
-def _ledger_env(monkeypatch):
+def _ledger_env(monkeypatch, request):
     monkeypatch.delenv(cap.LEDGER_REPO_ENV, raising=False)
+    if "real_files" not in request.node.name:           # the real-file tests run the real recount
+        monkeypatch.setattr(cap, "_recount_exit", _fake_recount)
 
 
 def test_an_approved_cap_handoff_gives_evidence_that_says_cap_handoff_and_never_a_pass(tmp_path, monkeypatch):
@@ -118,6 +148,10 @@ def test_check_e1_gate_reads_the_receipt_and_names_its_kind(tmp_path, monkeypatc
     ("maintenance_hold", "maintenance"),
     ("survival_59", "survival floor"),
     ("nothing_missed", "survival floor|no missed"),
+    ("other_ledger_file", "registered decisions file"),
+    ("local_only_commit", "not on origin"),
+    ("p1_maintenance_edited", "cell judgments differ"),
+    ("p1_survival_edited", "recounted from its measurement"),
     ("line_not_in_ledger", "not in the ledger"),
     ("line_text_edited", "differs from its sha"),
     ("unmet_value_forged", "missed-cell record"),
@@ -128,7 +162,7 @@ def test_check_e1_gate_reads_the_receipt_and_names_its_kind(tmp_path, monkeypatc
     ("no_ledger_repo", "ledger repository"),
 ])
 def test_each_forgery_or_missing_condition_is_refused(tmp_path, monkeypatch, case, match):
-    kw, ledger_kw, decision = {}, {}, DECISION
+    kw, ledger_kw, decision, tamper = {}, {}, DECISION, None
     if case == "other_checkpoint_line":
         ledger_kw = {"sha8": "deadbeef"}
     elif case == "other_round_line":
@@ -143,10 +177,20 @@ def test_each_forgery_or_missing_condition_is_refused(tmp_path, monkeypatch, cas
         kw = {"current": {"low/L0/eval_gt/fwd0.1": _cell(survival=59)}}
     elif case == "nothing_missed":
         kw = {"current": {"low/L0/eval_gt/fwd0.1": _cell("PASS")}, "previous": {}}
+    elif case == "other_ledger_file":
+        ledger_kw = {"path": "other/decisions.tsv"}
+    elif case == "local_only_commit":
+        ledger_kw = {"published": False}
+    elif case == "p1_maintenance_edited":
+        kw = {"maintenance": "HOLD"}
+        tamper = _tamper_maintenance
+    elif case == "p1_survival_edited":
+        kw = {"current": {"low/L0/eval_gt/fwd0.1": _cell(survival=59)}}
+        tamper = _tamper_survival
     elif case == "p1_is_pass":
         kw = {"judgment": "PASS"}
     try:
-        plan, run, out, log, mesh, baseline, cp_sha, repo, p1_path, _g = _setup(tmp_path, p1_kw=kw, ledger_kw=ledger_kw, decision=DECISION)
+        plan, run, out, log, mesh, baseline, cp_sha, repo, p1_path, _g = _setup(tmp_path, p1_kw=kw, ledger_kw=ledger_kw, decision=DECISION, p1_tamper=tamper)
     except ValueError:
         return                                                       # the builder's own read-back may already refuse
     monkeypatch.setenv(cap.LEDGER_REPO_ENV, str(repo))
@@ -203,6 +247,7 @@ from foothold_s2.tests.test_ex42_materialize_cpu import dump, known, sha  # noqa
 
 
 def _known_to_cap(known, tmp_path, monkeypatch):
+    monkeypatch.setattr(cap, "_recount_exit", lambda *a: None)          # the known fixture's measurement is a legacy six-case file
     run_dir = known["gate_receipt"].parent
     p1 = json.loads(known["gate_receipt"].read_text())
     cp_sha = p1["checkpoint_sha256"]
@@ -214,7 +259,7 @@ def _known_to_cap(known, tmp_path, monkeypatch):
     dump(p1_path, p1)
     repo, commit, line = _ledger(tmp_path, cp_sha)
     receipt = run_dir / "e1_cap_handoff.json"
-    cap.build_cap_handoff(p1_path, receipt, repo=repo, commit=commit, ledger_path="decisions.tsv", line=2,
+    cap.build_cap_handoff(p1_path, receipt, repo=repo, commit=commit, ledger_path=cap.LEDGER_PATH, line=2,
                           line_text=line, decision_id=DECISION)
     monkeypatch.setenv(cap.LEDGER_REPO_ENV, str(repo))
     ev = json.loads(known["evidence"].read_text())
@@ -284,3 +329,41 @@ def test_the_real_ledger_line_859_passes_the_reader_checks_for_m2500_and_not_for
         cap._check_approval(approval, LEDGER, iteration=2500, checkpoint_sha256="deadbeef" + "0" * 56)
     with pytest.raises(ValueError, match="does not name"):
         cap._check_approval(approval, LEDGER, iteration=2250, checkpoint_sha256=M2500_SHA)
+
+
+@pytest.mark.skipif(not (REAL / "eval/scores/m2500/p1_score.json").is_file() or not LEDGER.exists(), reason="real m2500 files or ledger copy missing")
+def test_real_files_the_real_recount_accepts_the_real_boundary_and_refuses_an_edited_copy(tmp_path):
+    """Read only on the OUT and the ledger copy; the receipts are written into tmp. The real E1 judge recounts from the raw files."""
+    p1_src = REAL / "eval/scores/m2500/p1_score.json"
+    text = cap._ledger_lines(LEDGER, LEDGER_COMMIT, LEDGER_PATH)[858].decode("utf-8")
+    ups = (1750, 2000, 2250, 2500, 2750)
+    out = tmp_path / "ok.json"
+    cap.build_cap_handoff(p1_src, out, repo=LEDGER, commit=LEDGER_COMMIT, ledger_path=LEDGER_PATH, line=859, line_text=text,
+                          decision_id="de927fbf")
+    assert cap.read_cap_handoff(out, exit_updates=ups, repo=LEDGER)["checkpoint_iteration"] == 2500
+    edited = json.loads(p1_src.read_text())
+    edited["e1_exit_v2"]["current"]["items"]["low/L0/eval_gt/fwd0.1"]["success"] = 52         # one missed cell made look like a pass
+    edited_path = tmp_path / "p1_edited.json"
+    edited_path.write_text(json.dumps(edited), encoding="utf-8")
+    bad = tmp_path / "bad.json"
+    cap.build_cap_handoff(edited_path, bad, repo=LEDGER, commit=LEDGER_COMMIT, ledger_path=LEDGER_PATH, line=859, line_text=text,
+                          decision_id="de927fbf")
+    with pytest.raises(ValueError, match="recounted from its measurement|raw|differs"):
+        cap.read_cap_handoff(bad, exit_updates=ups, repo=LEDGER)
+
+
+def test_the_automatic_launch_proof_reads_the_receipt_itself_and_refuses_a_wrong_ledger_line(known, tmp_path, monkeypatch):
+    """Called directly (the transition replay stubbed away), the launch proof is the only reader: a wrong ledger refuses."""
+    from foothold_s2.curriculum.ex42_prep import EX42Plan
+    from foothold_s2 import ex42_stage_materialize as mat
+    from foothold_s2.ex42_auto_authorization import validate_automatic_stage_launch
+    receipt = _known_to_cap(known, tmp_path, monkeypatch)
+    result = mat.materialize(**known)
+    plan = EX42Plan.load(result["plan"])
+    monkeypatch.setattr(mat, "validate_materialized_transition",
+                        lambda *a, **k: {"source_plan_sha256": json.loads(receipt.read_text())["plan_sha256"], "source_stage_id": "E1"})
+    other, _commit, _line = _ledger(tmp_path, "0" * 64, name="other_ledger")        # a ledger that does not hold the approval line
+    monkeypatch.setenv(cap.LEDGER_REPO_ENV, str(other))
+    with pytest.raises(ValueError, match="not in the ledger|not on origin|does not name"):
+        validate_automatic_stage_launch(plan, result["approvals"], target_stage="E1F", parent_manifest_path=known["parent_manifest"],
+                                        gate_receipt_path=receipt, expected_gate_sha256=sha(receipt))

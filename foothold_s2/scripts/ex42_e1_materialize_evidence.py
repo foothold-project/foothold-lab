@@ -137,7 +137,7 @@ def build_evidence(*, source_plan_path: str | Path, parent_manifest_path: str | 
     cap_handoff = None
     if gate.get("state") == "cap_handoff":            # no graduation PASS: only the approved cap handoff receipt, read back in full
         from foothold_s2.ex42_e1_cap_handoff import read_cap_handoff
-        cap_handoff = read_cap_handoff(gate_path, exit_updates=stage_exit_updates(plan.document, "E1"))
+        cap_handoff = read_cap_handoff(gate_path, exit_updates=stage_exit_updates(plan.document, "E1"), policy_plan=evaluation_plan)
         if cap_handoff["plan_sha256"] != plan.sha256:
             raise ValueError("E1 cap handoff receipt is not for the source plan")
     elif (gate.get("state") != "complete" or gate.get("stage_id") != "E1"

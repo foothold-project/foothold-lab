@@ -347,8 +347,9 @@ def _prepare(*, plan, source_plan, approvals, target, parent_manifest, gate_rece
         from foothold_s2.ex42_e1_cap_handoff import read_cap_handoff
         if gate.get('stage_id') != 'E1' or (ev.get('predecessor_exit') or {}).get('mode') != 'cap_handoff':
             raise ValueError('cap handoff receipt needs an E1 gate and cap_handoff predecessor evidence')
-        read_cap_handoff(gate_path, exit_updates=stage_exit_updates(source.document, 'E1'))
-        score = _json(Path(gate['p1_score']['path']))
+        got = read_cap_handoff(gate_path, exit_updates=stage_exit_updates(source.document, 'E1'),
+                               policy_plan=EX42Plan.load(_checked_ref(ev['evaluation_plan'], ev_path.parent)) if ev.get('evaluation_plan') is not None else source)
+        score = _json(Path(got['p1_score_path']))
     if (ev.get('format') != EVIDENCE_FORMAT or ev.get('target_stage') != target
             or ev.get('source_plan_sha256') != source.sha256 or ev.get('gate_sha256') != digest(gate_path)
             or ev.get('checkpoint_sha256') != gate.get('checkpoint_sha256')

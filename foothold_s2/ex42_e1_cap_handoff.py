@@ -27,6 +27,8 @@ JUDGMENT = "CAP_HANDOFF"
 LINE_TAG = "[상한 넘김 승인 줄 · cap_handoff]"
 APPROVAL_PHRASE = "E1F 로 넘어가되 저속 칸은 E1F 에서 기록 평가로 계속"     # the team lead's decision 2, quoted in the approval line
 LEDGER_REPO_ENV = "EX42_LEDGER_REPO"
+LEDGER_PATH = "inbox/jay/20261104-ex41-restart/decisions.tsv"          # the ledger file is fixed here, the receipt cannot name another
+LEDGER_REMOTE_REF = "origin/feature/verify-v2-mvp-jay"               # the approval commit must already be on the published ledger branch
 _WINDOWS = ("current", "previous")
 
 
@@ -85,28 +87,11 @@ def survival_below_floor(failed: list[dict], *, floor: int = 60, of: int = 64) -
     return out
 
 
-def ledger_line(repo, commit: str, path: str, line: int) -> bytes:
-    """The bytes of line `line` (1-based, newline excluded) of `path` as committed at `commit`."""
-    if not isinstance(commit, str) or len(commit) != 40 or any(c not in "0123456789abcdef" for c in commit):
-        raise ValueError("ledger commit must be a full 40-hex sha")
-    if not isinstance(path, str) or not path or path.startswith("/") or ".." in Path(path).parts:
-        raise ValueError("ledger path must be relative inside the repository")
-    if type(line) is not int or line < 1:
-        raise ValueError("ledger line must be a positive integer")
-    shown = subprocess.run(["git", "-C", str(repo), "show", f"{commit}:{path}"], capture_output=True, check=False)
-    if shown.returncode != 0:
-        raise ValueError("ledger commit or path cannot be read")
-    lines = shown.stdout.split(b"\n")
-    if line > len(lines):
-        raise ValueError("ledger line is past the end of the file")
-    return lines[line - 1].rstrip(b"\r")
-
-
 def _ledger_lines(repo, commit: str, path: str) -> list[bytes]:
     if not isinstance(commit, str) or len(commit) != 40 or any(c not in "0123456789abcdef" for c in commit):
         raise ValueError("ledger commit must be a full 40-hex sha")
-    if not isinstance(path, str) or not path or path.startswith("/") or ".." in Path(path).parts:
-        raise ValueError("ledger path must be relative inside the repository")
+    if path != LEDGER_PATH:
+        raise ValueError("ledger path is not the registered decisions file")
     shown = subprocess.run(["git", "-C", str(repo), "show", f"{commit}:{path}"], capture_output=True, check=False)
     if shown.returncode != 0:
         raise ValueError("ledger commit or path cannot be read")
@@ -119,6 +104,12 @@ def _check_approval(approval, repo, *, iteration: int, checkpoint_sha256: str) -
     repo = repo or os.environ.get(LEDGER_REPO_ENV)
     if not repo:
         raise ValueError(f"cap handoff needs the ledger repository ({LEDGER_REPO_ENV} or the repo argument)")
+    if approval["path"] != LEDGER_PATH:
+        raise ValueError("ledger path is not the registered decisions file")
+    ancestor = subprocess.run(["git", "-C", str(repo), "merge-base", "--is-ancestor", approval["commit"], LEDGER_REMOTE_REF],
+                              capture_output=True, check=False)
+    if ancestor.returncode != 0:
+        raise ValueError(f"cap handoff ledger commit is not on {LEDGER_REMOTE_REF} (a local commit is not an approval)")
     text = approval["line_text"]
     if not isinstance(text, str) or hashlib.sha256(text.encode("utf-8")).hexdigest() != approval["line_sha256"]:
         raise ValueError("cap handoff ledger line text differs from its sha")
@@ -134,7 +125,30 @@ def _ref_path(ref: dict, base: Path) -> Path:
     return path if path.is_absolute() else base / path
 
 
-def read_cap_handoff(path, *, exit_updates: tuple[int, ...], repo=None) -> dict:
+def _recount_exit(measured: dict, p1: dict, policy_plan) -> None:
+    """The same recount validate_source_exit does for a PASS gate, minus the PASS requirement: the measurement's cell judgments
+    must be the score's, and the E1 judge recounts its exit evidence from the measurement (raw files) and must get the score's."""
+    from foothold_s2.curriculum.ex42_prep import EX42Plan
+    from foothold_s2.ex42_stage_judges import adapter_for
+    if policy_plan is None:                       # the plan the boundary was judged under, named by the score itself
+        ref = p1.get("evaluation_plan")
+        if not isinstance(ref, dict) or not ref.get("path"):
+            raise ValueError("cap handoff cannot find the evaluation plan the boundary was judged under")
+        policy_plan = EX42Plan.load(ref["path"])
+        if policy_plan.sha256 != ref.get("sha256"):
+            raise ValueError("cap handoff evaluation plan sha differs")
+    policy_sha = measured.get("maintenance_source_sha256")
+    if policy_sha is not None and policy_sha != policy_plan.sha256:
+        raise ValueError("cap handoff evaluation policy differs from the measured maintenance_source_sha256")
+    adapter = adapter_for(policy_plan.document, "E1")
+    if adapter is None:
+        raise ValueError("E1 judge is unavailable")
+    extras = adapter.verify(measured, p1["judgment"], "PASS", plan=policy_plan.document)
+    if not extras or any(p1.get(k) != v for k, v in extras.items()):
+        raise ValueError("cap handoff boundary score differs from the exit evidence recounted from its measurement")
+
+
+def read_cap_handoff(path, *, exit_updates: tuple[int, ...], repo=None, policy_plan=None) -> dict:
     """Verify the receipt against its own pinned files and the ledger; returns the gate-shaped dict the consumers use."""
     path = Path(path).resolve(strict=True)
     row = _json(path)
@@ -159,6 +173,11 @@ def read_cap_handoff(path, *, exit_updates: tuple[int, ...], repo=None) -> dict:
     measurement = _ref_path({"path": row["measurement"]}, p1_path.parent)
     if not measurement.is_file() or _sha(measurement) != row["measurement_sha256"]:
         raise ValueError("cap handoff measurement is missing or its sha differs")
+    measured = _json(measurement)
+    if (measured.get("checkpoint_sha256") != p1.get("checkpoint_sha256")
+            or not isinstance(measured.get("cell_judgments"), dict) or measured["cell_judgments"] != p1.get("cell_judgments")):
+        raise ValueError("cap handoff measurement and boundary score cell judgments differ")
+    _recount_exit(measured, p1, policy_plan)
     failed, held = unmet_cells(p1)
     if row.get("unmet_cells") != failed or row.get("hold_items") != held:
         raise ValueError("cap handoff missed-cell record differs from the boundary score")
@@ -173,7 +192,7 @@ def read_cap_handoff(path, *, exit_updates: tuple[int, ...], repo=None) -> dict:
         if _sha(prev_path) != previous.get("sha256"):
             raise ValueError("cap handoff previous score sha differs")
     _check_approval(row.get("lead_approval"), repo, iteration=row["checkpoint_iteration"], checkpoint_sha256=row["checkpoint_sha256"])
-    return {**row, "kind": "cap_handoff", "path": str(path), "sha256": _sha(path),
+    return {**row, "kind": "cap_handoff", "path": str(path), "sha256": _sha(path), "p1_score_path": str(p1_path),
             "unmet_cell_names": sorted(f"{c['window']}/{c['item_id']}" for c in failed)}
 
 

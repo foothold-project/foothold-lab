@@ -73,8 +73,8 @@ def validate_automatic_stage_launch(
         from foothold_s2.ex42_e1_cap_handoff import read_cap_handoff
         if source_stage != 'E1' or gate.get('judgment') != 'CAP_HANDOFF':
             raise ValueError('EX-42 automatic cap handoff must be an E1 receipt')
-        read_cap_handoff(gate_path, exit_updates=stage_exit_updates(plan.document, 'E1'))
-        score = json.loads(Path(gate['p1_score']['path']).read_text(encoding='utf-8-sig'))
+        got = read_cap_handoff(gate_path, exit_updates=stage_exit_updates(plan.document, 'E1'))
+        score = json.loads(Path(got['p1_score_path']).read_text(encoding='utf-8-sig'))
     elif (not isinstance(gate, dict) or gate.get('judgment') != 'PASS'):
         raise ValueError('EX-42 automatic gate must be predecessor PASS under this plan')
     if source_stage not in proof['source_stage_ids']:
