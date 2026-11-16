@@ -63,6 +63,25 @@ def test_shares_delta_is_the_difference_to_the_stage_zero_vector_in_plan_and_app
     assert plan.document["stage_zero"]["approval_sha256"] == hashlib.sha256(APPROVALS.read_bytes()).hexdigest()
 
 
+def test_both_share_blocks_the_sampler_reads_carry_the_planner_vector():
+    """The E1F sampler reads two blocks: `commands.shares` (13 free slots, sum 1) for the envs outside the continuous columns -> Stage.shares of
+    the stage-zero view (stages[0]); the row's `shares` (13 slots + flag) for the continuous columns -> CommandShares.free_stage, which divides it by
+    1 - flag (ex42_shares.py CommandShares.__init__). Same planner vector in both: the commands block is the contract vector over 0.9."""
+    plan, view = _view("E1F")
+    contract = ex42_shares.read_contract(plan, "E1F")
+    free_mass = 1.0 - contract["shares"]["flag"]
+    outside = view.stages[0].shares                                                  # what the envs outside the continuous columns draw from
+    inside = ex42_shares.CommandShares(contract, view.stages[0]).free_stage.shares   # what the continuous columns draw from
+    assert set(outside) == set(inside) and math.isclose(math.fsum(outside.values()), 1.0, abs_tol=1e-9)
+    for key in inside:
+        assert inside[key] == pytest.approx(contract["shares"][key] / free_mass, abs=1e-12)
+        assert outside[key] == pytest.approx(inside[key], abs=1e-9), key
+    assert outside["reverse"] == pytest.approx(0.1 / 0.9, abs=1e-9) and outside["side_left"] == pytest.approx(0.09 / 0.9, abs=1e-9)
+    assert outside["forward"] == pytest.approx(0.17 / 0.9, abs=1e-9) and outside["spin_left"] == pytest.approx(0.07 / 0.9, abs=1e-9)
+    _, e1 = _view("E1")
+    assert e1.stages[0].shares["reverse"] == 0.14 and e1.stages[0].shares["forward"] == 0.19       # E1 keeps its own block
+
+
 def test_p_side_and_pc_cells_reach_the_real_e1f_stage_and_are_off_in_e1():
     plan, view = _view("E1F")
     stage = view.stages[0]
@@ -77,7 +96,11 @@ def test_the_live_adjustment_fence_and_the_pinned_limits_file_agree():
     row = _row(plan, "E1F")
     assert row["live_adjustment"]["command_limits"] == {"low_forward_fraction": [0.2, 0.5], "low_side_fraction": [0.0, 0.5]}
     assert row["live_adjustment"]["segment_reward_limits_sha256"] == hashlib.sha256(LIMITS.read_bytes()).hexdigest()
+    from foothold_s2.commands import ex42_segment_adjust as adj
     from foothold_s2.ex42_live_adjust import limits_from_plan
+    assert "low_side_fraction" not in adj.reward_limits()["command_cells"]           # the limits file keeps its bytes (the source E1 row pins its sha)
+    assert "low_side_fraction" not in _row(plan, "E1")["live_adjustment"]["command_limits"]
+    assert adj.stage_low_side(plan, "E1F") == 0.4                                    # the fence is the E1F row's own command_limits
     limits = limits_from_plan(row["live_adjustment"], segment_path=LIMITS)         # the real reader refuses a sha or cell mismatch
     assert limits["commands"] == {"low_forward_fraction": (0.2, 0.5), "low_side_fraction": (0.0, 0.5)}
     assert 0.0 <= row["low_side_fraction"] <= 0.5

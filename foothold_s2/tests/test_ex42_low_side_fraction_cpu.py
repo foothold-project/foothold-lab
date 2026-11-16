@@ -18,6 +18,14 @@ from foothold_s2.tests.test_ex42_segment_adjust_cpu import LOW_NOTE, document, p
 N = 400_000
 
 
+def _fenced(plan, stage_id="E1"):
+    """The shipped E1 row has no low_side_fraction fence (E1F's live_adjustment.command_limits carries it, the limits file stays byte for byte):
+    these tests put the same [0, 0.5] fence into the in-memory E1 row so the E1 sampler paths can be exercised."""
+    row = next(r for r in plan.document["stages"] if r["id"] == stage_id)
+    row["live_adjustment"]["command_limits"]["low_side_fraction"] = [0.0, 0.5]
+    return row
+
+
 def _draw(stage, seed=21):
     out = mc.resample_stage(mc.make_generator(seed), N, stage, torch.zeros(N))
     side = torch.isin(out["slot"], torch.tensor([mc.EX39_SLOTS.index("side_left"), mc.EX39_SLOTS.index("side_right")]))
@@ -55,9 +63,12 @@ def test_on_moves_the_side_share_below_03_by_about_one_point_seven_five(view):
 
 def test_the_plan_row_cell_and_the_fence(plan, view, tmp_path):
     limits = adj.reward_limits()
-    assert limits["command_cells"]["low_side_fraction"] == (0.0, 0.5)
+    assert "low_side_fraction" not in limits["command_cells"]                    # the limits file is untouched: no fence in it
     row = next(r for r in plan.document["stages"] if r["id"] == "E1")
     assert adj.stage_low_side(plan, "E1", limits) is None                        # the shipped E1 row has no cell: off
+    assert adj._plan_fenced(limits, plan, "E1") is limits                         # and no fence: the limits are passed through as they are
+    _fenced(plan)
+    assert adj._plan_fenced(limits, plan, "E1")["command_cells"]["low_side_fraction"] == (0.0, 0.5)
     row["low_side_fraction"] = 0.5
     try:
         assert adj.stage_low_side(plan, "E1", limits) == 0.5
@@ -72,6 +83,7 @@ def test_the_plan_row_cell_and_the_fence(plan, view, tmp_path):
 
 
 def test_an_adjust_file_entry_sets_and_records_it_and_a_later_start_must_agree(plan, view, tmp_path):
+    _fenced(plan)
     path = tmp_path / "adjust.json"
     path.write_text(json.dumps(document(plan, b1={**LOW_NOTE, "low_side_fraction": 0.5})), encoding="utf-8")
     record = adj.start_segment(view, plan, "E1", boundary_index=1, path=str(path), log_dir=str(tmp_path), write=True)
@@ -98,7 +110,7 @@ def test_a_record_without_the_cell_has_the_old_shape(plan, view, tmp_path):
 
 
 def test_the_live_adjustment_accepts_the_key_inside_the_plan_limits(plan):
-    config = next(r for r in plan.document["stages"] if r["id"] == "E1")["live_adjustment"]
+    config = _fenced(plan)["live_adjustment"]
     limits = limits_from_plan(config)
     assert limits["commands"]["low_side_fraction"] == (0.0, 0.5)
     ok = validate_request({"decided_by": "t", "decided_at": "t", "evidence": "t", "commands": {"low_side_fraction": 0.5}}, limits)

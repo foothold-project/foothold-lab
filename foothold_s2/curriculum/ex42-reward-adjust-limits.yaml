@@ -33,11 +33,8 @@ cells:
 # drawn below 0.3 m/s (source stage 0.20). decisions.tsv 2026-11-13 15:17 (team lead; ledger commit a00ab2a8, read
 # directly): 0.2 -> 0.4 approved. decisions.tsv 2026-11-14 00:28 (team lead, direct; ledger commit bc66f6ee): the upper
 # limit 0.4 -> 0.5. The fence is the source value and the approved value.
-# low_side_fraction (lead 2026-11-16 01:51, ex42-launch-e1-v29-10): the share of the side commands drawn with |vy| in [0.1, 0.3];
-# 0 = off (the sampler is the old one bit for bit), 0.5 the value the lead may turn on.
 command_cells:
   low_forward_fraction: [0.2, 0.5]
-  low_side_fraction: [0.0, 0.5]
 # Run-time cells (decisions.tsv 2026-11-14 12:42, lead under the team lead's 12:11 delegation, planner review
 # REVIEW-V28-PLAN-1114 block 1). A run that has started cannot change the plan or this file, so the knobs the lead may
 # need are registered now, off. policy_std_cap: 0 = off (the v28 start); otherwise a ceiling on the policy action std,

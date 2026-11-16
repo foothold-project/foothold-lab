@@ -188,14 +188,32 @@ def stage_low_forward(plan, stage_id, limits=None) -> float | None:
     return _low_forward(row["low_forward_fraction"], limits if limits is not None else reward_limits(), f"{stage_id} plan row")
 
 
+def _plan_fenced(limits, plan, stage_id):
+    """E1F keeps ex42-reward-adjust-limits.yaml byte for byte (the source E1 row pins its sha and the materialization reads that file against it),
+    so the fence of `low_side_fraction` is the stage row's own `live_adjustment.command_limits.low_side_fraction`. A fence the file itself carries
+    wins; a row without that cell leaves `limits` exactly as it is (None stays None)."""
+    row = next((s for s in plan.document["stages"] if s["id"] == stage_id), {})
+    fence = ((row.get("live_adjustment") or {}).get("command_limits") or {}).get("low_side_fraction")
+    if fence is None:
+        return limits
+    base = limits if limits is not None else reward_limits()
+    cells = dict((base or {}).get("command_cells") or {})
+    if "low_side_fraction" in cells:
+        return base
+    if (not isinstance(fence, list) or len(fence) != 2 or any(type(v) not in (int, float) or not math.isfinite(v) for v in fence)
+            or not 0 <= fence[0] <= fence[1] <= 1):
+        raise ValueError(f"EX-42 {stage_id} plan row low_side_fraction limit must be [low, high] inside 0..1")
+    return {**base, "command_cells": {**cells, "low_side_fraction": (float(fence[0]), float(fence[1]))}}
+
+
 def stage_low_side(plan, stage_id, limits=None) -> float | None:
     """The slow-side share the stage's own plan row registers (`low_side_fraction`, 2026-11-16): in force from the first
     update of the stage. None when the row has no cell (the sampler stays as it was, bit for bit)."""
     row = next((s for s in plan.document["stages"] if s["id"] == stage_id), {})
     if "low_side_fraction" not in row:
         return None
-    return _command_cell("low_side_fraction", row["low_side_fraction"], limits if limits is not None else reward_limits(),
-                         f"{stage_id} plan row")
+    return _command_cell("low_side_fraction", row["low_side_fraction"],
+                         _plan_fenced(limits if limits is not None else reward_limits(), plan, stage_id), f"{stage_id} plan row")
 
 
 def stage_rewards(plan, stage_id, limits=None) -> dict | None:
@@ -223,6 +241,7 @@ def resolve(plan, stage_id, document, boundary_index, limits=None) -> dict:
     rewards_entry}. `commands` is None for a stage with no command profile, `rewards` None while neither the plan row
     nor an entry names them (the source stage's values stay); an entry number is None when the plan row holds."""
     base = stage_commands(plan, stage_id)
+    limits = _plan_fenced(limits, plan, stage_id)
     out = {"commands": _plain(base), "commands_entry": None, "rewards": stage_rewards(plan, stage_id, limits),
            "rewards_entry": None, "low_forward_fraction": stage_low_forward(plan, stage_id, limits),
            "low_forward_fraction_entry": None, "low_side_fraction": stage_low_side(plan, stage_id, limits),

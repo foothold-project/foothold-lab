@@ -694,7 +694,7 @@ def limits_without_command_cells(tmp_path):
 
 def test_the_shipped_limits_open_low_forward_fraction_between_the_source_and_the_approved_value():
     """decisions.tsv 2026-11-13 15:17 (a00ab2a8): 0.2 -> 0.4; 2026-11-14 00:28 (bc66f6ee): the upper limit 0.5."""
-    assert adj.reward_limits()["command_cells"] == {"low_forward_fraction": (0.2, 0.5), "low_side_fraction": (0.0, 0.5)}
+    assert adj.reward_limits()["command_cells"] == {"low_forward_fraction": (0.2, 0.5)}
 
 
 def test_without_the_command_cell_in_the_limits_file_an_entry_is_refused(plan, view, tmp_path):
