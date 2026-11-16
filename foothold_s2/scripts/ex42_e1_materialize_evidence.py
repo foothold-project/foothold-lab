@@ -134,7 +134,13 @@ def build_evidence(*, source_plan_path: str | Path, parent_manifest_path: str | 
     gate_path = Path(gate_receipt_path).resolve(strict=True)
     gate = _json(gate_path)
     from foothold_s2.curriculum.ex42_prep import stage_exit_updates
-    if (gate.get("state") != "complete" or gate.get("stage_id") != "E1"
+    cap_handoff = None
+    if gate.get("state") == "cap_handoff":            # no graduation PASS: only the approved cap handoff receipt, read back in full
+        from foothold_s2.ex42_e1_cap_handoff import read_cap_handoff
+        cap_handoff = read_cap_handoff(gate_path, exit_updates=stage_exit_updates(plan.document, "E1"))
+        if cap_handoff["plan_sha256"] != plan.sha256:
+            raise ValueError("E1 cap handoff receipt is not for the source plan")
+    elif (gate.get("state") != "complete" or gate.get("stage_id") != "E1"
             or gate.get("judgment") != "PASS" or gate.get("checkpoint_iteration") not in stage_exit_updates(plan.document, "E1")
             or gate.get("plan_sha256") != plan.sha256):
         raise ValueError("E1 exit boundary evaluation receipt is not complete PASS for the source plan")
@@ -159,7 +165,7 @@ def build_evidence(*, source_plan_path: str | Path, parent_manifest_path: str | 
     measured = _json(measurement)
     measured_policy_sha = measured.get("maintenance_source_sha256")
     if (measured.get("checkpoint_sha256") != checkpoint_sha
-            or measured.get("judgement") != "PASS"
+            or (cap_handoff is None and measured.get("judgement") != "PASS")
             or (evaluation_plan.sha256 != plan.sha256 and measured_policy_sha != evaluation_plan.sha256)
             or (evaluation_plan.sha256 == plan.sha256 and measured_policy_sha not in (None, plan.sha256))):
         raise ValueError("E1 measurement checkpoint or plan identity differs")
@@ -194,6 +200,10 @@ def build_evidence(*, source_plan_path: str | Path, parent_manifest_path: str | 
                 "path": str(baseline_path), "sha256": _sha(baseline_path)},
         },
     }
+    if cap_handoff is not None:       # never written as a PASS: the mode, the receipt, the ledger line and the missed cells by name
+        evidence["predecessor_exit"] = {"mode": "cap_handoff", "receipt_sha256": _sha(gate_path),
+                                        "ledger_line_sha256": cap_handoff["lead_approval"]["line_sha256"],
+                                        "unmet_cells": cap_handoff["unmet_cell_names"]}
     if evaluation_plan.sha256 != plan.sha256:
         evidence["evaluation_plan"] = {"path": str(evaluation_path), "sha256": _sha(evaluation_path)}
     return evidence

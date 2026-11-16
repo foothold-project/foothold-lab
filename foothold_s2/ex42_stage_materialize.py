@@ -91,12 +91,12 @@ def _finite_tree(value):
             _finite_tree(x)
 
 
-def _measurement(gate, gate_path):
+def _measurement(gate, gate_path, *, cap_handoff=False):
     path = _checked_ref({'path': gate.get('measurement'), 'sha256': gate.get('measurement_sha256')},
                         Path(gate_path).parent)
     measured = _json(path)
     if (measured.get('checkpoint_sha256') != gate['checkpoint_sha256']
-            or measured.get('judgement') != 'PASS'):
+            or (measured.get('judgement') != 'PASS' and not cap_handoff)):
         raise ValueError('measurement checkpoint or PASS differs')
     return measured
 
@@ -337,13 +337,26 @@ def _prepare(*, plan, source_plan, approvals, target, parent_manifest, gate_rece
         raise ValueError('scope differs from its table base cap; cannot enlarge authorization')
     ev_path = Path(evidence).resolve(strict=True); ev = _json(ev_path)
     gate_path = Path(gate_receipt).resolve(strict=True); gate = _json(gate_path)
+    cap_handoff = gate.get('state') == 'cap_handoff'
+    score = gate
+    if cap_handoff:
+        # E1 handed over without a graduation PASS on the team lead's recorded approval (ex42_e1_cap_handoff reads the receipt back in
+        # full: boundary score, missed cells recounted, maintenance PASS, survival floor, ledger line). Nothing below is relaxed
+        # except the PASS requirement itself; the evidence must say so and must not claim a PASS.
+        from foothold_s2.curriculum.ex42_prep import stage_exit_updates
+        from foothold_s2.ex42_e1_cap_handoff import read_cap_handoff
+        if gate.get('stage_id') != 'E1' or (ev.get('predecessor_exit') or {}).get('mode') != 'cap_handoff':
+            raise ValueError('cap handoff receipt needs an E1 gate and cap_handoff predecessor evidence')
+        read_cap_handoff(gate_path, exit_updates=stage_exit_updates(source.document, 'E1'))
+        score = _json(Path(gate['p1_score']['path']))
     if (ev.get('format') != EVIDENCE_FORMAT or ev.get('target_stage') != target
             or ev.get('source_plan_sha256') != source.sha256 or ev.get('gate_sha256') != digest(gate_path)
             or ev.get('checkpoint_sha256') != gate.get('checkpoint_sha256')
             or ev.get('source_stage') != gate.get('stage_id')):
         raise ValueError('materialize evidence identity differs')
     stage = gate.get('stage_id')
-    if (stage not in row['authorization_contract']['source_stage_ids'] or gate.get('judgment') != 'PASS'
+    if (stage not in row['authorization_contract']['source_stage_ids']
+            or gate.get('judgment') != ('CAP_HANDOFF' if cap_handoff else 'PASS')
             or gate.get('plan_sha256') != source.sha256):
         raise ValueError('gate is not predecessor PASS under its actual source plan')
     source_row = _row(source, stage)
@@ -359,15 +372,20 @@ def _prepare(*, plan, source_plan, approvals, target, parent_manifest, gate_rece
     manifest = _json(parent_manifest)
     checkpoint = Path(parent_manifest).resolve().parent / f'model_{iteration}.pt'
     actual_sha = digest(checkpoint)
-    validate_score_pair(expected_iteration=iteration,score=gate,manifest=manifest,
+    validate_score_pair(expected_iteration=iteration,score=score,manifest=manifest,
                         checkpoint_exists=True,checkpoint_sha256=actual_sha)
     evaluation_plan=None
     if ev.get('evaluation_plan') is not None:
         evaluation_plan=EX42Plan.load(_checked_ref(ev['evaluation_plan'],ev_path.parent))
-        measured=_measurement(gate,gate_path)
+        measured=_measurement(gate,gate_path,cap_handoff=cap_handoff)
         if measured.get('maintenance_source_sha256')!=evaluation_plan.sha256:
             raise ValueError('evaluation plan has no matching measured policy SHA')
-    validate_source_exit(source, gate, gate_path,evaluation_plan=evaluation_plan)
+    if cap_handoff:
+        validate_ex42_map_score(score, source.document['evaluation']['map_modes'])
+        if (ev.get('predecessor_exit') or {}).get('receipt_sha256') != digest(gate_path):
+            raise ValueError('cap handoff evidence is not bound to this receipt')
+    else:
+        validate_source_exit(source, gate, gate_path,evaluation_plan=evaluation_plan)
     pin = dict(source_stage_id=stage,manifest_local_update=iteration,checkpoint_key=checkpoint.name,
                sha256=actual_sha,cumulative_update=source_row['parent']['cumulative_update']+iteration)
     if scope['parent_sha256'] not in (None, actual_sha):
