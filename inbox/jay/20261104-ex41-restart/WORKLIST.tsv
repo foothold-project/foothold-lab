@@ -75,3 +75,8 @@ W73	팀장 11/15 11:39 · 13:44	P0		lead	decisions.tsv 2026-11-15 14:03 · b1774
 W74	팀장 11/15 12:35	P0		lead · super2	decisions.tsv 2026-11-15 13:35 · af2d0212	done	디스크 정리 87%→19% · wt.py add/gc · 디스크 경보 · AGENTS 4 절 · Orca Cleanup		
 W75	팀장 11/15 13:44	P1		super2	super-lx INBOX-AUDIT-1115.md	open	받은편지함 지연 (Orca 이틀 배달 멈춤 원인 미확인) · 미수신 경보 47ddfdeb		
 W76	lead 11/15	P2		lead	decisions.tsv 2026-11-15 14:14	open	/home/jay/mai/tmp 나머지 · /home/jay/mai/wt 정리 (저속 단계 끝난 뒤 · 팀장)		
+W77	팀장 11/16 11:3x	P0		lead · planner · reviewer	decisions.tsv 2026-11-16 12:11 ae52bf3c	open	E1 m2000 재출발 (v28u OUT · progress 0.3 · b 0.016) · 졸업 두 창 m2250' · m2500'		
+W78	팀장 11/16 11:4x	P0		sonnet · reviewer	decisions.tsv 2026-11-16 12:18 81a37cc6	open	E3~E5 졸업 판정 (e1f5 55e64c98 잠금 · climb/gap +x 채점 고침 중) · E1F 넘김 장치 새 OUT 맞춤		
+W79	lead 11/16	P0		runner · reviewer	decisions.tsv 2026-11-16 12:34 0a99317a	done	경계 무인 장치 v4 (새 OUT · pending 지킴 · 점수 먼저) 걸음 12:34		
+W80	팀장 11/16 14:1x	P2		runner	decisions.tsv 2026-11-16 bda845af	open	부드러운 actor 대칭: 회당 시간 · 지도/카메라 대칭 먼저 재고 조건 맞을 때만		
+W81	lead 11/16 12:2x	P1		sonnet · planner	TABLE-EX42-SCHEDULE-E1-E5-1116.md	open	일정 줄이기 (묶어 열기 · 가벼운 평가 · 쉬운 종) 준비 사본 a9bbc0a9 · 팀장 일정 논의 (E1 결과 뒤) 대기		
