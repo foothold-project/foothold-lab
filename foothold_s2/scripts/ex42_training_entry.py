@@ -1145,6 +1145,14 @@ def make_ex42_stage_zero_plan_view(source_plan: Any, stage: Any,
                 raise ValueError("EX-42 stage low_side_fraction needs side_vy_abs to start at 0.1 or below")
             from dataclasses import replace
             stage = replace(stage, low_side_fraction=float(side_fraction))
+        hold_range = row.get("slow_hold_range_s")
+        if hold_range is not None:
+            if (not isinstance(hold_range, (list, tuple)) or len(hold_range) != 2
+                    or any(type(v) not in (int, float) or isinstance(v, bool) or not math.isfinite(v) for v in hold_range)
+                    or not 0 < hold_range[0] <= hold_range[1] <= 30):
+                raise ValueError("EX-42 stage slow_hold_range_s invalid (two numbers, 0 < lo <= hi <= 30 s)")
+            from dataclasses import replace
+            stage = replace(stage, slow_hold_range_s=(float(hold_range[0]), float(hold_range[1])))
     return SimpleNamespace(
         command_contract=command_contract,
         is_ex41=True, stages=[stage], domain_randomization=source_plan.domain_randomization,

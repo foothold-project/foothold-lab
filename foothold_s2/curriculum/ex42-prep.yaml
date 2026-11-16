@@ -143,7 +143,7 @@ stage_zero:
     cumulative_update: 12000
     manifest_local_update: 6000
     sha256: 1c6af6319c823c718af4965064f1c312b0d25177f5223a49c323aab3b6f1e613
-  approval_sha256: 80a6079b5d77f6f65e7be71c120982f8e7f1379666bc890f68e2c267a7d10696
+  approval_sha256: 38ddad06199f1032052b908158ca7227b9e9f5b0bfb66d521d602b77493b6dc7
   minimum_updates: 1000
   maximum_updates: 1000
   extension_updates: 0
@@ -455,6 +455,11 @@ stages:
   # 0.5 (the same value as E1's own row; inside the limits of decisions.tsv 2026-11-13 15:17), heading envs inside the slow band count for
   # ex42_slow_track, and the live monitor and live adjustment blocks are E1's, so the lead can still move the cells a boundary decides.
   low_forward_fraction: 0.5
+  # E1F new composition (lead 2026-11-16 09:26, planner 09:23): the side commands are drawn with |vy| in [0.1, 0.3] for 0.4 of the draws (the fence
+  # [0, 0.5] is the limits file's command_cells.low_side_fraction; the live adjustment may move it inside that fence), and the slow forward
+  # commands (0.1 <= |v_xy| < 0.3, no turn) are held for U(6, 8) s. The E1 row has neither cell: no slow-side draw and no long hold there.
+  low_side_fraction: 0.4
+  slow_hold_range_s: [6.0, 8.0]
   slow_track_heading: true
   live_monitor:
     enabled: true
@@ -468,7 +473,7 @@ stages:
     initial: {slow_forward: learning, side_left: learning, side_right: learning}
   live_adjustment:
     file_env: EX42_UPDATE_ADJUST
-    segment_reward_limits_sha256: 15dfcdcdf464fab34db1829d82ac95048d45b686f16cb54244655458314ee04e
+    segment_reward_limits_sha256: 8a52e9e814adea6fb89d30b38ee79f2089321a46d7488a19242949e907a08dc8
     # Repeated cells must equal the segment fence; this plan SHA pins that agreement.
     extra_reward_limits:
       zero_yaw: [-2.0, -0.5]
@@ -479,6 +484,7 @@ stages:
       slow_track_speed_max: [0.3, 0.3]
     command_limits:
       low_forward_fraction: [0.2, 0.5]
+      low_side_fraction: [0.0, 0.5]
     # policy_std_cap cannot start above 0 from the plan (the code refuses a non-zero runtime_start); the E1F adjust file sets 0.48 at update 1.
     runtime_limits:
       policy_std_cap: [0.0, 2.0]
@@ -509,6 +515,9 @@ stages:
         forward: -0.06
         spin_left: -0.02
         spin_right: -0.02
+        reverse: -0.04
+        side_left: 0.02
+        side_right: 0.02
       boundary.exposure_source: same_as_E1_end
     required_boolean_paths: []
     required_stage_values:
@@ -519,9 +528,9 @@ stages:
         spin_left: 0.07
         spin_right: 0.07
         stand: 0.1
-        reverse: 0.14
-        side_left: 0.07
-        side_right: 0.07
+        reverse: 0.1
+        side_left: 0.09
+        side_right: 0.09
         diag_fwd_left: 0.02
         diag_fwd_right: 0.02
         diag_back_left: 0.025
@@ -554,9 +563,9 @@ stages:
     spin_left: 0.07
     spin_right: 0.07
     stand: 0.1
-    reverse: 0.14
-    side_left: 0.07
-    side_right: 0.07
+    reverse: 0.1
+    side_left: 0.09
+    side_right: 0.09
     diag_fwd_left: 0.02
     diag_fwd_right: 0.02
     diag_back_left: 0.025

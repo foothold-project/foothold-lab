@@ -180,6 +180,9 @@ stage_e1f_authorization:
       forward: -0.06
       spin_left: -0.02
       spin_right: -0.02
+      reverse: -0.04
+      side_left: 0.02
+      side_right: 0.02
     exposure_source: same_as_E1_end
   extension_authorized: false
   minimum_updates: 250

@@ -516,6 +516,20 @@ class StartRunner(OnPolicyRunner):
                 it, row["lowspeed_envs"], row["small_noise_envs"], row["num_envs"], row["lowspeed_cmd"]), flush=True)
         return row
 
+    def _command_cells_log(self, it: int) -> None:
+        """Record only (E1F): the command cells in force in this rank's command term (the live adjustment may move low_side_fraction), at the first
+        update and every 50 after. A stage without a cell prints low_side_fraction=0 and slow_hold_range_s=off."""
+        first = not getattr(self, "_cells_logged", False)
+        self._cells_logged = True
+        runtime = getattr(self._command_term(), "stage_runtime", None) if self._command_term() is not None else None
+        if self.disable_logs or runtime is None or not (first or it % 50 == 0):
+            return
+        stage = runtime.plan.stages[0]
+        hold = getattr(stage, "slow_hold_range_s", None)
+        print("EX42_COMMAND_CELLS it=%d low_side_fraction=%g low_forward_fraction=%g slow_hold_range_s=%s" % (
+            it, float(getattr(stage, "low_side_fraction", 0.0)), float(stage.low_forward_fraction),
+            "off" if not hold else "%g-%g" % (hold[0], hold[1])), flush=True)
+
     def _slow_hold_log(self, it: int) -> None:
         """v29-5, record only: per update the number of envs holding a slow command (long time_left) and their mean time_left."""
         summary = getattr(self._command_term(), "slow_hold_summary", None)
@@ -858,7 +872,7 @@ class StartRunner(OnPolicyRunner):
                     else:
                         est = self.perception.step(self.pstate, inp, gmap)
                     ppo_obs = self._ppo_obs(raw, est)
-                    self._vxcorr_collect(o, est, ppo_obs)
+                    self._vxcorr_collect(o, est, ppo_obs, vel)
                     self._vbias_collect(o, ppo_obs, vel)
                     self._step_small_noise(o)
                     if self.replay is not None:
@@ -961,6 +975,7 @@ class StartRunner(OnPolicyRunner):
                 self._vbias_finish(it)
                 noise_row = self._small_noise_finish(it)
                 self._slow_hold_log(it)
+                self._command_cells_log(it)
             if trace is not None:
                 trace.end_update()
             if contract_bad is not None and bool(contract_bad.any()):
@@ -1384,7 +1399,7 @@ class StartRunner(OnPolicyRunner):
             print("EX42_PERCEPTION_EMA it=%d decay=%g updates=%d est_diff_mean=%.5f v_diff_mean=%.5f v_online_minus_ema=%+.5f" % (
                 it, self.perception_wema.decay, r["updates"], r["est_diff_mean"], r["v_diff_mean"], r["v_online_minus_ema"]), flush=True)
 
-    def _vxcorr_collect(self, o: torch.Tensor, est: torch.Tensor, ppo_obs) -> None:
+    def _vxcorr_collect(self, o: torch.Tensor, est: torch.Tensor, ppo_obs, vel: torch.Tensor | None = None) -> None:
         """Record only (EX42_PERCEPTION_VX_CORR): sums of est_vx before and after the correction over the envs inside the band. Nothing when off."""
         on, b, band = vx_corr_params()
         if not on or self.pcfg["est_mode"] != "learned":
@@ -1395,16 +1410,35 @@ class StartRunner(OnPolicyRunner):
         part = torch.stack([torch.tensor(float(before.numel()), dtype=torch.float64, device=before.device), before.sum(), after.sum()])
         acc = getattr(self, "_vxcorr_acc", None)
         self._vxcorr_acc = part if acc is None else acc + part
+        self._vxcorr_raw_fwd01(o, est, vel)
+
+    def _vxcorr_raw_fwd01(self, o: torch.Tensor, est: torch.Tensor, vel) -> None:
+        """Record only: the forward-velocity bias of the RAW est (before the correction) over the FWD01 samples (the same mask as
+        EX42_PERCEPTION_V_BIAS_FWD01: |vy| small, wz 0, heading off, vx 0.08~0.12, command older than 2 s): sum and count of est[16] - vel_x."""
+        term = self._command_term()
+        if vel is None or term is None:
+            return
+        age = float(term.cfg.resampling_time_range[1]) - term.time_left
+        fm = sp.fwd01_mask(o[:, 6:9], term.heading, age)
+        raw = (est[:, VX_CORR_VX_COL] - vel[:, 0])[fm].double()
+        part = torch.stack([torch.tensor(float(raw.numel()), dtype=torch.float64, device=raw.device), raw.sum()])
+        acc = getattr(self, "_vxcorr_raw_acc", None)
+        self._vxcorr_raw_acc = part if acc is None else acc + part
 
     def _vxcorr_finish(self, it: int) -> None:
         """Every 50 updates, when on: n, mean est_vx before, mean est_vx after (this rank's envs inside the band). Record only."""
         acc = getattr(self, "_vxcorr_acc", None)
         self._vxcorr_acc = None
+        raw_acc = getattr(self, "_vxcorr_raw_acc", None)
+        self._vxcorr_raw_acc = None
         if acc is None or self.disable_logs or it % 50 != 0:
             return
         n = float(acc[0])
         before, after = (float(acc[1]) / n, float(acc[2]) / n) if n > 0 else (float("nan"), float("nan"))
-        print("EX42_PERCEPTION_VX_CORR it=%d on=1 n=%d est_vx_before=%+.5f est_vx_after=%+.5f" % (it, int(n), before, after), flush=True)
+        rn = float(raw_acc[0]) if raw_acc is not None else 0.0
+        raw_bias = "%+.5f" % (float(raw_acc[1]) / rn) if rn > 0 else "null"
+        print("EX42_PERCEPTION_VX_CORR it=%d on=1 n=%d est_vx_before=%+.5f est_vx_after=%+.5f raw_bias_fwd01=%s n_fwd01=%d" % (
+            it, int(n), before, after, raw_bias, int(rn)), flush=True)
 
     def _vbias_collect(self, o: torch.Tensor, ppo_obs, vel: torch.Tensor) -> None:
         """기록만. 명령 속력 (o[:, 6:9] 의 vx vy 노름) 이 저속 띠인 env 의 «actor 가 받은 est 의 속도 3 칸 - 실제 몸 속도» 를 모은다.

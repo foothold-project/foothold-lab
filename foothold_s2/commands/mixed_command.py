@@ -24,10 +24,10 @@ if TYPE_CHECKING:
     from isaaclab.envs import ManagerBasedRLEnv
 
 
-# v29-5 (lead 11/15 17:23): a free-speed env that draws a slow forward command (0.1 <= |v_xy| < 0.3, no rotation) keeps it for
-# U(lo, hi) s instead of the base period (4 s), so the 0.1 command reaches its steady state. None or 0 turns it off.
-# It only ever lengthens the hold: it does nothing when the base period is already >= lo (evaluation uses 1e9) or when fixed_cmd is set.
-SLOW_HOLD_RANGE_S = (8.0, 12.0)
+# v29-5 (lead 11/15 17:23), plan-driven since E1F (lead 2026-11-16 09:26): a free-speed env that draws a slow forward command
+# (0.1 <= |v_xy| < 0.3, no rotation) keeps it for U(lo, hi) s instead of the base period (4 s), so the 0.1 command reaches its steady state.
+# (lo, hi) is the plan row's `slow_hold_range_s`; no cell / null = off (the E1 row has none). It only ever lengthens the hold: it does nothing
+# when the base period is already >= lo (evaluation uses 1e9) or when fixed_cmd is set.
 SLOW_HOLD_V_LO = 0.1
 SLOW_HOLD_V_HI = 0.3
 
@@ -271,25 +271,35 @@ class MixedVelocityCommand(CommandTerm):
             self.vel_command_b[flag] = 0.0
 
     def _apply_slow_hold(self, ids):
-        """v29-5: after the free envs drew their command, envs on the slow band (0.1 <= |v_xy| < 0.3, wz == 0, no heading / spin / stand)
-        get time_left = U(lo, hi) s. Other envs keep the base time_left. Off (None or 0) draws nothing from the generator."""
-        hold_range = SLOW_HOLD_RANGE_S
+        """v29-5, plan-driven (E1F): after the free envs drew their command, envs on the slow band (0.1 <= |v_xy| < 0.3, wz == 0, no heading / spin /
+        stand) get time_left = U(lo, hi) s, where (lo, hi) is the plan row's `slow_hold_range_s` of the env's stage. No cell, null or 0 (the E1 row, the
+        stage-zero view, any plan without the cell) = off: no draw from the generator, the base time_left stays."""
         if len(ids) == 0:
             return
         self.slow_hold[ids] = False
-        if (not hold_range or self.cfg.fixed_cmd is not None
-                or float(self.cfg.resampling_time_range[1]) >= float(hold_range[0])):
+        if self.cfg.fixed_cmd is not None:
             return
-        cmd = self.vel_command_b[ids]
-        speed = torch.linalg.norm(cmd[:, :2], dim=1)
-        hold = ((speed >= SLOW_HOLD_V_LO) & (speed < SLOW_HOLD_V_HI) & (cmd[:, 2].abs() <= 1e-6)
-                & ~self.heading[ids] & ~self.spin[ids] & ~self.stand[ids])
-        if hold.any():
-            sel = ids[hold]
-            lo, hi = float(hold_range[0]), float(hold_range[1])
-            u = torch.rand(len(sel), generator=self.gen, device=self.device)
-            self.time_left[sel] = lo + (hi - lo) * u
-            self.slow_hold[sel] = True
+        runtime = getattr(self, "stage_runtime", None)
+        if runtime is None:
+            return
+        stages = runtime.plan.stages
+        for index in range(len(stages)):
+            hold_range = getattr(stages[index], "slow_hold_range_s", None)
+            if not hold_range or float(self.cfg.resampling_time_range[1]) >= float(hold_range[0]):
+                continue
+            group = ids[runtime.env_stage[ids] == index]
+            if len(group) == 0:
+                continue
+            cmd = self.vel_command_b[group]
+            speed = torch.linalg.norm(cmd[:, :2], dim=1)
+            hold = ((speed >= SLOW_HOLD_V_LO) & (speed < SLOW_HOLD_V_HI) & (cmd[:, 2].abs() <= 1e-6)
+                    & ~self.heading[group] & ~self.spin[group] & ~self.stand[group])
+            if hold.any():
+                sel = group[hold]
+                lo, hi = float(hold_range[0]), float(hold_range[1])
+                u = torch.rand(len(sel), generator=self.gen, device=self.device)
+                self.time_left[sel] = lo + (hi - lo) * u
+                self.slow_hold[sel] = True
 
     def slow_hold_summary(self):
         """Record only: (number of envs now holding a slow command, their mean time_left in s)."""
