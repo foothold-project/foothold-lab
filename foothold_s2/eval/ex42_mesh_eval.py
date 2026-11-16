@@ -44,7 +44,7 @@ def validate_kind_cell(result, mesh, *, family: str, kind: str, level: int, envs
     n = result.get("envs")
     table = [{"family": f, "kind": k} for f, k in zip(
         mesh.get("column_family", ()), mesh.get("columns", ()))]
-    if (n != 64 or record.get("rows") != 10 or record.get("cols") != len(table)
+    if (n != envs or record.get("rows") != 10 or record.get("cols") != len(table)
             or record.get("num_envs") != n or record.get("fixed_level") != level
             or record.get("family") != family or record.get("kind") != kind):
         raise ValueError("EX-42 named kind evaluation identity differs")

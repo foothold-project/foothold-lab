@@ -190,6 +190,7 @@ def write_ladder_evidence(checkpoint: Path, evaluation: Path, interval: int, out
 
 def stage_items(kinds: dict[str, int], now: dict, old: dict | None, ladder: dict) -> dict:
     """The exit items that belong to the kinds (maintenance, learned_cells and the exchange watch are added by the caller)."""
+    # OUTSIDE THE DESIGN DOC (DESIGN-E3E5-EXIT-JUDGE-1116): the kind_ladder exit item; confirmation asked of planner-lx 11/16 12:20
     items = {"kind_ladder": ladder}
     for kind, level in sorted(kinds.items()):
         for mode in ("eval_gt", "eval_pred"):
@@ -209,7 +210,8 @@ def ladder_item(required: list[str], opened: dict[str, int]) -> dict:
 
 
 def ladder_outcomes(kinds: dict[str, int], now: dict, old: dict | None) -> dict:
-    """The evidence `ladder_terrain` reads for this boundary: first_window_pass = this window passed in both judged
+    """OUTSIDE THE DESIGN DOC (asked of planner-lx 11/16 12:20): the target_level_reached definition below is an assumption.
+    The evidence `ladder_terrain` reads for this boundary: first_window_pass = this window passed in both judged
     modes; target_level_reached = this and the previous window passed at the kind's open level (the plan keeps the cap
     it opened with, so the open level is the target)."""
     def passed(row):

@@ -73,10 +73,10 @@ args = parser.parse_args()
 friction_policy = ex42_friction.map_policy(args)
 kind_cell = args.ex42_kind_family is not None or args.ex42_kind_name is not None
 if kind_cell and (not args.ex42_kind_family or not args.ex42_kind_name or not args.mesh_dir
-                  or not args.fixed_terrain or args.fixed_level is None or args.envs != 64
+                  or not args.fixed_terrain or args.fixed_level is None or args.envs not in (32, 64)
                   or args.terrain_set != "default" or args.axis_v2 or args.terrain_skill
                   or args.terrain_skill_v2 or args.push_ladder):
-    parser.error("EX-42 kind cell needs family, kind, mesh, fixed level and 64 env without other suites")
+    parser.error("EX-42 kind cell needs family, kind, mesh, fixed level and 32 or 64 env without other suites")
 if args.mesh_dir and (args.terrain_set != "default" or args.push_ladder or args.terrain_skill
                       or args.terrain_skill_v2 or not args.fixed_terrain):
     parser.error("--mesh-dir needs fixed default terrain without other terrain suites")
@@ -850,7 +850,7 @@ out_json = os.path.join(args.out, "map_modes.json")
 if kind_cell:
     from foothold_s2.eval.ex42_mesh_eval import validate_kind_cell
     validate_kind_cell(res, args.ex42_mesh, family=args.ex42_kind_family,
-                       kind=args.ex42_kind_name, level=args.fixed_level)
+                       kind=args.ex42_kind_name, level=args.fixed_level, envs=args.envs)
 with open(out_json + ".tmp", "w", encoding="utf-8") as stream:
     res["evaluation_friction"] = ex42_friction.verify(raw, friction_policy)
     json.dump(res, stream, ensure_ascii=False, indent=1, allow_nan=False)
