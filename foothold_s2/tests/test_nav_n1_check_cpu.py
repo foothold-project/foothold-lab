@@ -14,15 +14,17 @@ def test_p95_matches_a_hand_computed_value():
     assert got["samples"] == 5 and got["vx"] == pytest.approx(np.quantile([0, 0.1, 0.2, 0.3, 0.4], 0.95)) and got["vy"] == 0.0
 
 
-def test_steps_after_the_first_done_are_left_out_but_the_done_step_stays():
+def test_steps_from_the_done_step_on_are_left_out():
     e = np.zeros((1, 5, 2, 3)); e[0, :, 1, 0] = 9.0           # env 1 은 끝난 뒤 값이 크다
     done = np.array([[-1, 2]])
     m = n1.valid_mask(done, 5)
-    assert m[0, :, 0].all() and list(m[0, :, 1]) == [True, True, True, False, False]
+    assert m[0, :, 0].all() and list(m[0, :, 1]) == [True, True, False, False, False]
     got = n1.p95(e, done)
-    assert got["samples"] == 8 and got["vx"] == pytest.approx(9.0)    # 끝난 스텝 (k=2) 까지의 세 값은 남는다
-    e[0, 3:, 1, 0] = 1000.0
+    assert got["samples"] == 7 and got["vx"] == pytest.approx(9.0)    # 끝난 스텝 (k=2) 은 버린다: 앞 두 값만 남는다
+    e[0, 2:, 1, 0] = 1000.0
     assert n1.p95(e, done)["vx"] == pytest.approx(9.0)
+    done0 = np.array([[-1, 0]])                                        # 첫 스텝에서 끝나면 그 env 는 전부 버린다
+    assert n1.valid_mask(done0, 5)[0, :, 1].sum() == 0 and n1.p95(e, done0)["samples"] == 5
 
 
 def test_decision_switches_at_twenty_percent_in_both_directions():
@@ -39,3 +41,23 @@ def test_bad_inputs_are_refused():
         n1.p95(np.full((1, 5, 1, 3), np.nan), np.full((1, 1), -1))
     with pytest.raises(ValueError, match="done_step"):
         n1.p95(np.zeros((2, 5, 3, 3)), np.full((2, 4), -1))
+
+
+def test_fall_counts_split_done_into_timeouts_and_falls():
+    done = np.array([[-1, 2, 0, 4]]); to = np.array([[False, True, False, False]])
+    assert n1.fall_counts(done, to) == {"ended": 3, "falls": 2, "timed_out": 1}
+    with pytest.raises(ValueError):
+        n1.fall_counts(done, np.zeros((1, 3), bool))
+
+
+def test_one_channel_decides_only_when_the_absolute_gap_is_big_enough():
+    base = {"samples": 10, "l2": 0.30, "vx": 0.20, "vy": 0.20, "wz": 0.20, "bias": {"vx": 0.0, "vy": 0.0, "wz": 0.0}}
+    tiny_a, tiny_b = dict(base, wz=0.05), dict(base, wz=0.075)                 # 상대 50 % · 절대 0.025
+    r = n1.compare_maps(tiny_a, tiny_b)
+    assert r["teacher_map"] == "recon" and r["recon_reasons"] == ["wz"]
+    r = n1.compare_maps(dict(base, wz=0.04), dict(base, wz=0.04 * 1.4))       # 절대 0.016 < 0.02 -> 잡음으로 거른다
+    assert r["teacher_map"] == "gt" and r["recon_reasons"] == []
+    r = n1.compare_maps(base, dict(base, l2=0.40))
+    assert r["teacher_map"] == "recon" and r["recon_reasons"] == ["l2"]
+    r = n1.compare_maps(base, dict(base), commands_sha256="ab" * 32, falls_gt={"falls": 1}, falls_pred={"falls": 3})
+    assert r["bias_gt"] == r["bias_pred"] and r["commands_sha256"] == "ab" * 32 and r["falls_pred"]["falls"] == 3
