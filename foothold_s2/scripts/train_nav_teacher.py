@@ -1,7 +1,8 @@
-"""HiPAN 모드 2 teacher PPO 실행기 (설계 §3 N3). 지금은 `--print` 예행만 한다: 시작 영수증을 찍고 끝난다.
+"""HiPAN 모드 2 teacher PPO 실행기 (설계 §3 N3). `--print` = 시작 영수증만 찍고 끝 · 없이 부르면 학습 루프 (`nav/hl_train.py`).
 
 영수증: 하위 저장본 sha · 방 메시 sha (room_manifest.json) · plan sha · 하위 b 값 · 관측 차원 대조 · PPO 설정 (가정 이름 표시) · 저장 간격 · 이어 받기 경로.
-학습 루프 (Kit 환경 위에 rsl-rl) 는 N1 Kit 확인이 끝나기 전에는 붙이지 않았다: `--print` 없이 부르면 거절한다 (조용히 다른 길로 가지 않음).
+학습 루프: `--env-factory 모듈:함수` 가 (NavEnv, NavTask) 를 돌려준다 (Kit 기동은 그 함수 몫 · N1 Kit 확인 뒤). 없으면 · `--out-dir` 가 없으면 · `--iterations` 가 없으면 거절 (조용히 다른 길로 가지 않음).
+영수증은 out-dir 에 먼저 써 두고 (덮어쓰지 않음) 그 sha256 이 체크포인트에 들어간다: 이어 받기는 같은 영수증 · 같은 PPO 설정일 때만. 저장 50 회마다 `model_<회>.pt`. 실제 학습은 팀장 승인 뒤 lead 가 띄운다.
 쓰는 법: python -m foothold_s2.scripts.train_nav_teacher --print --lower-checkpoint <pt> --lower-sha256 <sha> --room-manifest <json> --plan <yaml> --vx-corr-b 0.009
 """
 from __future__ import annotations
@@ -68,10 +69,14 @@ def main(argv=None) -> int:
     p.add_argument("--vx-corr-b", type=float, required=True)
     p.add_argument("--resume", default=None)
     p.add_argument("--num-envs", type=int, default=None)
+    p.add_argument("--env-factory", default=None, help="module:function returning (NavEnv, NavTask) for the real loop")
+    p.add_argument("--out-dir", default=None)
+    p.add_argument("--iterations", type=int, default=None)
+    p.add_argument("--seed", type=int, default=0)
     p.add_argument("--receipt-out", default=None, help="also write the receipt here (never overwritten)")
     a = p.parse_args(argv)
-    if not a.dry:
-        print("refused: the teacher training loop is not attached yet (N1 Kit check first); run with --print", file=sys.stderr)
+    if not a.dry and not (a.env_factory and a.out_dir and a.iterations):
+        print("refused: training needs --env-factory, --out-dir and --iterations (or use --print)", file=sys.stderr)
         return 2
     receipt = build_receipt(lower_checkpoint=a.lower_checkpoint, lower_sha256=a.lower_sha256, room_manifests=a.room_manifest, plan=a.plan,
                             vx_corr_b=a.vx_corr_b, resume=a.resume, num_envs=a.num_envs)
@@ -80,7 +85,33 @@ def main(argv=None) -> int:
         with open(a.receipt_out, "x", encoding="utf-8") as stream:
             stream.write(text + "\n")
     print(text)
+    if a.dry:
+        return 0
+    import importlib
+    from foothold_s2.nav import hl_ppo_cfg as cfg, hl_train
+
+    out = Path(a.out_dir)
+    out.mkdir(parents=True, exist_ok=True)
+    rpath = out / "start_receipt.json"
+    if rpath.exists():
+        if rpath.read_text(encoding="utf-8").strip() != text:
+            raise SystemExit("refused: out-dir already holds a different start receipt")
+    else:
+        rpath.write_text(text + "\n", encoding="utf-8")
+    receipt["receipt_sha256"] = hashlib.sha256(text.encode("utf-8")).hexdigest()
+    mod, _, fn = a.env_factory.partition(":")
+    nav_env, task = getattr(importlib.import_module(mod), fn)()
+    ppo = cfg.TeacherPPO(**({"num_envs": int(a.num_envs)} if a.num_envs else {}))
+    env = hl_train.TeacherVecEnv(nav_env, task, device="cuda:0" if _cuda() else "cpu")
+    last, saved = hl_train.train(env, ppo, out_dir=out, iterations=a.iterations, receipt=receipt, resume=a.resume, seed=a.seed,
+                                 device=env.device)
+    print(json.dumps({"last_iteration": last, "saved": saved}))
     return 0
+
+
+def _cuda() -> bool:
+    import torch
+    return torch.cuda.is_available()
 
 
 if __name__ == "__main__":

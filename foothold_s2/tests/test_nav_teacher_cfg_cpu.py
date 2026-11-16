@@ -73,3 +73,28 @@ def test_print_writes_the_receipt_once_and_a_run_without_print_is_refused(files,
     with pytest.raises(FileExistsError):
         tnt.main(["--print", *argv, "--receipt-out", str(out)])
     assert tnt.main(argv) == 2
+
+
+def make_stub_env():
+    """env-factory 시험용: (NavEnv, NavTask) 꼴의 가짜. 몸은 가만히 서 있고 보상은 1."""
+    from types import SimpleNamespace
+    import numpy as np
+    n, D = 1024, TeacherObsLayout().total
+    state = SimpleNamespace(done=np.zeros(n, bool), timed_out=np.zeros(n, bool), pos_local=np.zeros((n, 3)))
+    nav = SimpleNamespace(n=n, step=lambda a: state, reset=lambda: state)
+    task = SimpleNamespace(n=n, origin_xy=None, reset_envs=lambda ids, start_xy=None: None,
+                           step=lambda s: {"reward": np.ones(n), "task_reached": np.zeros(n, bool)},
+                           observation=lambda s: {"flat": np.zeros((n, D), np.float32)})
+    return nav, task
+
+
+def test_a_real_run_writes_the_receipt_first_and_refuses_a_different_one(files, tmp_path):
+    ckpt, room, plan = files
+    out = tmp_path / "run"
+    argv = ["--lower-checkpoint", str(ckpt), "--lower-sha256", _sha(b"lower"), "--room-manifest", str(room), "--plan", str(plan), "--vx-corr-b", "0.009",
+            "--env-factory", f"{__name__}:make_stub_env", "--out-dir", str(out)]
+    assert tnt.main([*argv, "--iterations", "1"]) == 0
+    assert (out / "start_receipt.json").exists() and not list(out.glob("model_*.pt"))     # 저장 간격 (50) 전에는 저장 없음
+    assert tnt.main([*argv, "--iterations", "1"]) == 0                                    # 같은 영수증이면 같은 폴더를 다시 쓸 수 있다
+    with pytest.raises(SystemExit):                                                       # 다른 영수증 (num-envs 다름) 이면 거절
+        tnt.main([*argv, "--iterations", "1", "--num-envs", "512"])
