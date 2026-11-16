@@ -143,7 +143,8 @@ def read_start_kind_cell(folder: Path, *, mesh: dict, checkpoint_sha256: str,
             any(set(result["modes"][name]) != {"fwd1.0"} for name in expected_modes) or
             result.get("env_arrays", {}).get(key) != f"env_arrays_{mode}_fwd1.0.npz"):
         raise ValueError("EX-42 kind evaluation identity or mode coverage differs")
-    validate_kind_cell(result, mesh, family=family, kind=kind, level=level, envs=envs)
+    validate_kind_cell(result, mesh, family=family, kind=kind, level=level, envs=envs,
+                       start_yaw_zero=bool(anchor and anchor.get("start_yaw_zero")))
     row = result["modes"][mode]["fwd1.0"]
     total = row.get("policy_steps_x_envs")
     used = row.get("gt_used")

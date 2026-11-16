@@ -111,7 +111,7 @@ def test_only_the_fixed_bundle_gets_the_yaw_flag_and_the_parser_knows_it(tmp_pat
         assert ("--start-yaw-zero" in argv) == (name != "wide_endpoints"), name
     source = (ROOT / "foothold_s2/eval/eval_map_modes.py").read_text()
     assert 'parser.add_argument("--start-yaw-zero", action="store_true"' in source
-    assert 'args.start_yaw_zero and (args.command_suite != "e1_wide_fixed"' in source
+    assert 'args.start_yaw_zero and ((args.command_suite != "e1_wide_fixed" and not kind_cell)' in source
 
 
 def test_start_yaw_block_of_the_real_eval_script_sets_yaw_zero_and_keeps_position():

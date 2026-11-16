@@ -52,7 +52,8 @@ def _spec(plan: dict) -> dict:
         if key == "A":
             continue
         if (not re.fullmatch(r"[BCE]/\w+", key) or rule.get("rule") not in RULES or
-                type(rule.get("m")) not in (int, float) or not 0 < rule["m"] <= 12):
+                type(rule.get("m")) not in (int, float) or not 0 < rule["m"] <= 12 or
+                rule.get("start_yaw_zero", True) is not True):
             raise ValueError("EX-42 named-kind stage completion rule invalid")
     return spec
 
@@ -106,8 +107,11 @@ def finish_anchor(mesh: dict, *, family: str, kind: str, level: int, completion:
     if rule["rule"] == "center_max":
         return {"center_max_m": float(rule["m"]), "kind": kind, "level": level, "family": family,
                 "method": f"center_max_{rule['m']}m_from_the_cell_origin"}
-    return {"travel_m": float(rule["m"]), "kind": kind, "level": level, "family": family,
-            "method": f"travel_{rule['m']}m_from_the_first_sample"}
+    anchor = {"travel_m": float(rule["m"]), "kind": kind, "level": level, "family": family,
+              "method": f"travel_{rule['m']}m_from_the_first_sample"}
+    if rule.get("start_yaw_zero"):                       # the kind's reset yaw is random: the cell must start facing +x (recorded, checked)
+        anchor["start_yaw_zero"] = True
+    return anchor
 
 
 def read_kind_modes(folder: Path, kinds: dict[str, int], *, plan: dict, mesh: dict,

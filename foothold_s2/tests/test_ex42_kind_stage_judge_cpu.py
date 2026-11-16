@@ -209,7 +209,7 @@ def test_a_registered_kind_counts_a_straight_line_travel_and_an_unregistered_one
     anchor = ks.finish_anchor({}, family="C", kind="flat", level=0, completion=spec["completion"])
     assert anchor["travel_m"] == 3.5 and ks.finish_anchor({}, family="B", kind="rough", level=0, completion=spec["completion"])["travel_m"] == 4.0
     assert ks.finish_anchor({}, family="E", kind="slope_steep", level=0, completion=spec["completion"])["center_max_m"] == 3.85
-    for hold in ("climb_up", "climb_down", "gap"):                    # random heading, obstacle on one side: no value
+    for hold in ("no_such_kind",):                                    # a kind the plan does not register
         with pytest.raises(KeyError):
             ks.finish_anchor({}, family="B", kind=hold, level=0, completion=spec["completion"])
 
@@ -236,8 +236,8 @@ def test_a_kind_without_a_registered_rule_gets_hold_cells_in_the_raw_reader(monk
     calls = []
     monkeypatch.setattr(ks, "read_start_kind_cell", lambda *a, **k: calls.append(k["family"] + "/" + k["kind"]) or _cell(32, 30, 32))
     plan = _plan().document
-    out = ks.read_kind_modes(pathlib.Path("/none"), {"B/climb_up": 0, "C/flat": 0}, plan=plan, mesh={}, checkpoint_sha256="c" * 64, seed=42)
-    assert out["B/climb_up"]["eval_gt"]["judgement"] == "HOLD" and out["B/climb_up"]["probe_prop_only"]["role"] == "record_only"
+    out = ks.read_kind_modes(pathlib.Path("/none"), {"B/no_such_kind": 0, "C/flat": 0}, plan=plan, mesh={}, checkpoint_sha256="c" * 64, seed=42)
+    assert out["B/no_such_kind"]["eval_gt"]["judgement"] == "HOLD" and out["B/no_such_kind"]["probe_prop_only"]["role"] == "record_only"
     assert calls == ["C/flat"] * 3                                    # the registered kind was read in all three modes
 
 
@@ -440,3 +440,48 @@ def test_a_differing_gate_turns_the_learned_cells_item_hold_and_the_exit_aggrega
     held = ks.gate_checked(learned, ["windows"])
     assert held["judgement"] == "HOLD" and held["exit_gate_mismatch"] == ["windows"] and learned["judgement"] == "PASS"
     assert aggregate(i["judgement"] for i in (held, {"judgement": "PASS"})) == "HOLD"
+
+
+def test_climb_and_gap_of_b_are_x_based_cells_that_start_facing_plus_x_and_only_they_get_the_option():
+    from foothold_s2 import ex42_eval_once as once
+    plan = _plan()
+    completion = plan.document["evaluation"]["kind_stage_cells"]["completion"]
+    assert {k: (v["rule"], v["m"], v.get("start_yaw_zero")) for k, v in completion.items() if k in ("B/climb_up", "B/climb_down", "B/gap")} == {
+        "B/climb_up": ("travel", 4.5, True), "B/climb_down": ("travel", 4.5, True), "B/gap": ("travel", 5.4, True)}
+    assert [k for k, v in completion.items() if v.get("start_yaw_zero")] == ["B/climb_up", "B/climb_down", "B/gap"]
+    assert ks.finish_anchor({}, family="B", kind="gap", level=3, completion=completion)["start_yaw_zero"] is True
+    assert "start_yaw_zero" not in ks.finish_anchor({}, family="B", kind="rough", level=3, completion=completion)
+    kinds = {"B/climb_up": 1, "B/gap": 1, "B/rough": 1, "C/flat": 0}
+    commands = once.kind_stage_kit_commands("/x/model_500.pt", "/x/m500", "cuda:0", task="T", plan_path=plan.path, plan=plan.document,
+                                            mesh_dir="/x/mesh", seed=42, kinds=kinds)
+    assert {name: "--start-yaw-zero" in argv for name, argv in commands} == {
+        "kind_stage_B__climb_up": True, "kind_stage_B__gap": True, "kind_stage_B__rough": False, "kind_stage_C__flat": False}
+
+
+def test_a_start_yaw_zero_mark_other_than_true_is_an_invalid_completion_rule():
+    import copy
+    doc = copy.deepcopy(_plan().document)
+    doc["evaluation"]["kind_stage_cells"]["completion"]["B/gap"]["start_yaw_zero"] = False
+    with pytest.raises(ValueError, match="completion rule invalid"):
+        ks._spec(doc)
+
+
+def test_the_raw_reader_asks_the_cell_validator_for_the_yaw_record_only_when_the_anchor_carries_the_mark(monkeypatch, tmp_path):
+    from foothold_s2.eval import ex42_kind_completion as kc
+    from foothold_s2.eval import ex42_mesh_eval as me
+    asked = []
+
+    def stop(*args, **kwargs):
+        asked.append(kwargs["start_yaw_zero"])
+        raise RuntimeError("stop after the validator")
+
+    monkeypatch.setattr(me, "validate_kind_cell", stop)
+    modes = {m: {"fwd1.0": {}} for m in ("eval_gt", "eval_pred", "probe_prop_only")}
+    (tmp_path / "map_modes.json").write_text(json.dumps({
+        "checkpoint_sha256": "c" * 64, "eval_seed": 42, "envs": 32, "ex42_mesh": {"mesh_sha256": "m"}, "modes": modes,
+        "env_arrays": {f"{m}/fwd1.0": f"env_arrays_{m}_fwd1.0.npz" for m in modes}}))
+    for anchor in ({"travel_m": 4.5, "start_yaw_zero": True}, {"travel_m": 4.0}):
+        with pytest.raises(RuntimeError, match="stop after"):
+            kc.read_start_kind_cell(tmp_path, mesh={"mesh_sha256": "m"}, checkpoint_sha256="c" * 64, seed=42, family="B",
+                                    kind="gap", level=1, mode="eval_gt", seconds=12, settle_s=0.5, envs=32, anchor=anchor)
+    assert asked == [True, False]

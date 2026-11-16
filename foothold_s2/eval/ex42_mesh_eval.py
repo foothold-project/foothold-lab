@@ -36,7 +36,7 @@ def validate_eval_cell(result, mesh, *, fixed_level=None):
         raise ValueError("EX-42 calibration terrain tiles differ from A continuous fixed cell")
 
 
-def validate_kind_cell(result, mesh, *, family: str, kind: str, level: int, envs: int = 64):
+def validate_kind_cell(result, mesh, *, family: str, kind: str, level: int, envs: int = 64, start_yaw_zero: bool = False):
     """Verify every env stayed on the selected named kind after the Kit run."""
     from foothold_s2.eval.fixed_terrain import assignment_sha256, kind_assignment
 
@@ -48,6 +48,8 @@ def validate_kind_cell(result, mesh, *, family: str, kind: str, level: int, envs
             or record.get("num_envs") != n or record.get("fixed_level") != level
             or record.get("family") != family or record.get("kind") != kind):
         raise ValueError("EX-42 named kind evaluation identity differs")
+    if result.get("start_yaw_override") != (0.0 if start_yaw_zero else None):      # a +x start must be recorded; a random-yaw cell must not carry one
+        raise ValueError("EX-42 named kind evaluation start yaw record differs from the plan")
     levels, types = kind_assignment(n, record["rows"], table, family, kind, level)
     if record.get("assignment_sha256") != assignment_sha256(levels, types):
         raise ValueError("EX-42 named kind evaluation assignment SHA differs")

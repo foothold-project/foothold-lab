@@ -250,13 +250,14 @@ def kind_stage_kit_commands(checkpoint, output, device, *, task, plan_path, plan
     out = []
     for kind, level in sorted(kinds.items()):
         family, name = kind.split("/", 1)
+        yaw0 = ["--start-yaw-zero"] if (spec["completion"].get(kind) or {}).get("start_yaw_zero") else []
         out.append((f"kind_stage_{kind_dir(kind)}",
                     [str(machine_path("conda_python")), "-m", "foothold_s2.eval.eval_map_modes", "--task", task,
                      "--checkpoint", str(checkpoint), "--envs", str(spec["envs_per_kind"]), "--steps", str(spec["forward_steps"]),
                      "--modes", ",".join(MODES), "--command-suite", "core", "--commands", "fwd1.0",
                      "--fixed-terrain", "--fixed-level", str(level), "--mesh-dir", str(mesh_dir),
                      "--ex42-kind-family", family, "--ex42-kind-name", name, "--eval-seed", str(seed),
-                     "--out", str(Path(output) / "kind_cells" / kind_dir(kind)), "--device", device, *kit]))
+                     "--out", str(Path(output) / "kind_cells" / kind_dir(kind)), "--device", device, *yaw0, *kit]))
     return out
 
 

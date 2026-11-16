@@ -66,7 +66,7 @@ parser.add_argument("--push-ladder-map-mode", choices=("eval_gt", "eval_pred", "
 parser.add_argument("--push-ladder-command", choices=("walk_0.5", "walk_1.0", "walk_1.5", "stand_turn_1.2", "stand"), default="walk_0.5")
 parser.add_argument("--push-ladder-directions", choices=("full", "cardinal"), default="full")
 parser.add_argument("--eval-seed", type=int, default=42, help="명령마다 env.reset 앞에서 torch.manual_seed 에 주는 값(시작 위치 · 관측 잡음, 행동은 평균). 기본 42 = 기존과 같음. 지형 기하 시드(SPARSE_GEOMETRY_SEED)는 따로 고정이라 안 바뀐다")
-parser.add_argument("--start-yaw-zero", action="store_true", help="E1 wide fixed cells only: set every env start yaw to +x (0 rad) after the fixed-terrain reset; position and joints stay (lead 11/15 팀장 21:49)")
+parser.add_argument("--start-yaw-zero", action="store_true", help="E1 wide fixed cells and EX-42 named-kind cells only: set every env start yaw to +x (0 rad) after the fixed-terrain reset; position and joints stay (lead 11/15 팀장 21:49)")
 parser.add_argument("--out", required=True)
 AppLauncher.add_app_launcher_args(parser)
 args = parser.parse_args()
@@ -123,8 +123,8 @@ if args.fixed_level is not None and not 0 <= args.fixed_level <= 9:
     parser.error("--fixed-level 은 0..9 정수(지형 레벨 행 수 10)")                                  # 행 수 대조는 apply 에서 한 번 더
 if args.eval_seed < 0:
     parser.error("--eval-seed 는 0 이상 정수(Kit 기동 전 거절)")
-if args.start_yaw_zero and (args.command_suite != "e1_wide_fixed" or not args.fixed_terrain or args.fixed_level is None or parser_sparse):
-    parser.error("--start-yaw-zero 는 --command-suite e1_wide_fixed 와 --fixed-terrain --fixed-level N 에만 쓴다(Kit 기동 전 거절)")
+if args.start_yaw_zero and ((args.command_suite != "e1_wide_fixed" and not kind_cell) or not args.fixed_terrain or args.fixed_level is None or parser_sparse):
+    parser.error("--start-yaw-zero 는 --command-suite e1_wide_fixed 나 --ex42-kind-* 종 칸과, --fixed-terrain --fixed-level N 에만 쓴다(Kit 기동 전 거절)")
 CMD_NAMES = tuple(_command_cells.commands(args.command_suite))
 WANT_CMDS = CMD_NAMES if args.commands == "all" else tuple(args.commands.split(","))
 
@@ -850,7 +850,8 @@ out_json = os.path.join(args.out, "map_modes.json")
 if kind_cell:
     from foothold_s2.eval.ex42_mesh_eval import validate_kind_cell
     validate_kind_cell(res, args.ex42_mesh, family=args.ex42_kind_family,
-                       kind=args.ex42_kind_name, level=args.fixed_level, envs=args.envs)
+                       kind=args.ex42_kind_name, level=args.fixed_level, envs=args.envs,
+                       start_yaw_zero=args.start_yaw_zero)
 with open(out_json + ".tmp", "w", encoding="utf-8") as stream:
     res["evaluation_friction"] = ex42_friction.verify(raw, friction_policy)
     json.dump(res, stream, ensure_ascii=False, indent=1, allow_nan=False)
