@@ -270,6 +270,13 @@ class MixedVelocityCommand(CommandTerm):
             # compute after it, and the first action would follow that stale command.
             self.vel_command_b[flag] = 0.0
 
+    def _flag_turn_first_rad(self):
+        """The plan row's `flag_turn_first_rad` (stage 0 of the stage runtime = the running row), or None = off (E1, E1F and every plan without the cell)."""
+        runtime = getattr(self, "stage_runtime", None)
+        stages = getattr(getattr(runtime, "plan", None), "stages", None)
+        value = getattr(stages[0], "flag_turn_first_rad", None) if stages else None
+        return float(value) if value else None
+
     def _apply_slow_hold(self, ids):
         """v29-5, plan-driven (E1F): after the free envs drew their command, envs on the slow band (0.1 <= |v_xy| < 0.3, wz == 0, no heading / spin /
         stand) get time_left = U(lo, hi) s, where (lo, hi) is the plan row's `slow_hold_range_s` of the env's stage. No cell, null or 0 (the E1 row, the
@@ -344,7 +351,8 @@ class MixedVelocityCommand(CommandTerm):
                 }
 
         if len(self.flag_ids) > 0:
-            cmd = mc.flag_step(self.flag_state, pos[self.flag_ids], yaw[self.flag_ids], dt, self.params)
+            self.flag_turn_first_rad = self._flag_turn_first_rad()
+            cmd = mc.flag_step(self.flag_state, pos[self.flag_ids], yaw[self.flag_ids], dt, self.params, self.flag_turn_first_rad)
             sel = self.is_flag_env[self.flag_ids]
             self.vel_command_b[self.flag_ids[sel]] = cmd[sel]
             self.goals[self.flag_ids[sel]] = self.flag_state.passed[sel]

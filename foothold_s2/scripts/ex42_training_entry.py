@@ -1153,6 +1153,12 @@ def make_ex42_stage_zero_plan_view(source_plan: Any, stage: Any,
                 raise ValueError("EX-42 stage slow_hold_range_s invalid (two numbers, 0 < lo <= hi <= 30 s)")
             from dataclasses import replace
             stage = replace(stage, slow_hold_range_s=(float(hold_range[0]), float(hold_range[1])))
+        turn_first = row.get("flag_turn_first_rad")
+        if turn_first is not None:
+            if type(turn_first) not in (int, float) or isinstance(turn_first, bool) or not math.isfinite(turn_first) or not 0.1 <= turn_first <= 3.0:
+                raise ValueError("EX-42 stage flag_turn_first_rad invalid (a number of radians in [0.1, 3.0])")
+            from dataclasses import replace
+            stage = replace(stage, flag_turn_first_rad=float(turn_first))
     return SimpleNamespace(
         command_contract=command_contract,
         is_ex41=True, stages=[stage], domain_randomization=source_plan.domain_randomization,

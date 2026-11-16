@@ -538,12 +538,14 @@ def flag_resample(state, ids, gen, params):
         state.backoff_v[ids] = torch.where(on, new_v, state.backoff_v[ids])
 
 
-def flag_step(state, pos_xy, yaw, dt, params):
+def flag_step(state, pos_xy, yaw, dt, params, turn_first_rad=None):
     """한 제어 스텝: 깃발 진행을 갱신하고 명령 (n, 3) 을 돌려준다.
 
     - 0.5 m 안에 들면 다음 깃발. 마지막 깃발이면 세 칸 0 을 `flag_final_hold_s` 동안(이후도 0) 유지.
     - 물러나기 중이면 직전에 지난 깃발 쪽 단위 벡터 x backoff_v, wz 0 (몸을 돌리지 않는다).
     - v < 0.3 이면 (0, 0, spin_wz), 아니면 방향 x v 에 wz = clip(방향 각, +-1).
+    - turn_first_rad (plan 칸 `flag_turn_first_rad`, 없으면 꺼짐): 걷는 env 의 깃발 방향 각이 이 값보다 크면 제자리 회전 (xy 0, wz = clip(방향 각, +-flag_wz_clip)),
+      안이면 위와 같이 직진 + 작은 wz. 물러나기 · 제자리 회전 (v < 0.3) 갈래는 그대로.
     깃발이 하나도 없는 env(n_flags == 0)는 세 칸 0.
     """
     n = pos_xy.shape[0]
@@ -574,6 +576,9 @@ def flag_step(state, pos_xy, yaw, dt, params):
     forward = torch.stack([unit[:, 0] * state.v, unit[:, 1] * state.v,
                            torch.clip(angle, -params.flag_wz_clip, params.flag_wz_clip)], dim=1)
     spinning = torch.stack([zeros, zeros, state.spin_wz], dim=1)
+    if turn_first_rad:
+        turn_in_place = torch.stack([zeros, zeros, forward[:, 2]], dim=1)
+        forward = torch.where((angle.abs() > turn_first_rad)[:, None], turn_in_place, forward)
     cmd = torch.where(moving[:, None], forward, spinning)
 
     back = state.backoff_left > 0.0

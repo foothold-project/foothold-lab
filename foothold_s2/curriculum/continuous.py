@@ -113,6 +113,7 @@ class Stage:
     turn_overlay: tuple[float, float, float] | None = None      # (fraction, |wz| low, |wz| high) on reverse / side / diagonal
     low_side_fraction: float = 0.0                              # share of the side commands with |vy| in [0.1, 0.3]; 0 = the sampler is unchanged
     slow_hold_range_s: tuple[float, float] | None = None       # E1F: slow forward commands (0.1 <= |v_xy| < 0.3, no turn) are held U(lo, hi) s; None = off
+    flag_turn_first_rad: float | None = None                   # E1F-b / E2: a walking flag env whose flag is more than this angle off the heading turns in place (xy 0, wz = clip(angle)); None = off
 
 
 class Plan:
