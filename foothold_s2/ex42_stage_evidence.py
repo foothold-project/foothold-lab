@@ -110,7 +110,7 @@ def produce(*, template_path, source_path, target, gate_path, manifest_path, out
         npz = Path(mesh.get('mesh_npz', '')).resolve(strict=True)
         manifest = _json(mesh.get('manifest', ''))
         if (manifest.get('mesh_sha256') != mesh.get('mesh_sha256')
-                or manifest.get('mesh_file_sha256') != digest(npz)):
+                or manifest.get('mesh_file_sha256') not in (None, digest(npz))):      # the E0 evaluation mesh manifest predates the field (same tolerance as ex42_flag_publication); the geometry sha above still has to match the receipt
             raise ValueError('mesh producer SHA differs')
         bindings[mesh_key] = _ref(npz)
     flags = source.document.get('evaluation', {}).get('flag_cells') or {}
