@@ -41,7 +41,7 @@ def configure_lower_env_cfg(env_cfg, agent_cfg, *, num_envs: int, device: str, s
 
 
 def build_nav_env(*, checkpoint, expected_sha256: str, room_mesh_npz, room_mesh_sha256: str, num_envs: int, device: str,
-                  seed: int, map_mode: str = "eval_gt", command_mode: str = "clip", prep_path=None):
+                  seed: int, map_mode: str = "eval_gt", command_mode: str = "clip", prep_path=None, extra_scene=None):
     """Kit python 에서만. 하위 env 를 만들고 하위 정책을 올려 `NavEnv` 를 돌려준다 (Kit 에서 돌려 본 적 없음: 미확인).
     순서는 D44 평가기와 같다: cfg -> 저장본 sha · 입력 폭 검사 (gym.make 전) -> gym.make -> 러너 -> 명령 항 heading 끄기."""
     import gymnasium as gym
@@ -58,6 +58,8 @@ def build_nav_env(*, checkpoint, expected_sha256: str, room_mesh_npz, room_mesh_
     agent_cfg = load_cfg_from_registry(LOWER_TASK, "rsl_rl_cfg_entry_point")
     summary = configure_lower_env_cfg(env_cfg, agent_cfg, num_envs=num_envs, device=device, seed=seed,
                                       terrain_generator=mesh_file_generator_cfg(room_mesh_npz, room_mesh_sha256))
+    if extra_scene is not None:         # 예: student 의 depth 카메라를 scene 에 더한다 (gym.make 전에만 가능)
+        extra_scene(env_cfg)
     state, prep = lower_adapter.prepare(env_cfg, checkpoint, expected_sha256)
     env = RslRlVecEnvWrapper(gym.make(LOWER_TASK, cfg=env_cfg), clip_actions=agent_cfg.clip_actions)
     lower = lower_adapter.LowerPolicy.load(checkpoint, env, device, map_mode, agent_cfg=agent_cfg.to_dict(),

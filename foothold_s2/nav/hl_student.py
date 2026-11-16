@@ -42,11 +42,23 @@ class StudentCfg:
         return asdict(self)
 
 
+def pitch_down_quat_wxyz(deg: float):
+    """몸 틀 y 축 둘레 아래로 deg 도 (z 위 · x 앞 · y 왼쪽 틀에서 +y 둘레 + 회전이 앞을 아래로 눕힌다). Kit 에서 영상으로 확인 전: 미확인."""
+    import math
+
+    h = math.radians(deg) / 2
+    return (math.cos(h), 0.0, math.sin(h), 0.0)
+
+
+CAMERA_POS_M = (0.30, 0.0, 0.05)         # 가정: 몸통 앞 위 (실측으로 교체 · 11 §2)
+
+
 def depth_camera_cfg(num_envs: int = NUM_ENVS, mesh_prim_paths=("/World/ground",)):
     """Kit 쪽에서만. RayCasterCamera 180x320. 부르는 쪽이 로봇 몸통 prim 경로 · 장착 위치를 채운다 (미확인: 이 cfg 는 Kit 에서 만들어 본 적 없음)."""
     from isaaclab.sensors import RayCasterCameraCfg, patterns
 
     return RayCasterCameraCfg(prim_path="{ENV_REGEX_NS}/Robot/base", mesh_prim_paths=list(mesh_prim_paths), update_period=0.1,
+                              offset=RayCasterCameraCfg.OffsetCfg(pos=CAMERA_POS_M, rot=pitch_down_quat_wxyz(CAMERA_PITCH_DEG), convention="world"),
                               data_types=["distance_to_image_plane"],
                               pattern_cfg=patterns.PinholeCameraPatternCfg(focal_length=1.93, horizontal_aperture=3.68, height=DEPTH_H, width=DEPTH_W),
                               debug_vis=False)
