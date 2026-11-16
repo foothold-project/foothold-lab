@@ -24,7 +24,10 @@ def _rows():
 
 def test_the_e1f_row_has_the_e1_live_blocks_and_only_the_start_weight_differs():
     plan, e1, e1f = _rows()
-    assert e1f["live_adjustment"] == e1["live_adjustment"]
+    # E1F new composition (2026-11-16): the only difference is the low_side_fraction fence in command_limits (the limits file stays byte for byte)
+    e1f_live = {**e1f["live_adjustment"], "command_limits": dict(e1f["live_adjustment"]["command_limits"])}
+    assert e1f_live["command_limits"].pop("low_side_fraction") == [0.0, 0.5]
+    assert e1f_live == e1["live_adjustment"]
     assert {k: v for k, v in e1f["live_monitor"].items() if k != "initial_slow_track_weight"} == \
         {k: v for k, v in e1["live_monitor"].items() if k != "initial_slow_track_weight"}
     assert e1["live_monitor"]["initial_slow_track_weight"] == 0.2 and e1f["live_monitor"]["initial_slow_track_weight"] == 0.3

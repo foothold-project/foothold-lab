@@ -87,12 +87,14 @@ def test_e3_start_block_is_the_e2_end_state_plus_the_entry_axis_only():
 def test_command_shares_follow_the_canon_c_boundaries():
     rows = _rows()
     e1f, e3, e4 = rows["E1F"]["shares"], rows["E3"], rows["E4"]
-    assert e3["shares"] == e1f and e1f["flag"] == 0.1                    # E2 changes no command share
+    assert e3["shares"] == rows["E2"]["shares"] and e1f["flag"] == 0.1   # E2 -> E3 changes no command share
+    # E1F new composition (lead 2026-11-16 09:26): reverse 0.10 and side 0.09 in E1F only; the E2 and later rows still hold the earlier vector (open: lead)
+    assert {k for k in e1f if e1f[k] != e3["shares"][k]} == {"reverse", "side_left", "side_right"}
     after = e3["command_allocation_boundary"]["shares"]
     assert abs(sum(after.values()) - 1.0) < 1e-9 and after["flag"] == 0.15
     assert (after["forward"], after["walk_left"], after["walk_right"]) == (0.14, 0.05, 0.05)
     assert {k: v for k, v in after.items() if k not in ("forward", "walk_left", "walk_right", "flag")} == \
-           {k: v for k, v in e1f.items() if k not in ("forward", "walk_left", "walk_right", "flag")}
+           {k: v for k, v in e3["shares"].items() if k not in ("forward", "walk_left", "walk_right", "flag")}   # vs the E2 vector (E1F's own reverse and side moved 2026-11-16)
     assert e4["shares"] == after
     assert e4["command_allocation_boundary"]["targets"] == {"flag": 0.2, "forward": 0.11, "diagonal_total": 0.07}
     last = e4["command_allocation_boundary"]["shares"]
@@ -114,7 +116,8 @@ def test_every_stage_the_share_contract_reads_has_an_explicit_vector():
 
     document = yaml.safe_load(PLAN.read_text(encoding="utf-8"))
     rows = {row["id"]: row for row in document["stages"]}
-    assert rows["E2"]["shares"] == rows["E1F"]["shares"]                 # CG E.2 E2: no command share moves at the K boundary
+    # CG E.2 E2: no command share moves at the K boundary. E1F's own vector changed on 2026-11-16 (reverse, side); E2 and later keep the earlier one (open: lead)
+    assert {k for k in rows["E1F"]["shares"] if rows["E1F"]["shares"][k] != rows["E2"]["shares"][k]} == {"reverse", "side_left", "side_right"}
     plan = SimpleNamespace(document=document)
     for stage in ("E1F", "E2", "E3", "E4", "E5", "E6a", "E6b"):
         contract = read_contract(plan, stage)
