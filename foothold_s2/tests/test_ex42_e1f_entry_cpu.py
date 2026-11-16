@@ -78,3 +78,17 @@ def test_a_resume_from_the_base_cap_save_into_the_extension_is_accepted_by_the_s
     assert _saved_bound_fits(1750, 2250, "E1") and _saved_bound_fits(1750, 1750, "E1") and _saved_bound_fits(2250, 2750, "E1")
     assert not _saved_bound_fits(2250, 1750, "E1") and not _saved_bound_fits(2000, 2250, "E1") and not _saved_bound_fits(1000, 1750, "E1")
     assert _saved_bound_fits(1000, 1000, "EX42_0_T0_prime") and not _saved_bound_fits(1000, 1500, "EX42_0_T0_prime")
+
+
+def test_e2_follows_e1f_even_when_the_plan_pins_no_e1f_parent():
+    """E2 plan (materialized from the shipped template): E1F pins no parent, but E2's parent run is E1F's, not E1's.
+    The parent check reads E1F's caps (750 base + one 500 extension) and its mirror from the plan row."""
+    import yaml
+    stages = yaml.safe_load(entry.Path(entry.__file__).resolve().parents[1].joinpath("curriculum", "ex42-prep.yaml").read_text(encoding="utf-8-sig"))["stages"]
+    for row in stages:                                                        # give E2 a pin like the materialization does
+        if row["id"] == "E2":
+            row["parent"] = {"source_stage_id": "E1F", "manifest_local_update": 500, "checkpoint_key": "model_500.pt", "sha256": "0" * 64, "cumulative_update": 15750}
+    table = entry.e_stage_table(stages)
+    assert "E1F" not in table
+    assert table["E2"]["previous"] == "E1F" and table["E2"]["previous_caps"] == {750, 1250}
+    assert table["E2"]["previous_mirror"] is True and table["E1"]["previous"] == "E0"

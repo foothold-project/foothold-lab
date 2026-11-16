@@ -45,22 +45,26 @@ def e_stage_table(stages: list[dict[str, Any]]) -> dict[str, dict[str, Any]]:
     run, and the pin is written into the plan when that is known. `previous` is the stage whose run is the parent
     (None for the first, whose parent is the stage-zero m13000). Nothing here names a stage."""
     table: dict[str, dict[str, Any]] = {}
-    previous = None
+    previous = None                 # the plan row just before, whether or not it pins a parent (E2 follows E1F, which pins none in the E2 plan)
+    previous_caps: set[int] = set()
+    previous_mirror = False
     mirror = False                  # the critic mirror stays on from the stage that turns it on until a stage says off
     for row in stages:
         mirror = row.get("critic_mirror", mirror)
         if type(mirror) is not bool:
             raise ValueError(f"EX-42 stage {row.get('id')} critic_mirror must be a bool")
+        updates = row.get("maximum_updates", row.get("minimum_updates"))
+        caps = ({updates + k * (row.get("extension_updates") or 0) for k in range((row.get("extension_max_count") or 0) + 1)}
+                if type(updates) is int else set())      # this row's finished run may have saved one of these (read by the next row's parent check)
         parent = row.get("parent")
-        if not isinstance(parent, dict):
-            continue
-        table[row["id"]] = {
-            "updates": row.get("maximum_updates", row["minimum_updates"]),               # the base cap; the first check (minimum) is not a limit
-            "extension_updates": row.get("extension_updates") or 0, "extension_max_count": row.get("extension_max_count") or 0, "parent_local": parent["manifest_local_update"],
-            "parent_cumulative": parent["cumulative_update"], "parent_key": parent["checkpoint_key"],
-            "critic_mirror": mirror,
-            "previous": previous}
-        previous = row["id"]
+        if isinstance(parent, dict):
+            table[row["id"]] = {
+                "updates": row.get("maximum_updates", row["minimum_updates"]),     # the base cap; the first check (minimum) is not a limit
+                "extension_updates": row.get("extension_updates") or 0, "extension_max_count": row.get("extension_max_count") or 0, "parent_local": parent["manifest_local_update"],
+                "parent_cumulative": parent["cumulative_update"], "parent_key": parent["checkpoint_key"],
+                "critic_mirror": mirror,
+                "previous": previous, "previous_caps": previous_caps, "previous_mirror": previous_mirror}
+        previous, previous_caps, previous_mirror = row["id"], caps, mirror
     return table
 
 
@@ -1963,7 +1967,7 @@ def inspect_ex42_stage_parent(*, plan: EX42Plan, stage_id: str, approvals_path: 
         raise ValueError(f"EX-42 {stage_id} is not a stage that continues a previous stage's run")
     validator = stage_approval_validator(plan, stage_id)
     previous, local, cumulative = spec["previous"], spec["parent_local"], spec["parent_cumulative"]
-    mirror_before = E_STAGE_SPECS[previous]["critic_mirror"]
+    mirror_before = spec["previous_mirror"]
     pin = dict(_e_stage(plan, stage_id)["parent"])
     approval = validator(plan, approvals_path, pin["sha256"])
     parent = plan.verify_parent_manifest(parent_manifest_path, stage_id=stage_id)
@@ -1987,7 +1991,7 @@ def inspect_ex42_stage_parent(*, plan: EX42Plan, stage_id: str, approvals_path: 
     state = checkpoint.get("continuous_curriculum")
     if (not isinstance(state, dict) or state.get("format") != "foothold-ex42-stage-zero-state/1"
             or state.get("stage_id") != previous or state.get("iteration") != local
-            or state.get("maximum_updates") not in _stage_caps(previous)):
+            or state.get("maximum_updates") not in spec["previous_caps"]):
         raise ValueError(f"EX-42 {stage_id} parent curriculum state is not the finished {previous} state")
     required = ("model_state_dict", "optimizer_state_dict", "ppo_learning_rate",
                 "perception_state_dict", "perception_optimizer_state_dict", "adasmpl",
