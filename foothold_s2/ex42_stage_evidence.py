@@ -78,7 +78,11 @@ def produce(*, template_path, source_path, target, gate_path, manifest_path, out
     template, source = EX42Plan.load(template_path), EX42Plan.load(source_path)
     gate_path = Path(gate_path).resolve(strict=True)
     gate = _json(gate_path)
-    if gate.get('state') != 'complete' or gate.get('judgment') != 'PASS' or gate.get('plan_sha256') != source.sha256:
+    first_window = gate.get('state') == 'first_window_handoff'      # E1F m250 on the team lead's recorded approval (ex42_e1f_first_window); never written as a PASS
+    if first_window:
+        if gate.get('judgment') != 'FIRST_WINDOW_HANDOFF' or gate.get('plan_sha256') != source.sha256 or gate.get('stage_id') != 'E1F':
+            raise ValueError('first window handoff receipt does not belong to this E1F plan')
+    elif gate.get('state') != 'complete' or gate.get('judgment') != 'PASS' or gate.get('plan_sha256') != source.sha256:
         raise ValueError('stage evidence requires actual predecessor PASS under its source plan')
     row = _row(template, target)
     contract = row['authorization_contract']
@@ -88,7 +92,11 @@ def produce(*, template_path, source_path, target, gate_path, manifest_path, out
     policy = source
     if gate.get('evaluation_plan'):
         policy = EX42Plan.load(_checked_ref(gate['evaluation_plan'], gate_path.parent))
-    validate_source_exit(source, gate, gate_path, evaluation_plan=policy)
+    if first_window:
+        from foothold_s2.ex42_e1f_first_window import read_first_window_handoff
+        read_first_window_handoff(gate_path, policy_plan=policy)      # recounts the raw flag cells, the maintenance table and the ledger line
+    else:
+        validate_source_exit(source, gate, gate_path, evaluation_plan=policy)
     bindings = {}
     paths = set(contract['required_sha256_paths']) | set(contract['required_string_paths'])
     paths |= set(contract['required_boolean_paths']) - {'critic_mirror'}
@@ -144,6 +152,10 @@ def produce(*, template_path, source_path, target, gate_path, manifest_path, out
                 'checkpoint_sha256': gate['checkpoint_sha256'], 'bindings': bindings, 'budget_observed': budget}
     if policy.sha256 != source.sha256:
         document['evaluation_plan'] = _ref(policy.path)
+    if first_window:
+        document['predecessor_exit'] = {'mode': 'first_window_handoff', 'receipt_sha256': digest(gate_path),
+                                        'ledger_line_sha256': gate['lead_approval']['line_sha256'],
+                                        'hold_items': gate['hold_items']}
     axes = row.get('boundary_axes') or []
     if len(axes) == 1:
         document['boundary_axis'] = axes[0]
