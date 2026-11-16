@@ -34,14 +34,14 @@ class TeacherVecEnv:
         return self._torch.as_tensor(self.task.observation(state)["flat"], device=self.device)
 
     def reset(self):
-        state = self.nav.reset()
+        state = self.state = self.nav.reset()
         ids = np.arange(self.n)
         self.task.reset_envs(ids, start_xy=self._pos_room(state, ids))
         return self._obs(state)
 
     def step(self, action):
         t = self._torch
-        state = self.nav.step(action.detach().cpu().numpy())
+        state = self.state = self.nav.step(action.detach().cpu().numpy())
         out = self.task.step(state)
         done = np.asarray(state.done, bool)
         ids = np.flatnonzero(done | out["task_reached"])
