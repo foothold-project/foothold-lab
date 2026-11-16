@@ -43,7 +43,9 @@ def plan_mae_window_s(plan: dict):
 
 def _conditional_ok(block) -> bool:
     num = lambda v: type(v) in (int, float) and math.isfinite(v)
-    return (isinstance(block, dict) and set(block) == CONDITIONAL_KEYS
+    return (isinstance(block, dict) and set(block) - {"from_iteration"} == CONDITIONAL_KEYS and CONDITIONAL_KEYS <= set(block)
+            and ("from_iteration" not in block
+                 or (type(block["from_iteration"]) is int and block["from_iteration"] > 0 and block["from_iteration"] % 250 == 0))
             and isinstance(block["cells"], list) and block["cells"] and len(set(block["cells"])) == len(block["cells"])
             and all(isinstance(k, str) and CONDITIONAL_CELL_RE.fullmatch(k) for k in block["cells"])
             and type(block["success_min"]) is int and 1 <= block["success_min"] <= 64
@@ -92,7 +94,21 @@ def apply_record_cells(result: dict, plan: dict) -> dict:
     return {**result, "judgement": verdict, "items": items}
 
 
-def apply_conditional_record(result: dict, plan: dict) -> dict:
+def _window_iteration(checkpoint) -> int | None:
+    """Update number of a window = the model_<N>.pt name its score is bound to (same field previous_e1_score checks); None if unreadable."""
+    try:
+        match = re.fullmatch(r"model_(\d+)\.pt", Path(checkpoint).name)
+    except TypeError:
+        return None
+    return int(match.group(1)) if match else None
+
+
+def apply_conditional_record_prior(prior_v2: dict, plan: dict, previous: dict) -> dict:
+    """The stored previous window is read under the rule at ITS OWN update number (its score's checkpoint name), not the current window's."""
+    return apply_conditional_record(prior_v2, plan, _window_iteration(previous.get("checkpoint")))
+
+
+def apply_conditional_record(result: dict, plan: dict, iteration: int | None = None) -> dict:
     """Graduation plan v3 only (decision ledger conditional_record.decision): when EVERY judged FAIL is one of
     conditional_record.cells, each such cell stands on the floor (success, R, survival) and its companion cell (same map mode,
     same command, level L0) is PASS, those FAIL cells become record cells (value kept, judgement_if_judged FAIL, not in the
@@ -100,6 +116,12 @@ def apply_conditional_record(result: dict, plan: dict) -> dict:
     block = graduation(plan).get("conditional_record")
     if not block:
         return result
+    start = block.get("from_iteration")      # plan v4: the rule judges only windows at or after this update (m2000 is not counted)
+    if start is not None:
+        if type(iteration) is not int:
+            return {**result, "conditional_record_skipped": "window update number unreadable: rule not applied"}
+        if iteration < start:
+            return result
     items = result["items"]
     failed = [k for k, v in items.items() if v.get("role") != "record" and v.get("judgement") == "FAIL"]
     if not failed or not set(failed) <= set(block["cells"]):
@@ -639,7 +661,7 @@ def _judge_e1_v2(score: dict, baseline: dict, measured: dict, plan: dict,
     # A graduation plan lists record_cells (L5 side +-0.4); apply_record_cells is a no-op for every other plan.
     current_v2 = apply_conditional_record(apply_record_cells(judge_cells(
         result["e1_v2_cells"], plan, repeats=repeats if set(repeats) == expected_repeats else None,
-        previous_cells=previous_cells), plan), plan)
+        previous_cells=previous_cells), plan), plan, _window_iteration(checkpoint))
     if repeats and set(repeats) != expected_repeats:
         current_v2["repeat_evidence"] = {"judgement": "HOLD", "reason": "세 시드 자료 일부 결측"}
     # The prior P1 receipt has already judged its own seed 42/7/13 bundle.
@@ -649,7 +671,7 @@ def _judge_e1_v2(score: dict, baseline: dict, measured: dict, plan: dict,
     if not isinstance(prior_v2, dict) or prior_v2.get("judgement") not in ("PASS", "HOLD", "FAIL"):
         prior_v2 = {"judgement": "HOLD", "reason": "직전 창 v2 판정 없음"}
     elif isinstance(prior_v2.get("items"), dict):
-        prior_v2 = apply_conditional_record(prior_v2, plan)      # a previous window stored before v3 is read under the same rule (no key = unchanged)
+        prior_v2 = apply_conditional_record_prior(prior_v2, plan, previous)      # a previous window stored before v3 is read under the same rule (no key = unchanged)
     match = re.fullmatch(r"model_(\d+)\.pt", Path(checkpoint).name)
     if match is None:
         raise ValueError("E1 v2 checkpoint iteration missing")
