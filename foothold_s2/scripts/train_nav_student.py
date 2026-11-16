@@ -23,7 +23,12 @@ def _sha(path) -> str:
     return h.hexdigest()
 
 
-def build_receipt(*, teacher_checkpoint, teacher_sha256, cfg=None, resume=None) -> dict:
+def identity_text(receipt: dict) -> str:
+    """이어 받기 대조용 글: `resume` 칸을 뺀 영수증 (reviewer 04:15 와 같은 결함을 student 에도 미리 막음)."""
+    return json.dumps({k: v for k, v in receipt.items() if k != "resume"}, ensure_ascii=False, indent=2, sort_keys=True)
+
+
+def build_receipt(*, teacher_checkpoint, teacher_sha256, cfg=None, resume=None, save_interval=SAVE_INTERVAL) -> dict:
     import torch
     from foothold_s2.nav import hl_student as hs
 
@@ -41,7 +46,7 @@ def build_receipt(*, teacher_checkpoint, teacher_sha256, cfg=None, resume=None) 
         rp = Path(resume).resolve(strict=True)
         row = {"path": str(rp), "sha256": _sha(rp)}
     return {"format": FORMAT, "teacher": {"checkpoint": str(ck), "sha256": digest}, "student": cfg.as_dict(), "assumed_fields": list(hs.ASSUMED),
-            "depth": [hs.DEPTH_H, hs.DEPTH_W], "camera_pitch_deg": hs.CAMERA_PITCH_DEG, "save_interval": SAVE_INTERVAL, "resume": row, "training_started": False}
+            "depth": [hs.DEPTH_H, hs.DEPTH_W], "camera_pitch_deg": hs.CAMERA_PITCH_DEG, "save_interval": int(save_interval), "resume": row, "training_started": False}
 
 
 def main(argv=None) -> int:
@@ -55,12 +60,13 @@ def main(argv=None) -> int:
     p.add_argument("--iterations", type=int, default=None)
     p.add_argument("--resume", default=None)
     p.add_argument("--seed", type=int, default=0)
+    p.add_argument("--save-interval", type=int, default=SAVE_INTERVAL)
     p.add_argument("--receipt-out", default=None)
     a = p.parse_args(argv)
     if not a.dry and not (a.env_factory and a.out_dir and a.iterations):
         print("refused: training needs --env-factory, --out-dir and --iterations (or use --print)", file=sys.stderr)
         return 2
-    receipt = build_receipt(teacher_checkpoint=a.teacher_checkpoint, teacher_sha256=a.teacher_sha256, resume=a.resume)
+    receipt = build_receipt(teacher_checkpoint=a.teacher_checkpoint, teacher_sha256=a.teacher_sha256, resume=a.resume, save_interval=a.save_interval)
     text = json.dumps(receipt, ensure_ascii=False, indent=2, sort_keys=True)
     if a.receipt_out:
         with open(a.receipt_out, "x", encoding="utf-8") as stream:
@@ -74,13 +80,17 @@ def main(argv=None) -> int:
 
     out = Path(a.out_dir)
     out.mkdir(parents=True, exist_ok=True)
+    ident = identity_text(receipt)
     rpath = out / "start_receipt.json"
     if rpath.exists():
-        if rpath.read_text(encoding="utf-8").strip() != text:
+        if rpath.read_text(encoding="utf-8").strip() != ident:
             raise SystemExit("refused: out-dir already holds a different start receipt")
     else:
-        rpath.write_text(text + "\n", encoding="utf-8")
-    sha = hashlib.sha256(text.encode("utf-8")).hexdigest()
+        rpath.write_text(ident + "\n", encoding="utf-8")
+    if a.resume:
+        with open(out / "resume_log.jsonl", "a", encoding="utf-8") as stream:
+            stream.write(json.dumps(receipt["resume"], ensure_ascii=False) + "\n")
+    sha = hashlib.sha256(ident.encode("utf-8")).hexdigest()
     cfg = hs.StudentCfg()
     mod, _, fn = a.env_factory.partition(":")
     vec, depth_fn = getattr(importlib.import_module(mod), fn)()
@@ -99,7 +109,7 @@ def main(argv=None) -> int:
     saved = []
 
     def after(it, net, optimizer):
-        if it % SAVE_INTERVAL == 0:
+        if it % a.save_interval == 0:
             path = out / f"student_{it}.pt"
             if path.exists():
                 raise FileExistsError(f"{path} exists (never overwritten)")

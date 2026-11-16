@@ -76,3 +76,14 @@ def test_eval_scores_a_walker_that_reaches_the_goal(tmp_path):
     finally:
         ns.shortest_length = orig
     assert r["n"] == 2 and r["sr"] == 0.5 and r["spl"] == pytest.approx(0.5)
+
+
+def test_student_cli_resume_continues_in_the_same_out_dir(teacher_ckpt, tmp_path, monkeypatch):
+    path, sha = teacher_ckpt
+    monkeypatch.setattr(hs, "StudentCfg", lambda: REAL(rollout_steps=2, seq_len=2, batch_seqs=2, epochs=1))
+    out = tmp_path / "s"
+    base = ["--teacher-checkpoint", str(path), "--teacher-sha256", sha, "--env-factory", f"{__name__}:make_vec", "--out-dir", str(out), "--save-interval", "2"]
+    assert tns.main([*base, "--iterations", "2"]) == 0 and (out / "student_2.pt").exists()
+    assert tns.main([*base, "--iterations", "2", "--resume", str(out / "student_2.pt")]) == 0 and (out / "student_4.pt").exists()
+    with pytest.raises(SystemExit):
+        tns.main([*base, "--iterations", "1", "--resume", str(out / "student_4.pt"), "--save-interval", "3"])

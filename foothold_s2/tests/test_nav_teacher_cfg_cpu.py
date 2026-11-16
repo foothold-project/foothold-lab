@@ -98,3 +98,16 @@ def test_a_real_run_writes_the_receipt_first_and_refuses_a_different_one(files, 
     assert tnt.main([*argv, "--iterations", "1"]) == 0                                    # 같은 영수증이면 같은 폴더를 다시 쓸 수 있다
     with pytest.raises(SystemExit):                                                       # 다른 영수증 (num-envs 다름) 이면 거절
         tnt.main([*argv, "--iterations", "1", "--num-envs", "512"])
+
+
+def test_cli_resume_continues_in_the_same_out_dir_and_a_changed_ppo_is_refused(files, tmp_path):
+    """reviewer 04:15 FAIL: 명령줄에서 이어 받기가 언제나 거절되던 결함. 2 회 -> model_2.pt -> --resume 으로 같은 out-dir 에서 3 회까지."""
+    ckpt, room, plan = files
+    out = tmp_path / "run"
+    base = ["--lower-checkpoint", str(ckpt), "--lower-sha256", _sha(b"lower"), "--room-manifest", str(room), "--plan", str(plan), "--vx-corr-b", "0.009",
+            "--env-factory", f"{__name__}:make_stub_env", "--out-dir", str(out), "--save-interval", "2"]
+    assert tnt.main([*base, "--iterations", "2"]) == 0 and (out / "model_2.pt").exists()
+    assert tnt.main([*base, "--iterations", "2", "--resume", str(out / "model_2.pt")]) == 0 and (out / "model_4.pt").exists()
+    assert len((out / "resume_log.jsonl").read_text().splitlines()) == 1
+    with pytest.raises(SystemExit):                                   # PPO 하나 (num-envs) 를 바꾸면 거절
+        tnt.main([*base, "--iterations", "1", "--resume", str(out / "model_4.pt"), "--num-envs", "512"])

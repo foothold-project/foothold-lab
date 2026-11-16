@@ -24,7 +24,16 @@ def _sha(path) -> str:
     return h.hexdigest()
 
 
-def build_receipt(*, lower_checkpoint, lower_sha256, room_manifests, plan, vx_corr_b, resume=None, num_envs=None) -> dict:
+def ppo_kwargs(num_envs=None, save_interval=None) -> dict:
+    return {**({"num_envs": int(num_envs)} if num_envs else {}), **({"save_interval": int(save_interval)} if save_interval else {})}
+
+
+def identity_text(receipt: dict) -> str:
+    """이어 받기 대조에 쓰는 글: `resume` 칸을 뺀 영수증 (하위 · 방 · plan · b · 관측 · PPO). 첫 실행과 이어 받기가 같은 글을 낸다 (reviewer 04:15)."""
+    return json.dumps({k: v for k, v in receipt.items() if k != "resume"}, ensure_ascii=False, indent=2, sort_keys=True)
+
+
+def build_receipt(*, lower_checkpoint, lower_sha256, room_manifests, plan, vx_corr_b, resume=None, num_envs=None, save_interval=None) -> dict:
     from foothold_s2.nav import hl_ppo_cfg as cfg
     from foothold_s2.nav.teacher_obs import TeacherObsLayout
 
@@ -41,7 +50,7 @@ def build_receipt(*, lower_checkpoint, lower_sha256, room_manifests, plan, vx_co
     if not rooms:
         raise ValueError("at least one room manifest is required")
     plan_path = Path(plan).resolve(strict=True)
-    ppo = cfg.TeacherPPO(**({"num_envs": int(num_envs)} if num_envs else {}))
+    ppo = cfg.TeacherPPO(**ppo_kwargs(num_envs, save_interval))
     layout = TeacherObsLayout()
     encoder = cfg.build_encoder(ppo, layout)
     import torch
@@ -69,6 +78,7 @@ def main(argv=None) -> int:
     p.add_argument("--vx-corr-b", type=float, required=True)
     p.add_argument("--resume", default=None)
     p.add_argument("--num-envs", type=int, default=None)
+    p.add_argument("--save-interval", type=int, default=None, help="default 50 (design); a different value is part of the PPO identity")
     p.add_argument("--env-factory", default=None, help="module:function returning (NavEnv, NavTask) for the real loop")
     p.add_argument("--out-dir", default=None)
     p.add_argument("--iterations", type=int, default=None)
@@ -79,7 +89,7 @@ def main(argv=None) -> int:
         print("refused: training needs --env-factory, --out-dir and --iterations (or use --print)", file=sys.stderr)
         return 2
     receipt = build_receipt(lower_checkpoint=a.lower_checkpoint, lower_sha256=a.lower_sha256, room_manifests=a.room_manifest, plan=a.plan,
-                            vx_corr_b=a.vx_corr_b, resume=a.resume, num_envs=a.num_envs)
+                            vx_corr_b=a.vx_corr_b, resume=a.resume, num_envs=a.num_envs, save_interval=a.save_interval)
     text = json.dumps(receipt, ensure_ascii=False, indent=2, sort_keys=True)
     if a.receipt_out:
         with open(a.receipt_out, "x", encoding="utf-8") as stream:
@@ -92,16 +102,20 @@ def main(argv=None) -> int:
 
     out = Path(a.out_dir)
     out.mkdir(parents=True, exist_ok=True)
+    ident = identity_text(receipt)
     rpath = out / "start_receipt.json"
     if rpath.exists():
-        if rpath.read_text(encoding="utf-8").strip() != text:
+        if rpath.read_text(encoding="utf-8").strip() != ident:
             raise SystemExit("refused: out-dir already holds a different start receipt")
     else:
-        rpath.write_text(text + "\n", encoding="utf-8")
-    receipt["receipt_sha256"] = hashlib.sha256(text.encode("utf-8")).hexdigest()
+        rpath.write_text(ident + "\n", encoding="utf-8")
+    if a.resume:                                   # 이어 받기 기록은 영수증과 따로 덧붙인다
+        with open(out / "resume_log.jsonl", "a", encoding="utf-8") as stream:
+            stream.write(json.dumps(receipt["resume"], ensure_ascii=False) + "\n")
+    receipt["receipt_sha256"] = hashlib.sha256(ident.encode("utf-8")).hexdigest()
     mod, _, fn = a.env_factory.partition(":")
     nav_env, task = getattr(importlib.import_module(mod), fn)()
-    ppo = cfg.TeacherPPO(**({"num_envs": int(a.num_envs)} if a.num_envs else {}))
+    ppo = cfg.TeacherPPO(**ppo_kwargs(a.num_envs, a.save_interval))
     env = hl_train.TeacherVecEnv(nav_env, task, device="cuda:0" if _cuda() else "cpu")
     last, saved = hl_train.train(env, ppo, out_dir=out, iterations=a.iterations, receipt=receipt, resume=a.resume, seed=a.seed,
                                  device=env.device)
