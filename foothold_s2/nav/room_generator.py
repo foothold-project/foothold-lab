@@ -343,6 +343,7 @@ def mesh_sha256(vertices: np.ndarray, faces: np.ndarray) -> str:
 
 
 START_MARGIN_M = 0.8                  # 시작점은 평지 셀이고 벽 · 장애물 · 구덩이 · 방 가장자리에서 이만큼 떨어진 곳 (planner F2 · 11/16 23:40: 열 reset 의 xy 흔들기 ±0.5 m 네모의 모서리 0.71 m 도 평지 안에 들어오게 0.5 -> 0.8)
+ROOM_GAP_M = 2.0                      # 한 메시의 방 사이 빈 공간. 방 폭 20 m 에 2 m 여유를 둔다.
 
 
 def start_points(room: Room, k: int, seed: int = 0, margin: float = START_MARGIN_M) -> np.ndarray:
@@ -385,6 +386,77 @@ def write_room(room: Room, out_dir, n_starts: int = 0, start_seed: int = 0) -> d
                 "primitives": room.spec["primitives"],
                 "starts": None if starts is None else {"seed": int(start_seed), "margin_m": START_MARGIN_M, "xyz": starts.round(4).tolist()}}
     (out / "room_manifest.json").write_text(json.dumps(manifest, ensure_ascii=False, indent=1, sort_keys=True), encoding="utf-8")
+    return manifest
+
+
+def write_rooms(rooms, out_dir, n_starts: int = 0, start_seed: int = 0,
+                room_gap_m: float = ROOM_GAP_M) -> dict:
+    """여러 방을 x 방향 한 메시로 저장한다. origins 의 각 행은 한 방, 열은 그 방 시작점이다."""
+    rooms = list(rooms)
+    if not rooms:
+        raise ValueError("at least one room is required")
+    gap = float(room_gap_m)
+    if not np.isfinite(gap) or gap <= 0:
+        raise ValueError("room_gap_m must be finite and positive")
+    if n_starts < 0:
+        raise ValueError("n_starts must be >= 0")
+
+    pitch = ROOM_M + gap
+    vertices, faces, origin_rows, room_rows = [], [], [], []
+    vertex_offset = 0
+    for row, room in enumerate(rooms):
+        x_offset = row * pitch
+        v, f = room_mesh(room)
+        v[:, 0] += x_offset
+        faces.append(f + vertex_offset)
+        vertices.append(v)
+        vertex_offset += len(v)
+
+        if n_starts:
+            starts = start_points(room, n_starts, seed=int(start_seed) + row)
+        else:
+            starts = np.array([[ROOM_M / 2, ROOM_M / 2, 0.0]], dtype=np.float64)
+        starts[:, 0] += x_offset
+        origin_rows.append(starts)
+        room_rows.append({
+            "row": row,
+            "seed": room.spec.get("seed"),
+            "x_offset_m": x_offset,
+            "mesh_vertices": int(len(v)),
+            "mesh_faces": int(len(f)),
+            "starts_seed": int(start_seed) + row if n_starts else None,
+            "starts_local_xyz": (starts - np.array([x_offset, 0.0, 0.0])).round(4).tolist(),
+            "patches": [o for o in room.objects if o["kind"] == "patch"],
+            "primitives": room.spec["primitives"],
+        })
+
+    v = np.concatenate(vertices).astype(np.float32, copy=False)
+    f = np.concatenate(faces).astype(np.int32, copy=False)
+    origins = np.stack(origin_rows).astype(np.float64, copy=False)
+    sha = mesh_sha256(v, f)
+    out = Path(out_dir)
+    out.mkdir(parents=True, exist_ok=True)
+    np.savez_compressed(out / "terrain_mesh.npz", vertices=v, faces=f, origins=origins,
+                        column_family=np.array(["room"] * origins.shape[1]))
+    manifest = {
+        "format": "hipan-rooms/1",
+        "room_count": len(rooms),
+        "size_m": ROOM_M,
+        "room_gap_m": gap,
+        "room_pitch_m": pitch,
+        "origins_shape": list(origins.shape),
+        "mesh_sha256": sha,
+        "vertices": int(len(v)),
+        "faces": int(len(f)),
+        "starts": None if not n_starts else {
+            "seed": int(start_seed), "margin_m": START_MARGIN_M,
+            "points_per_room": int(n_starts),
+        },
+        "rooms": room_rows,
+    }
+    (out / "room_manifest.json").write_text(
+        json.dumps(manifest, ensure_ascii=False, indent=1, sort_keys=True), encoding="utf-8"
+    )
     return manifest
 
 
