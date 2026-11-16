@@ -22,7 +22,11 @@ class FakeEnv:
                                     heading=torch.zeros(n, dtype=torch.bool), is_flag_env=torch.zeros(n, dtype=torch.bool),
                                     psi_star=torch.zeros(n), params=SimpleNamespace(ex39_arm=1))
         self.data = SimpleNamespace(root_pos_w=torch.zeros(n, 3) + 10.0, root_quat_w=torch.tensor([[1.0, 0, 0, 0]]).repeat(n, 1),
-                                    root_lin_vel_b=torch.zeros(n, 3), root_ang_vel_b=torch.zeros(n, 3))
+                                    root_lin_vel_b=torch.zeros(n, 3), root_ang_vel_b=torch.zeros(n, 3),
+                                    joint_pos=torch.full((n, 12), 0.1), default_joint_pos=torch.zeros(n, 12))
+        self.sensor = SimpleNamespace(body_names=["base", "FL_thigh", "FL_calf", "FL_foot", "Head_upper"],
+                                      data=SimpleNamespace(net_forces_w=torch.zeros(n, 5, 3)))
+        self.collide_at = {}
         self.scene = SimpleNamespace(env_origins=torch.full((n, 3), 10.0))
         self.scene_robot = SimpleNamespace(data=self.data)
         self.seen_cmd = []
@@ -37,8 +41,7 @@ class FakeEnv:
             env_origins = self.scene.env_origins
 
             def __getitem__(_s, key):
-                assert key == "robot"
-                return env.scene_robot
+                return env.scene_robot if key == "robot" else env.sensor
         self.unwrapped.scene = _Scene()
         self.num_envs = n
 
@@ -46,7 +49,7 @@ class FakeEnv:
         self.resets += 1
 
     def get_observations(self):
-        return torch.zeros(self.n, 98)
+        return {"policy": torch.arange(self.n * 98, dtype=torch.float32).reshape(self.n, 98)}
 
     def step(self, action):
         self.calls += 1
@@ -57,6 +60,9 @@ class FakeEnv:
         self.data.root_ang_vel_b[:, 2] = self.data.root_ang_vel_b[:, 2] + self.lag * (cmd[:, 2] - self.data.root_ang_vel_b[:, 2])
         self.data.root_pos_w = self.data.root_pos_w + self.data.root_lin_vel_b * DT
         done = torch.zeros(self.n, dtype=torch.bool)
+        self.sensor.data.net_forces_w.zero_()
+        for (e, c, b) in [k for k in self.collide_at if k[1] == self.calls]:
+            self.sensor.data.net_forces_w[e, b] = torch.tensor([0.0, 0.0, 30.0])
         if self.heading_on_after_done:           # 끝난 env 의 명령 항이 다시 뽑히며 heading 이 켜지는 일을 흉내
             self.term.heading[:] = True
         for (e, c), v in self.done_at.items():
@@ -175,3 +181,26 @@ def test_heading_switched_on_by_a_command_resample_is_cleared_before_the_next_ov
     env2.heading_on_after_done = True
     with pytest.raises(RuntimeError, match="heading or flag"):
         nav2.step(np.array([[0.5, 0.0, 0.0]] * 3))
+
+
+def test_state_carries_the_teacher_inputs_proprio_joints_ang_vel_and_collision(space_args):
+    env, _lower, nav = _make(space_args)
+    env.collide_at = {(2, 3, 1): True, (0, 2, 3): True, (1, 4, 2): True}     # env2 허벅지 · env0 발 (충돌 몸체 아님) · env1 종아리 (아님)
+    s0 = nav.reset()
+    assert s0.proprio.shape == (3, 45) and not s0.collision.any()
+    s = nav.step(np.array([[0.5, 0.0, 0.0]] * 3))
+    obs = env.get_observations()["policy"].numpy()
+    assert np.array_equal(s.proprio, obs[:, :45]) and s.ang_vel_b.shape == (3, 3) and s.q.shape == (3, 12) and s.q0.shape == (12,)
+    assert np.allclose(s.q, 0.1) and np.allclose(s.q0, 0.0)
+    assert list(s.collision) == [False, False, True]           # 몸통 · 허벅지 · 머리만 센다. 윈도 안 한 번이면 True
+
+
+def test_missing_collision_body_names_are_refused_and_no_sensor_means_no_collision(space_args):
+    env = FakeEnv()
+    env.sensor.body_names = ["FL_foot", "FR_foot"]
+    with pytest.raises(ValueError, match="no contact sensor body matches"):
+        NavEnv(env, FakeLower(env.n), cs.CommandSpace(space_args, "clip"))
+    env2 = FakeEnv()
+    nav = NavEnv(env2, FakeLower(env2.n), cs.CommandSpace(space_args, "clip"), sensor_name=None)
+    nav.reset()
+    assert not nav.step(np.array([[0.5, 0.0, 0.0]] * 3)).collision.any()

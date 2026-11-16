@@ -11,6 +11,7 @@ Isaac 가 없어도 가짜 env 로 시험한다 (torch 만 필요).
 """
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass
 
 import numpy as np
@@ -19,6 +20,9 @@ from foothold_s2.nav import lower_adapter
 from foothold_s2.nav.command_space import CommandSpace, HOLD_STEPS
 
 TERM_NAME = "base_velocity"
+SENSOR_NAME = "contact_forces"
+COLLISION_BODIES = ("base", ".*_thigh", "Head_.*")      # 충돌 몸체 = 몸통 · 허벅지 · 머리 (논문 미기재 · 가정 · 설계 §5). 이름은 Go2 USD 기준 (Kit 확인 전 미확인)
+COLLISION_FORCE_N = 1.0                                 # 가정 (D44 평가기의 발 접촉 문턱과 같은 값)
 
 
 @dataclass
@@ -36,6 +40,11 @@ class NavState:
     done: np.ndarray             # (n,) bool 이 윈도 안에서 한 번이라도 끝남 (넘어짐 · 시간 초과 포함)
     done_step: np.ndarray        # (n,) int 처음 끝난 하위 스텝 번호 (없으면 -1)
     timed_out: np.ndarray        # (n,) bool 시간 초과로 끝남 (extras["time_outs"] 가 있을 때)
+    ang_vel_b: np.ndarray        # (n, 3)
+    q: np.ndarray                # (n, J) 관절 위치
+    q0: np.ndarray               # (J,) 기본 자세
+    proprio: np.ndarray          # (n, 45) 하위 관측의 앞 45 칸 (o45 = 하위 고유감각 · teacher 관측의 o_p)
+    collision: np.ndarray        # (n,) bool 이 윈도 안에서 충돌 몸체가 문턱 이상 힘을 받았다
 
 
 def _np(x):
@@ -43,7 +52,8 @@ def _np(x):
 
 
 class NavEnv:
-    def __init__(self, env, lower, space: CommandSpace, *, term_name: str = TERM_NAME, fix_heading=None):
+    def __init__(self, env, lower, space: CommandSpace, *, term_name: str = TERM_NAME, fix_heading=None,
+                 sensor_name: str | None = SENSOR_NAME, collision_bodies=COLLISION_BODIES, collision_force_n: float = COLLISION_FORCE_N):
         if space.hold_steps < 1:
             raise ValueError("hold_steps must be >= 1")
         self.env, self.lower, self.space = env, lower, space
@@ -58,6 +68,15 @@ class NavEnv:
         self.obs = None
         if fix_heading is None:
             from foothold_s2.eval.map_mode_cells import disable_heading_for_fixed_eval as fix_heading
+        self.collision_force_n = float(collision_force_n)
+        self.sensor = None if sensor_name is None else self.raw.scene[sensor_name]
+        self.collision_ids = None
+        if self.sensor is not None:
+            names = list(self.sensor.body_names)
+            ids = [i for i, nm in enumerate(names) if any(re.fullmatch(pat, nm) for pat in collision_bodies)]
+            if not ids:
+                raise ValueError(f"no contact sensor body matches {collision_bodies}: {names}")
+            self.collision_ids = ids
         self._fix_heading = fix_heading        # 에피소드가 끝나 명령 항이 다시 뽑히면 heading 이 다시 켜질 수 있다: 덮어쓰기 전에 끈다
 
     # ---- 상태 읽기
@@ -78,8 +97,21 @@ class NavEnv:
         return self._state(None, np.zeros((self.hold, self.n, 3)), np.zeros(self.n, bool), np.full(self.n, -1, np.int32),
                            np.zeros(self.n, bool))
 
-    def _state(self, applied, track_err, done, done_step, timed_out) -> NavState:
+    def _collision_now(self) -> np.ndarray:
+        if self.sensor is None:
+            return np.zeros(self.n, bool)
+        import torch
+
+        force = torch.linalg.vector_norm(self.sensor.data.net_forces_w[:, self.collision_ids], dim=-1)
+        return _np((force > self.collision_force_n).any(dim=1)).astype(bool)
+
+    def _proprio(self) -> np.ndarray:
+        obs = self.obs["policy"] if not hasattr(self.obs, "shape") else self.obs
+        return _np(obs[:, :45])
+
+    def _state(self, applied, track_err, done, done_step, timed_out, collision=None) -> NavState:
         pos, quat, vel, yaw = self._body()
+        data = self.raw.scene["robot"].data
         origins = self.raw.scene.env_origins
         z5 = np.zeros((self.n, 5))
         return NavState(
@@ -87,7 +119,9 @@ class NavEnv:
             applied=z5 if applied is None else applied.cmd.copy(),
             stand=np.zeros(self.n, bool) if applied is None else applied.stand.copy(),
             modified=np.zeros(self.n, bool) if applied is None else applied.modified.copy(),
-            track_err=track_err, done=done, done_step=done_step, timed_out=timed_out)
+            track_err=track_err, done=done, done_step=done_step, timed_out=timed_out,
+            ang_vel_b=_np(data.root_ang_vel_b), q=_np(data.joint_pos), q0=_np(data.default_joint_pos[0]),
+            proprio=self._proprio(), collision=np.zeros(self.n, bool) if collision is None else collision)
 
     def step(self, high_action) -> NavState:
         """상위 행동 (n, 3) 하나 -> 하위 `hold` 스텝. 중간에 끝난 env 는 Isaac 이 되돌려 놓으므로 남은 스텝도 같은 명령으로 간다
@@ -101,6 +135,7 @@ class NavEnv:
         done_step = np.full(self.n, -1, np.int32)
         timed = np.zeros(self.n, bool)
         errs, applied = [], None
+        collided = np.zeros(self.n, bool)
         for k in range(self.hold):
             applied = self.space.step(a)
             self._fix_heading(self.term)
@@ -111,9 +146,10 @@ class NavEnv:
             _p, _q, vel, yaw = self._body()
             errs.append(lower_adapter.tracking_error(applied.cmd[:, :3], _np(vel), _np(yaw)))
             d = _np(done).astype(bool)
+            collided |= self._collision_now()
             done_step[(done_step < 0) & d] = k
             done_any |= d
             t = (extras or {}).get("time_outs") if isinstance(extras, dict) else None
             if t is not None:
                 timed |= _np(t).astype(bool) & d
-        return self._state(applied, np.stack(errs), done_any, done_step, timed)
+        return self._state(applied, np.stack(errs), done_any, done_step, timed, collided)
