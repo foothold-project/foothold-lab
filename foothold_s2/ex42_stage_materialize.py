@@ -226,7 +226,7 @@ def source_exit_bounds(source, template, stage):
     return minimum, expected['maximum_updates']
 
 
-def inherited_rewards(source, stage, parent_manifest, iteration, limits_path):
+def inherited_rewards(source, stage, parent_manifest, iteration, limits_path, target_plan=None, target_stage=None):
     """The reward cells the source stage really ran with in the segment that produced `model_<iteration>.pt`.
 
     decisions.tsv 2026-11-13 21:50: a target row without its own `rewards` cell does not fall back to the code's stage
@@ -236,11 +236,14 @@ def inherited_rewards(source, stage, parent_manifest, iteration, limits_path):
     segment (`ex42_resume_segments[*].local_update_origin`). A run that was never resumed ran its plan row throughout
     and leaves no readback file, so it inherits the row itself. A resumed segment must have left
     `segment_rewards_b<k>[_rank<r>].json`; a missing or differing file is refused, never replaced by defaults."""
-    from foothold_s2.commands.ex42_segment_adjust import REWARD_CELLS, TOL, complete_cells, reward_limits, stage_rewards
+    from foothold_s2.commands.ex42_segment_adjust import (REWARD_CELLS, TOL, _plan_fenced, complete_cells, reward_limits,
+                                                          stage_rewards)
     row = _row(source, stage)
     if row.get('rewards') is None:
         return None, {}
     limits = reward_limits(limits_path)      # the target template's limits: the values must be startable there
+    if target_plan is not None:              # ... including the target row's own wider fence (E1F, E2: PLAN_WIDENABLE cells)
+        limits = _plan_fenced(limits, target_plan, target_stage)
     interval = source.document['evaluation']['interval_updates']
     segments = _json(parent_manifest).get('ex42_resume_segments', [])
     origins = [segment.get('local_update_origin') if isinstance(segment, dict) else None for segment in segments] \
@@ -390,9 +393,26 @@ def _prepare(*, plan, source_plan, approvals, target, parent_manifest, gate_rece
     inherited, inherited_refs = (None, {})
     if row.get('rewards') is None:
         inherited, inherited_refs = inherited_rewards(source, stage, parent_manifest, iteration,
-                                                      template.path.parent / 'ex42-reward-adjust-limits.yaml')
+                                                      template.path.parent / 'ex42-reward-adjust-limits.yaml',
+                                                      target_plan=template, target_stage=target)
         if inherited is not None:
             row['rewards'] = dict(inherited['values'])
+    start = row.get('reward_start')
+    if start is not None:
+        # E1F (lead 2026-11-16 15:20, planner 15:17): the stage starts two reward cells away from what the source stage ended with.
+        # Only the PLAN_WIDENABLE cells, only on top of an inherited full set, and inside the row's own fence.
+        from foothold_s2.commands.ex42_segment_adjust import PLAN_WIDENABLE, _plan_fenced, _rewards, reward_limits
+        if (not isinstance(start, dict) or not start or not set(start) <= set(PLAN_WIDENABLE)
+                or any(type(v) not in (int, float) or not math.isfinite(v) for v in start.values())):
+            raise ValueError(f'{target} reward_start may name only {list(PLAN_WIDENABLE)} as numbers')
+        if inherited is None:        # an already materialized template: its own cells must already be the start
+            if row.get('rewards') is None or any(row['rewards'].get(k) != float(v) for k, v in start.items()):
+                raise ValueError(f'{target} reward_start needs the reward cells inherited from {stage}')
+        else:
+            fenced = _plan_fenced(reward_limits(template.path.parent / 'ex42-reward-adjust-limits.yaml'), template, target)
+            row['rewards'] = _rewards({**row['rewards'], **{k: float(v) for k, v in start.items()}}, fenced, f'{target} reward_start')
+        if inherited is not None:
+            inherited['start_override'] = {k: float(v) for k, v in start.items()}
     flag_artifacts = {}
     if flag_chain is not None:
         if target != FLAG_CHAIN_TARGET:

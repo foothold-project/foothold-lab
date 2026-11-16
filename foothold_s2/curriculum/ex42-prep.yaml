@@ -462,6 +462,12 @@ stages:
   # Fence of a boundary adjustment of slow_hold_range_s (EX42_SEGMENT_ADJUST): an entry is null (off) or a pair inside it, and 0 < lo <= hi <= 30.
   slow_hold_fence_s: [4.0, 12.0]
   slow_track_heading: true
+  # E1F starts two reward cells away from what E1 ended with (lead 2026-11-16 15:20, planner 15:17): slow_progress 0.4 (the push from below the
+  # command) and slow_track_sigma 0.35 (a narrower tracking width, over- and undershoot both punished). slow_track weight stays what E1 ended with
+  # (0.3). The other cells are E1's last readback (ex42_stage_materialize.inherited_rewards); this cell only overlays these two and only at
+  # materialization, inside the fence below. E2 has no such cell: it inherits E1F's last readback. Back-out order (boundary adjustment): Pc off,
+  # then slow_progress 0.3 and slow_track_sigma 0.5, both inside the row fence.
+  reward_start: {slow_progress: 0.4, slow_track_sigma: 0.35}
   live_monitor:
     enabled: true
     moving_updates: 20
@@ -480,9 +486,12 @@ stages:
       zero_yaw: [-2.0, -0.5]
       feet_air_time_threshold: [0.04, 0.5]
       slow_track: [0.0, 0.3]
-      slow_track_sigma: [0.5, 0.5]
+      # The two cells below are fenced wider than the limits file (it keeps its bytes: the source E1 row pins its sha). The row pair must
+      # contain the file's pair ([0.5, 0.5] and [0.0, 0.3]); commands.ex42_segment_adjust.PLAN_WIDENABLE names the only two cells allowed to.
+      slow_track_sigma: [0.35, 0.5]
       slow_track_speed_min: [0.1, 0.1]
       slow_track_speed_max: [0.3, 0.3]
+      slow_progress: [0.0, 0.6]
     command_limits:
       low_forward_fraction: [0.2, 0.5]
       low_side_fraction: [0.0, 0.5]
@@ -642,9 +651,12 @@ stages:
       zero_yaw: [-2.0, -0.5]
       feet_air_time_threshold: [0.04, 0.5]
       slow_track: [0.0, 0.3]
-      slow_track_sigma: [0.5, 0.5]
+      # The two cells below are fenced wider than the limits file (it keeps its bytes: the source E1 row pins its sha). The row pair must
+      # contain the file's pair ([0.5, 0.5] and [0.0, 0.3]); commands.ex42_segment_adjust.PLAN_WIDENABLE names the only two cells allowed to.
+      slow_track_sigma: [0.35, 0.5]
       slow_track_speed_min: [0.1, 0.1]
       slow_track_speed_max: [0.3, 0.3]
+      slow_progress: [0.0, 0.6]
     command_limits:
       low_forward_fraction: [0.2, 0.5]
       low_side_fraction: [0.0, 0.5]
@@ -731,6 +743,9 @@ stages:
   - start_beam_l0
   - start_gap_l0
 - id: E3
+  # Inherits E2's last reward values (slow_progress up to 0.6, slow_track_sigma down to 0.35): the same row fence as E1F/E2, read by
+  # commands.ex42_segment_adjust.row_reward_fence (no live adjustment here). The limits file keeps its bytes.
+  reward_fence: {slow_progress: [0.0, 0.6], slow_track_sigma: [0.35, 0.5]}
   exit_judge: kind_two_window_e3
   # The command ranges and the turn overlay reinforced in E1 stay in force after it (decisions.tsv 2026-11-12 12:52,
   # 13:03). Without this cell a stage falls back to the stage-zero ranges (ex42_shares.stage_commands). `ranges` and
@@ -862,6 +877,9 @@ stages:
       # The 30 is an assumption (CG marks 2 / 30 / 32 as assumptions); the planner contract 16:2x records it.
       continuous_low_level_floor: {levels: [0, 2], fraction_of_continuous: 0.30, class: assumption, source: CG:380}
 - id: E4
+  # Inherits E2's last reward values (slow_progress up to 0.6, slow_track_sigma down to 0.35): the same row fence as E1F/E2, read by
+  # commands.ex42_segment_adjust.row_reward_fence (no live adjustment here). The limits file keeps its bytes.
+  reward_fence: {slow_progress: [0.0, 0.6], slow_track_sigma: [0.35, 0.5]}
   exit_judge: kind_two_window_e4
   # The command ranges and the turn overlay reinforced in E1 stay in force after it (decisions.tsv 2026-11-12 12:52,
   # 13:03). Without this cell a stage falls back to the stage-zero ranges (ex42_shares.stage_commands). `ranges` and
@@ -1053,6 +1071,9 @@ stages:
   - E
   - continuous
 - id: E5
+  # Inherits E2's last reward values (slow_progress up to 0.6, slow_track_sigma down to 0.35): the same row fence as E1F/E2, read by
+  # commands.ex42_segment_adjust.row_reward_fence (no live adjustment here). The limits file keeps its bytes.
+  reward_fence: {slow_progress: [0.0, 0.6], slow_track_sigma: [0.35, 0.5]}
   exit_judge: kind_two_window_e5
   # The command ranges and the turn overlay reinforced in E1 stay in force after it (decisions.tsv 2026-11-12 12:52,
   # 13:03). Without this cell a stage falls back to the stage-zero ranges (ex42_shares.stage_commands). `ranges` and

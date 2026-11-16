@@ -195,15 +195,47 @@ def stage_low_forward(plan, stage_id, limits=None) -> float | None:
     return _low_forward(row["low_forward_fraction"], limits if limits is not None else reward_limits(), f"{stage_id} plan row")
 
 
+# Reward cells a stage row may fence wider than the limits file (E1F, E2; 2026-11-16 lead 15:20, planner 15:17). The file keeps its bytes
+# (the source E1 row pins its sha, ex42_stage_materialize reads the template's file against it), so the wider fence is the row's own
+# `live_adjustment.extra_reward_limits.<cell>` (or `reward_fence.<cell>` on a stage without a live adjustment): it must contain the file's pair, never narrow it, and only these two cells may differ.
+PLAN_WIDENABLE = ("slow_progress", "slow_track_sigma")
+
+
+def row_reward_fence(row, base_cells, stage_id) -> dict:
+    """{cell: (low, high)} the stage row widens beyond `base_cells` (the limits file's pairs); {} when it widens nothing.
+    A row pair that does not contain the file's pair is refused (a row cannot narrow the fence)."""
+    extra = {**(row.get("reward_fence") or {}), **((row.get("live_adjustment") or {}).get("extra_reward_limits") or {})}
+    out = {}
+    for name in PLAN_WIDENABLE:
+        if name not in extra:
+            continue
+        pair = extra[name]
+        if (not isinstance(pair, list) or len(pair) != 2 or any(type(v) not in (int, float) or not math.isfinite(v) for v in pair)
+                or pair[0] > pair[1]):
+            raise ValueError(f"EX-42 {stage_id} plan row extra_reward_limits.{name} must be [low, high]")
+        low, high = base_cells[name]
+        if pair[0] > low + TOL or pair[1] < high - TOL:
+            raise ValueError(f"EX-42 {stage_id} plan row extra_reward_limits.{name} {list(pair)} does not contain the limits file's {[low, high]}")
+        if (float(pair[0]), float(pair[1])) != (low, high):
+            out[name] = (float(pair[0]), float(pair[1]))
+    return out
+
+
 def _plan_fenced(limits, plan, stage_id):
     """E1F keeps ex42-reward-adjust-limits.yaml byte for byte (the source E1 row pins its sha and the materialization reads that file against it),
-    so the fence of `low_side_fraction` is the stage row's own `live_adjustment.command_limits.low_side_fraction`. A fence the file itself carries
-    wins; a row without that cell leaves `limits` exactly as it is (None stays None)."""
+    so the fence of `low_side_fraction` is the stage row's own `live_adjustment.command_limits.low_side_fraction`, and the fence of the two
+    reward cells in PLAN_WIDENABLE is the row's own `live_adjustment.extra_reward_limits` when that is wider than the file's. A fence the file
+    itself carries wins for the command cell; a row without those cells leaves `limits` exactly as it is (None stays None)."""
     row = next((s for s in plan.document["stages"] if s["id"] == stage_id), {})
     fence = ((row.get("live_adjustment") or {}).get("command_limits") or {}).get("low_side_fraction")
-    if fence is None:
-        return limits
     base = limits if limits is not None else reward_limits()
+    widened = row_reward_fence(row, base["cells"], stage_id) if base is not None else {}
+    if widened:
+        base = {**base, "cells": {**base["cells"], **widened}}
+    elif fence is None:
+        return limits
+    if fence is None:
+        return base
     cells = dict((base or {}).get("command_cells") or {})
     if "low_side_fraction" in cells:
         return base
@@ -264,7 +296,7 @@ def stage_rewards(plan, stage_id, limits=None) -> dict | None:
     cell = row.get("rewards")
     if cell is None:
         return None
-    return _rewards(cell, limits if limits is not None else reward_limits(), f"{stage_id} plan row")
+    return _rewards(cell, _plan_fenced(limits if limits is not None else reward_limits(), plan, stage_id), f"{stage_id} plan row")
 
 
 def stage_slow_track_heading(plan, stage_id) -> bool:

@@ -37,12 +37,15 @@ def test_e1f_row_gets_the_last_segment_live_values_including_an_adjustment(known
     result = run(known)
     plan, row = _e1f(result)
     source_row = next(x for x in yaml.safe_load(Path(known['source_plan']).read_text())['stages'] if x['id'] == 'E1')
-    assert row['rewards'] == {**source_row['rewards'], 'slow_track': 0.3}
-    assert row['rewards']['zero_yaw'] == -1.0 and row['rewards']['track_lin_vel_std'] == 0.35
+    # what E1 ended with (the readback), then the E1F row's reward_start overlay (2026-11-16 15:20): slow_progress 0.4, slow_track_sigma 0.35
+    inherited = {**source_row['rewards'], 'slow_track': 0.3}
+    assert row['rewards'] == {**inherited, 'slow_progress': 0.4, 'slow_track_sigma': 0.35}
+    assert row['rewards']['zero_yaw'] == -1.0 and row['rewards']['track_lin_vel_std'] == 0.35 and row['rewards']['slow_track'] == 0.3
     transition = json.loads(Path(result['transition']).read_text())
     assert transition['inherited_rewards']['boundary_index'] == 6
     assert transition['inherited_rewards']['origin'] == 'segment_rewards readback'
-    assert transition['inherited_rewards']['values'] == row['rewards']
+    assert transition['inherited_rewards']['values'] == inherited
+    assert transition['inherited_rewards']['start_override'] == {'slow_progress': 0.4, 'slow_track_sigma': 0.35}
     assert {'inherited_rewards.readback0', 'inherited_rewards.readback1'} <= set(transition['artifacts'])
     # the stage start reads the same cells from the published row
     from foothold_s2.commands.ex42_segment_adjust import stage_rewards
@@ -238,7 +241,9 @@ def test_a_source_stage_without_reward_cells_inherits_nothing(known):
 def test_a_template_row_with_its_own_cells_is_not_overwritten(known):
     document = yaml.safe_load(Path(known['plan']).read_text())
     own = dict(next(x for x in document['stages'] if x['id'] == 'E1')['rewards'], zero_yaw=-0.75)
-    next(x for x in document['stages'] if x['id'] == 'E1F')['rewards'] = own
+    e1f_row = next(x for x in document['stages'] if x['id'] == 'E1F')
+    e1f_row['rewards'] = own
+    e1f_row.pop('reward_start')           # an own full set and an overlay on the inherited one cannot both speak (see the test below)
     template = Path(known['plan']).parent / 'own-cells.yaml'
     template.write_text(yaml.safe_dump(document, sort_keys=False, allow_unicode=True))
     known['plan'] = template
