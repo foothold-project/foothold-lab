@@ -183,3 +183,19 @@ def fold_ranks(documents: list[dict[str, Any]]) -> dict[str, Any]:
     if sorted(d["rank"] for d in documents) != list(range(first["world_size"])):
         raise ValueError("EX-42 exposure receipts do not cover every rank")
     return first
+
+
+def read_boundary_receipt(checkpoint: str | Path, *, stage_id: str, plan_sha256: str) -> dict[str, Any]:
+    """The verified, rank-folded `exposure_receipt_<it>.json` the training wrote at this checkpoint's boundary."""
+    import re
+    checkpoint = Path(checkpoint)
+    iteration = int(re.fullmatch(r"model_(\d+)\.pt", checkpoint.name).group(1))
+    files = sorted(p for p in checkpoint.parent.iterdir()
+                   if re.fullmatch(rf"exposure_receipt_{iteration}(_rank\d+)?\.json", p.name))
+    if not files:
+        raise ValueError("EX-42 boundary exposure receipt is missing")
+    body = fold_ranks([json.loads(p.read_text(encoding="utf-8")) for p in files])
+    if (body["stage_id"] != stage_id or body["plan_sha256"] != plan_sha256 or body["iteration"] != iteration
+            or body["kind"] != "boundary"):
+        raise ValueError("EX-42 boundary exposure receipt identity differs")
+    return body

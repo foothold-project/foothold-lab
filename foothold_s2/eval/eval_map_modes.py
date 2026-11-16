@@ -358,7 +358,7 @@ def _save_env_arrays(mode, cname, vx, fw, al, dn, dt, start_xy, row, map_err=Non
         contact, foot_local = kind_foot_arrays
         fixed_terrain.verify_kind_foot_arrays(contact, foot_local, al)
         extra.update(foot_contact=contact, foot_pos_local=foot_local,
-                     root_x_local_m=fw)
+                     root_x_local_m=fw, root_y_local_m=POS[:, :, 1].cpu().numpy())
         row["kind_foot_evidence"] = {"foot_order": ["FL_foot", "FR_foot", "RL_foot", "RR_foot"],
                                      "contact_threshold_n": 1.0,
                                      "valid_mask": "alive excludes post-reset samples",

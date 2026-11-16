@@ -143,7 +143,7 @@ stage_zero:
     cumulative_update: 12000
     manifest_local_update: 6000
     sha256: 1c6af6319c823c718af4965064f1c312b0d25177f5223a49c323aab3b6f1e613
-  approval_sha256: 38ddad06199f1032052b908158ca7227b9e9f5b0bfb66d521d602b77493b6dc7
+  approval_sha256: 429ec98dcea918067f6ec8fa9063dcc89ee07eb31d1672f64dda8fd5fa13ef6c
   minimum_updates: 1000
   maximum_updates: 1000
   extension_updates: 0
@@ -731,6 +731,7 @@ stages:
   - start_beam_l0
   - start_gap_l0
 - id: E3
+  exit_judge: kind_two_window_e3
   # The command ranges and the turn overlay reinforced in E1 stay in force after it (decisions.tsv 2026-11-12 12:52,
   # 13:03). Without this cell a stage falls back to the stage-zero ranges (ex42_shares.stage_commands). `ranges` and
   # `turn_overlay` are E1's plan values. `shares` here are the 13 free slots for environments outside the continuous
@@ -861,6 +862,7 @@ stages:
       # The 30 is an assumption (CG marks 2 / 30 / 32 as assumptions); the planner contract 16:2x records it.
       continuous_low_level_floor: {levels: [0, 2], fraction_of_continuous: 0.30, class: assumption, source: CG:380}
 - id: E4
+  exit_judge: kind_two_window_e4
   # The command ranges and the turn overlay reinforced in E1 stay in force after it (decisions.tsv 2026-11-12 12:52,
   # 13:03). Without this cell a stage falls back to the stage-zero ranges (ex42_shares.stage_commands). `ranges` and
   # `turn_overlay` are E1's plan values. `shares` here are the 13 free slots for environments outside the continuous
@@ -1051,6 +1053,7 @@ stages:
   - E
   - continuous
 - id: E5
+  exit_judge: kind_two_window_e5
   # The command ranges and the turn overlay reinforced in E1 stay in force after it (decisions.tsv 2026-11-12 12:52,
   # 13:03). Without this cell a stage falls back to the stage-zero ranges (ex42_shares.stage_commands). `ranges` and
   # `turn_overlay` are E1's plan values. `shares` here are the 13 free slots for environments outside the continuous
@@ -2914,6 +2917,43 @@ evaluation:
     weak_subcell_warning_fraction_of_success_floor: 0.5
     judge_modes: [eval_gt, eval_pred]
     record_modes: [probe_prop_only]
+  kind_stage_cells:
+    forward_command: fwd1.0
+    forward_steps: 600
+    forward_seconds: 12.0
+    completion_settle_s: 0.5
+    envs_per_kind: 32
+    valid_min_each: 24
+    judge_modes: [eval_gt, eval_pred]
+    record_modes: [probe_prop_only]
+    # planner TABLE-E3E5-KIND-COMPLETION-1116 (values are assumption grade: dimension calculations, not measured on the mesh).
+    # A = the measured finish platform (the E2 rule). travel = straight-line displacement (m) from the first sample, for kinds
+    # with a fixed reset heading or whose heading does not matter. center_max = max(|x|, |y|) from the tile center (m), for the
+    # pyramid-shaped kinds (reset yaw and xy are random there; assumes the cell origin is the tile center).
+    # No entry = HOLD, never a pass: B climb_up, climb_down, gap (random heading and the obstacle is on one side only).
+    # learned_cells_min 32 stays at the E2 value (grade: assumption, proportional to the E2 threshold); the 32-env cell scales the counts 26 / 30.
+    completion:
+      A: {rule: start_finish_platform}
+      B/stair_up: {rule: travel, m: 3.8}
+      B/stair_down: {rule: travel, m: 3.8}
+      B/consecutive: {rule: travel, m: 5.3}
+      B/beam: {rule: travel, m: 4.0}
+      B/pallets: {rule: travel, m: 4.0}
+      B/stones: {rule: travel, m: 4.0}
+      B/obstacles: {rule: travel, m: 4.0}
+      B/rough: {rule: travel, m: 4.0}
+      B/boxes: {rule: travel, m: 4.0}
+      C/gap: {rule: travel, m: 7.5}
+      C/box: {rule: travel, m: 7.3}
+      C/discrete_obstacles: {rule: travel, m: 7.0}
+      C/flat: {rule: travel, m: 3.5}
+      C/discrete_grid: {rule: travel, m: 3.5}
+      C/pyramid_stairs: {rule: center_max, m: 3.75}
+      C/inverted_pyramid_stairs: {rule: center_max, m: 3.75}
+      E/stairs_high: {rule: center_max, m: 3.5}
+      E/stairs_high_inv: {rule: center_max, m: 3.5}
+      E/slope_steep: {rule: center_max, m: 3.85}
+      E/slope_steep_inv: {rule: center_max, m: 3.85}
   paper_cells:
     judge_from_stage: E4
     slope:

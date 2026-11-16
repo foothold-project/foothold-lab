@@ -108,10 +108,13 @@ def read_boundary(checkpoint: Path, *, stage_id: str, plan_sha256: str, interval
 
 def judge_two_boundaries(checkpoint: Path, *, stage_id: str, plan: dict,
                          plan_sha256: str, interval: int, min_episodes: int,
-                         previous_kind_pass: bool) -> dict:
+                         previous_kind_pass: bool,
+                         named_kinds: dict[tuple[str, str], bool] | None = None) -> dict:
     """CG:381 registration, two adjacent save windows, no proxy counts."""
-    if stage_id != "E2" or type(min_episodes) is not int or min_episodes < 1:
-        raise ValueError("EX-42 learned_cells E2 threshold invalid")
+    # `named_kinds` (E3 and later): {(family, kind): this kind passed its previous window}; E2 has the one kind below.
+    if stage_id not in ("E2", "E3", "E4", "E5") or (stage_id == "E2") != (named_kinds is None) or \
+            type(min_episodes) is not int or min_episodes < 1:
+        raise ValueError("EX-42 learned_cells stage threshold invalid")
     checkpoint = Path(checkpoint)
     iteration = int(re.fullmatch(r"model_(\d+)\.pt", checkpoint.name).group(1))
     current = read_boundary(checkpoint, stage_id=stage_id,
@@ -140,17 +143,26 @@ def judge_two_boundaries(checkpoint: Path, *, stage_id: str, plan: dict,
     e0 = next(row for row in plan["stages"] if row["id"] == "E0")
     terrain = {**stage["terrain"], "kind_task": e0["terrain"]["kind_task"]}
     table = current["column_table"]
-    exposure, caps = exposure_by_column(terrain, table, stage_id)
+    if named_kinds is None:
+        exposure, caps = exposure_by_column(terrain, table, stage_id)
+    else:
+        # E3 and later: the exposure the training actually ran at this boundary (the ladder may have opened kinds), not the start block
+        from foothold_s2.ex42_exposure_receipt import read_boundary_receipt
+        rows = read_boundary_receipt(checkpoint, stage_id=stage_id, plan_sha256=plan_sha256)["column_rows"]
+        if [(r["family"], r["kind"]) for r in rows] != [(r["family"], r["kind"]) for r in table]:
+            raise ValueError("EX-42 learned_cells column table differs from the exposure receipt")
+        exposure, caps = [r["exposure"] for r in rows], [r["level_cap"] for r in rows]
     continuous = set(e0["terrain"]["kind_task"]["continuous"])
     registered = set()
     for column, row in enumerate(table):
         family, kind = row["family"], row["kind"]
-        if exposure[column] <= 0 or family != "A":
+        if exposure[column] <= 0 or (family != "A" and named_kinds is None):
             continue
         if kind in continuous:
             groups = GROUPS  # the flag group opened at E1F, before E2
             modes = MODES if p_off > 0 and kind in ELIGIBLE_NAMES else MODES[:1]
-        elif kind == "stepping_stones_low" and previous_kind_pass:
+        elif (named_kinds is None and kind == "stepping_stones_low" and previous_kind_pass) or \
+                (named_kinds is not None and named_kinds.get((family, kind)) is True):
             groups, modes = ("forward", "flag"), MODES[:1]
         else:
             continue  # new kind registers only after its first passing window
@@ -161,7 +173,7 @@ def judge_two_boundaries(checkpoint: Path, *, stage_id: str, plan: dict,
                 for mode in modes:
                     registered.add((family, kind, band, group, mode))
     if not registered:
-        raise ValueError("EX-42 learned_cells has no registered E2 cells")
+        raise ValueError(f"EX-42 learned_cells has no registered {stage_id} cells")
     counted = {}
     for window in (previous, current):
         for column, band, group, mode, n in window["cells"]:
