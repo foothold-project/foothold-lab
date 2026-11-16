@@ -1,0 +1,27 @@
+[
+  {
+    "case": "normal",
+    "rc": 0,
+    "summary": "8 passed, 10 deselected in 0.80s"
+  },
+  {
+    "case": "private_output",
+    "rc": 1,
+    "summary": "2 failed, 6 passed, 10 deselected in 0.80s"
+  },
+  {
+    "case": "ignore_conflicting_sha",
+    "rc": 1,
+    "summary": "1 failed, 7 passed, 10 deselected in 0.81s"
+  },
+  {
+    "case": "allow_missing_shared",
+    "rc": 1,
+    "summary": "1 failed, 7 passed, 10 deselected in 0.81s"
+  },
+  {
+    "case": "null_plan_identity",
+    "rc": 1,
+    "summary": "3 failed, 5 passed, 10 deselected in 0.77s"
+  }
+]

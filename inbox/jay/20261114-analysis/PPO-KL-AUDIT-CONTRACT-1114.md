@@ -6,7 +6,7 @@
 
 # PPO 미니배치 KL 기록 계약
 
-연결은 `foothold_s2.runners.ppo_kl_audit.install_runner_kl_audit(runner, *, runtime, top_k=8)` 한 번이다. EX42 `attach_runner`에서 `runner.continuous_curriculum = self` 뒤에 두 rank 모두 호출한다. `runner.disable_logs`로 rank1을 빼지 않는다. 호출은 pstate가 만들어지기 전이어도 되고 실제 pstate는 매 `alg.act` 직전에 읽는다. 중복 호출은 같은 observer를 반환한다.
+연결은 `foothold_s2.runners.ppo_kl_audit.install_runner_kl_audit(runner, *, runtime, top_k=8)` 한 번이다. EX42 `attach_runner`에서 `runner.continuous_curriculum = self` 뒤에 두 rank 모두 호출한다. `runner.disable_logs`로 rank1을 빼지 않는다. 호출은 pstate가 만들어지기 전이어도 되고 실제 pstate는 매 `alg.act` 직전에 읽는다. 중복 호출은 같은 observer를 반환한다. 분산 실행에서는 진입점이 `runtime.record_dir`을 양 rank 같은 원 실행 폴더로 먼저 설정해야 한다. rank1의 임시 `runner.log_dir`은 기록 신원으로 사용하지 않는다. plan·parent SHA는 runtime 직접 속성에서 검증한다. 호환 plan에 SHA도 있다면 직접 속성과 같아야 한다.
 
 ```python
 from foothold_s2.runners.ppo_kl_audit import install_runner_kl_audit
@@ -17,7 +17,7 @@ analyst 소유는 `runners/ppo_kl_audit.py`, `ex41_valid_storage.py`, `ex41_crit
 
 | 기록 | 정의 |
 |---|---|
-| 경로 | `runner.log_dir/ppo_kl_audit/ppo_kl_rank{rank}.jsonl` |
+| 경로 | `runtime.record_dir/ppo_kl_audit/ppo_kl_rank{rank}.jsonl` (양 rank 공유 원 실행 폴더, 단일 rank만 runner.log_dir 대체 허용) |
 | 식 | 설치 PPO의 `sum(log(sigma/old_sigma+1e-5)+(old_sigma²+(old_mu-mu)²)/(2*sigma²)-0.5)` |
 | 시점 | 기존 scheduler 계산과 clipping 뒤, optimizer.step이 파라미터를 바꾸기 직전. 별도 정책 forward나 난수 추출 없음 |
 | 회차 · epoch · minibatch | runtime.iteration과 storage의 실제 shuffle index, epoch와 minibatch는 0부터 |

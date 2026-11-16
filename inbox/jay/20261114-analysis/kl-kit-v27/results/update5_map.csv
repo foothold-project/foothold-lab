@@ -1,0 +1,4 @@
+map_mode,top_occurrences,unique_envs_observed,observed_env_pct_of_all,unique_env_steps_observed,max_kl
+PRED,211,29,0.4720052083333333,73,387.4356689453125
+OFF,83,5,0.08138020833333333,23,287.7061767578125
+GT,2,2,0.032552083333333336,2,0.032338082790374756
