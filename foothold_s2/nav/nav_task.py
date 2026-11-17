@@ -68,6 +68,7 @@ class NavTask:
         self.task_relaxed = 0             # 목표 조건 (경로 길이 범위) 을 못 맞춰 옛 꼴로 물러선 수 (누적)
         self.ratio_edges = (1.1, 1.2, 1.5, 2.0)
         self.ratio_hist = np.zeros(len(self.ratio_edges) + 1, dtype=np.int64)       # 뽑힌 쌍의 굴곡 비 분포: <1.1 · 1.1~1.2 · 1.2~1.5 · 1.5~2 · 2 이상
+        self.approach_weight = 0.0         # 논문 밖 덧붙임 (r11): 부목표 쪽으로 다가간 거리 (m) x 이 값. 0 (기본) = 끔. 가중치는 planner 가 정한다
         self.redraw_on_fall = False       # True = 넘어진 뒤 (과제를 못 끝냄) 에도 표에서 새 과제 · False (기본, 논문 IV-C2) = 같은 과제 유지: 새 과제는 PGCL 이 요청할 때만
         self.tick_s = None                # 상위 틱 한 번의 초 (hold x step_dt). 호출한 쪽이 넣는다. None = 에피소드 길이는 틱 수로만
         self._st = None                   # 회차 통계 합 (take_stats 가 읽고 비운다)
@@ -205,7 +206,7 @@ class NavTask:
     def _stat(self):
         if self._st is None:
             self._st = {"ticks": 0, "sub_reached": 0, "lvl": np.zeros(3), "r": {}, "vcmd": 0.0, "vbody": 0.0, "stand": 0.0,
-                        "eps": 0, "prog": 0.0, "dsub0": 0.0, "dsub1": 0.0, "plen": 0.0, "ep_ticks": 0.0,
+                        "eps": 0, "cos": 0.0, "cos_n": 0, "prog": 0.0, "dsub0": 0.0, "dsub1": 0.0, "plen": 0.0, "ep_ticks": 0.0,
                         "out": {"hold": 0, "level_up": 0, "final_success": 0, "new_task": 0}}
         if getattr(self, "_ep_n", None) is None:
             self._ep_n = np.zeros(self.n, dtype=np.int64)
@@ -248,6 +249,8 @@ class NavTask:
         out.update({f"nv_out_{k}": v for k, v in st["out"].items()})
         out.update({f"nv_{k}": v / t for k, v in st["r"].items()})
         out["nv_ep_ticks"] = st["ep_ticks"] / e
+        out["nv_cos_vel_sub"] = st["cos"] / st["cos_n"] if st["cos_n"] else 0.0
+        out["nv_cos_n"] = st["cos_n"]
         if self.tick_s:
             out["nv_ep_s"] = st["ep_ticks"] * self.tick_s / e
         self._st = None
@@ -372,6 +375,10 @@ class NavTask:
         passed = np.array([p._i for p in self.pgcl]) - i_before
         terms = dict(terms)
         terms["r1"] = rewards_hl.WEIGHTS["r1"] * passed.astype(np.float64)
+        if self.approach_weight:     # r11: 같은 (지금) 부목표까지의 거리가 지난 틱보다 줄어든 만큼 (m). 에피소드 첫 틱 (지난 위치 없음) 은 0
+            prev = self._pos_prev
+            gain = np.linalg.norm(prev - self.subgoal, axis=1) - np.linalg.norm(pos_room[:, :2] - self.subgoal, axis=1)
+            terms["r11"] = self.approach_weight * np.where(np.isnan(gain), 0.0, gain)
         total = sum(terms.values())
         if done.any():
             terms = {k: (np.where(done, v if k == "r10" else 0.0, v)) for k, v in terms.items()}
@@ -379,9 +386,24 @@ class NavTask:
         self.cmd_prev2 = self.cmd_prev.copy()
         self.cmd_prev = np.asarray(state.applied)[:, :3].copy()
         reached = np.array([p.all_reached for p in self.pgcl]) & ~done
+        self._note_cos(state, pos_room[:, :2], done)
         self._note_tick(state, pos_room[:, :2], terms, done)
         return {"reward": total, "terms": terms, "subgoal": self.subgoal.copy(), "room_id": self.room_id.copy(),
                 "task_reached": reached, "eta": eta, "done": done}
+
+    def _note_cos(self, state, pos_xy, done) -> None:
+        """몸 속도 방향 (방 틀) 과 부목표 방향의 cos. 속도 0.05 m/s 아래 · 끝난 env 는 뺀다 (nv_cos_vel_sub)."""
+        st = self._stat()
+        v = np.asarray(state.vel_b)[:, :2]
+        yaw = teacher_obs.yaw_from_quat_wxyz(state.quat_w)
+        c, s_ = np.cos(yaw), np.sin(yaw)
+        vw = np.stack([c * v[:, 0] - s_ * v[:, 1], s_ * v[:, 0] + c * v[:, 1]], axis=1)
+        d = self.subgoal - pos_xy
+        nv, nd = np.linalg.norm(vw, axis=1), np.linalg.norm(d, axis=1)
+        ok = (nv >= 0.05) & (nd > 1e-9) & ~done
+        if ok.any():
+            st["cos"] += float(((vw[ok] * d[ok]).sum(1) / (nv[ok] * nd[ok])).sum())
+            st["cos_n"] += int(ok.sum())
 
     def _note_tick(self, state, pos_xy, terms, done) -> None:
         st = self._stat()

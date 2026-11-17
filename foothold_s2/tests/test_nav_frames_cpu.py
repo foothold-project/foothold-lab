@@ -38,3 +38,57 @@ def test_the_only_term_that_pays_for_getting_closer_to_the_subgoal_is_r1_inside_
     for k in toward:
         assert np.allclose(toward[k], away[k]), k                           # no term looks at the direction of motion: toward and away pay the same
     assert list(toward["r1"]) == [0.0, 0.0, 1.0]                            # 2 m and 1 m away: nothing; 0.05 m: 1
+
+
+def _task(weight=0.0):
+    from pathlib import Path
+    from foothold_s2.nav import grade_map as gm, room_generator as rg
+    table = gm.load_grade_table(str(Path(__file__).resolve().parents[1] / "nav" / "grade_table_draft.yaml"))
+    room = rg.make_room(1000, rg.RoomConfig(sparse_patch_kinds=()))[1]
+    t = nav_task.NavTask([nav_task.make_asset(room, table)], 2, np.random.default_rng(3))
+    starts = [rg.start_points(room, 4, seed=1000)[:, :2]]
+    t.build_table(starts, per_start=8, seed=0)
+    t.origin_xy = np.zeros((2, 2))
+    t.approach_weight = weight
+    t.reset_envs([0, 1], start_xy=np.stack([starts[0][0], starts[0][1]]))
+    t.take_stats()
+    return t
+
+
+def _st(pos, vel_b, yaw=0.0):
+    from foothold_s2.tests.test_nav_task_table_cpu import _state
+    s = _state(len(pos), np.asarray(pos, float))
+    s.vel_b = np.asarray(vel_b, float)
+    s.quat_w = np.tile(_q(yaw), (len(pos), 1))
+    return s
+
+
+def test_cos_vel_sub_is_plus_one_toward_minus_one_away_and_skips_standing_envs():
+    t = _task()
+    sub = t.subgoal.copy()
+    pos = sub - np.array([[1.0, 0.0], [1.0, 0.0]])                              # both 1 m behind their subgoal on the room x axis
+    t.step(_st(pos, [[0.5, 0.0, 0.0], [0.02, 0.0, 0.0]]))                         # env 0 moves toward, env 1 is standing (below 0.05)
+    s = t.take_stats()
+    assert s["nv_cos_n"] == 1 and abs(s["nv_cos_vel_sub"] - 1.0) < 1e-9
+    t.step(_st(pos, [[-0.5, 0.0, 0.0], [0.5, 0.0, 0.0]]))                         # env 0 away, env 1 toward
+    s = t.take_stats()
+    assert s["nv_cos_n"] == 2 and abs(s["nv_cos_vel_sub"]) < 1e-9
+    t.step(_st(pos, [[0.0, 0.5, 0.0], [0.0, 0.5, 0.0]], yaw=np.pi / 2))          # facing +y, body +y (left) = room -x: away from a subgoal that is +x of the body
+    s = t.take_stats()
+    assert s["nv_cos_n"] == 2 and abs(s["nv_cos_vel_sub"] + 1.0) < 1e-9
+
+
+def test_approach_reward_is_off_by_default_plus_for_closing_in_and_minus_for_backing_off():
+    off = _task(0.0)
+    off.step(_st(off.subgoal - np.array([[2.0, 0.0]] * 2), [[0.5, 0, 0]] * 2))
+    assert "r11" not in off.step(_st(off.subgoal - np.array([[1.5, 0.0]] * 2), [[0.5, 0, 0]] * 2))["terms"]
+    t = _task(2.0)
+    sub = t.subgoal.copy()
+    p0 = t._stat() and t._pos_prev.copy()                                       # the episode start position is the first "previous" one
+    unit = (sub - p0) / np.linalg.norm(sub - p0, axis=1, keepdims=True)
+    first = t.step(_st(p0, [[0.5, 0, 0]] * 2))["terms"]["r11"]
+    assert np.allclose(first, 0.0)                                              # still at the start: no gain
+    closer = t.step(_st(p0 + 0.5 * unit, [[0.5, 0, 0]] * 2))["terms"]["r11"]
+    assert np.allclose(closer, 2.0 * 0.5)                                       # 0.5 m closer x weight 2
+    farther = t.step(_st(p0 - 0.5 * unit, [[-0.5, 0, 0]] * 2))["terms"]["r11"]
+    assert np.allclose(farther, -2.0 * 1.0)                                     # 1.0 m farther
