@@ -58,7 +58,7 @@ class NavTask:
         # 방 설계 (DESIGN-HIPAN-ROOMS-1117 3.3): 목표는 경로 길이로 뽑고 (path_range_m) 과제의 winding_frac 는 굴곡 비 (경로 / 직선) winding_min 이상인 쌍에서 뽑는다.
         # goal_candidates 개를 뽑아 길을 내 보고 조건에 맞는 것을 고른다. 맞는 것이 없으면 (좁은 방 · 시작이 구석) 길이만 맞는 것 · 그것도 없으면 옛 꼴 (직선 min_task_m 이상) 로 물러선다.
         self.straighten, self.path_range_m = bool(straighten), tuple(path_range_m)
-        self.table = None; self.table_tol_m = 0.3; self.table_sha256 = None; self.task_table_hits = 0; self.task_table_miss = 0; self.task_redraw_on_reset = 0   # 시작 · 목표 · 경로 표 (build_table): 학습 중에는 표에서 뽑는다
+        self.table = None; self.table_tol_m = 0.75; self.table_sha256 = None; self.task_table_hits = 0; self.task_table_miss = 0; self.task_redraw_on_reset = 0   # 시작 · 목표 · 경로 표 (build_table): 학습 중에는 표에서 뽑는다
         self.winding_frac, self.winding_min, self.goal_candidates = float(winding_frac), float(winding_min), int(goal_candidates)
         self.task_new = 0                 # 새로 뽑은 과제 수 (누적)
         self.task_winding = 0             # 그 가운데 굴곡 비 winding_min 이상 (누적)
@@ -116,7 +116,7 @@ class NavTask:
         return pool[int(self.rng.integers(len(pool)))]
 
     # ---- 시작 · 목표 · 경로 표 (G3 Pod 실측: 새 과제 1 개 = 경로 계산 8 번 · 학습 중에도 도달 · 넘어짐마다 계속 뽑혀 CPU 한 코어에 묶였다)
-    def build_table(self, starts_by_room, per_start: int = 32, tol_m: float = 0.3, seed: int = 0, log=None) -> str:
+    def build_table(self, starts_by_room, per_start: int = 32, tol_m: float = 0.75, seed: int = 0, log=None) -> str:
         """방마다 시작점 (K, 2 · 방 틀 m) 마다 목표 후보 per_start 개를 `_pick_goal` 과 같은 규칙으로 걸러 (직선 min_task_m 이상 · 경로 있음 · 길이 path_range_m 안)
         굴곡 (경로 / 직선 >= winding_min) 쌍과 그렇지 않은 쌍으로 나눠 둔다. 뽑을 때 (`_new_task`) 는 `_pick_goal` 과 같은 규칙 (굴곡 쌍 절반 시도 · 없으면 아무 쌍) 으로 표에서만 고른다.
         시작이 표의 어느 시작점에서도 tol_m 보다 멀면 (표가 모르는 자리) 옛 꼴로 직접 길을 낸다. 돌려주는 값 = 표 sha256 (영수증 · 로그용)."""

@@ -92,3 +92,10 @@ def test_continuing_task_reset_uses_the_table_and_vectorized_subgoal_samples_mat
     P = np.array([[0.0, 0.0], [1.0, 0.0], [1.0, 0.0], [1.0, 2.0], [3.0, 2.0]])      # 길이 0 구간 포함
     arc = pgcl._arc(P); ss = np.linspace(-0.5, arc[-1] + 0.5, 57)
     assert np.allclose(pgcl._at_many(P, arc, ss), np.array([pgcl._at(P, arc, s) for s in ss]), atol=1e-12)
+
+
+def test_default_table_radius_covers_the_isaac_reset_jitter_square():
+    _rooms, assets, starts = _setup(n_rooms=1, k=4)
+    t = nav_task.NavTask(assets, 1, np.random.default_rng(3))
+    t.build_table(starts, per_start=16, seed=0)
+    assert t.table_tol_m >= 0.71                                       # reset_base x y U(-0.5, 0.5): the corner is 0.707 m from the origin (a table start)

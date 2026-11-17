@@ -11,6 +11,15 @@ LOWER_TASK = "FootholdS2-Go2-S2-SB-v0"
 NO_RESAMPLE = (1.0e9, 1.0e9)
 
 
+def foot_below_room_floor(env, sensor_cfg, asset_cfg, margin: float = 0.25):
+    """주행 환경의 「발이 바닥 아래」 종료: 발이 env 의 바닥 높이 (env 원점 z) 보다 `margin` 아래면 끝.
+    하위 학습 env 의 옛 판정 (`mdp_extra.foot_below_ground`) 은 발에서 가장 가까운 높이 스캔 점 (위에서 쏜 광선의 첫 면) 을 지면으로 본다.
+    방에서는 그 첫 면이 벽 윗면 (1.2 m) 이나 탁자 윗면이라서, 벽 옆이나 탁자 밑을 걷는 발이 「1.2 m - 0.25 m 보다 낮음」 으로 오판된다 (G3 L40S 종료 까닭의 대부분)."""
+    del sensor_cfg
+    feet_z = env.scene[asset_cfg.name].data.body_pos_w[:, asset_cfg.body_ids, 2]
+    return (feet_z < env.scene.env_origins[:, 2][:, None] - margin).any(dim=1)
+
+
 def configure_lower_env_cfg(env_cfg, agent_cfg, *, num_envs: int, device: str, seed: int, terrain_generator,
                             disable_dr=None, start_obs_module=None) -> dict:
     """하위 env cfg 를 주행용으로 고친다. 돌려주는 값: 고친 내용 요약 (영수증용)."""
@@ -36,8 +45,13 @@ def configure_lower_env_cfg(env_cfg, agent_cfg, *, num_envs: int, device: str, s
     command.resampling_time_range = NO_RESAMPLE
     command.dynamic_flags = False
     command.flag_stride = 0
+    fbg = getattr(getattr(env_cfg, "terminations", None), "foot_below_ground", None)
+    if fbg is not None:                      # 방 메시: 벽 · 탁자 윗면을 지면으로 읽는 스캔 판정을 env 바닥 높이 판정으로 바꾼다
+        fbg.func = foot_below_room_floor
+        fbg.params = {k: v for k, v in fbg.params.items() if k != "scanner_cfg"}
     return {"num_envs": int(num_envs), "seed": int(seed), "device": device, "dr_disabled": disabled,
-            "command_resampling": "off", "flags": "off", "curriculum": "off", "observation_corruption": "off"}
+            "command_resampling": "off", "flags": "off", "curriculum": "off", "observation_corruption": "off",
+            "foot_below_ground": "room_floor" if fbg is not None else "absent"}
 
 
 def build_nav_env(*, checkpoint, expected_sha256: str, room_mesh_npz, room_mesh_sha256: str, num_envs: int, device: str,

@@ -64,3 +64,34 @@ def test_build_nav_env_keeps_the_d44_order_and_the_train_path_files_are_untouche
     order = [text.index(k) for k in ("configure_lower_env_cfg(", "lower_adapter.prepare(", "gym.make(", "LowerPolicy.load(")]
     assert order == sorted(order)                                   # cfg -> sha 검사 -> gym.make -> 러너
     assert "gym.register" not in src                                # 새 과제 등록 없음
+
+
+def test_configure_swaps_the_scan_based_foot_below_ground_for_the_room_floor_one():
+    import torch
+
+    ns = SimpleNamespace
+    cfg = _cfg()
+    cfg.terminations = ns(foot_below_ground=ns(func=object(), params={"sensor_cfg": 1, "scanner_cfg": 2, "asset_cfg": ns(name="robot", body_ids=[0, 1]), "margin": 0.25}))
+    out = nc.configure_lower_env_cfg(cfg, SimpleNamespace(), num_envs=2, device="cpu", seed=1, terrain_generator=None, disable_dr=lambda c: [],
+                                     start_obs_module=SimpleNamespace(AUG=SimpleNamespace(enabled=True)))
+    fbg = cfg.terminations.foot_below_ground
+    assert fbg.func is nc.foot_below_room_floor and "scanner_cfg" not in fbg.params and fbg.params["margin"] == 0.25 and out["foot_below_ground"] == "room_floor"
+    robot = ns(data=ns(body_pos_w=torch.tensor([[[0, 0, 0.02], [0, 0, 0.0]], [[0, 0, 0.02], [0, 0, -0.30]]], dtype=torch.float32)))
+    env = ns()
+    env.scene = type("S", (), {"env_origins": torch.zeros(2, 3), "__getitem__": lambda self, k: robot})()
+    assert nc.foot_below_room_floor(env, None, fbg.params["asset_cfg"]).tolist() == [False, True]
+
+
+def test_the_old_scan_rule_flags_a_foot_beside_a_wall_and_the_room_floor_rule_does_not():
+    import torch
+
+    from foothold_s2.tasks import mdp_extra
+
+    ns = SimpleNamespace
+    robot = ns(data=ns(body_pos_w=torch.tensor([[[1.0, 0.0, 0.02]]], dtype=torch.float32)))     # foot on the floor at x = 1.0
+    hits = torch.tensor([[[1.04, 0.0, 1.2], [1.2, 0.0, 0.0]]], dtype=torch.float32)            # the nearest scan point (0.04 m away) lies on a 1.2 m wall top
+    scene = type("S", (), {"sensors": {"hs": ns(data=ns(ray_hits_w=hits))}, "env_origins": torch.zeros(1, 3), "__getitem__": lambda self, k: robot})()
+    env = ns(scene=scene)
+    asset = ns(name="robot", body_ids=[0])
+    assert bool(mdp_extra.foot_below_ground(env, None, ns(name="hs"), asset, 0.25)[0]) is True      # old: 0.02 < 1.2 - 0.25
+    assert bool(nc.foot_below_room_floor(env, None, asset, 0.25)[0]) is False
