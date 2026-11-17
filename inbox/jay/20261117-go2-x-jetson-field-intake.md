@@ -4,8 +4,8 @@
 > 작성: 오흥재 · 2026-11-17 17:24
 > 근거: 업체 제공 「Unitree Go2 + Intel RealSense D435i 제어기 사용자 매뉴얼」 · 2026-11-17 현장 터미널 출력 · NoMachine 접속 실측 · 정본 3 전달 문서
 > 요지: 교체받은 Go2 X 계통의 현재 연결과 원격 접속을 확정값 · 업체 문서값 · 미확인값으로 나누고, 저수준 정책 시험 전 점검 순서를 고정한다
-> 상태: 현장 기록 v0.1 · 읽기 전용 장비 식별 전
-> 판: v0.1
+> 상태: 현장 기록 v0.2 · Jetson 모듈과 캐리어 모델 확정
+> 판: v0.2
 
 ## 0. 이 기록의 범위
 
@@ -24,7 +24,7 @@
 |---|---|---|
 | 로봇 명칭 | `Go2 X` `업체 전달값` | 사용자가 업체로부터 전달받은 명칭이다. 본체 라벨과 펌웨어에서는 아직 재확인하지 않았다. |
 | Jetson 전원과 부팅 | `확인됨` | NX215 안쪽 HDMI 포트에 모니터를 연결해 Ubuntu 데스크톱이 출력됐다. 보드는 정상적으로 전원 인가와 OS 부팅이 된다. |
-| 캐리어 보드 | `NX215` `사용자 확인값` | 사용자가 현재 장착 캐리어를 NX215로 확인했다. Jetson 모듈의 정확한 SKU와 메모리 용량은 아직 장치 정보로 확정하지 않았다. |
+| Jetson 모듈과 캐리어 | `NVIDIA Jetson Orin NX 16GB - AVerMedia NX215B` `확인됨` | Jetson에서 `tr -d '\0' </proc/device-tree/model`을 실행해 device tree model 문자열을 직접 확인했다. Orin Nano가 아니다. |
 | Jetson 사용자 | `nvidia` `확인됨` | Ubuntu Settings의 사용자와 NoMachine 로그인에서 확인했다. 비밀번호는 저장소에 기록하지 않는다. |
 | Go2와 Jetson 내부 LAN | `연결 유지` `확인됨` | Go2와 Jetson 사이의 기존 LAN 케이블은 분리하지 않았다. |
 | D435i와 Jetson USB | `연결 유지` `확인됨` | D435i로 추정되는 카메라가 USB A 변환을 거쳐 Jetson에 연결돼 있다. USB 장치 ID와 제품명은 아직 `lsusb`로 재확인하지 않았다. |
@@ -93,15 +93,22 @@
 
 ### 4.1 Jetson 모듈과 JetPack
 
+device tree model 확인은 끝났다.
+
+```text
+NVIDIA Jetson Orin NX 16GB - AVerMedia NX215B
+```
+
+남은 OS와 전력 모드 확인:
+
 ```bash
-tr -d '\0' </proc/device-tree/model; echo
 tr '\0' '\n' </proc/device-tree/compatible
 cat /etc/nv_tegra_release
 free -h
 sudo nvpmodel -q --verbose
 ```
 
-통과 결과: Orin NX 또는 Orin Nano의 정확한 모듈 식별 근거, 메모리 용량, L4T와 전력 모드를 기록한다. 캐리어가 NX215라는 사실만으로 모듈 SKU를 추정하지 않는다.
+통과 결과: device tree로 확정한 Orin NX 16GB와 NX215B에 이어 L4T, 실제 가용 메모리, 전력 모드를 기록한다.
 
 ### 4.2 NIC와 경로
 
@@ -163,6 +170,19 @@ ros2 pkg prefix wego_teleop
 
 업체 매뉴얼의 `/cmd_vel`과 `go2_motion_cmd`는 업체 ROS 드라이버의 순정 고수준 제어 경로다. 정본 3 ONNX가 12개 관절 목표를 내는 저수준 정책 경로와 같은 것이 아니다. 처음 점검에서는 `receive_only:=true`를 유지하고, 두 제어 경로를 동시에 실행하지 않는다.
 
+### 6.1 배터리 저전압과 종료
+
+Unitree Go2 사용자 매뉴얼에는 머리 표시등이 노란색으로 느리게 깜빡이면 저전압 경고이며 10분 안에 자동으로 crouch한다고 적혀 있다. 같은 매뉴얼은 배터리가 한 칸 남으면 운용을 멈추고 로봇을 끈 뒤 충전하라고 안내한다. 전원이 끊길 때 로봇이 서 있으면 크게 넘어져 손상과 안전 위험이 생길 수 있으므로, 전원을 끌 때는 먼저 로봇을 눕히라고 명시한다.
+
+현장 운용 규칙:
+
+1. 자동 crouch를 기다리지 않는다. 배터리가 한 칸이거나 노란색 느린 점멸이면 즉시 시험을 멈춘다.
+2. 사람과 물건을 치우고 순정 조이스틱의 익숙한 눕기 또는 damping 동작으로 몸통을 바닥에 안정시킨다. 손과 발을 몸통 아래에 넣지 않는다.
+3. Jetson 작업을 저장하고 OS를 정상 종료한 뒤 로봇 전원을 끈다. 로봇 배터리 차단 때 Jetson 전원이 어떻게 종료되는지는 아직 `미확인`이므로 강제 전원 차단에 의존하지 않는다.
+4. 완전 방전을 안전 동작 시험으로 사용하지 않는다. BMS에는 과방전 보호가 있지만, 이것이 서 있는 로봇과 Jetson OS의 안전한 종료를 보장한다는 뜻은 아니다.
+
+출처: [Unitree Go2 사용자 매뉴얼](https://marketing.unitree.com/article/en/Go2/User_Manual.html) · [Unitree Go2 배터리와 BMS 보호](https://www.unitree.com/go2/battery/)
+
 ## 7. 팀원이 이어서 볼 위치
 
 - 정본 3 전달: [`HANDOFF-START-m15500-CANON3.md`](20261103-policy-handoff/HANDOFF-START-m15500-CANON3.md)
@@ -176,4 +196,5 @@ ros2 pkg prefix wego_teleop
 
 | 판 | 날짜 | 내용 |
 |---|---|---|
+| v0.2 | 2026-11-17 | device tree model 출력으로 NVIDIA Jetson Orin NX 16GB와 AVerMedia NX215B 확정 · 배터리 저전압과 종료 안전 절차 추가 |
 | v0.1 | 2026-11-17 | 업체 매뉴얼값, ai-lt01과 Jetson 네트워크 실측, NoMachine 접속, 실행 중 HDMI 분리 성공, 다음 읽기 전용 점검과 저수준 안전 관문 기록 |
