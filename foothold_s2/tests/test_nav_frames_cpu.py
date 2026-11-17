@@ -78,17 +78,62 @@ def test_cos_vel_sub_is_plus_one_toward_minus_one_away_and_skips_standing_envs()
     assert s["nv_cos_n"] == 2 and abs(s["nv_cos_vel_sub"] + 1.0) < 1e-9
 
 
-def test_approach_reward_is_off_by_default_plus_for_closing_in_and_minus_for_backing_off():
+def _along(t, i, d):
+    """env i 의 시작에서 경로를 따라 d m 간 위치 (방 틀)."""
+    pts = np.asarray(t.path[i], float)
+    seg = np.linalg.norm(np.diff(pts, axis=0), axis=1)
+    cum = np.concatenate([[0.0], np.cumsum(seg)])
+    k = min(int(np.searchsorted(cum, d, side="right")) - 1, len(seg) - 1)
+    return pts[k] + (pts[k + 1] - pts[k]) * (d - cum[k]) / max(seg[k], 1e-12)
+
+
+def test_shaping_is_off_by_default_and_pays_plus_for_closing_in_and_minus_for_backing_off():
     off = _task(0.0)
-    off.step(_st(off.subgoal - np.array([[2.0, 0.0]] * 2), [[0.5, 0, 0]] * 2))
-    assert "r11" not in off.step(_st(off.subgoal - np.array([[1.5, 0.0]] * 2), [[0.5, 0, 0]] * 2))["terms"]
-    t = _task(2.0)
-    sub = t.subgoal.copy()
-    p0 = t._stat() and t._pos_prev.copy()                                       # the episode start position is the first "previous" one
-    unit = (sub - p0) / np.linalg.norm(sub - p0, axis=1, keepdims=True)
-    first = t.step(_st(p0, [[0.5, 0, 0]] * 2))["terms"]["r11"]
-    assert np.allclose(first, 0.0)                                              # still at the start: no gain
-    closer = t.step(_st(p0 + 0.5 * unit, [[0.5, 0, 0]] * 2))["terms"]["r11"]
-    assert np.allclose(closer, 2.0 * 0.5)                                       # 0.5 m closer x weight 2
-    farther = t.step(_st(p0 - 0.5 * unit, [[-0.5, 0, 0]] * 2))["terms"]["r11"]
-    assert np.allclose(farther, -2.0 * 1.0)                                     # 1.0 m farther
+    off.step(_st(off._pos_prev.copy(), [[0.5, 0, 0]] * 2))
+    assert "r_shape" not in off.step(_st(off._pos_prev.copy(), [[0.5, 0, 0]] * 2))["terms"]
+    t = _task(0.0)
+    t.shape_w = 2.0
+    t.step(_st(t._pos_prev.copy(), [[0.5, 0, 0]] * 2))                         # first tick: still at the start, no gain
+    p0 = t._pos_prev.copy()
+    a = t.step(_st(np.stack([_along(t, 0, 0.2), _along(t, 1, 0.2)]), [[0.5, 0, 0]] * 2))["terms"]["r_shape"]
+    assert np.allclose(a, 2.0 * 0.2, atol=0.02)                                 # 0.2 m closer along the path x w
+    b = t.step(_st(p0, [[-0.5, 0, 0]] * 2))["terms"]["r_shape"]
+    assert (b < -0.3).all()                                                     # back to the start: minus
+
+
+def test_shaping_value_does_not_jump_when_a_subgoal_is_passed_and_is_clipped_per_tick():
+    t = _task(0.0)
+    t.shape_w = 5.0
+    t.step(_st(t._pos_prev.copy(), [[0.5, 0, 0]] * 2))
+    first_sub = np.asarray(t.pgcl[0]._sub[0].point, float)
+    d_sub = float(np.linalg.norm(first_sub - t.start[0]))                       # about where the first subgoal is (path is almost straight until it)
+    vals, passed = [], []
+    for k in range(1, 12):
+        d = 0.1 * k * max(d_sub, 1.0)
+        out = t.step(_st(np.stack([_along(t, 0, d), _along(t, 1, 0.01)]), [[0.5, 0, 0]] * 2))
+        vals.append(out["terms"]["r_shape"][0]); passed.append(t.pgcl[0]._i)
+    assert max(passed) >= 1                                                     # the walk went past the first subgoal
+    assert all(0.0 < v <= 0.5 + 1e-12 for v in vals)                            # always forward, clipped to 0.5 per tick
+    step_gain = np.diff([0.0] + [0.1 * k * max(d_sub, 1.0) for k in range(1, 12)])
+    ok = [abs(v - min(5.0 * g, 0.5)) < 0.06 for v, g in zip(vals, step_gain)]
+    assert all(ok), (vals, step_gain, passed)                                   # equals the clipped w x walked length also on the tick the subgoal was passed
+
+
+def test_shaping_is_zero_for_level_2_envs_and_decays_over_100_iterations_after_10_percent_are_at_level_2():
+    t = _task(0.0)
+    t.shape_w = 5.0
+    t.step(_st(t._pos_prev.copy(), [[0.5, 0, 0]] * 2))
+    t.pgcl[1].level = 2
+    out = t.step(_st(np.stack([_along(t, 0, 0.1), _along(t, 1, 0.1)]), [[0.5, 0, 0]] * 2))["terms"]["r_shape"]
+    assert out[0] > 0 and out[1] == 0.0
+    s = t.take_stats()
+    assert s["nv_shape_scale"] == 1.0 and t.shape_scale < 1.0 and abs(t.shape_scale - 0.99) < 1e-12      # half the envs are at level 2: decay starts
+    for _ in range(98):
+        t.step(_st(t._pos_prev.copy(), [[0.5, 0, 0]] * 2)); t.take_stats()
+    assert abs(t.shape_scale - 0.01) < 1e-9
+    t.step(_st(t._pos_prev.copy(), [[0.5, 0, 0]] * 2)); t.take_stats()
+    assert t.shape_scale == 0.0
+    t2 = _task(0.0)
+    t2.shape_w = 5.0
+    t2.step(_st(t2._pos_prev.copy(), [[0.5, 0, 0]] * 2)); t2.take_stats()
+    assert t2.shape_scale == 1.0                                                # nobody at level 2: no decay

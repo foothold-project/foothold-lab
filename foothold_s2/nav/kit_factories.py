@@ -110,8 +110,11 @@ def _build(cfg: dict, with_camera: bool):
 
     starts = None if not int(cfg.get("task_table_per_start", 32)) else [rg.start_points(a.room, int(cfg["n_starts"]), seed=int(cfg["room_seed"]) + row)[:, :2] for row, a in enumerate(prepared["assets"])]
     task = make_task(prepared["assets"], int(cfg["num_envs"]), int(cfg["seed"]), rows, raw.scene.env_origins[:, :2].cpu().numpy(), starts, int(cfg.get("task_table_per_start", 32)))
-    task.approach_weight = float(cfg.get("approach_weight", 0.0))           # 0 (기본) = 끔 · 논문 밖 r11 (부목표 쪽으로 다가간 거리 비례 보상), 가중치는 planner 가 정함
-    print(f"APPROACH_REWARD weight {task.approach_weight}", flush=True)
+    shape = str(cfg.get("shaping", "off"))                                # off (기본) | path_potential (논문 밖 덧붙임, 남은 경로 길이가 준 만큼 보상)
+    if shape not in ("off", "path_potential"):
+        raise ValueError(f"shaping must be off or path_potential, got {shape!r}")
+    task.shape_w = float(cfg.get("shaping_w", 5.0)) if shape == "path_potential" else 0.0
+    print(f"SHAPING={shape} w={task.shape_w:g} clip={task.shape_clip} start_frac={task.shape_start_frac} decay_iters={task.shape_decay_iters}", flush=True)
     task.redraw_on_fall = bool(cfg.get("task_redraw_on_fall", False))           # False (기본) = 같은 과제 유지 (논문) · True = 넘어지면 표에서 새 과제 (02:2x 판)
     print(f"TASK_RESET_ON_FALL {'new_task_from_table' if task.redraw_on_fall else 'same_task_kept'} table_tol_m {task.table_tol_m}", flush=True)
     depth_fn = (lambda: th(raw.scene["depth_camera"].data.output["distance_to_image_plane"])) if with_camera else None
