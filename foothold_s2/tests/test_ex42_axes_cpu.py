@@ -156,3 +156,22 @@ def test_old_mixed_slots_fit_overstates_the_slope_while_front_only_windows_do_no
     mixed = ax.slope_fit([fwd_t, side_t], [fwd_e, side_e])["slope"]
     front = ax.slope_windows([fwd_t], [fwd_e])["slope"]
     assert mixed > 0.8 and abs(front) < 0.4
+
+
+def test_record_maps_keeps_the_rough_map_beside_the_refined_one():
+    """lead 13:49: U-Net 앞 rough 지도 (32x16) 도 npz 에 같이 남긴다. 자식이 쓰는 기록 함수로 확인."""
+    gt = np.zeros((2, 32, 16)); gt[:, :, 8:] = 0.2
+    refined = gt.copy().reshape(2, -1); rough = (gt * 0.5).reshape(2, -1)           # 모델 출력은 (N, 512) 로 평평하다
+    state = {}
+    ax.record_maps(state, {"refined": refined, "rough": rough}, gt, every=2)
+    ax.record_maps(state, {"refined": refined, "rough": rough}, gt, every=2)
+    ax.record_maps(state, {"refined": refined, "rough": rough}, gt, every=2)
+    assert len(state["holes"]) == 3 and len(state["holes_rough"]) == 3
+    assert [s[0] for s in state["snaps"]] == [0, 2]                                # 처음 포함 every 번째
+    step, r, g, ro = state["snaps"][0]
+    assert r.shape == g.shape == ro.shape == (2, 32, 16) and np.allclose(ro, 0.5 * g.astype(np.float64), atol=1e-3)
+    edge = ax.HOLE_COLUMNS.index("edge_abs_sum")
+    assert state["holes"][0][:, edge].sum() == 0 and state["holes_rough"][0][:, edge].sum() > 0     # refined 는 맞고 rough 는 모서리를 낮게 그림
+    none = {}
+    ax.record_maps(none, {}, gt, every=1)                                          # 복원이 없으면 NaN 행 · 사진 없음
+    assert np.isnan(none["holes"][0]).all() and "snaps" not in none

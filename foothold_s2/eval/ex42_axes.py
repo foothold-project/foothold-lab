@@ -127,6 +127,26 @@ def hole_summary(stats, alive) -> dict:
             "edge_frac_gt": (edge_gt / cells) if cells > 0 else None, "edge_frac_pred": (edge_pred / cells) if cells > 0 else None}
 
 
+def record_maps(state: dict, out, gt, every: int) -> None:
+    """탐침 자식이 step 마다 부르는 기록 (numpy 만 · 평가기 · 학습 코드는 안 바뀐다). out = 모델 출력 dict (rough: U-Net 앞 32x16 지도 · refined: U-Net 뒤), gt = (N, R, C) 정답 지도.
+    state["holes"] / state["holes_rough"] 에 step 마다 hole_stats 한 장 (refined · rough 각각) · every 번째마다 (처음 포함) state["snaps"] 에 (step, refined, gt, rough) 한 장씩 (float16).
+    refined 가 없으면 NaN 행 (rough 만 있어도 refined 는 NaN 으로 둔다). 모양이 다른 지도는 평가를 멈추지 않도록 reshape 로 맞춘다 (n, R, C)."""
+    g = np.asarray(gt, dtype=np.float64)
+    n = int(g.shape[0])
+    cols = len(HOLE_COLUMNS)
+
+    def grab(key):
+        v = out.get(key) if isinstance(out, dict) else None
+        return None if v is None else np.asarray(v, dtype=np.float64).reshape(n, *g.shape[1:])
+
+    r, ro = grab("refined"), grab("rough")
+    state.setdefault("holes", []).append(hole_stats(r, g) if r is not None else np.full((n, cols), np.nan))
+    state.setdefault("holes_rough", []).append(hole_stats(ro, g) if ro is not None else np.full((n, cols), np.nan))
+    step = len(state["holes"]) - 1
+    if r is not None and step % every == 0:
+        state.setdefault("snaps", []).append((step, r.astype(np.float16), g.astype(np.float16), (ro if ro is not None else np.full_like(r, np.nan)).astype(np.float16)))
+
+
 # ---------------------------------------------------------------- 가-1 느린 걸음 (planner line50.py 와 같은 식)
 def keep_cell(true, command, *, s0: int = SLOW_WINDOW_START) -> dict:
     """한 칸 (명령 한 개 · 한 모드) 의 (S, N, 3) 실제 몸 속도 -> 명령 축의 실제 평균 속도와 성공 수.

@@ -122,6 +122,9 @@ def read_kind_cell(folder: str, mode_index: int, mode: str, anchor, settle_s: fl
         counts["hole_rows_vs_steps"] = [int(holes.shape[0]), int(n)]
         try:
             counts.update(ax.hole_summary(holes[:n], alive) if holes.shape[0] >= n else {"hole_error": "fewer hole rows than steps"})
+            rough = ex.get("holes_rough")
+            if rough is not None and rough.shape[0] >= n and np.isfinite(rough[:n]).any():      # U-Net 앞 rough 지도의 같은 칸 (구조 대 U-Net 가름용)
+                counts["rough"] = ax.hole_summary(rough[:n], alive)
         except ValueError as err:                                  # 옛 판 (구멍 6 열) 로 저장된 자식을 --reuse 로 읽은 경우: 값 없음으로 두고 이유를 남김
             counts["hole_error"] = str(err)
     e = arr.get("map_err_inrange_mean_cm")

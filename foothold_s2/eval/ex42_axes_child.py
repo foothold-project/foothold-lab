@@ -15,7 +15,7 @@ from foothold_s2.runners import start_runner
 CASES = [tuple(float(x) for x in item.split("/")) for item in os.environ["PROBE_CASES"].split(";")]
 EXTRA = os.environ["PROBE_EXTRA"]
 SNAP_EVERY = int(os.environ.get("AXES_SNAP_EVERY", "25"))
-state = {"case": -1, "rows": [], "holes": [], "snaps": [], "calls": 0}
+state = {"case": -1, "rows": [], "holes": [], "holes_rough": [], "snaps": [], "calls": 0}
 _disable = map_mode_cells.disable_heading_for_fixed_eval
 _assert = map_mode_cells.assert_heading_off_for_fixed_eval
 RUNNER = next(value for name, value in vars(start_runner).items() if isinstance(value, type) and "_ppo_obs" in vars(value))
@@ -32,14 +32,12 @@ def record(last, result, gt_map, rel=None):
     _record(last, result, gt_map, rel)
     out = result[2]
     n = int(gt_map.shape[0])
+    ten = lambda v: None if v is None else v.detach().float().cpu().numpy()                 # noqa: E731
     if isinstance(out, dict) and out.get("refined") is not None:
-        r = out["refined"].detach().float().cpu().numpy().reshape(n, *gt_map.shape[1:])
-        g = gt_map.detach().float().cpu().numpy()
-        state["holes"].append(ex42_axes.hole_stats(r, g))
-        if len(state["holes"]) % SNAP_EVERY == 1:
-            state["snaps"].append((len(state["holes"]) - 1, r.astype(np.float16), g.astype(np.float16)))
+        out = {"refined": ten(out["refined"]), "rough": ten(out.get("rough"))}
     else:
-        state["holes"].append(np.full((n, len(ex42_axes.HOLE_COLUMNS)), np.nan))
+        out = {}
+    ex42_axes.record_maps(state, out, ten(gt_map), SNAP_EVERY)
 
 
 def write(term) -> None:
@@ -59,8 +57,11 @@ def flush() -> None:
             extra["snap_step"] = np.array([s[0] for s in state["snaps"]])
             extra["snap_refined"] = np.stack([s[1] for s in state["snaps"]])
             extra["snap_gt"] = np.stack([s[2] for s in state["snaps"]])
+            extra["snap_rough"] = np.stack([s[3] for s in state["snaps"]])         # U-Net 앞 rough 지도 (32x16 · 같은 격자)
+        if state["holes_rough"]:
+            extra["holes_rough"] = np.stack(state["holes_rough"]).astype(np.float32)
         np.savez(f"{EXTRA}_{state['case']}.npz", est=est, true=true, command=np.array(CASES[state["case"] % len(CASES)]), **extra)
-    state["rows"], state["holes"], state["snaps"] = [], [], []
+    state["rows"], state["holes"], state["holes_rough"], state["snaps"] = [], [], [], []
 
 
 def disable(term):
