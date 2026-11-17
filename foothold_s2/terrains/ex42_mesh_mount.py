@@ -173,4 +173,11 @@ def mesh_file_generator_cfg(npz_path: str | Path, mesh_sha256: str | None = None
         curriculum: bool = True
         use_cache: bool = False
 
-    return CombinedMeshGeneratorCfg()
+    cfg = CombinedMeshGeneratorCfg()
+    from foothold_s2.lab_compat import lab_major
+
+    if lab_major() >= 3:
+        # Isaac Lab 3.0 TerrainImporter._is_heightfield_collider_requested 가 cfg.sub_terrains 를 무조건 읽는다 (v3.0.0 terrain_importer.py:276 · Runpod N1f AttributeError).
+        # 빈 dict = 「높이장 변환 요청 없음」 (len == 0 이면 False). 2.3.2 에는 이 읽기가 없어 속성을 두지 않는다 (generator_columns 는 빈 dict 도 «합친 메시 cfg» 로 읽음).
+        cfg.sub_terrains = {}
+    return cfg

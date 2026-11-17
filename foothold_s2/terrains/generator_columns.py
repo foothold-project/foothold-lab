@@ -15,13 +15,18 @@ from __future__ import annotations
 from foothold_s2.terrains import columns
 
 
+def _has_sub_terrains(generator) -> bool:
+    """비어 있지 않은 sub_terrains (옛 방식 생성기). Isaac Lab 3.0 용 합친 메시 cfg 는 빈 dict 를 달고 있어 hasattr 로는 못 가른다."""
+    return bool(getattr(generator, "sub_terrains", None))
+
+
 def is_combined_mesh_cfg(generator) -> bool:
-    return not hasattr(generator, "sub_terrains") and hasattr(generator, "column_family")
+    return not _has_sub_terrains(generator) and hasattr(generator, "column_family")
 
 
 def has_column_source(generator) -> bool:
     return generator is not None and hasattr(generator, "num_cols") and (
-        hasattr(generator, "sub_terrains") or is_combined_mesh_cfg(generator))
+        _has_sub_terrains(generator) or is_combined_mesh_cfg(generator))
 
 
 def generator_column_names(generator) -> list[str]:
@@ -37,7 +42,7 @@ def generator_column_names(generator) -> list[str]:
             kind, family = row["kind"], row["family"]
             names.append(kind if family == "A" and kind else f"{family}/{kind}" if kind else family)
         return names
-    if hasattr(generator, "sub_terrains"):
+    if _has_sub_terrains(generator):
         proportions = {name: float(spec.proportion) for name, spec in generator.sub_terrains.items()}
         return columns.column_types(proportions, int(generator.num_cols))
     raise ValueError("terrain generator cfg has neither sub_terrains nor column_family: column names unknown")

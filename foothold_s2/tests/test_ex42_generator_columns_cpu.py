@@ -121,3 +121,14 @@ def test_restrict_map_off_runs_on_the_real_cfg_and_only_a_continuous_or_flat_col
     assert out[:50].sum() == sum(x in ELIGIBLE_NAMES for x in names[:50]) > 0        # A: unchanged split
     events = fake.map_ratio_events[0]
     assert events["kind"] == "off_eligibility" and events["num_cols"] == n
+
+
+def test_lab3_combined_cfg_carries_an_empty_sub_terrains_and_is_still_read_as_combined(real_cfg, monkeypatch):
+    """Isaac Lab 3.0 TerrainImporter 가 cfg.sub_terrains 를 무조건 읽는다 (Runpod N1f AttributeError). 빈 dict 를 달아도 열 이름 읽기는 합친 메시 길을 탄다. 2.3.2 에는 속성이 없다."""
+    monkeypatch.setenv("FOOTHOLD_LAB_MAJOR", "3")
+    cfg = real_cfg(B613)
+    assert cfg.sub_terrains == {} and len(cfg.sub_terrains) == 0               # 3.0 의 _is_heightfield_collider_requested: len(...) > 0 and all(...) -> False
+    assert gc.is_combined_mesh_cfg(cfg) and gc.has_column_source(cfg)
+    assert len(gc.generator_column_names(cfg)) == cfg.num_cols == 76
+    monkeypatch.setenv("FOOTHOLD_LAB_MAJOR", "2")
+    assert not hasattr(real_cfg(B613), "sub_terrains")

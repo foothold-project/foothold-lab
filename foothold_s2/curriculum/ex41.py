@@ -843,7 +843,7 @@ def terrain_distribution(env):
     """Read real labels; column assignment matches installed Isaac generator."""
     terrain=env.scene.terrain; cfg=terrain.cfg.terrain_generator
     if cfg.curriculum is not True: raise ValueError('EX41 column names require curriculum generator or actual tile manifest')
-    if hasattr(cfg,'sub_terrains'):
+    if getattr(cfg,'sub_terrains',None):
         names=list(cfg.sub_terrains); proportions=[float(cfg.sub_terrains[k].proportion) for k in names]
         if sum(proportions)<=0: raise ValueError('EX41 terrain proportions empty')
         cumulative=[]; total=0.
