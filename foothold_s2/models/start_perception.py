@@ -64,6 +64,10 @@ class PerceptionCfg:
     depth_tick: int = 5  # 10 Hz 깊이 = 50 Hz 의 5 스텝마다 (11 §4)
     depth_delay_ticks: int = 1  # 1 프레임(0.1 s) 지연 (11 §2.1 · JEPLO cfg)
     sample_latent_in_rollout: bool = True  # 가정(rl): 수집 때 z 를 표집, 배포(act_inference)는 평균
+    # DESIGN-SLOW-WALK 7 절 (ㄱ-2): 속도 3 칸만 내는 가지. 명령 3 칸 (obs 6:9) 을 곱셈 마스크로 0 으로 가린 최근 10 프레임만 본다.
+    # "off" (기본) = 가지 없음: 모듈 · 상태 · 계산이 이 줄이 없던 때와 같다 (비트 같음 시험). "shadow" = 가지를 두고 학습하지만 정책이 받는 est 의 속도 3 칸은 옛 머리 값 그대로 (1 단계).
+    # "replace" = 정책이 받는 est 의 속도 3 칸 (est[16:19]) 이 가지 출력 (2 · 3 단계). z · zf · zb 는 어느 쪽에서도 옛 몸통 값 그대로다.
+    vel_branch: str = "off"
 
 
 class DepthCNN(nn.Module):
@@ -223,6 +227,18 @@ def velocity_loss(v_est: torch.Tensor, v_gt: torch.Tensor) -> torch.Tensor:
     return (w * err).mean()
 
 
+SLOW_SLOPE_BAND = (0.02, 0.14)   # 정답 |vx| 가 이 안인 표본: 느린 띠 (DESIGN-SLOW-WALK 7.3 1 단계 잣대의 순간 값 · 기록만)
+
+
+def slow_slope_sums(est_x: torch.Tensor, gt_x: torch.Tensor) -> torch.Tensor:
+    """est_x (K, N) 추정 vx 들 · gt_x (N,) 정답 vx. 느린 띠 표본에서 K 행마다 [sum(est * gt), sum(gt ^ 2), n]. 영점을 지나는 최소제곱 기울기 = sum(est*gt) / sum(gt^2)."""
+    lo, hi = SLOW_SLOPE_BAND
+    g = gt_x.detach().float()
+    m = (g.abs() >= lo) & (g.abs() < hi)
+    e = est_x.detach().float()
+    return torch.stack([(e * g * m).sum(-1), ((g * g) * m).sum().expand(e.shape[0]), m.sum().expand(e.shape[0]).to(e.dtype)], -1)
+
+
 def velocity_band_sums(v_est: torch.Tensor, v_gt: torch.Tensor) -> torch.Tensor:
     """(띠 수, 3) = [sum(est_x - gt_x), sum(est_y - gt_y), 표본 수]. 기록용이라 gradient 를 끊고 float 로 계산한다."""
     e, g = v_est.detach().float(), v_gt.detach().float()
@@ -354,6 +370,28 @@ class PerceptionState:
     map_off: torch.Tensor | None = None  # (N,) bool: 이 에피소드는 지도 토큰을 끈다(EX-33 S-B). None = 항상 켬(B)
 
 
+VEL_BRANCH_MODES = ("off", "shadow", "replace")
+VEL_BRANCH_CMD_COLS = (6, 7, 8)   # obs 45 칸 안의 속도 명령 vx vy wz (start_runner 의 o[:, 6:9] 와 같은 칸)
+H_PROP_DIM = 128
+H_VEL_DIM = 128
+
+
+class VelBranch(nn.Module):
+    """속도 가지: 최근 10 프레임에서 명령 3 칸을 0 으로 가린 것 -> MLP(256,128) -> GRUCell 128 -> 3 칸. 명령을 볼 길이가 구조상 없다 (곱셈 마스크 · 기울기도 0)."""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.mlp = mlp(OBS_DIM * HIST_LEN, [256, 128], None)
+        self.gru = nn.GRUCell(128, H_VEL_DIM)
+        self.head = nn.Linear(H_VEL_DIM, V_DIM)
+        mask = torch.ones(OBS_DIM)
+        mask[list(VEL_BRANCH_CMD_COLS)] = 0.0
+        self.register_buffer("cmd_mask", mask, persistent=False)
+
+    def step(self, hist: torch.Tensor, h: torch.Tensor) -> torch.Tensor:
+        return self.gru(self.mlp((hist * self.cmd_mask).flatten(1)), h)
+
+
 class StartPerception(nn.Module):
     """TR-Net + I-E 를 묶고, 50 Hz 한 스텝(step) 과 재생 손실(sequence_loss) 두 경로를 둔다.
 
@@ -365,12 +403,16 @@ class StartPerception(nn.Module):
         self.cfg = cfg or PerceptionCfg()
         self.trnet = TRNet() if self.cfg.map_input != "none" else None
         self.ie = IEEstimator(self.cfg)
+        if self.cfg.vel_branch not in VEL_BRANCH_MODES:
+            raise ValueError(f"vel_branch 는 {VEL_BRANCH_MODES} 중 하나: {self.cfg.vel_branch!r}")
+        self.vbranch = VelBranch() if self.cfg.vel_branch != "off" else None
+        self.hp_dim = H_PROP_DIM + (H_VEL_DIM if self.vbranch is not None else 0)  # 가지가 있으면 h_prop 뒤쪽 칸이 가지의 GRU 상태 (저장 · 재생 · 리셋이 같은 길을 탄다)
 
     # ---------------- 상태 ----------------
     def init_state(self, n: int, device) -> PerceptionState:
         k = DEPTH_FRAMES + self.cfg.depth_delay_ticks
         return PerceptionState(
-            h_prop=torch.zeros(n, 128, device=device),
+            h_prop=torch.zeros(n, self.hp_dim, device=device),
             h_terr=torch.zeros(n, 128, device=device),
             hist=torch.zeros(n, HIST_LEN, OBS_DIM, device=device),
             frames=torch.zeros(n, k, DEPTH_HW, DEPTH_HW, device=device),
@@ -412,6 +454,10 @@ class StartPerception(nn.Module):
     # ---------------- 한 스텝 계산 (수집 · 재생 공용) ----------------
     def _advance(self, h_prop, h_terr, hist, depth2, tick, first, use_gt, gt_map, map_off=None):
         keep = (~first).float()[:, None]
+        h_vel = None
+        if self.vbranch is not None:
+            h_vel = self.vbranch.step(hist, h_prop[:, H_PROP_DIM:] * keep)
+            h_prop = h_prop[:, :H_PROP_DIM]
         h_prop = self.ie.prop_step(hist, h_prop * keep)
         h_terr = h_terr * keep
         out: dict[str, torch.Tensor] = {}
@@ -429,7 +475,14 @@ class StartPerception(nn.Module):
             hmap = None
         est = self.ie.estimate(h_prop, hmap) if map_off is None else self.ie.estimate(h_prop, hmap, map_off)
         out.update(est)
+        if h_vel is not None:
+            out["v_branch"] = self.vbranch.head(h_vel)
+            h_prop = torch.cat([h_prop, h_vel], -1)
         return h_prop, h_terr, out
+
+    def _v_out(self, out: dict[str, torch.Tensor]) -> torch.Tensor:
+        """정책이 받는 est 의 속도 3 칸: replace 면 가지 출력, 아니면 (off · shadow) 옛 머리 값."""
+        return out["v_branch"] if self.cfg.vel_branch == "replace" else out["v"]
 
     @staticmethod
     def _off_args(map_off, t: int | None = None) -> tuple:
@@ -450,7 +503,7 @@ class StartPerception(nn.Module):
             z = out["mu"]
         else:
             z = out["mu"] + torch.randn_like(out["mu"]) * torch.exp(0.5 * out["logvar"])
-        return torch.cat([z, out["v"], out["zf"], out["zb"]], -1)
+        return torch.cat([z, self._v_out(out), out["zf"], out["zb"]], -1)
 
     @torch.no_grad()
     def est_sequence(self, batch: dict[str, torch.Tensor], eps: torch.Tensor) -> torch.Tensor:
@@ -465,7 +518,7 @@ class StartPerception(nn.Module):
                 batch["use_gt"][t], batch["gt_map"][t], *self._off_args(batch.get("map_off"), t),
             )
             z = out["mu"] + eps[t] * torch.exp(0.5 * out["logvar"])
-            outs.append(torch.cat([z, out["v"], out["zf"], out["zb"]], -1))
+            outs.append(torch.cat([z, self._v_out(out), out["zf"], out["zb"]], -1))
         return torch.stack(outs)
 
     # ---------------- 재생 손실 (gradient 켬) ----------------
@@ -482,6 +535,8 @@ class StartPerception(nn.Module):
         if eps is None:
             eps = torch.randn(T, batch["obs"].shape[1], Z_DIM, device=batch["obs"].device)
         if impl != "loop":
+            if self.vbranch is not None:
+                raise NotImplementedError("vel_branch 는 replay_impl=loop 에서만 (빠른 구현은 가지 상태를 모른다)")
             from foothold_s2.models.replay_fast import sequence_loss_fast
 
             return sequence_loss_fast(self, batch, eps, impl)
@@ -489,6 +544,8 @@ class StartPerception(nn.Module):
         sums = {k: 0.0 for k in ("tr", "kl", "o_next", "v", "hf", "hb")}
         o_valid_total = 0.0
         v_band = None
+        vb_sum = 0.0
+        slope = None   # 기록만: 정답 |vx| 0.02~0.14 표본에서 [sum(est x * gt x), sum(gt x ^ 2), n] 를 (옛 머리 · 가지) 로
         for t in range(T):
             h_prop, h_terr, out = self._advance(
                 h_prop, h_terr, batch["hist"][t], batch["depth2"][t].float(), batch["tick"][t], batch["first"][t],
@@ -501,6 +558,10 @@ class StartPerception(nn.Module):
             sums["v"] = sums["v"] + velocity_loss(out["v"], batch["base_vel"][t])
             vb = velocity_band_sums(out["v"], batch["base_vel"][t])
             v_band = vb if v_band is None else v_band + vb
+            if self.vbranch is not None:
+                vb_sum = vb_sum + F.mse_loss(out["v_branch"], batch["base_vel"][t])   # 가지 손실: 다른 손실과 그래프를 섞지 않는다 (옛 머리 v · o_hat 입력은 가지를 안 거친다)
+                sl = slow_slope_sums(torch.stack([out["v"][:, 0], out["v_branch"][:, 0]]), batch["base_vel"][t][:, 0])
+                slope = sl if slope is None else slope + sl
             sums["hb"] = sums["hb"] + F.mse_loss(self.ie.dec_b(out["zb"]), batch["gt_map"][t].flatten(1))
             sums["hf"] = sums["hf"] + F.mse_loss(self.ie.dec_f(out["zf"]), batch["gt_feet"][t])
             o_hat = self.ie.dec_o(torch.cat([z, out["v"], out["zf"], out["zb"]], -1))
@@ -513,4 +574,8 @@ class StartPerception(nn.Module):
         res["l_tr"] = res["tr"] if self.trnet is not None else torch.zeros(())
         res["loss"] = res["l_tr"] + res["l_ie"]
         res["_v_band"] = v_band
+        if self.vbranch is not None:
+            res["vb"] = vb_sum / T
+            res["loss"] = res["loss"] + res["vb"]
+            res["_vb_slope"] = slope
         return res

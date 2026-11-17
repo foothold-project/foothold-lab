@@ -38,7 +38,7 @@ class PerceptionActor(nn.Module):
         h_prop_next, h_terr_next, out = self.perception._advance(
             h_prop, h_terr, hist, depth2, depth_tick, first_after_reset,
             use_gt, gt_map)
-        est = torch.cat((out["mu"], out["v"], out["zf"], out["zb"]), dim=-1)
+        est = torch.cat((out["mu"], self.perception._v_out(out), out["zf"], out["zb"]), dim=-1)
         action = self.actor(torch.cat((obs45, est), dim=-1))
         return action, h_prop_next, h_terr_next, out["refined"]
 

@@ -111,8 +111,43 @@ VX_CORR_B_DEFAULT = 0.010
 VX_CORR_VX_COL = sp.Z_DIM            # est[..., 16]
 
 
+VEL_BRANCH_ENV = "EX42_VEL_BRANCH"                 # "off" (default) | "shadow" | "replace"  (DESIGN-SLOW-WALK 7 section)
+VEL_BRANCH_FREEZE_ENV = "EX42_VEL_BRANCH_FREEZE"   # "0" (default) | "1": policy and perception body frozen, only the branch learns (stage 1)
+
+
+def vel_branch_mode() -> str:
+    mode = os.environ.get(VEL_BRANCH_ENV, "off") or "off"
+    if mode not in sp.VEL_BRANCH_MODES:
+        raise ValueError("%s must be one of %s: %r" % (VEL_BRANCH_ENV, sp.VEL_BRANCH_MODES, mode))
+    return mode
+
+
+def vel_branch_freeze() -> bool:
+    raw = os.environ.get(VEL_BRANCH_FREEZE_ENV, "0") or "0"
+    if raw not in ("0", "1"):
+        raise ValueError("%s must be 0 or 1: %r" % (VEL_BRANCH_FREEZE_ENV, raw))
+    if raw == "1" and vel_branch_mode() == "off":
+        raise ValueError("%s=1 needs %s shadow or replace" % (VEL_BRANCH_FREEZE_ENV, VEL_BRANCH_ENV))
+    return raw == "1"
+
+
+def load_perception_state(module, state: dict, strict: bool = True) -> bool:
+    """module.load_state_dict, except that keys of the (new, optional) speed branch may be missing from an old checkpoint: they stay at their fresh init.
+    Returns True when branch keys were missing (the caller then does not load a perception optimizer state that has no entry for them).
+    Any other missing or unexpected key is still an error when strict."""
+    if getattr(module, "vbranch", None) is None:
+        module.load_state_dict(state, strict=strict)
+        return False
+    res = module.load_state_dict(state, strict=False)
+    missing_branch = [k for k in res.missing_keys if k.startswith("vbranch.")]
+    other_missing = [k for k in res.missing_keys if not k.startswith("vbranch.")]
+    if strict and (other_missing or res.unexpected_keys):
+        raise RuntimeError("perception state mismatch: missing=%s unexpected=%s" % (other_missing, list(res.unexpected_keys)))
+    return bool(missing_branch)
+
+
 def vx_corr_params() -> tuple:
-    """(on, b, band) from the environment, validated."""
+    """(on, b, band) from the environment, validated. Forced off while the speed branch feeds the policy (replace): the branch is not biased, no correction."""
     switch = os.environ.get(VX_CORR_ENV, "1")
     if switch not in ("0", "1"):
         raise ValueError("%s must be 0 or 1: %r" % (VX_CORR_ENV, switch))
@@ -123,7 +158,7 @@ def vx_corr_params() -> tuple:
         raise ValueError("%s must be a number: %r" % (VX_CORR_ENV_B, raw)) from None
     if not math.isfinite(b) or abs(b) > 0.05:
         raise ValueError("%s must be finite and within [-0.05, 0.05] m/s: %r" % (VX_CORR_ENV_B, raw))
-    return switch == "1", b, VX_CORR_BAND
+    return switch == "1" and vel_branch_mode() != "replace", b, VX_CORR_BAND
 
 
 def vx_corr_mask(vx: torch.Tensor, band: float = VX_CORR_BAND) -> torch.Tensor:
@@ -281,12 +316,18 @@ class StartRunner(OnPolicyRunner):
         self.perception = StartPerception(
             PerceptionCfg(map_input=pcfg.get("map_input", "reconstruction"), force_gt=bool(pcfg.get("force_gt", False)),
                           fast_gt_only=bool(pcfg["fast_gt_only"]),
-                          depth_delay_ticks=pcfg.get("depth_delay_ticks", 1))
+                          depth_delay_ticks=pcfg.get("depth_delay_ticks", 1), vel_branch=vel_branch_mode())
         ).to(device)
         self.perception.ie.heads_fp32 = bool(pcfg.get("kl_fp32", False))
+        self.vel_branch_freeze = vel_branch_freeze()
+        if self.vel_branch_freeze:                      # stage 1: only the branch learns (policy update is skipped in learn())
+            for name, prm in self.perception.named_parameters():
+                prm.requires_grad_(name.startswith("vbranch."))
         self.perception_optimizer = torch.optim.Adam(
-            self.perception.parameters(), lr=pcfg["learning_rate"], weight_decay=pcfg["weight_decay"]
+            [prm for prm in self.perception.parameters() if prm.requires_grad], lr=pcfg["learning_rate"], weight_decay=pcfg["weight_decay"]
         )
+        print("EX42_VEL_BRANCH where=start mode=%s freeze=%d vx_corr_on=%d" % (
+            self.perception.cfg.vel_branch, int(self.vel_branch_freeze), int(vx_corr_params()[0])), flush=True)
         self._pin_perception_lr("start")
         self.adasmpl = AdaSmpl(self.perception.cfg.p_smpl_init, self.perception.cfg.cv_eps, self.perception.cfg.force_gt)
         self.perception_wema = None            # v28u: WeightEma of the perception module (built in learn() when PERCEPTION_EMA_DECAY > 0)
@@ -300,7 +341,7 @@ class StartRunner(OnPolicyRunner):
         self.cfg["obs_groups"] = resolve_obs_groups(template, dict(OBS_GROUPS), ["critic"])
         self.alg = self._construct_algorithm(template)
         self.replay = (None if pcfg["fast_gt_only"] else PerceptionReplay(
-            self.env.num_envs, self.num_steps_per_env, device, getattr(torch, pcfg["depth_dtype"])
+            self.env.num_envs, self.num_steps_per_env, device, getattr(torch, pcfg["depth_dtype"]), h_prop_dim=self.perception.hp_dim
         ))
         self.map_switch_gen = make_generator(device, pcfg["map_switch_seed"]) if p_off > 0.0 else None
         self.map_switch = MapSwitchRecorder(self.env.num_envs, device) if p_off > 0.0 else None
@@ -1006,7 +1047,11 @@ class StartRunner(OnPolicyRunner):
             # ② PPO update
             self._phase_start()
             klp = self._kl_ppo_before(it) if self.pcfg["log_kl"] else None
-            loss_dict = self.alg.update()
+            if getattr(self, "vel_branch_freeze", False):       # stage 1: the policy is frozen (no update, storage emptied the way update() does)
+                self.alg.storage.clear()
+                loss_dict = {"value": 0.0, "surrogate": 0.0, "entropy": 0.0, "vel_branch_freeze": 1.0}
+            else:
+                loss_dict = self.alg.update()
             kl_info = {}
             if klp is not None:
                 kl_info["ppo"] = self._kl_ppo_after(klp)
@@ -1596,6 +1641,7 @@ class StartRunner(OnPolicyRunner):
         pc = self.pcfg
         params = [p for p in self.perception.parameters() if p.requires_grad]
         acc: dict[str, float] = {}
+        vb_slope = None    # speed branch (record only): [row ie head / branch] x [sum est*gt, sum gt^2, n] in the slow band
         v_band_sum = None  # 속도 띠별 (추정 - 실제) 합과 표본 수 (기록만, 학습에 안 쓰임)
         n_updates = 0
         grad_norms: list = []
@@ -1606,8 +1652,11 @@ class StartRunner(OnPolicyRunner):
                 with self._autocast():
                     res = self.perception.sequence_loss(self.replay.gather(c), impl=pc["replay_impl"])
                 (res["loss"] * (len(c) / len(idx))).backward()
-                for k in ("l_tr", "l_ie", "kl", "o_next", "v", "hf", "hb"):
+                for k in ("l_tr", "l_ie", "kl", "o_next", "v", "hf", "hb") + (("vb",) if "vb" in res else ()):
                     acc[k] = acc.get(k, 0.0) + float(res[k]) * len(c) / len(idx)
+                if res.get("_vb_slope") is not None:
+                    sl = res["_vb_slope"].detach().float()
+                    vb_slope = sl if vb_slope is None else vb_slope + sl
                 if res.get("_v_band") is not None:
                     vb = res["_v_band"].detach().float()
                     v_band_sum = vb if v_band_sum is None else v_band_sum + vb
@@ -1622,6 +1671,11 @@ class StartRunner(OnPolicyRunner):
                                              "clipped": int((g > pc["max_grad_norm"]).sum()), "threshold": float(pc["max_grad_norm"])}
         self.last_perception_losses = {k: v / n_updates for k, v in acc.items()}
         self.last_perception_losses.update(velocity_band_records(v_band_sum, n_updates))
+        if vb_slope is not None:
+            for name, row in (("ie", vb_slope[0]), ("branch", vb_slope[1])):
+                if float(row[1]) > 0:
+                    self.last_perception_losses["vslope_slow_" + name] = float(row[0] / row[1])
+            self.last_perception_losses["vslope_slow_n"] = float(vb_slope[0][2]) / n_updates
         return self.last_perception_losses
 
     def _gradnorm_print(self, it: int) -> None:
@@ -1984,14 +2038,15 @@ class StartRunner(OnPolicyRunner):
             if saved.get(key, default) != self.pcfg[key]:
                 raise ValueError(f"체크포인트의 {key}={saved.get(key, default)!r} 와 이 runner 의 {self.pcfg[key]!r} 가 다르다 (처치가 다른 체크포인트를 섞지 않는다)")
         self.alg.policy.load_state_dict(sd["model_state_dict"])
-        self.perception.load_state_dict(sd["perception_state_dict"])
+        branch_missing = load_perception_state(self.perception, sd["perception_state_dict"], strict=True)
         self._saved_perception_ema = sd.get("perception_ema")           # v28u: continued by learn() when the average is on, ignored otherwise
         self.adasmpl.load_state_dict(sd["adasmpl"])
         self._apply_resume_adasmpl()
         if load_optimizer:
             self.alg.optimizer.load_state_dict(sd["optimizer_state_dict"])
             self.alg.learning_rate = sd["ppo_learning_rate"]
-            self.perception_optimizer.load_state_dict(sd["perception_optimizer_state_dict"])
+            if not branch_missing:                       # an old checkpoint has no optimizer entries for the new branch parameters
+                self.perception_optimizer.load_state_dict(sd["perception_optimizer_state_dict"])
             self._pin_perception_lr("load")
         self.load_map_switch_state(sd.get("map_switch"), int(sd["iter"]))
         self._load_env_state(sd["env_state"])
@@ -2151,13 +2206,16 @@ class StartRunner(OnPolicyRunner):
                 parent_perception, perception_source = ema_state, "ema"
             else:
                 perception_source = "online (%s)" % perception_source
-        self.perception.load_state_dict(parent_perception, strict=True)
+        branch_missing = load_perception_state(self.perception, parent_perception, strict=True)
+        if branch_missing:
+            print("EX42_VEL_BRANCH where=parent_load branch keys missing in the parent: fresh init, perception optimizer state is not loaded", flush=True)
         print("EX42_PARENT_PERCEPTION_SOURCE=%s" % perception_source, flush=True)
         self.adasmpl.load_state_dict(checkpoint["adasmpl"])
         self._apply_resume_adasmpl()
         self.alg.optimizer.load_state_dict(checkpoint["optimizer_state_dict"])
         self.alg.learning_rate = float(checkpoint["ppo_learning_rate"])
-        self.perception_optimizer.load_state_dict(checkpoint["perception_optimizer_state_dict"])
+        if not branch_missing and not getattr(self, "vel_branch_freeze", False):
+            self.perception_optimizer.load_state_dict(checkpoint["perception_optimizer_state_dict"])
         self._pin_perception_lr("load_ex42_stage_zero_parent")
         self.load_map_switch_state(checkpoint["map_switch"], local_update)
         self.set_rng_state(checkpoint["rng"])

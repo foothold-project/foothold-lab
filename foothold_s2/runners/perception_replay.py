@@ -24,7 +24,7 @@ from foothold_s2.models.start_perception import (
 
 
 class PerceptionReplay:
-    def __init__(self, num_envs: int, num_steps: int, device, depth_dtype=torch.float16) -> None:
+    def __init__(self, num_envs: int, num_steps: int, device, depth_dtype=torch.float16, h_prop_dim: int = 128) -> None:
         self.N, self.T, self.device = num_envs, num_steps, device
         z = lambda *s, dt=torch.float32: torch.zeros(*s, dtype=dt, device=device)  # noqa: E731
         self.data = {
@@ -41,7 +41,7 @@ class PerceptionReplay:
             "use_gt": z(num_steps, num_envs, dt=torch.bool),
             "map_off": z(num_steps, num_envs, dt=torch.bool),                  # EX-33 S-B: 그 스텝에 정책이 받은 est 를 만들 때 지도 토큰을 껐는가(재생에서 같은 마스크를 쓰려고 저장)
         }
-        self.h_prop0 = z(num_envs, 128)
+        self.h_prop0 = z(num_envs, h_prop_dim)
         self.h_terr0 = z(num_envs, 128)
         self.step = 0
 
