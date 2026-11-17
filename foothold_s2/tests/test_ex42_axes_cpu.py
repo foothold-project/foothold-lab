@@ -175,3 +175,12 @@ def test_record_maps_keeps_the_rough_map_beside_the_refined_one():
     none = {}
     ax.record_maps(none, {}, gt, every=1)                                          # 복원이 없으면 NaN 행 · 사진 없음
     assert np.isnan(none["holes"][0]).all() and "snaps" not in none
+
+
+def test_table_line_names_the_tool_commit_and_the_hole_definition(tmp_path):
+    """planner 13:54: 다른 세션이 돌릴 때 커밋판을 가리키고 구멍 정의 판 번호를 표에 적는다."""
+    v = ax.tool_version()
+    assert v["hole_definition"] == ax.HOLE_DEFINITION and (v["commit"] is None or len(v["commit"]) == 8)
+    line = ax.format_line(50, {"tool": {"commit": "467f271f", "dirty": False, "hole_definition": "v2"}})
+    assert line.endswith("축도구 467f271f 구멍정의 v2")
+    assert "+수정" in ax.format_line(50, {"tool": {"commit": "467f271f", "dirty": True, "hole_definition": "v2"}})

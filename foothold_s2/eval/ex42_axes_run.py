@@ -210,6 +210,7 @@ def main(argv=None) -> int:
     row["timing"]["total_seconds"] = int(time.time() - t_all)
     if a.dry:
         return 0
+    row["tool"] = ax.tool_version(a.copy)
     line = ax.write_table(out / f"axes_m{it}.json", it, row)
     print(line)
     with open(out / "axes_table.txt", "a", encoding="utf-8") as f:

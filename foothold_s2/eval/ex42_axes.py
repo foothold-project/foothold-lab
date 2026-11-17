@@ -20,6 +20,7 @@ EDGE_STEP_M = 0.05          # 모서리 칸 = 네 이웃 중 하나와 높이 �
 EDGE_HIST_BINS = 40         # 모서리 오차 히스토그램: 1 cm 칸 40 개 (마지막 칸은 40 cm 이상)
 HOLE_COLUMNS = (("hole_n", "missed_n", "nonhole_n", "false_n", "hole_abs_sum", "nonhole_abs_sum", "cells_n", "edge_gt_n", "edge_pred_n", "edge_abs_sum")
                 + tuple(f"edge_hist_{k}" for k in range(EDGE_HIST_BINS)))
+HOLE_DEFINITION = "v2"      # v1 = 양옆 2 칸 (틈 안쪽을 놓침 · reviewer 13:42 FAIL) · v2 = 양옆 10 칸 + 모서리 칸 5 cm. 정의를 바꾸면 이 글자도 바꾼다 (표 줄에 찍힘)
 SLOW_WINDOW_START = 100     # line50.py 와 같은 창: 처음 100 step 은 걸음이 자리 잡는 시간
 STALL_M = 0.25              # 가정: 끝까지 살았는데 시작에서 이만큼도 못 간 env = 「멈춘」 것
 SLOPE_MIN_ENVS = 8
@@ -302,7 +303,23 @@ def format_line(it: int, row: dict) -> str:
                      f"모서리 오차 평균 {_fmt(m.get('edge_err_mean_cm'), '{:.1f}')}cm p90 {_fmt(m.get('edge_err_p90_cm'), '{:.0f}')}cm "
                      f"모서리 칸 비율 {_fmt(m.get('edge_frac_gt'), '{:.3f}')}|{_fmt(m.get('edge_frac_pred'), '{:.3f}')} "
                      f"(구멍 {_fmt(m.get('hole_cells'), '{:.0f}')}칸 놓침 {_fmt(m.get('missed_hole_frac'), '{:.2f}')} 없는구멍 {_fmt(m.get('false_hole_frac'), '{:.3f}')})")
+    tool = row.get("tool") or {}
+    if tool:
+        parts.append(f"축도구 {tool.get('commit', '?')}{'+수정' if tool.get('dirty') else ''} 구멍정의 {tool.get('hole_definition', '?')}")
     return " · ".join(parts)
+
+
+def tool_version(repo_dir=None) -> dict:
+    """이 표를 만든 코드의 커밋 (짧게) · 커밋 안 된 변경 여부 · 구멍 정의 판. git 을 못 부르면 commit 은 None (표에는 ?)."""
+    import subprocess
+
+    cwd = str(repo_dir or Path(__file__).resolve().parent)
+    try:
+        commit = subprocess.run(["git", "rev-parse", "--short=8", "HEAD"], cwd=cwd, capture_output=True, text=True, timeout=20, check=True).stdout.strip()
+        dirty = bool(subprocess.run(["git", "status", "--porcelain", "--untracked-files=no", "--", "foothold_s2/eval"], cwd=cwd, capture_output=True, text=True, timeout=20, check=True).stdout.strip())
+    except Exception:                                    # noqa: BLE001 (git 없음 · 저장소 아님)
+        commit, dirty = None, None
+    return {"commit": commit, "dirty": dirty, "hole_definition": HOLE_DEFINITION}
 
 
 def write_table(path, it: int, row: dict) -> str:
