@@ -98,3 +98,14 @@ def test_kit_entry_refuses_without_a_declared_lab_major(monkeypatch):
         lab_compat.require_declared_major()
     monkeypatch.setattr("importlib.metadata.version", lambda name: "28.0.0")
     assert lab_compat.require_declared_major() == 3
+
+
+def test_policy_obs_reads_policy_key_of_tensordict_and_plain_tensor():
+    import torch
+    from tensordict import TensorDict
+
+    t = torch.zeros(3, 45)
+    td = TensorDict({"policy": t}, batch_size=[3])
+    assert lp.policy_obs(td) is t or torch.equal(lp.policy_obs(td), t)
+    assert lp.policy_obs({"policy": t}) is t
+    assert lp.policy_obs(t) is t

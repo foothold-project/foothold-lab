@@ -40,6 +40,13 @@ def compare_obs(obs, *, quat_wxyz, ang_vel_b, command, joint_pos, default_joint_
     return {"max_abs_err": errs, "atol": atol, "passed": all(e <= atol for e in errs.values()), "n": int(o.shape[0])}
 
 
+def policy_obs(obs):
+    """env.step 이 준 관측에서 정책 텐서. TensorDict 는 .shape 가 있어도 («배치 모양») 텐서가 아니다: 키 "policy" 를 먼저 본다."""
+    if hasattr(obs, "keys") and "policy" in obs.keys():
+        return obs["policy"]
+    return obs
+
+
 def kit_probe(nav, rpy=TILT_RPY) -> dict:
     """Kit 안에서만. 몸통을 rpy 로 기울여 쓰고 영 행동으로 한 스텝 돌려, 관측 45 칸을 같은 시점 상태와 견준다. 실패해도 예외 대신 {"error": ...} (본 확인을 막지 않는다)."""
     import torch
@@ -54,7 +61,7 @@ def kit_probe(nav, rpy=TILT_RPY) -> dict:
         pose[:, 3:7] = quat_to_sim(q)
         robot.write_root_pose_to_sim(pose, env_ids=torch.arange(pose.shape[0], device=pose.device))
         obs, _r, _d, _e = nav.env.step(torch.zeros(nav.n, 12, device=pose.device))
-        policy = obs["policy"] if not hasattr(obs, "shape") else obs
+        policy = policy_obs(obs)
         d = robot.data
         n = lambda x: th(x).detach().cpu().numpy().astype(np.float64)
         jp, jd = n(d.joint_pos), n(d.default_joint_pos)
