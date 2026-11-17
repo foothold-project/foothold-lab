@@ -4,8 +4,8 @@
 > 작성: 오흥재 · 2026-11-17 17:24
 > 근거: 업체 제공 「Unitree Go2 + Intel RealSense D435i 제어기 사용자 매뉴얼」 · 2026-11-17 현장 터미널 출력 · NoMachine 접속 실측 · 정본 3 전달 문서
 > 요지: 교체받은 Go2 X 계통의 현재 연결과 원격 접속을 확정값 · 업체 문서값 · 미확인값으로 나누고, 저수준 정책 시험 전 점검 순서를 고정한다
-> 상태: 현장 기록 v0.6 · 유선 직결 SSH와 LiDARState 실측 반영
-> 판: v0.6
+> 상태: 현장 기록 v0.7 · D435i USB 3 경로와 C-to-A 젠더 불안정 실측 반영
+> 판: v0.7
 
 ## 0. 이 기록의 범위
 
@@ -135,9 +135,14 @@ ai-lt01 전용 ED25519 key를 Jetson `nvidia` 계정에 등록했고 `BatchMode=
 | USB ID | `8086:0b3a` |
 | firmware | `5.17.0.10` |
 | kernel driver | `uvcvideo` · HID는 `usbhid` |
-| 현재 USB 경로 | USB 2.0 root hub와 hub를 거쳐 `480M` |
+| Jetson 기존 USB 경로 | USB 2.0 root hub와 hub를 거쳐 `480M` · USB `2.10` |
+| ai-lt01 C-to-A 젠더 시험 | SuperSpeed로 열거되지만 1~10초 안에 반복 disconnect |
+| ai-lt01 C-to-C 직결 | `5000M` · USB `3.20` · 15회 연속 표본에서 같은 장치 번호로 안정 유지 |
+| serial | `253243060450` |
 
-업체 매뉴얼은 D435i의 color 640×480 30 fps, aligned depth 640×480 30 fps, gyro 200 Hz, accel 100 Hz를 제시한다. 현재 카메라는 USB 2.0 `480M`으로 연결돼 있어 이 스트림 조합이 손실 없이 유지되는지는 `미확인`이다. 카메라 각도 조정 전에 USB 3 경로로 옮기거나 현재 설정의 실제 frame rate와 drop을 측정해야 한다.
+업체 매뉴얼은 D435i의 color 640×480 30 fps, aligned depth 640×480 30 fps, gyro 200 Hz, accel 100 Hz를 제시한다. D435i와 C-to-C 케이블은 USB 3에서 정상 동작한다 `확인됨`. 업체 제공 C-to-A 젠더를 거친 ai-lt01 본체 USB-A 직결에서는 `new SuperSpeed USB device`와 D435i serial까지 인식한 뒤 반복 disconnect가 발생했다. 따라서 젠더가 USB 3 신호를 전혀 지원하지 않는 것은 아니지만 SuperSpeed 경로가 안정적이지 않다 `확인됨`. Jetson에서 `480M`으로 내려간 현상도 이 경로 문제와 일치한다.
+
+Go2 재가동 전 검증된 USB 3 A-to-C 단일 데이터 케이블을 준비하고 기존 C-to-A 젠더를 교체한다. Jetson에서 `5000M`과 연결 지속성을 먼저 확인한 뒤 실제 frame rate와 drop을 측정한다. 브라켓과 카메라 각도 조절 나사는 이 과정에서 풀지 않는다.
 
 ### 4.3 ROS 2 · Unitree DDS · LiDAR
 
@@ -261,6 +266,7 @@ Unitree Go2 사용자 매뉴얼에는 머리 표시등이 노란색으로 느리
 
 | 판 | 날짜 | 내용 |
 |---|---|---|
+| v0.7 | 2026-11-17 | Jetson 기존 D435i 480M 재확인 · ai-lt01 USB-A와 업체 C-to-A 젠더에서 SuperSpeed 반복 disconnect · C-to-C 직결은 USB 3.20 5000M로 안정 유지 · 젠더 경로 불안정 확정과 A-to-C 단일 케이블 교체 관문 기록 |
 | v0.6 | 2026-11-17 | ai-lt01과 Jetson 외부 NIC의 `192.168.50.0/24` 직결망 · SSH key와 BatchMode 접속 확인 · native SDK2 읽기 전용 subscriber로 LiDARState 5회 수신 · 약 62k cloud size와 L2 공식 64k 대조로 L2 운용 판정 확정 |
 | v0.5 | 2026-11-17 | Unitree ROS message package 부재와 SDK2 LidarState header 확인 · 공식 Go2 L2 제원과 L1 대비 느린 회전 관찰을 근거로 L2 유력 현장 판정 · 장치 식별값 미확인 한계 기록 |
 | v0.4 | 2026-11-17 | LiDAR 세 토픽의 type과 bare DDS publisher 확인 · LidarState 로컬 type support 부재와 데이터 표본 미수신 기록 · L1/L2 미확정 유지 |
