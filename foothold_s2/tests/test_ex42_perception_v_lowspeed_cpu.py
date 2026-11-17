@@ -252,3 +252,51 @@ def test_plan_and_approvals_are_not_touched():
 
     assert EX42Plan.load(ROOT / "foothold_s2" / "curriculum" / "ex42-prep.yaml").sha256 == PLAN_SHA
     assert hashlib.sha256((ROOT / "foothold_s2" / "curriculum" / "ex42-approvals.yaml").read_bytes()).hexdigest() == APPROVALS_SHA
+
+
+# ---- planner 11/17 12:26: the weight is a launch-time cell (EX42_PERCEPTION_V_LOWSPEED_WEIGHT), default = the previous behavior ----
+def test_env_cell_unset_or_empty_is_one_and_a_number_is_taken_as_is():
+    assert sp.lowspeed_weight_from_env({}) == 1.0
+    assert sp.lowspeed_weight_from_env({sp.PERCEPTION_V_LOWSPEED_WEIGHT_ENV: ""}) == 1.0
+    assert sp.lowspeed_weight_from_env({sp.PERCEPTION_V_LOWSPEED_WEIGHT_ENV: "1"}) == 1.0
+    assert sp.lowspeed_weight_from_env({sp.PERCEPTION_V_LOWSPEED_WEIGHT_ENV: "2.5"}) == 2.5
+    assert sp.PERCEPTION_V_LOWSPEED_WEIGHT == sp.lowspeed_weight_from_env()      # the module value is what the process env gave at import (unset here)
+
+
+@pytest.mark.parametrize("bad", ["abc", "nan", "inf", "-1", "0", "0.5"])
+def test_env_cell_refuses_a_bad_value_instead_of_falling_back(bad):
+    with pytest.raises(ValueError):
+        sp.lowspeed_weight_from_env({sp.PERCEPTION_V_LOWSPEED_WEIGHT_ENV: bad})
+
+
+def test_weight_one_from_the_env_path_is_byte_identical_and_a_larger_weight_raises_the_slow_sample_share():
+    g = torch.Generator().manual_seed(2)
+    est, gt = torch.randn(256, 3, generator=g), torch.randn(256, 3, generator=g) * 0.5
+    slow_only = gt.clone(); slow_only[:, :2] = slow_only[:, :2].clamp(-0.2, 0.2)       # every vx vy sample is in the slow band
+    fast_only = gt.clone(); fast_only[:, :2] = 1.0                                      # none is
+    base = {k: sp.velocity_loss(est, v) for k, v in (("mix", gt), ("slow", slow_only), ("fast", fast_only))}
+    w = sp.lowspeed_weight_from_env({sp.PERCEPTION_V_LOWSPEED_WEIGHT_ENV: "1.0"})
+    sp.PERCEPTION_V_LOWSPEED_WEIGHT = w
+    try:
+        assert all(torch.equal(sp.velocity_loss(est, v), F.mse_loss(est, v)) for v in (gt, slow_only, fast_only))
+    finally:
+        sp.PERCEPTION_V_LOWSPEED_WEIGHT = 1.0
+    sp.PERCEPTION_V_LOWSPEED_WEIGHT = sp.lowspeed_weight_from_env({sp.PERCEPTION_V_LOWSPEED_WEIGHT_ENV: "4"})
+    try:
+        on = {k: sp.velocity_loss(est, v) for k, v in (("mix", gt), ("slow", slow_only), ("fast", fast_only))}
+    finally:
+        sp.PERCEPTION_V_LOWSPEED_WEIGHT = 1.0
+    assert float(on["slow"]) > float(base["slow"]) and float(on["mix"]) > float(base["mix"])   # the slow samples' share of the loss grows
+    assert torch.equal(on["fast"], base["fast"])                                                # a batch with no slow sample is untouched
+
+
+def test_start_record_line_prints_the_low_speed_weight(capsys):
+    sp.PERCEPTION_V_LOWSPEED_WEIGHT = 3.0
+    try:
+        r = _runner()
+        capsys.readouterr()
+        r._pin_perception_lr("start")
+        text = capsys.readouterr().out
+    finally:
+        sp.PERCEPTION_V_LOWSPEED_WEIGHT = 1.0
+    assert "EX42_PERCEPTION_V_LOWSPEED where=start weight=3 threshold=0.3\n" in text
