@@ -54,3 +54,29 @@ def test_old_checkpoint_into_frozen_branch_runner_and_roundtrip(monkeypatch, tmp
     again.load(p_new)                                                 # 가지가 든 저장본 왕복
     for k, v in new.perception.state_dict().items():
         assert torch.allclose(again.perception.state_dict()[k], v, atol=1e-6), k
+
+
+def _runner_real_default(monkeypatch, mode, perception=None):
+    monkeypatch.setenv("EX42_VEL_BRANCH", mode)
+    monkeypatch.setenv("EX42_VEL_BRANCH_FREEZE", "0")
+    torch.manual_seed(0)
+    return StartRunner(FakeStartEnv(num_envs=8, seed=0), train_cfg(24, {"microbatch_envs": 4, **(perception or {})}), log_dir=None, device="cpu")      # replay_impl 을 안 넣는다 = E2 실제 설정 (기본 a3)
+
+
+def test_real_e2_default_replay_impl_is_forced_to_loop_when_the_branch_is_on_and_learns(monkeypatch, capsys):
+    from foothold_s2.runners.start_runner import PERCEPTION_DEFAULTS
+
+    assert PERCEPTION_DEFAULTS["replay_impl"] == "a3"                                           # E2 가 쓰는 기본
+    for mode in ("shadow", "replace"):
+        r = _runner_real_default(monkeypatch, mode)
+        assert r.pcfg["replay_impl"] == "loop"
+        r.learn(1)                                                                                # 예전에는 여기서 NotImplementedError
+        assert "vb" in r.last_perception_losses
+    assert "replay_impl forced a3 -> loop" in capsys.readouterr().out
+    r = _runner_real_default(monkeypatch, "shadow", {"replay_impl": "a3"})                        # 명시한 a3 도 같다
+    assert r.pcfg["replay_impl"] == "loop"
+
+
+def test_branch_off_keeps_the_fast_replay_impl(monkeypatch):
+    r = _runner_real_default(monkeypatch, "off")
+    assert r.pcfg["replay_impl"] == "a3"

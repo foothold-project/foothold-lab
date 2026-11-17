@@ -288,6 +288,10 @@ class StartRunner(OnPolicyRunner):
         pcfg = dict(PERCEPTION_DEFAULTS)
         pcfg.update(train_cfg.get("perception", {}))
         self.pcfg = pcfg
+        if vel_branch_mode() != "off" and pcfg["replay_impl"] != "loop":
+            # 속도 가지는 loop 재생에서만 (빠른 구현 a1 a2 a3 는 가지 상태를 모른다). E2 실제 설정은 기본 a3 이고 hydra 로는 덮을 수 없어 (agent.perception 에 키 없음) 여기서 강제한다.
+            print("EX42_VEL_BRANCH where=replay_impl forced %s -> loop (vel_branch mode=%s: the fast replay impls do not know the branch state)" % (pcfg["replay_impl"], vel_branch_mode()), flush=True)
+            pcfg["replay_impl"] = "loop"
         if pcfg["fast_gt_only"] and (not pcfg.get("force_gt") or pcfg.get("map_input") != "reconstruction" or pcfg.get("log_kl")):
             raise ValueError("fast_gt_only requires force_gt, reconstruction map, and disabled replay KL probe")
         if pcfg["est_mode"] not in ("learned", "zero", "oracle_vel") or pcfg["critic_mode"] not in ("legacy", "clean52"):
