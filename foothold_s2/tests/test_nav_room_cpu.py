@@ -197,7 +197,7 @@ def test_start_points_are_flat_clear_of_walls_and_fixed_by_seed(tmp_path):
     _, room = rg.make_room(3, grade_table=TABLE)
     a, b = rg.start_points(room, 8, seed=1), rg.start_points(room, 8, seed=1)
     assert (a == b).all() and not (a == rg.start_points(room, 8, seed=2)).all() and len({tuple(r[:2]) for r in a}) == 8
-    ij = np.floor(a[:, [1, 0]] / rg.RES).astype(int)
+    ij = np.floor(a[:, [0, 1]] / rg.RES).astype(int)          # 배열은 [x 칸][y 칸] (옛 판은 x · y 가 뒤바뀐 채 이 시험도 [1, 0] 으로 읽어 같이 틀렸다)
     assert (room.cell[ij[:, 0], ij[:, 1]] == rg.CELL_FLAT).all()
     dist = ndimage.distance_transform_edt(np.pad(room.cell == rg.CELL_FLAT, 1))[1:-1, 1:-1] * rg.RES      # 평지가 아닌 셀까지 거리
     assert (dist[ij[:, 0], ij[:, 1]] >= rg.START_MARGIN_M).all()

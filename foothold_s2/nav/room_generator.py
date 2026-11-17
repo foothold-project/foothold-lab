@@ -25,7 +25,8 @@ TILE = int(round(TILE_M / RES))       # 20
 NT = N // TILE                        # 10
 PATCH_TILES = 4                       # 8 m 패치 = 타일 4 x 4
 WALL_H = 1.2                          # 계획 §5.1
-OUTER_WALL_M = 0.2
+OUTER_WALL_M = 0.2                    # 둘레 벽 두께 기본 (손으로 적은 방 · 옛 꼴). maze 명세는 spec["outer_wall_m"] = MAZE_OUTER_WALL_M (설계 3.1)
+MAZE_OUTER_WALL_M = 0.3
 PIT_DROP = -1.0
 
 # 셀 종류 (grade_map.py 가 등급으로 옮김)
@@ -44,10 +45,24 @@ class RoomConfig:
     p_box: float = 0.1
     n_patches: int = 2                         # 8 x 8 m 둘 = 방 면적의 32 % (30 % 안팎, 가정)
     min_free_fraction: float = 0.35
-    max_tries: int = 50
+    max_tries: int = 200
+    layout: str = "maze"                       # "maze" = 길과 벽 (막힌 덩어리 + 타일 경계 벽 + 문 · DESIGN-HIPAN-ROOMS-1117 3.1 · 기본) | "old" = 옛 꼴 (막힌 타일에 벽 확률 p_wall)
+    block_frac: float = 0.22                   # maze: 막힌 타일 비율 (1~3 타일짜리 덩어리)
+    wall_keep: float = 0.55                    # maze: 신장 나무에 없는 타일 경계에 벽을 세울 확률 (0 = 벽 없음 · 1 = 완전 미로). make_room 의 keep_choices 가 시드마다 고름
+    door_frac: float = 0.35                    # maze: 세운 벽 가운데 문을 내는 비율
+    door_m: float = 1.0
+    wall_t_m: float = 0.2
+    p_pillar: float = 0.08                     # maze: 자유 타일 가운데 1.2 m 안에 흩는 탁자 · 상자 · 기둥 (p_table · p_box 와 함께)
+    keep_choices: tuple = (0.35, 0.55, 0.75)   # make_room 이 시드로 돌려가며 쓰는 wall_keep (설계 3.2 제안: 셋 둘씩). () = wall_keep 그대로
+    free_range: tuple = (0.55, 0.80)           # maze 수락: 통과 가능 칸 비율 (설계 3.4)
+    min_dead_end_tiles: int = 3                # maze 수락: 막다른 타일 수
+    min_connected: float = 0.98                # maze 수락: 통과 가능 칸 중 가장 큰 덩어리 비율
+    min_passage_m: float = 0.8                 # maze 수락: 가장 좁은 통과 폭
     sparse_patch_kinds: tuple = PATCH_KINDS    # 듬성한 패치 (징검돌 · 외나무 · 틈) 로 쓸 종류. () = 뺌 (HiPAN 1 차 방: 팀장 11/16 · FIRST_ROUND_CFG)
 
     def __post_init__(self):
+        if self.layout not in ("maze", "old"):
+            raise ValueError(f"layout must be maze | old: {self.layout}")
         bad = [k for k in self.sparse_patch_kinds if k not in PATCH_KINDS]
         if bad:
             raise ValueError(f"unknown sparse patch kinds {bad}; allowed {PATCH_KINDS}")
@@ -116,8 +131,14 @@ def wfc_tiles(rng: np.random.Generator, weights, max_restarts: int = 200) -> np.
 
 
 def generate_spec(seed: int, cfg: RoomConfig | None = None, grade_table: dict | None = None) -> dict:
-    """시드 -> 방 명세 (yaml 로 적을 수 있음). grade_table: `{kind: {max_passed_level: int}}` (없으면 패치를 넣지 않음)."""
+    """시드 -> 방 명세 (yaml 로 적을 수 있음). grade_table: `{kind: {max_passed_level: int}}` (없으면 패치를 넣지 않음). cfg.layout 이 maze (기본) 면 길과 벽 방."""
     cfg = cfg or RoomConfig()
+    if cfg.layout == "maze":
+        return _generate_spec_maze(seed, cfg, grade_table)
+    return _generate_spec_old(seed, cfg, grade_table)
+
+
+def _generate_spec_old(seed: int, cfg: RoomConfig, grade_table: dict | None) -> dict:
     rng = np.random.default_rng(seed)
     tiles = wfc_tiles(rng, cfg.weights)
     prims: list = []
@@ -158,6 +179,164 @@ def generate_spec(seed: int, cfg: RoomConfig | None = None, grade_table: dict | 
                     prims.append({"type": "box", "x": round(x0 + float(a), 1), "y": round(y0 + float(b), 1), "w": 0.6,
                                   "z0": round(float(rng.uniform(0.2, 1.0)), 2), "h": 0.5})
     return {"seed": int(seed), "size_m": ROOM_M, "tiles": tiles.tolist(), "primitives": prims}
+
+
+
+# ---------------------------------------------------------------- 길과 벽 방 (DESIGN-HIPAN-ROOMS-1117 3.1)
+
+_NB4 = ((1, 0), (-1, 0), (0, 1), (0, -1))
+
+
+def _tiles_connected(free: np.ndarray) -> bool:
+    cells = np.argwhere(free)
+    if not len(cells):
+        return False
+    seen = np.zeros_like(free)
+    stack = [tuple(cells[0])]
+    seen[stack[0]] = True
+    n = 1
+    while stack:
+        i, j = stack.pop()
+        for a, b in _NB4:
+            p, q = i + a, j + b
+            if 0 <= p < free.shape[0] and 0 <= q < free.shape[1] and free[p, q] and not seen[p, q]:
+                seen[p, q] = True
+                n += 1
+                stack.append((p, q))
+    return n == len(cells)
+
+
+def _block_tiles(rng: np.random.Generator, frac: float, taken: np.ndarray) -> np.ndarray:
+    """타일의 frac 를 1~3 타일짜리 덩어리 (1x1 · 2x2 · 1x3 · 3x1 · 1x2 · 2x1) 로 막는다. 남은 자유 타일은 한 덩어리로 이어진 채로 (taken = 패치 자리 · 막지 않음)."""
+    blocked = np.zeros((NT, NT), bool)
+    target, tries = int(round(frac * NT * NT)), 0
+    while blocked.sum() < target and tries < 500:
+        tries += 1
+        i, j = rng.integers(0, NT, 2)
+        h, w = tuple(int(x) for x in rng.integers(1, 3, 2)) if rng.random() < 0.7 else (1, 1)
+        if rng.random() < 0.3:
+            h, w = (3, 1) if rng.random() < 0.5 else (1, 3)
+        if taken[i:i + h, j:j + w].any() or i + h > NT or j + w > NT:
+            continue
+        cand = blocked.copy()
+        cand[i:i + h, j:j + w] = True
+        if _tiles_connected(~cand):
+            blocked = cand
+    return blocked
+
+
+def _spanning_tree_edges(rng: np.random.Generator, free: np.ndarray) -> set:
+    """자유 타일 위 무작위 신장 나무 (깊이 우선). 돌려주는 값: 가지 (두 타일의 frozenset) 집합. 나무 가지는 늘 열려 있다 = 어디든 갈 수 있음의 보장."""
+    cells = [tuple(int(v) for v in c) for c in np.argwhere(free)]
+    start = cells[int(rng.integers(len(cells)))]
+    seen, stack, edges = {start}, [start], set()
+    while stack:
+        c = stack[-1]
+        nb = [(c[0] + a, c[1] + b) for a, b in _NB4 if 0 <= c[0] + a < NT and 0 <= c[1] + b < NT and free[c[0] + a, c[1] + b] and (c[0] + a, c[1] + b) not in seen]
+        if not nb:
+            stack.pop()
+            continue
+        n = nb[int(rng.integers(len(nb)))]
+        seen.add(n)
+        edges.add(frozenset((c, n)))
+        stack.append(n)
+    return edges
+
+
+def _generate_spec_maze(seed: int, cfg: RoomConfig, grade_table: dict | None) -> dict:
+    rng = np.random.default_rng(seed)
+    prims: list = []
+    taken = np.zeros((NT, NT), dtype=bool)
+    kinds = [k for k in cfg.sparse_patch_kinds if grade_table and grade_table.get(k, {}).get("max_passed_level", -1) >= 0]
+    patch_tiles = np.zeros((NT, NT), dtype=bool)
+    if kinds:
+        for _ in range(cfg.n_patches):
+            cands = [(r, c) for r in range(1, NT - PATCH_TILES) for c in range(0, NT - PATCH_TILES + 1)
+                     if not taken[r - 1:r + PATCH_TILES + 1, c:c + PATCH_TILES].any()]
+            if not cands:
+                break
+            r, c = cands[int(rng.integers(0, len(cands)))]
+            kind = kinds[int(rng.integers(0, len(kinds)))]
+            level = int(rng.integers(0, int(grade_table[kind]["max_passed_level"]) + 1))
+            taken[r - 1:r + PATCH_TILES + 1, c:c + PATCH_TILES] = True
+            patch_tiles[r - 1:r + PATCH_TILES + 1, c:c + PATCH_TILES] = True
+            prims.append({"type": "patch", "kind": kind, "level": level, "x": r * TILE_M, "y": c * TILE_M})
+    blocked = _block_tiles(rng, cfg.block_frac, taken)
+    free_t = ~blocked
+    # 바닥 종류: WFC 로 평지 · 거친 면 · 계단을 깔고, 막힌 타일은 덩어리가 대신한다. WFC 가 낸 「막힌 면」 은 평지로 되돌린다
+    tiles = wfc_tiles(rng, cfg.weights)
+    tiles[tiles == TILE_OBST] = TILE_FLAT
+    tiles[taken] = TILE_FLAT
+    tiles[blocked] = TILE_OBST
+    for i in range(NT):
+        for j in range(NT):
+            if tiles[i, j] == TILE_STAIRS and any(0 <= i + a < NT and 0 <= j + b < NT and blocked[i + a, j + b] for a, b in _NB4):
+                tiles[i, j] = TILE_FLAT                         # 계단 둘레에 막힌 덩어리가 닿으면 평지로 (앞뒤는 오르내리는 혹이 되고 · 옆은 WFC 이웃 규칙 (_allowed) 을 어긴다)
+    for i in range(NT):
+        for j in range(NT):
+            t, x0, y0 = int(tiles[i, j]), i * TILE_M, j * TILE_M
+            if t == TILE_ROUGH:
+                prims.append({"type": "rough", "x0": x0, "y0": y0, "x1": x0 + TILE_M, "y1": y0 + TILE_M, "seed": int(rng.integers(0, 2**31))})
+            elif t == TILE_STAIRS:
+                prims.append({"type": "stairs", "x": x0, "y": y0, "step_m": cfg.stair_step_m})
+            elif t == TILE_OBST:
+                prims.append({"type": "wall", "x0": x0, "y0": y0, "x1": x0 + TILE_M, "y1": y0 + TILE_M, "h": WALL_H})     # 막힌 덩어리: 못 지나는 타일
+    # 얇은 벽: 나무에 없는 경계를 keep 확률로 세운다 (패치 타일에 닿는 경계는 열어 둔다)
+    tree = _spanning_tree_edges(rng, free_t & ~patch_tiles) if (free_t & ~patch_tiles).any() else set()
+    edges, th, dm = [], cfg.wall_t_m, cfg.door_m
+    for i in range(NT):
+        for j in range(NT):
+            if not free_t[i, j]:
+                continue
+            for a, b in ((1, 0), (0, 1)):
+                p, q = i + a, j + b
+                if p >= NT or q >= NT or not free_t[p, q] or patch_tiles[i, j] or patch_tiles[p, q]:
+                    continue
+                if frozenset(((i, j), (p, q))) in tree or rng.random() >= cfg.wall_keep:
+                    continue
+                door = bool(rng.random() < cfg.door_frac)
+                off = round(float(rng.uniform(0.3, TILE_M - dm - 0.3)), 1) if door else None
+                edges.append([i, j, a, b, door])
+                pieces = [(0.0, TILE_M)] if not door else [(0.0, off), (off + dm, TILE_M)]
+                for lo, hi in pieces:
+                    if a == 1:      # x 방향 경계: x = p * TILE_M 에 y 로 뻗은 벽
+                        prims.append({"type": "wall", "x0": round(p * TILE_M - th / 2, 2), "y0": round(j * TILE_M + lo, 2), "x1": round(p * TILE_M + th / 2, 2), "y1": round(j * TILE_M + hi, 2), "h": WALL_H})
+                    else:
+                        prims.append({"type": "wall", "x0": round(i * TILE_M + lo, 2), "y0": round(q * TILE_M - th / 2, 2), "x1": round(i * TILE_M + hi, 2), "y1": round(q * TILE_M + th / 2, 2), "h": WALL_H})
+    # 흩는 것: 자유 타일 가운데 1.2 m 안에 탁자 · 상자 · 기둥 (통로를 막지 않게)
+    for i in range(NT):
+        for j in range(NT):
+            if not free_t[i, j] or taken[i, j] or tiles[i, j] == TILE_STAIRS:
+                continue
+            x0, y0 = i * TILE_M, j * TILE_M
+            if rng.random() < cfg.p_table:
+                a, b = rng.uniform(0.4, 0.8, 2)
+                prims.append({"type": "table", "x": round(x0 + float(a), 1), "y": round(y0 + float(b), 1), "w": 0.8, "top": 0.7})
+            elif rng.random() < cfg.p_box:
+                a, b = rng.uniform(0.4, 1.0, 2)
+                prims.append({"type": "box", "x": round(x0 + float(a), 1), "y": round(y0 + float(b), 1), "w": 0.6, "z0": round(float(rng.uniform(0.2, 1.0)), 2), "h": 0.5})
+            elif rng.random() < cfg.p_pillar:
+                a, b = rng.uniform(0.5, 1.2, 2)
+                prims.append({"type": "wall", "x0": round(x0 + float(a), 2), "y0": round(y0 + float(b), 2), "x1": round(x0 + float(a) + 0.3, 2), "y1": round(y0 + float(b) + 0.3, 2), "h": WALL_H})
+    return {"seed": int(seed), "size_m": ROOM_M, "outer_wall_m": MAZE_OUTER_WALL_M, "tiles": tiles.tolist(), "primitives": prims,
+            "maze": {"wall_keep": float(cfg.wall_keep), "blocked": [[int(i), int(j)] for i, j in np.argwhere(blocked)], "edges": edges}}
+
+
+def dead_end_tiles(spec: dict) -> int:
+    """막다른 타일 수: 자유 타일 가운데 실제로 드나들 수 있는 (벽이 없거나 문이 있는) 이웃 자유 타일이 하나뿐인 것. maze 명세가 없으면 0."""
+    mz = spec.get("maze")
+    if not mz:
+        return 0
+    blocked = {(int(i), int(j)) for i, j in mz["blocked"]}
+    closed = {frozenset(((i, j), (i + a, j + b))) for i, j, a, b, door in mz["edges"] if not door}
+    n = 0
+    for i in range(NT):
+        for j in range(NT):
+            if (i, j) in blocked:
+                continue
+            deg = sum(1 for a, b in _NB4 if 0 <= i + a < NT and 0 <= j + b < NT and (i + a, j + b) not in blocked and frozenset(((i, j), (i + a, j + b))) not in closed)
+            n += deg == 1
+    return n
 
 
 def load_spec(path) -> dict:
@@ -298,11 +477,12 @@ def build_room(spec: dict) -> Room:
             room.objects.append({"kind": "box", "x0": x, "y0": y, "x1": x + w, "y1": y + w, "z0": z0, "z1": z0 + h})
         else:
             raise ValueError(f"unknown primitive {t!r}")
-    k = int(round(OUTER_WALL_M / RES))
+    ow = float(spec.get("outer_wall_m", OUTER_WALL_M))
+    k = int(round(ow / RES))
     for sl in ((slice(0, k), slice(None)), (slice(N - k, N), slice(None)), (slice(None), slice(0, k)), (slice(None), slice(N - k, N))):
         room.cell[sl] = CELL_WALL
-    for x0, x1, y0, y1 in ((0, OUTER_WALL_M, 0, ROOM_M), (ROOM_M - OUTER_WALL_M, ROOM_M, 0, ROOM_M),
-                           (0, ROOM_M, 0, OUTER_WALL_M), (0, ROOM_M, ROOM_M - OUTER_WALL_M, ROOM_M)):
+    for x0, x1, y0, y1 in ((0, ow, 0, ROOM_M), (ROOM_M - ow, ROOM_M, 0, ROOM_M),
+                           (0, ROOM_M, 0, ow), (0, ROOM_M, ROOM_M - ow, ROOM_M)):
         room.boxes.append((x0, x1, y0, y1, 0.0, 2.0))
     return room
 
@@ -362,7 +542,7 @@ def start_points(room: Room, k: int, seed: int = 0, margin: float = START_MARGIN
     if len(ok) < k:
         raise ValueError(f"only {len(ok)} start cells have {margin} m of flat clearance, {k} wanted")
     pick = ok[np.random.default_rng(seed).choice(len(ok), size=k, replace=False)]
-    return np.array([[(j + 0.5) * RES, (i + 0.5) * RES, float(room.height[i, j])] for i, j in pick])
+    return np.array([[(i + 0.5) * RES, (j + 0.5) * RES, float(room.height[i, j])] for i, j in pick])      # 배열은 [x 칸][y 칸] (build_room · room_mesh 와 같다). 옛 판은 x · y 가 뒤바뀌어 있었다 (11/17 22:5x 발견)
 
 
 def write_room(room: Room, out_dir, n_starts: int = 0, start_seed: int = 0) -> dict:
@@ -460,18 +640,95 @@ def write_rooms(rooms, out_dir, n_starts: int = 0, start_seed: int = 0,
     return manifest
 
 
+STAND_CLEARANCE_M = 0.5               # grade_table_draft.yaml 의 stand_clearance_m (가정 · 몸 높이 + 0.1)
+
+
+def free_mask(room: Room) -> np.ndarray:
+    """생성기가 아는 통과 가능 칸: 벽 · 탁자 다리 · 구덩이 · 틈 · 서서 못 지나는 낮은 머리 위 장애물 아래 (여유 < STAND_CLEARANCE_M) 를 뺀 칸.
+    grade_map 의 통과 가능 (자세 스위치 꺼짐) 과 같은 약속이다 (등급표 stand_clearance_m 0.5 와 같은 값 · 다르면 room_check 가 잡는다)."""
+    low = (room.cell == CELL_OVERHEAD) & (room.clearance < STAND_CLEARANCE_M)
+    return ~(np.isin(room.cell, (CELL_WALL, CELL_LEG, CELL_PIT, CELL_GAP_PIT)) | low)
+
+
+def passage_width_m(free: np.ndarray, min_cover: float = 0.98, cap_m: float = 1.2) -> float:
+    """가장 좁은 통과 폭 m: 반지름 r 인 원이 지나갈 수 있는 길 (벽에서 r 이상 떨어진 칸) 만으로도 통과 가능 칸의 min_cover 이상이 이어져 있는 가장 큰 2r (cap 까지).
+    좁은 문틈이 방을 둘로 가르면 r 이 그 틈 반폭 아래에서만 통과한다. 막힌 구석 (막다른 틈) 은 가르지 않으므로 세지 않는다."""
+    from scipy import ndimage
+
+    big = _largest_label(free)
+    total = int(big.sum())
+    if not total:
+        return 0.0
+    dist = ndimage.distance_transform_edt(big) * RES
+    best = 0.0
+    for r in np.arange(0.1, cap_m / 2 + 1e-9, 0.05):
+        comp = _largest_label(dist >= r)
+        if not comp.any():
+            break
+        covered = (ndimage.distance_transform_edt(~comp) * RES <= r + RES) & big
+        if covered.sum() / total >= min_cover:
+            best = 2 * float(r)
+        else:
+            break
+    return round(best, 2)
+
+
+def _largest_label(mask: np.ndarray) -> np.ndarray:
+    from scipy import ndimage
+
+    lab, n = ndimage.label(mask)
+    return lab == (1 + int(np.argmax(np.bincount(lab.ravel())[1:]))) if n else np.zeros_like(mask)
+
+
+def room_metrics(room: Room, spec: dict | None = None) -> dict:
+    """방 한 개의 수락 값 (maze 설계 3.4 의 방마다 줄): 통과 가능 칸 비율 · 가장 큰 덩어리 비율 · 막다른 타일 · 가장 좁은 통과 폭 · 시작 후보 칸 수."""
+    from scipy import ndimage
+
+    spec = spec or room.spec
+    free = free_mask(room)
+    big = _largest_label(free)
+    flat = np.pad(room.cell == CELL_FLAT, 1, constant_values=False)
+    clear = (ndimage.distance_transform_edt(flat)[1:-1, 1:-1] * RES) >= START_MARGIN_M
+    return {"free_frac": float(free.mean()), "connected_frac": float(big.sum() / max(free.sum(), 1)), "dead_end_tiles": dead_end_tiles(spec),
+            "passage_m": passage_width_m(free), "start_cells": int((clear & big).sum())}
+
+
+MIN_START_CELLS = 200                 # 시작점 64 개를 겹침 없이 뽑을 여유 (수락 조건)
+
+
+def accepts(m: dict, cfg: RoomConfig) -> bool:
+    """방마다 수락 조건 (설계 3.4 의 방마다 줄)."""
+    lo, hi = cfg.free_range
+    return (lo <= m["free_frac"] <= hi and m["connected_frac"] >= cfg.min_connected and m["dead_end_tiles"] >= cfg.min_dead_end_tiles
+            and m["passage_m"] >= cfg.min_passage_m and m["start_cells"] >= MIN_START_CELLS)
+
+
 def make_room(seed: int, cfg: RoomConfig | None = None, grade_table: dict | None = None):
-    """연결 크기 조건을 만족할 때까지 시드 흐름에서 다시 뽑음. 돌려주는 값: (spec, room)."""
+    """수락 조건을 만족할 때까지 시드 흐름에서 다시 뽑음. 돌려주는 값: (spec, room).
+    maze 방: wall_keep 은 시드가 keep_choices 를 돌려가며 고르고 (시드 % 3), 수락은 방마다 줄 (통과 가능 칸 · 이어짐 · 막다른 타일 · 통과 폭 · 시작 후보). spec[\"metrics\"] 에 값을 남긴다.
+    old 방 · 패치가 든 maze 방: 가장 큰 덩어리가 min_free_fraction 이상이면 수락 (옛 조건, spec["metrics"] 없음)."""
+    import dataclasses
+
     cfg = cfg or RoomConfig()
+    maze = cfg.layout == "maze"
+    if maze and cfg.keep_choices:
+        cfg = dataclasses.replace(cfg, wall_keep=float(cfg.keep_choices[int(seed) % len(cfg.keep_choices)]))
     rng = np.random.default_rng(seed)
     for tries in range(1, cfg.max_tries + 1):
         spec = generate_spec(int(rng.integers(0, 2**31)) if tries > 1 else seed, cfg, grade_table)
         spec["seed"], spec["tries"] = int(seed), tries
         room = build_room(spec)
+        if maze and not any(q.get("type") == "patch" for q in spec["primitives"]):
+            m = room_metrics(room, spec)
+            if accepts(m, cfg):
+                spec["metrics"] = {k: round(v, 4) if isinstance(v, float) else v for k, v in m.items()}
+                return spec, room
+            continue
+        # 옛 꼴 · 듬성한 패치가 든 방 (구덩이 · 징검돌이 통과 가능 칸 · 이어짐 · 통과 폭 줄을 건드린다. 이어짐은 건너뛰기 간선이 잇는다 = 계획기 몫): 옛 조건
         passable = room.cell != CELL_WALL
         if _largest_component(passable) / passable.size >= cfg.min_free_fraction:
             return spec, room
-    raise RuntimeError("no room met min_free_fraction")
+    raise RuntimeError("no room met the acceptance conditions")
 
 
 def _largest_component(mask: np.ndarray) -> int:

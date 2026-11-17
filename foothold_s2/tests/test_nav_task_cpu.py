@@ -85,7 +85,7 @@ def test_start_is_the_actual_body_position_and_the_path_begins_there(assets):
     """G1: Isaac reset places the body; the task takes that place as the start and only draws the goal."""
     t = nt.NavTask(assets, 2, np.random.default_rng(5))
     g = assets[0].grade
-    body = gm.sample_free_points(g, np.random.default_rng(11), 2)
+    body = np.concatenate([gm.sample_free_points(assets[i].grade, np.random.default_rng(11 + i), 1) for i in range(2)])      # 환경마다 자기 방의 칸 (방이 달라서 한 방에서 둘을 뽑으면 다른 방의 막힌 칸일 수 있다)
     out = t.reset_envs([0, 1], start_xy=body)
     assert np.allclose(out["start_xy"], body) and np.allclose(t.start, body)
     for i in range(2):

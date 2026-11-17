@@ -40,7 +40,7 @@ def make_asset(room, table: dict) -> RoomAsset:
 class NavTask:
     def __init__(self, assets: list, num_envs: int, rng: np.random.Generator, *, d0: float = 1.0, step: float = 1.0,
                  final_successes: int = 5, v_des_range=rewards_hl.V_DES_RANGE, min_task_m: float = 2.0, max_task_tries: int = 20, origin_xy=None,
-                 room_rows=None):
+                 room_rows=None, straighten: bool = True, path_range_m=(4.0, 25.0), winding_frac: float = 0.5, winding_min: float = 1.2, goal_candidates: int = 8):
         if not assets or num_envs < 1:
             raise ValueError("assets and num_envs are required")
         self.assets, self.n, self.rng = assets, int(num_envs), rng
@@ -54,6 +54,15 @@ class NavTask:
         self.cmd_prev = np.zeros((self.n, 3)); self.cmd_prev2 = np.zeros((self.n, 3))
         self.subgoal = np.zeros((self.n, 2))
         self.min_task_m, self.max_task_tries = min_task_m, max_task_tries
+        # 방 설계 (DESIGN-HIPAN-ROOMS-1117 3.3): 목표는 경로 길이로 뽑고 (path_range_m) 과제의 winding_frac 는 굴곡 비 (경로 / 직선) winding_min 이상인 쌍에서 뽑는다.
+        # goal_candidates 개를 뽑아 길을 내 보고 조건에 맞는 것을 고른다. 맞는 것이 없으면 (좁은 방 · 시작이 구석) 길이만 맞는 것 · 그것도 없으면 옛 꼴 (직선 min_task_m 이상) 로 물러선다.
+        self.straighten, self.path_range_m = bool(straighten), tuple(path_range_m)
+        self.winding_frac, self.winding_min, self.goal_candidates = float(winding_frac), float(winding_min), int(goal_candidates)
+        self.task_new = 0                 # 새로 뽑은 과제 수 (누적)
+        self.task_winding = 0             # 그 가운데 굴곡 비 winding_min 이상 (누적)
+        self.task_relaxed = 0             # 목표 조건 (경로 길이 범위) 을 못 맞춰 옛 꼴로 물러선 수 (누적)
+        self.ratio_edges = (1.1, 1.2, 1.5, 2.0)
+        self.ratio_hist = np.zeros(len(self.ratio_edges) + 1, dtype=np.int64)       # 뽑힌 쌍의 굴곡 비 분포: <1.1 · 1.1~1.2 · 1.2~1.5 · 1.5~2 · 2 이상
         self.task_fallbacks = 0           # 실제 시작에서 길을 못 찾아 새 쌍으로 대신한 횟수 (누적)
         self.voxels = {i: a.voxels for i, a in enumerate(assets)}
         self.origin_xy = origin_xy        # (n, 2) env 별 origins 열의 x y (방 틀). None = 방 가운데 (옛 꼴). 시작점 K 개 방은 이 값을 낸다
@@ -74,14 +83,55 @@ class NavTask:
     def _plan(self, i: int, s, t):
         """s -> t 길 (없거나 s · t 가 막힌 칸이면 None)."""
         try:
-            p = gvd_astar.find_path(self.assets[self.room_id[i]].grade, s, t)
+            p = gvd_astar.find_path(self.assets[self.room_id[i]].grade, s, t, straighten=self.straighten)
         except ValueError:
             return None
         return p.points if p.found else None
 
+    @staticmethod
+    def _length(pts) -> float:
+        return float(np.linalg.norm(np.diff(pts, axis=0), axis=1).sum())
+
+    def _pick_goal(self, i: int, s, g):
+        """시작 s 에서 목표 하나: (목표, 길) 또는 None. 경로 길이 path_range_m 안에서 · 과제의 winding_frac 는 굴곡 비 winding_min 이상에서."""
+        lo, hi = self.path_range_m
+        want_wind = self.rng.random() < self.winding_frac
+        ok, wound = [], []
+        for t in gm.sample_free_points(g, self.rng, self.goal_candidates):
+            straight = float(np.linalg.norm(s - t))
+            if straight < self.min_task_m:
+                continue
+            pts = self._plan(i, s, t)
+            if pts is None:
+                continue
+            L = self._length(pts)
+            if not (lo <= L <= hi):
+                continue
+            (wound if L / straight >= self.winding_min else ok).append((t, pts))
+        pool = (wound or ok) if want_wind else (ok + wound)
+        if not pool:
+            return None
+        return pool[int(self.rng.integers(len(pool)))]
+
+    def _note_task(self, i: int) -> None:
+        s, t, pts = self.start[i], self.goal[i], self.path[i]
+        straight = float(np.linalg.norm(s - t))
+        r = self._length(pts) / max(straight, 1e-6)
+        self.task_new += 1
+        self.task_winding += int(r >= self.winding_min)
+        self.ratio_hist[int(np.searchsorted(self.ratio_edges, r, side="right"))] += 1
+
     def _new_task(self, i: int, start=None) -> None:
         """start 가 주어지면 (실제 몸 위치) 그것이 시작이고 목표만 뽑는다. 없으면 시작 · 목표를 둘 다 뽑는다 (옛 꼴 · 시험용)."""
         g = self.assets[self.room_id[i]].grade
+        for _ in range(self.max_task_tries):
+            s = gm.sample_free_points(g, self.rng, 1)[0] if start is None else np.asarray(start, float)
+            got = self._pick_goal(i, s, g)
+            if got is not None:
+                self.start[i], self.goal[i], self.path[i] = s, got[0], got[1]
+                self._note_task(i)
+                return
+        self.task_relaxed += 1
         for _ in range(self.max_task_tries):
             if start is None:
                 s, t = gm.sample_free_points(g, self.rng, 2)
@@ -92,6 +142,7 @@ class NavTask:
             pts = self._plan(i, s, t)
             if pts is not None:
                 self.start[i], self.goal[i], self.path[i] = s, t, pts
+                self._note_task(i)
                 return
         if start is None:
             raise RuntimeError(f"env {i}: no start/goal with a path after {self.max_task_tries} tries")
@@ -105,6 +156,7 @@ class NavTask:
             pts = self._plan(i, s, t)
             if pts is not None:
                 self.start[i], self.goal[i], self.path[i] = s, t, pts
+                self._note_task(i)
                 return
         raise RuntimeError(f"env {i}: no start/goal with a path even for a free pair")
 

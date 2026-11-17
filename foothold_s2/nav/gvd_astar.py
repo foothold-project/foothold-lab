@@ -140,7 +140,7 @@ def _cell(g, xy):
     return int(c[0]), int(c[1])
 
 
-def find_path(g: gm.GradeMap, start_xy, goal_xy, ramp_m: float = RAMP_M, stride_m: float | None = None) -> Path:
+def find_path(g: gm.GradeMap, start_xy, goal_xy, ramp_m: float = RAMP_M, stride_m: float | None = None, straighten: bool = False) -> Path:
     s, t = _cell(g, start_xy), _cell(g, goal_xy)
     if g.grade[s] == gm.BLOCKED or g.grade[t] == gm.BLOCKED:
         raise ValueError("start and goal must be on passable cells")
@@ -198,4 +198,46 @@ def find_path(g: gm.GradeMap, start_xy, goal_xy, ramp_m: float = RAMP_M, stride_
     length = float(np.linalg.norm(np.diff(pts, axis=0), axis=1).sum())
     stub_s = float(np.linalg.norm(pts[1] - pts[0])) * float(cost[s])          # 시작 -> 첫 노드 · 마지막 노드 -> 목표 직선도 비용에 넣음
     stub_t = float(np.linalg.norm(pts[-1] - pts[-2])) * float(cost[t])
+    if straighten:
+        pts = straighten_path(g, pts)
+        length = float(np.linalg.norm(np.diff(pts, axis=0), axis=1).sum())
     return Path(True, pts, length, float(best) + stub_s + stub_t)
+
+
+MIN_CLEAR_M = 0.3                 # 곧게 편 뒤에도 장애물 (막힌 칸) 과의 여유가 이 아래로 내려가지 않는다 (원래 길이 더 좁게 지나면 그 값까지만)
+STRAIGHT_STEP_M = 0.05
+
+
+def straighten_path(g: gm.GradeMap, points: np.ndarray, min_clear_m: float = MIN_CLEAR_M) -> np.ndarray:
+    """경로 곧게 펴기 (DESIGN-HIPAN-ROOMS-1117 3.3 · 4: 보로노이 뼈대가 빈 곳에서 도는 것을 줄임. 논문에 없는 덧붙임).
+    앞에서부터 보이는 (직선이 평지 FREE 셀만 지나고 막힌 칸과의 여유가 need 이상인) 가장 먼 점으로 잇는다. need = min(min_clear_m, 원래 길의 최소 여유):
+    원래 길이 좁은 문을 지났으면 그 문까지는 허용하되 더 좁은 곳으로는 안 깎는다. 계단 · 머리 위 · 듬성한 셀을 지나는 구간은 원래 점을 그대로 둔다."""
+    pts = np.asarray(points, float)
+    if len(pts) <= 2:
+        return pts
+    dist = ndimage.distance_transform_edt(g.grade != gm.BLOCKED) * g.res
+    h, w = dist.shape
+
+    def at(xy):
+        c = np.clip((np.asarray(xy) / g.res).astype(int), 0, [h - 1, w - 1])
+        return int(c[0]), int(c[1])
+
+    need = min(min_clear_m, float(min(dist[at(q)] for q in pts)))
+    free_grade = g.grade == gm.FREE
+
+    def visible(a, b):
+        n = max(int(np.ceil(np.linalg.norm(b - a) / STRAIGHT_STEP_M)), 1)
+        for k in range(n + 1):
+            c = at(a + (b - a) * (k / n))
+            if not free_grade[c] or dist[c] < need - 1e-9:
+                return False
+        return True
+
+    out, i = [pts[0]], 0
+    while i < len(pts) - 1:
+        j = len(pts) - 1
+        while j > i + 1 and not visible(pts[i], pts[j]):
+            j -= 1
+        out.append(pts[j])
+        i = j
+    return np.array(out)

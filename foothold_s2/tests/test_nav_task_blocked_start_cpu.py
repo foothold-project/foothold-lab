@@ -9,7 +9,7 @@ TABLE = Path(__file__).resolve().parents[1] / "nav" / "grade_table_draft.yaml"
 
 
 def _task(room_seed):
-    room = rg.make_room(room_seed)[1]
+    room = rg.make_room(room_seed, rg.RoomConfig(layout="old"))[1]      # 옛 꼴 방 (G3 첫 Pod 의 막힌 시작점 재현은 그 방에서만 막힌 칸이다)
     return nav_task.NavTask([nav_task.make_asset(room, gm.load_grade_table(str(TABLE)))], 1, np.random.default_rng(0))
 
 

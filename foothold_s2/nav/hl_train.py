@@ -53,8 +53,10 @@ class TeacherVecEnv:
         d = t.as_tensor(done, device=self.device)
         to = t.as_tensor(np.asarray(state.timed_out, bool), device=self.device)
         info = {"task_reached": int(out["task_reached"].sum()), "fell": int((done & ~np.asarray(state.timed_out, bool)).sum()),
-                "task_fallback": int(getattr(self.task, "task_fallbacks", 0)) - getattr(self, "_fb0", 0)}
+                "task_fallback": int(getattr(self.task, "task_fallbacks", 0)) - getattr(self, "_fb0", 0),
+                "task_new": int(getattr(self.task, "task_new", 0)) - getattr(self, "_new0", 0), "task_winding": int(getattr(self.task, "task_winding", 0)) - getattr(self, "_wind0", 0)}
         self._fb0 = int(getattr(self.task, "task_fallbacks", 0))
+        self._new0, self._wind0 = int(getattr(self.task, "task_new", 0)), int(getattr(self.task, "task_winding", 0))
         return self._obs(state), r, d, to, info
 
 
@@ -97,7 +99,7 @@ def train(env, ppo, *, out_dir, iterations, receipt: dict, resume=None, device="
     for it in range(it0 + 1, it0 + iterations + 1):
         t0 = time.time()
         O, A, LP, V, R, D = [], [], [], [], [], []
-        stats = {"task_reached": 0, "fell": 0, "task_fallback": 0}
+        stats = {"task_reached": 0, "fell": 0, "task_fallback": 0, "task_new": 0, "task_winding": 0}
         with torch.no_grad():
             for _ in range(T):
                 std = log_std.exp()
