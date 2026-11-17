@@ -1,7 +1,7 @@
 # 복원 지도가 좁은 모서리를 뭉개는 문제 · 해결 설계
 
 > 분류: A/정책학습 · 결정 자료 (lead 와 맞춘 뒤 팀장 논의용 · 한 장)
-> 작성: planner-lx · 2026-11-17 15:0x · lead-lx 의뢰 (14:55 · 팀장 14:46 요지: 원인을 알았으면 해결 과정을 논의하자)
+> 작성: Claude 세션 (오흥재 지시, planner-lx) · 2026-11-17 15:0x · lead-lx 의뢰 (14:55 · 팀장 14:46 요지: 원인을 알았으면 해결 과정을 논의하자)
 > 근거: 저장 지도 측정 넷 (k m50 · 정본 3 · ① m300 · ② m300 · A/boxes L5 · `/home/jay/data/foothold/axes_planner/` · `/home/jay/data/foothold/axes_m50/`) · sonnet 의 rough 저장 (467f271f · `/home/jay/data/foothold/axes_rough_check/`) · 코드 읽기 `foothold_s2/models/start_perception.py` (TRNet · UNetRefine · loss_tr) · `runners/start_runner.py`
 > 요지: 복원 지도는 넓은 높낮이는 맞추고 좁은 것 (모서리 · 골 · 틈) 은 지운다. 지우는 곳은 U-Net 앞이다. 남은 원인 후보는 둘 (지도 512 칸이 128 차원 한 줄을 지나는 구조 · 칸 평균 손실) 이고, 둘을 가르는 짧은 판은 강화학습 없이 「정책을 얼리고 지도만 정답에 맞추는」 판으로 된다. 징검돌 (E3) 전에 끝내야 한다.
 > 상태: 초안 v0.2 (10 절 = 오프라인 가르기 첫 결과와 B1 재판정 설계 · 11 절 = B2 팀장판과 「학습 없이 기하만으로 잰 값」 을 이어 붙임 · 단차 판정 줄을 비율로 고침) · 코드 0 · 횟수와 시간은 가정 (표시함) · 이 문서로 학습을 띄우지 않는다
