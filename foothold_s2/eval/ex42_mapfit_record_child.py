@@ -10,6 +10,18 @@ from foothold_s2.eval.ex42_mapfit_record import Recorder
 
 recorder = Recorder()
 recorder.install()
+_real_exit = os._exit
+
+
+def _save_then_exit(code=0):
+    """eval_map_modes 는 끝에서 os._exit(0) 로 나가 finally 가 안 돈다: 나가기 전에 저장한다."""
+    try:
+        recorder.save(os.environ["MAPFIT_OUT"])
+    finally:
+        _real_exit(code)
+
+
+os._exit = _save_then_exit
 sys.argv = ["eval_map_modes"] + sys.argv[1:]
 try:
     runpy.run_module("foothold_s2.eval.eval_map_modes", run_name="__main__")
