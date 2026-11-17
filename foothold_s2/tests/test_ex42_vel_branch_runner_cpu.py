@@ -26,7 +26,7 @@ def test_frozen_shadow_changes_only_the_branch(monkeypatch):
     changed = [k for k, v in r.perception.state_dict().items() if not torch.equal(per0[k], v)]
     assert changed and all(k.startswith("vbranch.") for k in changed), changed                  # 몸통 얼림 · 가지만 움직임
     losses = r.last_perception_losses
-    assert "vb" in losses and "vslope_slow_n" in losses
+    assert "vb" in losses and "vslope_fwdslow_n" in losses
 
 
 def test_unfrozen_replace_trains_and_actor_gets_branch_v(monkeypatch):

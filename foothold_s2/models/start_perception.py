@@ -232,12 +232,15 @@ def velocity_loss(v_est: torch.Tensor, v_gt: torch.Tensor) -> torch.Tensor:
 SLOPE_WINDOW = 25            # step (0.5 초). 한 rollout 이 이보다 짧으면 rollout 길이 (작은 시험 · 24 step 설정)
 SLOPE_FIT_BAND = (0.0, 0.15)  # 창 평균 실제 vx 가 이 안인 창만 기울기 최소제곱에 넣는다 (axes 표 slope_windows 의 「명령 앞 0.1 칸」 에서 실제가 0 ~ 0.14 로 퍼지는 것과 같은 자리)
 SLOPE_ZERO_BAND = 0.02        # 창 평균 |실제 vx| 가 이 미만인 창 = 영점 칸 (실제 0 에서의 추정 평균을 따로)
+SLOPE_CMD_VX = (0.05, 0.15)   # 「명령이 앞으로 느린 걷기」 창: 창 안 모든 step 의 명령 vx 가 이 안 (lead 20:50 · reviewer FAIL: 서기 · 옆 · 회전 창이 섞여 1.0 안팎이었다)
+SLOPE_CMD_VY_MAX, SLOPE_CMD_WZ_MAX = 0.05, 0.1
 SLOPE_COLS = 7                # [n, sum x, sum y, sum xx, sum xy, n0, sum y0]
 
 
-def slow_window_sums(est_x: torch.Tensor, gt_x: torch.Tensor, first: torch.Tensor) -> torch.Tensor:
+def slow_window_sums(est_x: torch.Tensor, gt_x: torch.Tensor, first: torch.Tensor, cmd: torch.Tensor | None = None) -> torch.Tensor:
     """기록만. DESIGN-SLOW-WALK 7.3 1 단계 잣대 (axes 표 slope_windows 와 같은 식): 25 step 창 평균 점 (x = 실제 vx, y = 추정 vx) 의 최소제곱 재료.
-    est_x (K, T, B) 추정 vx 들 · gt_x (T, B) 정답 vx · first (T, B) 리셋 직후 표시. 창 안에 리셋 (첫 step 이 아닌 first) 이 있으면 그 창은 버린다.
+    est_x (K, T, B) 추정 vx 들 · gt_x (T, B) 정답 vx · first (T, B) 리셋 직후 표시 · cmd (T, B, 3) 명령 (vx, vy, wz, 주면 「앞으로 느린 걷기」 창만: 창 안 모든 step 이 vx 0.05~0.15 · |vy| < 0.05 · |wz| < 0.1).
+    판정은 planner 탐침 (설계 7.3) 이 정본이고 이 기록은 학습 중 흐름 보기용이다. 창 안에 리셋 (첫 step 이 아닌 first) 이 있으면 그 창은 버린다.
     창 평균 x 가 SLOPE_FIT_BAND 안인 점마다 K 행별 [n, sum x, sum y, sum xx, sum xy, n0, sum y0] (n0 · sum y0 은 |x| < SLOPE_ZERO_BAND 인 점).
     기울기 = (n sxy - sx sy) / (n sxx - sx^2) · 절편 = (sy - slope sx) / n · 영점 = sy0 / n0. 순간 표본의 원점 통과 비가 아니다 (영점이 섞여 1.0 안팎으로 부푸는 식이었다)."""
     K, T, B = est_x.shape
@@ -249,6 +252,9 @@ def slow_window_sums(est_x: torch.Tensor, gt_x: torch.Tensor, first: torch.Tenso
         a, b = w * W, (w + 1) * W
         ok = ~f[a + 1:b].any(0) if W > 1 else torch.ones(B, dtype=torch.bool)
         x = g[a:b].mean(0)
+        if cmd is not None:
+            c = cmd[a:b].double()
+            ok = ok & ((c[..., 0] >= SLOPE_CMD_VX[0]) & (c[..., 0] <= SLOPE_CMD_VX[1]) & (c[..., 1].abs() < SLOPE_CMD_VY_MAX) & (c[..., 2].abs() < SLOPE_CMD_WZ_MAX)).all(0)
         sel = ok & (x >= lo) & (x < hi)
         if not bool(sel.any()):
             continue
@@ -613,7 +619,7 @@ class StartPerception(nn.Module):
         o_valid_total = 0.0
         v_band = None
         vb_sum = 0.0
-        trace = {"ie": [], "br": [], "gt": [], "first": []}   # 기록만: 25 step 창 평균 기울기 재료 (slow_window_sums)
+        trace = {"ie": [], "br": [], "gt": [], "first": [], "cmd": []}   # 기록만: 25 step 창 평균 기울기 재료 (slow_window_sums)
         for t in range(T):
             h_prop, h_terr, out = self._advance(
                 h_prop, h_terr, batch["hist"][t], batch["depth2"][t].float(), batch["tick"][t], batch["first"][t],
@@ -629,7 +635,7 @@ class StartPerception(nn.Module):
             if self.vbranch is not None:
                 vb_sum = vb_sum + F.mse_loss(out["v_branch"], batch["base_vel"][t])   # 가지 손실: 다른 손실과 그래프를 섞지 않는다 (옛 머리 v · o_hat 입력은 가지를 안 거친다)
                 trace["ie"].append(out["v"][:, 0].detach()); trace["br"].append(out["v_branch"][:, 0].detach())
-                trace["gt"].append(batch["base_vel"][t][:, 0].detach()); trace["first"].append(batch["first"][t])
+                trace["gt"].append(batch["base_vel"][t][:, 0].detach()); trace["first"].append(batch["first"][t]); trace["cmd"].append(batch["hist"][t][:, 0, VEL_BRANCH_CMD_COLS[0]:VEL_BRANCH_CMD_COLS[-1] + 1].detach())
             sums["hb"] = sums["hb"] + F.mse_loss(self.ie.dec_b(out["zb"]), batch["gt_map"][t].flatten(1))
             sums["hf"] = sums["hf"] + F.mse_loss(self.ie.dec_f(out["zf"]), batch["gt_feet"][t])
             o_hat = self.ie.dec_o(torch.cat([z, out["v"], out["zf"], out["zb"]], -1))
@@ -645,5 +651,5 @@ class StartPerception(nn.Module):
         if self.vbranch is not None:
             res["vb"] = vb_sum / T
             res["loss"] = res["loss"] + res["vb"]
-            res["_vb_slope"] = slow_window_sums(torch.stack([torch.stack(trace["ie"]), torch.stack(trace["br"])]), torch.stack(trace["gt"]), torch.stack(trace["first"]))
+            res["_vb_slope"] = slow_window_sums(torch.stack([torch.stack(trace["ie"]), torch.stack(trace["br"])]), torch.stack(trace["gt"]), torch.stack(trace["first"]), torch.stack(trace["cmd"]))
         return res

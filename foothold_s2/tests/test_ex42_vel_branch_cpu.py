@@ -250,3 +250,17 @@ def test_input_log_replays_branch_and_swaps_action_columns_from_a_donor_record()
         rp.branch_from_log(log, VEL_BRANCH_ACTION_COLS, donor[:3])
     rp.record_inputs(False)
     assert rp.input_log is None
+
+
+def test_window_fit_keeps_only_forward_slow_command_windows():
+    est, gt, first = _windows(0.3, 0.05)
+    T, B = gt.shape
+    cmd = torch.zeros(T, B, 3); cmd[..., 0] = 0.1
+    assert window_fit(slow_window_sums(est, gt, first, cmd)[0])["n"] == 2 * B                 # 전부 앞으로 느림
+    stand = cmd.clone(); stand[:, :10, 0] = 0.0                                                # 서기 10 env
+    side = cmd.clone(); side[:, 10:20, 1] = 0.2                                                # 옆걸음 10 env
+    turn = cmd.clone(); turn[:, 20:25, 2] = 0.3                                                # 회전 5 env
+    mixed = torch.where(torch.arange(B)[None, :, None] < 10, stand, torch.where(torch.arange(B)[None, :, None] < 20, side, torch.where(torch.arange(B)[None, :, None] < 25, turn, cmd)))
+    assert window_fit(slow_window_sums(est, gt, first, mixed)[0])["n"] == 2 * (B - 25)
+    half = cmd.clone(); half[30:, :, 0] = 0.0                                                  # 둘째 창은 서기로 바뀜
+    assert window_fit(slow_window_sums(est, gt, first, half)[0])["n"] == B

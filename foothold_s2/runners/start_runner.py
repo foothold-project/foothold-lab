@@ -1682,10 +1682,10 @@ class StartRunner(OnPolicyRunner):
         if vb_slope is not None:                        # 25 step window least squares with intercept (sp.window_fit); n counts windows, summed over the update
             for name, row in (("ie", vb_slope[0]), ("branch", vb_slope[1])):
                 fit = sp.window_fit(row)
-                for key, tag in (("slope", "vslope_slow_"), ("intercept", "vintercept_slow_"), ("zero", "vzero_slow_")):
+                for key, tag in (("slope", "vslope_fwdslow_"), ("intercept", "vintercept_fwdslow_"), ("zero", "vzero_fwdslow_")):
                     if fit[key] is not None:
                         self.last_perception_losses[tag + name] = float(fit[key])
-            self.last_perception_losses["vslope_slow_n"] = float(vb_slope[0][0]) / n_updates
+            self.last_perception_losses["vslope_fwdslow_n"] = float(vb_slope[0][0]) / n_updates
         return self.last_perception_losses
 
     def _gradnorm_print(self, it: int) -> None:
