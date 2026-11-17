@@ -113,14 +113,30 @@ def main(argv=None) -> int:
         with open(out / "resume_log.jsonl", "a", encoding="utf-8") as stream:
             stream.write(json.dumps(receipt["resume"], ensure_ascii=False) + "\n")
     receipt["receipt_sha256"] = hashlib.sha256(ident.encode("utf-8")).hexdigest()
-    mod, _, fn = a.env_factory.partition(":")
-    nav_env, task = getattr(importlib.import_module(mod), fn)()
-    ppo = cfg.TeacherPPO(**ppo_kwargs(a.num_envs, a.save_interval))
-    env = hl_train.TeacherVecEnv(nav_env, task, device="cuda:0" if _cuda() else "cpu")
-    last, saved = hl_train.train(env, ppo, out_dir=out, iterations=a.iterations, receipt=receipt, resume=a.resume, seed=a.seed,
-                                 device=env.device)
-    print(json.dumps({"last_iteration": last, "saved": saved}))
-    return 0
+    rc = 0
+    try:
+        mod, _, fn = a.env_factory.partition(":")
+        nav_env, task = getattr(importlib.import_module(mod), fn)()
+        ppo = cfg.TeacherPPO(**ppo_kwargs(a.num_envs, a.save_interval))
+        env = hl_train.TeacherVecEnv(nav_env, task, device="cuda:0" if _cuda() else "cpu")
+        last, saved = hl_train.train(env, ppo, out_dir=out, iterations=a.iterations, receipt=receipt, resume=a.resume, seed=a.seed,
+                                     device=env.device)
+        print(json.dumps({"last_iteration": last, "saved": saved}), flush=True)
+    except BaseException:
+        import traceback
+
+        text = traceback.format_exc()                   # Kit 종료 (app.close) 가 예외 Traceback 과 종료 코드를 지우므로 먼저 stderr 와 파일에 남긴다
+        print(text, file=sys.stderr, flush=True)
+        try:
+            (out / "FAILED.txt").write_text(text, encoding="utf-8")
+        except OSError:
+            pass
+        rc = 1
+    finally:
+        from foothold_s2.nav import kit_factories
+
+        kit_factories.finish(rc)
+    return rc
 
 
 def _cuda() -> bool:

@@ -128,12 +128,17 @@ def column_tile_sizes(origins) -> tuple[np.ndarray, float, list[dict[str, float]
     return tile_x, (float(np.median(dy)) if len(dy) else float(tile_x.mean())), irregular
 
 
+ROOM_ROW_PITCH_M = 22.0            # 방 여럿 (write_rooms): 방 줄 하나의 x 간격 = 방 20 m + 사이 2 m (room_generator.ROOM_M + ROOM_GAP_M 와 같아야 한다 · 시험이 대조)
+
+
 def single_room_tile_sizes(origins, column_family, room_m: float = 20.0):
     """HiPAN 방 한 개 (origins (1, K, 3), column_family 가 모두 "room"): 칸 K 개가 한 방의 시작점이라 방 하나 = 타일 하나 (room_m x room_m).
     행 간격으로 타일 길이를 재는 column_tile_sizes 는 행이 둘 이상이어야 해 이 꼴에서 거절한다 (N1 첫 Kit 판에서 발견). 이 꼴이 아니면 None."""
     o = np.asarray(origins)
-    if o.ndim != 3 or o.shape[0] != 1 or not all(str(f) == "room" for f in column_family):
+    if o.ndim != 3 or o.shape[0] < 1 or not all(str(f) == "room" for f in column_family):
         return None
+    if o.shape[0] >= 2:        # 방 여럿 한 메시 (G3 첫 로컬 Kit 판에서 발견): 줄 = 방, 칸 = 그 방의 시작점. 시작점이 방마다 달라 행 간격으로 재면 거절되므로 방 줄 간격을 상수로 쓴다
+        return np.full(o.shape[1], ROOM_ROW_PITCH_M), float(room_m), []
     return np.full(o.shape[1], float(room_m)), float(room_m), []
 
 

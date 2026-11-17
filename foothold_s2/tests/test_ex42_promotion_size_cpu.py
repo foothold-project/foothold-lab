@@ -133,5 +133,11 @@ def test_single_room_origins_get_one_room_tile_instead_of_the_row_spacing_error(
     o = np.zeros((1, 4, 3))
     tx, ty, irr = single_room_tile_sizes(o, ["room"] * 4)
     assert list(tx) == [20.0] * 4 and ty == 20.0 and irr == []
-    assert single_room_tile_sizes(np.zeros((2, 4, 3)), ["room"] * 4) is None          # 여러 행 꼴은 옛 길
+    from foothold_s2.nav import room_generator as rg
+    from foothold_s2.terrains.ex42_mesh_mount import ROOM_ROW_PITCH_M
+
+    assert ROOM_ROW_PITCH_M == rg.ROOM_M + rg.ROOM_GAP_M                                 # 방 여럿 한 메시 (G3 첫 로컬 Kit): 줄 = 방, 시작점이 방마다 달라 행 간격으로 못 잰다
+    tx6, ty6, _ = single_room_tile_sizes(np.zeros((6, 4, 3)), ["room"] * 4)
+    assert list(tx6) == [ROOM_ROW_PITCH_M] * 4 and ty6 == 20.0
+    assert single_room_tile_sizes(np.zeros((2, 4, 3)), ["A", "room", "room", "room"]) is None        # 방이 아닌 열이 섞이면 옛 길
     assert single_room_tile_sizes(o, ["A", "room", "room", "room"]) is None

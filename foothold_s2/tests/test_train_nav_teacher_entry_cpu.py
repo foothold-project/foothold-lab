@@ -59,3 +59,13 @@ def test_entry_refuses_a_missing_loop_argument_and_a_wrong_lower_sha(files):
     bad = [("0" * 64 if len(a) == 64 else a) for a in base]
     with pytest.raises(ValueError, match="sha256"):
         tnt.main(bad + ["--out-dir", str(tmp / "o2"), "--iterations", "1"])
+
+
+def test_a_failing_factory_leaves_the_traceback_in_a_file_and_returns_one(files):
+    tmp, base = files
+    mod = sys.modules["fake_g3_factory"]
+    def boom():
+        raise RuntimeError("no kit here")
+    mod.boom = boom
+    rc = tnt.main([("fake_g3_factory:boom" if a == "fake_g3_factory:make" else a) for a in base] + ["--out-dir", str(tmp / "o3"), "--iterations", "1"])
+    assert rc == 1 and "no kit here" in (tmp / "o3" / "FAILED.txt").read_text()

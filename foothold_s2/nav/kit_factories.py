@@ -15,6 +15,37 @@ CONFIG_ENV = "HIPAN_FACTORY_CONFIG"
 REQUIRED = ("lower_checkpoint", "lower_sha256", "num_envs", "device", "seed", "room_count", "room_seed", "n_starts", "room_dir", "grade_table")
 
 
+_APP = None                                      # Kit 앱 (한 프로세스에 하나). isaaclab 모듈은 앱이 뜬 뒤에만 import 할 수 있다 (11/17 첫 로컬 실행: 앱 없이 isaaclab_tasks import 에서 죽음)
+
+
+def launch_app(cfg: dict, with_camera: bool):
+    """Kit 을 헤드리스로 한 번 띄운다 (n1_kit_check 와 같은 AppLauncher 호출). 이미 떴으면 그대로."""
+    global _APP
+    if _APP is None:
+        from isaaclab.app import AppLauncher
+
+        _APP = AppLauncher(headless=True, device=cfg["device"], enable_cameras=bool(with_camera)).app
+    return _APP
+
+
+def finish(rc: int, seconds: float = 90.0) -> None:
+    """Kit 앱이 떠 있으면 닫는다. app.close() 는 프로세스를 바로 끝내 종료 코드가 0 이 되고 (Traceback 은 호출자가 먼저 남겨야 한다), 멈추기도 한다
+    (로컬 2.3.2 에서 20 분 넘게 CPU 100 %): 일정 뒤 같은 rc 로 강제 종료하는 감시를 건다. 앱이 안 떴으면 아무것도 안 한다."""
+    if _APP is None:
+        return
+    import sys
+    import threading
+
+    def _kill():
+        sys.stdout.flush(); sys.stderr.flush()
+        os._exit(rc)
+    t = threading.Timer(seconds, _kill)
+    t.daemon = True
+    t.start()
+    _APP.close()
+    t.cancel()
+
+
 def load_config(path=None) -> dict:
     path = path or os.environ.get(CONFIG_ENV)
     if not path:
@@ -56,6 +87,7 @@ def _build(cfg: dict, with_camera: bool):
 
     from foothold_s2.lab_compat import require_declared_major
 
+    launch_app(cfg, with_camera)                  # isaaclab 을 import 하는 build_nav_env 보다 먼저
     require_declared_major()
     prepared = prepare_rooms(cfg)
     extra = None
