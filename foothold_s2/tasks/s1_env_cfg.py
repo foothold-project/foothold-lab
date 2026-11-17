@@ -195,7 +195,9 @@ class FootholdS1aScanEnvCfg(ManagerBasedRLEnvCfg):
         self.sim.dt = 0.005
         self.sim.render_interval = self.decimation
         self.sim.physics_material = self.scene.terrain.physics_material
-        self.sim.physx.gpu_max_rigid_patch_count = 10 * 2**15
+        from foothold_s2.lab_compat import apply_physx_sim
+
+        apply_physx_sim(self.sim, 10 * 2**15)      # 3.0 에서는 sim.physics = PhysxCfg (PhysX · TGS) 로 박는다
 
         self.scene.height_scanner.update_period = self.decimation * self.sim.dt
         self.scene.contact_forces.update_period = self.sim.dt

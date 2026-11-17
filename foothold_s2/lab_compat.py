@@ -86,3 +86,34 @@ def velocity_go2_module(name: str):
 
     base = "isaaclab_tasks.core.velocity.config.go2" if lab_major() >= 3 else "isaaclab_tasks.manager_based.locomotion.velocity.config.go2"
     return importlib.import_module(f"{base}.{name}")
+
+
+# ---------------------------------------------------------------- 물리 백엔드 (lead 14:08 · 팀장: 3.0 도 PhysX 로 고정)
+def apply_physx_sim(sim_cfg, gpu_max_rigid_patch_count: int) -> None:
+    """2.x: sim.physx.gpu_max_rigid_patch_count 를 쓴다. 3.0: SimulationCfg 에 physx 칸이 없고 `physics` 가 백엔드 cfg 라서 PhysxCfg (Isaac Sim PhysX · TGS solver_type 1) 를 직접 박는다
+    (stock 과제는 physics=RoughPhysicsCfg 프리셋이라 기본이 newton_mjwarp 로 뜬 적이 있다 · R3b 로그). 프리셋 이름 isaacsim_physx 와 같은 cfg 다."""
+    if lab_major() >= 3:
+        from isaaclab_physx.physics import PhysxCfg
+
+        sim_cfg.physics = PhysxCfg(gpu_max_rigid_patch_count=int(gpu_max_rigid_patch_count), solver_type=1)
+    else:
+        sim_cfg.physx.gpu_max_rigid_patch_count = int(gpu_max_rigid_patch_count)
+
+
+def physics_report(raw_env) -> dict:
+    """만든 env 가 실제로 쓰는 물리 백엔드: {'manager': 클래스 이름, 'cfg': cfg 클래스 이름, 'solver_type': ..., 'is_physx': bool}. 2.x 는 늘 PhysX."""
+    if lab_major() < 3:
+        return {"manager": "PhysxInterface(2.x)", "cfg": "PhysxCfg(2.x)", "solver_type": getattr(getattr(raw_env.cfg.sim, "physx", None), "solver_type", None), "is_physx": True}
+    ctx = raw_env.sim
+    manager = getattr(getattr(ctx, "physics_manager", None), "__name__", type(getattr(ctx, "physics_manager", None)).__name__)
+    cfg = getattr(raw_env.cfg.sim, "physics", None)
+    return {"manager": manager, "cfg": type(cfg).__name__, "solver_type": getattr(cfg, "solver_type", None),
+            "is_physx": "physx" in manager.lower() and "newton" not in manager.lower()}
+
+
+def require_physx(raw_env) -> dict:
+    """PhysX 가 아니면 (newton 등) 예외 -> 시작하지 않는다. 결과 dict 를 돌려준다 (로그에 PHYSICS_BACKEND 로 찍는 용)."""
+    rep = physics_report(raw_env)
+    if not rep["is_physx"]:
+        raise RuntimeError(f"physics backend is not PhysX: {rep}")
+    return rep
