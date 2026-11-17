@@ -281,7 +281,8 @@ def prepare_e0_env_cfg(env_cfg: Any, plan: EX42Plan, mesh_dir: str | Path, stage
     mask = push_gate_mask(table, {f: k for f, k in e0_push_off_kinds(plan, stage_id).items() if f in set(families)})
     env_cfg.scene.terrain.terrain_generator = mesh_file_generator_cfg(npz, sha)
     from foothold_s2.terrains.ex42_flags import attach_mesh_flags
-    flag_table = attach_mesh_flags(env_cfg, npz, env_cfg.scene.terrain.terrain_generator.num_rows, len(table))
+    # EX42_E2_NO_MESH_FLAGS=1 (diagnostic version, lead 2026-11-17 09:40): leave flag_provider unset = the E1F source of flag positions (straight lines in the cell middle)
+    flag_table = None if os.environ.get("EX42_E2_NO_MESH_FLAGS") == "1" else attach_mesh_flags(env_cfg, npz, env_cfg.scene.terrain.terrain_generator.num_rows, len(table))
     apply_column_reset(env_cfg, table)
     wrapped = apply_column_push_gate(env_cfg, mask)
     return {"mesh_sha256": sha, "columns": len(table), "families": sorted(set(families)),

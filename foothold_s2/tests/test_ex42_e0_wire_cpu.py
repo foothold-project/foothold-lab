@@ -182,3 +182,14 @@ def test_no_undefined_names_in_the_files_this_wiring_touches():
     from foothold_s2.scripts.ex41_startup import assert_no_undefined_names
     assert_no_undefined_names([ROOT / "foothold_s2/scripts/train_start.py", ROOT / "foothold_s2/scripts/ex42_training_entry.py",
                                ROOT / "foothold_s2/terrains/ex42_exposure.py", ROOT / "foothold_s2/terrains/ex42_column_reset.py"])
+
+
+@pytest.mark.skipif(not REAL.is_dir(), reason="real mesh not on this machine")
+@pytest.mark.parametrize("flag,calls", [("1", 0), ("", 1)])
+def test_no_mesh_flags_switch_leaves_the_flag_provider_unset(monkeypatch, flag, calls):
+    from foothold_s2.terrains import ex42_flags
+    seen = []
+    monkeypatch.setattr(ex42_flags, "attach_mesh_flags", lambda *a, **k: seen.append(1))
+    monkeypatch.setenv("EX42_E2_NO_MESH_FLAGS", flag)
+    te.prepare_e0_env_cfg(_env_cfg(), _plan(), REAL)
+    assert len(seen) == calls
