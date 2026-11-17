@@ -98,3 +98,29 @@ def test_nav_env_state_is_wxyz_on_3(monkeypatch):
     nav = NavEnv(fake, FakeLower(fake.n), cs.CommandSpace(cs.slots_from_stage_row(PREP, "E1F"), "clip"))
     state = nav.reset()
     assert to.yaw_from_quat_wxyz(state.quat_w) == pytest.approx([0.7, 0.7], abs=1e-5)
+
+
+def test_moved_isaaclab_modules_pick_the_path_for_the_declared_major(monkeypatch):
+    """Runpod N1 첫 판 (11/17 13:54): 3.0 에는 isaaclab_tasks.manager_based 폴더가 없다 (v3.0.0 원문: isaaclab_tasks/core/velocity)."""
+    import importlib
+
+    asked = []
+    monkeypatch.setattr(importlib, "import_module", lambda name: asked.append(name) or name)
+    monkeypatch.setenv("FOOTHOLD_LAB_MAJOR", "3")
+    assert lc.velocity_mdp() == "isaaclab_tasks.core.velocity.mdp"
+    assert lc.velocity_go2_module("rough_env_cfg") == "isaaclab_tasks.core.velocity.config.go2.rough_env_cfg"
+    monkeypatch.setenv("FOOTHOLD_LAB_MAJOR", "2")
+    assert lc.velocity_mdp() == "isaaclab_tasks.manager_based.locomotion.velocity.mdp"
+    assert lc.velocity_go2_module("rough_env_cfg") == "isaaclab_tasks.manager_based.locomotion.velocity.config.go2.rough_env_cfg"
+
+
+def test_no_source_file_imports_a_moved_isaaclab_path_directly():
+    """옮겨진 경로를 직접 import 하는 줄이 lab_compat 밖에 새로 생기면 실패 (시험 파일 · 주석은 제외)."""
+    import re
+    from pathlib import Path
+
+    root = Path(__file__).resolve().parents[1]
+    bad = re.compile(r"^\s*(from|import)\s+isaaclab_tasks\.manager_based|^\s*from\s+isaaclab\.utils\.noise\s+import\s+AdditiveUniformNoiseCfg", re.M)
+    hits = [str(p.relative_to(root)) for p in root.rglob("*.py") if "tests" not in p.parts and p.name != "lab_compat.py" and bad.search(p.read_text(encoding="utf-8"))]
+    # gap_training 은 설치된 2.3.2 에만 있는 개인 수정판 경로 (3.0 원문에 없음): v2_noscan 두 파일만 허용 (nav 닫힘 밖 · EX-24 전용)
+    assert sorted(hits) == ["tasks/agents/v2_noscan_ppo_cfg.py", "tasks/v2_noscan_cfg.py"]

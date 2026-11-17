@@ -10,7 +10,9 @@ EX-11 환경(FootholdS2X11EnvCfg)을 상속하고 두 묶음만 바꾼다:
 
 from isaaclab.managers import SceneEntityCfg
 from isaaclab.utils import configclass
-from isaaclab_tasks.manager_based.locomotion.velocity import mdp
+from foothold_s2.lab_compat import velocity_mdp
+
+mdp = velocity_mdp()      # 3.0 에서는 isaaclab_tasks.core.velocity.mdp (manager_based 폴더 없음)
 
 from foothold_s2.tasks.s2_env_cfg import FootholdS2X11EnvCfg
 

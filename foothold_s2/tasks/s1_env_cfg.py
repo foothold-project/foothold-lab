@@ -6,7 +6,9 @@ S2 는 이 클래스를 상속해 명령 · 지형 · 보상만 바꾼다.
 """
 
 import isaaclab.sim as sim_utils
-import isaaclab_tasks.manager_based.locomotion.velocity.mdp as mdp
+from foothold_s2.lab_compat import velocity_mdp  # noqa: E402
+
+mdp = velocity_mdp()      # 3.0 에서는 isaaclab_tasks.core.velocity.mdp
 from isaaclab.envs import ManagerBasedRLEnvCfg
 from isaaclab.managers import CurriculumTermCfg as CurrTerm
 from isaaclab.managers import EventTermCfg as EventTerm
@@ -19,7 +21,9 @@ from isaaclab.sensors import ContactSensorCfg, RayCasterCfg, patterns
 from isaaclab.terrains import TerrainImporterCfg
 from isaaclab.utils import configclass
 from isaaclab.utils.assets import ISAACLAB_NUCLEUS_DIR
-from isaaclab.utils.noise import AdditiveUniformNoiseCfg as Unoise
+from foothold_s2.lab_compat import uniform_noise_cfg_cls
+
+Unoise = uniform_noise_cfg_cls()      # 3.0 에는 AdditiveUniformNoiseCfg 가 없고 UniformNoiseCfg (같은 뜻)
 
 from foothold_s2.commands.mixed_command import MixedVelocityCommandCfg
 from foothold_s2.curriculum import terrain_levels_mixed as tlm

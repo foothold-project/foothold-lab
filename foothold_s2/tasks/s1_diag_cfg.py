@@ -4,13 +4,17 @@ D1: feet_air_time +0.1, 문턱 0.5 (v2 env.yaml 의 feet_air_time 행 887~916: f
     command_name base_velocity · sensor contact_forces ".*_foot" · threshold 0.5 · weight 0.1 을 그대로 옮김).
 """
 
-import isaaclab_tasks.manager_based.locomotion.velocity.mdp as mdp
+from foothold_s2.lab_compat import velocity_mdp  # noqa: E402
+
+mdp = velocity_mdp()      # 3.0 에서는 isaaclab_tasks.core.velocity.mdp
 from isaaclab.managers import RewardTermCfg as RewTerm
 from isaaclab.managers import SceneEntityCfg
 from isaaclab.utils import configclass
 
 from isaaclab.managers import ObservationTermCfg as ObsTerm
-from isaaclab.utils.noise import AdditiveUniformNoiseCfg as Unoise
+from foothold_s2.lab_compat import uniform_noise_cfg_cls
+
+Unoise = uniform_noise_cfg_cls()      # 3.0 에는 AdditiveUniformNoiseCfg 가 없고 UniformNoiseCfg (같은 뜻)
 
 from foothold_s2.tasks.s1_env_cfg import FootholdS1aBlindEnvCfg, FootholdS1aScanEnvCfg
 

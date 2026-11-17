@@ -8,7 +8,9 @@ import torch
 
 from isaaclab.managers import ManagerTermBase, RewardTermCfg as RewTerm, SceneEntityCfg
 from isaaclab.utils import configclass
-from isaaclab_tasks.manager_based.locomotion.velocity import mdp
+from foothold_s2.lab_compat import velocity_mdp
+
+mdp = velocity_mdp()      # 3.0 에서는 isaaclab_tasks.core.velocity.mdp (manager_based 폴더 없음)
 
 from foothold_s2.rewards import core
 from foothold_s2.rewards.penalty_log import record

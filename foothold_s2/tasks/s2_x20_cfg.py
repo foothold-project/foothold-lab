@@ -9,7 +9,9 @@ v2 에 있는 fell_below_terrain 은 요청 범위 밖이라 넣지 않는다. �
 from isaaclab.managers import SceneEntityCfg
 from isaaclab.managers import TerminationTermCfg as DoneTerm
 from isaaclab.utils import configclass
-from isaaclab_tasks.manager_based.locomotion.velocity import mdp
+from foothold_s2.lab_compat import velocity_mdp
+
+mdp = velocity_mdp()      # 3.0 에서는 isaaclab_tasks.core.velocity.mdp (manager_based 폴더 없음)
 
 from foothold_s2.tasks.s2_x16n_cfg import FootholdS2X16nEnvCfg
 

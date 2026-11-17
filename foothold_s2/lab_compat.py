@@ -46,3 +46,43 @@ def quat_cfg(q_wxyz, major: int | None = None) -> tuple:
 def quat_to_sim(q_wxyz, major: int | None = None):
     """wxyz 쿼터니언 (…, 4) 텐서 · 배열 -> 이 판의 시뮬 쓰기 함수 (write_root_pose_to_sim 등) 가 받는 순서. `quat_wxyz` 의 역."""
     return q_wxyz[..., [1, 2, 3, 0]] if (lab_major() if major is None else major) >= 3 else q_wxyz
+
+
+def require_declared_major() -> int:
+    """Kit 을 띄우는 진입점이 부른다 (reviewer 13:38 권고): FOOTHOLD_LAB_MAJOR 가 없으면 거절. 설치된 isaaclab 을 못 읽어 조용히 2 로 떨어지면 쿼터니언 순서가 어긋난 채 도는 것을 막는다.
+    설치된 isaaclab 의 주 버전이 읽히면 선언과 같아야 한다."""
+    raw = os.environ.get(_ENV)
+    if raw not in ("2", "3"):
+        raise RuntimeError(f"{_ENV} must be set to 2 or 3 before starting Kit (got {raw!r})")
+    try:
+        from importlib.metadata import version
+
+        installed = int(version("isaaclab").split(".")[0])
+    except Exception:                                    # 설치 버전을 못 읽으면 선언을 믿는다 (Kit 안 아님)
+        return int(raw)
+    if installed != int(raw):
+        raise RuntimeError(f"{_ENV}={raw} but the installed isaaclab is {installed}.x")
+    return int(raw)
+
+
+# ---------------------------------------------------------------- 옮겨진 모듈 (v3.0.0 원문 대조 · Runpod N1 첫 판 실패 11/17 13:54)
+def velocity_mdp():
+    """Isaac Lab 의 velocity 과제 mdp 모듈. 2.x: isaaclab_tasks.manager_based.locomotion.velocity.mdp · 3.0: isaaclab_tasks.core.velocity.mdp (v3.0.0 에 manager_based 폴더 없음)."""
+    import importlib
+
+    return importlib.import_module("isaaclab_tasks.core.velocity.mdp" if lab_major() >= 3 else "isaaclab_tasks.manager_based.locomotion.velocity.mdp")
+
+
+def uniform_noise_cfg_cls():
+    """덧셈 균등 잡음 cfg. 2.x: isaaclab.utils.noise.AdditiveUniformNoiseCfg · 3.0: UniformNoiseCfg (operation 기본 'add' 라 같은 뜻 · n_min · n_max 같음)."""
+    from isaaclab.utils import noise
+
+    return noise.UniformNoiseCfg if lab_major() >= 3 else noise.AdditiveUniformNoiseCfg
+
+
+def velocity_go2_module(name: str):
+    """Isaac Lab 의 Go2 velocity 설정 모듈 (예: 'rough_env_cfg'). 2.x: ...manager_based.locomotion.velocity.config.go2.<name> · 3.0: isaaclab_tasks.core.velocity.config.go2.<name>."""
+    import importlib
+
+    base = "isaaclab_tasks.core.velocity.config.go2" if lab_major() >= 3 else "isaaclab_tasks.manager_based.locomotion.velocity.config.go2"
+    return importlib.import_module(f"{base}.{name}")

@@ -53,8 +53,12 @@ from isaaclab.managers import ObservationTermCfg as ObsTerm  # noqa: E402
 from isaaclab.utils import configclass  # noqa: E402
 from isaaclab_rl.rsl_rl import RslRlVecEnvWrapper  # noqa: E402
 
-import isaaclab_tasks.manager_based.locomotion.velocity.mdp as mdp  # noqa: E402
-from isaaclab_tasks.manager_based.locomotion.velocity.config.go2.rough_env_cfg import UnitreeGo2RoughEnvCfg  # noqa: E402
+from foothold_s2.lab_compat import velocity_mdp  # noqa: E402
+
+mdp = velocity_mdp()      # 3.0 에서는 isaaclab_tasks.core.velocity.mdp
+from foothold_s2.lab_compat import velocity_go2_module  # noqa: E402
+
+UnitreeGo2RoughEnvCfg = velocity_go2_module("rough_env_cfg").UnitreeGo2RoughEnvCfg
 
 from foothold_s2.sensors.start_obs import apply_start_perception  # noqa: E402
 
