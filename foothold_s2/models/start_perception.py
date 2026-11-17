@@ -86,13 +86,15 @@ class DepthCNN(nn.Module):
 class UNetRefine(nn.Module):
     """선행 Fig. 8: 16,16 / 32,32 / 64,64 / concat 64->32,32 / concat 32->16,16 -> 1. 마지막 활성화 없음(가정)."""
 
-    def __init__(self) -> None:
+    def __init__(self, geom: bool = False) -> None:
+        """geom 참이면 입력이 3 장 (rough + 기하 채널 둘: 보이는 칸 높이 · 보였나, B2a · DESIGN-MAP-EDGE 11 절). 첫 층만 모양이 다르다 (geom_extend_first_layer 가 이어받음). 기본 꺼짐 = 옛 모양 그대로."""
         super().__init__()
+        self.geom = bool(geom)
 
         def block(i: int, o: int) -> nn.Sequential:
             return nn.Sequential(nn.Conv2d(i, o, 3, 1, 1), nn.ReLU(), nn.Conv2d(o, o, 3, 1, 1), nn.ReLU())
 
-        self.e1 = block(1, 16)
+        self.e1 = block(3 if geom else 1, 16)
         self.e2 = block(16, 32)
         self.mid = block(32, 64)
         self.u2 = nn.ConvTranspose2d(64, 32, 2, 2)
@@ -101,8 +103,11 @@ class UNetRefine(nn.Module):
         self.d1 = block(32, 16)
         self.out = nn.Conv2d(16, 1, 3, 1, 1)  # 3x3 · 활성화 없음: fable 20s 가 START 원문과 대조해 채택 (12 §3 · §12, 37ed3ada)
 
-    def forward(self, h: torch.Tensor) -> torch.Tensor:
-        x = h.unsqueeze(1)
+    def forward(self, h: torch.Tensor, geom: torch.Tensor | None = None) -> torch.Tensor:
+        """geom (B, 2, 32, 16) = geom_channel.channels(...). geom 모양이 아닌데 주면 · 켰는데 안 주면 오류."""
+        if self.geom != (geom is not None):
+            raise ValueError(f"UNetRefine geom={self.geom} 인데 geom 채널 {'없음' if geom is None else '있음'}")
+        x = h.unsqueeze(1) if geom is None else torch.cat([h.unsqueeze(1), geom.to(h.dtype)], 1)
         e1 = self.e1(x)
         e2 = self.e2(F.max_pool2d(e1, 2))
         m = self.mid(F.max_pool2d(e2, 2))
@@ -112,8 +117,8 @@ class UNetRefine(nn.Module):
 
 
 class TRNet(nn.Module):
-    def __init__(self, width: int = 128) -> None:
-        """width = GRU hidden 폭 (기본 128 = 지금 구조와 모양 · 초기값 비트 같음). 128 이 아니면 rough MLP 도 [width, 2 * width] 로 같이 넓힌다 (복원 지도 설계 7 절 2: 오프라인 가르기 B1 용 ·
+    def __init__(self, width: int = 128, geom: bool = False) -> None:
+        """geom = U-Net 에 기하 채널 둘을 더 받음 (B2a, 기본 꺼짐 · 꺼짐이면 옛 구조와 같은 모양). width = GRU hidden 폭 (기본 128 = 지금 구조와 모양 · 초기값 비트 같음). 128 이 아니면 rough MLP 도 [width, 2 * width] 로 같이 넓힌다 (복원 지도 설계 7 절 2: 오프라인 가르기 B1 용 ·
         StartPerception · 재생 버퍼의 h_terr 폭은 128 로 고정이라 학습 경로에는 아직 연결 안 됨)."""
         super().__init__()
         self.width = int(width)
@@ -121,16 +126,25 @@ class TRNet(nn.Module):
         self.prop_mlp = mlp(128, [64, 64], None)
         self.gru = nn.GRUCell(1024 + 64, self.width)
         self.rough = mlp(self.width, [128, 256] if self.width == 128 else [self.width, 2 * self.width], MAP_CELLS)
-        self.refine = UNetRefine()
+        self.refine = UNetRefine(geom=geom)
 
     def step(self, depth: torch.Tensor, z_prop: torch.Tensor, h: torch.Tensor) -> torch.Tensor:
         """한 틱 진행한 새 hidden. z_prop 은 detach 해서 받는다(12 §6 가정)."""
         x = torch.cat([self.depth_cnn(depth), self.prop_mlp(z_prop.detach())], -1)
         return self.gru(x, h)
 
-    def decode(self, h: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
+    def decode(self, h: torch.Tensor, geom: torch.Tensor | None = None) -> tuple[torch.Tensor, torch.Tensor]:
         rough = self.rough(h).view(-1, MAP_X, MAP_Y)
-        return rough, self.refine(rough)
+        return rough, self.refine(rough, geom)
+
+
+def geom_extend_first_layer(sd: dict, own: dict) -> dict:
+    """옛 U-Net 첫 층 (16, 1, 3, 3) 을 새 첫 층 (16, 3, 3, 3) 으로 이어받는다: 첫 채널 (rough) 은 복사 · 새 두 채널은 0 -> 시작 출력이 옛 것과 같다. 키 이름 끝 `refine.e1.0.weight`."""
+    out = dict(sd)
+    for k, v in sd.items():
+        if k.endswith("refine.e1.0.weight") and k in own and v.shape[1] == 1 and own[k].shape[1] == 3:
+            w = torch.zeros_like(own[k]); w[:, :1] = v; out[k] = w
+    return out
 
 
 class IEEstimator(nn.Module):

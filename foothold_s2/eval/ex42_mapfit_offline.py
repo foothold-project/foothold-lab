@@ -17,6 +17,7 @@ import numpy as np
 import torch
 
 from foothold_s2.eval import ex42_axes as ax
+from foothold_s2.models import geom_channel as gcm
 from foothold_s2.models import map_weights as mw
 from foothold_s2.models import start_perception as sp
 
@@ -38,8 +39,17 @@ def load_segments(patterns) -> list[dict]:
         for a, b in zip(cut, list(cut[1:]) + [len(env)]):
             if b - a >= MIN_SEGMENT_TICKS and bool(first[a]):               # 리셋 첫 스텝으로 시작하는 구간만 (h 0 에서 시작이 맞는 것)
                 idx = order[a:b]
-                segs.append({"depth": d["depth2"][idx].astype(np.float32), "z_prop": d["z_prop"][idx].astype(np.float32), "gt": d["gt"][idx].astype(np.float32), "src": f})
+                segs.append({"depth": d["depth2"][idx].astype(np.float32), "z_prop": d["z_prop"][idx].astype(np.float32), "gt": d["gt"][idx].astype(np.float32), "src": f,
+                             "grav": d["grav"][idx].astype(np.float32) if "grav" in d.files else None})
     return segs
+
+
+def attach_geom(segs: list[dict], *, agg: str = "max", y_flip: bool = False) -> None:
+    """기하 채널 (B2a) 을 구간마다 한 번 계산해 s["geom"] (T, 2, 32, 16) 로 붙인다 (학습 없는 계산이라 반복할 필요가 없다). 기록에 몸 자세 (grav) 가 없으면 오류: 서 있다고 놓고 돌리지 않는다."""
+    for s in segs:
+        if s.get("grav") is None:
+            raise ValueError(f"기록에 grav (몸 틀 중력) 가 없다: {s['src']} · 기록 자식을 새 판으로 다시 찍을 것")
+        s["geom"] = gcm.channels(torch.from_numpy(s["depth"]), torch.from_numpy(s["grav"]), agg=agg, y_flip=y_flip).numpy()
 
 
 def pad_batch(segs: list[dict]):
@@ -49,10 +59,15 @@ def pad_batch(segs: list[dict]):
     for i, s in enumerate(segs):
         n = len(s["gt"])
         depth[i, :n] = torch.from_numpy(s["depth"]); zp[i, :n] = torch.from_numpy(s["z_prop"]); gt[i, :n] = torch.from_numpy(s["gt"]); valid[i, :n] = True
-    return depth, zp, gt, valid
+    geom = None
+    if "geom" in segs[0]:
+        geom = torch.zeros(b, t, 2, sp.MAP_X, sp.MAP_Y)
+        for i, s in enumerate(segs):
+            geom[i, :len(s["gt"])] = torch.from_numpy(s["geom"])
+    return depth, zp, gt, valid, geom
 
 
-def forward_segments(net: sp.TRNet, depth, zp, valid):
+def forward_segments(net: sp.TRNet, depth, zp, valid, geom=None):
     """구간 묶음 (B, T, ...) -> rough · refined (B, T, 32, 16). 구간 시작 h = 0 · 한 구간 안에서 BPTT. 유효하지 않은 칸은 h 를 그대로 둔다."""
     b, t = valid.shape
     h = torch.zeros(b, net.width)
@@ -60,17 +75,18 @@ def forward_segments(net: sp.TRNet, depth, zp, valid):
     for k in range(t):
         h_new = net.step(depth[:, k], zp[:, k], h)
         h = torch.where(valid[:, k, None], h_new, h)
-        r, f = net.decode(h)
+        r, f = net.decode(h, geom[:, k] if (geom is not None and net.refine.geom) else None)
         roughs.append(r); refs.append(f)
     return torch.stack(roughs, 1), torch.stack(refs, 1)
 
 
-def load_trnet(checkpoint: str, width: int = 128) -> tuple[sp.TRNet, dict]:
+def load_trnet(checkpoint: str, width: int = 128, geom: bool = False) -> tuple[sp.TRNet, dict]:
     """체크포인트의 perception_state_dict 에서 TRNet 만 읽는다 (읽기 전용). 모양이 다른 칸 (B1 의 GRU · rough) 은 새로 두고 건너뛴 이름을 돌려준다."""
     ck = torch.load(checkpoint, map_location="cpu", weights_only=False)
     sd = {k[len("trnet."):]: v for k, v in ck["perception_state_dict"].items() if k.startswith("trnet.")}
-    net = sp.TRNet(width=width)
+    net = sp.TRNet(width=width, geom=geom)
     own = net.state_dict()
+    sd = sp.geom_extend_first_layer(sd, own) if geom else sd                    # U-Net 첫 층만 새로 (rough 채널은 이어받고 기하 두 채널은 0)
     take = {k: v for k, v in sd.items() if k in own and own[k].shape == v.shape}
     skipped = sorted(k for k in own if k not in take)
     net.load_state_dict({**own, **take})
@@ -86,8 +102,8 @@ def fit(net: sp.TRNet, train: list[dict], *, w_edge: float, w_hole: float, epoch
         order = rng.permutation(len(train))
         tot, cnt = 0.0, 0
         for i in range(0, len(order), batch):
-            depth, zp, gt, valid = pad_batch([train[j] for j in order[i:i + batch]])
-            rough, ref = forward_segments(net, depth, zp, valid)
+            depth, zp, gt, valid, geom = pad_batch([train[j] for j in order[i:i + batch]])
+            rough, ref = forward_segments(net, depth, zp, valid, geom)
             g = gt[valid]
             loss = sp.loss_tr(rough[valid], ref[valid], g, mw.weight_map(g, w_edge, w_hole))
             opt.zero_grad(); loss.backward(); opt.step()
@@ -104,8 +120,8 @@ def evaluate(net: sp.TRNet, segs: list[dict], batch: int = 16) -> dict:
     cnt = {"cells": 0, "edge_gt": 0, "edge_pred": 0}
     hole = np.zeros(len(ax.HOLE_COLUMNS))
     for i in range(0, len(segs), batch):
-        depth, zp, gt, valid = pad_batch(segs[i:i + batch])
-        rough, ref = forward_segments(net, depth, zp, valid)
+        depth, zp, gt, valid, geom = pad_batch(segs[i:i + batch])
+        rough, ref = forward_segments(net, depth, zp, valid, geom)
         g = gt[valid].numpy().astype(np.float64); r = ref[valid].numpy().astype(np.float64); ro = rough[valid].numpy().astype(np.float64)
         eg, er = ax.edge_mask(g), ax.edge_mask(r)
         e, e_ro = np.abs(r - g), np.abs(ro - g)
@@ -150,15 +166,21 @@ def run(args, log=print) -> dict:
     train, held = load_segments([p for p in args.train_dirs.split(",")]), load_segments([p for p in args.eval_dirs.split(",")])
     sha = hashlib.sha256(Path(args.checkpoint).read_bytes()).hexdigest()
     log(f"train segments {len(train)} ({sum(len(s['gt']) for s in train)} ticks) · eval segments {len(held)} ({sum(len(s['gt']) for s in held)} ticks)")
-    spec = {"base": (128, 1.0, False), "ctrl": (128, 1.0, True), "A": (128, args.weight, True), "B1": (args.width, 1.0, True), "A+B1": (args.width, args.weight, True)}
+    names = args.variants.split(",")
+    if any("G" in n.split("+") for n in names):                       # 기하 채널 (B2a): 판 이름에 G 토큰 (예: G · A+G · A+B1+G). 기본 판 목록에는 없다 = 기본 꺼짐
+        attach_geom(train, agg=args.geom_agg, y_flip=args.geom_y_flip); attach_geom(held, agg=args.geom_agg, y_flip=args.geom_y_flip)
     rows = {}
-    for name in args.variants.split(","):
-        width, w, trained = spec[name]
-        net, info = load_trnet(args.checkpoint, width)
+    for name in names:
+        toks = set(name.split("+"))
+        unknown = toks - {"base", "ctrl", "A", "B1", "G"}
+        if unknown:
+            raise ValueError(f"모르는 판 이름 {name}: {sorted(unknown)}")
+        width, w, trained, geom = (args.width if "B1" in toks else 128), (args.weight if "A" in toks else 1.0), toks != {"base"}, "G" in toks
+        net, info = load_trnet(args.checkpoint, width, geom)
         t0 = time.time()
         hist = fit(net, train, w_edge=w, w_hole=w, epochs=args.epochs, batch=args.batch, lr=args.lr, log=log) if trained else []
         m = evaluate(net, held)
-        rows[name] = {"metrics": m, "judge": judge(m), "width": width, "weight": w, "trained": trained, "loss_by_epoch": hist, "load": info, "seconds": round(time.time() - t0, 1)}
+        rows[name] = {"metrics": m, "judge": judge(m), "width": width, "weight": w, "geom": geom, "trained": trained, "loss_by_epoch": hist, "load": info, "seconds": round(time.time() - t0, 1)}
         log(f"[{name}] edge {m['edge_err_cm']} cm · flat {m['flat_err_cm']:.2f} cm · {rows[name]['seconds']} s")
     res = {"checkpoint": args.checkpoint, "checkpoint_sha256": sha, "checkpoint_sha256_after": hashlib.sha256(Path(args.checkpoint).read_bytes()).hexdigest(),
            "train_dirs": args.train_dirs, "eval_dirs": args.eval_dirs, "judge_lines": JUDGE, "rows": rows, "table": table(rows),
@@ -176,6 +198,7 @@ def main(argv=None) -> int:
     p.add_argument("--eval-dirs", required=True); p.add_argument("--out", required=True)
     p.add_argument("--variants", default="base,ctrl,A,B1,A+B1"); p.add_argument("--weight", type=float, default=4.0, help="설계 2.2: 먼저 4 (가정)")
     p.add_argument("--width", type=int, default=512); p.add_argument("--epochs", type=int, default=8); p.add_argument("--batch", type=int, default=8)
+    p.add_argument("--geom-agg", default="max", choices=["max", "mean"], help="B2a 기하 채널의 칸 모으기 (판 이름에 G 가 있을 때)"); p.add_argument("--geom-y-flip", action="store_true")
     p.add_argument("--lr", type=float, default=3e-4); p.add_argument("--threads", type=int, default=4)
     a = p.parse_args(argv)
     torch.set_num_threads(a.threads)
