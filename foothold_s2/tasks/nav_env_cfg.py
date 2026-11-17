@@ -20,8 +20,33 @@ def foot_below_room_floor(env, sensor_cfg, asset_cfg, margin: float = 0.25):
     return (feet_z < env.scene.env_origins[:, 2][:, None] - margin).any(dim=1)
 
 
+DEFAULT_EPISODE_S = 90.0
+
+
+def nav_force_reset(env):
+    """종료 항: 상위가 요청한 env (과제 성공 종료) 를 이 스텝에 되돌린다. 읽고 바로 비운다."""
+    import torch
+
+    f = getattr(env, "_nav_force", None)
+    if f is None:
+        return torch.zeros(env.num_envs, dtype=torch.bool, device=env.device)
+    out = f.clone()
+    f.zero_()
+    return out
+
+
+def nav_episode_timeout(env):
+    """종료 항 (time_out): env 별 최대 스텝 (`env._nav_max_steps`, 상위가 경로 길이로 정함) 에 닿으면. 없으면 고정 90 초."""
+    import torch
+
+    lim = getattr(env, "_nav_max_steps", None)
+    if lim is None:
+        return env.episode_length_buf >= int(DEFAULT_EPISODE_S / float(env.step_dt))
+    return env.episode_length_buf >= lim
+
+
 def configure_lower_env_cfg(env_cfg, agent_cfg, *, num_envs: int, device: str, seed: int, terrain_generator,
-                            disable_dr=None, start_obs_module=None) -> dict:
+                            disable_dr=None, start_obs_module=None, done_term_cls=None) -> dict:
     """하위 env cfg 를 주행용으로 고친다. 돌려주는 값: 고친 내용 요약 (영수증용)."""
     if num_envs < 1:
         raise ValueError("num_envs must be >= 1")
@@ -45,13 +70,29 @@ def configure_lower_env_cfg(env_cfg, agent_cfg, *, num_envs: int, device: str, s
     command.resampling_time_range = NO_RESAMPLE
     command.dynamic_flags = False
     command.flag_stride = 0
+    reset_base = getattr(getattr(env_cfg, "events", None), "reset_base", None)
+    if reset_base is not None and isinstance(getattr(reset_base, "params", None), dict):      # 리셋 때 몸이 env 원점 (= 과제 시작 자리) 그대로 서게: x y 흔들기 끔 (yaw 는 그대로)
+        pr = dict(reset_base.params.get("pose_range", {}))
+        pr["x"], pr["y"] = (0.0, 0.0), (0.0, 0.0)
+        reset_base.params = {**reset_base.params, "pose_range": pr}
+    terms = getattr(env_cfg, "terminations", None)
+    custom = "absent"
+    if terms is not None and hasattr(terms, "time_out"):         # 성공 종료 (상위 요청) · env 별 시간 초과 (경로 길이 / 0.3 + 10 초) 로 기본 시간 초과를 바꾼다
+        if done_term_cls is None:
+            from isaaclab.managers import TerminationTermCfg as done_term_cls
+        env_cfg.episode_length_s = 600.0                         # 기본 시간 초과 (20 초) 는 끈다. 길이는 nav_episode_timeout 이 정한다
+        terms.time_out = None
+        terms.nav_timeout = done_term_cls(func=nav_episode_timeout, time_out=True)
+        terms.nav_success = done_term_cls(func=nav_force_reset)
+        custom = "nav_timeout+nav_success"
     fbg = getattr(getattr(env_cfg, "terminations", None), "foot_below_ground", None)
     if fbg is not None:                      # 방 메시: 벽 · 탁자 윗면을 지면으로 읽는 스캔 판정을 env 바닥 높이 판정으로 바꾼다
         fbg.func = foot_below_room_floor
         fbg.params = {k: v for k, v in fbg.params.items() if k != "scanner_cfg"}
     return {"num_envs": int(num_envs), "seed": int(seed), "device": device, "dr_disabled": disabled,
             "command_resampling": "off", "flags": "off", "curriculum": "off", "observation_corruption": "off",
-            "foot_below_ground": "room_floor" if fbg is not None else "absent"}
+            "foot_below_ground": "room_floor" if fbg is not None else "absent", "episode_terms": custom,
+            "reset_jitter_xy": "off" if reset_base is not None else "absent"}
 
 
 def build_nav_env(*, checkpoint, expected_sha256: str, room_mesh_npz, room_mesh_sha256: str, num_envs: int, device: str,

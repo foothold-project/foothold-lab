@@ -233,3 +233,18 @@ def test_term_counts_or_over_the_window_per_termination_reason():
     e.env = object()
     e._note_terms(True)
     assert e.term_counts == {}
+
+
+def test_request_reset_and_episode_seconds_write_the_tensors_the_isaac_terms_read():
+    import types
+    import torch
+    from foothold_s2.nav import nav_env
+
+    e = nav_env.NavEnv.__new__(nav_env.NavEnv)
+    e.n = 4
+    e.term = types.SimpleNamespace(vel_command_b=torch.zeros(4, 3))
+    e.raw = types.SimpleNamespace(step_dt=0.02)
+    e.request_reset([1, 3])
+    e.set_episode_seconds([0, 2], [50.0, 0.001])
+    assert e.raw._nav_force.tolist() == [False, True, False, True]
+    assert e.raw._nav_max_steps.tolist() == [2500, 4500, 1, 4500]

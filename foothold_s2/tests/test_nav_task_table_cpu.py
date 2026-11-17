@@ -84,6 +84,7 @@ def test_continuing_task_reset_uses_the_table_and_vectorized_subgoal_samples_mat
     _rooms, assets, starts = _setup(n_rooms=1, k=4)
     t = nav_task.NavTask(assets, 1, np.random.default_rng(5))
     t.build_table(starts, per_start=16, seed=0)
+    t.redraw_on_fall = True                                             # the 02:2x behaviour (cfg task_redraw_on_fall)
     t.reset_envs([0], start_xy=starts[0][0][None])
     live_before = t.task_table_hits
     t.pgcl[0].needs_new_task = False                                  # 넘어짐: 과제는 이어 쓰는 경우
@@ -141,3 +142,30 @@ def test_iteration_stats_count_subgoals_levels_outcomes_rewards_speeds_and_episo
     assert abs(s["nv_v_cmd"] - 0.5) < 1e-9 and abs(s["nv_lvl1"] - 1.0) < 1e-9 and s["nv_progress_end"] == 0.0
     assert s["nv_ep_ticks"] == 4 and s["nv_ep_s"] == 2.0 and s["nv_dsub_start"] > 0 and s["nv_path_len"] >= 4.0 and "nv_r1" in s
     assert t.take_stats() == {}                                                       # read and cleared
+
+
+def test_default_keeps_the_same_task_and_path_across_a_fall_and_the_level_follows_pgcl():
+    _rooms, assets, starts = _setup(n_rooms=1, k=4)
+    t = nav_task.NavTask(assets, 1, np.random.default_rng(5))
+    t.build_table(starts, per_start=16, seed=0)
+    assert t.redraw_on_fall is False
+    t.reset_envs([0], start_xy=starts[0][0][None])
+    goal, path = t.goal[0].copy(), t.path[0].copy()
+    new0 = t.task_new
+    out = t.reset_envs([0], start_xy=starts[0][0][None])                       # fall: the body is back on the task start
+    assert out["outcome"] == ["hold"] and t.task_new == new0 and np.allclose(t.goal[0], goal) and np.allclose(t.path[0], path)
+    t.pgcl[0]._i = len(t.pgcl[0]._sub)                                          # every subgoal reached
+    out = t.reset_envs([0], start_xy=starts[0][0][None])
+    assert out["outcome"] == ["level_up"] and t.pgcl[0].level == 2 and np.allclose(t.goal[0], goal) and t.task_new == new0
+
+
+def test_episode_seconds_is_path_length_over_0_3_plus_10():
+    _rooms, assets, starts = _setup(n_rooms=1, k=4)
+    t = nav_task.NavTask(assets, 2, np.random.default_rng(6))
+    t.build_table(starts, per_start=16, seed=0)
+    assert np.allclose(t.episode_seconds([0, 1]), 90.0)                         # no task yet: fixed 90 s
+    t.reset_envs([0, 1], start_xy=np.stack([starts[0][0], starts[0][1]]))
+    sec = t.episode_seconds([0, 1])
+    for k in range(2):
+        L = float(np.linalg.norm(np.diff(t.path[k], axis=0), axis=1).sum())
+        assert abs(sec[k] - (L / 0.3 + 10.0)) < 1e-9 and 10 + 4 / 0.3 - 1e-9 <= sec[k] <= 10 + 25 / 0.3 + 1e-9

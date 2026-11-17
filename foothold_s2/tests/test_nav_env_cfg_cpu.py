@@ -95,3 +95,27 @@ def test_the_old_scan_rule_flags_a_foot_beside_a_wall_and_the_room_floor_rule_do
     asset = ns(name="robot", body_ids=[0])
     assert bool(mdp_extra.foot_below_ground(env, None, ns(name="hs"), asset, 0.25)[0]) is True      # old: 0.02 < 1.2 - 0.25
     assert bool(nc.foot_below_room_floor(env, None, asset, 0.25)[0]) is False
+
+
+def test_configure_adds_success_and_per_env_timeout_terms_and_turns_the_reset_jitter_off():
+    import torch
+
+    ns = SimpleNamespace
+    cfg = _cfg()
+    cfg.events.reset_base = ns(params={"pose_range": {"x": (-0.5, 0.5), "y": (-0.5, 0.5), "yaw": (-3.14, 3.14)}, "velocity_range": {}})
+    cfg.terminations = ns(time_out=object(), foot_below_ground=None)
+    made = []
+    Done = lambda **kw: (made.append(kw), kw)[1]
+    out = nc.configure_lower_env_cfg(cfg, SimpleNamespace(), num_envs=2, device="cpu", seed=1, terrain_generator=None, disable_dr=lambda c: [],
+                                     start_obs_module=SimpleNamespace(AUG=SimpleNamespace(enabled=True)), done_term_cls=Done)
+    pr = cfg.events.reset_base.params["pose_range"]
+    assert pr["x"] == (0.0, 0.0) and pr["y"] == (0.0, 0.0) and pr["yaw"] == (-3.14, 3.14) and out["reset_jitter_xy"] == "off"
+    assert cfg.terminations.time_out is None and cfg.terminations.nav_timeout["func"] is nc.nav_episode_timeout and cfg.terminations.nav_timeout["time_out"] is True
+    assert cfg.terminations.nav_success["func"] is nc.nav_force_reset and out["episode_terms"] == "nav_timeout+nav_success"
+    env = ns(num_envs=3, device="cpu", step_dt=0.02, episode_length_buf=torch.tensor([10, 50, 4000]), _nav_force=torch.tensor([True, False, False]),
+             _nav_max_steps=torch.tensor([100, 40, 5000]))
+    assert nc.nav_force_reset(env).tolist() == [True, False, False] and not bool(env._nav_force.any())     # read once, then cleared
+    assert nc.nav_episode_timeout(env).tolist() == [False, True, False]
+    bare = ns(num_envs=2, device="cpu", step_dt=0.02, episode_length_buf=torch.tensor([4499, 4500]))
+    assert nc.nav_episode_timeout(bare).tolist() == [False, True]                                          # fixed 90 s without limits
+    assert nc.nav_force_reset(bare).tolist() == [False, False]

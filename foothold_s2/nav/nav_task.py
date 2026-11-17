@@ -38,6 +38,9 @@ def make_asset(room, table: dict) -> RoomAsset:
     return RoomAsset(room, gm.make_grade_map(room, table), teacher_maps.RoomVoxels.from_room(room))
 
 
+SAME_START_M = 0.05                  # 리셋 뒤 몸이 과제 시작 자리에서 이만큼 안이면 같은 과제를 그대로 (길을 다시 내지 않음)
+EPISODE_SPEED_MPS, EPISODE_EXTRA_S = 0.3, 10.0   # 에피소드 길이 = 경로 길이 / 0.3 + 10 초 (planner 03:57 가정)
+
 class NavTask:
     def __init__(self, assets: list, num_envs: int, rng: np.random.Generator, *, d0: float = 1.0, step: float = 1.0,
                  final_successes: int = 5, v_des_range=rewards_hl.V_DES_RANGE, min_task_m: float = 2.0, max_task_tries: int = 20, origin_xy=None,
@@ -65,7 +68,7 @@ class NavTask:
         self.task_relaxed = 0             # 목표 조건 (경로 길이 범위) 을 못 맞춰 옛 꼴로 물러선 수 (누적)
         self.ratio_edges = (1.1, 1.2, 1.5, 2.0)
         self.ratio_hist = np.zeros(len(self.ratio_edges) + 1, dtype=np.int64)       # 뽑힌 쌍의 굴곡 비 분포: <1.1 · 1.1~1.2 · 1.2~1.5 · 1.5~2 · 2 이상
-        self.redraw_on_fall = True        # True = 넘어진 뒤 (과제를 못 끝냄) 에도 표에서 새 과제 · False = 같은 과제 재도전 (같은 목표, 시작 자리만 표에서; PGCL 수준 올리기 옛 뜻)
+        self.redraw_on_fall = False       # True = 넘어진 뒤 (과제를 못 끝냄) 에도 표에서 새 과제 · False (기본, 논문 IV-C2) = 같은 과제 유지: 새 과제는 PGCL 이 요청할 때만
         self.tick_s = None                # 상위 틱 한 번의 초 (hold x step_dt). 호출한 쪽이 넣는다. None = 에피소드 길이는 틱 수로만
         self._st = None                   # 회차 통계 합 (take_stats 가 읽고 비운다)
         self.task_fallbacks = 0           # 실제 시작에서 길을 못 찾아 새 쌍으로 대신한 횟수 (누적)
@@ -174,6 +177,15 @@ class NavTask:
         pts = pts.copy(); pts[0] = np.asarray(s, float)                    # 몸이 실제로 선 자리에서 출발
         self.task_table_hits += 1
         return t.copy(), pts
+
+    def episode_seconds(self, env_ids=None, speed_mps: float = EPISODE_SPEED_MPS, extra_s: float = EPISODE_EXTRA_S):
+        """env 별 에피소드 최대 길이 (초) = 과제 경로 길이 / speed + extra (논문에 없음: 우리 가정). 길이를 못 재면 고정 90 초."""
+        ids = range(self.n) if env_ids is None else np.atleast_1d(env_ids)
+        out = []
+        for i in ids:
+            pts = self.path[int(i)]
+            out.append(90.0 if pts is None else self._length(pts) / speed_mps + extra_s)
+        return np.array(out)
 
     def _table_same_goal(self, i: int, s):
         """표의 가장 가까운 시작점 줄에서 지금 목표와 같은 목표의 길 (없으면 None). 같은 과제 재도전 때 A* 를 안 돌리려고."""
@@ -314,6 +326,8 @@ class NavTask:
             elif s is not None and self.table is not None and self.redraw_on_fall:
                 self.task_redraw_on_reset += 1                              # 표가 있으면 넘어진 뒤에도 표에서 새 과제 (같은 목표로 다시 A* 를 돌리지 않는다)
                 self._new_task(i, s)
+            elif s is not None and np.linalg.norm(np.asarray(s, float) - self.start[i]) <= SAME_START_M:
+                pass                                                        # 같은 과제를 그 시작 자리에서 다시 (리셋 때 몸이 시작 자리로 돌아온다): 길 · 목표 그대로
             elif s is not None:
                 pts = self._table_same_goal(i, s) if self.table is not None else None      # 같은 목표 재도전: 표에 그 목표의 길이 있으면 그것 (A* 없음)
                 if pts is None:

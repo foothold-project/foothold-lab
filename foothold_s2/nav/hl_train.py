@@ -45,7 +45,13 @@ class TeacherVecEnv:
         state = self.state = self.nav.reset()
         ids = np.arange(self.n)
         self.task.reset_envs(ids, start_xy=self._pos_room(state, ids))
+        self._set_episode_limits(ids)
         return self._obs(state)
+
+    def _set_episode_limits(self, ids):
+        """과제마다 에피소드 최대 길이 (경로 길이 / 0.3 + 10 초) 를 하위 env 의 시간 초과 항에 넘긴다. 못 하면 (가짜 env) 건너뜀."""
+        if hasattr(self.nav, "set_episode_seconds") and hasattr(self.task, "episode_seconds"):
+            self.nav.set_episode_seconds(ids, self.task.episode_seconds(ids))
 
     def step(self, action):
         t = self._torch
@@ -53,10 +59,18 @@ class TeacherVecEnv:
         out = self.task.step(state)
         done = np.asarray(state.done, bool)
         self.task_reached = np.asarray(out["task_reached"], bool).copy()      # reset_envs 가 PGCL 을 되돌리기 전 값 (평가가 읽음)
-        ids = np.flatnonzero(done | out["task_reached"])
+        reached = np.asarray(out["task_reached"], bool)
+        can_force = hasattr(self.nav, "request_reset")
+        if can_force and (reached & ~done).any():
+            # 과제 성공 종료 (논문 IV-C2 의 「수준마다 한 번」): 몸을 시작 자리로 되돌리도록 Isaac 에 요청. 되돌려진 틱에 done 으로 돌아오면 아래에서 한 번 끝낸다 (task_reached 는 에피소드당 한 번).
+            self.nav.request_reset(np.flatnonzero(reached & ~done))
+            ids = np.flatnonzero(done)
+        else:
+            ids = np.flatnonzero(done | reached)
         # 끝난 env: Isaac 이 이미 새 에피소드로 되돌렸으므로 지금 몸 위치가 새 시작 (G1). 과제를 끝낸 env 는 PGCL 이 새 과제를 요청한다.
         if len(ids):
             self.task.reset_envs(ids, start_xy=self._pos_room(state, ids))
+            self._set_episode_limits(ids)
         r = t.as_tensor(np.asarray(out["reward"], np.float32), device=self.device)
         d = t.as_tensor(done, device=self.device)
         to = t.as_tensor(np.asarray(state.timed_out, bool), device=self.device)

@@ -67,3 +67,31 @@ def test_vec_env_resets_done_envs_from_the_real_body_position():
     obs, r, d, to, info = env.step(torch.zeros(n, 3))
     ids, start = calls["r"][-1]
     assert ids == [1] and start.shape == (1, 2) and obs.shape == (n, D) and info["fell"] == 1
+
+
+def test_success_is_a_reset_request_once_and_the_level_goes_up_when_isaac_hands_the_env_back_done():
+    import torch
+    from foothold_s2.nav import nav_task, room_generator as rg, grade_map as gm
+    from foothold_s2.tests.test_nav_task_table_cpu import _setup, _state
+
+    _rooms, assets, starts = _setup(n_rooms=1, k=4)
+    n = 2
+    task = nav_task.NavTask(assets, n, np.random.default_rng(3))
+    task.build_table(starts, per_start=16, seed=0)
+    task.origin_xy = np.zeros((n, 2))                                      # pos_local is the room frame here
+    st0 = np.stack([starts[0][0], starts[0][1]])
+    asked, limits, cur = [], [], {}
+    nav = SimpleNamespace(n=n, reset=lambda: cur["s"], step=lambda a: cur["s"], request_reset=lambda ids: asked.append(list(ids)),
+                          set_episode_seconds=lambda ids, sec: limits.append((list(ids), list(sec))))
+    env = hl_train.TeacherVecEnv(nav, task)
+    cur["s"] = _state(n, st0)
+    env.reset()
+    assert limits and all(s > 10 for s in limits[0][1])
+    task.pgcl[0]._i = len(task.pgcl[0]._sub) - 1
+    pos = st0.copy(); pos[0] = task.pgcl[0]._sub[-1].point
+    cur["s"] = _state(n, pos)
+    obs, r, d, to, info = env.step(torch.zeros(n, 3))
+    assert info["task_reached"] == 1 and asked == [[0]] and task.pgcl[0].level == 1       # asked Isaac, nothing ended yet
+    cur["s"] = _state(n, st0, done=np.array([True, False]))                 # next window: Isaac hands env 0 back at its start
+    obs, r, d, to, info = env.step(torch.zeros(n, 3))
+    assert info["task_reached"] == 0 and asked == [[0]] and task.pgcl[0].level == 2 and info["fell"] == 1

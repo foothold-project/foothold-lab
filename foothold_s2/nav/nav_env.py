@@ -11,6 +11,7 @@ Isaac 가 없어도 가짜 env 로 시험한다 (torch 만 필요).
 """
 from __future__ import annotations
 
+import math
 import re
 from dataclasses import dataclass
 
@@ -52,6 +53,9 @@ def _np(x):
     return x.detach().cpu().numpy().copy()
 
 
+DEFAULT_EPISODE_S = 90.0              # 경로 길이로 시간을 못 정할 때의 고정 에피소드 길이 (초)
+
+
 class NavEnv:
     def __init__(self, env, lower, space: CommandSpace, *, term_name: str = TERM_NAME, fix_heading=None,
                  sensor_name: str | None = SENSOR_NAME, collision_bodies=COLLISION_BODIES, collision_force_n: float = COLLISION_FORCE_N):
@@ -85,9 +89,39 @@ class NavEnv:
         d = self.raw.scene["robot"].data
         return th(d.root_pos_w), quat_wxyz(d.root_quat_w), th(d.root_lin_vel_b), th(d.root_ang_vel_b)[:, 2]
 
+    def _nav_tensors(self):
+        """하위 env 의 두 종료 항 (nav_env_cfg.nav_force_reset · nav_episode_timeout) 이 읽는 텐서: 되돌림 요청 (n,) bool · env 별 에피소드 최대 스텝 (n,)."""
+        import torch
+
+        raw = self.raw
+        if getattr(raw, "_nav_force", None) is None:
+            dev = self.term.vel_command_b.device
+            raw._nav_force = torch.zeros(self.n, dtype=torch.bool, device=dev)
+            raw._nav_max_steps = torch.full((self.n,), int(math.ceil(DEFAULT_EPISODE_S / float(raw.step_dt))), dtype=torch.long, device=dev)
+        return raw
+
+    def request_reset(self, env_ids) -> None:
+        """이 env 들을 다음 상위 틱 첫 하위 스텝에 Isaac 이 되돌리게 한다 (과제 성공 종료). 되돌림은 보통 종료와 같은 길 (events · 명령 · 하위 정책 reset)."""
+        import torch
+
+        raw = self._nav_tensors()
+        raw._nav_force[torch.as_tensor(np.asarray(env_ids, dtype=np.int64), device=raw._nav_force.device)] = True
+
+    def set_episode_seconds(self, env_ids, seconds) -> None:
+        """env 별 에피소드 최대 길이 (초). 하위 env 의 시간 초과 항 (nav_episode_timeout) 이 읽는다."""
+        import torch
+
+        raw = self._nav_tensors()
+        steps = np.maximum(np.ceil(np.asarray(seconds, dtype=float) / float(raw.step_dt)), 1).astype(np.int64)
+        raw._nav_max_steps[torch.as_tensor(np.asarray(env_ids, dtype=np.int64), device=raw._nav_max_steps.device)] = torch.as_tensor(steps, device=raw._nav_max_steps.device)
+
     def reset(self) -> NavState:
         import torch
 
+        try:
+            self._nav_tensors()
+        except AttributeError:               # 가짜 env (step_dt 없음)
+            pass
         self.env.reset()
         self.obs = self.env.get_observations()
         self.lower.reset(torch.ones(self.n, dtype=torch.bool, device=self.term.vel_command_b.device))
