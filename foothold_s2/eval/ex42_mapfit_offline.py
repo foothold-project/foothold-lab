@@ -1,7 +1,7 @@
 """복원 지도 오프라인 가르기 (설계 DESIGN-MAP-EDGE-1117 2.2 · 2.3 ㄱ · 3 절): 기록 npz (ex42_mapfit_record_child) 로 TRNet 만 맞추는 스크립트. Kit · 정책 없음 · CPU.
 판: base (정본 3 의 TRNet 그대로, 맞추지 않음 = 기준) · ctrl (같은 길이로 맞추되 가중 1 = 「더 맞췄을 뿐」 대조, 설계 밖 덧붙임) · A (모서리 · 구멍 칸 손실 x weight) ·
 B1 (GRU · rough MLP 폭 width · CNN · prop_mlp · U-Net 은 이어받음) · A+B1. 체크포인트 파일은 읽기만 한다 (정책 · 나머지 지각은 건드리지 않고, 이 스크립트는 어디에도 체크포인트를 쓰지 않는다).
-판정표 (3 절 미리 적은 줄): 모서리 칸 오차 (cm) · 이웃 차 5 cm 넘는 칸 비율 (복원 대 정답) · 평평한 칸 오차 · 없는 구멍 · 좁은 구멍 복원 비율 (기록) · rough (U-Net 앞) 모서리 오차.
+판정표 (3 절 미리 적은 줄): 모서리 칸 오차 (cm) · 이웃 차 5 cm 넘는 칸 비율 (복원 대 정답) · 평평한 칸 오차 · 없는 구멍 · 구멍 놓침 % (기록) · rough (U-Net 앞) 모서리 오차.
 평가 묶음은 학습 시드와 다른 폴더 (--eval-dirs). 기록의 깊이는 평가 환경이 낸 그대로 (그 안에 증강이 켜져 있었는지는 미확인: 오프라인에서 다시 증강하지 않는다).
 쓰는 법: python -m foothold_s2.eval.ex42_mapfit_offline --checkpoint <model.pt> --train-dirs d1,d2 --eval-dirs d3 --out <폴더> [--variants base,ctrl,A,B1,A+B1] [--weight 4 --width 512 --epochs 8]"""
 from __future__ import annotations
