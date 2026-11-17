@@ -110,6 +110,7 @@ def verify_pair(out, checkpoint_sha, seed, level, expected_head=None, expected_p
 def main():
     p=argparse.ArgumentParser(); p.add_argument('--run',type=Path,default=DEFAULT_RUN)
     p.add_argument('--iteration',type=int,default=500); p.add_argument('--basis',type=int,default=250)
+    p.add_argument('--basis-run',type=Path,help='Evaluation plan/mesh source run, when comparing an older checkpoint')
     p.add_argument('--out',type=Path,required=True); p.add_argument('--code-root',type=Path,default=ROOT)
     p.add_argument('--expected-code-head', help='Required for execution; embedded by CPU preparation')
     p.add_argument('--device',choices=('cuda:0','cuda:1'),default='cuda:0')
@@ -119,7 +120,7 @@ def main():
     if a.out.is_relative_to(a.run) or a.out.is_relative_to(a.code_root):
         raise ValueError('output must be outside training and source trees')
     a.out.mkdir(parents=True,exist_ok=True)
-    basis=a.run/f'eval/scores/m{a.basis}'
+    basis=(a.basis_run.resolve() if a.basis_run else a.run)/f'eval/scores/m{a.basis}'
     p1=read(basis/'p1_score.json'); baseline=read(basis/'e1_v2/L0/map_modes.json')
     plan=Path(p1['evaluation_plan']['path']).resolve()
     if sha(plan) != p1['evaluation_plan']['sha256']:
@@ -141,6 +142,7 @@ def main():
              'checkpoint':str(cp),'checkpoint_sha256':expected if ready else None,
              'blockers':([] if ready else ['checkpoint_missing_or_manifest_unpinned'])+(['code_dirty'] if dirty else []),
              'code_root':str(a.code_root),'code_head':head,'plan_path':str(plan),'plan_sha256':sha(plan),
+             'evaluation_basis':str(basis), 'evaluation_basis_p1_sha256':sha(basis/'p1_score.json'),
              'mesh_sha256':mesh_record['mesh_sha256'], 'mesh_file_sha256':sha(mesh/'terrain_mesh.npz'),
              'device':a.device,'seed':a.seed,'level':a.level,
              'actions':argv,'scope':'eight record-only cells, no training/scheduler/ledger writes'}
@@ -149,6 +151,8 @@ def main():
                 '--basis',str(a.basis),'--out',str(a.out),'--code-root',str(a.code_root),
                 '--device',a.device,'--seed',str(a.seed),'--level',str(a.level),
                 '--expected-code-head',head,'--execute']
+    if a.basis_run:
+        invocation += ['--basis-run',str(a.basis_run.resolve())]
     (a.out/'run_pair.sh').write_text('#!/usr/bin/env bash\nset -euo pipefail\nset -a\nsource /home/jay/mai/foothold-linux.env\nset +a\n'
         +'export PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1\ncd '+shlex.quote(str(a.code_root))+'\n'
         +shlex.join(invocation)+'\n')

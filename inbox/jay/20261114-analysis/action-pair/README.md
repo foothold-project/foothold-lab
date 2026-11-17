@@ -42,6 +42,8 @@ CUDA_VISIBLE_DEVICES='' PYTHONDONTWRITEBYTECODE=1 /home/jay/miniforge3/envs/isaa
 
 `--code-root /절대/경로`로 평가 사본을 선택할 수 있다. 준비기와 평가 코드는 같은 수정본을 사용해야 한다. 운영 `ex42-launch-e1-v27`에 파일을 덮지 않는다. 이 PR은 통합 가지 기준이다. 별도 v27 평가 사본에 옮기는 경우에는 이 PR의 평가 변경만 적용하고 그 사본에서 CPU 시험·준비를 다시 수행한다. v27 평가기의 wide 명령 및 root_xy 기록을 통째로 되돌리지 않는다.
 
+부모 m13250의 실제 파일은 E0 run의 `model_250.pt`다. `--run <E0 run> --iteration 250 --basis-run <v27 run> --basis 250`로 부모 체크포인트를 그 부모 manifest에서 검증하면서, 현재 v27과 같은 평가 plan·메시를 읽는다. 부모의 옛 평가 칸이나 학습 설정을 현재 평가에 섞지 않는다. `evaluation_basis`와 P1 파일 SHA도 명령 영수증에 남긴다.
+
 ## 읽는 값과 한계
 
 `pair_readback.json`은 같은 저장본·plan·메시·소스·시드·명령·초기 XY·행동 std를 확인한다. NPZ는 각 칸 `vx[300,64]`, `alive[300,64]`, dt, 초기 위치, 지형 배치, 실행 출처를 가진다. R은 기존 저속 평가처럼 `sum(vx_body × alive) × dt / (명령속도 × 6초)`로 env마다 구한 뒤 중앙값과 평균을 따로 낸다. 1초별 vx 평균의 env 중앙값과 끝 생존 수도 별도로 남긴다. 생존과 추종을 한 수치로 뭉치지 않는다.
