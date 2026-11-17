@@ -527,6 +527,13 @@ class StartRunner(OnPolicyRunner):
         if self.disable_logs or runtime is None or not (first or it % 50 == 0):
             return
         stage = runtime.plan.stages[0]
+        summary = getattr(self._command_term(), "stone_floor_summary", None)
+        got = summary() if summary is not None else None
+        if got is None:
+            print("EX42_STONE_FWD_FLOOR it=%d floor=off" % it, flush=True)
+        else:
+            print("EX42_STONE_FWD_FLOOR it=%d floor=%g stone_envs=%d of=%d stone_fwd_draws=%d stone_below_floor=%d other_fwd_draws=%d other_below_floor=%d stone_fwd_min=%s" % (
+                it, got[0], got[1], got[2], got[3], got[4], got[5], got[6], "none" if got[7] is None else "%.3f" % got[7]), flush=True)
         hold = getattr(stage, "slow_hold_range_s", None)
         print("EX42_COMMAND_CELLS it=%d low_side_fraction=%g low_forward_fraction=%g slow_hold_range_s=%s" % (
             it, float(getattr(stage, "low_side_fraction", 0.0)), float(stage.low_forward_fraction),

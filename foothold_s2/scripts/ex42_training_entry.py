@@ -1157,6 +1157,16 @@ def make_ex42_stage_zero_plan_view(source_plan: Any, stage: Any,
                 raise ValueError("EX-42 stage slow_hold_range_s invalid (two numbers, 0 < lo <= hi <= 30 s)")
             from dataclasses import replace
             stage = replace(stage, slow_hold_range_s=(float(hold_range[0]), float(hold_range[1])))
+        stone_floor = os.environ.get("EX42_STONE_FWD_FLOOR")              # E2 o2 (e2.env): stepping-stones envs get no forward command below this (m/s); unset = off
+        if stone_floor not in (None, ""):
+            try:
+                floor_value = float(stone_floor)
+            except ValueError:
+                floor_value = float("nan")
+            if not math.isfinite(floor_value) or not 0.1 <= floor_value <= 0.6:
+                raise ValueError("EX42_STONE_FWD_FLOOR invalid (a speed in [0.1, 0.6] m/s)")
+            from dataclasses import replace
+            stage = replace(stage, stone_forward_floor=floor_value)
         turn_first = row.get("flag_turn_first_rad")
         if turn_first is not None:
             if type(turn_first) not in (int, float) or isinstance(turn_first, bool) or not math.isfinite(turn_first) or not 0.1 <= turn_first <= 3.0:

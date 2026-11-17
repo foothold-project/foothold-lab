@@ -267,7 +267,7 @@ def resample_ex39(gen, n, arm, yaw):
             "heading": heading, "psi_star": psi_star, "slot": slot}
 
 
-def resample_stage(gen, n, stage, yaw):
+def resample_stage(gen, n, stage, yaw, stone_mask=None):
     """W55: sample one immutable episode-stage profile from curriculum.yaml.
 
     The generator is the existing command generator. No new RNG stream or
@@ -326,6 +326,14 @@ def resample_stage(gen, n, stage, yaw):
         pick = (reverse | side | diagonal) & (_u(gen, (n,)) < fraction)
         turn = _u(gen, (n,), low, high) * torch.where(_u(gen, (n,)) < 0.5, 1.0, -1.0)
         wz = torch.where(pick, turn, wz)
+    floor = getattr(stage, "stone_forward_floor", None)
+    if floor and stone_mask is not None:
+        # E2 o2: an env on stepping stones gets no forward command below `floor` (the slow ones are drawn again from floor to the top of the
+        # forward range). One extra draw, only while the cell is on, after every other draw: a stage without it is bit for bit the old sampler.
+        if floor >= r["forward_vx"][1]:
+            raise ValueError("stone_forward_floor must be below the top of the forward range")
+        again = _u(gen, (n,), floor, r["forward_vx"][1])
+        vx = torch.where(forward & stone_mask & (vx < floor), again, vx)
     return {"cmd": torch.stack([vx, vy, wz], dim=1), "stand": stand, "spin": spin,
             "heading": heading, "psi_star": psi_star, "slot": slot}
 
