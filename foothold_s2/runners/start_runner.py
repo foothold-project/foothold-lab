@@ -217,6 +217,26 @@ def resumed_loop_start(current_learning_iteration: int, resumed: bool, runtime) 
     return current_learning_iteration
 
 
+PPO_DROPPED_DEFAULTS = {"optimizer": "adam", "share_cnn_encoders": False, "use_mixed_precision": False}   # Isaac Lab 3.0 RslRlPpoAlgorithmCfg fields rsl_rl 3.1.2 PPO does not take, with their defaults
+
+
+def ppo_kwargs_for(ppo_cls, alg_cfg: dict, log=print) -> dict:
+    """Keep only the keys the PPO class takes (inspect.signature). Isaac Lab 3.0's RslRlPpoAlgorithmCfg.to_dict() carries fields (optimizer ...)
+    that rsl_rl 3.1.2 PPO.__init__ does not know. Dropped keys: one log line; a dropped value that differs from its default is a WARNING.
+    When the class takes **kwargs nothing is dropped; with 2.3.2 cfgs every key is taken, so the result equals the input."""
+    import inspect
+
+    params = inspect.signature(ppo_cls.__init__).parameters
+    if any(p.kind is inspect.Parameter.VAR_KEYWORD for p in params.values()):
+        return dict(alg_cfg)
+    kept = {k: v for k, v in alg_cfg.items() if k in params}
+    dropped = {k: v for k, v in alg_cfg.items() if k not in params}
+    if dropped:
+        odd = {k: v for k, v in dropped.items() if k not in PPO_DROPPED_DEFAULTS or PPO_DROPPED_DEFAULTS[k] != v}
+        log("PPO_CFG_DROPPED %s dropped=%s%s" % (ppo_cls.__name__, dropped, (" WARNING non-default dropped values: %s" % odd) if odd else ""))
+    return kept
+
+
 class StartRunner(OnPolicyRunner):
     def __init__(self, env, train_cfg: dict, log_dir: str | None = None, device: str = "cpu") -> None:
         # 설치 __init__ 은 env 관측 묶음으로 obs_groups 를 풀고 정책을 만든다. 우리는 정책이 지각 뒤 입력을 받으므로
@@ -427,12 +447,12 @@ class StartRunner(OnPolicyRunner):
             from foothold_s2.runners.ex41_critic_mirror import CriticMirrorPPO
             if self.ex41_critic_mirror:
                 self._assert_ex41_joint_order()
-            alg = CriticMirrorPPO(policy, device=self.device, **alg_cfg, multi_gpu_cfg=self.multi_gpu_cfg)
+            alg = CriticMirrorPPO(policy, device=self.device, **ppo_kwargs_for(CriticMirrorPPO, alg_cfg), multi_gpu_cfg=self.multi_gpu_cfg)
             alg.mirror_enabled = self.ex41_critic_mirror
             clip = self.cfg.get("clip_actions")      # the env clip: a mean past it only moves the log-prob (bounds loss)
             alg.bounds_loss_limit = float(clip) if clip else None
         else:
-            alg = PPO(policy, device=self.device, **alg_cfg, multi_gpu_cfg=self.multi_gpu_cfg)
+            alg = PPO(policy, device=self.device, **ppo_kwargs_for(PPO, alg_cfg), multi_gpu_cfg=self.multi_gpu_cfg)
         alg.init_storage("rl", self.env.num_envs, self.num_steps_per_env, obs, [self.env.num_actions])
         self._small_noise_target = alg
         self._apply_small_noise()
