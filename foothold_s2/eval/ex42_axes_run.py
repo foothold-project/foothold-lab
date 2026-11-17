@@ -78,7 +78,10 @@ def _npz(folder: str, name: str) -> dict:
         return {k: z[k] for k in z.files}
 
 
-SLOPE_SLOTS = ((0, 0), (4, 0), (1, 1), (2, 1))           # (칸 번호, 축): 느린 걸음 칸만 (앞 0.1 두 칸 · 옆 +-0.2) · 0.3 은 느린 구간 밖
+SLOPE_SLOTS = ((0, 0), (4, 0), (1, 1), (2, 1))           # 옛 판 (참고 칸 전용): 앞 0.1 두 칸 + 옆 +-0.2 를 섞어 환경 평균으로 맞춤. 판정에 쓰지 않는다
+FWD01_SLOT = 4                                            # 앞 0.1 칸 번호 (line50.py 와 같음 · 정답 n | 복원 n + 5)
+
+
 def read_flat(folder: str) -> dict:
     keep = {}
     for name, n in KEEP_SLOTS:
@@ -88,12 +91,22 @@ def read_flat(folder: str) -> dict:
             cell[mode] = ax.keep_cell(z["true"], z["command"])
         keep[name] = cell
     slope = {}
+    ref = {}
     for mode, off in (("gt", 0), ("pred", 5)):
-        ts, es = [], []
+        ts, es = [], []                                    # 판정 칸: 앞 0.1 (x 만) 한 칸 · 25 step 창 평균 점
+        for n in (FWD01_SLOT,):                            # 칸 0 은 정답 쪽이 1 step 짜리 껍데기 (복원 쪽 칸 5 는 301 step) 라 둘 다 못 쓴다 · 정답 | 복원 같은 칸 (4 | 9)
+            z = _npz(folder, f"extra_{n + off}.npz")
+            c = np.asarray(z["command"], dtype=np.float64)
+            if abs(c[0] - 0.1) > 1e-6 or abs(c[1]) > 1e-6:
+                raise ValueError(f"slot {n + off} is not the forward 0.1 command: {c.tolist()}")
+            ts.append(z["true"][..., 0]); es.append(z["est"][..., 16])
+        slope[mode] = ax.slope_windows(ts, es)
+        old_t, old_e = [], []
         for n, axis in SLOPE_SLOTS:
             z = _npz(folder, f"extra_{n + off}.npz")
-            ts.append(z["true"][..., axis]); es.append(z["est"][..., 16 + axis])
-        slope[mode] = ax.slope_fit(ts, es)
+            old_t.append(z["true"][..., axis]); old_e.append(z["est"][..., 16 + axis])
+        ref[mode] = ax.slope_fit(old_t, old_e)
+    slope["ref"] = ref
     return {"keep": keep, "slope": slope}
 
 
@@ -107,7 +120,10 @@ def read_kind_cell(folder: str, mode_index: int, mode: str, anchor, settle_s: fl
     if holes is not None:
         n = alive.shape[0]
         counts["hole_rows_vs_steps"] = [int(holes.shape[0]), int(n)]
-        counts.update(ax.hole_summary(holes[:n], alive) if holes.shape[0] >= n else {"hole_error": "fewer hole rows than steps"})
+        try:
+            counts.update(ax.hole_summary(holes[:n], alive) if holes.shape[0] >= n else {"hole_error": "fewer hole rows than steps"})
+        except ValueError as err:                                  # 옛 판 (구멍 6 열) 로 저장된 자식을 --reuse 로 읽은 경우: 값 없음으로 두고 이유를 남김
+            counts["hole_error"] = str(err)
     e = arr.get("map_err_inrange_mean_cm")
     if e is not None:
         counts["err_mean_cm"] = float(np.nanmean(e)) if np.isfinite(e).any() else None

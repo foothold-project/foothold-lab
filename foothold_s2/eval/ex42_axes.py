@@ -15,20 +15,24 @@ from pathlib import Path
 import numpy as np
 
 HOLE_DROP_M = 0.1           # 설계 초안 가정: 구멍 = 양옆 칸이 이 값 이상 높은 칸
-HOLE_REACH_CELLS = 2        # 양옆을 보는 칸 수 (한 축에서 왼쪽 · 오른쪽 각각 1~REACH 칸 가운데 가장 높은 것)
-HOLE_COLUMNS = ("hole_n", "missed_n", "nonhole_n", "false_n", "hole_abs_sum", "nonhole_abs_sum")
+HOLE_REACH_CELLS = 10       # 양옆을 보는 칸 수 (칸 0.05 m 이므로 0.5 m · 틈 폭보다 넓게. 2 칸이던 처음 판은 폭 0.2 m 넘는 틈 안쪽을 구멍으로 못 봤다)
+EDGE_STEP_M = 0.05          # 모서리 칸 = 네 이웃 중 하나와 높이 차가 이 값 이상
+EDGE_HIST_BINS = 40         # 모서리 오차 히스토그램: 1 cm 칸 40 개 (마지막 칸은 40 cm 이상)
+HOLE_COLUMNS = (("hole_n", "missed_n", "nonhole_n", "false_n", "hole_abs_sum", "nonhole_abs_sum", "cells_n", "edge_gt_n", "edge_pred_n", "edge_abs_sum")
+                + tuple(f"edge_hist_{k}" for k in range(EDGE_HIST_BINS)))
 SLOW_WINDOW_START = 100     # line50.py 와 같은 창: 처음 100 step 은 걸음이 자리 잡는 시간
 STALL_M = 0.25              # 가정: 끝까지 살았는데 시작에서 이만큼도 못 간 env = 「멈춘」 것
 SLOPE_MIN_ENVS = 8
 
 
-# ---------------------------------------------------------------- 구멍 칸 (다-2)
+# ---------------------------------------------------------------- 구멍 · 모서리 칸 (다-2)
 def hole_mask(m, drop: float = HOLE_DROP_M, reach: int = HOLE_REACH_CELLS) -> np.ndarray:
     """(..., R, C) 높이 지도 -> 같은 모양 bool. 한 칸이 «구멍» = 같은 줄 또는 같은 열에서 양쪽 모두, 1~reach 칸 안에 그 칸보다 drop 이상 높은 칸이 있다.
-    한쪽만 높은 칸 (계단 모서리 · 비탈) 은 구멍이 아니다. 지도 가장자리 밖은 칸이 없는 것으로 본다 (그쪽은 높지 않음). 비유한 칸은 구멍도 이웃도 아니다."""
+    reach 는 틈 폭보다 넓어야 한다 (기본 10 칸 = 0.5 m, 칸 0.05 m: 폭 0.5 m 까지의 틈은 안쪽 칸이 전부 구멍). 한쪽만 높은 칸 (계단 모서리 · 비탈) 은 구멍이 아니다.
+    지도 가장자리 밖은 칸이 없는 것으로 본다 (그쪽은 높지 않음). 비유한 칸은 구멍도 이웃도 아니다."""
     a = np.asarray(m, dtype=np.float64)
-    a = np.where(np.isfinite(a), a, -np.inf)                       # 비유한 칸은 높은 이웃이 될 수 없고, 구멍이 되지도 않게 아래에서 거른다
-    finite = np.isfinite(np.asarray(m, dtype=np.float64))
+    finite = np.isfinite(a)
+    a = np.where(finite, a, -np.inf)                       # 비유한 칸은 높은 이웃이 될 수 없고, 구멍이 되지도 않게 아래에서 거른다
     out = np.zeros(a.shape, dtype=bool)
     for axis in (-2, -1):
         size = a.shape[axis]
@@ -37,51 +41,90 @@ def hole_mask(m, drop: float = HOLE_DROP_M, reach: int = HOLE_REACH_CELLS) -> np
         for d in range(1, reach + 1):
             if d >= size:
                 break
-            sl_dst_l = [slice(None)] * a.ndim; sl_src_l = [slice(None)] * a.ndim
-            sl_dst_l[axis] = slice(d, None); sl_src_l[axis] = slice(0, size - d)       # lo[i] = a[i - d]
-            lo[tuple(sl_dst_l)] = np.maximum(lo[tuple(sl_dst_l)], a[tuple(sl_src_l)])
-            sl_dst_r = [slice(None)] * a.ndim; sl_src_r = [slice(None)] * a.ndim
-            sl_dst_r[axis] = slice(0, size - d); sl_src_r[axis] = slice(d, None)       # hi[i] = a[i + d]
-            hi[tuple(sl_dst_r)] = np.maximum(hi[tuple(sl_dst_r)], a[tuple(sl_src_r)])
+            dst_l = [slice(None)] * a.ndim; src_l = [slice(None)] * a.ndim
+            dst_l[axis] = slice(d, None); src_l[axis] = slice(0, size - d)       # lo[i] = max a[i - d]
+            lo[tuple(dst_l)] = np.maximum(lo[tuple(dst_l)], a[tuple(src_l)])
+            dst_r = [slice(None)] * a.ndim; src_r = [slice(None)] * a.ndim
+            dst_r[axis] = slice(0, size - d); src_r[axis] = slice(d, None)       # hi[i] = max a[i + d]
+            hi[tuple(dst_r)] = np.maximum(hi[tuple(dst_r)], a[tuple(src_r)])
         out |= (lo - a >= drop) & (hi - a >= drop)
     return out & finite
 
 
+def edge_mask(m, step: float = EDGE_STEP_M) -> np.ndarray:
+    """(..., R, C) -> bool. 모서리 칸 = 위아래 · 좌우 네 이웃 중 하나와 높이 차가 step (5 cm) 이상인 칸. 비유한 칸은 모서리도 이웃도 아니다."""
+    a = np.asarray(m, dtype=np.float64)
+    big = np.zeros(a.shape, dtype=bool)
+    for axis in (-2, -1):
+        n = a.shape[axis]
+        if n < 2:
+            continue
+        head = [slice(None)] * a.ndim; tail = [slice(None)] * a.ndim
+        head[axis] = slice(0, n - 1); tail[axis] = slice(1, None)
+        with np.errstate(invalid="ignore"):
+            jump = np.abs(a[tuple(tail)] - a[tuple(head)]) >= step      # 비유한이면 False
+        big[tuple(head)] |= jump
+        big[tuple(tail)] |= jump
+    return big
+
+
 def hole_stats(refined, gt_map, drop: float = HOLE_DROP_M, reach: int = HOLE_REACH_CELLS) -> np.ndarray:
-    """(N, R, C) 두 지도 -> (N, 6) = HOLE_COLUMNS 순서의 한 step 값.
+    """(N, R, C) 두 지도 -> (N, len(HOLE_COLUMNS)) = HOLE_COLUMNS 순서의 한 step 값.
     hole_n = 정답이 구멍인 칸 수 · missed_n = 그 가운데 복원 지도가 구멍으로 안 그린 칸 (같은 규칙을 복원 지도에 적용) · nonhole_n = 정답이 구멍이 아닌 칸 수 ·
-    false_n = 그 가운데 복원 지도가 구멍으로 그린 칸 (없는 구멍) · hole_abs_sum / nonhole_abs_sum = 각 칸 집합의 |복원 - 정답| 합 [m]."""
+    false_n = 그 가운데 복원 지도가 구멍으로 그린 칸 (없는 구멍) · hole_abs_sum / nonhole_abs_sum = 각 칸 집합의 |복원 - 정답| 합 [m] ·
+    cells_n = 오차를 잰 칸 수 · edge_gt_n / edge_pred_n = 정답 / 복원 지도의 모서리 칸 수 · edge_abs_sum = 정답 모서리 칸의 |복원 - 정답| 합 [m] ·
+    edge_hist_* = 그 오차의 1 cm 칸 히스토그램 (EDGE_HIST_BINS 칸 · 마지막 칸은 그 이상)."""
     r = np.asarray(refined, dtype=np.float64)
     g = np.asarray(gt_map, dtype=np.float64)
     if r.shape != g.shape or r.ndim != 3:
         raise ValueError("hole_stats needs two (N, R, C) maps of the same shape")
     hg, hr = hole_mask(g, drop, reach), hole_mask(r, drop, reach)
+    eg, er = edge_mask(g), edge_mask(r)
     err = np.abs(np.where(np.isfinite(r), r, np.nan) - g)
     ok = np.isfinite(err)
     n = r.shape[0]
-    out = np.zeros((n, len(HOLE_COLUMNS)), dtype=np.float64)
     flat = lambda x: x.reshape(n, -1)                                                    # noqa: E731
+    e0 = flat(np.nan_to_num(err))
+    out = np.zeros((n, len(HOLE_COLUMNS)), dtype=np.float64)
     out[:, 0] = flat(hg & ok).sum(1)
     out[:, 1] = flat(hg & ~hr & ok).sum(1)
     out[:, 2] = flat(~hg & ok).sum(1)
     out[:, 3] = flat(~hg & hr & ok).sum(1)
-    out[:, 4] = np.where(flat(hg & ok), flat(np.nan_to_num(err)), 0.0).sum(1)
-    out[:, 5] = np.where(flat(~hg & ok), flat(np.nan_to_num(err)), 0.0).sum(1)
+    out[:, 4] = np.where(flat(hg & ok), e0, 0.0).sum(1)
+    out[:, 5] = np.where(flat(~hg & ok), e0, 0.0).sum(1)
+    out[:, 6] = flat(ok).sum(1)
+    out[:, 7] = flat(eg & ok).sum(1)
+    out[:, 8] = flat(er & ok).sum(1)
+    sel = flat(eg & ok)
+    out[:, 9] = np.where(sel, e0, 0.0).sum(1)
+    bins = np.minimum((e0 * 100.0).astype(np.int64), EDGE_HIST_BINS - 1)
+    for k in range(EDGE_HIST_BINS):
+        out[:, 10 + k] = (sel & (bins == k)).sum(1)
     return out
 
 
 def hole_summary(stats, alive) -> dict:
-    """stats (S, N, 6) · alive (S, N) bool -> 살아 있는 step 만 합친 비율. 구멍 칸이 하나도 없으면 missed_frac 은 None (값 없음 · 0 이 아니다)."""
+    """stats (S, N, len(HOLE_COLUMNS)) · alive (S, N) bool -> 살아 있는 step 만 합친 비율. 구멍 칸이 하나도 없으면 missed_frac 은 None (값 없음 · 0 이 아니다).
+    모서리: edge_err_mean_cm · edge_err_p90_cm (1 cm 칸 히스토그램의 90 % 지점 · 칸 위쪽 끝) · edge_frac_gt / edge_frac_pred = 이웃 차 5 cm 이상 칸이 전체 칸에서 차지하는 비율."""
     s = np.asarray(stats, dtype=np.float64)
     al = np.asarray(alive, dtype=bool)
     if s.shape[:2] != al.shape:
         raise ValueError("hole stats and alive shapes differ: %s vs %s" % (s.shape, al.shape))
+    if s.shape[2] != len(HOLE_COLUMNS):
+        raise ValueError("hole stats have %d columns, expected %d (older run? rerun the kind cell)" % (s.shape[2], len(HOLE_COLUMNS)))
     s = np.where(np.isfinite(s) & al[..., None], s, 0.0).sum((0, 1))
-    hole, missed, nonhole, false, hole_abs, nonhole_abs = (float(x) for x in s)
+    hole, missed, nonhole, false, hole_abs, nonhole_abs, cells, edge_gt, edge_pred, edge_abs = (float(x) for x in s[:10])
+    hist = s[10:]
+    p90 = None
+    if edge_gt > 0:
+        k = int(np.searchsorted(np.cumsum(hist), 0.9 * hist.sum()))
+        p90 = float(min(k + 1, EDGE_HIST_BINS))
     return {"hole_cells": hole, "missed_hole_frac": (missed / hole) if hole > 0 else None,
             "false_hole_frac": (false / nonhole) if nonhole > 0 else None,
             "hole_abs_err_cm": (100.0 * hole_abs / hole) if hole > 0 else None,
-            "nonhole_abs_err_cm": (100.0 * nonhole_abs / nonhole) if nonhole > 0 else None}
+            "nonhole_abs_err_cm": (100.0 * nonhole_abs / nonhole) if nonhole > 0 else None,
+            "edge_cells": edge_gt, "edge_err_mean_cm": (100.0 * edge_abs / edge_gt) if edge_gt > 0 else None, "edge_err_p90_cm": p90,
+            "edge_frac_gt": (edge_gt / cells) if cells > 0 else None, "edge_frac_pred": (edge_pred / cells) if cells > 0 else None}
 
 
 # ---------------------------------------------------------------- 가-1 느린 걸음 (planner line50.py 와 같은 식)
@@ -122,6 +165,37 @@ def slope_fit(true_x, est_x, *, window_start: int = SLOW_WINDOW_START) -> dict:
     return {"slope": float(slope), "intercept": float(intercept), "points": int(x.size), "true_std": float(x.std())}
 
 
+def slope_windows(true_x, est_x, *, window_start: int = SLOW_WINDOW_START, window: int = 25) -> dict:
+    """가-2 판정 칸 (planner info_regress.py 와 같은 식): 명령 앞 0.1 칸들의 (S, N) 실제 · 추정 -> 25 step (0.5 초) 창 평균 점 (칸 × env × 창) 으로
+    est = intercept + slope * true 최소제곱. bias = 점마다 (추정 - 실제) 의 평균 [m/s] (영점 칸 · 정본 3 +0.003 · 무너진 판 +0.007~0.009).
+    true_x, est_x 는 (S, N) 배열의 list (앞 0.1 칸만 · 옆 칸을 섞으면 명령 사이 차이를 따라가 기울기가 부풀므로 부르는 쪽에서 거른다)."""
+    ts = true_x if isinstance(true_x, (list, tuple)) else [true_x]
+    es = est_x if isinstance(est_x, (list, tuple)) else [est_x]
+    if len(ts) != len(es):
+        raise ValueError("slope_windows: true and est lists differ in length")
+    xs, ys = [], []
+    for t, e in zip(ts, es):
+        t, e = np.asarray(t, dtype=np.float64), np.asarray(e, dtype=np.float64)
+        n = min(len(t), len(e))
+        k = ((n - window_start) // window) * window
+        if k <= 0:
+            continue
+        xs.append(t[window_start:window_start + k].reshape(-1, window, t.shape[1]).mean(1).ravel())
+        ys.append(e[window_start:window_start + k].reshape(-1, window, e.shape[1]).mean(1).ravel())
+    if not xs:
+        return {"slope": None, "intercept": None, "bias": None, "points": 0, "true_std": None}
+    x, y = np.concatenate(xs), np.concatenate(ys)
+    ok = np.isfinite(x) & np.isfinite(y)
+    x, y = x[ok], y[ok]
+    if x.size < SLOPE_MIN_ENVS:
+        return {"slope": None, "intercept": None, "bias": None, "points": int(x.size), "true_std": None}
+    bias = float((y - x).mean())
+    if float(x.std()) < 1e-6:
+        return {"slope": None, "intercept": None, "bias": bias, "points": int(x.size), "true_std": float(x.std())}
+    slope, intercept = np.polyfit(x, y, 1)
+    return {"slope": float(slope), "intercept": float(intercept), "bias": bias, "points": int(x.size), "true_std": float(x.std())}
+
+
 # ---------------------------------------------------------------- 나 새 종: 세 숫자
 def kind_counts(arrays: dict, anchor: dict | None, *, settle_s: float, envs: int) -> dict:
     """한 종 칸의 env_arrays (alive · dones · dt · root_x_local_m · root_y_local_m) -> 세 숫자를 따로.
@@ -140,7 +214,7 @@ def kind_counts(arrays: dict, anchor: dict | None, *, settle_s: float, envs: int
     seconds = alive.shape[0] * dt
     surv_moved = moved[survived_mask]
     out = {"envs": envs, "survived": int(survived_mask.sum()), "fell": fell,
-           "mean_forward_speed": float(surv_moved.mean() / seconds) if surv_moved.size else None,
+           "move_speed": float(surv_moved.mean() / seconds) if surv_moved.size else None,
            "stalled_frac": float((surv_moved < STALL_M).mean()) if surv_moved.size else None,
            "reached": None, "completed": None}
     if anchor is not None:
@@ -154,7 +228,7 @@ def kind_counts(arrays: dict, anchor: dict | None, *, settle_s: float, envs: int
 
 
 def continuous_counts(arrays: dict, *, envs: int) -> dict:
-    """가-3: 연속 지형 한 열. 생존 수 · 평균 이동 거리 [m] (env 별 시작에서 마지막으로 살아 있던 자리까지의 직선 거리 · 방향 무관). 키 이름 mean_forward_m 는 표 호환용."""
+    """가-3: 연속 지형 한 열. 생존 수 · 평균 이동 거리 [m] (env 별 시작에서 마지막으로 살아 있던 자리까지의 직선 거리 · 방향 무관). 키 이름 move_m 는 표 호환용."""
     alive = np.asarray(arrays["alive"], dtype=bool)
     x = np.asarray(arrays["root_x_local_m"], dtype=np.float64)
     if alive.shape != x.shape or alive.shape[1] != envs:
@@ -162,7 +236,7 @@ def continuous_counts(arrays: dict, *, envs: int) -> dict:
     last = np.where(alive.any(0), alive.shape[0] - 1 - np.argmax(alive[::-1], axis=0), 0)
     y = np.asarray(arrays["root_y_local_m"], dtype=np.float64)
     dist = np.hypot(x[last, np.arange(envs)] - x[0], y[last, np.arange(envs)] - y[0])
-    return {"envs": envs, "survived": int(alive[-1].sum()), "mean_forward_m": float(dist.mean())}
+    return {"envs": envs, "survived": int(alive[-1].sum()), "move_m": float(dist.mean())}
 
 
 # ---------------------------------------------------------------- 한 줄 표
@@ -187,21 +261,27 @@ def format_line(it: int, row: dict) -> str:
             parts.append(f"{name} 실제 {_fmt(c['gt']['actual'], '{:+.3f}')}|{_fmt(c['pred']['actual'], '{:+.3f}')} 성공 {c['gt']['ok']}|{c['pred']['ok']}")
     sl = row.get("slope") or {}
     if sl:
-        parts.append("추정 기울기 %s|%s 영점 %s|%s" % (_fmt((sl.get('gt') or {}).get('slope'), '{:.2f}'), _fmt((sl.get('pred') or {}).get('slope'), '{:.2f}'),
-                                                   _fmt((sl.get('gt') or {}).get('intercept'), '{:+.3f}'), _fmt((sl.get('pred') or {}).get('intercept'), '{:+.3f}')))
+        g, p = sl.get("gt") or {}, sl.get("pred") or {}
+        parts.append("추정 기울기 %s|%s 치우침 %s|%s" % (_fmt(g.get("slope"), "{:.2f}"), _fmt(p.get("slope"), "{:.2f}"), _fmt(g.get("bias"), "{:+.3f}"), _fmt(p.get("bias"), "{:+.3f}")))
+        ref = sl.get("ref") or {}
+        if ref:
+            parts.append("(참고 · 옛 한데 기울기 %s|%s 판정에 안 씀)" % (_fmt((ref.get("gt") or {}).get("slope"), "{:.2f}"), _fmt((ref.get("pred") or {}).get("slope"), "{:.2f}")))
     ct = row.get("continuous")
     if ct:
-        parts.append(f"연속 {ct['kind']} L{ct['level']} 생존 {ct['gt']['survived']}|{ct['pred']['survived']} 전진 {_fmt(ct['gt']['mean_forward_m'], '{:.2f}')}|{_fmt(ct['pred']['mean_forward_m'], '{:.2f}')}")
+        parts.append(f"연속 {ct['kind']} L{ct['level']} 생존 {ct['gt']['survived']}|{ct['pred']['survived']} 이동 {_fmt(ct['gt']['move_m'], '{:.2f}')}|{_fmt(ct['pred']['move_m'], '{:.2f}')}")
     for kind, cells in (row.get("kinds") or {}).items():
         g, p = cells.get("eval_gt"), cells.get("eval_pred")
         if not g or not p:
             parts.append(f"새 종 {kind} 값 없음")
             continue
         parts.append(f"새 종 {kind} 도달 {_fmt(g['reached'], '{}')}|{_fmt(p['reached'], '{}')} 생존 {g['survived']}|{p['survived']} 넘어짐 {g['fell']}|{p['fell']} "
-                     f"속도 {_fmt(g['mean_forward_speed'], '{:.2f}')}|{_fmt(p['mean_forward_speed'], '{:.2f}')} 멈춤 {_fmt(g['stalled_frac'], '{:.2f}')}|{_fmt(p['stalled_frac'], '{:.2f}')}")
+                     f"이동속도 {_fmt(g['move_speed'], '{:.2f}')}|{_fmt(p['move_speed'], '{:.2f}')} 멈춤 {_fmt(g['stalled_frac'], '{:.2f}')}|{_fmt(p['stalled_frac'], '{:.2f}')}")
     for kind, modes in (row.get("map") or {}).items():
         m = modes.get("eval_pred") or {}
-        parts.append(f"지도 {kind} 오차 평균 {_fmt(m.get('err_mean_cm'), '{:.1f}')}cm p90 {_fmt(m.get('err_p90_cm'), '{:.1f}')}cm 놓친구멍 {_fmt(m.get('missed_hole_frac'), '{:.2f}')} 없는구멍 {_fmt(m.get('false_hole_frac'), '{:.3f}')}")
+        parts.append(f"지도 {kind} 오차 평균 {_fmt(m.get('err_mean_cm'), '{:.1f}')}cm p90 {_fmt(m.get('err_p90_cm'), '{:.1f}')}cm "
+                     f"모서리 오차 평균 {_fmt(m.get('edge_err_mean_cm'), '{:.1f}')}cm p90 {_fmt(m.get('edge_err_p90_cm'), '{:.0f}')}cm "
+                     f"모서리 칸 비율 {_fmt(m.get('edge_frac_gt'), '{:.3f}')}|{_fmt(m.get('edge_frac_pred'), '{:.3f}')} "
+                     f"(구멍 {_fmt(m.get('hole_cells'), '{:.0f}')}칸 놓침 {_fmt(m.get('missed_hole_frac'), '{:.2f}')} 없는구멍 {_fmt(m.get('false_hole_frac'), '{:.3f}')})")
     return " · ".join(parts)
 
 
