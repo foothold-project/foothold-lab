@@ -41,7 +41,13 @@ from tensordict import TensorDict
 
 from rsl_rl.algorithms import PPO
 from rsl_rl.runners import OnPolicyRunner
-from rsl_rl.utils import resolve_obs_groups, store_code_state
+from rsl_rl.utils import resolve_obs_groups
+
+try:                                            # rsl_rl 3.3 이상은 store_code_state 를 없앴다 (학습 learn() 만 쓴다 · 하위 정책 읽기 N1 은 안 부른다)
+    from rsl_rl.utils import store_code_state
+except ImportError:
+    def store_code_state(*args, **kwargs):
+        raise RuntimeError("rsl_rl.utils.store_code_state 없음: 이 rsl_rl 판 (3.3 이상) 에서는 학습을 돌리지 않는다. rsl-rl-lib 3.1.2 로 고정할 것")
 
 import rsl_rl
 from foothold_s2.commands import mixed_core as mc

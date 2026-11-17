@@ -116,6 +116,20 @@ def actuator_effort_limits(robot):
     return result
 
 
+GROUND_PRIM='/World/ground'
+
+
+def ground_mesh(meshes,device):
+    """RayCaster.meshes 에서 지면 warp mesh. 2.3.2 는 열쇠가 문자열, 3.0 은 (prim_path, device) 튜플."""
+    if GROUND_PRIM in meshes: return meshes[GROUND_PRIM]
+    dev=str(device)
+    tupled=[(k,v) for k,v in meshes.items() if isinstance(k,tuple) and k and k[0]==GROUND_PRIM]
+    for k,v in tupled:
+        if len(k)>1 and str(k[1])==dev: return v
+    if len(tupled)==1: return tupled[0][1]            # 장치 이름만 다르게 적힌 경우 (cuda 대 cuda:0)
+    raise ValueError('W86 actual terrain mesh missing')
+
+
 class PhysicalSource:
     def __init__(self,env):
         self.env=env; self.robot=env.scene['robot']; self.sensor=env.scene.sensors['contact_forces']
@@ -127,8 +141,7 @@ class PhysicalSource:
             raise ValueError('W86 all-link sensor must cover every robot body')
         from isaaclab.sensors import RayCaster
         from isaaclab.utils.warp import raycast_mesh
-        if '/World/ground' not in RayCaster.meshes: raise ValueError('W86 actual terrain mesh missing')
-        self.mesh=RayCaster.meshes['/World/ground']; self.cast=raycast_mesh
+        self.mesh=ground_mesh(RayCaster.meshes,env.device); self.cast=raycast_mesh
 
     def __call__(self):
         env=self.env; d=self.robot.data; f=self.feet
