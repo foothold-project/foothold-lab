@@ -140,6 +140,9 @@ def test_offline_fit_can_switch_geom_on_and_refuses_a_record_without_gravity(tmp
     assert res["rows"]["G"]["geom"] is True and res["rows"]["ctrl"]["geom"] is False
     assert res["rows"]["G"]["load"]["new_keys"] == []                                      # 첫 층은 확장해 이어받음 (새 키 없음)
     assert res["checkpoint_sha256"] == res["checkpoint_sha256_after"]
+    bands = res["rows"]["G"]["metrics"]["bands"]
+    assert set(bands) == set(off.BANDS) and bands["전체"]["edge_err_cm"] == pytest.approx(res["rows"]["G"]["metrics"]["edge_err_cm"])    # 전체 띠 = 기존 값
+    assert "[앞쪽 줄 19~31]" in res["table"] and "[발밑 줄 8~18]" in res["table"]
     args.train_dirs = str(tmp_path / "nog.npz")
     with pytest.raises(ValueError, match="grav"):
         off.run(args, log=lambda *_: None)

@@ -132,12 +132,16 @@ def fit(net: sp.TRNet, train: list[dict], *, w_edge: float, w_hole: float, epoch
     return hist
 
 
+BANDS = {"전체": (0, 32), "앞쪽 줄 19~31": (19, 32), "발밑 줄 8~18": (8, 19)}      # 줄 = 지도 행 (몸 앞쪽 x 가 커지는 쪽 · 칸 0 이 x -0.475). lead 22:47 지시
+
+
 @torch.no_grad()
 def evaluate(net: sp.TRNet, segs: list[dict], batch: int = 16) -> dict:
-    """평가 묶음에서 판정표의 값. 모든 칸 합쳐 센다 (구간 · 틱 구분 없이 칸 단위)."""
+    """평가 묶음에서 판정표의 값. 모든 칸 합쳐 센다 (구간 · 틱 구분 없이 칸 단위). 줄 띠별 값은 m["bands"][이름] (모서리 판정은 전체 지도에서 하고 띠로 자른다)."""
     err_e, err_e_rough, n_flat, s_flat = [], [], 0, 0.0
     cnt = {"cells": 0, "edge_gt": 0, "edge_pred": 0}
     hole = np.zeros(len(ax.HOLE_COLUMNS))
+    bd = {k: {"ee": [], "eo": [], "nf": 0, "sf": 0.0, "cells": 0, "eg": 0, "ep": 0} for k in BANDS}
     for i in range(0, len(segs), batch):
         depth, zp, gt, valid, geom = pad_batch(segs[i:i + batch])
         rough, ref = forward_segments(net, depth, zp, valid, geom)
@@ -148,12 +152,25 @@ def evaluate(net: sp.TRNet, segs: list[dict], batch: int = 16) -> dict:
         n_flat += int((~eg).sum()); s_flat += float(e[~eg].sum())
         cnt["cells"] += g.size; cnt["edge_gt"] += int(eg.sum()); cnt["edge_pred"] += int(er.sum())
         hole += ax.hole_stats(r, g).sum(0)
+        for k, (a, b) in BANDS.items():
+            sl = (slice(None), slice(a, b))
+            m_eg, m_er = eg[sl], er[sl]
+            d = bd[k]
+            d["ee"].append(e[sl][m_eg]); d["eo"].append(e_ro[sl][m_eg])
+            d["nf"] += int((~m_eg).sum()); d["sf"] += float(e[sl][~m_eg].sum())
+            d["cells"] += m_eg.size; d["eg"] += int(m_eg.sum()); d["ep"] += int(m_er.sum())
     ee, eo = np.concatenate(err_e), np.concatenate(err_e_rough)
+    bands = {}
+    for k, d in bd.items():
+        x, xo = np.concatenate(d["ee"]), np.concatenate(d["eo"])
+        bands[k] = {"edge_err_cm": float(x.mean() * 100) if x.size else None, "edge_err_p90_cm": float(np.percentile(x, 90) * 100) if x.size else None,
+                    "rough_edge_err_cm": float(xo.mean() * 100) if xo.size else None, "edge_frac_gt": d["eg"] / d["cells"], "edge_frac_pred": d["ep"] / d["cells"],
+                    "flat_err_cm": d["sf"] / max(d["nf"], 1) * 100}
     return {"ticks": int(sum(len(s["gt"]) for s in segs)), "edge_err_cm": float(ee.mean() * 100) if ee.size else None,
             "edge_err_p90_cm": float(np.percentile(ee, 90) * 100) if ee.size else None, "rough_edge_err_cm": float(eo.mean() * 100) if eo.size else None,
             "edge_frac_gt": cnt["edge_gt"] / cnt["cells"], "edge_frac_pred": cnt["edge_pred"] / cnt["cells"], "flat_err_cm": s_flat / max(n_flat, 1) * 100,
             "hole_cells": int(hole[0]), "hole_missed_frac": float(hole[1] / hole[0]) if hole[0] > 0 else None,
-            "false_hole_frac": float(hole[3] / hole[2]) if hole[2] > 0 else None}
+            "false_hole_frac": float(hole[3] / hole[2]) if hole[2] > 0 else None, "bands": bands}
 
 
 def judge(m: dict) -> dict:
@@ -178,6 +195,14 @@ def table(rows: dict) -> str:
                    f"{f(m['flat_err_cm'])}          {f(None if m['false_hole_frac'] is None else m['false_hole_frac'] * 100, 3)}       "
                    f"{f(None if m['hole_missed_frac'] is None else m['hole_missed_frac'] * 100, 1)}         {f(m['rough_edge_err_cm'])}            "
                    f"{j['edge_err']} · {j['edge_frac']} · {j['flat_err']} · {j['false_hole']}")
+    out.append("")
+    out.append("줄 띠별 (칸 = 모서리 cm · 5cm 단차 칸 비율 복원/정답 % · 평평한 칸 cm)")
+    for band in BANDS:
+        out.append(f"[{band}]")
+        for name, r in rows.items():
+            b = r["metrics"].get("bands", {}).get(band)
+            if b:
+                out.append(f"  {name:<8} 모서리 {f(b['edge_err_cm'])} cm (p90 {f(b['edge_err_p90_cm'])}) · 단차 {f(b['edge_frac_pred'] * 100)} / {f(b['edge_frac_gt'] * 100)} · 평평 {f(b['flat_err_cm'])} cm · rough 모서리 {f(b['rough_edge_err_cm'])}")
     return "\n".join(out)
 
 
