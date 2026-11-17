@@ -2,9 +2,18 @@
 > 작성: 오흥재 · lead 세션 · 2026-11-03 16:3x v0.1 · 2026-11-09 10:3x v0.4 (start 새 판 start-m13000 · 만드는 명령)
 > 근거: 이 폴더의 문서 셋 · WORKLIST D107 · D108 · D144 · D162 · D169 · foothold-app dev `20f3d066` (2026-11-03 09:19Z)
 > 요지: 정책을 앱에 넘기는 일을 문서 셋으로 나눴다. 사람마다 자기 문서 하나만 읽으면 되고, 세 문서는 같은 이름 규칙과 같은 저장소 배치를 쓴다
-> 상태: v0.4 · start 새 판 `start-m13000-app/` (EX-42 0 단계 m13000) · 앞 판 start-demo(PR #571) · ame2-demo(PR #574 + 보완) 그대로 · 앱 적용은 `HANDOFF-APP-DEVELOPER.md` v0.4 하나만 본다
+> 상태: v0.5 (2026-11-17 planner-lx) · start 새 판 `start-m15500-app/` (정본 3 = EX-42 E1F m250 · 누적 15,500) · 앞 판 `start-m13000-app/` (EX-42 0 단계 m13000) · 앞 판 start-demo(PR #571) · ame2-demo(PR #574 + 보완) 그대로 · 앱 적용은 `HANDOFF-APP-DEVELOPER.md` v0.4 하나만 본다
 
 # 정책 → 앱 전달 묶음
+
+## 먼저 읽는 순서 (2026-11-17 · 앱 담당과 앱 agent)
+
+1. **이 README** (지금 판이 무엇이고 문서가 어디 있는지).
+2. **[APP-HANDOFF-1117.md](APP-HANDOFF-1117.md)**: 앱이 지금 가진 것 · 설계와 다른 곳 · 앞으로 준비할 것 (보행 ONNX · HiPAN · Orin) · 속도를 고정하지 않는 까닭 (3.2a) · 실기 첫 주 점검. 전체 그림은 여기서 본다.
+3. **[HANDOFF-START-m15500-CANON3.md](HANDOFF-START-m15500-CANON3.md)**: start 모드를 정본 3 (m15500) 으로 바꾸는 일의 순서. 실제 작업은 이 문서 1 절을 위에서 아래로 따른다.
+4. 필요할 때만: [HANDOFF-APP-DEVELOPER.md](HANDOFF-APP-DEVELOPER.md) (모드 넷 구조 · 시험 벡터 확인법 2-4) · [APP-AGENT-GUIDE-1109.md](APP-AGENT-GUIDE-1109.md) (앞 판 m13000 때의 단계별 지시 · ②~④ 는 정책 판과 무관한 앱 고침) · `start-m15500-app/CONTRACT.md` (앞 판과 다른 것만).
+
+보고는 lab 이슈 #591 에 한다 (앞 판과 같은 자리).
 
 | 문서 | 누가 읽나 | 무엇을 하게 되나 |
 |---|---|---|
@@ -13,6 +22,9 @@
 | [HANDOFF-START-m6000-ONNX.md](HANDOFF-START-m6000-ONNX.md) | 오흥재 · lead (START) | m6000 ONNX 묶음이 무엇이고 어디까지 확인됐는지, 앱에 넘기기 전에 남은 것 |
 | [MAKE-APP-BUNDLE.md](MAKE-APP-BUNDLE.md) · `make_start_app_bundle.py` | START 묶음을 만드는 세션 누구나 | 저장본 경로 · sha · 이름을 주면 같은 꼴의 묶음이 명령 하나로 나온다(m13000 첫 사용) |
 | [start-m13000-app/CONTRACT.md](start-m13000-app/CONTRACT.md) | 오현민 (앱) · lead | m13000 이 m6000 과 무엇이 다른지(입출력은 같음 · 후진 범위 1.3) |
+| **[APP-HANDOFF-1117.md](APP-HANDOFF-1117.md)** (2026-11-17) | 오현민 (앱) · 앱 agent | 앱 현황과 앞으로 준비할 것 (전체 그림). README 다음에 읽는다 |
+| **[HANDOFF-START-m15500-CANON3.md](HANDOFF-START-m15500-CANON3.md)** (2026-11-17) | 오현민 (앱) · 앱 agent | **start 모드의 지금 판 = 정본 3 (m15500).** 이 문서 하나로 m13000 → m15500 교체를 한다 (받기 · sha · 바꿀 곳 · 명령 상한 · 속도 고정 풀기 · 확인) |
+| [start-m15500-app/CONTRACT.md](start-m15500-app/CONTRACT.md) · `make_canon3_app_bundle.py` | 오현민 (앱) · lead | m15500 이 m13000 과 무엇이 다른지 (입출력은 같음 · 속도 보정이 ONNX 안 · 지각 평균 판 · 옆 · 회전 범위 넓어짐) · 묶음을 만든 명령 |
 
 ## 지금 사실 (2026-11-03 16:3x)
 
@@ -26,6 +38,13 @@
 - m6000 에서 바뀐 것: ① 파일 이름 · sha ② actor 안의 자세 명령 2 칸(학습 내내 0 이라 ONNX 안에서 0 고정 · 앱 입력 아님) ③ 학습 때 지도가 정답 고정에서 정답 · 복원 섞음으로 ④ 후진 학습 범위 −1.0 → −1.3 (앱 상한 후진 1.3). ONNX 입출력 이름 · 모양 · 자료형은 같다. 자세한 표는 `start-m13000-app/CONTRACT.md` §1.
 - 같은 출력 확인(CPU onnxruntime 1.28.0): 합성 최대 7.63e-6 · Kit 기록 입력 9 × 20 스텝 되먹임 최대 3.46e-6. Kit 기록은 m6000 이 몬 궤적이라 m13000 이 스스로 걸은 궤적은 아니다(미확인으로 둠).
 - 다음 판(E0 · E1 …)은 `MAKE-APP-BUNDLE.md` 의 명령 하나로 같은 꼴을 만든다.
+
+## start 새 판 = 정본 3 (2026-11-17 · v0.5)
+
+- start 모드의 지금 판은 `start-m15500-app/` 이다. 저장본 EX-42 E1F `model_250.pt` (누적 15,500 update) · sha `13caeb4a…`. 뒤 단계가 모두 이 저장본에서 갈라져 나가서 「정본 3」 이라 부른다.
+- m13000 에서 바뀐 것: ① 파일 이름 · sha ② 전진 속도 추정 보정 (b 0.010) 이 **ONNX 안에** 들어감 (앱이 더하지 않는다) ③ 지각 가중치가 학습 평균 판 ④ 명령 학습 범위: 옆 0.1~0.8 · 제자리 회전 0.15~1.5 · 걸으며 회전 vx 1.2 까지 ⑤ 걷는 속도를 앱이 고정할 필요 없음 (느린 0.1 m/s 부터 학습). ONNX 입출력 이름 · 모양 · 자료형은 같다.
+- 같은 출력 확인 (CPU onnxruntime 1.32.0): 합성 최대 1.05e-5 · Kit 기록 입력 9 × 20 스텝 되먹임 최대 7.48e-6. 앱 · 브라우저 · 실기는 미확인.
+- 앱 쪽 할 일은 `HANDOFF-START-m15500-CANON3.md` 하나만 본다.
 
 ## 이름 규칙 (팀장 11/03 17:0x · D169 를 대체) · 네 문서 공통
 

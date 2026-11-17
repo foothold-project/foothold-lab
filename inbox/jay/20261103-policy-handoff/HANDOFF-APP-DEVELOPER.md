@@ -2,7 +2,7 @@
 > 작성: 오흥재 · lead 세션 · 2026-11-03 16:3x v0.1 · 19:1x v0.2 · 21:5x v0.3 (단일 문서로 정리 · 최종 결정만 · 모드별 명령 표) · 2026-11-09 10:3x v0.4 (start 새 판 start-m13000)
 > 근거: 앱용 묶음 `inbox/jay/20261103-policy-handoff/start-m13000-app/` (v0.4 · 조건표 `start-m13000-app/CONTRACT.md`) · `inbox/jay/20261103-policy-handoff/start-demo-app/` (lab PR #571) · `inbox/jay/20261103-policy-handoff/ame2-demo-app/` (석헌 님 PR #574 묶음 + lead 보완 #576) · m6000 조건표 `start-demo-app/CONTRACT.md` §3.5 (명령 범위 · D108) · foothold-app dev `1fbe6f6c`(2026-11-03 12:38Z) 를 받아 줄 번호를 다시 잼
 > 요지: 현민 님이 이 문서 하나만 보고 start-demo · ame2-demo 를 앱에 붙인다. 파일 자리 · sha · 입출력 · 상태 되먹임 · 시험 벡터 확인법 · 앱 파일별 할 일 · 모드마다 명령이 학습 범위대로 정책에 들어가는지 · JS f32 되돌림 규칙 · 끝 확인 목록을 모두 여기에 둔다. 최종 결정만 적고, 재지 않은 것은 「미확인」 으로만 적는다
-> 상태: v0.4 · start 는 새 판 `start-m13000-app/` 을 본다(§0a) · ame2 는 그대로 · 앱 작업 이슈 foothold-app#259
+> 상태: v0.5 (2026-11-17 planner-lx: §0b 더함) · start 는 새 판 `start-m15500-app/` 을 본다(§0b · 앞 판 m13000 은 §0a) · ame2 는 그대로 · 앱 작업 이슈 foothold-app#259
 
 # 앱 개발 준수 사항 · 정책 모드 넷
 
@@ -32,6 +32,20 @@ start 모드의 정책을 m6000(`start-demo`) 에서 m13000(`start-m13000`, EX-4
 | 명령 학습 범위: 후진 −1.0 → **−1.3** (나머지 같음) | start 모드 상한 후진 1.0 → **1.3** (§1.5 · §2-2 · §2-5 · §4 를 이 값으로 고침) |
 | 같은 출력 확인: 합성 최대 7.63e-6 · Kit 기록 입력 9 × 20 스텝 되먹임 최대 3.46e-6 (onnxruntime 1.28.0 CPU) | 앱 시험(§2-4)을 새 시험 벡터 셋으로 다시 통과 |
 
+## 0b. start 새 판 start-m15500 = 정본 3 (v0.5 · 2026-11-17) · m13000 에서 바뀐 것
+
+start 모드의 정책을 m13000 에서 m15500 (`start-m15500`, EX-42 E1F `model_250.pt` = 누적 15,500 update) 으로 바꾼다. 할 일의 순서 · 명령 · 확인은 [`HANDOFF-START-m15500-CANON3.md`](HANDOFF-START-m15500-CANON3.md) 한 문서에 있다. 아래는 요약이고, 이 문서의 §1.5 · §2-2 · §2-5 · §4 에 적힌 start 상한 숫자는 m13000 기준이므로 **start 모드 값은 그 문서 1-5 의 표가 우선한다.**
+
+| 바뀐 것 | 앱이 할 일 |
+|---|---|
+| 파일 이름 · sha: `start-m15500_map_on.onnx` `df91c2d7…` · `start-m15500_map_off.onnx` `be6c8b10…` | 자산 복사 · sha 허용 목록 · 시험 벡터 경로를 `start-m15500-app/` 으로 |
+| ONNX 입출력 이름 · 순서 · 모양 · 자료형 | **바뀌지 않음.** 실행기 · 상태 되먹임 · bool 플래그 그대로 |
+| 전진 속도 추정 보정 (b 0.010 · 느린 띠 0~0.3 m/s) 이 ONNX 안에 생김 | 없음. **앱이 같은 보정을 더하면 두 번 걸린다** |
+| 지각 가중치가 학습 평균 판 | 없음 (ONNX 안의 일) |
+| 명령 학습 범위: 옆 0.2~0.6 → **0.1~0.8** · 제자리 회전 0.3~1.5 → **0.15~1.5** · 걸으며 회전 vx 0.3~0.8 → **0.3~1.2** (나머지 같음) | start 모드 상한: 옆 0.5 → 0.8 까지 올릴 수 있음 (올릴지는 앱 담당 판단) |
+| 느린 걸음 0.1~0.3 m/s 와 방향이 계속 바뀌는 명령을 학습 | 조이스틱 · 목표 찍기의 속도 고정 (0.4~0.8 m/s) 을 풀 수 있다. 목표 → 속도 명령은 학습이 쓴 식 (`mixed_core.flag_step`) 그대로 |
+| 같은 출력 확인: 합성 최대 1.05e-5 · Kit 기록 입력 9 × 20 스텝 되먹임 최대 7.48e-6 (onnxruntime 1.32.0 CPU) | 앱 시험(§2-4)을 새 시험 벡터 셋으로 다시 통과 |
+
 ## 1. 파일 · sha · 입출력
 
 ### 1.1 받을 파일 (lab 저장소 main)
@@ -42,6 +56,7 @@ start 모드의 정책을 m6000(`start-demo`) 에서 m13000(`start-m13000`, EX-4
 | | | `start-m13000_map_off.onnx`(끔) | `8317548f51a046afb537c212eec47a12b2888b6ea049fa84361d83aa8c30849f` |
 | | | 시험 벡터 `test_vectors_flat20_reconstruction.json` · `_gt.json` · `_off.json` | `87dc46ac…` · `81d93e3b…` · `9db10027…` (전부 폴더 `SHA256SUMS`) |
 | | | 앱 계약 꼴: `contract.json` 의 `app_onnx` 칸 (m6000 과 같음) | contract.json `c7587240…` |
+| **start 지금 판 (v0.5 · 정본 3)** | `inbox/jay/20261103-policy-handoff/start-m15500-app/` | `start-m15500_map_on.onnx`(정답 · 복원) · `start-m15500_map_off.onnx`(끔) | `df91c2d772c7d054e33c74fca479e79550cfd228d7682402f7eef4a0865e279f` · `be6c8b103d3b39503447ee71076ec199e5ed0688c3540ccfe449a96d6e2a9a41` (시험 벡터 · 계약은 폴더 `SHA256SUMS`) |
 | start 앞 판 (비교용) | `inbox/jay/20261103-policy-handoff/start-demo-app/` | `start-demo_map_on.onnx` · `start-demo_map_off.onnx` | `81c7e079…` · `5d1b7bf3…` |
 | ame2 | `inbox/jay/20261103-policy-handoff/ame2-demo-app/` | `ame2-demo.onnx` | `830595df1e78072c0606b5193d1ba787720ff6777edc7cabe496b8c1a9d25de6` |
 | | | 시험 벡터 `test_vectors_flat20.json` (같은 내용 `.npz`) | `95bb7ab1be2d7414b495a4e79df8a3a311b703123c4588355621397fb74c7077` |
