@@ -107,7 +107,8 @@ class NavEnv:
         return _np((force > self.collision_force_n).any(dim=1)).astype(bool)
 
     def _proprio(self) -> np.ndarray:
-        obs = self.obs["policy"] if not hasattr(self.obs, "shape") else self.obs
+        # rsl_rl 3.x 는 TensorDict (batch shape (n,) 라 .shape 가 있음 · 로컬 2.3.2 Kit 에서 IndexError) 를 준다: "policy" 키가 있으면 그것을 쓴다
+        obs = self.obs["policy"] if hasattr(self.obs, "keys") and "policy" in self.obs.keys() else self.obs
         return _np(obs[:, :45])
 
     def _state(self, applied, track_err, done, done_step, timed_out, collision=None) -> NavState:

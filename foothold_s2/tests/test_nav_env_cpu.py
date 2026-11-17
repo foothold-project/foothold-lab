@@ -204,3 +204,13 @@ def test_missing_collision_body_names_are_refused_and_no_sensor_means_no_collisi
     nav = NavEnv(env2, FakeLower(env2.n), cs.CommandSpace(space_args, "clip"), sensor_name=None)
     nav.reset()
     assert not nav.step(np.array([[0.5, 0.0, 0.0]] * 3)).collision.any()
+
+
+def test_proprio_reads_the_policy_key_of_a_tensordict_that_also_has_a_shape(space_args):
+    """rsl_rl 3.x TensorDict: .shape 는 batch (n,) 라 [:, :45] 가 IndexError (로컬 Kit 첫 판). 키 'policy' 로 읽는다."""
+    from tensordict import TensorDict
+
+    env, _lower, nav = _make(space_args)
+    nav.reset()
+    nav.obs = TensorDict({"policy": torch.arange(3 * 98, dtype=torch.float32).reshape(3, 98)}, batch_size=[3])
+    assert nav._proprio().shape == (3, 45)
