@@ -4,8 +4,8 @@
 > 작성: 오흥재 · 2026-11-17 17:24
 > 근거: 업체 제공 「Unitree Go2 + Intel RealSense D435i 제어기 사용자 매뉴얼」 · 2026-11-17 현장 터미널 출력 · NoMachine 접속 실측 · 정본 3 전달 문서
 > 요지: 교체받은 Go2 X 계통의 현재 연결과 원격 접속을 확정값 · 업체 문서값 · 미확인값으로 나누고, 저수준 정책 시험 전 점검 순서를 고정한다
-> 상태: 현장 기록 v0.8 · 재부팅 뒤 headless 화면, 현재 D435i 스트림, Go2 상태와 업체 워크스페이스 불일치 실측 반영
-> 판: v0.8
+> 상태: 현장 기록 v0.9 · D435i IMU의 JetPack 6 V4L2 backend 문제와 firmware 호환 관문 추가
+> 판: v0.9
 
 ## 0. 이 기록의 범위
 
@@ -156,6 +156,12 @@ HDMI 모니터를 같은 안쪽 포트에 다시 연결하자 재부팅 없이 `
 현재 Jetson에서 ROS 2 RealSense node를 depth Z16 640×480×30과 color RGB8 640×480×30으로 짧게 실행했다. depth는 약 28~30 Hz, color는 약 27~30 Hz로 발행됐다. 시작 직후 `Depth stream start failure` hardware notification이 한 번 있었지만 이후 프레임은 계속 수신됐다. 장시간 drop 검사는 아직 하지 않았다.
 
 D435i gyro/accel은 실패했다. librealsense 로그는 `No HID info provided`, `HID Motion Sensor Failure (bad optional access)`를 기록했고 IMU 토픽은 생성되지 않았다. `nvidia` 사용자는 `video`, `plugdev` 그룹에 있고 `/dev/hidraw0`과 video node 권한, 공식 2.58.4 D435i udev rule 세 줄은 확인돼 단순 파일 권한 문제로 확정할 수 없다. Jetson kernel에서는 interface 5가 `hid-generic`으로 붙었다. 영상 경로 성공과 IMU 성공을 분리해 다룬다.
+
+`rs-enumerate-devices --debug`와 library symbol을 추가 확인했다. 현재 `/opt/ros/humble`의 librealsense 2.58.4는 Linux `v4l_backend`를 사용하고 UVC video0~5는 찾지만 HID device info를 backend device group에 넣지 못한다. RealSense 공식 이슈의 JetPack 6 + D435i IMU 실패 양상과 일치하며, 공식 제시 우회 후보는 librealsense를 `FORCE_RSUSB_BACKEND=TRUE`로 별도 빌드하는 것이다. 이는 아직 적용하지 않았다.
+
+카메라 firmware `5.17.0.10`도 호환 관문이다. RealSense 2.58.4 release 표는 D435/D435i 계열에 `5.17.3.10 이상`을 제시한다. firmware update는 장치를 영구 변경하고 실패 위험이 있으므로 업체 확인, 현재 firmware backup/복구 방법과 전원 안정성을 확보하기 전에는 실행하지 않는다. 먼저 격리된 RSUSB build로 IMU가 열리는지 시험해 kernel/backend 원인과 firmware 원인을 분리한다.
+
+출처: [RealSense Jetson Orin IMU issue #13713](https://github.com/realsenseai/librealsense/issues/13713) · [RealSense D435i Orin NX issue #13958](https://github.com/realsenseai/librealsense/issues/13958) · [librealsense releases](https://github.com/realsenseai/librealsense/releases)
 
 교체용 모비큐 `EM-ATCP2P` USB-A 3.2 to USB-C 10 Gbps 젠더 2개입은 구매 완료됐지만 아직 미수령·미검증이다. 도착 뒤 ai-lt01에서 두 개를 각각 `5000M`과 disconnect 부재로 선별하고, 통과한 젠더만 Jetson 장시간 스트림에 사용한다. 브라켓과 카메라 각도 조절 나사는 이 과정에서 풀지 않는다.
 
@@ -319,6 +325,7 @@ Unitree Go2 사용자 매뉴얼에는 머리 표시등이 노란색으로 느리
 
 | 판 | 날짜 | 내용 |
 |---|---|---|
+| v0.9 | 2026-11-17 | D435i IMU failure가 현재 V4L2 backend에서 HID device info를 찾지 못하는 상태임을 debug log로 확인 · JetPack 6 알려진 문제와 RSUSB 별도 build 후보 · firmware 5.17.0.10과 SDK 권장 5.17.3.10 이상 차이 및 firmware update 보류 관문 기록 |
 | v0.8 | 2026-11-17 | HDMI 없는 재부팅의 640×480 fallback과 HDMI 연결 즉시 1080p 복구 · 직결 LAN 자동연결 · Jetson 현재 D435i 5000M와 depth/color 30 fps급 실측 · D435i IMU HID 실패 · Go2 배터리/관절/IMU/LiDAR receive-only 수신률 · 업체 `wego_ws`의 stale serial/interface/MID-360 구성 불일치 · ONNX runtime 개발환경 공백 기록 |
 | v0.7 | 2026-11-17 | Jetson 기존 D435i 480M 재확인 · ai-lt01 USB-A와 업체 C-to-A 젠더에서 SuperSpeed 반복 disconnect · C-to-C 직결은 USB 3.20 5000M로 안정 유지 · 젠더 경로 불안정 확정과 A-to-C 단일 케이블 교체 관문 기록 |
 | v0.6 | 2026-11-17 | ai-lt01과 Jetson 외부 NIC의 `192.168.50.0/24` 직결망 · SSH key와 BatchMode 접속 확인 · native SDK2 읽기 전용 subscriber로 LiDARState 5회 수신 · 약 62k cloud size와 L2 공식 64k 대조로 L2 운용 판정 확정 |
