@@ -6,6 +6,15 @@
 
 # 정책 → 앱 전달 묶음
 
+## 먼저 읽는 순서 (2026-11-17 · 앱 담당과 앱 agent)
+
+1. **이 README** (지금 판이 무엇이고 문서가 어디 있는지).
+2. **[APP-HANDOFF-1117.md](APP-HANDOFF-1117.md)**: 앱이 지금 가진 것 · 설계와 다른 곳 · 앞으로 준비할 것 (보행 ONNX · HiPAN · Orin) · 속도를 고정하지 않는 까닭 (3.2a) · 실기 첫 주 점검. 전체 그림은 여기서 본다.
+3. **[HANDOFF-START-m15500-CANON3.md](HANDOFF-START-m15500-CANON3.md)**: start 모드를 정본 3 (m15500) 으로 바꾸는 일의 순서. 실제 작업은 이 문서 1 절을 위에서 아래로 따른다.
+4. 필요할 때만: [HANDOFF-APP-DEVELOPER.md](HANDOFF-APP-DEVELOPER.md) (모드 넷 구조 · 시험 벡터 확인법 2-4) · [APP-AGENT-GUIDE-1109.md](APP-AGENT-GUIDE-1109.md) (앞 판 m13000 때의 단계별 지시 · ②~④ 는 정책 판과 무관한 앱 고침) · `start-m15500-app/CONTRACT.md` (앞 판과 다른 것만).
+
+보고는 lab 이슈 #591 에 한다 (앞 판과 같은 자리).
+
 | 문서 | 누가 읽나 | 무엇을 하게 되나 |
 |---|---|---|
 | [HANDOFF-APP-DEVELOPER.md](HANDOFF-APP-DEVELOPER.md) | 오현민 (앱) | 앱에 「모드」 넷(nvidia · start · ame2 · go2)을 두고, 모드마다 값을 통째로 갈아 끼우는 구조를 만든다. 답(값)을 먼저 준다 |
@@ -13,6 +22,7 @@
 | [HANDOFF-START-m6000-ONNX.md](HANDOFF-START-m6000-ONNX.md) | 오흥재 · lead (START) | m6000 ONNX 묶음이 무엇이고 어디까지 확인됐는지, 앱에 넘기기 전에 남은 것 |
 | [MAKE-APP-BUNDLE.md](MAKE-APP-BUNDLE.md) · `make_start_app_bundle.py` | START 묶음을 만드는 세션 누구나 | 저장본 경로 · sha · 이름을 주면 같은 꼴의 묶음이 명령 하나로 나온다(m13000 첫 사용) |
 | [start-m13000-app/CONTRACT.md](start-m13000-app/CONTRACT.md) | 오현민 (앱) · lead | m13000 이 m6000 과 무엇이 다른지(입출력은 같음 · 후진 범위 1.3) |
+| **[APP-HANDOFF-1117.md](APP-HANDOFF-1117.md)** (2026-11-17) | 오현민 (앱) · 앱 agent | 앱 현황과 앞으로 준비할 것 (전체 그림). README 다음에 읽는다 |
 | **[HANDOFF-START-m15500-CANON3.md](HANDOFF-START-m15500-CANON3.md)** (2026-11-17) | 오현민 (앱) · 앱 agent | **start 모드의 지금 판 = 정본 3 (m15500).** 이 문서 하나로 m13000 → m15500 교체를 한다 (받기 · sha · 바꿀 곳 · 명령 상한 · 속도 고정 풀기 · 확인) |
 | [start-m15500-app/CONTRACT.md](start-m15500-app/CONTRACT.md) · `make_canon3_app_bundle.py` | 오현민 (앱) · lead | m15500 이 m13000 과 무엇이 다른지 (입출력은 같음 · 속도 보정이 ONNX 안 · 지각 평균 판 · 옆 · 회전 범위 넓어짐) · 묶음을 만든 명령 |
 
