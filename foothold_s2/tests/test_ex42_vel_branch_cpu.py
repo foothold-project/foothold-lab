@@ -264,3 +264,29 @@ def test_window_fit_keeps_only_forward_slow_command_windows():
     assert window_fit(slow_window_sums(est, gt, first, mixed)[0])["n"] == 2 * (B - 25)
     half = cmd.clone(); half[30:, :, 0] = 0.0                                                  # 둘째 창은 서기로 바뀜
     assert window_fit(slow_window_sums(est, gt, first, half)[0])["n"] == B
+
+
+@pytest.mark.skipif(not torch.cuda.is_available(), reason="CUDA 장치가 있을 때만 (CPU 시험은 CPU 텐서끼리라 장치 불일치를 못 잡았다: Kit 스모크 RuntimeError cpu 와 cuda:1)")
+def test_branch_loss_and_slope_sums_run_on_a_cuda_device():
+    dev = torch.device("cuda", torch.cuda.device_count() - 1)
+    est, gt, first = _windows(0.3, 0.05)
+    s = slow_window_sums(est.to(dev), gt.to(dev), first.to(dev), torch.full((50, 40, 3), 0.1, device=dev))   # cmd 를 주는 경로 (torch.ones(B, bool) 줄은 W=1 일 때만)
+    assert s.device == dev
+    s1 = slow_window_sums(est[:, :1].to(dev), gt[:1].to(dev), first[:1].to(dev))                             # T=1 -> W=1 경로
+    assert s1.device == dev
+    p = _make("replace", seed=1).to(dev)
+    g = torch.Generator().manual_seed(5)
+    st = p.init_state(N, dev)
+    st.use_gt = torch.tensor([True, False] * (N // 2), device=dev)
+    rb = PerceptionReplay(N, T, dev, torch.float32, h_prop_dim=p.hp_dim)
+    rb.start(st.h_prop, st.h_terr)
+    for t in range(T):
+        o = torch.randn(N, 45, generator=g).to(dev)
+        inp = p.ingest(st, o, torch.rand(N, 60, 60, generator=g).to(dev))
+        gm = (torch.randn(N, 32, 16, generator=g) * 0.1).to(dev)
+        p.step(st, inp, gm, deterministic=True)
+        rb.add_pre(inp, o, gm, torch.randn(N, 100, generator=g).to(dev), torch.randn(N, 3, generator=g).to(dev), st.use_gt)
+        rb.add_post(torch.randn(N, 45, generator=g).to(dev), torch.zeros(N, dtype=torch.bool, device=dev))
+    res = p.sequence_loss(rb.gather(torch.arange(N, device=dev)))
+    assert res["_vb_slope"].device.type == "cuda" and torch.isfinite(res["loss"])
+    res["loss"].backward()

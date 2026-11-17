@@ -245,12 +245,13 @@ def slow_window_sums(est_x: torch.Tensor, gt_x: torch.Tensor, first: torch.Tenso
     기울기 = (n sxy - sx sy) / (n sxx - sx^2) · 절편 = (sy - slope sx) / n · 영점 = sy0 / n0. 순간 표본의 원점 통과 비가 아니다 (영점이 섞여 1.0 안팎으로 부푸는 식이었다)."""
     K, T, B = est_x.shape
     W = min(SLOPE_WINDOW, T)
-    out = torch.zeros(K, SLOPE_COLS, dtype=torch.float64)
+    dev = est_x.device                                                  # 입력이 cuda 면 합도 같은 장치에서 (CPU 텐서와 stack 하면 RuntimeError)
+    out = torch.zeros(K, SLOPE_COLS, dtype=torch.float64, device=dev)
     g, e, f = gt_x.detach().double(), est_x.detach().double(), first.bool()
     lo, hi = SLOPE_FIT_BAND
     for w in range(T // W):
         a, b = w * W, (w + 1) * W
-        ok = ~f[a + 1:b].any(0) if W > 1 else torch.ones(B, dtype=torch.bool)
+        ok = ~f[a + 1:b].any(0) if W > 1 else torch.ones(B, dtype=torch.bool, device=dev)
         x = g[a:b].mean(0)
         if cmd is not None:
             c = cmd[a:b].double()
@@ -262,7 +263,7 @@ def slow_window_sums(est_x: torch.Tensor, gt_x: torch.Tensor, first: torch.Tenso
         zero = xs.abs() < SLOPE_ZERO_BAND
         for k in range(K):
             ys = e[k, a:b].mean(0)[sel]
-            out[k] += torch.stack([torch.tensor(float(xs.numel()), dtype=torch.float64), xs.sum(), ys.sum(), (xs * xs).sum(), (xs * ys).sum(),
+            out[k] += torch.stack([torch.tensor(float(xs.numel()), dtype=torch.float64, device=dev), xs.sum(), ys.sum(), (xs * xs).sum(), (xs * ys).sum(),
                                    zero.sum().double(), ys[zero].sum()])
     return out
 
