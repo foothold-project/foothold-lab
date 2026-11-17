@@ -1,6 +1,6 @@
 > 분류: 운영 · 무인 실행 계약
 > 작성: 오흥재 (lead) · 2026-11-04 23:0x
-> 근거: 팀장 11/04 22:5x 「자러 가면 agent 가 이행 · 판단과 승인은 lead · 필요하면 텔레그램」 · pstack 0.15.36 `docs/guide/07-overnight.md` · `poteto-mode/playbooks/autonomous-run.md` · `show-me-your-work` · WORKLIST D178~D183 · EX41-RELAUNCH-GATE
+> 근거: 팀장 11/04 22:5x 요지: 팀장 취침 중 실행은 agent, 판단 · 승인은 lead, 필요할 때만 텔레그램 · pstack 0.15.36 `docs/guide/07-overnight.md` · `poteto-mode/playbooks/autonomous-run.md` · `show-me-your-work` · WORKLIST D178~D183 · EX41-RELAUNCH-GATE
 > 요지: EX-41 → EX-42 → 점프 논의까지를 팀장 개입 없이 잇는다. 단계마다 「끝」 을 검사 가능한 조건으로 적고, lead 가 판단 · 승인하며, 결정마다 기록 한 줄, 텔레그램은 정해진 세 경우만.
 > 상태: v1 · 팀장 외부 일정(11/05~) 동안 유효
 

@@ -1,6 +1,6 @@
 > 분류: A/정책학습 · ASTRA 의뢰 17f-2 · S2 encoder 고정 구간 W · 학습률 비 r 제안 검토
 > 작성: 오흥재 (lead 세션 · Claude 작성) · 2026-10-14 00:08
-> 근거: VERIFY-astra-17d.md §6.3 · DESIGN-s2-ab-v1.md 6 절 · E1 `params/agent.yaml` (num_steps_per_env 24 · num_learning_epochs 5 · num_mini_batches 4 · learning_rate 0.001 · student_encoder_learning_rate 0.001) · `_eval/s2/s2_policy.py` (EncoderSchedule · make_optimizer) · 팀장 10/14 00:07 「제안사항도 같이 답변하고 ASTRA 에게 해당 제안이 맞는지 검토」
+> 근거: VERIFY-astra-17d.md §6.3 · DESIGN-s2-ab-v1.md 6 절 · E1 `params/agent.yaml` (num_steps_per_env 24 · num_learning_epochs 5 · num_mini_batches 4 · learning_rate 0.001 · student_encoder_learning_rate 0.001) · `_eval/s2/s2_policy.py` (EncoderSchedule · make_optimizer) · 팀장 10/14 00:07 요지: 제안 사항에도 답하고 그 제안이 맞는지 ASTRA 검토를 받을 것
 > 요지: W 의 단위는 PPO iteration, 값은 W 50 · r 0.1 을 제안한다. 단 이 값은 근거가 약하므로 A/B 전에 짧은 smoke 로 latent 변화를 재고, 미리 정한 기준을 넘으면 encoder 를 끝까지 고정 (r 0) 하는 대안으로 간다. 이 제안이 맞는지 판정해 달라
 > 상태: 의뢰 (17f 다음 차례)
 

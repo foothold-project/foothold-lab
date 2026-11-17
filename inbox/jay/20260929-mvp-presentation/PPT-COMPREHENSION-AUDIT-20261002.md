@@ -4,7 +4,7 @@
 - 방법: 읽기 전용. 장마다 (1) 아무것도 모르는 청자가 따라올 수 있나 (2) 배경지식 있는 청자가 「이 팀이 제대로 풀었구나」 할 근거가 있나 (3) 「개선됐다」고 말할 때 전(before)과 후(after)가 같은 화면에 있나 를 봤다.
 - 근거 자료: `docs/research/20260928-v2-mvp-report.md`(v4.1) · `inbox/jay/20260929-mvp-submission/source/media/` · `../foothold-site/gallery/v1/clips/` · `../foothold-site/assets/video/v2/` · `sim/policy/gap_env_cfg.py` · `sim/eval/gap_observations.py` · `models/foothold-v{1,2}.env.yaml`
 - 기호: ○ 된다 · △ 용어나 근거가 한 줄 모자란다 · ✕ 빠졌다 · 「해당 없음」 은 그 장이 개선을 주장하지 않는다는 뜻
-- 팀장 지시 원문: 「전진 보행이 개선되었습니다. 어떤 기준으로 개선된지 청자가 어떻게 알아? 지금 v1만을 제공하면?」 「NVIDIA 에서는 실패한 영상을 옆에 같이 보여준던가」 「코드적인 부분들은 내용이 좀 빠진 것 같은데」
+- 팀장 지시 원문 요지: (1) 전진 보행이 개선됐다고만 하면 청자는 어떤 기준의 개선인지 알 수 없고, v1 만 보여 주면 비교가 안 됨 (2) NVIDIA 자료처럼 실패 영상을 나란히 보여 주는 방식 검토 (3) 코드 관련 내용이 부족함
 
 ---
 

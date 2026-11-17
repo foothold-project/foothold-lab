@@ -1,6 +1,6 @@
 > 분류: A/정책학습 · 평가 · 기록 규격 · HUD 영상
 > 작성: 오흥재 (lead 세션 하위 작업 · Claude 실행) · 2026-10-12
-> 근거: 팀장 10/12 「기존에 csv 남기는 항목을 많이 정리했는데 그 기준을 새 설계에 적용 못하나? 우리 HUD 를 활용하면 좋겠다」 · lab 저장소 `sim/eval/timeseries.py` · `overlay/trace.py` · `overlay/render.py` · `overlay/hud.py` · `eval_command_response.py` · `eval_generalization.py` · `record_terrain_demo.py` · `_out/loop/axis2_hud.py` (모두 읽기만) · `_eval/E2-and-records.md`
+> 근거: 팀장 10/12 요지: 이미 정리해 둔 csv 기록 항목 기준을 새 설계에 적용 · 우리 HUD 활용 · lab 저장소 `sim/eval/timeseries.py` · `overlay/trace.py` · `overlay/render.py` · `overlay/hud.py` · `eval_command_response.py` · `eval_generalization.py` · `record_terrain_demo.py` · `_out/loop/axis2_hud.py` (모두 읽기만) · `_eval/E2-and-records.md`
 > 요지: full_record CSV (115 열) 를 lab 시계열 규격 93 열 parquet 과 HUD trace 17 열로 1:1 변환한다 (지시의 92 · 16 · 127 열은 재 보니 93 · 17 · 115). 같은 이름 다른 뜻 하나 (`base_z_m`) 는 우리 쪽 이름을 `base_z_w_m` 으로 바꿨다. 변환은 판정값 (MAE · 행 수) 으로 되접어 대조하고, 어긋나면 멈춘다. 1,657 편 모두 통과했다. 대표 영상 332 편에 lab HUD 를 얹고, 아래 띠에 「기록 재생」과 Q 판정을 적었다. 웹 사본 332 편은 419 MB 이고 모두 2 MB 아래다. 렌더러가 일부 프로세스에서 검정 · 하늘 프레임을 내던 결함 (24 편) 을 다시 만들었고, 렌더 · 발행 두 단계에 전 프레임 관문을 넣었다 (332 편 결함 0). 마찰력은 기록되지 않는다
 > 상태: 판 2 (2026-10-12 21:40) · 판 1 (19:35) 에서 바뀐 곳: 프레임 결함 24 편 재렌더 · 렌더 · 발행 단계 프레임 관문 (5-1 절) · 웹 사본 합계 419.2 MB
 

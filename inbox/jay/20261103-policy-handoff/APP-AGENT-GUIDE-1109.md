@@ -1,6 +1,6 @@
 > 분류: A/정책학습 · 앱 작업 지시서 (agent 에 그대로 붙여 넣는 한 장 · start 모드)
 > 작성: 오흥재 · lead 세션 · 2026-11-09 11:1x v0.1 · 11:4x v0.2 (보고 자리를 이슈 #591 로 · 키보드에서도 튐 보고 줄)
-> 근거: 측정과 원인 [`APP-TUNING-1109.md`](APP-TUNING-1109.md) · 묶음 `start-m13000-app/` (lab `feature/verify-v2-mvp-jay` · 원격 커밋 `c9470ba0`) · foothold-app `dev` `2f1ef45` 줄 번호(읽기만 함) · 팀장 11/09 11:0x 「문서 하나만 보고 자기 agent 가 따라 할 수 있게」
+> 근거: 측정과 원인 [`APP-TUNING-1109.md`](APP-TUNING-1109.md) · 묶음 `start-m13000-app/` (lab `feature/verify-v2-mvp-jay` · 원격 커밋 `c9470ba0`) · foothold-app `dev` `2f1ef45` 줄 번호(읽기만 함) · 팀장 11/09 11:0x 요지: 이 문서 한 장만으로 각자의 agent 가 따라 할 수 있게
 > 요지: 여섯 단계를 순서대로 한다. ① start 정책을 m6000 에서 m13000 으로 바꾸기 ② start 화면 그리기 미루기 고치기 ③ 모든 사람 명령에 가감속 제한 ④ 목표 모드 직진 1.2 m/s ⑤ 고치기 전 · 뒤 숫자 재기 ⑥ 보고. 단계마다 「할 일 · 바꿀 파일:줄 · 확인 · 안 되면」 이 있다
 > 상태: v0.2 · 지시서 · 할 일 이슈 https://github.com/foothold-project/foothold-lab/issues/591 · 앱에 적용 전 · 브라우저 · 폰 숫자는 ⑤ 에서 처음 잰다
 

@@ -1,6 +1,6 @@
 > 분류: 운영 · lead 인수인계 정본 (lead 세션이 한도 · 장애로 멈출 때 누구든 이것 하나로 이어 간다)
 > 작성: 오흥재 (lead 세션 · 10/20 23시대)
-> 근거: 팀장 10/20 「lead 가 버티지 못하면? 역할 · 실험 시스템 · 일정을 문서로」 · SCHEDULE-NOW.md · AGENDA-LEAD.md · APPROVED-DIRECTION A~Q · 사슬 foothold_s2/chain
+> 근거: 팀장 10/20 요지: lead 세션이 중단될 때를 대비해 역할 · 실험 시스템 · 일정을 문서화 · SCHEDULE-NOW.md · AGENDA-LEAD.md · APPROVED-DIRECTION A~Q · 사슬 foothold_s2/chain
 > 요지: 세션별 역할과 연락법, 무인 실험 사슬이 어떻게 돌고 사람이 무엇을 해야 하는지, 지금 기다리는 것, 지켜야 할 규칙. lead 는 큰 변화가 있을 때마다 이 파일을 고친다
 > 상태: 운영 중 · Claude 주간 한도 86 %(10/20 21:37 · 풀림 10/24 20:00)
 

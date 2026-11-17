@@ -1,7 +1,7 @@
 > 분류: A/정책학습 · Codex Worker 작업서 (sol) · S2 B 짧은 A/B(short) 실행 준비 (CPU 만)
 > 작성: 오흥재 (lead 세션 · Claude 작성) · 2026-10-16 10:51
 > 근거: `night-tools-20261013/s2_step8/` (lead 재실행 293 PASS · 변이 57/57) · `S2-STEP5-USAGE.md` 의 short 계약 · `TASK-astra-17af-s2-AB-short.md` (ASTRA 에게 병렬로 묻는 중) · E1 부모 `model_20000.pt` 와 `params/agent.yaml`
-> 요지: 팀장이 「아직도 A B 비교 실험이 진행이 안됐다고?」 라고 크게 화났다. 0단계 4차와 첫 배관은 동의만 기다린다. ASTRA 가 short 단계를 허용하는 순간 바로 띄울 수 있도록, 짧은 A/B 의 요청 JSON · barrier 계약 · 비교 도구를 CPU 에서 미리 닫아 둔다
+> 요지: 팀장이 A/B 비교 실험이 아직 시작되지 않은 데 대해 강하게 질책했다 (요지). 0단계 4차와 첫 배관은 동의만 기다린다. ASTRA 가 short 단계를 허용하는 순간 바로 띄울 수 있도록, 짧은 A/B 의 요청 JSON · barrier 계약 · 비교 도구를 CPU 에서 미리 닫아 둔다
 > 상태: 작업 지시 (GPU · Isaac 기동 금지 · 승인 json 은 만들지 않는다)
 
 # sol 작업서: B short 준비

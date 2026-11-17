@@ -1,6 +1,6 @@
 > 분류: 검증 의뢰 (ASTRA 4)
 > 작성: 오흥재 (lead 세션 · Claude 작성) · 2026-10-11
-> 근거: 팀장 10/10 「ASTRA 와 Top-down 으로 로컬 실험」 · `DESIGN-astra-rl-topdown.md` 3절 Q · 4절 E1 · D1 · `eval-q-e1/Q-E1.md`
+> 근거: 팀장 10/10 요지: ASTRA 와 함께 Top-down 방식으로 로컬 실험 진행 · `DESIGN-astra-rl-topdown.md` 3절 Q · 4절 E1 · D1 · `eval-q-e1/Q-E1.md`
 > 요지: E1(MoE-CTS 시드 42) 배포 student 를 Q 로 처음 쟀다. Q 계약에서 정해지지 않은 세 곳이 드러났고, GPU 1 에서 D1 을 바로 돌리려 한다. 판정과 결정 제안을 받는다
 > 상태: 의뢰
 

@@ -1,7 +1,7 @@
 # 실행 카드 W03 · 세 정본 같은 조건 평가 · 촬영 · manifest
 
 > 분류: 실행 카드
-> 작성: lead · 2026-10-28 02:2x (팀장 01:4x 「3번 진행」)
+> 작성: lead · 2026-10-28 02:2x (팀장 01:4x 요지: 3 번 안 진행)
 > 근거: `WORKLIST.md` W03 · `20261027-experiments/CARD-EVAL-FLAG-BASELINE.md` 3 · 5 절(정본 경로 · manifest 칸) · `impl-turncases/logs/{sb10_eval,ex35_eval,map_err_main_x27n}/`
 > 요지: B1500 · S-B10 m1500 · EX-35 m2000 셋을 같은 평가 코드 · 같은 GPU · 같은 시드로 다시 재서 한 표에 놓는다. 이미 있는 값이라도 코드 head 가 다르면 다시 잰다. 학습은 하지 않는다
 > 상태: 의뢰 · 평가 · 촬영은 빈 GPU 라 승인 불필요 · 새 학습 금지

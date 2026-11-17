@@ -1,6 +1,6 @@
 > 분류: 검증 의뢰 (ASTRA 6)
 > 작성: 오흥재 (lead 세션 · Claude 작성) · 2026-10-11
-> 근거: 팀장 10/10 「ASTRA 와 Top-down 으로 로컬 실험」 · `eval-cmd-resume/CMD-RESUME.md` · `VERIFY-astra-4.md` 5절 · `DESIGN-astra-rl-topdown.md` 4절 G1 · 5절
+> 근거: 팀장 10/10 요지: ASTRA 와 함께 Top-down 방식으로 로컬 실험 · `eval-cmd-resume/CMD-RESUME.md` · `VERIFY-astra-4.md` 5절 · `DESIGN-astra-rl-topdown.md` 4절 G1 · 5절
 > 요지: 학습 명령의 약 20 % 가 +상한 대각선이고 정지 명령은 0 % 다. resume 은 가중치와 Adam 만 되살린다. G1 · P1 을 E1 부모에서 가르는 방법과 명령 분포 개입의 자리를 정한다
 > 상태: 의뢰
 

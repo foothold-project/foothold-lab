@@ -8,7 +8,7 @@
 
 ## 0. 지킬 것
 
-step17 과 같다. 새 사본 `codexE/s2_step18/` (step17 을 복사해 시작). `CUDA_VISIBLE_DEVICES=-1`, `C:/Users/AI-WS01/anaconda3/envs/isaac311-moects/python.exe -I -B`. 정상 먼저, 변이는 지정 첫 FAIL, 정상 PASS 와 변이 단계 선행 PASS 를 합쳐 쓰지 않는다. 해시 목록 CR 없이, 번들 안에 닫히게. 인도 때 B 전체 회귀(깨끗한 복사본)와 새 시험을 같이 낸다. 설치된 `C:/isaac/...` 파일은 고치지 않는다(읽기만). 팀장은 「이 실험 GPU 실행은 앞으로 매번 묻지 말고 설계대로 진행」이라고 했으므로, 고친 뒤 lead 재실행과 ASTRA 확인이 끝나면 노드 1 을 다시 띄운다.
+step17 과 같다. 새 사본 `codexE/s2_step18/` (step17 을 복사해 시작). `CUDA_VISIBLE_DEVICES=-1`, `C:/Users/AI-WS01/anaconda3/envs/isaac311-moects/python.exe -I -B`. 정상 먼저, 변이는 지정 첫 FAIL, 정상 PASS 와 변이 단계 선행 PASS 를 합쳐 쓰지 않는다. 해시 목록 CR 없이, 번들 안에 닫히게. 인도 때 B 전체 회귀(깨끗한 복사본)와 새 시험을 같이 낸다. 설치된 `C:/isaac/...` 파일은 고치지 않는다(읽기만). 팀장 지시 요지가 이 실험의 GPU 실행은 앞으로 매번 묻지 않고 설계대로 진행이므로, 고친 뒤 lead 재실행과 ASTRA 확인이 끝나면 노드 1 을 다시 띄운다.
 
 ## 1. 실제 실행에서 나온 사실
 

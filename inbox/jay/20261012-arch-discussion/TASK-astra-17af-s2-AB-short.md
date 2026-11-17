@@ -1,6 +1,6 @@
 > 분류: A/정책학습 · ASTRA 의뢰 17af · S2 짧은 A/B 학습(`stage=short`) 계약과 0단계 PASS 전 실행 여부, 연속 동의 해석
 > 작성: 오흥재 (lead 세션 · Claude 작성) · 2026-10-16 10:50
-> 근거: `VERIFY-astra-17ae.md` 4절(4차 종료 → 독립 가족 정리 → 배관) · `s2_step8/` (lead 재실행 293 PASS · 변이 57/57) · `s2_step8/S2-STEP5-USAGE.md` 의 short 계약(2,000 update, +500 증분, 두 arm barrier) · 팀장의 10/16 질책 「아직도 A B 비교 실험이 진행이 안됐다고?」
+> 근거: `VERIFY-astra-17ae.md` 4절(4차 종료 → 독립 가족 정리 → 배관) · `s2_step8/` (lead 재실행 293 PASS · 변이 57/57) · `s2_step8/S2-STEP5-USAGE.md` 의 short 계약(2,000 update, +500 증분, 두 arm barrier) · 팀장의 10/16 질책 (요지: A/B 비교 실험이 아직도 진행되지 않은 데 대한 지적)
 > 요지: 팀장이 가장 원하는 것은 A(상수 지도)/B(이상적 지도) 비교 결과다. 0단계 4차와 첫 배관은 팀장 동의만 기다린다. 그 뒤 짧은 A/B 가 ASTRA 판정에 걸려 또 멈추지 않도록 지금 병렬로 묻는다
 > 상태: 의뢰 (GPU 둘 다 계산 0 · 승인 json 없음)
 

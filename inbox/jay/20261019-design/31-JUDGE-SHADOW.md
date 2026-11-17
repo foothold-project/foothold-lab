@@ -1,6 +1,6 @@
 > 분류: B/항법 · C/판단 · 설계 (30 판단층 · 그림자 모드 · 명령 정리기)
 > 작성: 오흥재 (lead 세션 초안 · fable 20f 가 v1 으로 고쳐 씀)
-> 근거: TypeSafe Jev 1.14 블로그 https://typesafe.ai/blog/jev-1-14 (2026-10-14, fable 20f 10/19 직접 열람) · panews https://panews.io/articles/01a13d18-26cd-7359-ba88-c3f2b2e1a95a (10/19 열람) · `inbox/jay/20261018-next-arch/VERIFY-astra-19d-ideas.md` · `VERIFY-fable-20c-ideas.md` 98 · 104~105 · 128 · 132 행 · `ANALYSIS-app-prd-553.md` 72 행 · 14 §3 · 23 §4 · 팀장 10/19 「Laya 든 Jev 든 같은 자리」 · APPROVED H(판단층 shadow 확정 · STOP) · G-6 · VERIFY-fable-20f P16 · P20 · P36
+> 근거: TypeSafe Jev 1.14 블로그 https://typesafe.ai/blog/jev-1-14 (2026-10-14, fable 20f 10/19 직접 열람) · panews https://panews.io/articles/01a13d18-26cd-7359-ba88-c3f2b2e1a95a (10/19 열람) · `inbox/jay/20261018-next-arch/VERIFY-astra-19d-ideas.md` · `VERIFY-fable-20c-ideas.md` 98 · 104~105 · 128 · 132 행 · `ANALYSIS-app-prd-553.md` 72 행 · 14 §3 · 23 §4 · 팀장 10/19 요지: Laya 와 Jev 는 같은 자리에 둠 · APPROVED H(판단층 shadow 확정 · STOP) · G-6 · VERIFY-fable-20f P16 · P20 · P36
 > 요지: Laya(로컬)와 Jev(원격 API)를 주행층 위 판단층에 둔다. **그림자 모드로 확정**: 조언만 기록하고 행동은 바꾸지 않으며, 규칙 기반 판단을 대조군으로 같은 입력에서 비교한다. 듬성한 지형에서 손 조종 명령을 학습 분포 안으로 자르는 「명령 정리기」 는 1 차에 규칙으로만 한다(옆은 학습 중 나온 범위 · 뒤는 −0.3 m/s · 연속 2 s · 최대 0.6 m 까지 · 회전은 제자리 ±1.2 · 이동 중 ±1.0, 팀장 결정 D39 · M 결정 2 · 5). 지연 · 문맥 크기 숫자는 인용 출처에서 확인되지 않아 지웠다
 > 상태: v1.1 · 팀장 검토 전 · 그림자 모드 확정(D28) · 결정 2 · 5 반영(fable 20l) · **20q N 절 반영(fable 10/20)** · **20r sonnet 정책 노드 조사 반영(fable 10/20)** · **20s lead 답 8 항 반영(fable 10/20)**
 

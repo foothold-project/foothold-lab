@@ -1,6 +1,6 @@
 > 분류: A/평가 · Codex Worker 작업서 (sol) · A/B 최종 평가 경로 (step26)
 > 작성: 오흥재 (lead 세션 · Claude 작성) · 2026-10-17 16:58
-> 근거: `REPORT-s2-step24.md` 의 「평가 규모와 현재 경로」 표 · `evaluation_criteria_s2_ab.json` · `evaluation_seeds_s2_ab.json` (결과 전 등록, 이 작업이 바꾸지 않는다) · `S2-RESULT-PLAN.md` · 팀장 10/17 「반드시 실험의 결과를 내는 것이 목표」
+> 근거: `REPORT-s2-step24.md` 의 「평가 규모와 현재 경로」 표 · `evaluation_criteria_s2_ab.json` · `evaluation_seeds_s2_ab.json` (결과 전 등록, 이 작업이 바꾸지 않는다) · `S2-RESULT-PLAN.md` · 팀장 10/17 요지: 목표는 실험 결과를 반드시 내는 것
 > 요지: 학습은 A 가 19:07, B 가 21:40 쯤 끝난다. 그때 바로 A/B 의 update 0 · 2000 체크포인트를 60쌍(120 case-arm)으로 평가해 지도 효과 판정까지 내는 경로가 필요하다. 지금 봉인된 평가기는 smoke(4쌍)뿐이다
 > 상태: 작업 지시 (CPU 만 · 또 Kit 시험은 lead 가 A→B 틈에 한다 · GPU · Isaac 은 sol 이 띄우지 않는다)
 

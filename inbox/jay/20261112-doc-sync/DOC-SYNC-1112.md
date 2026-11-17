@@ -1,5 +1,5 @@
 > 분류: 운영 · 문서 동기화 점검표
-> 작성: scribe-lx · 2026-11-12 00:1x (lead-lx 00:05 의뢰 · 팀장 00:05 지시 「scribe = 문서 동기화 담당」)
+> 작성: scribe-lx · 2026-11-12 00:1x (lead-lx 00:05 의뢰 · 팀장 00:05 지시 요지: 문서 동기화는 scribe 몫)
 > 근거: 원장 `inbox/jay/20261104-ex41-restart/decisions.tsv` (feature/verify-v2-mvp-jay, 00:07 행까지) · CG 작업본 `fable-25a/inbox/jay/20261026-experiments/CURRICULUM-GATES.md` (planner v0.17a 미커밋 · 원격 254f5ad1) · 통합 `origin/lead/linux-integration-1109` · #555 · `/home/jay/mai/tmp/lead/HANDOFF-lead-lx-1111-*.md`
 > 요지: 11/04 이후 원장 결정 · 실험 결과가 문서에 옮겨졌는지 문서마다 대조했다. 고친 것은 커밋, 판정 문장이 필요한 것은 담당에게 넘김
 > 상태: v0.3 (00:3x) · CG 불일치 · 00:07 행 해결 · v0.2 · 저장소로 옮김 (lead-lx 00:30 「scribe 산출은 저장소 안」) · CG v0.17a 3623d0f3 에 11/11 행 반영됨, 11/05 ~ 11/10 행 · E1 상한 불일치는 남음

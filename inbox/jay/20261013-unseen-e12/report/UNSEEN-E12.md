@@ -1,6 +1,6 @@
 > 분류: A/정책학습 · 평가 · 미경험 지형 · E1 대 E2
 > 작성: 오흥재 (lead 세션 하위 작업 · Claude 실행) · 2026-10-13
-> 근거: lead 10/12 23:30 의뢰 · 팀장 「자는 동안에도 GPU 가 돌고, ASTRA 검증을 받으며 Top-down 으로 아침까지」 · foothold-lab `models/foothold-v2.json` (evaluation.terrain_sets.unseen10 · scores_difficulty_0_5 · known_limits) · lab `sim/eval/generalization_env_cfg.py` · `sim/eval/terrains.py` (import 해서 씀, 고치지 않음) · 원자료 `_eval/out/un_*` · `_eval/out/full/un_*`
+> 근거: lead 10/12 23:30 의뢰 · 팀장 요지: 밤사이에도 GPU 를 돌리며 ASTRA 검증을 거쳐 Top-down 으로 아침까지 진행 · foothold-lab `models/foothold-v2.json` (evaluation.terrain_sets.unseen10 · scores_difficulty_0_5 · known_limits) · lab `sim/eval/generalization_env_cfg.py` · `sim/eval/terrains.py` (import 해서 씀, 고치지 않음) · 원자료 `_eval/out/un_*` · `_eval/out/full/un_*`
 > 요지: E1 · E2 student (20000 · 20499) 를 v2 의 미경험 지형 10 종 (lab 정의를 그대로 import, 난이도 0.5) 에서 100 실행 · 1 만 판 평가했다. gap 은 0.5 m/s 이하에서 거의 못 건넌다 (0~4 %). 기록으로 보면 앞발이 먼저 틈 아래로 빠지고 몸이 앞으로 기울며 멈춘다. student 는 높이 관측이 없다. stepping_stones 는 건넘 0 % 로 v2 도 깨지는 지형이다. floating_ring 은 0.5 m/s 에서 70~88 % 이고 E2 가 E1 보다 일관되게 낫다. 나머지 7 종은 0.5 · 1.0 m/s 에서 92~100 % 다. v2 와는 잣대가 달라 패턴만 견준다. 대표 영상 144 편 (HUD · 웹 사본) 모든 프레임 결함 0 이고, GPU 1 감시 기록을 붙였다
 > 상태: 판 1 (2026-10-13 04:22) · 평가 · 기록 · 영상 끝. ASTRA 검증 전
 

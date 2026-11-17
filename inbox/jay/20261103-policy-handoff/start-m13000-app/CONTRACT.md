@@ -1,6 +1,6 @@
 > 분류: A/정책학습 · 앱 전달 조건표 (start-m13000 · m6000 조건표와 다른 것만)
 > 작성: 오흥재 · lead 세션 · 2026-11-09 10:2x v0.1
-> 근거: 저장본 `C:/Users/AI-WS01/s2_lab/ex42_main_20261108_123914/main/EX-42-B-stagezero_20261108_123914/model_1000.pt` (sha256 `20365a2c…`, 직접 잼) · 같은 폴더 `params/env.yaml` · `params/agent.yaml` · `manifest.json`(학습 코드 `eae0bed7`, 바뀐 소스 0 바이트) · `ex42_application.jsonl`(0 단계 명령 범위) · m6000 조건표 `../start-demo-app/CONTRACT.md` · 만든 명령 `../make_start_app_bundle.py` · 결정 팀장 11/09 10:0x 「m13000 ONNX 를 git 으로 팀원 · 앱에 전달하고 앞으로 같은 절차로 반복」
+> 근거: 저장본 `C:/Users/AI-WS01/s2_lab/ex42_main_20261108_123914/main/EX-42-B-stagezero_20261108_123914/model_1000.pt` (sha256 `20365a2c…`, 직접 잼) · 같은 폴더 `params/env.yaml` · `params/agent.yaml` · `manifest.json`(학습 코드 `eae0bed7`, 바뀐 소스 0 바이트) · `ex42_application.jsonl`(0 단계 명령 범위) · m6000 조건표 `../start-demo-app/CONTRACT.md` · 만든 명령 `../make_start_app_bundle.py` · 결정 팀장 11/09 10:0x 요지: m13000 ONNX 는 git 으로 팀원 · 앱에 넘기고 이후도 같은 절차
 > 요지: m13000 은 m6000 과 ONNX 입출력(이름 9 · 4, 모양, 자료형)이 같아서 앱 실행기는 그대로 쓴다. 바뀐 것은 저장본 · actor 안의 자세 명령 2 칸(ONNX 안에서 0 고정) · 학습 때 지도 섞기(정답 고정 → 정답 · 복원 섞음) · 후진 학습 범위(−1.0 → −1.3) 넷이다
 > 상태: v0.1 · 묶음 만듦 · CPU 같은 출력 확인 끝(parity.json) · 앱 적용 · 브라우저 ORT · 실기는 미확인
 

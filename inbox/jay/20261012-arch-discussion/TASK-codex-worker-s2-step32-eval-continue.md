@@ -1,6 +1,6 @@
 > 분류: A/평가 · Codex Worker 작업서 (sol) · step32 (긴급 · step31 보다 먼저)
 > 작성: 오흥재 (lead 세션 · Claude 작성) · 2026-10-17 23:52
-> 근거: 예행 평가 실행 `C:/Users/AI-WS01/s2_lab/s2_step29b_run/eval29b_frozen_delivery/runs/eval0-live-20261017-234333-de88c3db/` (읽기 전용) · `evaluation_criteria_s2_ab.json` 「missing pairs are excluded and counted, never imputed」 · 팀장 10/17 「실험이 멈추는 일은 없어야」
+> 근거: 예행 평가 실행 `C:/Users/AI-WS01/s2_lab/s2_step29b_run/eval29b_frozen_delivery/runs/eval0-live-20261017-234333-de88c3db/` (읽기 전용) · `evaluation_criteria_s2_ab.json` 「missing pairs are excluded and counted, never imputed」 · 팀장 10/17 요지: 실험이 멈추면 안 됨
 > 요지: 예행 평가 8 건 중 2 건(gap-000 A · B)은 실제 Kit 에서 끝까지 통과했다(29b 수리 확인). 3 번째 gap-001-s3109 A 의 자식이 `FingerprintHold:ray_current_usd_mismatch` 를 내자 부모가 전체를 멈췄다. 한 건의 결측 때문에 평가 전체가 서면 안 된다
 > 상태: 작업 지시 (CPU 만 · GPU 0 은 23:48 부터 비어 있음 · 가능한 한 빨리)
 

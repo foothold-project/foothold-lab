@@ -266,7 +266,7 @@
 
 제목 「HiPAN: Hierarchical Posture-Adaptive Navigation for Quadruped Robots in Unstructured 3D Environments」 (KAIST).
 
-**식별**: WebSearch 두 번(「HiPAN quadruped navigation depth camera arXiv」 · 「"HiPAN" robot locomotion OR navigation paper」)에서 이름이 맞는 논문은 이것 하나였다. 사족 · RealSense D435i 실기라는 점도 맞는다. 팀장이 말한 「HiPAN 같은 주행」이 이 논문을 뜻하는지는 팀장 확인 전 `미확인`.
+**식별**: WebSearch 두 번(「HiPAN quadruped navigation depth camera arXiv」 · 「"HiPAN" robot locomotion OR navigation paper」)에서 이름이 맞는 논문은 이것 하나였다. 사족 · RealSense D435i 실기라는 점도 맞는다. 팀장이 말한 HiPAN 류 주행 (요지) 이 이 논문을 뜻하는지는 팀장 확인 전 `미확인`.
 
 | 항목 | 내용 | 근거 |
 |---|---|---|

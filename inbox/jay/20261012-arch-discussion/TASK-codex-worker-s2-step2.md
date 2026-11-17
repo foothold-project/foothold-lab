@@ -1,6 +1,6 @@
 > 분류: A/정책학습 · Codex Worker(sol) 작업서 · S2 「지도 실험」 학습 연결 2 단계 후보 (CPU 전용 · 학습 기동 아님)
 > 작성: 오흥재 (lead 세션 · Claude 작성) · 2026-10-15 02:35
-> 근거: 팀장 10/15 새벽 「권고대로」 (지도 실험을 1 순위로, 틈 · 징검다리 연습은 그 안에 같이) · `night-tools-20261013/s2/README-s2-step1.md` (특히 3 · 8 절) · `DESIGN-s2-ab-v1.md` 6 절 · `VERIFY-astra-17f2.md` · `VERIFY-astra-17f.md` 5 절 · `VERIFY-astra-17d.md` 6 절 · `s2-terrain-probe/PROBE-sparse-terrain.md`
+> 근거: 팀장 10/15 새벽 요지: 권고안 채택 (지도 실험을 1 순위로, 틈 · 징검다리 연습은 그 안에 같이) · `night-tools-20261013/s2/README-s2-step1.md` (특히 3 · 8 절) · `DESIGN-s2-ab-v1.md` 6 절 · `VERIFY-astra-17f2.md` · `VERIFY-astra-17f.md` 5 절 · `VERIFY-astra-17d.md` 6 절 · `s2-terrain-probe/PROBE-sparse-terrain.md`
 > 요지: 1 단계(지도 입력 · 정책 · optimizer 통제 · 시험 14 개 · 변이 69 개)는 끝났다. 2 단계는 학습 루프에 붙이는 일이다. 목표는 GPU 에서 짧은 smoke 와 A/B 학습을 ASTRA 허용 아래 띄울 수 있는 CPU 검증 후보를 만드는 것이다. 이 작업서는 기동 허용이 아니다
 > 상태: 의뢰 (CPU 전용 · `_eval` 은 읽기만 · GPU · Isaac 실행 금지)
 

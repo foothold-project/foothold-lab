@@ -16,7 +16,7 @@
 - `#night` 밤사이 한 일 (시각은 커밋 · 로그 · 드라이버 기록과 대조. GPU 가 쉰 시간 주장 포함)
 - `#unseen` 미경험 지형 (ASTRA 14 10 절 표대로 고쳤는지 · 표 칸 형식 「도달 (도달 뒤 끝까지 생존) · 생존」 의 숫자를 원자료 `_eval/out/un_*` 로 표본 재계산 · 영상 여덟 편의 설명이 그 판의 기록과 맞는지)
 - `#rg` RoboGauge (ASTRA 13 5 절 · 숫자는 `_eval/out/robogauge/summary.json` · Q 표는 episode CSV)
-- `#cmdr` CMD-R (아직 결과 대부분이 「아직」 이다. 판정선 문장이 팀장 확정 (10/13 01:10 「제안 · 권고대로」) 내용과 같은지 · `VERIFY-astra-7.md` 2(c) 와 lead 제안 원문 대조)
+- `#cmdr` CMD-R (아직 결과 대부분이 「아직」 이다. 판정선 문장이 팀장 확정 (10/13 01:10 요지: 제안과 권고안 채택) 내용과 같은지 · `VERIFY-astra-7.md` 2(c) 와 lead 제안 원문 대조)
 - `#next` 다음 실험 (계획 `inbox/jay/20261012-arch-discussion/PLAN-next-after-astra11.md` 와 · v2 대 E1 · E2 표의 「얻은 것 · 잃은 것 · 새로 드러난 약점」 이 공정한지 · ASTRA 12 물리 차이 문장)
 - `#app` 앱 (오현민 기획 요약 `inbox/jay/20261013-go2-app-study/APP-PLAN-facts.md` · ASTRA 10 보고와 대조. 「RL 과 만나는 곳」 표의 E1 · E2 숫자가 페이지 다른 절과 같은지)
 - `#qa` 새 질답 둘 · RoboGauge 질답의 바뀐 설명

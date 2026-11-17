@@ -1,6 +1,6 @@
 > 분류: 논의 의뢰 (ASTRA 9 · 독립 의견)
 > 작성: 오흥재 (lead 세션 · Claude 작성) · 2026-10-13 00:12
-> 근거: 팀장 10/12 23:50 「MARG · START 는 코드가 없어도 논문에 구조가 있다 · 진짜 좋은 방법이 무엇인지 팀장 · lead · ASTRA 셋이 같이 논의하자」 · `PAPERS-architecture.md` (같은 폴더) · 9/29 `inbox/jay/20260929-locomotion-direction/DIRECTION.md`
+> 근거: 팀장 10/12 23:50 요지: MARG · START 는 공개 코드가 없어도 논문에 구조가 있으니, 가장 나은 방법을 팀장 · lead · ASTRA 셋이 함께 검토 · `PAPERS-architecture.md` (같은 폴더) · 9/29 `inbox/jay/20260929-locomotion-direction/DIRECTION.md`
 > 요지: 미경험 험지 (gap · 징검다리 · pit) 를 시뮬에서 건너는 보행 정책을 어떤 구조로 만들지, ASTRA 의 독립 의견을 받는다. lead 의견 (`DISCUSS-lead.md`) 은 일부러 읽지 않는다
 > 상태: 의뢰
 

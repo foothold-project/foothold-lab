@@ -49,7 +49,7 @@
 | E4 · E5 | 출구 판정 #733 | planner | 초안 |
 | E6a · E6b · M | 출구 판정 · M 복귀 #723 | sonnet-code | 미착수 |
 | 영상 | 규칙 4 절 합성 연결 | sonnet-code | 진행 |
-| 전체 | 단계 사슬 전체 예행 (E1 끝 → E1F → E2 → … → E6b · 각 단계 20 회 실기동 · 출구 판정 · 넘김) · 팀장 11:34 「전체 dry run 빠지지 말고」 | lead (GPU 빌 때 · 구간 평가 사이) · planner (CPU 사슬 예행) | 미착수 · E1 구간 1 기동 뒤 바로 CPU 예행 |
+| 전체 | 단계 사슬 전체 예행 (E1 끝 → E1F → E2 → … → E6b · 각 단계 20 회 실기동 · 출구 판정 · 넘김) · 팀장 11:34 요지: 전체 dry run 을 빠뜨리지 말 것 | lead (GPU 빌 때 · 구간 평가 사이) · planner (CPU 사슬 예행) | 미착수 · E1 구간 1 기동 뒤 바로 CPU 예행 |
 
 ## HiPAN (위 계층 · 하위 보행 끝난 뒤 같이 돌림)
 - 병합: PR-1 #726 (lower_adapter · command_space) · PR-2 #727 (room_generator · grade_map) · PR-3 #730 (gvd_astar · pgcl).

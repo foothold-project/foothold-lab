@@ -1,6 +1,6 @@
 > 분류: A/정책학습 · ASTRA 의뢰 17x · S2 0 단계 묶음 A2(17w 반영) 의 좁은 확인과 GPU 0 단회 정보 수집의 기동 조건
 > 작성: 오흥재 (lead 세션 · Claude 작성) · 2026-10-15 06:51
-> 근거: `VERIFY-astra-17w.md` 전문 · sol 의 A2 보고 `REPORT-s2-step4a2.md` (사본 `night-tools-20261013/s2_step4a2/` · 완결 39 파일 고정 묶음) · lead 재실행 `evidence_lead_a2_0600/` · 팀장 「GPU 는 절대 놀면 안 된다 · GPU 사용은 lead 권한」
+> 근거: `VERIFY-astra-17w.md` 전문 · sol 의 A2 보고 `REPORT-s2-step4a2.md` (사본 `night-tools-20261013/s2_step4a2/` · 완결 39 파일 고정 묶음) · lead 재실행 `evidence_lead_a2_0600/` · 팀장 요지: GPU 를 쉬게 두지 않음 · GPU 사용 권한은 lead
 > 요지: 17w 가 지적한 누락 의존 파일 · 잘못된 환경 연결 · 검사기 거짓 PASS · 센서 출처 · 정보 수집 자료 보존 · 장치 / 자원 보호를 sol 이 고쳤다고 보고한다. **17w 가 열어 준 길(수정 후 lead 권한으로 GPU 0 단회 정보 수집)** 을 이 묶음으로 가도 되는지, 그리고 팀장이 주무시는 동안 무인으로 돌려도 되는지 좁게 확인해 달라
 > 상태: 의뢰 (GPU 는 둘 다 비어 있음 · 승인 json 미발급 · Codex 주간 한도 8 % 라 범위를 좁힌다)
 

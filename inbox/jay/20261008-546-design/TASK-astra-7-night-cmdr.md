@@ -1,6 +1,6 @@
 > 분류: 검증 의뢰 (ASTRA 7)
 > 작성: 오흥재 (lead 세션 · Claude 작성) · 2026-10-12 23:20
-> 근거: 팀장 10/12 23:00 lead 채팅 「오늘부터 내가 자는 시간에도 GPU 가 돌아야 한다 · lead 가 한 것을 ASTRA 세션에 검증 받고 진행하고 검증 받고 · 아침까지 · Top-down」 · `VERIFY-astra-6.md` · `eval-branch-cmdr/BRANCH-CMDR-tools.md`
+> 근거: 팀장 10/12 23:00 lead 채팅 요지: 이날부터 팀장 취침 중에도 GPU 가동 · lead 작업은 ASTRA 검증과 진행을 번갈아 · 아침까지 · Top-down · `VERIFY-astra-6.md` · `eval-branch-cmdr/BRANCH-CMDR-tools.md`
 > 요지: 오늘 밤 GPU 0 에 CMD-R 쌍을 띄웠다. 띄운 조건이 ASTRA 6 의 분기 규약과 맞는지, 아침에 무엇을 어떻게 재야 결론이 나는지, 다음 실험 (G0 → G1) 을 띄우기 전에 무엇이 모자란지 검증해 달라
 > 상태: 의뢰
 

@@ -1,6 +1,6 @@
 > 분류: A/평가 · 영상 · Codex Worker 작업서 (sol) · step30
 > 작성: 오흥재 (lead 세션 · Claude 작성) · 2026-10-17 22:50
-> 근거: 팀장 10/17 22:4x 「평가까지 문제 없이 진행하고 영상 마찬가지로 뽑고 ... 사이트에 업데이트」 · E1/E2 영상 도구 `C:/isaac/ext/go2_rl_robotlab/_eval/` 의 `RECORD-HUD.md` · `full_record.py` · `hud_follow.py` · `hud_make.py` · `q_video.py` · `run_videos.sh` · `web_list.py` · step29b 평가기 `C:/Users/AI-WS01/s2_lab/s2_step29b_run/eval29b_frozen_delivery/`
+> 근거: 팀장 10/17 22:4x 요지: 평가까지 막힘 없이 진행하고 영상도 같은 방식으로 만든 뒤 사이트에 반영 · E1/E2 영상 도구 `C:/isaac/ext/go2_rl_robotlab/_eval/` 의 `RECORD-HUD.md` · `full_record.py` · `hud_follow.py` · `hud_make.py` · `q_video.py` · `run_videos.sh` · `web_list.py` · step29b 평가기 `C:/Users/AI-WS01/s2_lab/s2_step29b_run/eval29b_frozen_delivery/`
 > 요지: A(지도 없음)와 B(지도 있음)의 update 2000 정책이 같은 지형 · 같은 시드에서 어떻게 걷는지 E1/E2 사이트 영상과 같은 모양(따라가는 카메라 · HUD · mp4 + 포스터)으로 뽑는 도구. 최종 평가(23:55~01:00 예상)가 끝난 뒤 lead 가 GPU 0 에서 돌린다
 > 상태: 작업 지시 (CPU 만 · GPU · Isaac 을 띄우지 않는다 · 지금 GPU 0 은 B 학습, 이어서 최종 평가)
 
@@ -26,7 +26,7 @@
 
 `REPORT-s2-step30.md`(E1/E2 영상 규격 표, 도구 사용법, 시험, 미확인, lead 실행 명령 한 줄), `S2-STEP30-SHA256SUMS.txt`. **최종 평가가 끝나는 01:00 전후까지.** 막히면 막힌 줄과 필요한 값을 적어라.
 
-## 3. 추가 (22:55 · 팀장 질문 「A, B 에서도 지형을 로봇이 보고 있는지 아닌지 영상으로도 나와?」)
+## 3. 추가 (22:55 · 팀장 질문 요지: A · B 영상에서도 로봇이 지형을 보는지 여부가 드러나는가)
 
 - **지도 점을 영상에 그려라.** 높이 스캐너 187 ray 가 닿은 지점(정책에 들어가는 지도의 실제 측정점)을 영상 위에 점으로 표시한다(Isaac Lab RayCaster 의 debug 표시나 투영 HUD 중 E1/E2 모양과 어울리는 쪽, 어느 쪽을 썼는지 보고). 점 색은 높이(발밑보다 낮으면 틈)로.
 - **B 영상:** 점 = 정책이 실제로 받는 지도. HUD 에 「지도 입력: 켬 (187 점)」.

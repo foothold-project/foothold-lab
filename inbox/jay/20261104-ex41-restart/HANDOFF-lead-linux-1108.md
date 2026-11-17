@@ -19,10 +19,10 @@
 | 무엇 | 상태 | 근거 |
 |---|---|---|
 | EX-42 0 단계 | 끝 · m13000 sha 20365a2c… · 1000/1000 | `C:/Users/AI-WS01/s2_lab/ex42_main_20261108_123914/main/EX-42-B-stagezero_20261108_123914/manifest.json` |
-| 0 단계 판단 | 팀장 21:45 「원래 계획대로」 · E1 은 지형 상한 L5 → L9 를 한 단계씩 | decisions 11/08 22:5x · 19:0x |
+| 0 단계 판단 | 팀장 21:45 요지: 원래 계획 유지 · E1 은 지형 상한 L5 → L9 를 한 단계씩 | decisions 11/08 22:5x · 19:0x |
 | GPU | 둘 다 빔. 대기열 1363 · 1391 (EX-42 P1 평가 · 승인 대기 표식) | `D:/mai-tmp/gpu/queue.json` |
 | Linux 전 고칠 곳 8 개 | 전부 코드 · 시험 끝. Linux 실측만 남음 | runner da3af0d8 · 31ac99c0 · pipeline 89db2513 · super2 d3234667 · 198c58e8 |
-| 텔레그램 새 발송기 | Windows 시험 한 통 도착 확인 (팀장 23:1x 「메시지 왔다」). Linux 한 통은 따로 승인 | super2 083c7d3 |
+| 텔레그램 새 발송기 | Windows 시험 한 통 도착 확인 (팀장 23:1x 수신 확인). Linux 한 통은 따로 승인 | super2 083c7d3 |
 | 사이트 | 허브 결과 보고 칸 [계보 0]~[계보 4] 연재 · 그림 확대. 배포는 이 문서 시각에 진행 중 | decisions 11/08 23:xx |
 | D: 정리 | 계획 · DRY 끝 (2~2.5 시간 · 프로세스 9 개 멈춤 필요). 실행은 팀장 확인 뒤. 지울 것은 `D:\mai\_to_delete\` 한 곳에 모으고 마지막에 한 번 | mai-os 31502ff `os/d-drive-cleanup-plan.md` 8 절 |
 

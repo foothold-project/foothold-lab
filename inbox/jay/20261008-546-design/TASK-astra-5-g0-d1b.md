@@ -1,6 +1,6 @@
 > 분류: 검증 의뢰 (ASTRA 5)
 > 작성: 오흥재 (lead 세션 · Claude 작성) · 2026-10-11
-> 근거: 팀장 10/10 「ASTRA 와 Top-down 으로 로컬 실험」 · `VERIFY-astra-4.md` 4절 gap 단락 · `DESIGN-astra-rl-topdown.md` 4절 G0 · D1 · G1 · `eval-g0/G0.md`
+> 근거: 팀장 10/10 요지: ASTRA 와 함께 Top-down 방식의 로컬 실험 · `VERIFY-astra-4.md` 4절 gap 단락 · `DESIGN-astra-rl-topdown.md` 4절 G0 · D1 · G1 · `eval-g0/G0.md`
 > 요지: G0 에서 legacy 관측이 no-hit 칸을 1 m 벽과 같은 -2.5 로 읽는 반전을 확인했다. D1-B (gap) 를 하기 전에 고정할 조건 여섯을 ASTRA 가 정한다
 > 상태: 의뢰
 

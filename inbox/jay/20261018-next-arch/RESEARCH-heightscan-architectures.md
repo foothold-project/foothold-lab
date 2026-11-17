@@ -220,7 +220,7 @@
 
 이 표에서 우리에게 중요한 것 넷:
 
-1. **팀장이 말한 「발 놓을 곳이 행동으로 나오는 구조」 를 글자 그대로 하는 것은 (라) 다섯 편뿐이다.** 다섯 모두 공개 학습 코드가 없고(DTC 는 그림 자료만, TAMOLS 는 비공식만), planner 를 Go2 기구학에 맞게 새로 만들어야 한다. 나머지 지형 인지 논문들은 발 자리를 관절 행동 안에서 「고르게」 만들고, 발 디딤 보상(MARG · START · Extreme Parkour · BeamDojo)이나 attention(AME-1 · AME-2 · DELTA)으로 그 고르기를 돕는다.
+1. **팀장이 말한 구조 (요지: 발 디딜 자리를 정책 행동으로 직접 내는 구조) 를 글자 그대로 하는 것은 (라) 다섯 편뿐이다.** 다섯 모두 공개 학습 코드가 없고(DTC 는 그림 자료만, TAMOLS 는 비공식만), planner 를 Go2 기구학에 맞게 새로 만들어야 한다. 나머지 지형 인지 논문들은 발 자리를 관절 행동 안에서 「고르게」 만들고, 발 디딤 보상(MARG · START · Extreme Parkour · BeamDojo)이나 attention(AME-1 · AME-2 · DELTA)으로 그 고르기를 돕는다.
 2. **지형을 보는 정책은 지도와 함께 처음부터 학습된다.** 읽은 논문에서 눈 먼 정책에 지도를 나중에 붙이는 길은 찾지 못했다. 가장 가까운 것은 ViNL(rough 지형 사전학습 → 장애물 fine-tune) · Risky Terrains(generalist → specialist) · Parkour in the Wild(증류 → RL fine-tune)인데, 셋 다 출발 정책이 **이미 지도를 보고** 있었다.
 3. **작은 돌에는 격자 해상도가 걸린다.** DELTA Table III 은 같은 방법에서 격자를 26 × 16 → 41 × 25 로 바꾸면 작은 돌 성공률이 84.0 → 95.9 % 가 된다고 적는다. 우리 187 점(0.1 m)은 gap 에는 통했지만(v2) 작은 돌 목표에는 근거가 약하다.
 4. **보행 위상은 저절로 trot 가 되기도 하고(legged_gym), gap 에서는 pronk 가 「살아남는」 해답이기도 하다(DeepTransition).** 학습 초기에는 pronk · trot 이 쉬운 끌개다(Walk These Ways Fig. 4). 그래서 gait 를 재는 관문이 필요하다(7.2).

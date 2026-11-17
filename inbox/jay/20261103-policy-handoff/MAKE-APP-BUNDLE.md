@@ -1,6 +1,6 @@
 > 분류: A/정책학습 · START 앱 묶음을 만드는 절차 (명령 하나)
 > 작성: 오흥재 · lead 세션 · 2026-11-09 10:3x v0.1
-> 근거: `make_start_app_bundle.py` (이 폴더) · m6000 내보내기 `foothold_s2/deploy/export_ex40_w89.py` · `verify_ex40_w89.py` (34982e13) · 실입력 비교 `package_ex40_real20.py` (a10af76f) · 팀장 11/09 10:0x 「앞으로 같은 절차로 반복」
+> 근거: `make_start_app_bundle.py` (이 폴더) · m6000 내보내기 `foothold_s2/deploy/export_ex40_w89.py` · `verify_ex40_w89.py` (34982e13) · 실입력 비교 `package_ex40_real20.py` (a10af76f) · 팀장 11/09 10:0x 요지: 이후에도 이 절차를 그대로 반복
 > 요지: 저장본 경로 · sha · 이름 셋을 주면 `start-demo-app/` 과 같은 꼴의 폴더(ONNX 둘 · 계약 · 같은 출력 확인 · 시험 벡터 · SHA256SUMS)가 나온다. 같은 입력이면 모든 파일이 바이트까지 같다
 > 상태: v0.1 · start-m13000 으로 두 번 돌려 13 파일 바이트 같음 · m6000 으로 돌려 lab 의 start-demo ONNX 두 파일과 바이트 같음 · CPU 만 씀
 
