@@ -124,3 +124,14 @@ def test_mount_cfg_never_declares_a_zero_size_and_carries_the_per_column_table()
     text = (pathlib.Path(rules.__file__).resolve().parents[1] / "terrains" / "ex42_mesh_mount.py").read_text(encoding="utf-8")
     assert "size: tuple = (0.0, 0.0)" not in text
     assert "tile_x_by_column: tuple" in text and "column_tile_sizes(loaded[\"origins\"])" in text
+
+
+def test_single_room_origins_get_one_room_tile_instead_of_the_row_spacing_error():
+    """HiPAN 방 (origins (1, K, 3) · family room) 은 행이 하나라 column_tile_sizes 가 거절했다 (N1 평지 방 · 일반 방 둘 다). 방 한 개 = 타일 한 개."""
+    from foothold_s2.terrains.ex42_mesh_mount import single_room_tile_sizes
+
+    o = np.zeros((1, 4, 3))
+    tx, ty, irr = single_room_tile_sizes(o, ["room"] * 4)
+    assert list(tx) == [20.0] * 4 and ty == 20.0 and irr == []
+    assert single_room_tile_sizes(np.zeros((2, 4, 3)), ["room"] * 4) is None          # 여러 행 꼴은 옛 길
+    assert single_room_tile_sizes(o, ["A", "room", "room", "room"]) is None
