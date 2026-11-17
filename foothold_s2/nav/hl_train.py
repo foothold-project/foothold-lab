@@ -23,6 +23,14 @@ class TeacherVecEnv:
             raise ValueError(f"NavEnv has {nav_env.n} envs, NavTask has {task.n}")
         self.nav, self.task, self.n = nav_env, task, int(nav_env.n)
         self.device, self._torch = device, torch
+        try:                                                  # 상위 틱 한 번의 초 (회차 통계의 에피소드 길이 · 초)
+            self.task.tick_s = float(nav_env.hold) * float(nav_env.raw.step_dt)
+        except (AttributeError, TypeError, ValueError):
+            pass
+
+    def take_nav_stats(self) -> dict:
+        take = getattr(self.task, "take_stats", None)
+        return take() if take is not None else {}
 
     def _pos_room(self, state, ids):
         from foothold_s2.nav import teacher_obs
@@ -155,6 +163,7 @@ def train(env, ppo, *, out_dir, iterations, receipt: dict, resume=None, device="
             lr = max(1e-5, lr / 1.5) if kl > ppo.desired_kl * 2 else min(1e-2, lr * 1.5) if 0 < kl < ppo.desired_kl / 2 else lr
             for g in opt.param_groups:
                 g["lr"] = lr
+        stats.update(getattr(env, "take_nav_stats", lambda: {})())
         row = {"iteration": it, "reward_mean": float(torch.stack(R).mean()), "value_loss": float(vf), "kl": kl, "lr": lr,
                "noise_std": float(log_std.exp().mean()), "seconds": round(time.time() - t0, 2), **stats}
         log(json.dumps(row))

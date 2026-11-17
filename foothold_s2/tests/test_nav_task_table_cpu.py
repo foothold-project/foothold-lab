@@ -99,3 +99,45 @@ def test_default_table_radius_covers_the_isaac_reset_jitter_square():
     t = nav_task.NavTask(assets, 1, np.random.default_rng(3))
     t.build_table(starts, per_start=16, seed=0)
     assert t.table_tol_m >= 0.71                                       # reset_base x y U(-0.5, 0.5): the corner is 0.707 m from the origin (a table start)
+
+
+def _state(n, pos, applied_vx=0.5, vel=0.0, done=None):
+    from foothold_s2.nav.nav_env import NavState
+    z = lambda *s: np.zeros(s)
+    return NavState(pos_w=np.c_[pos, np.full(n, 0.35)], quat_w=np.tile([1.0, 0, 0, 0], (n, 1)), pos_local=np.c_[pos, np.full(n, 0.35)], vel_b=np.c_[np.full(n, vel), z(n, 2)],
+                    yaw_rate=z(n), applied=np.tile([applied_vx, 0, 0, 0, 0], (n, 1)), stand=np.zeros(n, bool), modified=np.zeros(n, bool), track_err=z(5, n, 3),
+                    done=np.zeros(n, bool) if done is None else done, done_step=np.full(n, -1), timed_out=np.zeros(n, bool), ang_vel_b=z(n, 3), q=z(n, 12), q0=z(12),
+                    proprio=z(n, 45), collision=np.zeros(n, bool))
+
+
+def test_same_goal_retry_after_a_fall_keeps_the_goal_and_uses_the_table_path(monkeypatch):
+    _rooms, assets, starts = _setup(n_rooms=1, k=4)
+    t = nav_task.NavTask(assets, 1, np.random.default_rng(5))
+    t.build_table(starts, per_start=16, seed=0)
+    t.redraw_on_fall = False
+    t.reset_envs([0], start_xy=starts[0][0][None])
+    goal = t.goal[0].copy()
+    monkeypatch.setattr(t, "_plan", lambda *a, **k: (_ for _ in ()).throw(AssertionError("A* must not run")))
+    t.reset_envs([0], start_xy=(starts[0][0] + np.array([0.3, -0.2]))[None])        # a fall: the same task, a jittered start
+    assert np.allclose(t.goal[0], goal) and t.task_redraw_on_reset == 0 and np.allclose(t.path[0][-1], goal)
+
+
+def test_iteration_stats_count_subgoals_levels_outcomes_rewards_speeds_and_episode_ends():
+    _rooms, assets, starts = _setup(n_rooms=1, k=4)
+    n = 4
+    t = nav_task.NavTask(assets, n, np.random.default_rng(9))
+    t.build_table(starts, per_start=16, seed=0)
+    t.tick_s = 0.5
+    st0 = np.stack([starts[0][i % 4] for i in range(n)])
+    t.reset_envs(np.arange(n), start_xy=st0)
+    pos = st0.copy()
+    for k in range(3):
+        t.step(_state(n, pos, vel=0.0))
+    done = np.array([True, False, False, False])
+    t.step(_state(n, pos, done=done))
+    t.reset_envs([0], start_xy=st0[:1])
+    s = t.take_stats()
+    assert s["nv_episodes"] == 1 and s["nv_out_hold"] == 1 and s["nv_stand_frac"] == 1.0 and s["nv_v_body"] == 0.0
+    assert abs(s["nv_v_cmd"] - 0.5) < 1e-9 and abs(s["nv_lvl1"] - 1.0) < 1e-9 and s["nv_progress_end"] == 0.0
+    assert s["nv_ep_ticks"] == 4 and s["nv_ep_s"] == 2.0 and s["nv_dsub_start"] > 0 and s["nv_path_len"] >= 4.0 and "nv_r1" in s
+    assert t.take_stats() == {}                                                       # read and cleared

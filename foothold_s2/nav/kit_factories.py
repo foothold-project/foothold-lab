@@ -110,6 +110,8 @@ def _build(cfg: dict, with_camera: bool):
 
     starts = None if not int(cfg.get("task_table_per_start", 32)) else [rg.start_points(a.room, int(cfg["n_starts"]), seed=int(cfg["room_seed"]) + row)[:, :2] for row, a in enumerate(prepared["assets"])]
     task = make_task(prepared["assets"], int(cfg["num_envs"]), int(cfg["seed"]), rows, raw.scene.env_origins[:, :2].cpu().numpy(), starts, int(cfg.get("task_table_per_start", 32)))
+    task.redraw_on_fall = bool(cfg.get("task_redraw_on_fall", True))            # False = 넘어져도 같은 과제 재도전 (PGCL 수준 올리기 옛 뜻 · 시작 자리만 표에서)
+    print(f"TASK_RESET_ON_FALL {'new_task_from_table' if task.redraw_on_fall else 'same_task_retry'} table_tol_m {task.table_tol_m}", flush=True)
     depth_fn = (lambda: th(raw.scene["depth_camera"].data.output["distance_to_image_plane"])) if with_camera else None
     return nav, task, depth_fn
 

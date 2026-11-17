@@ -65,6 +65,9 @@ class NavTask:
         self.task_relaxed = 0             # 목표 조건 (경로 길이 범위) 을 못 맞춰 옛 꼴로 물러선 수 (누적)
         self.ratio_edges = (1.1, 1.2, 1.5, 2.0)
         self.ratio_hist = np.zeros(len(self.ratio_edges) + 1, dtype=np.int64)       # 뽑힌 쌍의 굴곡 비 분포: <1.1 · 1.1~1.2 · 1.2~1.5 · 1.5~2 · 2 이상
+        self.redraw_on_fall = True        # True = 넘어진 뒤 (과제를 못 끝냄) 에도 표에서 새 과제 · False = 같은 과제 재도전 (같은 목표, 시작 자리만 표에서; PGCL 수준 올리기 옛 뜻)
+        self.tick_s = None                # 상위 틱 한 번의 초 (hold x step_dt). 호출한 쪽이 넣는다. None = 에피소드 길이는 틱 수로만
+        self._st = None                   # 회차 통계 합 (take_stats 가 읽고 비운다)
         self.task_fallbacks = 0           # 실제 시작에서 길을 못 찾아 새 쌍으로 대신한 횟수 (누적)
         self.voxels = {i: a.voxels for i, a in enumerate(assets)}
         self.origin_xy = origin_xy        # (n, 2) env 별 origins 열의 x y (방 틀). None = 방 가운데 (옛 꼴). 시작점 K 개 방은 이 값을 낸다
@@ -172,6 +175,72 @@ class NavTask:
         self.task_table_hits += 1
         return t.copy(), pts
 
+    def _table_same_goal(self, i: int, s):
+        """표의 가장 가까운 시작점 줄에서 지금 목표와 같은 목표의 길 (없으면 None). 같은 과제 재도전 때 A* 를 안 돌리려고."""
+        tb = self.table[self.room_id[i]]
+        d = np.linalg.norm(tb["starts"] - np.asarray(s, float), axis=1)
+        k = int(d.argmin())
+        if d[k] > self.table_tol_m:
+            return None
+        for t, pts in tb["rows"][k]["ok"] + tb["rows"][k]["wound"]:
+            if np.allclose(t, self.goal[i], atol=1e-9):
+                pts = pts.copy(); pts[0] = np.asarray(s, float)
+                self.task_table_hits += 1
+                return pts
+        return None
+
+    # ---- 회차 통계 (읽기 전용: 학습에 쓰이지 않는다)
+    def _stat(self):
+        if self._st is None:
+            self._st = {"ticks": 0, "sub_reached": 0, "lvl": np.zeros(3), "r": {}, "vcmd": 0.0, "vbody": 0.0, "stand": 0.0,
+                        "eps": 0, "prog": 0.0, "dsub0": 0.0, "dsub1": 0.0, "plen": 0.0, "ep_ticks": 0.0,
+                        "out": {"hold": 0, "level_up": 0, "final_success": 0, "new_task": 0}}
+        if getattr(self, "_ep_n", None) is None:
+            self._ep_n = np.zeros(self.n, dtype=np.int64)
+            self._pos_prev = np.full((self.n, 2), np.nan)
+        return self._st
+
+    def _note_episode_end(self, i, p) -> None:
+        st = self._stat()
+        if not p._sub:
+            return
+        st["eps"] += 1
+        st["prog"] += p._i / len(p._sub)
+        tgt = p._sub[min(p._i, len(p._sub) - 1)].point
+        if not np.isnan(self._pos_prev[i, 0]):
+            st["dsub1"] += float(np.linalg.norm(self._pos_prev[i] - np.asarray(tgt)))
+        st["ep_ticks"] += float(self._ep_n[i])
+
+    def _note_outcome(self, name: str) -> None:
+        out = self._stat()["out"]
+        if name in out:
+            out[name] += 1
+
+    def _note_episode_start(self, i, p, s) -> None:
+        st = self._stat()
+        self._ep_n[i] = 0
+        self._pos_prev[i] = np.nan if s is None else np.asarray(s, float)
+        st["dsub0"] += float(np.linalg.norm(np.asarray(s if s is not None else self.start[i]) - p.target.point))
+        st["plen"] += self._length(self.path[i])
+
+    def take_stats(self) -> dict:
+        """이번 회차의 통계 (nv_ 접두): 부목표 도달 수 · 에피소드 끝 진행 비 · PGCL 수준 분포 · 끝 결과 수 · 보상 항 평균 · 속도 · 서 있는 비율 · 부목표 거리 · 경로 길이 · 에피소드 길이. 읽고 비운다."""
+        st = self._stat()
+        if st["ticks"] == 0 and st["eps"] == 0:
+            return {}
+        t, e = max(st["ticks"], 1), max(st["eps"], 1)
+        out = {"nv_sub_reached": st["sub_reached"], "nv_episodes": st["eps"], "nv_progress_end": st["prog"] / e,
+               "nv_lvl1": st["lvl"][0] / t, "nv_lvl2": st["lvl"][1] / t, "nv_lvl3p": st["lvl"][2] / t,
+               "nv_v_cmd": st["vcmd"] / t, "nv_v_body": st["vbody"] / t, "nv_stand_frac": st["stand"] / t,
+               "nv_dsub_start": st["dsub0"] / e, "nv_dsub_end": st["dsub1"] / e, "nv_path_len": st["plen"] / e}
+        out.update({f"nv_out_{k}": v for k, v in st["out"].items()})
+        out.update({f"nv_{k}": v / t for k, v in st["r"].items()})
+        out["nv_ep_ticks"] = st["ep_ticks"] / e
+        if self.tick_s:
+            out["nv_ep_s"] = st["ep_ticks"] * self.tick_s / e
+        self._st = None
+        return out
+
     def _note_task(self, i: int) -> None:
         s, t, pts = self.start[i], self.goal[i], self.path[i]
         straight = float(np.linalg.norm(s - t))
@@ -235,22 +304,27 @@ class NavTask:
         outcome = []
         for j, i in enumerate(ids):
             p = self.pgcl[i]
+            self._note_episode_end(i, p)
             outcome.append("fresh" if not p._sub else p.end_episode())
+            self._note_outcome(outcome[-1])
             s = None if start_xy is None else start_xy[j]
             if self.path[i] is None or p.needs_new_task:
                 self._new_task(i, s)
                 p.needs_new_task = False
-            elif s is not None and self.table is not None:
+            elif s is not None and self.table is not None and self.redraw_on_fall:
                 self.task_redraw_on_reset += 1                              # 표가 있으면 넘어진 뒤에도 표에서 새 과제 (같은 목표로 다시 A* 를 돌리지 않는다)
                 self._new_task(i, s)
             elif s is not None:
-                pts = self._plan(i, s, self.goal[i])
+                pts = self._table_same_goal(i, s) if self.table is not None else None      # 같은 목표 재도전: 표에 그 목표의 길이 있으면 그것 (A* 없음)
+                if pts is None:
+                    pts = self._plan(i, s, self.goal[i])
                 if pts is None:
                     self._new_task(i, s)
                 else:
                     self.start[i], self.path[i] = s, pts
             p.start_episode(self.path[i], self.assets[self.room_id[i]].grade)
             self.subgoal[i] = p.target.point
+            self._note_episode_start(i, p, s)
         self.v_des[ids] = rewards_hl.sample_v_des(self.rng, len(ids), self.v_des_range)
         self.visit.reset(ids)
         self.cmd_prev[ids] = 0.0; self.cmd_prev2[ids] = 0.0
@@ -267,11 +341,14 @@ class NavTask:
         # 알려진 두 가지 (reviewer 02:52 권고, 막지 않음): (1) 끝난 틱에는 r9 (명령 제한) 도 0 이고 넘어짐 · 시간 초과 자체에는 상위 보상 벌점 항이 없다:
         # 「벌점 없는 에피소드 끝」 이 논문 (HiPAN) 의도인지는 논문 종료 벌점 유무를 대조해야 한다 (미확인, 첫 Kit 로그 뒤 결정).
         # (2) 같은 윈도 안에서 마지막 부목표에 닿은 뒤 넘어지면 task_reached 에서 빠진다 (done 이 이긴다). done_step 이전 하위 스텝으로 판정하면 살릴 수 있다: 빈도를 보고 정한다.
+        st = self._stat()
+        i0 = sum(p._i for p, d in zip(self.pgcl, done) if not d)
         for i in range(self.n):
             if done[i]:
                 continue
             tgt = self.pgcl[i].update(pos_room[i, :2])
             self.subgoal[i] = (self.goal[i] if tgt is None else tgt.point)
+        st["sub_reached"] += sum(p._i for p, d in zip(self.pgcl, done) if not d) - i0
         eta = self.visit.visit(pos_room[:, :2], active=~done)
         total, terms = hl_rewards_term.reward(
             state, pos_room_xy=pos_room[:, :2], subgoal_xy=self.subgoal, eta=eta, v_des=self.v_des,
@@ -282,8 +359,22 @@ class NavTask:
         self.cmd_prev2 = self.cmd_prev.copy()
         self.cmd_prev = np.asarray(state.applied)[:, :3].copy()
         reached = np.array([p.all_reached for p in self.pgcl]) & ~done
+        self._note_tick(state, pos_room[:, :2], terms, done)
         return {"reward": total, "terms": terms, "subgoal": self.subgoal.copy(), "room_id": self.room_id.copy(),
                 "task_reached": reached, "eta": eta, "done": done}
+
+    def _note_tick(self, state, pos_xy, terms, done) -> None:
+        st = self._stat()
+        st["ticks"] += 1
+        lv = np.array([p.level for p in self.pgcl])
+        st["lvl"] += [(lv == 1).mean(), (lv == 2).mean(), (lv >= 3).mean()]
+        for k, v in terms.items():
+            st["r"][k] = st["r"].get(k, 0.0) + float(np.mean(v))
+        st["vcmd"] += float(np.linalg.norm(np.asarray(state.applied)[:, :2], axis=1).mean())
+        vb = np.linalg.norm(np.asarray(state.vel_b)[:, :2], axis=1)
+        st["vbody"] += float(vb.mean()); st["stand"] += float((vb < 0.05).mean())
+        self._ep_n += 1
+        self._pos_prev = np.where(done[:, None], self._pos_prev, pos_xy)
 
     def observation(self, state) -> dict:
         """teacher 관측 (부목표는 보상 갱신 뒤의 값). `step` 뒤에 부른다."""
