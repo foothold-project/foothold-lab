@@ -128,6 +128,7 @@ def train(env, ppo, *, out_dir, iterations, receipt: dict, resume=None, device="
     for it in range(it0 + 1, it0 + iterations + 1):
         t0 = time.time()
         O, A, LP, V, R, D = [], [], [], [], [], []
+        kl_max = 0.0
         stats = {"task_reached": 0, "fell": 0, "task_fallback": 0, "task_new": 0, "task_winding": 0}
         with torch.no_grad():
             for _ in range(T):
@@ -174,13 +175,16 @@ def train(env, ppo, *, out_dir, iterations, receipt: dict, resume=None, device="
             with torch.no_grad():       # 적응형 학습률: KL 이 목표의 두 배 넘으면 줄이고 절반 미만이면 키운다 (rsl-rl 방식)
                 full = torch.distributions.Normal(actor(bO), log_std.exp())
                 kl = (bLP - full.log_prob(bA).sum(-1)).mean().item()
-            lr = max(1e-5, lr / 1.5) if kl > ppo.desired_kl * 2 else min(1e-2, lr * 1.5) if 0 < kl < ppo.desired_kl / 2 else lr
+            kl_max = max(kl_max, kl)
+            lr = max(ppo.lr_min, lr / 1.5) if kl > ppo.desired_kl * 2 else min(ppo.lr_max, lr * 1.5) if 0 < kl < ppo.desired_kl / 2 else lr
             for g in opt.param_groups:
                 g["lr"] = lr
         stats.update(getattr(env, "take_nav_stats", lambda: {})())
-        row = {"iteration": it, "reward_mean": float(torch.stack(R).mean()), "value_loss": float(vf), "kl": kl, "lr": lr,
+        row = {"iteration": it, "reward_mean": float(torch.stack(R).mean()), "value_loss": float(vf), "kl": kl, "kl_max": kl_max, "lr": lr,
                "noise_std": float(log_std.exp().mean()), "seconds": round(time.time() - t0, 2), **stats}
         log(json.dumps(row))
+        if kl_max > ppo.kl_warn:
+            log(f"KL_WARN it={it} kl_max={kl_max:.4f} kl_warn={ppo.kl_warn} lr={lr:.2e}")
         if it % ppo.save_interval == 0:
             path = out / f"model_{it}.pt"
             if path.exists():

@@ -1,5 +1,6 @@
 """N3 학습 루프: 가짜 환경으로 한 회 돌고 · 50 회 저장 · 이어 받기 · 다른 설정 거절 (Kit 없음)."""
 from types import SimpleNamespace
+import json
 import dataclasses
 import numpy as np
 import pytest
@@ -95,3 +96,15 @@ def test_success_is_a_reset_request_once_and_the_level_goes_up_when_isaac_hands_
     cur["s"] = _state(n, st0, done=np.array([True, False]))                 # next window: Isaac hands env 0 back at its start
     obs, r, d, to, info = env.step(torch.zeros(n, 3))
     assert info["task_reached"] == 0 and asked == [[0]] and task.pgcl[0].level == 2 and info["fell"] == 1
+
+
+def test_adaptive_lr_stops_at_lr_max_and_kl_warn_line_and_kl_max_are_logged(tmp_path):
+    lines = []
+    hl_train.train(FakeEnv(8), _ppo(desired_kl=1e6, lr_max=4.0e-4, kl_warn=0.0), out_dir=tmp_path, iterations=6, receipt={"receipt_sha256": "aa"}, log=lines.append)
+    rows = [json.loads(s) for s in lines if s.startswith("{")]
+    assert max(r["lr"] for r in rows) == 4.0e-4 and rows[-1]["lr"] == 4.0e-4 and all("kl_max" in r and r["kl_max"] >= r["kl"] for r in rows)
+    assert sum(s.startswith("KL_WARN") for s in lines) == len(rows) and "lr=4.00e-04" in [s for s in lines if s.startswith("KL_WARN")][-1]
+    assert cfg.TeacherPPO().lr_max == 1.0e-3 and cfg.TeacherPPO().lr_min == 1.0e-5 and "lr_max" in cfg.ASSUMED
+    quiet = []
+    hl_train.train(FakeEnv(8), _ppo(kl_warn=1e9), out_dir=tmp_path / "q", iterations=2, receipt={"receipt_sha256": "aa"}, log=quiet.append)
+    assert not any(s.startswith("KL_WARN") for s in quiet)

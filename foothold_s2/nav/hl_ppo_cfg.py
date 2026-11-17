@@ -15,7 +15,7 @@ SAVE_INTERVAL = 50              # 설계 §3 · §8: 50 회마다 저장
 ACTION_DIM = 3                  # 상위 출력 (vx vy wz) · 설계 결정 1
 
 ASSUMED = ("learning_rate", "gamma", "lam", "clip_param", "num_learning_epochs", "num_mini_batches", "desired_kl",
-           "entropy_coef", "num_steps_per_env", "hidden", "conv_channels", "max_grad_norm", "init_noise_std")
+           "lr_max", "lr_min", "kl_warn", "entropy_coef", "num_steps_per_env", "hidden", "conv_channels", "max_grad_norm", "init_noise_std")
 
 
 @dataclass(frozen=True)
@@ -30,6 +30,9 @@ class TeacherPPO:
     num_learning_epochs: int = 5
     num_mini_batches: int = 4
     desired_kl: float = 0.01
+    lr_max: float = 1.0e-3          # 적응 학습률 상한 (가정 · 논문에 값 없음). G3 r1 판에서 1e-2 까지 올라 회차 40 KL 36 으로 터졌다
+    lr_min: float = 1.0e-5          # 하한 (가정)
+    kl_warn: float = 0.05           # 회차 안 KL 최댓값이 이 값을 넘으면 KL_WARN 줄 (진단만)
     entropy_coef: float = 0.005
     num_steps_per_env: int = 24
     hidden: tuple = (256, 128)
