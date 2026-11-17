@@ -95,7 +95,7 @@ def run_env_diff(args, out: Path) -> Path:
     phys = report_physics(env, out)
     rec = env_diff.Recorder(env.raw, rgb=not args.no_rgb, depth=not args.no_depth)
     result = env_diff.run_cases(env, on_tick=rec)
-    res = {"physics": phys, "cases": result, "verdict": env_diff.verdict(result), "recorded": rec.save(out), "envs": args.envs,
+    res = {"physics": phys, "cases": result, "verdict": env_diff.verdict(result), "recorded": rec.save(out), "envs": args.envs, "seed": args.seed, "room_seed": args.room_seed,
            "lower_sha256": args.lower_sha256, "note": "평지 · 6 초 · 상위 틱 0.1 s · 성공 식은 env_diff.py 머리 글 참조 (OPS v0.2 원문 미확인)"}
     path = out / "env_diff.json"
     with open(path, "w", encoding="utf-8") as stream:

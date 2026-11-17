@@ -25,7 +25,7 @@ def flat_room_spec(seed: int = 0) -> dict:
     return spec
 
 
-def score_case(track_err, done, pos_start, pos_end, command, *, seconds: float = SECONDS, settle_s: float = SETTLE_S) -> dict:
+def score_case(track_err, done, pos_start, pos_end, command, *, seconds: float = SECONDS, settle_s: float = SETTLE_S, done_tick=None) -> dict:
     """track_err (T, 5, n, 3) = 상위 틱마다 하위 5 스텝의 (실제 - 명령) · done (n,) bool 윈도 안에 끝남 · pos_*: (n, 2) 월드 xy · command (3,).
     명령 축 = 절댓값이 가장 큰 칸. 이동 = 끝난 env 를 뺀 평균 직선 거리 (시작 방향이 무작위라 +x 가 아님) [m] · 회전 명령이면 평균 속도 비율만."""
     err = np.asarray(track_err, dtype=np.float64)
@@ -45,7 +45,10 @@ def score_case(track_err, done, pos_start, pos_end, command, *, seconds: float =
     alive = ~done
     return {"command": [float(x) for x in cmd], "envs": int(n), "fell": int(done.sum()), "success": int(ok.sum()),
             "mean_ratio": float(ratio[alive].mean()) if alive.any() else None, "mean_move_m": float(moved[alive].mean()) if alive.any() else None,
-            "mae_over": int((mae > 0.2 * abs(c)).sum()), "seconds": seconds}
+            "mae_over": int((mae > 0.2 * abs(c)).sum()), "seconds": seconds,
+            # 넘어진 (윈도 안에 끝난) env 의 번호 · 끝난 상위 틱 · 시작 xy (같은 seed 에서 로컬과 어느 env 가 같은지 보려는 기록)
+            "fell_envs": [{"env": int(i), "tick": None if done_tick is None else int(done_tick[i]),
+                           "start_xy": [float(x) for x in np.asarray(pos_start, dtype=np.float64)[i]]} for i in np.nonzero(done)[0]]}
 
 
 def run_cases(nav, *, on_tick=None, ticks: int | None = None) -> dict:
@@ -55,16 +58,18 @@ def run_cases(nav, *, on_tick=None, ticks: int | None = None) -> dict:
     for name, cmd in CASES:
         s0 = nav.reset()
         start = np.asarray(s0.pos_w)[:, :2].copy()
-        errs, done_any = [], np.zeros(nav.n, dtype=bool)
+        errs, done_any, done_tick = [], np.zeros(nav.n, dtype=bool), np.full(nav.n, -1, dtype=np.int64)
         command = np.tile(np.asarray(cmd, dtype=np.float64), (nav.n, 1))
         s = s0
         for t in range(ticks):
             s = nav.step(command)
             errs.append(np.asarray(s.track_err))
-            done_any |= np.asarray(s.done, dtype=bool)
+            now = np.asarray(s.done, dtype=bool)
+            done_tick = np.where(now & ~done_any, t, done_tick)
+            done_any |= now
             if on_tick is not None:
                 on_tick(name, t, s)
-        out[name] = score_case(np.stack(errs), done_any, start, np.asarray(s.pos_w)[:, :2], cmd, seconds=ticks * HIGH_DT_S)
+        out[name] = score_case(np.stack(errs), done_any, start, np.asarray(s.pos_w)[:, :2], cmd, seconds=ticks * HIGH_DT_S, done_tick=done_tick)
     return out
 
 

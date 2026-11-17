@@ -1,8 +1,10 @@
 """환경 차이 확인 비교 (OPS v0.2 5.1 절): Pod 3.0 의 env_diff.json 과 로컬 2.3.2 의 env_diff_local.json 을 칸마다 견준다.
 
 기준 (lead-lx 14:09 가 전한 5.1 절 원문 요지):
-  PASS  = 칸마다 실제 속도 차 <= 0.015 (yaw 칸은 0.05 rad/s) · 성공 수 차 <= 3 · 두 환경 모두 넘어짐 0
-  FAIL  = 속도 차 > 0.03 (yaw 도 같은 0.03 이 아니라 yaw 는 0.05 안이면 통과, 0.05 밖이면 실패로 읽음) 또는 한쪽이라도 넘어짐
+  PASS  = 칸마다 실제 속도 차 <= 0.015 (yaw 칸은 0.05 rad/s) · 성공 수 차 <= 3 · 넘어짐 수 차 <= 1 (lead 15:03 정정: 「두 환경 모두 0」 이 아니라 같은 시드 · 같은 시작점에서 로컬 대비 칸마다 차 1 대 이하.
+          로컬 기준값에 옆 두 칸 1 씩이 있었기 때문)
+  FAIL  = 속도 차 > 0.03 (yaw 는 0.05 밖) 또는 넘어짐 수 차 > 1
+  거절   = 두 json 의 seed · room_seed 가 다르면 비교하지 않음 (json 에 없으면 --assume-seed 로 적어 줘야 함: 옛 판 json 은 seed 를 안 적었다)
   그 사이 (0.015 초과 0.03 이하, 성공 수 차 3 초과) = "주의" (통과도 실패도 아님 · 판정은 lead)
 실제 속도 = mean_ratio x |명령|. mean_ratio 는 두 json 모두 같은 식 (env_diff.score_case). 절대 성공률 80% 는 참고 칸으로만 둔다.
 사용: python -m foothold_s2.nav.env_diff_compare POD.json LOCAL.json [--out compare.json]
@@ -17,6 +19,7 @@ SPEED_PASS = 0.015
 SPEED_FAIL = 0.03
 YAW_PASS = 0.05
 SUCCESS_PASS = 3
+FELL_DIFF_PASS = 1
 REF_MIN_SUCCESS_FRAC = 0.8
 
 
@@ -37,12 +40,13 @@ def compare_case(name: str, a: dict, b: dict) -> dict:
     ds = abs(int(a["success"]) - int(b["success"]))
     fell = [int(a["fell"]), int(b["fell"])]
     reasons = []
+    fell_diff = abs(fell[0] - fell[1])
     if dv is None:
         reasons.append("한쪽 속도 없음 (모든 env 넘어짐)")
     elif dv > fail_lim:
         reasons.append(f"속도 차 {dv:.4f} > {fail_lim}")
-    if any(fell):
-        reasons.append(f"넘어짐 pod {fell[0]} · local {fell[1]}")
+    if fell_diff > FELL_DIFF_PASS:
+        reasons.append(f"넘어짐 수 차 {fell_diff} > {FELL_DIFF_PASS} (pod {fell[0]} · local {fell[1]})")
     if reasons:
         verdict = "FAIL"
     else:
@@ -58,7 +62,19 @@ def compare_case(name: str, a: dict, b: dict) -> dict:
             "move_m_pod": a.get("mean_move_m"), "move_m_local": b.get("mean_move_m"), "ref_80pct_pass": ref}
 
 
-def compare(pod: dict, local: dict) -> dict:
+def seeds_of(res: dict, assume: tuple | None):
+    got = (res.get("seed"), res.get("room_seed"))
+    if None in got:
+        if assume is None:
+            raise ValueError("json 에 seed · room_seed 가 없다: --assume-seed S,R 로 적어 줄 것 (옛 판)")
+        return assume
+    return got
+
+
+def compare(pod: dict, local: dict, assume_seed: tuple | None = None) -> dict:
+    sp, sl = seeds_of(pod, assume_seed), seeds_of(local, assume_seed)
+    if sp != sl:
+        raise ValueError(f"seed 가 다르다 (seed, room_seed): pod {sp} · local {sl} -> 비교하지 않음")
     ca, cb = pod["cases"], local["cases"]
     if set(ca) != set(cb):
         raise ValueError(f"칸 이름이 다름: pod {sorted(ca)} · local {sorted(cb)}")
@@ -70,7 +86,7 @@ def compare(pod: dict, local: dict) -> dict:
     rows = [compare_case(k, ca[k], cb[k]) for k in ca]
     v = [r["verdict"] for r in rows]
     overall = "FAIL" if "FAIL" in v else ("WARN" if "WARN" in v else "PASS")
-    return {"overall": overall, "rows": rows, "lower_sha256": [pod.get("lower_sha256"), local.get("lower_sha256")],
+    return {"overall": overall, "seeds": list(sp), "seeds_assumed": assume_seed is not None, "rows": rows, "lower_sha256": [pod.get("lower_sha256"), local.get("lower_sha256")],
             "same_lower": pod.get("lower_sha256") == local.get("lower_sha256"),
             "physics": [(pod.get("physics") or {}).get("backend", pod.get("physics")), (local.get("physics") or {}).get("backend", local.get("physics"))]}
 
@@ -89,9 +105,10 @@ def table(res: dict) -> str:
 
 def main(argv=None) -> int:
     p = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    p.add_argument("pod"); p.add_argument("local"); p.add_argument("--out")
+    p.add_argument("pod"); p.add_argument("local"); p.add_argument("--out"); p.add_argument("--assume-seed", help="json 에 seed 가 없을 때 S,R (seed, room_seed)")
     a = p.parse_args(argv)
-    res = compare(json.loads(Path(a.pod).read_text()), json.loads(Path(a.local).read_text()))
+    assume = tuple(int(x) for x in a.assume_seed.split(",")) if a.assume_seed else None
+    res = compare(json.loads(Path(a.pod).read_text()), json.loads(Path(a.local).read_text()), assume)
     print(table(res))
     if a.out:
         Path(a.out).write_text(json.dumps(res, ensure_ascii=False, indent=2))
