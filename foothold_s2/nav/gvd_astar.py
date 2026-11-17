@@ -10,6 +10,7 @@
 from __future__ import annotations
 
 import heapq
+import math
 from dataclasses import dataclass
 
 import numpy as np
@@ -140,54 +141,107 @@ def _cell(g, xy):
     return int(c[0]), int(c[1])
 
 
-def find_path(g: gm.GradeMap, start_xy, goal_xy, ramp_m: float = RAMP_M, stride_m: float | None = None, straighten: bool = False) -> Path:
-    s, t = _cell(g, start_xy), _cell(g, goal_xy)
-    if g.grade[s] == gm.BLOCKED or g.grade[t] == gm.BLOCKED:
-        raise ValueError("start and goal must be on passable cells")
+_CACHE = True      # 시험이 끌 수 있다 (캐시 없는 옛 계산과 같은 길이 나오는지 대조)
+
+
+def _static(g: gm.GradeMap, ramp_m: float, stride_m: float | None) -> dict:
+    """방 (GradeMap) 마다 한 번만 만드는 값: 통과 가능 덩어리 · 건너뛰기 간선 · 덩어리 합치기. 시작 · 목표와 무관해서 find_path 가 부를 때마다 다시 만들 까닭이 없다
+    (G3 Pod 실측: 새 과제 하나에 find_path 약 8 번 · 한 번 0.1 초 안팎 중 대부분이 이 계산이었다). 격자 · 비용 · 간격이 바뀌면 (지문이 달라지면) 다시 만든다."""
+    fp = (hash(g.grade.tobytes()), hash(np.asarray(g.cost).tobytes()), float(g.res), float(g.stride_m if stride_m is None else stride_m), float(ramp_m),
+          None if g.patch is None else hash(np.asarray(g.patch).tobytes()))
+    c = getattr(g, "_gvd_static", None) if _CACHE else None
+    if c is not None and c["fp"] == fp:
+        return c
     reg, _ = ndimage.label(g.grade != gm.BLOCKED, structure=np.ones((3, 3)))   # 통과 가능 덩어리
     jumps = jump_edges(g, stride_m)
     uf = _UF()
     for e in jumps:                                                            # 건너뛰기로 이어지는 덩어리끼리 합침
         uf.union(int(reg[e[0], e[1]]), int(reg[e[2], e[3]]))
-    if uf.find(int(reg[s])) != uf.find(int(reg[t])):
-        return Path(False, np.zeros((0, 2)), 0.0, np.inf)                      # 서로 다른 덩어리 = 경로 없음
-    group = uf.find(int(reg[s]))
+    c = {"fp": fp, "reg": reg, "jumps": jumps, "uf": uf, "groups": {}, "clear": None}
+    if _CACHE:
+        g._gvd_static = c
+    return c
+
+
+def _group(g: gm.GradeMap, st: dict, group: int, ramp_m: float):
+    """한 덩어리의 (노드 마스크 · 가장 가까운 노드 색인 · 건너뛰기 연결). 없으면 (None, None, None)."""
+    got = st["groups"].get(group)
+    if got is not None:
+        return got
+    reg, jumps, uf = st["reg"], st["jumps"], st["uf"]
     member = np.array([uf.find(int(k)) == group for k in range(int(reg.max()) + 1)], bool)
     member[0] = False
     nodes = node_mask(g, ramp_m, member[reg], jumps)
     if not nodes.any():
+        got = (None, None, None)
+    else:
+        _, idx = ndimage.distance_transform_edt(~nodes, return_indices=True)
+        cost = g.cost
+        link: dict = {}
+        for ax, ay, bx, by, d in jumps:
+            u, v = (int(ax), int(ay)), (int(bx), int(by))
+            if nodes[u] and nodes[v]:
+                step = d / 1000.0 * g.res * 0.5 * (cost[u] + cost[v])
+                link.setdefault(u, []).append((v, step))
+                link.setdefault(v, []).append((u, step))
+        got = (nodes, idx, link)
+    if _CACHE:
+        st["groups"][group] = got
+    return got
+
+
+def _lists(st: dict, nodes, cost):
+    st["lists"] = (nodes, nodes.tolist(), np.asarray(cost, np.float64).tolist())
+    return st["lists"]
+
+
+def find_path(g: gm.GradeMap, start_xy, goal_xy, ramp_m: float = RAMP_M, stride_m: float | None = None, straighten: bool = False) -> Path:
+    s, t = _cell(g, start_xy), _cell(g, goal_xy)
+    if g.grade[s] == gm.BLOCKED or g.grade[t] == gm.BLOCKED:
+        raise ValueError("start and goal must be on passable cells")
+    st = _static(g, ramp_m, stride_m)
+    reg, uf = st["reg"], st["uf"]
+    if uf.find(int(reg[s])) != uf.find(int(reg[t])):
+        return Path(False, np.zeros((0, 2)), 0.0, np.inf)                      # 서로 다른 덩어리 = 경로 없음
+    nodes, idx, link = _group(g, st, uf.find(int(reg[s])), ramp_m)
+    if nodes is None:
         return Path(False, np.zeros((0, 2)), 0.0, np.inf)
-    _, idx = ndimage.distance_transform_edt(~nodes, return_indices=True)
     s2, t2 = (int(idx[0][s]), int(idx[1][s])), (int(idx[0][t]), int(idx[1][t]))
     cost = g.cost
     h, w = cost.shape
-    link: dict = {}
-    for ax, ay, bx, by, d in jumps:
-        u, v = (int(ax), int(ay)), (int(bx), int(by))
-        if nodes[u] and nodes[v]:
-            step = d / 1000.0 * g.res * 0.5 * (cost[u] + cost[v])
-            link.setdefault(u, []).append((v, step))
-            link.setdefault(v, []).append((u, step))
+    ls = st.get("lists")
+    if ls is None or ls[0] is not nodes:
+        ls = _lists(st, nodes, cost)
+    nodes_l, cost_l = ls[1], ls[2]
+    res = g.res
+    nb = [(dx, dy, math.hypot(dx, dy) * res * 0.5, math.hypot(dx, dy) * res) for dx, dy in _NB]
+    hyp = math.hypot
     dist = {s2: 0.0}
     prev = {}
     pq = [(0.0, s2)]
     best = np.inf
+    t0, t1 = t2
     while pq:
         f, u = heapq.heappop(pq)
         if u == t2:
             best = dist[u]
             break
         du = dist[u]
-        if f > du + np.hypot(u[0] - t2[0], u[1] - t2[1]) * g.res + 1e-9:
+        u0, u1 = u
+        if f > du + hyp(u0 - t0, u1 - t1) * res + 1e-9:
             continue                                    # 낡은 큐 항목
-        around = [((u[0] + dx, u[1] + dy), np.hypot(dx, dy) * g.res * 0.5 * (cost[u] + cost[(u[0] + dx, u[1] + dy)]))
-                  for dx, dy in _NB if 0 <= u[0] + dx < h and 0 <= u[1] + dy < w and nodes[u[0] + dx, u[1] + dy]]
+        cu = cost_l[u0][u1]
+        around = []
+        for dx, dy, half, _full in nb:                  # 순수 파이썬 (numpy 스칼라 접근이 느렸다: G3 Pod 실측)
+            x, y = u0 + dx, u1 + dy
+            if 0 <= x < h and 0 <= y < w and nodes_l[x][y]:
+                around.append(((x, y), half * (cu + cost_l[x][y])))
         for v, step in around + link.get(u, []):
             nd = du + step
             if nd < dist.get(v, np.inf):
                 dist[v] = nd
                 prev[v] = u
-                heapq.heappush(pq, (nd + np.hypot(v[0] - t2[0], v[1] - t2[1]) * g.res, v))
+                heapq.heappush(pq, (nd + hyp(v[0] - t0, v[1] - t1) * res, v))
     if not np.isfinite(best):
         return Path(False, np.zeros((0, 2)), 0.0, np.inf)
     cells = [t2]
@@ -215,23 +269,23 @@ def straighten_path(g: gm.GradeMap, points: np.ndarray, min_clear_m: float = MIN
     pts = np.asarray(points, float)
     if len(pts) <= 2:
         return pts
-    dist = ndimage.distance_transform_edt(g.grade != gm.BLOCKED) * g.res
+    st = _static(g, RAMP_M, None)
+    if st["clear"] is None or not _CACHE:
+        st["clear"] = (ndimage.distance_transform_edt(g.grade != gm.BLOCKED) * g.res, g.grade == gm.FREE)
+    dist, free_grade = st["clear"]
     h, w = dist.shape
+    hw = np.array([h - 1, w - 1])
 
     def at(xy):
-        c = np.clip((np.asarray(xy) / g.res).astype(int), 0, [h - 1, w - 1])
+        c = np.clip((np.asarray(xy) / g.res).astype(int), 0, hw)
         return int(c[0]), int(c[1])
 
     need = min(min_clear_m, float(min(dist[at(q)] for q in pts)))
-    free_grade = g.grade == gm.FREE
 
     def visible(a, b):
         n = max(int(np.ceil(np.linalg.norm(b - a) / STRAIGHT_STEP_M)), 1)
-        for k in range(n + 1):
-            c = at(a + (b - a) * (k / n))
-            if not free_grade[c] or dist[c] < need - 1e-9:
-                return False
-        return True
+        c = np.clip(((a + (b - a) * (np.arange(n + 1) / n)[:, None]) / g.res).astype(int), 0, hw)      # 선 위 모든 점을 한 번에 (옛 꼴은 점마다 파이썬 반복)
+        return bool(free_grade[c[:, 0], c[:, 1]].all() and (dist[c[:, 0], c[:, 1]] >= need - 1e-9).all())
 
     out, i = [pts[0]], 0
     while i < len(pts) - 1:

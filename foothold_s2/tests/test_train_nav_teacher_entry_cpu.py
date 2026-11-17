@@ -69,3 +69,24 @@ def test_a_failing_factory_leaves_the_traceback_in_a_file_and_returns_one(files)
     mod.boom = boom
     rc = tnt.main([("fake_g3_factory:boom" if a == "fake_g3_factory:make" else a) for a in base] + ["--out-dir", str(tmp / "o3"), "--iterations", "1"])
     assert rc == 1 and "no kit here" in (tmp / "o3" / "FAILED.txt").read_text()
+
+
+def test_sigusr1_dumps_the_python_stack_without_killing_the_process():
+    """Pod 는 ptrace 가 막혀 py-spy 가 안 된다: kill -USR1 로 스택을 stderr 에 찍는다."""
+    import os
+    import signal
+    import subprocess
+    import sys
+    import time
+
+    code = "import time; from foothold_s2.scripts import train_nav_teacher as t; t._register_stack_dump(); print('ready', flush=True); time.sleep(30)"
+    p = subprocess.Popen([sys.executable, "-c", code], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, env=dict(os.environ, PYTHONPATH=os.getcwd()))
+    try:
+        assert p.stdout.readline().strip() == "ready"
+        os.kill(p.pid, signal.SIGUSR1)
+        time.sleep(1.0)
+        assert p.poll() is None                                  # 안 죽는다
+    finally:
+        p.kill()
+        _out, err = p.communicate()
+    assert "File" in err and "<module>" in err

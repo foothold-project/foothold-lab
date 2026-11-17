@@ -8,6 +8,7 @@ env 의 방 번호: 기본은 round robin (env i -> 방 i mod 방 수), 여러 �
 """
 from __future__ import annotations
 
+import hashlib
 from dataclasses import dataclass
 
 import numpy as np
@@ -57,6 +58,7 @@ class NavTask:
         # 방 설계 (DESIGN-HIPAN-ROOMS-1117 3.3): 목표는 경로 길이로 뽑고 (path_range_m) 과제의 winding_frac 는 굴곡 비 (경로 / 직선) winding_min 이상인 쌍에서 뽑는다.
         # goal_candidates 개를 뽑아 길을 내 보고 조건에 맞는 것을 고른다. 맞는 것이 없으면 (좁은 방 · 시작이 구석) 길이만 맞는 것 · 그것도 없으면 옛 꼴 (직선 min_task_m 이상) 로 물러선다.
         self.straighten, self.path_range_m = bool(straighten), tuple(path_range_m)
+        self.table = None; self.table_tol_m = 0.3; self.table_sha256 = None; self.task_table_hits = 0; self.task_table_miss = 0   # 시작 · 목표 · 경로 표 (build_table): 학습 중에는 표에서 뽑는다
         self.winding_frac, self.winding_min, self.goal_candidates = float(winding_frac), float(winding_min), int(goal_candidates)
         self.task_new = 0                 # 새로 뽑은 과제 수 (누적)
         self.task_winding = 0             # 그 가운데 굴곡 비 winding_min 이상 (누적)
@@ -113,6 +115,63 @@ class NavTask:
             return None
         return pool[int(self.rng.integers(len(pool)))]
 
+    # ---- 시작 · 목표 · 경로 표 (G3 Pod 실측: 새 과제 1 개 = 경로 계산 8 번 · 학습 중에도 도달 · 넘어짐마다 계속 뽑혀 CPU 한 코어에 묶였다)
+    def build_table(self, starts_by_room, per_start: int = 32, tol_m: float = 0.3, seed: int = 0, log=None) -> str:
+        """방마다 시작점 (K, 2 · 방 틀 m) 마다 목표 후보 per_start 개를 `_pick_goal` 과 같은 규칙으로 걸러 (직선 min_task_m 이상 · 경로 있음 · 길이 path_range_m 안)
+        굴곡 (경로 / 직선 >= winding_min) 쌍과 그렇지 않은 쌍으로 나눠 둔다. 뽑을 때 (`_new_task`) 는 `_pick_goal` 과 같은 규칙 (굴곡 쌍 절반 시도 · 없으면 아무 쌍) 으로 표에서만 고른다.
+        시작이 표의 어느 시작점에서도 tol_m 보다 멀면 (표가 모르는 자리) 옛 꼴로 직접 길을 낸다. 돌려주는 값 = 표 sha256 (영수증 · 로그용)."""
+        rng = np.random.default_rng(int(seed) + 7919)
+        lo, hi = self.path_range_m
+        self.table, h = [], hashlib.sha256()
+        for r, asset in enumerate(self.assets):
+            starts = np.asarray(starts_by_room[r], float).reshape(-1, 2)
+            g = asset.grade
+            rows = []
+            for s in starts:
+                ok, wound = [], []
+                for t in gm.sample_free_points(g, rng, int(per_start)):
+                    straight = float(np.linalg.norm(s - t))
+                    if straight < self.min_task_m:
+                        continue
+                    try:
+                        pp = gvd_astar.find_path(g, s, t, straighten=self.straighten)
+                    except ValueError:
+                        continue
+                    if not pp.found:
+                        continue
+                    L = self._length(pp.points)
+                    if not (lo <= L <= hi):
+                        continue
+                    (wound if L / straight >= self.winding_min else ok).append((np.asarray(t, float), pp.points))
+                rows.append({"ok": ok, "wound": wound})
+                for t, pts in ok + wound:
+                    h.update(t.tobytes()); h.update(np.float64(self._length(pts)).tobytes())
+            self.table.append({"starts": starts, "rows": rows})
+            if log:
+                log(f"task table room {r}: starts {len(starts)} ok {sum(len(x['ok']) for x in rows)} wound {sum(len(x['wound']) for x in rows)}")
+        self.table_tol_m, self.table_sha256 = float(tol_m), h.hexdigest()
+        return self.table_sha256
+
+    def _table_pick(self, i: int, s):
+        if self.table is None:
+            return None
+        tb = self.table[self.room_id[i]]
+        d = np.linalg.norm(tb["starts"] - np.asarray(s, float), axis=1)
+        k = int(d.argmin())
+        if d[k] > self.table_tol_m:
+            self.task_table_miss += 1
+            return None
+        row = tb["rows"][k]
+        want_wind = self.rng.random() < self.winding_frac
+        pool = (row["wound"] or row["ok"]) if want_wind else (row["ok"] + row["wound"])
+        if not pool:
+            self.task_table_miss += 1
+            return None
+        t, pts = pool[int(self.rng.integers(len(pool)))]
+        pts = pts.copy(); pts[0] = np.asarray(s, float)                    # 몸이 실제로 선 자리에서 출발
+        self.task_table_hits += 1
+        return t.copy(), pts
+
     def _note_task(self, i: int) -> None:
         s, t, pts = self.start[i], self.goal[i], self.path[i]
         straight = float(np.linalg.norm(s - t))
@@ -124,6 +183,12 @@ class NavTask:
     def _new_task(self, i: int, start=None) -> None:
         """start 가 주어지면 (실제 몸 위치) 그것이 시작이고 목표만 뽑는다. 없으면 시작 · 목표를 둘 다 뽑는다 (옛 꼴 · 시험용)."""
         g = self.assets[self.room_id[i]].grade
+        if start is not None:
+            got = self._table_pick(i, np.asarray(start, float))
+            if got is not None:
+                self.start[i], self.goal[i], self.path[i] = np.asarray(start, float), got[0], got[1]
+                self._note_task(i)
+                return
         for _ in range(self.max_task_tries):
             s = gm.sample_free_points(g, self.rng, 1)[0] if start is None else np.asarray(start, float)
             got = self._pick_goal(i, s, g)

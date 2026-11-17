@@ -68,6 +68,18 @@ def build_receipt(*, lower_checkpoint, lower_sha256, room_manifests, plan, vx_co
             "save_interval": ppo.save_interval, "resume": resume_row, "lower_map_mode": "eval_gt", "training_started": False}
 
 
+def _register_stack_dump() -> None:
+    """Pod 는 ptrace 가 막혀 py-spy dump 가 안 된다: `kill -USR1 <학습 python PID>` 로 모든 스레드의 파이썬 스택을 stderr (= train.log) 에 찍는다 (G3 Pod 느림 조사 · lead 00:51)."""
+    import faulthandler
+    import signal
+
+    if hasattr(signal, "SIGUSR1"):
+        try:
+            faulthandler.register(signal.SIGUSR1, all_threads=True, chain=False)
+        except (OSError, ValueError, AttributeError):          # stderr 가 파일 서술자가 없는 곳 (pytest 가로채기 등): 스택 덤프만 못 쓴다
+            pass
+
+
 def main(argv=None) -> int:
     p = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     p.add_argument("--print", dest="dry", action="store_true", help="print the start receipt and exit (the only mode so far)")
@@ -85,6 +97,8 @@ def main(argv=None) -> int:
     p.add_argument("--seed", type=int, default=0)
     p.add_argument("--receipt-out", default=None, help="also write the receipt here (never overwritten)")
     a = p.parse_args(argv)
+    if not a.dry:
+        _register_stack_dump()
     if not a.dry and not (a.env_factory and a.out_dir and a.iterations):
         print("refused: training needs --env-factory, --out-dir and --iterations (or use --print)", file=sys.stderr)
         return 2

@@ -72,11 +72,18 @@ def prepare_rooms(cfg: dict) -> dict:
     return {"manifest": manifest, "mesh": out / "terrain_mesh.npz", "assets": [nav_task.make_asset(r, table) for r in rooms]}
 
 
-def make_task(assets, num_envs: int, seed: int, rows, env_origins_xy):
+def make_task(assets, num_envs: int, seed: int, rows, env_origins_xy, table_starts=None, per_start: int = 32):
+    """table_starts = 방마다 시작점 (K, 2) 목록이면 시작 · 목표 · 경로 표를 미리 만든다 (학습 중 새 과제는 표에서 뽑기만). None 이면 옛 꼴 (뽑을 때마다 길을 냄)."""
     from foothold_s2.nav import nav_task
 
     task = nav_task.NavTask(assets, num_envs, np.random.default_rng(seed))
     task.set_rooms_from_rows(rows, env_origins_xy)
+    if table_starts is not None:
+        import time
+
+        t0 = time.time()
+        sha = task.build_table(table_starts, per_start=per_start, seed=seed, log=lambda m: print(m, flush=True))
+        print(f"TASK_TABLE sha256 {sha} secs {time.time() - t0:.0f} per_start {per_start}", flush=True)
     return task
 
 
@@ -99,7 +106,10 @@ def _build(cfg: dict, with_camera: bool):
                                   seed=int(cfg["seed"]), prep_path=cfg.get("prep_path"), extra_scene=extra)
     raw = nav.raw
     rows = raw.scene.terrain.terrain_levels.cpu().numpy()
-    task = make_task(prepared["assets"], int(cfg["num_envs"]), int(cfg["seed"]), rows, raw.scene.env_origins[:, :2].cpu().numpy())
+    from foothold_s2.nav import room_generator as rg
+
+    starts = None if not int(cfg.get("task_table_per_start", 32)) else [rg.start_points(a.room, int(cfg["n_starts"]), seed=int(cfg["room_seed"]) + row)[:, :2] for row, a in enumerate(prepared["assets"])]
+    task = make_task(prepared["assets"], int(cfg["num_envs"]), int(cfg["seed"]), rows, raw.scene.env_origins[:, :2].cpu().numpy(), starts, int(cfg.get("task_table_per_start", 32)))
     depth_fn = (lambda: th(raw.scene["depth_camera"].data.output["distance_to_image_plane"])) if with_camera else None
     return nav, task, depth_fn
 
