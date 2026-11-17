@@ -632,9 +632,7 @@ stages:
   slow_hold_range_s: [6.0, 8.0]
   # Fence of a boundary adjustment of slow_hold_range_s (EX42_SEGMENT_ADJUST): an entry is null (off) or a pair inside it, and 0 < lo <= hi <= 30.
   slow_hold_fence_s: [4.0, 12.0]
-  # Flag envs turn first (team lead 2026-11-17): a walking flag env whose flag is more than this angle (rad) off its heading turns in place
-  # (vx = vy = 0, wz = clip(angle, +-flag_wz_clip)); inside it, it walks toward the flag with the small wz as before. No cell = off (E1F keeps its judged path).
-  flag_turn_first_rad: 0.5
+  # Handover control version (lead 2026-11-17 09:40, planner 09:37 candidate 1): E1F row content: no stepping stones, no flag turn first.
   slow_track_heading: true
   live_monitor:
     enabled: true
@@ -730,10 +728,6 @@ stages:
         kinds_of: continuous
         exposure: 1.0
         level_cap: 5
-      - family: A
-        kind: stepping_stones_low
-        share: 0.05
-        level_cap: 0
     floors:
       global_command_floor:
         reverse: 0.05
