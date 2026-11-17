@@ -214,3 +214,22 @@ def test_proprio_reads_the_policy_key_of_a_tensordict_that_also_has_a_shape(spac
     nav.reset()
     nav.obs = TensorDict({"policy": torch.arange(3 * 98, dtype=torch.float32).reshape(3, 98)}, batch_size=[3])
     assert nav._proprio().shape == (3, 45)
+
+
+def test_term_counts_or_over_the_window_per_termination_reason():
+    import types
+    import torch
+    from foothold_s2.nav import nav_env
+
+    tm = types.SimpleNamespace(active_terms=["base_contact", "time_out"], vals={})
+    tm.get_term = lambda name: tm.vals[name]
+    e = nav_env.NavEnv.__new__(nav_env.NavEnv)
+    e.env = types.SimpleNamespace(unwrapped=types.SimpleNamespace(termination_manager=tm))
+    tm.vals = {"base_contact": torch.tensor([True, False, False]), "time_out": torch.tensor([False, False, True])}
+    e._note_terms(True)
+    tm.vals = {"base_contact": torch.tensor([False, True, False]), "time_out": torch.tensor([False, False, False])}
+    e._note_terms(False)
+    assert e.term_counts == {"base_contact": 2, "time_out": 1}
+    e.env = object()
+    e._note_terms(True)
+    assert e.term_counts == {}

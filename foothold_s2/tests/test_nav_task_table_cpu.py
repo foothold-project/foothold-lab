@@ -77,3 +77,18 @@ def test_cached_find_path_matches_uncached_and_is_not_stale_after_the_grid_chang
     g.grade[90:110, :] = gm.BLOCKED; g.cost[90:110, :] = np.inf                                # 격자가 바뀌면 지문이 달라 캐시를 다시 만든다 (낡은 길을 안 낸다)
     st2 = gvd_astar._static(g, gvd_astar.RAMP_M, None)
     assert st2 is not st1 and st2["fp"] != st1["fp"]
+
+
+def test_continuing_task_reset_uses_the_table_and_vectorized_subgoal_samples_match():
+    from foothold_s2.nav import pgcl
+    _rooms, assets, starts = _setup(n_rooms=1, k=4)
+    t = nav_task.NavTask(assets, 1, np.random.default_rng(5))
+    t.build_table(starts, per_start=16, seed=0)
+    t.reset_envs([0], start_xy=starts[0][0][None])
+    live_before = t.task_table_hits
+    t.pgcl[0].needs_new_task = False                                  # 넘어짐: 과제는 이어 쓰는 경우
+    t.reset_envs([0], start_xy=starts[0][1][None])
+    assert t.task_redraw_on_reset == 1 and t.task_table_hits == live_before + 1 and t.task_table_miss == 0
+    P = np.array([[0.0, 0.0], [1.0, 0.0], [1.0, 0.0], [1.0, 2.0], [3.0, 2.0]])      # 길이 0 구간 포함
+    arc = pgcl._arc(P); ss = np.linspace(-0.5, arc[-1] + 0.5, 57)
+    assert np.allclose(pgcl._at_many(P, arc, ss), np.array([pgcl._at(P, arc, s) for s in ss]), atol=1e-12)

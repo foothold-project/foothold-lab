@@ -55,6 +55,13 @@ class TeacherVecEnv:
         info = {"task_reached": int(out["task_reached"].sum()), "fell": int((done & ~np.asarray(state.timed_out, bool)).sum()),
                 "task_fallback": int(getattr(self.task, "task_fallbacks", 0)) - getattr(self, "_fb0", 0),
                 "task_new": int(getattr(self.task, "task_new", 0)) - getattr(self, "_new0", 0), "task_winding": int(getattr(self.task, "task_winding", 0)) - getattr(self, "_wind0", 0)}
+        for k, v in (getattr(self.nav, "term_counts", None) or {}).items():       # 종료 까닭별 env 수 (몸 닿음 · 기울기 · 시간 ...)
+            info["term_" + k] = int(v)
+        col = getattr(state, "collision", None)
+        info["fell_with_collision"] = 0 if col is None else int((done & ~np.asarray(state.timed_out, bool) & np.asarray(col, bool)).sum())
+        info["task_redraw"] = int(getattr(self.task, "task_redraw_on_reset", 0)) - getattr(self, "_rd0", 0)
+        info["table_miss"] = int(getattr(self.task, "task_table_miss", 0)) - getattr(self, "_tm0", 0)
+        self._rd0, self._tm0 = int(getattr(self.task, "task_redraw_on_reset", 0)), int(getattr(self.task, "task_table_miss", 0))
         self._fb0 = int(getattr(self.task, "task_fallbacks", 0))
         self._new0, self._wind0 = int(getattr(self.task, "task_new", 0)), int(getattr(self.task, "task_winding", 0))
         return self._obs(state), r, d, to, info
@@ -111,8 +118,9 @@ def train(env, ppo, *, out_dir, iterations, receipt: dict, resume=None, device="
                 # 시간 초과는 끝이 아니다: 다음 가치로 이어 받는다 (부트스트랩)
                 r = r + ppo.gamma * v * to.float()
                 O.append(obs), A.append(a), LP.append(dist.log_prob(a).sum(-1)), V.append(v), R.append(r), D.append(d.float())
-                for k in stats:
-                    stats[k] += info.get(k, 0)
+                for k, v in info.items():
+                    if k in stats or k.startswith(("term_", "fell_", "task_redraw", "table_")):
+                        stats[k] = stats.get(k, 0) + v
                 obs = nobs
             last_v = critic(obs).squeeze(-1)
         adv, gae = torch.zeros(T, n, device=device), torch.zeros(n, device=device)

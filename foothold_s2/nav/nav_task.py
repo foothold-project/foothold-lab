@@ -58,7 +58,7 @@ class NavTask:
         # 방 설계 (DESIGN-HIPAN-ROOMS-1117 3.3): 목표는 경로 길이로 뽑고 (path_range_m) 과제의 winding_frac 는 굴곡 비 (경로 / 직선) winding_min 이상인 쌍에서 뽑는다.
         # goal_candidates 개를 뽑아 길을 내 보고 조건에 맞는 것을 고른다. 맞는 것이 없으면 (좁은 방 · 시작이 구석) 길이만 맞는 것 · 그것도 없으면 옛 꼴 (직선 min_task_m 이상) 로 물러선다.
         self.straighten, self.path_range_m = bool(straighten), tuple(path_range_m)
-        self.table = None; self.table_tol_m = 0.3; self.table_sha256 = None; self.task_table_hits = 0; self.task_table_miss = 0   # 시작 · 목표 · 경로 표 (build_table): 학습 중에는 표에서 뽑는다
+        self.table = None; self.table_tol_m = 0.3; self.table_sha256 = None; self.task_table_hits = 0; self.task_table_miss = 0; self.task_redraw_on_reset = 0   # 시작 · 목표 · 경로 표 (build_table): 학습 중에는 표에서 뽑는다
         self.winding_frac, self.winding_min, self.goal_candidates = float(winding_frac), float(winding_min), int(goal_candidates)
         self.task_new = 0                 # 새로 뽑은 과제 수 (누적)
         self.task_winding = 0             # 그 가운데 굴곡 비 winding_min 이상 (누적)
@@ -240,6 +240,9 @@ class NavTask:
             if self.path[i] is None or p.needs_new_task:
                 self._new_task(i, s)
                 p.needs_new_task = False
+            elif s is not None and self.table is not None:
+                self.task_redraw_on_reset += 1                              # 표가 있으면 넘어진 뒤에도 표에서 새 과제 (같은 목표로 다시 A* 를 돌리지 않는다)
+                self._new_task(i, s)
             elif s is not None:
                 pts = self._plan(i, s, self.goal[i])
                 if pts is None:

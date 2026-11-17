@@ -125,6 +125,22 @@ class NavEnv:
             ang_vel_b=_np(th(data.root_ang_vel_b)), q=_np(th(data.joint_pos)), q0=_np(th(data.default_joint_pos)[0]),
             proprio=self._proprio(), collision=np.zeros(self.n, bool) if collision is None else collision)
 
+    def _note_terms(self, first: bool) -> None:
+        """이 윈도 안에서 종료 항 (몸 닿음 · 기울기 · 시간 · ...) 별로 한 번이라도 켜진 env 수. GPU 에서 OR 하고 윈도 끝에 한 번만 센다 (term_counts)."""
+        try:
+            tm = self.env.unwrapped.termination_manager
+            if first:
+                self._term_acc = {}
+            for name in tm.active_terms:
+                v = tm.get_term(name).bool()
+                self._term_acc[name] = v if name not in self._term_acc else (self._term_acc[name] | v)
+        except (AttributeError, KeyError, RuntimeError):
+            self._term_acc = {}
+
+    @property
+    def term_counts(self) -> dict:
+        return {k: int(v.sum().item()) for k, v in getattr(self, "_term_acc", {}).items()}
+
     def step(self, high_action) -> NavState:
         """상위 행동 (n, 3) 하나 -> 하위 `hold` 스텝. 중간에 끝난 env 는 Isaac 이 되돌려 놓으므로 남은 스텝도 같은 명령으로 간다
         (벡터 환경이라 건너뛸 수 없다). 끝남은 `done` · `done_step` 으로 알린다."""
@@ -145,6 +161,7 @@ class NavEnv:
             action = self.lower.act(self.obs)
             self.obs, _reward, done, extras = self.env.step(action)
             self.lower.reset(done)
+            self._note_terms(k == 0)
             _p, _q, vel, yaw = self._body()
             errs.append(lower_adapter.tracking_error(applied.cmd[:, :3], _np(vel), _np(yaw)))
             d = _np(done).astype(bool)

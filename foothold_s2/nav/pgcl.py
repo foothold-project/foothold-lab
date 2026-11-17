@@ -37,6 +37,15 @@ def _at(points, arc, s):
     return points[i] + t * (points[i + 1] - points[i])
 
 
+def _at_many(points, arc, ss):
+    """`_at` 을 여러 호길이에 한꺼번에 (같은 값). 파이썬 반복 대신 searchsorted 한 번."""
+    ss = np.clip(np.asarray(ss, float), 0.0, arc[-1])
+    i = np.minimum(np.searchsorted(arc, ss, side="right") - 1, len(points) - 2)
+    den = arc[i + 1] - arc[i]
+    t = np.where(den == 0.0, 0.0, (ss - arc[i]) / np.where(den == 0.0, 1.0, den))
+    return points[i] + t[:, None] * (points[i + 1] - points[i])
+
+
 def path_subgoals(points, d: float, g: gm.GradeMap | None = None) -> list:
     """d 간격 부목표 ceil(L / d) 개 (마지막은 목표) + 진입 방향 부목표. g 가 없으면 진입 부목표 없음."""
     P = np.asarray(points, dtype=float)
@@ -49,7 +58,7 @@ def path_subgoals(points, d: float, g: gm.GradeMap | None = None) -> list:
     out[-1] = Subgoal(tuple(P[-1]), "goal", L)
     if g is not None:
         fine = np.arange(0.0, L, g.res / 2)
-        samples = np.array([_at(P, arc, s) for s in fine])
+        samples = _at_many(P, arc, fine)
         cells = (samples / g.res).astype(int)
         sparse = g.grade[cells[:, 0], cells[:, 1]] == gm.SPARSE
         enter = np.nonzero(sparse[1:] & ~sparse[:-1])[0] + 1
