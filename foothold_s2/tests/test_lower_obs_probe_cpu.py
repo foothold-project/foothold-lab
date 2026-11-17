@@ -93,8 +93,8 @@ def test_kit_entry_refuses_without_a_declared_lab_major(monkeypatch):
     with pytest.raises(RuntimeError, match="FOOTHOLD_LAB_MAJOR"):
         lab_compat.require_declared_major()
     monkeypatch.setenv("FOOTHOLD_LAB_MAJOR", "3")
-    monkeypatch.setattr("importlib.metadata.version", lambda name: "2.3.2")
-    with pytest.raises(RuntimeError, match="installed isaaclab"):
+    monkeypatch.setattr("importlib.metadata.version", lambda name: "0.54.2")
+    with pytest.raises(RuntimeError, match="maps to Lab"):
         lab_compat.require_declared_major()
-    monkeypatch.setattr("importlib.metadata.version", lambda name: "3.0.0")
+    monkeypatch.setattr("importlib.metadata.version", lambda name: "28.0.0")
     assert lab_compat.require_declared_major() == 3

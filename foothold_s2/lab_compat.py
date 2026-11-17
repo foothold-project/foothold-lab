@@ -21,7 +21,7 @@ def lab_major() -> int:
     try:
         from importlib.metadata import version
 
-        return int(version("isaaclab").split(".")[0])
+        return lab_major_of_installed(version("isaaclab")) or 2
     except Exception:                                    # 설치 안 됨 (CPU 시험) 또는 버전 못 읽음
         return 2
 
@@ -48,20 +48,30 @@ def quat_to_sim(q_wxyz, major: int | None = None):
     return q_wxyz[..., [1, 2, 3, 0]] if (lab_major() if major is None else major) >= 3 else q_wxyz
 
 
+def lab_major_of_installed(pkg_version: str) -> int | None:
+    """isaaclab 패키지 버전 -> Isaac Lab 주 버전. 실측 표: 이 기기 0.54.2 (Lab 2.3.2) -> 2 · Pod 28.0.0 (Lab 3.0) -> 3. 표 밖이면 None (판단 안 함)."""
+    head = int(pkg_version.split(".")[0])
+    if head == 0:
+        return 2
+    if head >= 28:
+        return 3
+    return None
+
+
 def require_declared_major() -> int:
-    """Kit 을 띄우는 진입점이 부른다 (reviewer 13:38 권고): FOOTHOLD_LAB_MAJOR 가 없으면 거절. 설치된 isaaclab 을 못 읽어 조용히 2 로 떨어지면 쿼터니언 순서가 어긋난 채 도는 것을 막는다.
-    설치된 isaaclab 의 주 버전이 읽히면 선언과 같아야 한다."""
+    """Kit 을 띄우는 진입점이 부른다: FOOTHOLD_LAB_MAJOR 선언이 없으면 거절. 설치 버전이 실측 표 (0.x -> 2 · 28.x -> 3) 에 있고 선언과 다르면 거절.
+    버전을 못 읽거나 표 밖이면 선언을 믿는다 (reviewer 14:08: 패키지 버전 번호 자체는 Lab 주 버전이 아니다)."""
     raw = os.environ.get(_ENV)
     if raw not in ("2", "3"):
         raise RuntimeError(f"{_ENV} must be set to 2 or 3 before starting Kit (got {raw!r})")
     try:
         from importlib.metadata import version
 
-        installed = int(version("isaaclab").split(".")[0])
-    except Exception:                                    # 설치 버전을 못 읽으면 선언을 믿는다 (Kit 안 아님)
+        mapped = lab_major_of_installed(version("isaaclab"))
+    except Exception:
         return int(raw)
-    if installed != int(raw):
-        raise RuntimeError(f"{_ENV}={raw} but the installed isaaclab is {installed}.x")
+    if mapped is not None and mapped != int(raw):
+        raise RuntimeError(f"{_ENV}={raw} but the installed isaaclab maps to Lab {mapped} (package table: 0.x -> 2, 28.x -> 3)")
     return int(raw)
 
 

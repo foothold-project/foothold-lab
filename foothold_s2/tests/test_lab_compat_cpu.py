@@ -124,3 +124,44 @@ def test_no_source_file_imports_a_moved_isaaclab_path_directly():
     hits = [str(p.relative_to(root)) for p in root.rglob("*.py") if "tests" not in p.parts and p.name != "lab_compat.py" and bad.search(p.read_text(encoding="utf-8"))]
     # gap_training 은 설치된 2.3.2 에만 있는 개인 수정판 경로 (3.0 원문에 없음): v2_noscan 두 파일만 허용 (nav 닫힘 밖 · EX-24 전용)
     assert sorted(hits) == ["tasks/agents/v2_noscan_ppo_cfg.py", "tasks/v2_noscan_cfg.py"]
+
+
+# ---------------------------------------------------------------- require_declared_major: 실측 표 (reviewer 14:08 FAIL 뒤)
+def _installed(monkeypatch, ver):
+    import importlib.metadata as md
+
+    monkeypatch.setattr(md, "version", lambda name: ver)
+
+
+@pytest.mark.parametrize("ver,declared", [("0.54.2", "2"), ("0.47.1", "2"), ("28.0.0", "3")])
+def test_declaration_matching_the_real_installed_package_passes(monkeypatch, ver, declared):
+    _installed(monkeypatch, ver)
+    monkeypatch.setenv("FOOTHOLD_LAB_MAJOR", declared)
+    assert lc.require_declared_major() == int(declared)
+
+
+@pytest.mark.parametrize("ver,declared", [("0.54.2", "3"), ("28.0.0", "2")])
+def test_declaration_contradicting_the_installed_package_is_refused(monkeypatch, ver, declared):
+    _installed(monkeypatch, ver)
+    monkeypatch.setenv("FOOTHOLD_LAB_MAJOR", declared)
+    with pytest.raises(RuntimeError, match="maps to Lab"):
+        lc.require_declared_major()
+
+
+def test_missing_declaration_is_refused_and_unknown_package_version_trusts_the_declaration(monkeypatch):
+    _installed(monkeypatch, "5.1.0")
+    monkeypatch.delenv("FOOTHOLD_LAB_MAJOR", raising=False)
+    with pytest.raises(RuntimeError, match="must be set"):
+        lc.require_declared_major()
+    monkeypatch.setenv("FOOTHOLD_LAB_MAJOR", "3")
+    assert lc.require_declared_major() == 3
+
+
+def test_entry_points_import_and_call_the_guard():
+    """진입점 모듈이 Kit 없이 import 되고 (n1_kit_check · kit_factories) 소스에 require_declared_major 호출이 있다 (이 기기 0.54.2 로 선언 2 가 통과하는 것은 위 시험)."""
+    import importlib
+    import inspect
+
+    for name in ("foothold_s2.scripts.n1_kit_check", "foothold_s2.nav.kit_factories"):
+        mod = importlib.import_module(name)
+        assert "require_declared_major()" in inspect.getsource(mod), name
