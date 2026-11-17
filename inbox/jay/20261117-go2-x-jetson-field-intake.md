@@ -4,8 +4,8 @@
 > 작성: 오흥재 · 2026-11-17 17:24
 > 근거: 업체 제공 「Unitree Go2 + Intel RealSense D435i 제어기 사용자 매뉴얼」 · 2026-11-17 현장 터미널 출력 · NoMachine 접속 실측 · 정본 3 전달 문서
 > 요지: 교체받은 Go2 X 계통의 현재 연결과 원격 접속을 확정값 · 업체 문서값 · 미확인값으로 나누고, 저수준 정책 시험 전 점검 순서를 고정한다
-> 상태: 현장 기록 v0.5 · LiDAR L2 현장 판정과 근거 한계 반영
-> 판: v0.5
+> 상태: 현장 기록 v0.6 · 유선 직결 SSH와 LiDARState 실측 반영
+> 판: v0.6
 
 ## 0. 이 기록의 범위
 
@@ -64,11 +64,11 @@
 |---|---|
 | Wi-Fi | `wlp0s20f3` · `192.168.20.60/23` |
 | USB Ethernet | `enx00e04c362511` · RTL8152 10/100 · carrier UP · 100 Mb/s full duplex |
-| 시험용 연결 프로필 | `go2-lab` · `192.168.123.51/24` · default route 사용 안 함 · IPv6 끔 |
-| `.99`와 `.161` ping | 둘 다 3회 송신, 응답 0 |
-| ARP neighbor | `.99 FAILED` · `.161 FAILED` |
+| 직결 연결 프로필 | `go2-lab` · `192.168.50.1/24` · default route 사용 안 함 · IPv6 끔 |
+| Jetson 직결 ping | `192.168.50.2` · 3/3 응답 · 0% loss · RTT 0.891/1.652/2.563 ms |
+| 직결 서비스 | `192.168.50.2:22` SSH 성공 · `192.168.50.2:4000` NoMachine 성공 |
 
-물리 링크는 살아 있지만 ai-lt01이 연결된 NX215 외부 Ethernet 포트에서 업체 내부망의 `.99`와 `.161`까지 L2 이웃을 찾지 못했다. 따라서 그 외부 포트가 Go2 내부망에 단순 bridge된 포트는 아니라는 해석이 현재 관측과 맞는다 `추정`. Jetson의 두 NIC 이름과 주소를 읽기 전에는 포트 역할을 확정하지 않는다.
+초기 `192.168.123.51/24` 설정에서는 업체 내부망의 `.99`와 `.161`까지 L2 이웃을 찾지 못했다. Jetson 외부 NIC와 ai-lt01을 별도 `192.168.50.0/24`로 설정한 뒤 유선 직결 관리 경로가 정상화됐다 `확인됨`. 이 외부 포트는 Go2 내부망의 단순 bridge가 아니다.
 
 ### 3.2 Jetson Wi-Fi와 NoMachine
 
@@ -93,9 +93,9 @@
 |---|---|---|
 | Go2 내부망 | `enP8p1s0` | UP · `192.168.123.99/24` · `192.168.123.0/24` 직접 route |
 | Wi-Fi 관리망 | `wlP1p1s0` | UP · `192.168.21.103/23` · default gateway `192.168.20.1` |
-| ai-lt01 직결 외부 LAN | `enx00181af2995a` | ASIX AX88179 · USB 3 `5000M` · 물리 UP · DHCP 주소 대기 중 · IPv4 없음 |
+| ai-lt01 직결 외부 LAN | `enx00181af2995a` | ASIX AX88179 · USB 3 `5000M` · `192.168.50.2/24` · 물리 UP |
 
-직결 실패 원인은 확정됐다. ai-lt01 케이블은 Jetson의 `enx00181af2995a`에 연결돼 있고, 이 인터페이스에는 IPv4가 없다. `192.168.123.99`는 다른 NIC인 `enP8p1s0`에 붙어 있다. 외부 직결망에는 Go2 내부망과 겹치지 않는 별도 subnet을 설정해야 한다.
+직결 실패 원인은 Jetson 외부 NIC에 IPv4가 없었던 것이다. Go2 내부망 `192.168.123.0/24`와 겹치지 않는 별도 subnet을 설정해 `ai-lt01 192.168.50.1/24 <-> Jetson 192.168.50.2/24`를 확정했다.
 
 SSH는 이미 설치돼 있다 `확인됨`.
 
@@ -105,7 +105,7 @@ SSH는 이미 설치돼 있다 `확인됨`.
 | 서비스 | enabled · active |
 | listen | IPv4 `0.0.0.0:22` · IPv6 `[::]:22` |
 
-따라서 Wi-Fi에서는 지금도 `ssh nvidia@192.168.21.103`으로 접근할 수 있다. 직결 NIC에 정적 IPv4를 설정하면 Wi-Fi 없이도 같은 SSH와 NoMachine을 사용할 수 있다. 비밀번호는 저장소에 기록하지 않고, ai-lt01 전용 SSH key를 등록하는 방식으로 전환한다.
+ai-lt01 전용 ED25519 key를 Jetson `nvidia` 계정에 등록했고 `BatchMode=yes` SSH에 성공했다 `확인됨`. 개인키 경로는 ai-lt01의 `/home/jay/.ssh/id_ed25519_go2`이며 개인키와 비밀번호는 저장소에 기록하지 않는다. 직결 SSH에서 `hostname=tegra-ubuntu`, `whoami=nvidia`, 세 NIC 주소를 다시 확인했다. Wi-Fi가 없어도 유선 SSH와 NoMachine을 사용할 수 있다.
 
 ## 4. 시스템 · 센서 · ROS 실측
 
@@ -163,17 +163,36 @@ LiDAR DDS endpoint와 type은 다음처럼 확인됐다.
 
 `ros2 pkg prefix unitree_go`와 `ros2 interface show unitree_go/msg/LidarState`는 package 없음으로 실패했다. ROS message package는 없지만 Unitree SDK2의 C++ type header `/usr/local/include/unitree/idl/go2/LidarState_.hpp`는 설치돼 있다 `확인됨`. 따라서 bare DDS endpoint는 발견되지만 ROS CLI가 custom message를 역직렬화하지 못한다.
 
-`ros2 topic echo --once /utlidar/lidar_state`는 `The message type 'unitree_go/msg/LidarState' is invalid`로 실패했다. BEST_EFFORT로 다시 구독한 `/utlidar/range_info`와 `/utlidar/cloud`도 제한 시간 안에 표본이 없었다. endpoint 발견은 실제 메시지 수신과 같지 않으므로 LiDAR가 현재 active라고 확정하지 않는다.
+`ros2 topic echo --once /utlidar/lidar_state`는 `The message type 'unitree_go/msg/LidarState' is invalid`로 실패했다. BEST_EFFORT로 다시 구독한 `/utlidar/range_info`와 `/utlidar/cloud`도 제한 시간 안에 표본이 없었다. 이는 LiDAR 비활성이 아니라 ROS message package 부재와 CLI 구독 경로 문제였다.
+
+설치된 `libunitree_sdk2.a`, `libddsc.so`, `libddscxx.so`와 CMake package를 사용해 publisher가 없는 읽기 전용 C++ subscriber를 빌드했다. `rt/utlidar/lidar_state`를 Go2 내부망 `enP8p1s0`에서 직접 구독해 실제 상태 수신에 성공했다 `확인됨`. 진단기는 Jetson `/home/nvidia/go2_diag/lidar_state_readonly/`에 두었고 LiDAR work mode, 회전, IP, `/lowcmd`를 변경하는 API는 포함하지 않았다.
+
+5회 반복 실측 범위는 다음과 같다.
+
+| 필드 | 실측값 |
+|---|---|
+| `software_version` | `1.0.0.38` |
+| `error_state` | `0` |
+| `dirty_percentage` | `1` |
+| `cloud_frequency` | `15.352078`~`15.384279` |
+| `cloud_packet_loss_rate` | `0.0` |
+| `cloud_size` | `61,986`~`62,027` |
+| `cloud_scan_num` | `210` |
+| `imu_frequency` | `247.497879`~`250.643814` |
+| `imu_packet_loss_rate` | `0.0` |
+
+`firmware_version`과 `sdk_version` 문자열은 이 publisher에서 빈 값이었다. `sys_rotation_speed`와 `com_rotation_speed`도 수신했지만 공개 header에 단위 설명이 없으므로 Hz로 환산하지 않는다.
 
 ### 4.4 LiDAR 모델 판정
 
-현재 개체는 `4D LiDAR L2`로 현장 판정한다 `유력`. 근거는 다음 셋이다.
+현재 개체는 `4D LiDAR L2`로 운용 판정한다 `확인됨`. 근거는 다음 넷이다.
 
 1. Unitree 현재 Go2 제품 페이지는 Go2의 기본 LiDAR를 L2, FOV 360°×96°로 안내한다.
 2. 이 Go2 X의 LiDAR 회전은 조선대 Go2 EDU에서 확인한 L1보다 눈에 띄게 느리다 `사용자 비교 관찰`. 공식 수치는 L2의 수평 주사가 5.55 Hz, L1은 11 Hz이므로 방향이 일치한다.
 3. `/utlidar/*` DDS와 SDK2 `LidarState_` type이 존재해 Unitree 4D LiDAR 계통임은 확인됐다.
+4. 읽기 전용 native DDS subscriber에서 `cloud_size`가 5회 모두 약 62,000으로 안정적으로 수신됐다. 이는 Unitree 공식 L2 유효 주파수 64,000 points/s에 가깝고 L1의 21,600 points/s와 명확히 구분된다. packet loss는 0이었다.
 
-다만 현재 공식 Go2 앱 페이지에는 L1이라는 옛 표기도 남아 있고, 장치가 직접 내보낸 model 문자열이나 실측 회전 주파수는 아직 받지 못했다. 따라서 문서 증거 등급은 `L2 유력`이며 `장치 식별값 확인됨`으로 올리지 않는다. SDK2 subscriber로 `LidarState_`를 직접 읽거나 본체 라벨을 확인하면 최종 확정한다. `/lowcmd`에는 어떤 값도 publish하지 않는다.
+현재 공식 Go2 앱 페이지에는 L1이라는 옛 표기가 남아 있고 `LidarState_`에는 별도 model 문자열이 없다. 따라서 본체 라벨이나 serial 조회에 의한 식별은 아직 없지만, 공식 L1/L2 데이터율 차이와 실제 상태값이 충분히 분리되므로 실기 구성에서는 L2로 다룬다. `/lowcmd`와 LiDAR 제어 명령에는 어떤 값도 publish하지 않았다.
 
 출처: [Unitree 현재 Go2 제품 페이지](https://www.unitree.com/go2/) · [Unitree L2 공식 제원](https://www.unitree.com/L2/) · [Unitree Go2 앱 페이지의 L1 표기](https://www.unitree.com/app/go2/)
 
@@ -242,6 +261,7 @@ Unitree Go2 사용자 매뉴얼에는 머리 표시등이 노란색으로 느리
 
 | 판 | 날짜 | 내용 |
 |---|---|---|
+| v0.6 | 2026-11-17 | ai-lt01과 Jetson 외부 NIC의 `192.168.50.0/24` 직결망 · SSH key와 BatchMode 접속 확인 · native SDK2 읽기 전용 subscriber로 LiDARState 5회 수신 · 약 62k cloud size와 L2 공식 64k 대조로 L2 운용 판정 확정 |
 | v0.5 | 2026-11-17 | Unitree ROS message package 부재와 SDK2 LidarState header 확인 · 공식 Go2 L2 제원과 L1 대비 느린 회전 관찰을 근거로 L2 유력 현장 판정 · 장치 식별값 미확인 한계 기록 |
 | v0.4 | 2026-11-17 | LiDAR 세 토픽의 type과 bare DDS publisher 확인 · LidarState 로컬 type support 부재와 데이터 표본 미수신 기록 · L1/L2 미확정 유지 |
 | v0.3 | 2026-11-17 | Ubuntu · L4T · RAM · 15W mode, 세 NIC 역할, SSH 활성, D435i firmware와 USB 2.0 연결, ROS Humble과 Unitree DDS · LiDAR 토픽 실측 반영 |
