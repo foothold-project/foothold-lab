@@ -4,8 +4,8 @@
 > 작성: 오흥재 · 2026-11-17 17:24
 > 근거: 업체 제공 「Unitree Go2 + Intel RealSense D435i 제어기 사용자 매뉴얼」 · 2026-11-17 현장 터미널 출력 · NoMachine 접속 실측 · 정본 3 전달 문서
 > 요지: 교체받은 Go2 X 계통의 현재 연결과 원격 접속을 확정값 · 업체 문서값 · 미확인값으로 나누고, 저수준 정책 시험 전 점검 순서를 고정한다
-> 상태: 현장 기록 v0.2 · Jetson 모듈과 캐리어 모델 확정
-> 판: v0.2
+> 상태: 현장 기록 v0.3 · 시스템 · NIC · SSH · D435i · ROS/DDS 실측 반영
+> 판: v0.3
 
 ## 0. 이 기록의 범위
 
@@ -27,7 +27,7 @@
 | Jetson 모듈과 캐리어 | `NVIDIA Jetson Orin NX 16GB - AVerMedia NX215B` `확인됨` | Jetson에서 `tr -d '\0' </proc/device-tree/model`을 실행해 device tree model 문자열을 직접 확인했다. Orin Nano가 아니다. |
 | Jetson 사용자 | `nvidia` `확인됨` | Ubuntu Settings의 사용자와 NoMachine 로그인에서 확인했다. 비밀번호는 저장소에 기록하지 않는다. |
 | Go2와 Jetson 내부 LAN | `연결 유지` `확인됨` | Go2와 Jetson 사이의 기존 LAN 케이블은 분리하지 않았다. |
-| D435i와 Jetson USB | `연결 유지` `확인됨` | D435i로 추정되는 카메라가 USB A 변환을 거쳐 Jetson에 연결돼 있다. USB 장치 ID와 제품명은 아직 `lsusb`로 재확인하지 않았다. |
+| D435i와 Jetson USB | `Intel RealSense D435i` `확인됨` | USB ID `8086:0b3a`, firmware `5.17.0.10`을 확인했다. 공개 저장소에는 장치 전체 serial을 기록하지 않는다. 현재 USB 2.0 `480M` 연결이라 대역폭 점검이 필요하다. |
 | 키보드 | Logitech K855 F2 Bluetooth `확인됨` | K855를 Jetson에 Bluetooth로 연결해 조작했다. F1은 ai-lt01에 배정돼 있다. |
 | 원격 데스크톱 | NoMachine 접속 성공 `확인됨` | ai-lt01에서 Jetson Wi-Fi 주소와 NX TCP 4000을 사용해 실제 데스크톱 접속에 성공했다. |
 | HDMI 없는 현재 세션 | 정상 `확인됨` | NoMachine 연결 중 HDMI를 분리한 뒤에도 원격 데스크톱이 정상 작동했다. |
@@ -42,14 +42,14 @@
 
 | 항목 | 업체 문서값 | 현장 재확인 상태 |
 |---|---|---|
-| Jetson OS | Ubuntu 22.04 LTS · JetPack 6 · L4T R36.4 · aarch64 | `미확인` |
-| ROS | ROS 2 Humble Desktop · `/opt/ros/humble` | `미확인` |
-| 작업공간 | `~/wego_ws` | `미확인` |
+| Jetson OS | Ubuntu 22.04 LTS · JetPack 6 · L4T R36.4 · aarch64 | Ubuntu `22.04.5`, L4T `R36.4.7`, aarch64 `확인됨`. JetPack metapackage 판은 `미확인` |
+| ROS | ROS 2 Humble Desktop · `/opt/ros/humble` | `ROS_DISTRO=humble`, `/opt/ros/humble` `확인됨` |
+| 작업공간 | `~/wego_ws` | `/home/nvidia/wego_ws` 존재 `확인됨` |
 | Go2 SDK | Unitree SDK2 · CycloneDDS 포함 · `/usr/local` | `미확인` |
-| Go2 연결 인터페이스 | `enP8p1s0` | `미확인` |
-| Jetson의 Go2 내부망 주소 | `192.168.123.99/24` 고정 | Jetson `hostname -I`에서 `.99`가 보인 사실만 `확인됨`. 어느 NIC에 붙었는지는 `미확인` |
+| Go2 연결 인터페이스 | `enP8p1s0` | 인터페이스 UP · `192.168.123.99/24` `확인됨` |
+| Jetson의 Go2 내부망 주소 | `192.168.123.99/24` 고정 | `enP8p1s0` 귀속과 route `192.168.123.0/24` `확인됨` |
 | Go2 주소 | `192.168.123.161` | `미확인` |
-| D435i USB ID | `8086:0b3a` | `미확인` |
+| D435i USB ID | `8086:0b3a` | 제품명 Intel RealSense Depth Camera 435i와 함께 `확인됨` |
 | D435i 매뉴얼 설정 | color 640×480 30 fps · depth 640×480 30 fps · aligned depth · gyro 200 Hz · accel 100 Hz | 설정 파일과 실행 토픽에서 `미확인` |
 | 기본 통합 런치 | `ros2 launch wego_teleop wego_teleop.launch.py` | `미실행` |
 | 통합 런치 기본 안전값 | `receive_only:=true` | 코드와 실제 런치 인자에서 `미확인` |
@@ -87,51 +87,75 @@
 
 현재 설치된 NoMachine 무료판은 active physical desktop connection 한 개만 허용한다. 팀원 여러 명이 각자 Player를 설치해 번갈아 접속할 수는 있지만 동시에 접속할 수는 없다. 대여 장비의 서버 패키지나 라이선스는 업체 승인 없이 바꾸지 않는다.
 
-## 4. 다음 읽기 전용 점검
+### 3.3 Jetson NIC와 SSH
 
-다음 명령은 NoMachine의 Jetson 터미널에서 한 묶음씩 실행하고 출력을 이 문서에 추가한다. 먼저 장비를 움직이지 않는 식별 명령만 사용한다.
+| 역할 | Jetson 장치 | 실측 상태 |
+|---|---|---|
+| Go2 내부망 | `enP8p1s0` | UP · `192.168.123.99/24` · `192.168.123.0/24` 직접 route |
+| Wi-Fi 관리망 | `wlP1p1s0` | UP · `192.168.21.103/23` · default gateway `192.168.20.1` |
+| ai-lt01 직결 외부 LAN | `enx00181af2995a` | ASIX AX88179 · USB 3 `5000M` · 물리 UP · DHCP 주소 대기 중 · IPv4 없음 |
+
+직결 실패 원인은 확정됐다. ai-lt01 케이블은 Jetson의 `enx00181af2995a`에 연결돼 있고, 이 인터페이스에는 IPv4가 없다. `192.168.123.99`는 다른 NIC인 `enP8p1s0`에 붙어 있다. 외부 직결망에는 Go2 내부망과 겹치지 않는 별도 subnet을 설정해야 한다.
+
+SSH는 이미 설치돼 있다 `확인됨`.
+
+| 항목 | 값 |
+|---|---|
+| 패키지 | `openssh-server 1:8.9p1-3ubuntu0.18` |
+| 서비스 | enabled · active |
+| listen | IPv4 `0.0.0.0:22` · IPv6 `[::]:22` |
+
+따라서 Wi-Fi에서는 지금도 `ssh nvidia@192.168.21.103`으로 접근할 수 있다. 직결 NIC에 정적 IPv4를 설정하면 Wi-Fi 없이도 같은 SSH와 NoMachine을 사용할 수 있다. 비밀번호는 저장소에 기록하지 않고, ai-lt01 전용 SSH key를 등록하는 방식으로 전환한다.
+
+## 4. 시스템 · 센서 · ROS 실측
+
+2026-11-17 NoMachine의 Jetson 터미널에서 읽기 전용 명령으로 확인했다.
 
 ### 4.1 Jetson 모듈과 JetPack
 
-device tree model 확인은 끝났다.
+| 항목 | 실측값 |
+|---|---|
+| device tree model | `NVIDIA Jetson Orin NX 16GB - AVerMedia NX215B` |
+| OS | Ubuntu `22.04.5 LTS` |
+| L4T | release `R36`, revision `4.7`, aarch64 |
+| kernel | `5.15.148-tegra` · PREEMPT |
+| RAM | total `15 GiB` · 측정 시 available `12 GiB` |
+| swap | `7.6 GiB` · 측정 시 사용 `0 B` |
+| nvpmodel | mode `2` · `15W` |
+| CPU 상태 | 8개 가운데 core 0~3 online · 4~7 offline · online core 상한 `1.4208 GHz` |
+| GPU 상한 | `612 MHz` |
 
-```text
-NVIDIA Jetson Orin NX 16GB - AVerMedia NX215B
-```
+50 Hz ONNX 추론 성능을 측정할 때 현재 `15W` mode를 기준값으로 반드시 함께 기록한다. 전력 mode를 임의로 바꾸지 않는다.
 
-남은 OS와 전력 모드 확인:
+### 4.2 RealSense D435i
 
-```bash
-tr '\0' '\n' </proc/device-tree/compatible
-cat /etc/nv_tegra_release
-free -h
-sudo nvpmodel -q --verbose
-```
+| 항목 | 실측값 |
+|---|---|
+| 장치 | `RealSense D435I` |
+| USB ID | `8086:0b3a` |
+| firmware | `5.17.0.10` |
+| kernel driver | `uvcvideo` · HID는 `usbhid` |
+| 현재 USB 경로 | USB 2.0 root hub와 hub를 거쳐 `480M` |
 
-통과 결과: device tree로 확정한 Orin NX 16GB와 NX215B에 이어 L4T, 실제 가용 메모리, 전력 모드를 기록한다.
+업체 매뉴얼은 D435i의 color 640×480 30 fps, aligned depth 640×480 30 fps, gyro 200 Hz, accel 100 Hz를 제시한다. 현재 카메라는 USB 2.0 `480M`으로 연결돼 있어 이 스트림 조합이 손실 없이 유지되는지는 `미확인`이다. 카메라 각도 조정 전에 USB 3 경로로 옮기거나 현재 설정의 실제 frame rate와 drop을 측정해야 한다.
 
-### 4.2 NIC와 경로
+### 4.3 ROS 2 · Unitree DDS · LiDAR
 
-```bash
-ip -br link
-ip -br addr
-ip route
-nmcli device status
-```
+| 항목 | 실측값 |
+|---|---|
+| ROS | Humble |
+| 설치 | `/opt/ros/humble` |
+| 업체 작업공간 | `/home/nvidia/wego_ws` |
+| Unitree 상태 | `/lowstate`, `/lf/lowstate`, `/sportmodestate`, `/lf/sportmodestate` 발견 |
+| 조이스틱 | `/wirelesscontroller`, `/wirelesscontroller_unprocessed` 발견 |
+| 저수준 명령 | `/lowcmd` 토픽 발견 · 읽기만 했으며 publish하지 않음 |
+| LiDAR | `/utlidar/cloud`, `/utlidar/imu`, `/utlidar/lidar_state`, `/utlidar/range_info` 등 발견 |
+| SLAM | `/uslam/*`, `/lio_sam_ros2/mapping/odometry` 발견 |
+| 배터리 경고 | `/lf/battery_alarm` 발견 |
 
-통과 결과: `enP8p1s0`의 실제 존재와 `.99/24` 귀속, 다른 Ethernet 포트의 이름과 주소, Wi-Fi 인터페이스와 `.21.103` 귀속을 기록한다.
+Unitree DDS discovery와 LiDAR publisher가 살아 있는 것은 `확인됨`이다. 다만 토픽 이름만으로 L1과 L2 중 어느 모델인지 확정할 수 없다. 다음 읽기 전용 단계에서 `/utlidar/lidar_state`와 `/utlidar/range_info`의 type과 한 메시지를 확인한다. `/lowcmd`에는 아직 어떤 값도 publish하지 않는다.
 
-### 4.3 D435i와 ROS 환경
-
-```bash
-lsusb
-source /opt/ros/humble/setup.bash
-source ~/wego_ws/install/setup.bash
-printenv ROS_DISTRO
-ros2 pkg prefix wego_teleop
-```
-
-통과 결과: `8086:0b3a`, D435i 제품 식별, Humble, `wego_ws` 설치를 확인한다. 아직 런치를 실행하지 않는다.
+업체 드라이버가 만드는 `/go2/odom`, `/go2/imu`, `/joint_states` 토픽은 이번 목록에 없었다. 따라서 업체 `wego_teleop` bringup은 현재 실행 중이 아닌 것으로 판단한다 `추정`. 순정 Unitree DDS 토픽과 업체 ROS driver 토픽을 구분한다.
 
 ## 5. 카메라 실기 정렬 기준
 
@@ -196,5 +220,6 @@ Unitree Go2 사용자 매뉴얼에는 머리 표시등이 노란색으로 느리
 
 | 판 | 날짜 | 내용 |
 |---|---|---|
+| v0.3 | 2026-11-17 | Ubuntu · L4T · RAM · 15W mode, 세 NIC 역할, SSH 활성, D435i firmware와 USB 2.0 연결, ROS Humble과 Unitree DDS · LiDAR 토픽 실측 반영 |
 | v0.2 | 2026-11-17 | device tree model 출력으로 NVIDIA Jetson Orin NX 16GB와 AVerMedia NX215B 확정 · 배터리 저전압과 종료 안전 절차 추가 |
 | v0.1 | 2026-11-17 | 업체 매뉴얼값, ai-lt01과 Jetson 네트워크 실측, NoMachine 접속, 실행 중 HDMI 분리 성공, 다음 읽기 전용 점검과 저수준 안전 관문 기록 |
