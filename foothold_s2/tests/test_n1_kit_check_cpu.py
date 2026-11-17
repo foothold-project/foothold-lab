@@ -45,3 +45,13 @@ def test_failed_run_leaves_traceback_before_the_app_closes(tmp_path, capsys):
     assert "build failed" in (tmp_path / "eval_gt.FAILED.txt").read_text()
     assert "build failed" in capsys.readouterr().err
     assert k.guarded_run(a, app, runner=lambda _a: "ok") == 0
+
+
+def test_exit_watchdog_is_cancelled_when_close_returns(monkeypatch):
+    import threading
+    made = []
+    real = threading.Timer
+    monkeypatch.setattr(threading, "Timer", lambda *a, **k: made.append(real(*a, **k)) or made[-1])
+    a = type("A", (), {"out": "/tmp/n1_wd_test", "map_mode": "eval_gt"})()
+    assert k.guarded_run(a, type("App", (), {"close": lambda self: None})(), runner=lambda _a: "ok") == 0
+    assert made and made[0].finished.is_set()

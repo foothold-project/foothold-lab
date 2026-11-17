@@ -8,6 +8,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import os
 import sys
 import traceback
 from pathlib import Path
@@ -194,8 +195,23 @@ def guarded_run(a, app, runner=None) -> int:
             pass
         rc = 1
     finally:
+        watchdog = _exit_watchdog(rc)
         app.close()
+        watchdog.cancel()                                     # close 가 돌아왔으면 (시험의 가짜 app 포함) 강제 종료는 필요 없다
     return rc
+
+
+def _exit_watchdog(rc: int, seconds: float = 90.0):
+    """결과 파일을 다 쓴 뒤 Kit 종료(app.close)가 멈춰도 (11/17 로컬 2.3.2 에서 두 번 20 분 넘게 CPU 100 %) 프로세스가 끝나게 한다: 일정 뒤 강제 종료. 유료 GPU 시간을 지키는 안전장치."""
+    import threading
+
+    def _kill():
+        sys.stdout.flush(); sys.stderr.flush()
+        os._exit(rc)
+    t = threading.Timer(seconds, _kill)
+    t.daemon = True
+    t.start()
+    return t
 
 
 if __name__ == "__main__":
