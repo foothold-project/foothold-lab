@@ -4,8 +4,8 @@
 > 작성: 오흥재 · 2026-11-17 17:24
 > 근거: 업체 제공 「Unitree Go2 + Intel RealSense D435i 제어기 사용자 매뉴얼」 · 2026-11-17 현장 터미널 출력 · NoMachine 접속 실측 · 정본 3 전달 문서
 > 요지: 교체받은 Go2 X 계통의 현재 연결과 원격 접속을 확정값 · 업체 문서값 · 미확인값으로 나누고, 저수준 정책 시험 전 점검 순서를 고정한다
-> 상태: 현장 기록 v0.4 · LiDAR DDS type과 로컬 echo 실패 근거 반영
-> 판: v0.4
+> 상태: 현장 기록 v0.5 · LiDAR L2 현장 판정과 근거 한계 반영
+> 판: v0.5
 
 ## 0. 이 기록의 범위
 
@@ -161,9 +161,21 @@ LiDAR DDS endpoint와 type은 다음처럼 확인됐다.
 | `/utlidar/range_info` | `geometry_msgs/msg/PointStamped` | bare DDS app 1개 · RELIABLE |
 | `/utlidar/cloud` | `sensor_msgs/msg/PointCloud2` | bare DDS app 1개 · RELIABLE |
 
-`ros2 topic echo --once /utlidar/lidar_state`는 `The message type 'unitree_go/msg/LidarState' is invalid`로 실패했다. 현재 Jetson ROS 환경에 이 custom message의 로컬 type support가 없거나 source되지 않은 상태로 판단한다 `추정`. `/utlidar/range_info` echo와 `/utlidar/cloud` rate는 제한 시간 안에 표본이 없었다. endpoint 발견은 실제 메시지 수신과 같지 않으므로 LiDAR가 현재 active라고 확정하지 않는다.
+`ros2 pkg prefix unitree_go`와 `ros2 interface show unitree_go/msg/LidarState`는 package 없음으로 실패했다. ROS message package는 없지만 Unitree SDK2의 C++ type header `/usr/local/include/unitree/idl/go2/LidarState_.hpp`는 설치돼 있다 `확인됨`. 따라서 bare DDS endpoint는 발견되지만 ROS CLI가 custom message를 역직렬화하지 못한다.
 
-이 결과만으로 L1과 L2 중 어느 모델인지 확정할 수 없다 `미확인`. 다음 읽기 전용 단계는 `unitree_go/msg/LidarState` 설치 위치와 interface 등록 여부를 찾고, PointCloud2를 BEST_EFFORT QoS로 다시 구독하는 것이다. `/lowcmd`에는 어떤 값도 publish하지 않는다.
+`ros2 topic echo --once /utlidar/lidar_state`는 `The message type 'unitree_go/msg/LidarState' is invalid`로 실패했다. BEST_EFFORT로 다시 구독한 `/utlidar/range_info`와 `/utlidar/cloud`도 제한 시간 안에 표본이 없었다. endpoint 발견은 실제 메시지 수신과 같지 않으므로 LiDAR가 현재 active라고 확정하지 않는다.
+
+### 4.4 LiDAR 모델 판정
+
+현재 개체는 `4D LiDAR L2`로 현장 판정한다 `유력`. 근거는 다음 셋이다.
+
+1. Unitree 현재 Go2 제품 페이지는 Go2의 기본 LiDAR를 L2, FOV 360°×96°로 안내한다.
+2. 이 Go2 X의 LiDAR 회전은 조선대 Go2 EDU에서 확인한 L1보다 눈에 띄게 느리다 `사용자 비교 관찰`. 공식 수치는 L2의 수평 주사가 5.55 Hz, L1은 11 Hz이므로 방향이 일치한다.
+3. `/utlidar/*` DDS와 SDK2 `LidarState_` type이 존재해 Unitree 4D LiDAR 계통임은 확인됐다.
+
+다만 현재 공식 Go2 앱 페이지에는 L1이라는 옛 표기도 남아 있고, 장치가 직접 내보낸 model 문자열이나 실측 회전 주파수는 아직 받지 못했다. 따라서 문서 증거 등급은 `L2 유력`이며 `장치 식별값 확인됨`으로 올리지 않는다. SDK2 subscriber로 `LidarState_`를 직접 읽거나 본체 라벨을 확인하면 최종 확정한다. `/lowcmd`에는 어떤 값도 publish하지 않는다.
+
+출처: [Unitree 현재 Go2 제품 페이지](https://www.unitree.com/go2/) · [Unitree L2 공식 제원](https://www.unitree.com/L2/) · [Unitree Go2 앱 페이지의 L1 표기](https://www.unitree.com/app/go2/)
 
 업체 드라이버가 만드는 `/go2/odom`, `/go2/imu`, `/joint_states` 토픽은 이번 목록에 없었다. 따라서 업체 `wego_teleop` bringup은 현재 실행 중이 아닌 것으로 판단한다 `추정`. 순정 Unitree DDS 토픽과 업체 ROS driver 토픽을 구분한다.
 
@@ -230,6 +242,7 @@ Unitree Go2 사용자 매뉴얼에는 머리 표시등이 노란색으로 느리
 
 | 판 | 날짜 | 내용 |
 |---|---|---|
+| v0.5 | 2026-11-17 | Unitree ROS message package 부재와 SDK2 LidarState header 확인 · 공식 Go2 L2 제원과 L1 대비 느린 회전 관찰을 근거로 L2 유력 현장 판정 · 장치 식별값 미확인 한계 기록 |
 | v0.4 | 2026-11-17 | LiDAR 세 토픽의 type과 bare DDS publisher 확인 · LidarState 로컬 type support 부재와 데이터 표본 미수신 기록 · L1/L2 미확정 유지 |
 | v0.3 | 2026-11-17 | Ubuntu · L4T · RAM · 15W mode, 세 NIC 역할, SSH 활성, D435i firmware와 USB 2.0 연결, ROS Humble과 Unitree DDS · LiDAR 토픽 실측 반영 |
 | v0.2 | 2026-11-17 | device tree model 출력으로 NVIDIA Jetson Orin NX 16GB와 AVerMedia NX215B 확정 · 배터리 저전압과 종료 안전 절차 추가 |
