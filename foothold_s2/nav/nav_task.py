@@ -163,7 +163,7 @@ class NavTask:
             return None
         row = tb["rows"][k]
         want_wind = self.rng.random() < self.winding_frac
-        pool = (row["wound"] or row["ok"]) if want_wind else (row["ok"] + row["wound"])
+        pool = (row["wound"] or row["ok"]) if want_wind else (row["ok"] or row["wound"])      # 표: 굴곡 아닌 쪽 뽑기는 굴곡 아닌 쌍만 (굴곡 비율 = winding_frac)
         if not pool:
             self.task_table_miss += 1
             return None

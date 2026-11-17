@@ -38,7 +38,7 @@ def test_table_draws_match_live_draws_in_length_and_winding_and_keep_the_start()
     assert np.allclose(s1, tab.start) and all(np.allclose(p[0], tab.start[i]) and np.allclose(p[-1], tab.goal[i]) for i, p in enumerate(tab.path))
     assert ((l1 >= 4.0) & (l1 <= 25.0)).mean() >= 0.95
     assert abs(np.median(l1) - np.median(l0)) <= 0.2 * np.median(l0)
-    assert abs((r1 >= 1.2).mean() - (r0 >= 1.2).mean()) <= 0.2                              # 굴곡 쌍 비율
+    assert abs((r1 >= 1.2).mean() - tab.winding_frac) <= 0.2                                  # 표에서는 굴곡 쌍 비율이 winding_frac (0.5) 근처
     assert tab.task_winding == int((r1 >= 1.2).sum()) and tab.task_new == n
 
 
