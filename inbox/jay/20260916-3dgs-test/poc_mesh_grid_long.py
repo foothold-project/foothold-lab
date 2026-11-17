@@ -511,9 +511,12 @@ def arguments():
     if not 0 < args.face_limit <= 10000000 or not 0 <= args.curb_prominence_fraction <= 1:
         parser.error("face_limit must not exceed 10000000; invalid curb prominence")
     args.ply, args.model, args.out = args.ply.resolve(), args.model.resolve(), args.out.resolve()
-    owned_mesh_roots = [ROOT/"_out/shot2pipe/mesh", ROOT/"_out/shot2pipe/merge/mesh", ROOT/"_out/shot2pipe/merge2/mesh"]
-    if not any(args.out.is_relative_to(path.resolve()) for path in owned_mesh_roots):
-        parser.error("Output must remain inside owned shot2pipe mesh directories")
+    # 처음에는 shot2pipe 의 mesh 폴더 셋만 허용했다. 같은 스크립트를 다른 장면에 쓰려면
+    # 그 목록을 계속 늘려야 하고, ROOT 는 스크립트 위치라서 사본을 다른 폴더에서 돌리면 또 막힌다.
+    # 그래서 스크립트 위치가 아니라 입력 PLY 를 기준으로 본다. 출력은 입력과 같은 _out 트리 안이어야 한다.
+    out_root = next((path for path in args.ply.parents if path.name == "_out"), None)
+    if out_root is None or not args.out.is_relative_to(out_root):
+        parser.error("Output must sit in the same _out tree as --ply")
     return args
 
 
