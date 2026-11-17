@@ -308,3 +308,13 @@ def test_the_slow_track_term_reads_the_masks_of_the_real_command_term(monkeypatc
     left_out = command.heading | command.is_flag_env
     assert int(command.is_flag_env.sum()) > 200 and int((~left_out).sum()) > 2000
     assert bool((value[left_out] == 0).all()) and bool((value[~left_out] == 1).all())
+
+
+def test_command_reset_accepts_slice_none_like_isaac_lab_3_full_reset(monkeypatch):
+    """3.0 의 env.reset() 은 command_manager.reset 에 slice(None) 을 넘긴다 (N1g: TypeError slice object cannot be interpreted as an integer)."""
+    command, runtime, robot = e1f_term(monkeypatch, {})
+    command.reset(slice(None))
+    first = command.is_flag_env.clone()
+    command.reset(torch.arange(command.num_envs))
+    assert first.shape == command.is_flag_env.shape
+    assert not bool(consumed_bad(command, runtime).any())

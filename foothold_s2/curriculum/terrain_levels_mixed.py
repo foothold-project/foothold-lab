@@ -20,7 +20,9 @@ def terrain_levels_mixed(env, env_ids, command_name: str = "base_velocity", resa
     """
     term = env.command_manager.get_term(command_name)
     terrain = env.scene.terrain
-    env_ids = torch.as_tensor(env_ids, device=env.device, dtype=torch.long)
+    from foothold_s2.lab_compat import env_ids_long
+
+    env_ids = env_ids_long(env_ids, lambda: env.num_envs, env.device)
 
     # 점 명령 합을 «재추출 한 번당 한 번 뽑힌 값의 합» 단위로 (rules.judge_free 의 0.5 x 합 x 4 s x 0.9 식에 맞춤)
     cmd_sum = term.cmd_sum_xy[env_ids] * env.step_dt / resample_s

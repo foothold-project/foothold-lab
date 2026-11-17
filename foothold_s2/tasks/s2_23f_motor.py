@@ -30,7 +30,9 @@ class TopDownDCMotor(DCMotor):
 
 def randomize_topdown_motor_strength(env, env_ids, asset_cfg, scale_range=(0.9, 1.1)):
     robot = env.scene[asset_cfg.name]
-    ids = torch.arange(env.num_envs, device=env.device) if env_ids is None else env_ids
+    from foothold_s2.lab_compat import env_ids_long
+
+    ids = env_ids_long(env_ids, lambda: env.num_envs, env.device)
     for actuator in robot.actuators.values():
         if not isinstance(actuator, TopDownDCMotor):
             raise TypeError("TopDown motor strength requires TopDownDCMotor")

@@ -40,9 +40,12 @@ def supported_departure_xy(joints: np.ndarray, proposed_xy: np.ndarray, yaw: flo
 
 def correct_topdown_spawn(env, env_ids) -> None:
     """Reset event ordered after reset_robot_joints, before any physics step."""
+    from foothold_s2.lab_compat import env_ids_long
+
+    robot = env.scene["robot"]
+    env_ids = env_ids_long(env_ids, lambda: env.scene.num_envs, robot.data.default_joint_pos.device)                # 3.0 은 전체 reset 에 slice(None)
     if len(env_ids) == 0:
         return
-    robot = env.scene["robot"]
     joints = [robot.joint_names.index(name) for name in fk.JOINT_NAMES]
     fk.validate_default_pose(robot.joint_names,
                              robot.data.default_joint_pos[env_ids][0].detach().cpu().numpy())

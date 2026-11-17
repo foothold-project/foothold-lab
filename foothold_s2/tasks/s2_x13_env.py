@@ -30,7 +30,9 @@ class FootholdS2PosRewardEnv(ManagerBasedRLEnv):
             self.reward_manager.compute = compute
 
     def _reset_idx(self, env_ids):
-        ids = torch.as_tensor(env_ids, device=self.device, dtype=torch.long)
+        from foothold_s2.lab_compat import env_ids_long
+
+        ids = env_ids_long(env_ids, lambda: self.num_envs, self.device)
         frac = (self._clip_steps[ids] / self.episode_length_buf[ids].clamp(min=1).float()).mean() if len(ids) > 0 else torch.zeros((), device=self.device)
         super()._reset_idx(env_ids)
         self.extras.setdefault("log", {})["Episode_Reward/only_positive_clipped_fraction"] = frac

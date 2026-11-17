@@ -30,7 +30,7 @@ class VisitGrid:
         self.counts = np.zeros((num_envs, self.n, self.n), np.int32)
 
     def reset(self, env_ids) -> None:
-        self.counts[np.asarray(env_ids, dtype=int)] = 0
+        self.counts[slice(None) if env_ids is None else env_ids if isinstance(env_ids, slice) else np.asarray(env_ids, dtype=int)] = 0
 
     def visit(self, pos_xy, active=None) -> np.ndarray:
         """한 걸음 방문을 세고 (N,) η (이번 걸음 포함, >= 1) 를 돌려준다. 방 밖은 가장자리 칸으로 센다.

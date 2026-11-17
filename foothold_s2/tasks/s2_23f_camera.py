@@ -25,7 +25,9 @@ def camera_intrinsic_fx(hfov_deg: torch.Tensor) -> torch.Tensor:
 
 
 def randomize_topdown_camera(env, env_ids, camera_name: str = "depth_cam") -> None:
-    ids = torch.as_tensor(env_ids, dtype=torch.long, device=env.device)
+    from foothold_s2.lab_compat import env_ids_long
+
+    ids = env_ids_long(env_ids, lambda: env.num_envs, env.device)
     n = len(ids)
     if n == 0:
         return

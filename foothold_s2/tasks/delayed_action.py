@@ -34,8 +34,10 @@ class DelayedJointPositionAction(JointPositionAction):
 
     def reset(self, env_ids=None):
         super().reset(env_ids)
-        ids = slice(None) if env_ids is None else env_ids
-        n = self.num_envs if env_ids is None else len(env_ids)
+        from foothold_s2.lab_compat import env_ids_long
+
+        ids = env_ids_long(env_ids, lambda: self.num_envs, self.device)
+        n = len(ids)
         if getattr(self.cfg, "dr_scale_from_env", False):
             scale = getattr(self._env, "_ex40_dr_scale", None)
             if scale is None or not 0.0 <= float(scale) <= 1.0:

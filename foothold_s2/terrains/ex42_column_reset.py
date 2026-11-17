@@ -143,7 +143,10 @@ def reset_root_state_by_column(env, env_ids, lo, hi, velocity_range, asset_cfg=N
     terrain column (terrain.terrain_types). Same maths: default root + env origin + sample."""
     import torch
 
+    from foothold_s2.lab_compat import env_ids_long
+
     asset = env.scene[asset_cfg.name if asset_cfg is not None else "robot"]
+    env_ids = env_ids_long(env_ids, lambda: env.scene.env_origins.shape[0], asset.device)   # 3.0 은 전체 reset 에 slice(None)
     root_states = asset.data.default_root_state[env_ids].clone()
     columns = env.scene.terrain.terrain_types[env_ids].long()
     lo_d, hi_d = lo.to(asset.device), hi.to(asset.device)
@@ -221,8 +224,9 @@ def push_gated_by_column(env, env_ids, inner, push_off, **params):
     import torch
 
     device = env.scene.terrain.terrain_types.device
-    rows = torch.arange(env.scene.num_envs, device=device) if env_ids is None else torch.as_tensor(
-        env_ids, dtype=torch.long, device=device).flatten()
+    from foothold_s2.lab_compat import env_ids_long
+
+    rows = env_ids_long(env_ids, lambda: env.scene.num_envs, device)
     keep = ~push_off.to(device)[env.scene.terrain.terrain_types[rows].long()]
     rows = rows[keep]
     if len(rows) == 0:

@@ -806,7 +806,8 @@ def ex41_terrain_levels(env,env_ids,command_name='base_velocity',resample_s=4.,w
     if settings is None:
         settings={'policy':initial_policy or 'fixed_l02',
                   'level_cap':initial_level_cap if initial_policy else 2}
-    ids=torch.as_tensor(env_ids,device=env.device,dtype=torch.long)
+    from foothold_s2.lab_compat import env_ids_long
+    ids=env_ids_long(env_ids,lambda:env.num_envs,env.device)
     if not hasattr(env,'_ex41_terrain_diagnostics'):
         env._ex41_terrain_diagnostics=torch.zeros(6,device=env.device,dtype=torch.long)
     counts=env._ex41_terrain_diagnostics

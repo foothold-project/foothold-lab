@@ -31,6 +31,19 @@ def th(x):
     return getattr(x, "torch", x)
 
 
+def env_ids_long(env_ids, num_envs: int, device):
+    """매니저가 넘긴 env_ids (None · slice · int32/int64 텐서 · 리스트 · ProxyArray) -> 1 차원 long 텐서.
+    3.0 은 env.reset() 때 curriculum · event · command · action 에 slice(None) 을 그대로 넘기고 (2.3.2 는 전체 인덱스 텐서) 그 사이 `len(env_ids)` · `torch.as_tensor(env_ids)` 가 깨진다."""
+    import torch
+
+    if env_ids is None:
+        env_ids = slice(None)
+    if isinstance(env_ids, slice):
+        n = num_envs() if callable(num_envs) else num_envs                   # 전체 개수는 slice 일 때만 필요하다 (가짜 env 시험 · 지연 계산)
+        return torch.arange(n, device=device, dtype=torch.long)[env_ids]
+    return torch.as_tensor(th(env_ids), device=device, dtype=torch.long).flatten()
+
+
 def quat_wxyz(q, major: int | None = None):
     """시뮬이 준 쿼터니언 (…, 4) -> wxyz. torch · numpy 둘 다 (마지막 축 재배열)."""
     q = th(q)

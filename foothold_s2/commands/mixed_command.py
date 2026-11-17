@@ -165,13 +165,15 @@ class MixedVelocityCommand(CommandTerm):
 
     def reset(self, env_ids=None):
         """에피소드 처음: 기록과 깃발을 새 출발점으로 비운 뒤 재추출 (Isaac 은 이 시점에 spawn 이 이미 정해져 있다)."""
-        ids = torch.arange(self.num_envs, device=self.device) if env_ids is None             else torch.as_tensor(env_ids, device=self.device, dtype=torch.long)
+        from foothold_s2.lab_compat import env_ids_long
+
+        ids = env_ids_long(env_ids, lambda: self.num_envs, self.device)                          # 3.0 은 전체 reset 에 slice(None) 을 준다
         runtime = getattr(self, "stage_runtime", None)
         if runtime is not None:
             runtime.on_reset(ids)
         self._reset_episode_state(ids)
 
-        extras = super().reset(env_ids)
+        extras = super().reset(ids)
         self._maybe_scatter_clock(ids)
         counts = torch.bincount(self.mode_ids, minlength=len(mc.MODES)).float() / self.num_envs
 
