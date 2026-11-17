@@ -40,16 +40,35 @@ def load_segments(patterns) -> list[dict]:
             if b - a >= MIN_SEGMENT_TICKS and bool(first[a]):               # 리셋 첫 스텝으로 시작하는 구간만 (h 0 에서 시작이 맞는 것)
                 idx = order[a:b]
                 segs.append({"depth": d["depth2"][idx].astype(np.float32), "z_prop": d["z_prop"][idx].astype(np.float32), "gt": d["gt"][idx].astype(np.float32), "src": f,
-                             "grav": d["grav"][idx].astype(np.float32) if "grav" in d.files else None})
+                             "grav": d["grav"][idx].astype(np.float32) if "grav" in d.files else None,
+                             "grav_clean": d["grav_clean"][idx].astype(np.float32) if "grav_clean" in d.files else None})
     return segs
 
 
-def attach_geom(segs: list[dict], *, agg: str = "max", y_flip: bool = False) -> None:
+GRAV_MODES = ("obs", "clean", "clean+noise")
+
+
+def pick_gravity(s: dict, mode: str, noise: float, rng) -> np.ndarray:
+    """geom 채널이 쓸 중력 (T, 3): obs = 정책 관측의 잡음 낀 값 (기본) · clean = 잡음 없는 projected_gravity_b · clean+noise = clean 에 ±noise 균등 잡음을 얹고 다시 단위로."""
+    if mode not in GRAV_MODES:
+        raise ValueError(f"geom 중력은 {GRAV_MODES}: {mode}")
+    if mode == "obs":
+        g = s.get("grav")
+    else:
+        g = s.get("grav_clean")
+        if g is not None and mode == "clean+noise":
+            g = g + rng.uniform(-noise, noise, g.shape).astype(np.float32)
+            g = g / np.linalg.norm(g, axis=-1, keepdims=True)
+    if g is None:
+        raise ValueError(f"기록에 {'grav' if mode == 'obs' else 'grav_clean'} 가 없다: {s['src']} · 기록 자식을 새 판으로 다시 찍을 것")
+    return g
+
+
+def attach_geom(segs: list[dict], *, agg: str = "max", y_flip: bool = False, grav: str = "obs", grav_noise: float = 0.05, seed: int = 0) -> None:
     """기하 채널 (B2a) 을 구간마다 한 번 계산해 s["geom"] (T, 2, 32, 16) 로 붙인다 (학습 없는 계산이라 반복할 필요가 없다). 기록에 몸 자세 (grav) 가 없으면 오류: 서 있다고 놓고 돌리지 않는다."""
+    rng = np.random.default_rng(seed)
     for s in segs:
-        if s.get("grav") is None:
-            raise ValueError(f"기록에 grav (몸 틀 중력) 가 없다: {s['src']} · 기록 자식을 새 판으로 다시 찍을 것")
-        s["geom"] = gcm.channels(torch.from_numpy(s["depth"]), torch.from_numpy(s["grav"]), agg=agg, y_flip=y_flip).numpy()
+        s["geom"] = gcm.channels(torch.from_numpy(s["depth"]), torch.from_numpy(pick_gravity(s, grav, grav_noise, rng)), agg=agg, y_flip=y_flip).numpy()
 
 
 def pad_batch(segs: list[dict]):
@@ -168,7 +187,8 @@ def run(args, log=print) -> dict:
     log(f"train segments {len(train)} ({sum(len(s['gt']) for s in train)} ticks) · eval segments {len(held)} ({sum(len(s['gt']) for s in held)} ticks)")
     names = args.variants.split(",")
     if any("G" in n.split("+") for n in names):                       # 기하 채널 (B2a): 판 이름에 G 토큰 (예: G · A+G · A+B1+G). 기본 판 목록에는 없다 = 기본 꺼짐
-        attach_geom(train, agg=args.geom_agg, y_flip=args.geom_y_flip); attach_geom(held, agg=args.geom_agg, y_flip=args.geom_y_flip)
+        kw = dict(agg=args.geom_agg, y_flip=args.geom_y_flip, grav=getattr(args, "geom_grav", "obs"), grav_noise=getattr(args, "geom_grav_noise", 0.05))
+        attach_geom(train, **kw); attach_geom(held, **kw)
     rows = {}
     for name in names:
         toks = set(name.split("+"))
@@ -199,6 +219,7 @@ def main(argv=None) -> int:
     p.add_argument("--variants", default="base,ctrl,A,B1,A+B1"); p.add_argument("--weight", type=float, default=4.0, help="설계 2.2: 먼저 4 (가정)")
     p.add_argument("--width", type=int, default=512); p.add_argument("--epochs", type=int, default=8); p.add_argument("--batch", type=int, default=8)
     p.add_argument("--geom-agg", default="max", choices=["max", "mean"], help="B2a 기하 채널의 칸 모으기 (판 이름에 G 가 있을 때)"); p.add_argument("--geom-y-flip", action="store_true")
+    p.add_argument("--geom-grav", default="obs", choices=list(GRAV_MODES), help="B2a 기하 채널이 쓸 중력: obs (기본 · 관측 3:6 열) | clean (잡음 없는 projected_gravity_b) | clean+noise"); p.add_argument("--geom-grav-noise", type=float, default=0.05)
     p.add_argument("--lr", type=float, default=3e-4); p.add_argument("--threads", type=int, default=4)
     a = p.parse_args(argv)
     torch.set_num_threads(a.threads)

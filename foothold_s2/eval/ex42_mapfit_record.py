@@ -8,9 +8,10 @@ from foothold_s2.models import start_perception as sp
 
 class Recorder:
     def __init__(self) -> None:
-        self.rec = {"env": [], "call": [], "first": [], "depth2": [], "z_prop": [], "gt": [], "grav": []}
+        self.rec = {"env": [], "call": [], "first": [], "depth2": [], "z_prop": [], "gt": [], "grav": [], "grav_clean": []}
         self.calls = 0
         self._orig = None
+        self._env, self._searched = None, False
 
     def install(self) -> None:
         orig = self._orig = sp.StartPerception._advance
@@ -18,7 +19,7 @@ class Recorder:
 
         def advance(self_, h_prop, h_terr, hist, depth2, tick, first, use_gt, gt_map, *rest):
             result = orig(self_, h_prop, h_terr, hist, depth2, tick, first, use_gt, gt_map, *rest)
-            me.add(result[0], depth2, tick, first, gt_map, hist)
+            me.add(result[0], depth2, tick, first, gt_map, hist, me.clean_gravity())
             return result
         sp.StartPerception._advance = advance
 
@@ -27,7 +28,22 @@ class Recorder:
             sp.StartPerception._advance = self._orig
             self._orig = None
 
-    def add(self, z_prop, depth2, tick, first, gt_map, hist=None) -> None:
+    def clean_gravity(self):
+        """잡음 없는 몸 틀 중력 (robot.data.projected_gravity_b, N x 3) 또는 None. 기록기는 env 를 받지 않으므로 처음 한 번 살아 있는 ManagerBasedRLEnv 를 gc 에서 찾아 둔다 (Kit 이 뜬 뒤라야 있다).
+        못 찾으면 None (grav_clean 은 안 적힘 · 기록은 그대로 돈다)."""
+        if self._env is None and not self._searched:
+            import gc
+
+            self._searched = True
+            for o in gc.get_objects():
+                if type(o).__name__ == "ManagerBasedRLEnv" and hasattr(o, "scene"):
+                    self._env = o
+                    break
+        if self._env is None:
+            return None
+        return self._env.scene["robot"].data.projected_gravity_b
+
+    def add(self, z_prop, depth2, tick, first, gt_map, hist=None, clean=None) -> None:
         """h_terr 가 바뀌는 스텝 (깊이 틱 또는 리셋 직후) 의 env 만 적는다. z_prop = _advance 가 돌려준 새 h_prop (TRNet.step 이 받는 값). grav = 이 스텝 몸 틀 중력 방향 (관측 45 칸의 3:6 열 · hist[:, 0] = 최신 · B2a 기하 채널의 몸 기울기 보정용)."""
         self.calls += 1
         sel = (tick | first).detach().bool()
@@ -42,6 +58,8 @@ class Recorder:
         r["z_prop"].append(z_prop[idx].detach().float().cpu().numpy())
         if hist is not None:
             r["grav"].append(hist[idx, 0, 3:6].detach().float().cpu().numpy())
+        if clean is not None:
+            r["grav_clean"].append(clean[idx].detach().float().cpu().numpy())
         r["gt"].append(gt_map[idx].detach().float().cpu().numpy().reshape(len(idx), sp.MAP_X, sp.MAP_Y))
 
     def save(self, path) -> bool:

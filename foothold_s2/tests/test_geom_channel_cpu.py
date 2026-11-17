@@ -145,3 +145,39 @@ def test_offline_fit_can_switch_geom_on_and_refuses_a_record_without_gravity(tmp
         off.run(args, log=lambda *_: None)
     args.variants = "ctrl"                                                                  # 기본 (G 없음) 은 grav 없는 옛 기록도 그대로 돈다
     assert "ctrl" in off.run(args, log=lambda *_: None)["rows"]
+
+
+def test_recorder_saves_clean_gravity_when_an_env_with_it_is_alive_and_skips_it_otherwise():
+    class ManagerBasedRLEnv:                                                               # 이름만 같은 가짜 env (gc 에서 type 이름으로 찾는다)
+        def __init__(self, g):
+            self.scene = {"robot": SimpleNamespace(data=SimpleNamespace(projected_gravity_b=g))}
+    from types import SimpleNamespace
+    n = 2
+    clean = torch.tensor([[0.0, 0.1, -0.99], [0.2, 0.0, -0.98]])
+    env = ManagerBasedRLEnv(clean)
+    r = rec.Recorder()
+    tick = torch.ones(n, dtype=torch.bool)
+    hist = torch.randn(n, 10, sp.OBS_DIM)
+    r.add(torch.zeros(n, 128), torch.zeros(n, 2, 60, 60), tick, tick, torch.zeros(n, sp.MAP_X * sp.MAP_Y), hist, r.clean_gravity())
+    assert np.allclose(np.concatenate(r.rec["grav_clean"]), clean.numpy()) and np.allclose(np.concatenate(r.rec["grav"]), hist[:, 0, 3:6].numpy())
+    del env
+    r2 = rec.Recorder(); r2._searched = True                                                 # env 를 못 찾는 경우
+    assert r2.clean_gravity() is None
+
+
+def test_offline_geom_gravity_choice_obs_default_clean_and_clean_plus_noise(tmp_path):
+    def seg(clean):
+        n = 4
+        return {"depth": np.full((n, 2, 60, 60), 1.0, np.float32), "grav": np.tile(np.array([0, 0, -1.0], np.float32), (n, 1)),
+                "grav_clean": clean, "src": "x"}
+    c = np.tile(np.array([0.1, 0.0, -0.995], np.float32), (4, 1))
+    s = seg(c)
+    rng = np.random.default_rng(0)
+    assert np.allclose(off.pick_gravity(s, "obs", 0.05, rng), s["grav"])                      # 기본은 지금과 같다
+    assert np.allclose(off.pick_gravity(s, "clean", 0.05, rng), c)
+    noisy = off.pick_gravity(s, "clean+noise", 0.05, rng)
+    assert not np.allclose(noisy, c) and np.allclose(np.linalg.norm(noisy, axis=-1), 1.0, atol=1e-5) and np.abs(noisy - c).max() < 0.06
+    with pytest.raises(ValueError, match="grav_clean"):
+        off.pick_gravity(seg(None), "clean", 0.05, rng)
+    with pytest.raises(ValueError):
+        off.pick_gravity(s, "bad", 0.05, rng)
