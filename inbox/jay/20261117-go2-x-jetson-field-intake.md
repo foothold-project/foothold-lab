@@ -4,8 +4,8 @@
 > 작성: 오흥재 · 2026-11-17 17:24
 > 근거: 업체 제공 「Unitree Go2 + Intel RealSense D435i 제어기 사용자 매뉴얼」 · 2026-11-17 현장 터미널 출력 · NoMachine 접속 실측 · 정본 3 전달 문서
 > 요지: 교체받은 Go2 X 계통의 현재 연결과 원격 접속을 확정값 · 업체 문서값 · 미확인값으로 나누고, 저수준 정책 시험 전 점검 순서를 고정한다
-> 상태: 현장 기록 v0.9 · D435i IMU의 JetPack 6 V4L2 backend 문제와 firmware 호환 관문 추가
-> 판: v0.9
+> 상태: 현장 기록 v0.10 · 격리 RSUSB build로 D435i 영상과 IMU 동시 수신 검증
+> 판: v0.10
 
 ## 0. 이 기록의 범위
 
@@ -159,7 +159,21 @@ D435i gyro/accel은 실패했다. librealsense 로그는 `No HID info provided`,
 
 `rs-enumerate-devices --debug`와 library symbol을 추가 확인했다. 현재 `/opt/ros/humble`의 librealsense 2.58.4는 Linux `v4l_backend`를 사용하고 UVC video0~5는 찾지만 HID device info를 backend device group에 넣지 못한다. RealSense 공식 이슈의 JetPack 6 + D435i IMU 실패 양상과 일치하며, 공식 제시 우회 후보는 librealsense를 `FORCE_RSUSB_BACKEND=TRUE`로 별도 빌드하는 것이다. 이는 아직 적용하지 않았다.
 
-카메라 firmware `5.17.0.10`도 호환 관문이다. RealSense 2.58.4 release 표는 D435/D435i 계열에 `5.17.3.10 이상`을 제시한다. firmware update는 장치를 영구 변경하고 실패 위험이 있으므로 업체 확인, 현재 firmware backup/복구 방법과 전원 안정성을 확보하기 전에는 실행하지 않는다. 먼저 격리된 RSUSB build로 IMU가 열리는지 시험해 kernel/backend 원인과 firmware 원인을 분리한다.
+카메라 firmware `5.17.0.10`도 호환 관문이다. RealSense 2.58.4 release 표는 D435/D435i 계열에 `5.17.3.10 이상`을 제시한다. firmware update는 장치를 영구 변경하고 실패 위험이 있으므로 업체 확인, 현재 firmware backup/복구 방법과 전원 안정성을 확보하기 전에는 실행하지 않는다.
+
+시스템 패키지를 바꾸지 않고 Jetson `/home/nvidia/go2_diag/librealsense-rsusb-v2.58.4/`에 tag v2.58.4 commit `34d6c778e1134d8505adcd56bb57acbe7598a459`을 `FORCE_RSUSB_BACKEND=TRUE`로 빌드했다. install prefix도 같은 폴더 아래로 격리했고 `/opt/ros/humble`, `/usr/local`, linker cache와 firmware는 변경하지 않았다.
+
+격리 RSUSB 도구는 BMI085를 HID 오류 없이 식별했다. 최소 진단 프로그램은 5초 동안 gyro 976 frame, accel 502 frame을 받아 각각 195.2 Hz와 100.4 Hz를 기록했다. 이어 기존 ROS `realsense2_camera_node` binary에 실행 시에만 격리 library path를 주입해 다음을 동시에 수신했다.
+
+| RSUSB ROS topic | 약 10초 실측 |
+|---|---|
+| depth 640×480×30 | 28.41 Hz |
+| color 640×480×30 | 28.67 Hz |
+| gyro 목표 200 Hz | 200.27 Hz |
+| accel 목표 100 Hz | 101.50 Hz |
+| united IMU | 200.21 Hz |
+
+따라서 D435i IMU hardware와 현재 firmware는 동작하며, 기존 IMU 실패 원인은 JetPack 6의 V4L2 backend 조합으로 확정한다. 다만 RSUSB 동시 스트림 시작 시 `control_transfer ... Resource temporarily unavailable`, UVC streamer watchdog과 depth start failure notification이 있었고 이후 frame은 계속 나왔다. 장시간 rate/drop, 재시작, USB 재연결과 CPU load를 통과하기 전에는 운영 기본값으로 승격하지 않는다. 재현용 최소 소스는 [`rsusb_imu_probe.cpp`](20261117-go2-x-jetson-field-intake-assets/rsusb_imu_probe.cpp)에 보관한다.
 
 출처: [RealSense Jetson Orin IMU issue #13713](https://github.com/realsenseai/librealsense/issues/13713) · [RealSense D435i Orin NX issue #13958](https://github.com/realsenseai/librealsense/issues/13958) · [librealsense releases](https://github.com/realsenseai/librealsense/releases)
 
@@ -325,6 +339,7 @@ Unitree Go2 사용자 매뉴얼에는 머리 표시등이 노란색으로 느리
 
 | 판 | 날짜 | 내용 |
 |---|---|---|
+| v0.10 | 2026-11-17 | 격리 librealsense 2.58.4 RSUSB build · gyro 약 195~200 Hz와 accel 약 100~101 Hz 실수신 · ROS depth/color/IMU 동시 발행 확인 · 현재 firmware에서 IMU hardware 정상과 V4L2 backend 원인 확정 · RSUSB 시작 경고와 장시간 관문 기록 |
 | v0.9 | 2026-11-17 | D435i IMU failure가 현재 V4L2 backend에서 HID device info를 찾지 못하는 상태임을 debug log로 확인 · JetPack 6 알려진 문제와 RSUSB 별도 build 후보 · firmware 5.17.0.10과 SDK 권장 5.17.3.10 이상 차이 및 firmware update 보류 관문 기록 |
 | v0.8 | 2026-11-17 | HDMI 없는 재부팅의 640×480 fallback과 HDMI 연결 즉시 1080p 복구 · 직결 LAN 자동연결 · Jetson 현재 D435i 5000M와 depth/color 30 fps급 실측 · D435i IMU HID 실패 · Go2 배터리/관절/IMU/LiDAR receive-only 수신률 · 업체 `wego_ws`의 stale serial/interface/MID-360 구성 불일치 · ONNX runtime 개발환경 공백 기록 |
 | v0.7 | 2026-11-17 | Jetson 기존 D435i 480M 재확인 · ai-lt01 USB-A와 업체 C-to-A 젠더에서 SuperSpeed 반복 disconnect · C-to-C 직결은 USB 3.20 5000M로 안정 유지 · 젠더 경로 불안정 확정과 A-to-C 단일 케이블 교체 관문 기록 |
