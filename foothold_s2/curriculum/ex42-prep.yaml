@@ -728,6 +728,10 @@ stages:
         kinds_of: continuous
         exposure: 1.0
         level_cap: 5
+      - family: A
+        kind: stepping_stones_low
+        share: 0.05
+        level_cap: 0
     floors:
       global_command_floor:
         reverse: 0.05
