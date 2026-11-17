@@ -54,6 +54,9 @@ def _build(cfg: dict, with_camera: bool):
     from foothold_s2.nav import hl_student
     from foothold_s2.tasks.nav_env_cfg import build_nav_env
 
+    from foothold_s2.lab_compat import require_declared_major
+
+    require_declared_major()
     prepared = prepare_rooms(cfg)
     extra = None
     if with_camera:

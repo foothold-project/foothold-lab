@@ -10,6 +10,8 @@ import numpy as np
 SLICES = {"base_ang_vel": (0, 3), "projected_gravity": (3, 6), "velocity_commands": (6, 9),
           "joint_pos_rel": (9, 21), "joint_vel_rel": (21, 33), "last_action": (33, 45)}
 ATOL = 1.0e-4
+# 2.3.2 에서 하위 정책이 학습된 관절 순서 (sim/eval/results/20260929-axis2-ext-clips/v1/probe_manifest.json 의 joint_names · 종류별로 FL FR RL RR)
+JOINT_NAMES_232 = tuple(f"{leg}_{part}_joint" for part in ("hip", "thigh", "calf") for leg in ("FL", "FR", "RL", "RR"))
 TILT_RPY = (0.3, -0.2, 0.9)                      # 라디안: 몸통 기울임 (종료 조건 안쪽 · 가정) + 방향 돌림
 
 
@@ -59,8 +61,73 @@ def kit_probe(nav, rpy=TILT_RPY) -> dict:
         res = compare_obs(policy.detach().cpu().numpy(), quat_wxyz=n(quat_wxyz(d.root_quat_w)), ang_vel_b=n(d.root_ang_vel_b),
                           command=nav.term.vel_command_b.detach().cpu().numpy(), joint_pos=jp, default_joint_pos=jd,
                           joint_vel=n(d.joint_vel), last_action=np.zeros_like(jp))
+        names = list(getattr(d, "joint_names", None) or robot.joint_names)
+        res["joint_names"] = names
+        res["joint_order_ok"] = names == list(JOINT_NAMES_232)                 # 관측 joint_pos_rel · joint_vel_rel · last_action · 행동 12 칸이 이 순서에 걸려 있다
+        res["passed"] = bool(res["passed"] and res["joint_order_ok"])
         res["tilt_rpy"] = list(rpy)
         res["written_quat_sim"] = [float(v) for v in n(quat_to_sim(q))[0]]
         return res
     except BaseException as exc:                                     # noqa: BLE001 (Kit 오류가 본 확인을 가리지 않게: 이유만 남긴다)
         return {"error": f"{type(exc).__name__}: {exc}"[:400], "passed": False}
+
+
+# ---------------------------------------------------------------- 깊이 카메라 방향 (reviewer 13:38 조건 1)
+def rotate_wxyz(q_wxyz, v) -> np.ndarray:
+    """wxyz 쿼터니언 (4,) 로 v (3,) 를 돌린다."""
+    w, x, y, z = (float(c) for c in q_wxyz)
+    u = np.array([x, y, z]); v = np.asarray(v, dtype=np.float64)
+    t = 2.0 * np.cross(u, v)
+    return v + w * t + np.cross(u, t)
+
+
+def cfg_rot_to_wxyz(rot, major: int):
+    """cfg 의 OffsetCfg.rot 튜플 (이 판이 받는 순서) -> wxyz."""
+    return (rot[3], rot[0], rot[1], rot[2]) if major >= 3 else tuple(rot)
+
+
+def expected_center_depth(base_pos, base_quat_wxyz, ground_z: float, cam_pos_b, cam_rot_wxyz) -> float:
+    """몸통 자세에서 카메라 중심 화소가 지면 평면 (z = ground_z) 을 보는 distance_to_image_plane [m] (= 중심 광선이 앞축이라 광선 길이). 지면을 안 보면 None.
+    cam_rot_wxyz = 몸 틀에서 카메라 틀로 (앞축 +x · convention world)."""
+    fwd_b = rotate_wxyz(cam_rot_wxyz, (1.0, 0.0, 0.0))
+    fwd = rotate_wxyz(base_quat_wxyz, fwd_b)
+    pos = np.asarray(base_pos, dtype=np.float64) + rotate_wxyz(base_quat_wxyz, cam_pos_b)
+    if fwd[2] >= -1e-6:
+        return None
+    return float((ground_z - pos[2]) / fwd[2])
+
+
+def kit_camera_probe(nav, depth_fn, ground_z_fn, tol: float = 0.05) -> dict:
+    """Kit 안에서만. 몸통이 서 있는 자세에서 한 스텝 뒤 깊이 카메라 중심 화소 (90 · 160) 대 계산한 지면 거리를 env 마다 견준다. 맞은 env 비율이 절반 이상이면 통과 (방 바닥이 평평하지 않은 칸은 틀릴 수 있어 전부는 요구 안 함).
+    ground_z_fn(env_index) -> 그 env 의 바닥 높이 (부르는 쪽이 env 원점 높이로 준다)."""
+    import torch
+
+    from foothold_s2.lab_compat import lab_major, quat_wxyz, th
+    from foothold_s2.nav import hl_student
+
+    try:
+        nav.reset()
+        nav.env.step(torch.zeros(nav.n, 12, device=nav.raw.device))
+        nav.env.step(torch.zeros(nav.n, 12, device=nav.raw.device))
+        d = nav.raw.scene["robot"].data
+        pos = th(d.root_pos_w).detach().cpu().numpy().astype(np.float64)
+        quat = th(quat_wxyz(d.root_quat_w)).detach().cpu().numpy().astype(np.float64)
+        depth = th(depth_fn()).detach().cpu().numpy().astype(np.float64).reshape(pos.shape[0], hl_student.DEPTH_H, hl_student.DEPTH_W)
+        rot = cfg_rot_to_wxyz(hl_student_cfg_rot(), lab_major())
+        got, want = depth[:, hl_student.DEPTH_H // 2, hl_student.DEPTH_W // 2], []
+        for i in range(pos.shape[0]):
+            want.append(expected_center_depth(pos[i], quat[i], ground_z_fn(i), hl_student.CAMERA_POS_M, rot))
+        want = np.array([np.nan if w is None else w for w in want])
+        rel = np.abs(got - want) / want
+        good = float(np.nanmean(rel <= tol))
+        return {"passed": bool(good >= 0.5), "fraction_within_tol": good, "tol": tol, "median_got_m": float(np.nanmedian(got)),
+                "median_want_m": float(np.nanmedian(want)), "pitch_deg": hl_student.CAMERA_PITCH_DEG}
+    except BaseException as exc:                                     # noqa: BLE001
+        return {"error": f"{type(exc).__name__}: {exc}"[:400], "passed": False}
+
+
+def hl_student_cfg_rot():
+    from foothold_s2.lab_compat import quat_cfg
+    from foothold_s2.nav import hl_student
+
+    return quat_cfg(hl_student.pitch_down_quat_wxyz(hl_student.CAMERA_PITCH_DEG))

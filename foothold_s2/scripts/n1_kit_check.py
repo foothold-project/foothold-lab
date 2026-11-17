@@ -25,8 +25,13 @@ def run(args) -> Path:
     from foothold_s2.nav import room_generator as rg
     from foothold_s2.tasks.nav_env_cfg import build_nav_env
 
+    from foothold_s2.lab_compat import require_declared_major
+
+    require_declared_major()                           # FOOTHOLD_LAB_MAJOR 없으면 거절 (쿼터니언 순서가 조용히 틀리는 것을 막음)
     out = Path(args.out)
     out.mkdir(parents=True, exist_ok=True)
+    if args.camera_probe:
+        return run_camera_probe(args, out)
     target = out / f"{args.map_mode}.npz"
     if target.exists():
         raise FileExistsError(f"{target} exists (never overwritten)")
@@ -53,6 +58,33 @@ def run(args) -> Path:
                         commands_sha256=hashlib.sha256(cmds.tobytes()).hexdigest(), map_mode=args.map_mode,
                         summary=json.dumps(summary, default=str))
     return target
+
+
+def run_camera_probe(args, out: Path) -> Path:
+    """깊이 카메라 방향 확인 (따로 한 번): 카메라를 단 환경으로 중심 화소 깊이 대 계산한 지면 거리. 결과 camera_probe.json."""
+    from foothold_s2.nav import hl_student, lower_obs_probe
+    from foothold_s2.nav import room_generator as rg
+    from foothold_s2.tasks.nav_env_cfg import build_nav_env
+
+    _spec, room = rg.make_room(args.room_seed)
+    manifest = rg.write_room(room, out / f"room_{args.room_seed}", n_starts=args.envs, start_seed=args.room_seed)
+    mesh = out / f"room_{args.room_seed}" / "terrain_mesh.npz"
+
+    def extra(env_cfg):
+        env_cfg.scene.depth_camera = hl_student.depth_camera_cfg()
+    env, _summary = build_nav_env(checkpoint=args.lower_checkpoint, expected_sha256=args.lower_sha256, room_mesh_npz=mesh,
+                                  room_mesh_sha256=manifest["mesh_sha256"], num_envs=args.envs, device=args.device, seed=args.seed,
+                                  map_mode=args.map_mode, extra_scene=extra)
+    from foothold_s2.lab_compat import th
+
+    raw = env.raw
+    origins = th(raw.scene.env_origins).detach().cpu().numpy()
+    res = lower_obs_probe.kit_camera_probe(env, lambda: raw.scene["depth_camera"].data.output["distance_to_image_plane"], lambda i: float(origins[i, 2]))
+    path = out / "camera_probe.json"
+    with open(path, "w", encoding="utf-8") as stream:
+        json.dump(res, stream, ensure_ascii=False, indent=2)
+    print("CAMERA_PROBE", json.dumps(res, ensure_ascii=False), flush=True)
+    return path
 
 
 def compare(out) -> dict:
@@ -85,6 +117,7 @@ def main(argv=None) -> int:
     r.add_argument("--seed", type=int, default=0)
     r.add_argument("--device", default="cuda:0")
     r.add_argument("--no-obs-probe", action="store_true")
+    r.add_argument("--camera-probe", action="store_true", help="깊이 카메라 방향만 확인하고 끝낸다 (camera_probe.json · npz 안 씀)")
     c = sub.add_parser("compare")
     c.add_argument("--out", required=True)
     a, _unknown = p.parse_known_args(argv)
