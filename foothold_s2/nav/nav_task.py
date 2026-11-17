@@ -356,6 +356,7 @@ class NavTask:
         # 「벌점 없는 에피소드 끝」 이 논문 (HiPAN) 의도인지는 논문 종료 벌점 유무를 대조해야 한다 (미확인, 첫 Kit 로그 뒤 결정).
         # (2) 같은 윈도 안에서 마지막 부목표에 닿은 뒤 넘어지면 task_reached 에서 빠진다 (done 이 이긴다). done_step 이전 하위 스텝으로 판정하면 살릴 수 있다: 빈도를 보고 정한다.
         st = self._stat()
+        i_before = np.array([p._i for p in self.pgcl])
         i0 = sum(p._i for p, d in zip(self.pgcl, done) if not d)
         for i in range(self.n):
             if done[i]:
@@ -367,6 +368,11 @@ class NavTask:
         total, terms = hl_rewards_term.reward(
             state, pos_room_xy=pos_room[:, :2], subgoal_xy=self.subgoal, eta=eta, v_des=self.v_des,
             cmd_prev=self.cmd_prev, cmd_prev2=self.cmd_prev2)
+        # r1 (부목표 도달): update 가 부목표를 넘긴 뒤 바뀐 subgoal 로 재면 닿은 틱에 이미 다음 부목표를 봐서 늘 0 이었다 (G3 nv_r1 = 0). 넘긴 개수 (한 틱에 둘이면 2) 를 직접 준다.
+        passed = np.array([p._i for p in self.pgcl]) - i_before
+        terms = dict(terms)
+        terms["r1"] = rewards_hl.WEIGHTS["r1"] * passed.astype(np.float64)
+        total = sum(terms.values())
         if done.any():
             terms = {k: (np.where(done, v if k == "r10" else 0.0, v)) for k, v in terms.items()}
             total = sum(terms.values())

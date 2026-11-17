@@ -169,3 +169,20 @@ def test_episode_seconds_is_path_length_over_0_3_plus_10():
     for k in range(2):
         L = float(np.linalg.norm(np.diff(t.path[k], axis=0), axis=1).sum())
         assert abs(sec[k] - (L / 0.3 + 10.0)) < 1e-9 and 10 + 4 / 0.3 - 1e-9 <= sec[k] <= 10 + 25 / 0.3 + 1e-9
+
+
+def test_r1_pays_the_weight_on_the_tick_a_subgoal_is_passed_and_matches_the_reached_count():
+    from foothold_s2.nav import rewards_hl
+    _rooms, assets, starts = _setup(n_rooms=1, k=4)
+    t = nav_task.NavTask(assets, 2, np.random.default_rng(7))
+    t.build_table(starts, per_start=16, seed=0)
+    st0 = np.stack([starts[0][0], starts[0][1]])
+    t.origin_xy = np.zeros((2, 2))                                                    # pos_local is the room frame
+    t.reset_envs([0, 1], start_xy=st0)
+    t.take_stats()
+    sub = [np.asarray(t.pgcl[k]._sub[0].point) for k in range(2)]
+    pos = np.stack([sub[0] + np.array([0.05, 0.0]), st0[1]])                          # env 0: 0.05 m from its first subgoal, env 1: far
+    out = t.step(_state(2, pos))
+    assert abs(out["terms"]["r1"][0] - rewards_hl.WEIGHTS["r1"]) < 1e-9 and out["terms"]["r1"][1] == 0.0
+    s = t.take_stats()
+    assert s["nv_r1"] > 0 and s["nv_sub_reached"] > 0 and abs(s["nv_r1"] * 2 - rewards_hl.WEIGHTS["r1"] * s["nv_sub_reached"]) < 1e-9
