@@ -50,7 +50,9 @@ def correct_topdown_spawn(env, env_ids) -> None:
     pose = robot.data.root_link_pose_w[env_ids].clone()
     origin = env.scene.terrain.env_origins[env_ids, :2]
     local = (pose[:, :2] - origin).detach().cpu().numpy() + np.array(start_sheet.SPAWN_XY)
-    quat = pose[:, 3:7]
+    from foothold_s2.lab_compat import quat_wxyz
+
+    quat = quat_wxyz(pose[:, 3:7])
     yaw = torch.atan2(2 * (quat[:, 0] * quat[:, 3] + quat[:, 1] * quat[:, 2]),
                       1 - 2 * (quat[:, 2].square() + quat[:, 3].square())).detach().cpu().numpy()
     corrected = np.stack([supported_departure_xy(q[i], local[i], float(yaw[i])) for i in range(len(q))])

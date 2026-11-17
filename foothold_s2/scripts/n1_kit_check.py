@@ -36,6 +36,13 @@ def run(args) -> Path:
     env, summary = build_nav_env(checkpoint=args.lower_checkpoint, expected_sha256=args.lower_sha256, room_mesh_npz=mesh,
                                  room_mesh_sha256=manifest["mesh_sha256"], num_envs=args.envs, device=args.device, seed=args.seed,
                                  map_mode=args.map_mode)
+    if not args.no_obs_probe:                       # 3.0 이식 확인: 관측 45 칸의 뜻 (쿼터니언 순서 포함). 틀려도 본 확인은 계속 돌고 결과만 파일로 남긴다
+        from foothold_s2.nav import lower_obs_probe
+
+        probe = lower_obs_probe.kit_probe(env)
+        with open(out / f"obs_probe_{args.map_mode}.json", "w", encoding="utf-8") as stream:
+            json.dump(probe, stream, ensure_ascii=False, indent=2)
+        print("OBS_PROBE", json.dumps(probe, ensure_ascii=False), flush=True)
     cmds = command_sequence(args.ticks, args.envs, args.seed)
     env.reset()
     errs, dsteps, touts = [], [], []
@@ -77,6 +84,7 @@ def main(argv=None) -> int:
     r.add_argument("--ticks", type=int, default=TICKS)
     r.add_argument("--seed", type=int, default=0)
     r.add_argument("--device", default="cuda:0")
+    r.add_argument("--no-obs-probe", action="store_true")
     c = sub.add_parser("compare")
     c.add_argument("--out", required=True)
     a, _unknown = p.parse_known_args(argv)

@@ -53,14 +53,16 @@ def ground_hit_x(base_height: float, extra_pitch_deg: float = 0.0, q=OFFSET_ROT)
 
 def make_depth_camera_cfg(prim_path: str = "{ENV_REGEX_NS}/Robot/base"):
     """Kit 안에서만 부른다."""
-    from isaaclab.sensors import RayCasterCameraCfg
+    from isaaclab.sensors.ray_caster import RayCasterCameraCfg
     from isaaclab.sensors.ray_caster.patterns import PinholeCameraPatternCfg
+
+    from foothold_s2.lab_compat import quat_cfg
 
     return RayCasterCameraCfg(
         prim_path=prim_path,
         mesh_prim_paths=list(MESH_PRIM_PATHS),
         update_period=UPDATE_PERIOD,
-        offset=RayCasterCameraCfg.OffsetCfg(pos=OFFSET_POS, rot=OFFSET_ROT, convention="world"),
+        offset=RayCasterCameraCfg.OffsetCfg(pos=OFFSET_POS, rot=quat_cfg(OFFSET_ROT), convention="world"),
         data_types=["distance_to_image_plane"],
         depth_clipping_behavior="none",  # 미검출은 inf -> normalize 에서 1.0
         pattern_cfg=PinholeCameraPatternCfg.from_intrinsic_matrix(INTRINSIC, WIDTH, HEIGHT),

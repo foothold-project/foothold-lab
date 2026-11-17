@@ -149,8 +149,10 @@ def reset_root_state_by_column(env, env_ids, lo, hi, velocity_range, asset_cfg=N
     lo_d, hi_d = lo.to(asset.device), hi.to(asset.device)
     samples = sample_pose_offsets(columns, lo_d, hi_d)
     positions = root_states[:, 0:3] + env.scene.env_origins[env_ids] + samples[:, 0:3]
-    orientations = _quat_mul(root_states[:, 3:7],
-                             _quat_from_euler_wxyz(samples[:, 3], samples[:, 4], samples[:, 5]))
+    from foothold_s2.lab_compat import quat_to_sim, quat_wxyz
+
+    orientations = quat_to_sim(_quat_mul(quat_wxyz(root_states[:, 3:7]),     # 3.0 은 xyzw: 곱은 wxyz 로 하고 쓸 때 시뮬 순서로 되돌린다
+                                         _quat_from_euler_wxyz(samples[:, 3], samples[:, 4], samples[:, 5])))
     rng = torch.tensor([velocity_range.get(k, (0.0, 0.0)) for k in AXES], device=asset.device)
     velocities = root_states[:, 7:13] + rng[:, 0] + (rng[:, 1] - rng[:, 0]) * torch.rand(
         len(env_ids), 6, device=asset.device)

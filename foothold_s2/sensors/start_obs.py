@@ -15,11 +15,12 @@ import torch
 from isaaclab.managers import ObservationGroupCfg as ObsGroup
 from isaaclab.managers import ObservationTermCfg as ObsTerm
 from isaaclab.managers import SceneEntityCfg
-from isaaclab.sensors import RayCasterCfg, patterns
+from isaaclab.sensors.ray_caster import RayCasterCfg, patterns
 from isaaclab.utils import configclass
 
 import isaaclab.envs.mdp as mdp
 
+from foothold_s2.lab_compat import th
 from foothold_s2.sensors.depth_aug import DepthAugCfg, augment
 from foothold_s2.sensors.depth_cam_cfg import make_depth_camera_cfg
 
@@ -29,13 +30,14 @@ AUG = DepthAugCfg()
 
 def depth_obs(env, sensor_cfg: SceneEntityCfg):
     d = env.scene.sensors[sensor_cfg.name].data.output["distance_to_image_plane"]  # (N, 60, 60, 1) m
+    d = th(d)
     return augment(d[..., 0], AUG).flatten(1)
 
 
 def height_rel_base(env, sensor_cfg: SceneEntityCfg):
     """h = z_hit - z_base, clip ±1 m. 못 맞힌 광선은 -1."""
-    z = env.scene.sensors[sensor_cfg.name].data.ray_hits_w[..., 2]
-    base_z = env.scene["robot"].data.root_pos_w[:, 2:3]
+    z = th(env.scene.sensors[sensor_cfg.name].data.ray_hits_w)[..., 2]
+    base_z = th(env.scene["robot"].data.root_pos_w)[:, 2:3]
     return torch.nan_to_num(z - base_z, nan=-1.0, posinf=-1.0, neginf=-1.0).clamp(-1.0, 1.0)
 
 
@@ -44,7 +46,7 @@ def feet_height(env):
 
 
 def feet_contact(env, sensor_cfg: SceneEntityCfg):
-    f = env.scene.sensors[sensor_cfg.name].data.net_forces_w[:, sensor_cfg.body_ids]
+    f = th(env.scene.sensors[sensor_cfg.name].data.net_forces_w)[:, sensor_cfg.body_ids]
     return (f.norm(dim=-1) > 1.0).float()
 
 

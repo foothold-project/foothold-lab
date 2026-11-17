@@ -1,6 +1,8 @@
 """P4-2 reset-only orientation diagnostics. Never changes yaw or commands."""
 import torch
 
+from foothold_s2.lab_compat import quat_wxyz
+
 from foothold_s2.terrains.generator_columns import generator_column_names
 
 STAIRS = ('pyramid_stairs', 'pyramid_stairs_inv', 'stage_stairs')
@@ -80,7 +82,7 @@ def record_reset(env, env_ids):
     valid_col = torch.isfinite(cols) & (cols == cols.long()) & (cols >= 0) & (cols < len(table))
     safe_col = torch.where(valid_col, cols, torch.zeros_like(cols)).long()
     kinds = torch.where(valid_col, table[safe_col], torch.full_like(safe_col, -2))
-    q = env.scene['robot'].data.root_quat_w[ids].to(torch.float64)
+    q = quat_wxyz(env.scene['robot'].data.root_quat_w)[ids].to(torch.float64)
     good_q = torch.isfinite(q).all(-1) & ((q.square().sum(-1) - 1.).abs() < 1e-3)
     yaw = torch.atan2(2*(q[:, 0]*q[:, 3]+q[:, 1]*q[:, 2]), 1-2*(q[:, 2].square()+q[:, 3].square()))
     hist.add(torch.where(good_q, yaw, torch.full_like(yaw, float('nan'))), kinds)

@@ -6,6 +6,7 @@ arrays. RewardManager alone multiplies cost by weight and dt.
 from collections.abc import Mapping
 from pathlib import Path
 import copy
+from foothold_s2.lab_compat import quat_wxyz
 import json
 import math
 import torch
@@ -133,10 +134,10 @@ class PhysicalSource:
         env=self.env; d=self.robot.data; f=self.feet
         command=env.command_manager.get_command('base_velocity')
         term=env.command_manager.get_term('base_velocity')
-        pos=d.body_pos_w[:,f]; quat=d.body_quat_w[:,f]
+        pos=d.body_pos_w[:,f]; quat=quat_wxyz(d.body_quat_w)[:,f]
         center=pos+rotate(quat,torch.tensor([-.002,0.,0.],device=env.device).expand_as(pos))
         sole=center[...,2]-.022
-        rootq=d.root_quat_w
+        rootq=quat_wxyz(d.root_quat_w)
         yaw=torch.atan2(2*(rootq[:,0]*rootq[:,3]+rootq[:,1]*rootq[:,2]),
                         1-2*(rootq[:,2].square()+rootq[:,3].square()))
         yawq=torch.zeros_like(rootq); yawq[:,0]=torch.cos(yaw/2); yawq[:,3]=torch.sin(yaw/2)

@@ -16,6 +16,7 @@ from dataclasses import dataclass
 
 import numpy as np
 
+from foothold_s2.lab_compat import quat_wxyz, th
 from foothold_s2.nav import lower_adapter
 from foothold_s2.nav.command_space import CommandSpace, HOLD_STEPS
 
@@ -82,7 +83,7 @@ class NavEnv:
     # ---- 상태 읽기
     def _body(self):
         d = self.raw.scene["robot"].data
-        return d.root_pos_w, d.root_quat_w, d.root_lin_vel_b, d.root_ang_vel_b[:, 2]
+        return th(d.root_pos_w), quat_wxyz(d.root_quat_w), th(d.root_lin_vel_b), th(d.root_ang_vel_b)[:, 2]
 
     def reset(self) -> NavState:
         import torch
@@ -102,7 +103,7 @@ class NavEnv:
             return np.zeros(self.n, bool)
         import torch
 
-        force = torch.linalg.vector_norm(self.sensor.data.net_forces_w[:, self.collision_ids], dim=-1)
+        force = torch.linalg.vector_norm(th(self.sensor.data.net_forces_w)[:, self.collision_ids], dim=-1)
         return _np((force > self.collision_force_n).any(dim=1)).astype(bool)
 
     def _proprio(self) -> np.ndarray:
@@ -120,7 +121,7 @@ class NavEnv:
             stand=np.zeros(self.n, bool) if applied is None else applied.stand.copy(),
             modified=np.zeros(self.n, bool) if applied is None else applied.modified.copy(),
             track_err=track_err, done=done, done_step=done_step, timed_out=timed_out,
-            ang_vel_b=_np(data.root_ang_vel_b), q=_np(data.joint_pos), q0=_np(data.default_joint_pos[0]),
+            ang_vel_b=_np(th(data.root_ang_vel_b)), q=_np(th(data.joint_pos)), q0=_np(th(data.default_joint_pos)[0]),
             proprio=self._proprio(), collision=np.zeros(self.n, bool) if collision is None else collision)
 
     def step(self, high_action) -> NavState:

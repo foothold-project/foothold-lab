@@ -55,10 +55,12 @@ CAMERA_POS_M = (0.30, 0.0, 0.05)         # 가정: 몸통 앞 위 (실측으로 
 
 def depth_camera_cfg(num_envs: int = NUM_ENVS, mesh_prim_paths=("/World/ground",)):
     """Kit 쪽에서만. RayCasterCamera 180x320. 부르는 쪽이 로봇 몸통 prim 경로 · 장착 위치를 채운다 (미확인: 이 cfg 는 Kit 에서 만들어 본 적 없음)."""
-    from isaaclab.sensors import RayCasterCameraCfg, patterns
+    from isaaclab.sensors.ray_caster import RayCasterCameraCfg, patterns
+
+    from foothold_s2.lab_compat import quat_cfg
 
     return RayCasterCameraCfg(prim_path="{ENV_REGEX_NS}/Robot/base", mesh_prim_paths=list(mesh_prim_paths), update_period=0.1,
-                              offset=RayCasterCameraCfg.OffsetCfg(pos=CAMERA_POS_M, rot=pitch_down_quat_wxyz(CAMERA_PITCH_DEG), convention="world"),
+                              offset=RayCasterCameraCfg.OffsetCfg(pos=CAMERA_POS_M, rot=quat_cfg(pitch_down_quat_wxyz(CAMERA_PITCH_DEG)), convention="world"),
                               data_types=["distance_to_image_plane"],
                               pattern_cfg=patterns.PinholeCameraPatternCfg(focal_length=1.93, horizontal_aperture=3.68, height=DEPTH_H, width=DEPTH_W),
                               debug_vis=False)

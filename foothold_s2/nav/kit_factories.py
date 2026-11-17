@@ -50,6 +50,7 @@ def make_task(assets, num_envs: int, seed: int, rows, env_origins_xy):
 
 
 def _build(cfg: dict, with_camera: bool):
+    from foothold_s2.lab_compat import th
     from foothold_s2.nav import hl_student
     from foothold_s2.tasks.nav_env_cfg import build_nav_env
 
@@ -64,7 +65,7 @@ def _build(cfg: dict, with_camera: bool):
     raw = nav.raw
     rows = raw.scene.terrain.terrain_levels.cpu().numpy()
     task = make_task(prepared["assets"], int(cfg["num_envs"]), int(cfg["seed"]), rows, raw.scene.env_origins[:, :2].cpu().numpy())
-    depth_fn = (lambda: raw.scene["depth_camera"].data.output["distance_to_image_plane"]) if with_camera else None
+    depth_fn = (lambda: th(raw.scene["depth_camera"].data.output["distance_to_image_plane"])) if with_camera else None
     return nav, task, depth_fn
 
 
