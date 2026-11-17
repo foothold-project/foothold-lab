@@ -1,0 +1,152 @@
+{
+  "format": "start-m15500-parity/1",
+  "checkpoint_sha256": "13caeb4ae52dd41ab3c2d23f9e6e34801a2414aa811c3efd4b38895e9ce29df6",
+  "onnxruntime": "1.32.0",
+  "torch": "2.7.0+cu128",
+  "synthetic": {
+    "format": "foothold-ex40-w89-cpu-comparison/1",
+    "cases": {
+      "map_on/first": {
+        "action": 5.4836273193359375e-06,
+        "h_prop_next": 2.6710331439971924e-06,
+        "h_terr_next": 1.4156103134155273e-06,
+        "recon_map": 7.331371307373047e-06
+      },
+      "map_on/carry_no_depth": {
+        "action": 3.337860107421875e-06,
+        "h_prop_next": 1.4901161193847656e-06,
+        "h_terr_next": 0.0,
+        "recon_map": 2.562999725341797e-06
+      },
+      "map_on/carry_depth_gt": {
+        "action": 2.86102294921875e-06,
+        "h_prop_next": 1.4901161193847656e-06,
+        "h_terr_next": 1.6838312149047852e-06,
+        "recon_map": 2.294778823852539e-06
+      },
+      "map_on/sequence/0": {
+        "action": 5.4836273193359375e-06,
+        "h_prop_next": 2.6710331439971924e-06,
+        "h_terr_next": 1.4156103134155273e-06,
+        "recon_map": 7.331371307373047e-06
+      },
+      "map_on/sequence/1": {
+        "action": 8.225440979003906e-06,
+        "h_prop_next": 1.9222497940063477e-06,
+        "h_terr_next": 1.4156103134155273e-06,
+        "recon_map": 7.331371307373047e-06
+      },
+      "map_on/sequence/2": {
+        "action": 5.7220458984375e-06,
+        "h_prop_next": 2.2798776626586914e-06,
+        "h_terr_next": 2.4139881134033203e-06,
+        "recon_map": 1.8477439880371094e-06
+      },
+      "map_off/first": {
+        "action": 7.62939453125e-06,
+        "h_prop_next": 2.6710331439971924e-06,
+        "h_terr_next": 1.4156103134155273e-06,
+        "recon_map": 7.331371307373047e-06
+      },
+      "map_off/carry_no_depth": {
+        "action": 3.814697265625e-06,
+        "h_prop_next": 1.4901161193847656e-06,
+        "h_terr_next": 0.0,
+        "recon_map": 2.562999725341797e-06
+      },
+      "map_off/carry_depth_gt": {
+        "action": 3.814697265625e-06,
+        "h_prop_next": 1.4901161193847656e-06,
+        "h_terr_next": 1.6838312149047852e-06,
+        "recon_map": 2.294778823852539e-06
+      },
+      "map_off/sequence/0": {
+        "action": 7.62939453125e-06,
+        "h_prop_next": 2.6710331439971924e-06,
+        "h_terr_next": 1.4156103134155273e-06,
+        "recon_map": 7.331371307373047e-06
+      },
+      "map_off/sequence/1": {
+        "action": 1.049041748046875e-05,
+        "h_prop_next": 1.9222497940063477e-06,
+        "h_terr_next": 1.4156103134155273e-06,
+        "recon_map": 7.331371307373047e-06
+      },
+      "map_off/sequence/2": {
+        "action": 6.198883056640625e-06,
+        "h_prop_next": 2.2798776626586914e-06,
+        "h_terr_next": 2.4139881134033203e-06,
+        "recon_map": 1.8477439880371094e-06
+      }
+    },
+    "max_abs": 1.049041748046875e-05,
+    "tolerance_max_abs": 3e-05
+  },
+  "real": {
+    "source_capture": "/mnt/win-d/mai/tmp/scripter/start_demo_real20_20261103_try03/capture.json",
+    "capture_sha256": "3837affcb6b561bc9ecb363b75e0f82b769d11097031c1e4e36a31b5bec49f6e",
+    "capture_driven_by_checkpoint_sha256": "d5e9ec400f33d74d97e7c69d4ab2092d4980195141bb8b30e683730eecd6b6f5",
+    "note": "Kit inputs recorded while m6000 drove the robot; this checkpoint's own torch GRU state is fed back; open-loop replay, not this checkpoint's closed loop",
+    "cases": {
+      "flat/eval_pred": {
+        "action": 4.0978193283081055e-06,
+        "h_prop_next": 1.7136335372924805e-06,
+        "h_terr_next": 1.296401023864746e-06,
+        "recon_map": 3.2782554626464844e-07
+      },
+      "flat/probe_prop_only": {
+        "action": 3.4570693969726562e-06,
+        "h_prop_next": 1.080334186553955e-06,
+        "h_terr_next": 1.1324882507324219e-06,
+        "recon_map": 4.470348358154297e-07
+      },
+      "flat/eval_gt": {
+        "action": 2.2649765014648438e-06,
+        "h_prop_next": 1.3969838619232178e-06,
+        "h_terr_next": 1.3709068298339844e-06,
+        "recon_map": 2.682209014892578e-07
+      },
+      "rough_L0/eval_pred": {
+        "action": 7.4803829193115234e-06,
+        "h_prop_next": 1.6987323760986328e-06,
+        "h_terr_next": 1.1920928955078125e-06,
+        "recon_map": 6.854534149169922e-07
+      },
+      "rough_L0/probe_prop_only": {
+        "action": 2.5033950805664062e-06,
+        "h_prop_next": 1.4007091522216797e-06,
+        "h_terr_next": 1.1771917343139648e-06,
+        "recon_map": 2.980232238769531e-07
+      },
+      "rough_L0/eval_gt": {
+        "action": 2.7418136596679688e-06,
+        "h_prop_next": 1.423526555299759e-06,
+        "h_terr_next": 1.2218952178955078e-06,
+        "recon_map": 4.76837158203125e-07
+      },
+      "stairs_L2/eval_pred": {
+        "action": 2.86102294921875e-06,
+        "h_prop_next": 1.519918441772461e-06,
+        "h_terr_next": 1.7881393432617188e-06,
+        "recon_map": 9.5367431640625e-07
+      },
+      "stairs_L2/probe_prop_only": {
+        "action": 1.9073486328125e-06,
+        "h_prop_next": 2.4549663066864014e-06,
+        "h_terr_next": 2.0563602447509766e-06,
+        "recon_map": 5.811452865600586e-06
+      },
+      "stairs_L2/eval_gt": {
+        "action": 2.1457672119140625e-06,
+        "h_prop_next": 2.1830201148986816e-06,
+        "h_terr_next": 2.1457672119140625e-06,
+        "recon_map": 1.8477439880371094e-06
+      }
+    },
+    "steps_per_case": 20,
+    "state_feedback": true,
+    "max_abs": 7.4803829193115234e-06,
+    "tolerance": 0.0001,
+    "passed": true
+  }
+}
