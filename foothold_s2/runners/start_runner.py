@@ -112,6 +112,7 @@ VX_CORR_VX_COL = sp.Z_DIM            # est[..., 16]
 
 
 VEL_BRANCH_ENV = "EX42_VEL_BRANCH"                 # "off" (default) | "shadow" | "replace"  (DESIGN-SLOW-WALK 7 section)
+VEL_BRANCH_MASK_ENV = "EX42_VEL_BRANCH_MASK"       # "cmd" (default) | "cmd_action": which obs columns the branch input hides
 VEL_BRANCH_FREEZE_ENV = "EX42_VEL_BRANCH_FREEZE"   # "0" (default) | "1": policy and perception body frozen, only the branch learns (stage 1)
 
 
@@ -120,6 +121,13 @@ def vel_branch_mode() -> str:
     if mode not in sp.VEL_BRANCH_MODES:
         raise ValueError("%s must be one of %s: %r" % (VEL_BRANCH_ENV, sp.VEL_BRANCH_MODES, mode))
     return mode
+
+
+def vel_branch_mask() -> str:
+    mask = os.environ.get(VEL_BRANCH_MASK_ENV, "cmd") or "cmd"
+    if mask not in sp.VEL_BRANCH_MASKS:
+        raise ValueError("%s must be one of %s: %r" % (VEL_BRANCH_MASK_ENV, tuple(sp.VEL_BRANCH_MASKS), mask))
+    return mask
 
 
 def vel_branch_freeze() -> bool:
@@ -316,7 +324,7 @@ class StartRunner(OnPolicyRunner):
         self.perception = StartPerception(
             PerceptionCfg(map_input=pcfg.get("map_input", "reconstruction"), force_gt=bool(pcfg.get("force_gt", False)),
                           fast_gt_only=bool(pcfg["fast_gt_only"]),
-                          depth_delay_ticks=pcfg.get("depth_delay_ticks", 1), vel_branch=vel_branch_mode())
+                          depth_delay_ticks=pcfg.get("depth_delay_ticks", 1), vel_branch=vel_branch_mode(), vel_branch_mask=vel_branch_mask())
         ).to(device)
         self.perception.ie.heads_fp32 = bool(pcfg.get("kl_fp32", False))
         self.vel_branch_freeze = vel_branch_freeze()
@@ -326,8 +334,8 @@ class StartRunner(OnPolicyRunner):
         self.perception_optimizer = torch.optim.Adam(
             [prm for prm in self.perception.parameters() if prm.requires_grad], lr=pcfg["learning_rate"], weight_decay=pcfg["weight_decay"]
         )
-        print("EX42_VEL_BRANCH where=start mode=%s freeze=%d vx_corr_on=%d" % (
-            self.perception.cfg.vel_branch, int(self.vel_branch_freeze), int(vx_corr_params()[0])), flush=True)
+        print("EX42_VEL_BRANCH where=start mode=%s mask=%s freeze=%d vx_corr_on=%d" % (
+            self.perception.cfg.vel_branch, self.perception.cfg.vel_branch_mask, int(self.vel_branch_freeze), int(vx_corr_params()[0])), flush=True)
         self._pin_perception_lr("start")
         self.adasmpl = AdaSmpl(self.perception.cfg.p_smpl_init, self.perception.cfg.cv_eps, self.perception.cfg.force_gt)
         self.perception_wema = None            # v28u: WeightEma of the perception module (built in learn() when PERCEPTION_EMA_DECAY > 0)
@@ -1655,8 +1663,8 @@ class StartRunner(OnPolicyRunner):
                 for k in ("l_tr", "l_ie", "kl", "o_next", "v", "hf", "hb") + (("vb",) if "vb" in res else ()):
                     acc[k] = acc.get(k, 0.0) + float(res[k]) * len(c) / len(idx)
                 if res.get("_vb_slope") is not None:
-                    sl = res["_vb_slope"].detach().float()
-                    vb_slope = sl if vb_slope is None else vb_slope + sl
+                    sl = res["_vb_slope"].detach()
+                    vb_slope = sl.double() if vb_slope is None else vb_slope + sl.double()
                 if res.get("_v_band") is not None:
                     vb = res["_v_band"].detach().float()
                     v_band_sum = vb if v_band_sum is None else v_band_sum + vb
@@ -1671,11 +1679,13 @@ class StartRunner(OnPolicyRunner):
                                              "clipped": int((g > pc["max_grad_norm"]).sum()), "threshold": float(pc["max_grad_norm"])}
         self.last_perception_losses = {k: v / n_updates for k, v in acc.items()}
         self.last_perception_losses.update(velocity_band_records(v_band_sum, n_updates))
-        if vb_slope is not None:
+        if vb_slope is not None:                        # 25 step window least squares with intercept (sp.window_fit); n counts windows, summed over the update
             for name, row in (("ie", vb_slope[0]), ("branch", vb_slope[1])):
-                if float(row[1]) > 0:
-                    self.last_perception_losses["vslope_slow_" + name] = float(row[0] / row[1])
-            self.last_perception_losses["vslope_slow_n"] = float(vb_slope[0][2]) / n_updates
+                fit = sp.window_fit(row)
+                for key, tag in (("slope", "vslope_slow_"), ("intercept", "vintercept_slow_"), ("zero", "vzero_slow_")):
+                    if fit[key] is not None:
+                        self.last_perception_losses[tag + name] = float(fit[key])
+            self.last_perception_losses["vslope_slow_n"] = float(vb_slope[0][0]) / n_updates
         return self.last_perception_losses
 
     def _gradnorm_print(self, it: int) -> None:

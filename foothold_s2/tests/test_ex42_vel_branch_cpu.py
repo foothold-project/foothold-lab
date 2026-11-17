@@ -3,7 +3,7 @@ import pytest
 import torch
 
 from foothold_s2.models.start_perception import (
-    VEL_BRANCH_CMD_COLS, PerceptionCfg, StartPerception, Z_DIM, slow_slope_sums)
+    VEL_BRANCH_CMD_COLS, PerceptionCfg, StartPerception, Z_DIM, slow_window_sums, window_fit)
 from foothold_s2.runners.perception_replay import PerceptionReplay
 from foothold_s2.runners import start_runner as sr
 
@@ -119,7 +119,7 @@ def test_replay_equals_collection_and_loss_graph_is_separate():
         est = torch.cat([out["mu"], p._v_out(out), out["zf"], out["zb"]], -1)
         assert torch.allclose(est, ests[t], atol=1e-5), t
     res = p.sequence_loss(b)
-    assert "vb" in res and res["_vb_slope"].shape == (2, 3)
+    assert "vb" in res and res["_vb_slope"].shape == (2, 7)
     p.zero_grad()
     res["vb"].backward(retain_graph=True)
     assert all(q.grad is None or float(q.grad.abs().sum()) == 0 for n_, q in p.named_parameters() if not n_.startswith("vbranch."))
@@ -153,12 +153,36 @@ def test_old_checkpoint_loads_with_fresh_branch_and_other_missing_is_an_error():
     assert sr.load_perception_state(_make("off"), old.state_dict()) is False
 
 
-def test_slow_slope_sums_least_squares_through_origin():
-    gt = torch.tensor([0.05, 0.10, 0.5, -0.1])
-    est = torch.stack([0.5 * gt, 1.0 * gt])
-    s = slow_slope_sums(est, gt)
-    assert float(s[0, 0] / s[0, 1]) == pytest.approx(0.5) and float(s[1, 0] / s[1, 1]) == pytest.approx(1.0)
-    assert float(s[0, 2]) == 3.0                                  # 0.5 는 띠 밖
+def _windows(slope, intercept, T=50, B=40, noise=0.0, seed=0):
+    g = torch.Generator().manual_seed(seed)
+    x = torch.linspace(0.0, 0.14, B)[None, :].expand(T, B)                                   # 환경마다 실제가 0 ~ 0.14 로 퍼진다
+    jitter = noise * torch.randn(T, B, generator=g)
+    est = slope * x + intercept + jitter
+    return est[None], x, torch.zeros(T, B, dtype=torch.bool)
+
+
+def test_window_fit_recovers_slope_and_intercept_not_the_through_origin_ratio():
+    est, gt, first = _windows(0.3, 0.05)
+    fit = window_fit(slow_window_sums(est, gt, first)[0])
+    assert fit["slope"] == pytest.approx(0.3, abs=1e-6) and fit["intercept"] == pytest.approx(0.05, abs=1e-6)
+    assert fit["zero"] == pytest.approx(0.05, abs=0.01)                                       # 실제 0 근처 칸에서의 추정 = 영점
+    origin_ratio = float((est[0] * gt).sum() / (gt * gt).sum())                                # 옛 식: 영점이 섞여 기울기가 부푼다
+    assert origin_ratio > 0.6
+
+
+def test_window_mean_averages_step_noise_and_reset_windows_are_dropped():
+    est, gt, first = _windows(0.3, 0.0, noise=0.05)
+    fit = window_fit(slow_window_sums(est, gt, first)[0])
+    assert fit["n"] == 2 * 40 and abs(fit["slope"] - 0.3) < 0.1                                # 25 step 창 2 개 x 40 env
+    first2 = first.clone()
+    first2[10, :20] = True                                                                     # 첫 창 안에서 20 env 가 리셋됨
+    assert window_fit(slow_window_sums(est, gt, first2)[0])["n"] == 2 * 40 - 20
+
+
+def test_window_fit_none_when_too_few_or_flat():
+    assert window_fit(torch.zeros(7, dtype=torch.float64))["slope"] is None
+    est, gt, first = _windows(0.3, 0.0)
+    assert window_fit(slow_window_sums(est, torch.full_like(gt, 0.1), first)[0])["slope"] is None
 
 
 def test_env_switches(monkeypatch):
@@ -178,3 +202,51 @@ def test_env_switches(monkeypatch):
     monkeypatch.setenv("EX42_VEL_BRANCH", "bogus")
     with pytest.raises(ValueError):
         sr.vel_branch_mode()
+
+
+def test_mask_config_hides_action_columns_too_and_default_is_cmd_only():
+    from foothold_s2.models.start_perception import VEL_BRANCH_ACTION_COLS
+    base = _make("off")
+    inputs = _inputs()
+    p_cmd = StartPerception(PerceptionCfg(vel_branch="replace"))
+    p_act = StartPerception(PerceptionCfg(vel_branch="replace", vel_branch_mask="cmd_action"))
+    assert float(p_cmd.vbranch.cmd_mask[list(VEL_BRANCH_ACTION_COLS)].min()) == 1.0           # 기본: 행동 칸은 보임
+    assert float(p_act.vbranch.cmd_mask[list(VEL_BRANCH_ACTION_COLS)].max()) == 0.0
+    assert float(p_act.vbranch.cmd_mask[list(VEL_BRANCH_CMD_COLS)].max()) == 0.0
+    for p in (p_cmd, p_act):
+        p.load_state_dict(base.state_dict(), strict=False)
+
+    def edit(h):
+        h = h.clone(); h[..., list(VEL_BRANCH_ACTION_COLS)] += 0.3
+        return h
+    v = slice(Z_DIM, Z_DIM + 3)
+    a, _ = _run(p_act, inputs); b, _ = _run(p_act, inputs, hist_edit=edit)
+    assert torch.equal(a[..., v], b[..., v])                                                  # 행동 칸까지 가리면 행동을 바꿔도 같다
+    c, _ = _run(p_cmd, inputs); d, _ = _run(p_cmd, inputs, hist_edit=edit)
+    assert not torch.equal(c[..., v], d[..., v])                                              # 기본 가림에서는 행동 칸이 간접 길
+    with pytest.raises(ValueError):
+        StartPerception(PerceptionCfg(vel_branch="shadow", vel_branch_mask="bogus"))
+
+
+def test_input_log_replays_branch_and_swaps_action_columns_from_a_donor_record():
+    from foothold_s2.models.start_perception import VEL_BRANCH_ACTION_COLS
+    rp = _make("replace", seed=2)
+    inputs = _inputs(3)
+    donor_inputs = _inputs(11)                                                                 # 다른 명령으로 걸은 기록 (같은 시각 · 같은 env 수)
+    rp.record_inputs(True)
+    est, _ = _run(rp, inputs)
+    log = rp.input_log
+    rp.record_inputs(True)
+    _run(rp, donor_inputs)
+    donor = rp.input_log
+    assert len(log) == T and log[0]["hist"].shape == (N, 10, 45)
+    again = rp.branch_from_log(log)
+    assert torch.allclose(again, est[..., Z_DIM:Z_DIM + 3], atol=1e-6)                         # 기록으로 다시 돌린 가지 = 수집 때 값
+    direct = rp.branch_from_log(log, VEL_BRANCH_CMD_COLS, donor)
+    assert torch.equal(direct, again)                                                          # 직접 개입 (명령 칸 바꿔 끼움): 정확히 같음
+    indirect = rp.branch_from_log(log, VEL_BRANCH_ACTION_COLS, donor)
+    assert not torch.equal(indirect, again)                                                    # 간접 개입 (행동 칸 바꿔 끼움): 달라진다 = 잴 수 있다
+    with pytest.raises(ValueError):
+        rp.branch_from_log(log, VEL_BRANCH_ACTION_COLS, donor[:3])
+    rp.record_inputs(False)
+    assert rp.input_log is None

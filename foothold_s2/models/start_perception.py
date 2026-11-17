@@ -68,6 +68,8 @@ class PerceptionCfg:
     # "off" (기본) = 가지 없음: 모듈 · 상태 · 계산이 이 줄이 없던 때와 같다 (비트 같음 시험). "shadow" = 가지를 두고 학습하지만 정책이 받는 est 의 속도 3 칸은 옛 머리 값 그대로 (1 단계).
     # "replace" = 정책이 받는 est 의 속도 3 칸 (est[16:19]) 이 가지 출력 (2 · 3 단계). z · zf · zb 는 어느 쪽에서도 옛 몸통 값 그대로다.
     vel_branch: str = "off"
+    # 가지 입력에서 가릴 칸 (설계 7 절 v0.3): "cmd" (기본) = 명령 3 칸 (obs 6:9) · "cmd_action" = 명령 3 칸 + 직전 행동 12 칸 (obs 33:45 · 정책이 명령에 반응해 낸 값이라 간접 길이 된다)
+    vel_branch_mask: str = "cmd"
 
 
 class DepthCNN(nn.Module):
@@ -227,16 +229,47 @@ def velocity_loss(v_est: torch.Tensor, v_gt: torch.Tensor) -> torch.Tensor:
     return (w * err).mean()
 
 
-SLOW_SLOPE_BAND = (0.02, 0.14)   # 정답 |vx| 가 이 안인 표본: 느린 띠 (DESIGN-SLOW-WALK 7.3 1 단계 잣대의 순간 값 · 기록만)
+SLOPE_WINDOW = 25            # step (0.5 초). 한 rollout 이 이보다 짧으면 rollout 길이 (작은 시험 · 24 step 설정)
+SLOPE_FIT_BAND = (0.0, 0.15)  # 창 평균 실제 vx 가 이 안인 창만 기울기 최소제곱에 넣는다 (axes 표 slope_windows 의 「명령 앞 0.1 칸」 에서 실제가 0 ~ 0.14 로 퍼지는 것과 같은 자리)
+SLOPE_ZERO_BAND = 0.02        # 창 평균 |실제 vx| 가 이 미만인 창 = 영점 칸 (실제 0 에서의 추정 평균을 따로)
+SLOPE_COLS = 7                # [n, sum x, sum y, sum xx, sum xy, n0, sum y0]
 
 
-def slow_slope_sums(est_x: torch.Tensor, gt_x: torch.Tensor) -> torch.Tensor:
-    """est_x (K, N) 추정 vx 들 · gt_x (N,) 정답 vx. 느린 띠 표본에서 K 행마다 [sum(est * gt), sum(gt ^ 2), n]. 영점을 지나는 최소제곱 기울기 = sum(est*gt) / sum(gt^2)."""
-    lo, hi = SLOW_SLOPE_BAND
-    g = gt_x.detach().float()
-    m = (g.abs() >= lo) & (g.abs() < hi)
-    e = est_x.detach().float()
-    return torch.stack([(e * g * m).sum(-1), ((g * g) * m).sum().expand(e.shape[0]), m.sum().expand(e.shape[0]).to(e.dtype)], -1)
+def slow_window_sums(est_x: torch.Tensor, gt_x: torch.Tensor, first: torch.Tensor) -> torch.Tensor:
+    """기록만. DESIGN-SLOW-WALK 7.3 1 단계 잣대 (axes 표 slope_windows 와 같은 식): 25 step 창 평균 점 (x = 실제 vx, y = 추정 vx) 의 최소제곱 재료.
+    est_x (K, T, B) 추정 vx 들 · gt_x (T, B) 정답 vx · first (T, B) 리셋 직후 표시. 창 안에 리셋 (첫 step 이 아닌 first) 이 있으면 그 창은 버린다.
+    창 평균 x 가 SLOPE_FIT_BAND 안인 점마다 K 행별 [n, sum x, sum y, sum xx, sum xy, n0, sum y0] (n0 · sum y0 은 |x| < SLOPE_ZERO_BAND 인 점).
+    기울기 = (n sxy - sx sy) / (n sxx - sx^2) · 절편 = (sy - slope sx) / n · 영점 = sy0 / n0. 순간 표본의 원점 통과 비가 아니다 (영점이 섞여 1.0 안팎으로 부푸는 식이었다)."""
+    K, T, B = est_x.shape
+    W = min(SLOPE_WINDOW, T)
+    out = torch.zeros(K, SLOPE_COLS, dtype=torch.float64)
+    g, e, f = gt_x.detach().double(), est_x.detach().double(), first.bool()
+    lo, hi = SLOPE_FIT_BAND
+    for w in range(T // W):
+        a, b = w * W, (w + 1) * W
+        ok = ~f[a + 1:b].any(0) if W > 1 else torch.ones(B, dtype=torch.bool)
+        x = g[a:b].mean(0)
+        sel = ok & (x >= lo) & (x < hi)
+        if not bool(sel.any()):
+            continue
+        xs = x[sel]
+        zero = xs.abs() < SLOPE_ZERO_BAND
+        for k in range(K):
+            ys = e[k, a:b].mean(0)[sel]
+            out[k] += torch.stack([torch.tensor(float(xs.numel()), dtype=torch.float64), xs.sum(), ys.sum(), (xs * xs).sum(), (xs * ys).sum(),
+                                   zero.sum().double(), ys[zero].sum()])
+    return out
+
+
+def window_fit(sums) -> dict:
+    """slow_window_sums の合計 (7,) -> {slope, intercept, zero, n, n0}. 点が 3 個未満か x が広がらなければ None."""
+    n, sx, sy, sxx, sxy, n0, sy0 = (float(v) for v in sums)
+    out = {"slope": None, "intercept": None, "zero": (sy0 / n0) if n0 > 0 else None, "n": int(n), "n0": int(n0)}
+    den = n * sxx - sx * sx
+    if n >= 3 and den > 1e-12:
+        out["slope"] = (n * sxy - sx * sy) / den
+        out["intercept"] = (sy - out["slope"] * sx) / n
+    return out
 
 
 def velocity_band_sums(v_est: torch.Tensor, v_gt: torch.Tensor) -> torch.Tensor:
@@ -372,6 +405,8 @@ class PerceptionState:
 
 VEL_BRANCH_MODES = ("off", "shadow", "replace")
 VEL_BRANCH_CMD_COLS = (6, 7, 8)   # obs 45 칸 안의 속도 명령 vx vy wz (start_runner 의 o[:, 6:9] 와 같은 칸)
+VEL_BRANCH_ACTION_COLS = tuple(range(33, 45))   # obs 45 칸 = 자이로 3 · 중력 3 · 명령 3 · 관절 위치 12 · 관절 속도 12 · 직전 행동 12 (s1_env_cfg 의 항 순서)
+VEL_BRANCH_MASKS = {"cmd": VEL_BRANCH_CMD_COLS, "cmd_action": VEL_BRANCH_CMD_COLS + VEL_BRANCH_ACTION_COLS}
 H_PROP_DIM = 128
 H_VEL_DIM = 128
 
@@ -379,17 +414,29 @@ H_VEL_DIM = 128
 class VelBranch(nn.Module):
     """속도 가지: 최근 10 프레임에서 명령 3 칸을 0 으로 가린 것 -> MLP(256,128) -> GRUCell 128 -> 3 칸. 명령을 볼 길이가 구조상 없다 (곱셈 마스크 · 기울기도 0)."""
 
-    def __init__(self) -> None:
+    def __init__(self, mask_name: str = "cmd") -> None:
         super().__init__()
+        if mask_name not in VEL_BRANCH_MASKS:
+            raise ValueError(f"vel_branch_mask 는 {tuple(VEL_BRANCH_MASKS)} 중 하나: {mask_name!r}")
         self.mlp = mlp(OBS_DIM * HIST_LEN, [256, 128], None)
         self.gru = nn.GRUCell(128, H_VEL_DIM)
         self.head = nn.Linear(H_VEL_DIM, V_DIM)
         mask = torch.ones(OBS_DIM)
-        mask[list(VEL_BRANCH_CMD_COLS)] = 0.0
+        mask[list(VEL_BRANCH_MASKS[mask_name])] = 0.0
         self.register_buffer("cmd_mask", mask, persistent=False)
 
     def step(self, hist: torch.Tensor, h: torch.Tensor) -> torch.Tensor:
         return self.gru(self.mlp((hist * self.cmd_mask).flatten(1)), h)
+
+    @torch.no_grad()
+    def run_sequence(self, hist: torch.Tensor, first: torch.Tensor) -> torch.Tensor:
+        """기록된 입력 이력 hist (T, B, 10, 45) · first (T, B) 로 가지만 다시 돌려 속도 (T, B, 3) 을 낸다 (탐침용: _advance 와 같은 리셋 규칙 · 상태 0 에서 시작)."""
+        h = torch.zeros(hist.shape[1], H_VEL_DIM, device=hist.device)
+        outs = []
+        for t in range(hist.shape[0]):
+            h = self.step(hist[t], h * (~first[t]).float()[:, None])
+            outs.append(self.head(h))
+        return torch.stack(outs)
 
 
 class StartPerception(nn.Module):
@@ -405,7 +452,8 @@ class StartPerception(nn.Module):
         self.ie = IEEstimator(self.cfg)
         if self.cfg.vel_branch not in VEL_BRANCH_MODES:
             raise ValueError(f"vel_branch 는 {VEL_BRANCH_MODES} 중 하나: {self.cfg.vel_branch!r}")
-        self.vbranch = VelBranch() if self.cfg.vel_branch != "off" else None
+        self.vbranch = VelBranch(self.cfg.vel_branch_mask) if self.cfg.vel_branch != "off" else None
+        self.input_log: list | None = None   # 탐침이 켜면 step() 마다 가지가 본 입력 이력 · first 를 쌓는다 (record_inputs)
         self.hp_dim = H_PROP_DIM + (H_VEL_DIM if self.vbranch is not None else 0)  # 가지가 있으면 h_prop 뒤쪽 칸이 가지의 GRU 상태 (저장 · 재생 · 리셋이 같은 길을 탄다)
 
     # ---------------- 상태 ----------------
@@ -480,6 +528,24 @@ class StartPerception(nn.Module):
             h_prop = torch.cat([h_prop, h_vel], -1)
         return h_prop, h_terr, out
 
+    def record_inputs(self, on: bool = True) -> None:
+        """탐침용: 켜면 step() 이 부를 때마다 입력 이력 (N, 10, 45) 과 first (N,) 를 self.input_log 에 쌓는다 (끄면 비움). 다른 명령의 기록을 같은 시각으로 맞춰 행동 칸만 바꿔 끼우는 데 쓴다 (branch_from_log)."""
+        self.input_log = [] if on else None
+
+    def branch_from_log(self, log: list, swap_cols=(), donor: list | None = None) -> torch.Tensor:
+        """기록 log (record_inputs 로 쌓은 것) 로 가지 속도 (T, N, 3) 을 다시 낸다. swap_cols 가 있으면 그 칸만 donor 기록 (같은 길이 · 같은 env 수 · 같은 시각) 의 값으로 바꿔 끼운다 (간접 개입 비 · 관절 · 자이로는 그대로).
+        swap_cols=VEL_BRANCH_CMD_COLS 는 직접 개입 (가림 때문에 출력이 같아야 한다)."""
+        if self.vbranch is None:
+            raise ValueError("vel_branch 가 꺼져 있다")
+        hist = torch.stack([e["hist"] for e in log])
+        first = torch.stack([e["first"] for e in log])
+        if swap_cols:
+            if donor is None or len(donor) != len(log):
+                raise ValueError("swap_cols 에는 같은 길이의 donor 기록이 필요하다")
+            hist = hist.clone()
+            hist[..., list(swap_cols)] = torch.stack([e["hist"] for e in donor])[..., list(swap_cols)]
+        return self.vbranch.run_sequence(hist, first)
+
     def _v_out(self, out: dict[str, torch.Tensor]) -> torch.Tensor:
         """정책이 받는 est 의 속도 3 칸: replace 면 가지 출력, 아니면 (off · shadow) 옛 머리 값."""
         return out["v_branch"] if self.cfg.vel_branch == "replace" else out["v"]
@@ -499,6 +565,8 @@ class StartPerception(nn.Module):
         st.h_prop, st.h_terr, out = self._advance(
             st.h_prop, st.h_terr, inp["hist"], inp["depth2"], inp["tick"], inp["first"], st.use_gt, gt_map, *self._off_args(st.map_off)
         )
+        if self.input_log is not None:
+            self.input_log.append({"hist": inp["hist"].detach().clone(), "first": inp["first"].detach().clone()})
         if deterministic or not self.cfg.sample_latent_in_rollout:
             z = out["mu"]
         else:
@@ -545,7 +613,7 @@ class StartPerception(nn.Module):
         o_valid_total = 0.0
         v_band = None
         vb_sum = 0.0
-        slope = None   # 기록만: 정답 |vx| 0.02~0.14 표본에서 [sum(est x * gt x), sum(gt x ^ 2), n] 를 (옛 머리 · 가지) 로
+        trace = {"ie": [], "br": [], "gt": [], "first": []}   # 기록만: 25 step 창 평균 기울기 재료 (slow_window_sums)
         for t in range(T):
             h_prop, h_terr, out = self._advance(
                 h_prop, h_terr, batch["hist"][t], batch["depth2"][t].float(), batch["tick"][t], batch["first"][t],
@@ -560,8 +628,8 @@ class StartPerception(nn.Module):
             v_band = vb if v_band is None else v_band + vb
             if self.vbranch is not None:
                 vb_sum = vb_sum + F.mse_loss(out["v_branch"], batch["base_vel"][t])   # 가지 손실: 다른 손실과 그래프를 섞지 않는다 (옛 머리 v · o_hat 입력은 가지를 안 거친다)
-                sl = slow_slope_sums(torch.stack([out["v"][:, 0], out["v_branch"][:, 0]]), batch["base_vel"][t][:, 0])
-                slope = sl if slope is None else slope + sl
+                trace["ie"].append(out["v"][:, 0].detach()); trace["br"].append(out["v_branch"][:, 0].detach())
+                trace["gt"].append(batch["base_vel"][t][:, 0].detach()); trace["first"].append(batch["first"][t])
             sums["hb"] = sums["hb"] + F.mse_loss(self.ie.dec_b(out["zb"]), batch["gt_map"][t].flatten(1))
             sums["hf"] = sums["hf"] + F.mse_loss(self.ie.dec_f(out["zf"]), batch["gt_feet"][t])
             o_hat = self.ie.dec_o(torch.cat([z, out["v"], out["zf"], out["zb"]], -1))
@@ -577,5 +645,5 @@ class StartPerception(nn.Module):
         if self.vbranch is not None:
             res["vb"] = vb_sum / T
             res["loss"] = res["loss"] + res["vb"]
-            res["_vb_slope"] = slope
+            res["_vb_slope"] = slow_window_sums(torch.stack([torch.stack(trace["ie"]), torch.stack(trace["br"])]), torch.stack(trace["gt"]), torch.stack(trace["first"]))
         return res
