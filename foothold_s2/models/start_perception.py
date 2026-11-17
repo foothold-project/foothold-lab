@@ -112,12 +112,15 @@ class UNetRefine(nn.Module):
 
 
 class TRNet(nn.Module):
-    def __init__(self) -> None:
+    def __init__(self, width: int = 128) -> None:
+        """width = GRU hidden 폭 (기본 128 = 지금 구조와 모양 · 초기값 비트 같음). 128 이 아니면 rough MLP 도 [width, 2 * width] 로 같이 넓힌다 (복원 지도 설계 7 절 2: 오프라인 가르기 B1 용 ·
+        StartPerception · 재생 버퍼의 h_terr 폭은 128 로 고정이라 학습 경로에는 아직 연결 안 됨)."""
         super().__init__()
+        self.width = int(width)
         self.depth_cnn = DepthCNN()
         self.prop_mlp = mlp(128, [64, 64], None)
-        self.gru = nn.GRUCell(1024 + 64, 128)
-        self.rough = mlp(128, [128, 256], MAP_CELLS)
+        self.gru = nn.GRUCell(1024 + 64, self.width)
+        self.rough = mlp(self.width, [128, 256] if self.width == 128 else [self.width, 2 * self.width], MAP_CELLS)
         self.refine = UNetRefine()
 
     def step(self, depth: torch.Tensor, z_prop: torch.Tensor, h: torch.Tensor) -> torch.Tensor:
@@ -186,9 +189,13 @@ def kl_standard_normal(mu: torch.Tensor, logvar: torch.Tensor) -> torch.Tensor:
     return (-0.5 * (1 + logvar - mu.pow(2) - logvar.exp()).sum(-1)).mean()
 
 
-def loss_tr(rough: torch.Tensor, refined: torch.Tensor, hb: torch.Tensor) -> torch.Tensor:
-    """식 4: MSE(H_rough, H^b) + L1(H_refined, H^b). 칸 평균."""
-    return F.mse_loss(rough, hb) + F.l1_loss(refined, hb)
+def loss_tr(rough: torch.Tensor, refined: torch.Tensor, hb: torch.Tensor, weight: torch.Tensor | None = None) -> torch.Tensor:
+    """식 4: MSE(H_rough, H^b) + L1(H_refined, H^b). 칸 평균.
+    weight (hb 와 같은 모양, 기본 None = 꺼짐: 옛 식을 그대로 부른다 · 비트 같음): 칸마다 곱하는 가중 (복원 지도 설계 7 절 1: 모서리 · 구멍 칸을 키움).
+    켜면 식은 mean(w * (rough - hb)^2) + mean(w * |refined - hb|): 평균 축은 옛 식과 같은 «전체 칸 개수» 로 나누고 가중으로는 나누지 않는다 (그래서 가중 칸이 있는 만큼 손실이 커진다)."""
+    if weight is None:
+        return F.mse_loss(rough, hb) + F.l1_loss(refined, hb)
+    return (weight * (rough - hb) ** 2).mean() + (weight * (refined - hb).abs()).mean()
 
 
 # EX-42 v28g 후보: 속도 추정 손실의 저속 가중. 1.0 = 꺼짐 (이전 동작과 비트 동일, F.mse_loss 를 그대로 부른다).
