@@ -54,6 +54,7 @@ class NavTask:
         self.cmd_prev = np.zeros((self.n, 3)); self.cmd_prev2 = np.zeros((self.n, 3))
         self.subgoal = np.zeros((self.n, 2))
         self.min_task_m, self.max_task_tries = min_task_m, max_task_tries
+        self.task_fallbacks = 0           # 실제 시작에서 길을 못 찾아 새 쌍으로 대신한 횟수 (누적)
         self.voxels = {i: a.voxels for i, a in enumerate(assets)}
         self.origin_xy = origin_xy        # (n, 2) env 별 origins 열의 x y (방 틀). None = 방 가운데 (옛 꼴). 시작점 K 개 방은 이 값을 낸다
 
@@ -92,7 +93,20 @@ class NavTask:
             if pts is not None:
                 self.start[i], self.goal[i], self.path[i] = s, t, pts
                 return
-        raise RuntimeError(f"env {i}: no start/goal with a path after {self.max_task_tries} tries")
+        if start is None:
+            raise RuntimeError(f"env {i}: no start/goal with a path after {self.max_task_tries} tries")
+        # 실제 몸 위치가 길 없는 칸 (막힌 칸 · 갇힌 칸) 이면 학습을 죽이지 않는다 (G3 첫 Pod: 방 6 개 · env 1024 에서 시작점 몇 개가 이래서 229 초에 죽음).
+        # 대신 시작 · 목표를 둘 다 새로 뽑은 쌍으로 쓰고 (몸은 그 길의 시작에 있지 않다) 세어 둔다: task_fallbacks.
+        self.task_fallbacks += 1
+        for _ in range(200):
+            s, t = gm.sample_free_points(g, self.rng, 2)
+            if np.linalg.norm(s - t) < self.min_task_m:
+                continue
+            pts = self._plan(i, s, t)
+            if pts is not None:
+                self.start[i], self.goal[i], self.path[i] = s, t, pts
+                return
+        raise RuntimeError(f"env {i}: no start/goal with a path even for a free pair")
 
     def reset_envs(self, env_ids, start_xy=None) -> dict:
         """끝난 env (또는 처음 전부) 를 새 에피소드로. `start_xy` (k, 2) = Isaac reset 뒤 실제 몸 위치 (방 틀): 그것이 이 에피소드의 시작 (G1).

@@ -52,7 +52,9 @@ class TeacherVecEnv:
         r = t.as_tensor(np.asarray(out["reward"], np.float32), device=self.device)
         d = t.as_tensor(done, device=self.device)
         to = t.as_tensor(np.asarray(state.timed_out, bool), device=self.device)
-        info = {"task_reached": int(out["task_reached"].sum()), "fell": int((done & ~np.asarray(state.timed_out, bool)).sum())}
+        info = {"task_reached": int(out["task_reached"].sum()), "fell": int((done & ~np.asarray(state.timed_out, bool)).sum()),
+                "task_fallback": int(getattr(self.task, "task_fallbacks", 0)) - getattr(self, "_fb0", 0)}
+        self._fb0 = int(getattr(self.task, "task_fallbacks", 0))
         return self._obs(state), r, d, to, info
 
 
@@ -95,7 +97,7 @@ def train(env, ppo, *, out_dir, iterations, receipt: dict, resume=None, device="
     for it in range(it0 + 1, it0 + iterations + 1):
         t0 = time.time()
         O, A, LP, V, R, D = [], [], [], [], [], []
-        stats = {"task_reached": 0, "fell": 0}
+        stats = {"task_reached": 0, "fell": 0, "task_fallback": 0}
         with torch.no_grad():
             for _ in range(T):
                 std = log_std.exp()
@@ -108,7 +110,7 @@ def train(env, ppo, *, out_dir, iterations, receipt: dict, resume=None, device="
                 r = r + ppo.gamma * v * to.float()
                 O.append(obs), A.append(a), LP.append(dist.log_prob(a).sum(-1)), V.append(v), R.append(r), D.append(d.float())
                 for k in stats:
-                    stats[k] += info[k]
+                    stats[k] += info.get(k, 0)
                 obs = nobs
             last_v = critic(obs).squeeze(-1)
         adv, gae = torch.zeros(T, n, device=device), torch.zeros(n, device=device)
