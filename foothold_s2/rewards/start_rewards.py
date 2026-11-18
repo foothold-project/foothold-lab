@@ -69,7 +69,14 @@ def foot_edge_term(env, sensor_cfg, asset_cfg):
     tables = getattr(env, "s2_tables", None)
 
     if tables is None:
-        return record(env, "foot_edge", torch.zeros(env.num_envs, device=env.device))
+        mesh = getattr(env, "ex42_edge_tables", None)           # EX-42 합친 메시: 메시 윗면에서 만든 마스크 (terrains/ex42_edge_masks.py). 없으면 아래처럼 0 (옛 메시)
+        if mesh is None:
+            return record(env, "foot_edge", torch.zeros(env.num_envs, device=env.device))
+        feet = env.scene[asset_cfg.name].data.body_pos_w[:, asset_cfg.body_ids, :2]
+        force = env.scene.sensors[sensor_cfg.name].data.net_forces_w[:, sensor_cfg.body_ids]
+        contact = torch.linalg.norm(force, dim=-1) > 1.0
+        terrain = env.scene.terrain
+        return record(env, "foot_edge", mesh.penalty(feet, contact, terrain.terrain_levels, terrain.terrain_types))
 
     feet = env.scene[asset_cfg.name].data.body_pos_w[:, asset_cfg.body_ids, :2]
     force = env.scene.sensors[sensor_cfg.name].data.net_forces_w[:, sensor_cfg.body_ids]

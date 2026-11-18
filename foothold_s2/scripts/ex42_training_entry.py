@@ -278,13 +278,22 @@ def prepare_e0_env_cfg(env_cfg: Any, plan: EX42Plan, mesh_dir: str | Path, stage
     shares = column_shares(stage_terrain, table, stage_id)
     from foothold_s2.terrains.ex42_exposure import low_level_floor
     floor = low_level_floor(stage_terrain, table, stage_id)
+    from foothold_s2.terrains.ex42_edge_masks import load_edge_masks
+    edge = load_edge_masks(npz)                                    # None: an older mesh (the foot_edge term reads 0 there, as before)
+    foot_edge_w = _foot_edge_weight(_e_stage(plan, stage_id), edge)
+    if foot_edge_w != 0.0:                                         # the plan row asks for the START foot-edge term: set it on the env config (a term on the config exists in every EX-42 env)
+        env_cfg.rewards.foot_edge.weight = foot_edge_w
     mask = push_gate_mask(table, {f: k for f, k in e0_push_off_kinds(plan, stage_id).items() if f in set(families)})
     env_cfg.scene.terrain.terrain_generator = mesh_file_generator_cfg(npz, sha)
     from foothold_s2.terrains.ex42_flags import attach_mesh_flags
     flag_table = attach_mesh_flags(env_cfg, npz, env_cfg.scene.terrain.terrain_generator.num_rows, len(table))
     apply_column_reset(env_cfg, table)
     wrapped = apply_column_push_gate(env_cfg, mask)
-    return {"mesh_sha256": sha, "columns": len(table), "families": sorted(set(families)),
+    edge_receipt = {} if edge is None else {"edge_masks_npz": str(npz), "edge_masks": {"columns": [int(c) for c in edge["columns"]], "kinds": edge["meta"]["kinds"],
+                                                                                    "inner_cells": int(edge["inner"].sum()), "outer_cells": int(edge["outer"].sum())}}
+    if foot_edge_w != 0.0:
+        edge_receipt["foot_edge_weight"] = foot_edge_w
+    return {**edge_receipt, "mesh_sha256": sha, "columns": len(table), "families": sorted(set(families)),
             "exposure": exposure, "level_caps": level_caps, "shares": shares, "low_floor": floor, "flag_table": flag_table,
             "continuous_level_cap": continuous_cap,      # None: the stage keeps the stage-zero promotion cap
             "k_ladder": {"boundary_index": boundary_index, "moves": ladder_receipt,
@@ -302,6 +311,44 @@ def _e0_stage(plan: EX42Plan) -> dict[str, Any]:
     return _e_stage(plan, STAGE_E0_ID)
 
 
+FOOT_EDGE_WEIGHT_FENCE = (-1.0, 0.0)      # START default core.WEIGHTS["foot_edge"] = -1.0 is the strongest value; 0 = off (older rows carry no key)
+
+
+def _foot_edge_weight(stage_row: dict[str, Any], edge: dict[str, Any] | None) -> float:
+    """The plan row's `foot_edge_weight` (no key = 0 = off). A weight needs a mesh that carries edge masks, or the term would read 0 (raises)."""
+    value = stage_row.get("foot_edge_weight", 0.0)
+    if type(value) not in (int, float) or value != value or not FOOT_EDGE_WEIGHT_FENCE[0] <= value <= FOOT_EDGE_WEIGHT_FENCE[1]:
+        raise ValueError(f"EX-42 foot_edge_weight must be a number in {list(FOOT_EDGE_WEIGHT_FENCE)}, got {value!r}")
+    if value != 0.0 and edge is None:
+        raise ValueError("EX-42 foot_edge_weight is not 0 but the training mesh carries no edge masks (ex42_edge_mesh_build): the term would read 0")
+    return float(value)
+
+
+def attach_edge_tables(raw: Any, contract: dict[str, Any]) -> dict[str, Any] | None:
+    """Mount the foot-edge masks of the mesh (when it has them) on the env, and refuse a live foot_edge weight without them.
+
+    A mesh with masks: `raw.ex42_edge_tables` is set and checked on the attached tensors (`EdgeTables.self_check`).
+    A mesh without: nothing is set and the term reads 0, which is only allowed while the weight is 0 (a weight above 0 on a term that reads
+    0 would be a silent no-op, so it raises here)."""
+    from foothold_s2.terrains.ex42_edge_masks import EdgeTables, load_edge_masks
+    npz = contract.get("edge_masks_npz")
+    tables, check = None, None
+    if npz:
+        tables = EdgeTables(load_edge_masks(npz), len(contract["column_table"]), raw.device)
+        check = tables.self_check()
+        raw.ex42_edge_tables = tables
+    try:
+        weight = float(raw.reward_manager.get_term_cfg("foot_edge").weight)
+    except (ValueError, KeyError, AttributeError):
+        weight = 0.0
+    asked = float(contract.get("foot_edge_weight", 0.0))
+    if abs(weight - asked) > 1e-12:
+        raise RuntimeError(f"EX-42 foot_edge weight on the live reward manager is {weight}, the plan row asked for {asked}")
+    if weight != 0.0 and tables is None:
+        raise RuntimeError("EX-42 foot_edge weight is not 0 but the mesh carries no edge masks: the term would read 0 (use a mesh built by ex42_edge_mesh_build)")
+    return None if tables is None else {"self_check": check, "weight": weight}
+
+
 def apply_e0_exposure(env: Any, contract: dict[str, Any], parent_env_state: dict[str, Any],
                       parent_same_mesh: bool = False) -> dict[str, Any]:
     """After gym.make: start from the parent's (column, level) per env, then cut at the column caps (Kit side).
@@ -312,6 +359,7 @@ def apply_e0_exposure(env: Any, contract: dict[str, Any], parent_env_state: dict
     env.unwrapped._ex42_column_table = contract["column_table"]          # the learned_cells recorder names columns by it
     env.unwrapped._ex42_learned_cells = contract.get("low_floor") is not None     # recorded from the E1F start on
     env.unwrapped._ex42_env_contract = contract                          # the exposure receipt (E3 raw material) writes it
+    attach_edge_tables(env.unwrapped, contract)
     return apply_exposure(env.unwrapped.scene.terrain, contract["exposure"], contract["level_caps"],
                           shares=contract.get("shares"), low_floor=contract.get("low_floor"),
                           parent_env_state=parent_env_state, table=contract["column_table"],
