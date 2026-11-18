@@ -40,7 +40,7 @@ def build(src: Path, dst: Path) -> dict:
     packed = em.pack_masks(built)
     sha = em.masks_sha256(packed)
     dst.mkdir(parents=True, exist_ok=True)
-    np.savez(dst / "terrain_mesh.npz", **arrays, **packed)
+    np.savez_compressed(dst / "terrain_mesh.npz", **arrays, **packed)
     shutil.copy2(src / "terrain_manifest.json", dst / "terrain_manifest.json")
     manifest = json.loads((src / "mesh_manifest.json").read_text(encoding="utf-8-sig"))
     inner, outer = built["inner"], built["outer"]

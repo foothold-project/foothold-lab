@@ -62,6 +62,15 @@ training_mesh_profiles:
       terrain_mesh.npz: 59b0bf3e3023f40da828b86eebff4513222e13452c70fc49b8951d7e8d42d771
       mesh_manifest.json: c6954b6c7ffaaeee2e17c3b9365a40b4391dd2ef33bafd2ab4b526daf42851a7
       terrain_manifest.json: 7e9dab9420c3c6694df9e2e5d5d9155ff4a5448d1ac7a9936a96c07d2a7a6740
+  # e2_named_flags_v2 plus the foot-edge masks (inner 2.5 cm, outer 5 cm bands from the mesh top surface; foothold_s2/terrains/ex42_edge_masks.py).
+  # Same vertices and faces (the same geometry_sha256); the files differ (npz carries edge_* arrays, mesh_manifest.json carries `edge_masks`).
+  e2_named_flags_v2_edge:
+    directory: /home/jay/data/foothold/s2_lab/ex42_mesh_1118_edge/seed42_E0_c333_flags_E2_1111_v2_edge
+    geometry_sha256: 88197b3adfdde327edc633c025c6ad9aa690ea59aa7df5d51d548f7f56c12a95
+    files:
+      terrain_mesh.npz: b4e9c051fcb9ed7dd24ac3265177ac98d5d3b4554ee9c1ed16730524aadcae2e
+      mesh_manifest.json: b31da042571252cc9f32f744495f8791a9909962c0dbcff41f1dab2bcd5854f5
+      terrain_manifest.json: 7e9dab9420c3c6694df9e2e5d5d9155ff4a5448d1ac7a9936a96c07d2a7a6740
 environment:
   num_envs: 6144
   task_id: FootholdS2-Go2-S2-SB-v0
@@ -672,7 +681,10 @@ stages:
     runtime_start:
       policy_std_cap: 0.0
   exit_judge: kind_two_window_e2
-  training_mesh_profile: e2_named_flags_v2
+  training_mesh_profile: e2_named_flags_v2_edge
+  # START foot-edge term (core.WEIGHTS[foot_edge] = -1.0, the paper default) from the first update of this stage. 0 or no key = off (as before).
+  # Needs the _edge mesh above (ex42_training_entry._foot_edge_weight raises on a mesh without masks). Fence [-1.0, 0.0], fixed by the plan: not a boundary cell.
+  foot_edge_weight: -1.0
   authorization_contract:
     validator: bounded
     source_stage_ids:
