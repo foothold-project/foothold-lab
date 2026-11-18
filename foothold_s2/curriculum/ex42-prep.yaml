@@ -880,8 +880,7 @@ stages:
     # 듬성 합은 늘 0.44 (lead 11/18 23:3x · (가) 채택으로 닫음): 지금 묶음 합 = 0.44 - 앞 네 종 유지 하한 합 0.12 = 0.32 를 같은 몫 (0.32 / 3 · 하나는 0.1066666666).
     # 연속 몫 0.56 이라 실효 연속 하한 42.9 % (CG E.3 · D176 ④) 를 그대로 지킨다.
     # A stepping_stones_low 는 쉬운 징검돌 사다리 메시 (가지 feature/sonnet-code-e2-easystone5-1118) 가 학습 메시로 승인되어야 한다.
-    # 유지 하한 네 종의 level_cap = 졸업한 레벨 그대로 (내리지도 올리지도 않음 · lead 11/18 23:3x). 지금은 시작값 2 를 적어 두고
-    # E2 에서 상한이 오르면 그 끝값으로 바꾼다 (단계 끝 상한 증거로 갈음).
+    # 유지 하한 네 종의 level_cap = 졸업 레벨 5 그대로 (내리지도 올리지도 않음 · lead 11/18 23:4x).
     # 이 행의 boundary.entry_axis (D) 와 아래 k_ladder (등급 0.05 / 0.10 / 0.03 · 순서에 이 블록의 종류가 겹침) 는 옛 값 그대로다
     # (sonnet 몫 · lead 배정 · CG E.12).
     exposure_at_E3:
@@ -896,19 +895,19 @@ stages:
       - family: A
         kind: gaps
         share: 0.03
-        level_cap: 2
+        level_cap: 5
       - family: C
         kind: gap
         share: 0.03
-        level_cap: 2
+        level_cap: 5
       - family: B
         kind: beam
         share: 0.03
-        level_cap: 2
+        level_cap: 5
       - family: A
         kind: balance_beams
         share: 0.03
-        level_cap: 2
+        level_cap: 5
       - family: B
         kind: pallets
         share: 0.1066666666
@@ -1044,8 +1043,7 @@ stages:
     # (B stones · A stepping_stones_high · 상한 2 에서 시작).
     # 듬성 합은 늘 0.44 (lead 11/18 23:3x · (가) 채택으로 닫음): 지금 묶음 합 = 0.44 - 앞 일곱 종 유지 하한 합 0.21 = 0.23 (각 0.115).
     # 연속 몫 0.56 이라 실효 연속 하한 42.9 % (CG E.3 · D176 ④) 를 그대로 지킨다.
-    # 유지 하한 일곱 종의 level_cap = 졸업한 레벨 그대로 (내리지도 올리지도 않음 · lead 11/18 23:3x). 지금은 시작값 2 를 적어 두고
-    # 앞 단계에서 상한이 오르면 그 끝값으로 바꾼다 (단계 끝 상한 증거로 갈음).
+    # 유지 하한 일곱 종의 level_cap = 졸업 레벨 5 그대로 (내리지도 올리지도 않음 · lead 11/18 23:4x).
     # 아래 k_ladder (kind_floor 0.015 · 순서에 이 블록의 종류 B stones · pallets · beam · gap · C gap 이 겹침) 는 옛 값 그대로다
     # (sonnet 몫 · lead 배정 · CG E.12 · 유지 하한은 0.03).
     exposure_at_E4:
@@ -1060,31 +1058,31 @@ stages:
       - family: A
         kind: gaps
         share: 0.03
-        level_cap: 2
+        level_cap: 5
       - family: C
         kind: gap
         share: 0.03
-        level_cap: 2
+        level_cap: 5
       - family: B
         kind: beam
         share: 0.03
-        level_cap: 2
+        level_cap: 5
       - family: A
         kind: balance_beams
         share: 0.03
-        level_cap: 2
+        level_cap: 5
       - family: B
         kind: pallets
         share: 0.03
-        level_cap: 2
+        level_cap: 5
       - family: A
         kind: stepping_beams
         share: 0.03
-        level_cap: 2
+        level_cap: 5
       - family: A
         kind: stepping_stones_low
         share: 0.03
-        level_cap: 2
+        level_cap: 5
       - family: B
         kind: stones
         share: 0.115
@@ -1203,10 +1201,9 @@ stages:
     # CG v0.18 초안 (E.12 · lead 11/18 23:2x 결정 · 팀장 11/18 21:37 승인 · 병합 전): 앞 값은 28 종 각 0.02 였다.
     # 새 시작 블록 = E4 끝 + K 축 한 번: E5 는 섞기라 익힌 아홉 종을 유지 하한이 아니라 같은 몫으로 나눈다 (lead 11/18 23:4x):
     # 합 0.44 · 종류마다 0.44 / 9 (0.0488888889 여덟 · 0.0488888888 하나) · 연속 0.56.
-    # 묶음 ② 높이 계열 (AME-2 · JEPLO · 확장 E 의 본 적 없는 종류) 은 「레벨 올림 차례로 세 종류씩」 이고 종류 · 몫 · 상한은
-    # L3 · L6 측정 표가 나온 뒤 채운다 (planner). 그래서 앞 값의 나머지 19 종 (stair_up · rough · climb_up · flat · slope_steep 들 · 측정 불가인 B gap 포함) 은
-    # 이 블록에서 뺐다. 익힌 아홉 종의 level_cap = 졸업한 레벨 그대로 (내리지도 올리지도 않음 · lead 11/18 23:3x). 지금은 시작값 2 를
-    # 적어 두고 앞 단계에서 상한이 오르면 그 끝값으로 바꾼다 (단계 끝 상한 증거로 갈음).
+    # 묶음 ② 높이 18 종 (B · C · E 가족의 본 적 없는 종류) 은 지금 E2~E5 어디에도 없다. L3 · L6 표 (planner · 재는 중) 가 나오면 자리를 정한다:
+    # 무너지면 E2 앞 한 단계 · 안 무너지면 E5 섞기에 0.44 밖의 연속 쪽 몫으로 (지금은 L3 · L6 뒤 표시만 · lead 11/18 23:4x). 그래서 앞 값의 나머지 19 종 (stair_up · rough · climb_up · flat · slope_steep 들 · 측정 불가인 B gap 포함) 은
+    # 이 블록에서 뺐다. 익힌 아홉 종의 level_cap = 졸업 레벨 5 그대로 (E5 섞기는 아홉 종 상한 5 · lead 11/18 23:4x).
     # M · E6a · E6b 의 시작 블록은 옛 E5 값 (28 종) 을 이어받은 그대로다 (sonnet 몫 · lead 배정 · CG E.12).
     exposure_at_E5:
       default:
@@ -1220,39 +1217,39 @@ stages:
       - family: A
         kind: gaps
         share: 0.0488888889
-        level_cap: 2
+        level_cap: 5
       - family: C
         kind: gap
         share: 0.0488888889
-        level_cap: 2
+        level_cap: 5
       - family: B
         kind: beam
         share: 0.0488888889
-        level_cap: 2
+        level_cap: 5
       - family: A
         kind: balance_beams
         share: 0.0488888889
-        level_cap: 2
+        level_cap: 5
       - family: B
         kind: pallets
         share: 0.0488888889
-        level_cap: 2
+        level_cap: 5
       - family: A
         kind: stepping_beams
         share: 0.0488888889
-        level_cap: 2
+        level_cap: 5
       - family: A
         kind: stepping_stones_low
         share: 0.0488888889
-        level_cap: 2
+        level_cap: 5
       - family: B
         kind: stones
         share: 0.0488888889
-        level_cap: 2
+        level_cap: 5
       - family: A
         kind: stepping_stones_high
         share: 0.0488888888
-        level_cap: 2
+        level_cap: 5
     floors:
       global_command_floor:
         reverse: 0.05
