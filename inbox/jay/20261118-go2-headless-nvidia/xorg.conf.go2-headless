@@ -1,0 +1,35 @@
+# Go2 Jetson Orin NX: keep an NVIDIA-accelerated 1920x1080 X screen when HDMI is absent.
+# The EDID is captured from the validated 1920x1080 monitor and installed separately.
+
+Section "ServerLayout"
+    Identifier "Go2HeadlessLayout"
+    Screen 0 "Go2HeadlessScreen" 0 0
+EndSection
+
+Section "Module"
+    Disable "dri"
+    SubSection "extmod"
+        Option "omit xfree86-dga"
+    EndSubSection
+EndSection
+
+Section "Device"
+    Identifier "Tegra0"
+    Driver "nvidia"
+    Option "AllowEmptyInitialConfiguration" "true"
+EndSection
+
+Section "Screen"
+    Identifier "Go2HeadlessScreen"
+    Device "Tegra0"
+    DefaultDepth 24
+    Option "ConnectedMonitor" "DFP-0"
+    Option "UseDisplayDevice" "DFP-0"
+    Option "CustomEDID" "DFP-0:/etc/X11/go2-headless-1920x1080.edid"
+    Option "MetaModes" "DFP-0: nvidia-auto-select +0+0"
+    SubSection "Display"
+        Depth 24
+        Virtual 1920 1080
+        Modes "nvidia-auto-select"
+    EndSubSection
+EndSection
