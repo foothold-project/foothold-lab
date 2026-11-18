@@ -1,6 +1,6 @@
 """Easy first rows of stepping_stones_low (start_go2_v2.set_easy_stone_low), measured on CPU from the actual boxes.
 
-OFF is the default and must leave every tile as it was; ON may change only kind stepping_stones_low at levels 0, 1, 2.
+OFF is the default and must leave every tile as it was; ON may change only kind stepping_stones_low at levels 0 to 4.
 """
 import importlib
 
@@ -9,7 +9,8 @@ import pytest
 
 from foothold_s2.terrains import sparse_terrains as legacy
 
-TABLE = {0: 0.05, 1: 0.10, 2: 0.14}
+TABLE = {0: 0.05, 1: 0.07, 2: 0.09, 3: 0.11, 4: 0.14}
+HJ = 0.02
 
 
 @pytest.fixture
@@ -40,7 +41,7 @@ def test_default_is_off_and_matches_the_plain_generator(go2):
         assert off.boxes.shape[0] > 3        # a real tile, gap table not consulted while off
 
 
-def test_on_changes_only_low_stones_rows_0_1_2(go2):
+def test_on_changes_only_low_stones_rows_0_to_4(go2):
     base = {(k, lv): _tile_arrays(go2, k, lv) for k in legacy.KINDS for lv in range(10)}
     go2.set_easy_stone_low(True)
     changed = set()
@@ -50,10 +51,11 @@ def test_on_changes_only_low_stones_rows_0_1_2(go2):
     assert changed == {("stepping_stones_low", lv) for lv in TABLE}      # high stones, beams, gaps, flat, rows 3+ byte equal
 
 
-@pytest.mark.parametrize("level", [0, 1, 2])
+@pytest.mark.parametrize("level", [0, 1, 2, 3, 4])
 def test_on_sets_gap_x_and_keeps_stone_size_and_gap_y(go2, level):
     off = go2.generate("stepping_stones", level, np.random.default_rng(7), randomness=0.0)
-    on = go2.generate("stepping_stones", level, np.random.default_rng(7), randomness=0.0, gap_x=TABLE[level])
+    on = go2.generate("stepping_stones", level, np.random.default_rng(7), randomness=0.0, gap_x=TABLE[level],
+                      height_jitter=HJ)
     for geom in (off, on):
         b = geom.boxes[3:]
         assert b[:, 1] - b[:, 0] == pytest.approx(geom.params["stone_x"])
@@ -63,7 +65,24 @@ def test_on_sets_gap_x_and_keeps_stone_size_and_gap_y(go2, level):
     gaps = np.diff(np.unique(np.round(b[:, 0], 9))) - on.params["stone_x"]
     assert gaps == pytest.approx(TABLE[level])
     assert on.params["gap_x_override"] == TABLE[level]
+    tops = on.boxes[3:, 5] - go2.PLATFORM_Z
+    assert np.abs(tops).max() <= HJ + 1e-9 and np.abs(tops).max() > 0.2 * HJ            # +-2 cm, still shaken
+    assert np.abs(off.boxes[3:, 5] - go2.PLATFORM_Z).max() > HJ                        # the old +-5 cm is wider
     assert np.diff(np.unique(np.round(b[:, 2], 9))) - on.params["stone_y"] == pytest.approx(on.params["gap_y"])
+
+
+def test_built_tiles_carry_the_easy_values_only_on_easy_rows(go2):
+    go2.set_easy_stone_low(True)
+    for level in range(10):
+        p = go2.generate("stepping_stones", level, np.random.default_rng(1), randomness=0.0).params
+        assert "gap_x_override" not in p and "height_jitter_override" not in p
+        t = go2.build_tile("stepping_stones_low", level / 10)
+        tops = t.boxes[3:, 5] - go2.PLATFORM_Z
+        assert (np.abs(tops).max() <= HJ + 1e-9) == (level in TABLE)
+        if level in TABLE:
+            xs = np.unique(np.round(t.boxes[3:, 0], 9))
+            stone_x = t.boxes[3, 1] - t.boxes[3, 0]
+            assert np.diff(xs) - stone_x == pytest.approx(TABLE[level])
 
 
 def test_switch_off_again_restores_bytes(go2):

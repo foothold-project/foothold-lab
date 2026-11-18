@@ -34,10 +34,12 @@ STEP_BEAM_GAP = tuple(v * SCALE_X for v in ss.STEP_BEAM_GAP)
 GAP_WIDTH = tuple(v * SCALE_X for v in ss.GAP_WIDTH)
 
 # Easy first rows of the LOW stepping-stone columns: the stone gap along x (metres, final value, not a pre-scale
-# one) per level (= mesh row). OFF by default: nothing changes until `set_easy_stone_low(True)` (the mesh builder's
-# --easy_stone_low flag). Only kind stepping_stones_low and only the levels listed here are touched; stone size, gap y,
-# jitter (low kind: randomness 0) and every other kind / level go through the same code as before.
-EASY_STONE_LOW_GAP_X = {0: 0.05, 1: 0.10, 2: 0.14}
+# one) per level (= mesh row), and the stone top height jitter (+- metres, instead of HEIGHT_JITTER) on those rows.
+# OFF by default: nothing changes until `set_easy_stone_low(True)` (the mesh builder's --easy_stone_low flag). Only kind
+# stepping_stones_low and only the levels listed here are touched; stone size (still by level), gap y, xy jitter
+# (low kind: randomness 0) and every other kind / level go through the same code as before.
+EASY_STONE_LOW_GAP_X = {0: 0.05, 1: 0.07, 2: 0.09, 3: 0.11, 4: 0.14}
+EASY_STONE_LOW_HEIGHT_JITTER = 0.02
 _EASY = {"stone_low": False}
 
 
@@ -54,7 +56,7 @@ PLATFORM_Z, FLOOR_THICKNESS, N_GAPS = ss.PLATFORM_Z, ss.FLOOR_THICKNESS, ss.N_GA
 _lerp, _frame, _box, SheetGeometry = ss._lerp, ss._frame, ss._box, ss.SheetGeometry
 
 
-def generate(kind, level, rng, randomness=None, gap_x=None):
+def generate(kind, level, rng, randomness=None, gap_x=None, height_jitter=None):
     """한 칸을 만든다. 레벨은 0~9 정수, 10 이상은 오류 (negative control)."""
     if kind not in KINDS:
         raise ValueError("모르는 종류 %r. 있는 것: %r" % (kind, KINDS))
@@ -67,8 +69,10 @@ def generate(kind, level, rng, randomness=None, gap_x=None):
     support = [True, True, False]  # 구덩이 바닥은 딛는 면이 아니다 (떨어진 것)
     floor_bottom = PLATFORM_Z - depth - FLOOR_THICKNESS
 
+    hj = HEIGHT_JITTER if height_jitter is None else float(height_jitter)
+
     def add(x0, x1, y0, y1, jitter=True):
-        top = PLATFORM_Z + (float(rng.uniform(-HEIGHT_JITTER, HEIGHT_JITTER)) if jitter else 0.0)
+        top = PLATFORM_Z + (float(rng.uniform(-hj, hj)) if jitter else 0.0)
         boxes.append(_box(x0, x1, y0, y1, top, floor_bottom))
         support.append(True)
 
@@ -88,6 +92,8 @@ def generate(kind, level, rng, randomness=None, gap_x=None):
         params.update(stone_x=sx, stone_y=sy, gap_x=gx, gap_y=gy, jitter=jit, column_jitter=col_jit)
         if gap_x is not None:
             params["gap_x_override"] = float(gap_x)
+        if height_jitter is not None:
+            params["height_jitter_override"] = float(height_jitter)
 
         n_cols = int(math.floor((x_hi - x_lo + gx) / px))
         n_rows = int(math.floor((SIZE[1] + gy) / py))
@@ -166,7 +172,8 @@ def build_tile(kind, difficulty):
         # Flat is identical in both presets.
         return legacy.build_tile(kind, difficulty)
     easy = EASY_STONE_LOW_GAP_X.get(level) if _EASY["stone_low"] and kind == "stepping_stones_low" else None
-    geom = generate(start_kind, level, rng, randomness=randomness, gap_x=easy)
+    geom = generate(start_kind, level, rng, randomness=randomness, gap_x=easy,
+                    height_jitter=None if easy is None else EASY_STONE_LOW_HEIGHT_JITTER)
     shifted = [(x0, x1, y0 + legacy.STRIP[0], y1 + legacy.STRIP[0], z0, z1)
                for x0, x1, y0, y1, z0, z1 in geom.boxes[3:]]
     boxes = np.asarray(legacy._frame(geom.depth) + shifted, dtype=float)
