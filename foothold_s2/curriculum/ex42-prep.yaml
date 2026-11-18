@@ -1201,10 +1201,11 @@ stages:
   terrain:
     # planner 표 (CG:309~314); 28 종 고르게 2 % · 상한은 E4 목표값 (가정), 실제 E4 끝 값으로 바꿀 것
     # CG v0.18 초안 (E.12 · lead 11/18 23:2x 결정 · 팀장 11/18 21:37 승인 · 병합 전): 앞 값은 28 종 각 0.02 였다.
-    # 새 시작 블록 = E4 끝 + K 축 한 번: E4 의 두 종도 유지 하한 0.03 으로 내려 익힌 아홉 종이 종류마다 0.03 (합 0.27).
+    # 새 시작 블록 = E4 끝 + K 축 한 번: E5 는 섞기라 익힌 아홉 종을 유지 하한이 아니라 같은 몫으로 나눈다 (lead 11/18 23:4x):
+    # 합 0.44 · 종류마다 0.44 / 9 (0.0488888889 여덟 · 0.0488888888 하나) · 연속 0.56.
     # 묶음 ② 높이 계열 (AME-2 · JEPLO · 확장 E 의 본 적 없는 종류) 은 「레벨 올림 차례로 세 종류씩」 이고 종류 · 몫 · 상한은
     # L3 · L6 측정 표가 나온 뒤 채운다 (planner). 그래서 앞 값의 나머지 19 종 (stair_up · rough · climb_up · flat · slope_steep 들 · 측정 불가인 B gap 포함) 은
-    # 이 블록에서 뺐다. 유지 하한 아홉 종의 level_cap = 졸업한 레벨 그대로 (내리지도 올리지도 않음 · lead 11/18 23:3x). 지금은 시작값 2 를
+    # 이 블록에서 뺐다. 익힌 아홉 종의 level_cap = 졸업한 레벨 그대로 (내리지도 올리지도 않음 · lead 11/18 23:3x). 지금은 시작값 2 를
     # 적어 두고 앞 단계에서 상한이 오르면 그 끝값으로 바꾼다 (단계 끝 상한 증거로 갈음).
     # M · E6a · E6b 의 시작 블록은 옛 E5 값 (28 종) 을 이어받은 그대로다 (sonnet 몫 · lead 배정 · CG E.12).
     exposure_at_E5:
@@ -1218,39 +1219,39 @@ stages:
         level_cap: 9
       - family: A
         kind: gaps
-        share: 0.03
+        share: 0.0488888889
         level_cap: 2
       - family: C
         kind: gap
-        share: 0.03
+        share: 0.0488888889
         level_cap: 2
       - family: B
         kind: beam
-        share: 0.03
+        share: 0.0488888889
         level_cap: 2
       - family: A
         kind: balance_beams
-        share: 0.03
+        share: 0.0488888889
         level_cap: 2
       - family: B
         kind: pallets
-        share: 0.03
+        share: 0.0488888889
         level_cap: 2
       - family: A
         kind: stepping_beams
-        share: 0.03
+        share: 0.0488888889
         level_cap: 2
       - family: A
         kind: stepping_stones_low
-        share: 0.03
+        share: 0.0488888889
         level_cap: 2
       - family: B
         kind: stones
-        share: 0.03
+        share: 0.0488888889
         level_cap: 2
       - family: A
         kind: stepping_stones_high
-        share: 0.03
+        share: 0.0488888888
         level_cap: 2
     floors:
       global_command_floor:
@@ -1374,6 +1375,7 @@ stages:
         kind: climb_down
         share: 0.02
         level_cap: 3
+      # B gap: 조사 뒤 다시 (CG v0.18 초안 E.12)
       - family: B
         kind: gap
         share: 0.02
@@ -1570,6 +1572,7 @@ stages:
         kind: climb_down
         share: 0.02
         level_cap: 3
+      # B gap: 조사 뒤 다시 (CG v0.18 초안 E.12)
       - family: B
         kind: gap
         share: 0.02
@@ -1769,6 +1772,7 @@ stages:
         kind: climb_down
         share: 0.015
         level_cap: 3
+      # B gap: 조사 뒤 다시 (CG v0.18 초안 E.12)
       - family: B
         kind: gap
         share: 0.015
