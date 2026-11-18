@@ -24,21 +24,32 @@ ROOM_M = 20.0
 class VisitGrid:
     """env 마다 0.5 m 격자 방문 수 (r2). 에피소드가 끝난 env 는 reset 으로 비운다."""
 
-    def __init__(self, num_envs: int, room_m: float = ROOM_M, res_m: float = VISIT_RES_M):
+    def __init__(self, num_envs: int, room_m: float = ROOM_M, res_m: float = VISIT_RES_M, num_groups: int | None = None):
+        """num_groups None (기본) = env 마다 따로 (지금과 같음). 정수 = 방 (그룹) 마다 격자 하나를 그 방의 모든 env 가 함께 쌓고 reset 은 아무것도 안 비운다
+        (선택 `visit_reset=shared`: 논문 r2 의 [38] State Count 의 통상의 뜻 · 학습 내내 누적 · 논문 본문 미확인)."""
         self.n = int(round(room_m / res_m))
         self.res, self.room = res_m, room_m
-        self.counts = np.zeros((num_envs, self.n, self.n), np.int32)
+        self.shared = num_groups is not None
+        self.counts = np.zeros(((num_groups if self.shared else num_envs), self.n, self.n), np.int32)
 
     def reset(self, env_ids) -> None:
+        if self.shared:
+            return                                                    # 함께 쌓는 격자는 비우지 않는다
         self.counts[slice(None) if env_ids is None else env_ids if isinstance(env_ids, slice) else np.asarray(env_ids, dtype=int)] = 0
 
-    def visit(self, pos_xy, active=None) -> np.ndarray:
+    def visit(self, pos_xy, active=None, group=None) -> np.ndarray:
         """한 걸음 방문을 세고 (N,) η (이번 걸음 포함, >= 1) 를 돌려준다. 방 밖은 가장자리 칸으로 센다.
         active (N,) bool 이 False 인 env 는 세지 않고 η = 1 (이미 끝나 되돌려진 env: 새 에피소드의 첫 위치를 옛 격자에 세지 않는다)."""
         p = np.asarray(pos_xy, float)
         cell = np.clip(np.floor(p / self.res).astype(int), 0, self.n - 1)
-        idx = np.arange(len(p))
         on = np.ones(len(p), bool) if active is None else np.asarray(active, bool)
+        if self.shared:                                               # group (N,) = 방 번호. 같은 틱에 같은 칸을 센 env 들은 모두 센 뒤의 값을 본다
+            if group is None:
+                raise ValueError("shared VisitGrid needs the room (group) of every env")
+            idx = np.asarray(group, dtype=int)
+            np.add.at(self.counts, (idx[on], cell[on, 0], cell[on, 1]), 1)
+            return np.where(on, self.counts[idx, cell[:, 0], cell[:, 1]], 1).astype(np.float64)
+        idx = np.arange(len(p))
         self.counts[idx[on], cell[on, 0], cell[on, 1]] += 1
         return np.where(on, self.counts[idx, cell[:, 0], cell[:, 1]], 1).astype(np.float64)
 

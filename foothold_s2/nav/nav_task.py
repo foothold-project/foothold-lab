@@ -94,6 +94,11 @@ class NavTask:
         self.voxels = {i: a.voxels for i, a in enumerate(assets)}
         self.origin_xy = origin_xy        # (n, 2) env 별 origins 열의 x y (방 틀). None = 방 가운데 (옛 꼴). 시작점 K 개 방은 이 값을 낸다
 
+    def use_shared_visit(self) -> None:
+        """visit_reset = "shared": 방 (asset) 마다 방문 격자 하나. 기본 (episode) 과 다르게 같은 방의 모든 env 가 함께 세고 reset 이 비우지 않는다."""
+        self.visit_reset = "shared"
+        self.visit = rewards_hl.VisitGrid(self.n, num_groups=len(self.assets))
+
     def set_rooms_from_rows(self, rows, env_origins_xy=None, pitch_m: float = rg.ROOM_M + rg.ROOM_GAP_M) -> None:
         """env 의 방 번호를 Isaac 이 준 줄 (`terrain.terrain_levels`, 줄 = 방) 에서 읽는다 (G3). 바뀐 env 는 새 과제를 뽑는다. 줄이 방 수 밖이면 거절."""
         rows = np.asarray(rows, dtype=int).reshape(-1)
@@ -224,7 +229,7 @@ class NavTask:
     def _stat(self):
         if self._st is None:
             self._st = {"ticks": 0, "sub_reached": 0, "lvl": np.zeros(3), "r": {}, "vcmd": 0.0, "vbody": 0.0, "stand": 0.0,
-                        "eps": 0, "cos": 0.0, "cos_n": 0, "cosd": 0.0, "cosd_n": 0, "yerr": 0.0, "yok": 0, "yn": 0, "prog": 0.0, "dsub0": 0.0, "dsub1": 0.0, "plen": 0.0, "ep_ticks": 0.0,
+                        "eps": 0, "cos": 0.0, "cos_n": 0, "cosd": 0.0, "cosd_n": 0, "cosa": np.zeros(3), "cosa_n": np.zeros(3, dtype=np.int64), "yerr": 0.0, "yok": 0, "yn": 0, "prog": 0.0, "dsub0": 0.0, "dsub1": 0.0, "plen": 0.0, "ep_ticks": 0.0,
                         "out": {"hold": 0, "level_up": 0, "final_success": 0, "new_task": 0},
                         "lv": {k: np.zeros(7) for k in LV_KEYS}}     # 수준별 (l1 · l2 · l3p): [eps, prog, dend, succ, sub_reached, cos, cos_n]
         if getattr(self, "_ep_n", None) is None:
@@ -281,6 +286,11 @@ class NavTask:
         out["nv_cos_n"] = st["cos_n"]
         out["nv_cos_disp"] = st["cosd"] / st["cosd_n"] if st["cosd_n"] else 0.0         # 틱 사이 위치 변화 방향과 부목표 방향의 cos (yaw 안 씀)
         out["nv_cos_disp_n"] = st["cosd_n"]
+        an = int(st["cosa_n"].sum())                                                         # 에피소드 나이 1~3 틱의 cos (부목표 방향 대 몸 이동 · 없으면 -1)
+        out["nv_cos_age13"] = float(st["cosa"].sum()) / an if an else -1.0
+        out["nv_cos_age13_n"] = an
+        for a in (1, 2, 3):
+            out[f"nv_cos_age{a}"] = float(st["cosa"][a - 1]) / int(st["cosa_n"][a - 1]) if st["cosa_n"][a - 1] else -1.0
         out["nv_yaw_err_deg"] = st["yerr"] / st["yn"] if st["yn"] else -1.0            # 해석 yaw 대 (위치 변화 방향 - 몸 속도 방향) 의 절대 차 평균 (도). 쿼터니언 순서가 맞으면 작다
         out["nv_yaw_ok_frac"] = st["yok"] / st["yn"] if st["yn"] else -1.0             # 그 차가 30 도 안인 비율
         out["nv_yaw_n"] = st["yn"]
@@ -390,7 +400,9 @@ class NavTask:
             self.subgoal[i] = p.target.point
             self._note_episode_start(i, p, s)
         self.v_des[ids] = rewards_hl.sample_v_des(self.rng, len(ids), self.v_des_range)
-        if self.visit_reset == "task":
+        if self.visit_reset == "shared":
+            pass                                                    # 선택: 방마다 하나를 모든 env 가 함께 쌓고 학습 내내 비우지 않는다 (use_shared_visit)
+        elif self.visit_reset == "task":
             self.visit.reset([int(i) for i in np.atleast_1d(ids) if int(i) in self._fresh_task])
         else:
             self.visit.reset(ids)
@@ -424,7 +436,7 @@ class NavTask:
             if self.pgcl[i]._i != i_before[i]:
                 self._dmin[i] = np.inf
             self._dmin[i] = min(self._dmin[i], float(np.linalg.norm(pos_room[i, :2] - np.asarray(self.pgcl[i].target.point))))
-        eta = self.visit.visit(pos_room[:, :2], active=~done)
+        eta = self.visit.visit(pos_room[:, :2], active=~done, group=self.room_id if self.visit.shared else None)
         total, terms = hl_rewards_term.reward(
             state, pos_room_xy=pos_room[:, :2], subgoal_xy=self.subgoal, eta=eta, v_des=self.v_des,
             cmd_prev=self.cmd_prev, cmd_prev2=self.cmd_prev2, arrive_m=self.reach_m)
@@ -513,6 +525,13 @@ class NavTask:
         if ok.any():
             st["cosd"] += float(((disp[ok] * d2[ok]).sum(1) / (dn[ok] * n2[ok])).sum())
             st["cosd_n"] += int(ok.sum())
+        age = self._ep_n + 1                                     # 에피소드 나이 (이 틱 포함 · 에피소드 첫 틱 = 1): _note_tick 이 이 뒤에 올린다
+        young = ~np.isnan(prev[:, 0]) & ~done & (age <= 3) & (dn > 1e-6) & (n2 > 1e-9)
+        for a in (1, 2, 3):                                      # 첫 1~3 틱: 부목표 방향 대 몸 이동 방향 cos (속도 문턱 없음 · HIPAN-NEXT-RUN-1119 판정 줄 1)
+            m = young & (age == a)
+            if m.any():
+                st["cosa"][a - 1] += float(((disp[m] * d2[m]).sum(1) / (dn[m] * n2[m])).sum())
+                st["cosa_n"][a - 1] += int(m.sum())
         mv = ok & (vn >= 0.05)
         if mv.any():
             est = np.arctan2(disp[:, 1], disp[:, 0]) - np.arctan2(v_b[:, 1], v_b[:, 0])

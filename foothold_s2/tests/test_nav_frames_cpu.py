@@ -360,3 +360,95 @@ def test_window_yaw_check_skips_samples_that_cross_a_reset_and_is_off_by_default
         w.push(np.full((1, 2), float(t)), np.ones((1, 2)), np.zeros(1), np.array([t == 8]))
     assert w.table()[5]["samples"] == 2                                      # t=6,7 만 (리셋 t=8 뒤에는 6 틱이 지나야 다시 쓰임; 12 틱 안에는 없음)
     assert nav_task.NavTask.QUAT_WINDOWS == ()
+
+
+# ---- 방문 격자 선택 칸 `shared` (HIPAN-NEXT-RUN-1119): 방마다 하나를 모든 env 가 함께 쌓고 비우지 않는다. 꺼짐 (기본) = 지금과 같음 ----
+def test_shared_visit_is_off_by_default_and_the_default_grid_is_unchanged():
+    t = _task()
+    assert t.visit_reset == "episode" and t.visit.shared is False and t.visit.counts.shape == (2, 40, 40)
+    ref = np.zeros((2, 40, 40), np.int32)                                         # the old per-env grid, rebuilt by hand
+    g = rewards_hl.VisitGrid(2)
+    rng = np.random.default_rng(0)
+    for _ in range(20):
+        p = rng.uniform(0.0, 20.0, (2, 2))
+        on = rng.random(2) > 0.2
+        cell = np.clip(np.floor(p / 0.5).astype(int), 0, 39)
+        for i in range(2):
+            if on[i]:
+                ref[i, cell[i, 0], cell[i, 1]] += 1
+        want = np.array([ref[i, cell[i, 0], cell[i, 1]] if on[i] else 1 for i in range(2)], float)
+        assert (g.visit(p, active=on) == want).all()
+    assert (g.counts == ref).all()
+
+
+def test_shared_visit_two_envs_count_the_same_cell_and_it_is_never_cleared():
+    t = _task()
+    t.use_shared_visit()
+    assert t.visit_reset == "shared" and t.visit.shared and t.visit.counts.shape == (1, 40, 40)        # one grid for the one room
+    pos = np.array([[5.2, 5.2], [5.3, 5.4]])                                       # both in the same 0.5 m cell of room 0
+    eta = t.visit.visit(pos, group=t.room_id)
+    assert t.visit.counts[0, 10, 10] == 2 and (eta == 2.0).all()                  # both envs are counted before either reads
+    out = t.step(_st(_near_first_subgoal(t, 0.4), [[0.5, 0, 0]] * 2))             # a real step adds to the same grid (room frame origin 0)
+    total = int(t.visit.counts.sum())
+    assert total == 4 and out["eta"].shape == (2,)
+    t.reset_envs([0, 1], start_xy=np.stack([t.start[0], t.start[1]]))             # episode ends: the shared grid is not cleared
+    assert int(t.visit.counts.sum()) == total
+    t.pgcl[0].needs_new_task = True
+    t.reset_envs([0, 1], start_xy=np.stack([t.start[0], t.start[1]]))             # nor on a new task
+    assert int(t.visit.counts.sum()) == total
+    again = t.visit.visit(pos, group=t.room_id, active=np.array([True, False]))   # a finished env does not count and reads eta = 1
+    assert t.visit.counts[0, 10, 10] == 3 and again[0] == 3.0 and again[1] == 1.0
+    try:
+        t.visit.visit(pos)
+        raise AssertionError("shared grid without rooms must refuse")
+    except ValueError:
+        pass
+
+
+def test_the_shared_grid_is_one_per_room_so_two_rooms_do_not_mix():
+    g = rewards_hl.VisitGrid(3, num_groups=2)
+    p = np.array([[1.0, 1.0], [1.0, 1.0], [1.0, 1.0]])
+    eta = g.visit(p, group=np.array([0, 0, 1]))
+    assert list(eta) == [2.0, 2.0, 1.0] and g.counts[0, 2, 2] == 2 and g.counts[1, 2, 2] == 1
+    g.reset(None); g.reset([0])
+    assert int(g.counts.sum()) == 3
+
+
+def test_r2_falls_faster_with_the_shared_grid_than_with_the_per_env_grid():
+    def r2_total(shared):
+        t = _task()
+        if shared:
+            t.use_shared_visit()
+        for _ in range(6):                                                         # two envs stand in the same cell every tick
+            t.step(_st(np.array([[5.2, 5.2], [5.3, 5.4]]), [[0.0, 0, 0]] * 2))
+        return t.take_stats()["nv_r2_sum"]
+    assert r2_total(True) < r2_total(False)
+
+
+def test_cos_of_the_first_three_ticks_of_an_episode_is_recorded_by_age():
+    t = _task()
+    sub = t.subgoal.copy()
+    p0 = t._pos_prev.copy()                                                        # episode start positions (reset sets them)
+    toward = (sub - p0) / np.linalg.norm(sub - p0, axis=1, keepdims=True)
+    for k in range(4):                                                             # env 0 steps straight to its subgoal, env 1 straight away from it
+        pos = p0 + np.stack([0.01 * (k + 1) * toward[0], -0.01 * (k + 1) * toward[1]])
+        t.step(_st(pos, [[0.5, 0, 0]] * 2))
+        if k == 0:
+            pos1 = pos
+    s = t.take_stats()
+    assert s["nv_cos_age13_n"] == 6 and abs(s["nv_cos_age13"]) < 1e-6              # three ticks x two envs, +1 and -1 cancel
+    assert all(abs(s[f"nv_cos_age{a}"]) < 1e-6 for a in (1, 2, 3))
+    assert t.take_stats() == {}                                                    # drained
+    t2 = _task()
+    assert t2.take_stats() == {}
+    t2.step(_st(t2._pos_prev, [[0.0, 0, 0]] * 2))                                  # no movement: no direction, nothing counted
+    assert t2.take_stats()["nv_cos_age13"] == -1.0
+
+
+def test_cos_age_is_plus_one_when_every_young_env_walks_to_its_subgoal():
+    t = _task()
+    sub = t.subgoal.copy(); p0 = t._pos_prev.copy()
+    step = 0.01 * (sub - p0) / np.linalg.norm(sub - p0, axis=1, keepdims=True)
+    t.step(_st(p0 + step, [[0.5, 0, 0]] * 2))
+    s = t.take_stats()
+    assert s["nv_cos_age1"] > 0.999 and s["nv_cos_age13_n"] == 2 and s["nv_cos_age2"] == -1.0 and s["nv_cos_age3"] == -1.0
