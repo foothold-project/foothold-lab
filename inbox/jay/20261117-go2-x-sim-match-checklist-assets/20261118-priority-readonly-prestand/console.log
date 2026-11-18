@@ -1,0 +1,16 @@
+t=0.0s soc=21% FR_hip=32C FL_hip=31C max=37C(RR_hip) reserve0_nonzero=0 kp_max=0.0 kd_max=0.0 sport_marker=0 state_age_ms=1.9 cmd_age_ms=nan state_cb=6 cmd_cb=0 errorlist_messages=0
+t=1.0s soc=21% FR_hip=32C FL_hip=31C max=37C(RR_hip) reserve0_nonzero=0 kp_max=0.0 kd_max=3.0 sport_marker=1001 state_age_ms=0.1 cmd_age_ms=1.7 state_cb=503 cmd_cb=495 errorlist_messages=0
+t=2.0s soc=21% FR_hip=32C FL_hip=31C max=37C(RR_hip) reserve0_nonzero=0 kp_max=0.0 kd_max=3.0 sport_marker=1001 state_age_ms=1.8 cmd_age_ms=1.3 state_cb=1002 cmd_cb=994 errorlist_messages=0
+t=3.0s soc=21% FR_hip=32C FL_hip=31C max=37C(RR_hip) reserve0_nonzero=0 kp_max=0.0 kd_max=3.0 sport_marker=1001 state_age_ms=1.3 cmd_age_ms=0.9 state_cb=1502 cmd_cb=1494 errorlist_messages=0
+t=4.0s soc=21% FR_hip=32C FL_hip=31C max=37C(RR_hip) reserve0_nonzero=0 kp_max=0.0 kd_max=3.0 sport_marker=1001 state_age_ms=1.0 cmd_age_ms=0.5 state_cb=2002 cmd_cb=1994 errorlist_messages=0
+t=5.0s soc=21% FR_hip=32C FL_hip=31C max=37C(RR_hip) reserve0_nonzero=0 kp_max=0.0 kd_max=3.0 sport_marker=1001 state_age_ms=0.6 cmd_age_ms=0.2 state_cb=2502 cmd_cb=2494 errorlist_messages=0
+t=6.0s soc=21% FR_hip=32C FL_hip=31C max=37C(RR_hip) reserve0_nonzero=0 kp_max=0.0 kd_max=3.0 sport_marker=1001 state_age_ms=0.2 cmd_age_ms=1.7 state_cb=3002 cmd_cb=2993 errorlist_messages=0
+t=7.0s soc=20% FR_hip=32C FL_hip=31C max=37C(RR_hip) reserve0_nonzero=0 kp_max=0.0 kd_max=3.0 sport_marker=1001 state_age_ms=1.7 cmd_age_ms=1.3 state_cb=3501 cmd_cb=3492 errorlist_messages=0
+t=8.0s soc=20% FR_hip=32C FL_hip=31C max=37C(RR_hip) reserve0_nonzero=0 kp_max=0.0 kd_max=3.0 sport_marker=1001 state_age_ms=1.4 cmd_age_ms=1.0 state_cb=4001 cmd_cb=3992 errorlist_messages=0
+t=9.0s soc=20% FR_hip=32C FL_hip=31C max=37C(RR_hip) reserve0_nonzero=0 kp_max=0.0 kd_max=3.0 sport_marker=1001 state_age_ms=0.8 cmd_age_ms=0.7 state_cb=4501 cmd_cb=4492 errorlist_messages=0
+t=10.0s soc=20% FR_hip=32C FL_hip=31C max=37C(RR_hip) reserve0_nonzero=0 kp_max=0.0 kd_max=3.0 sport_marker=1001 state_age_ms=0.4 cmd_age_ms=0.2 state_cb=5001 cmd_cb=4992 errorlist_messages=0
+t=11.0s soc=20% FR_hip=32C FL_hip=31C max=37C(RR_hip) reserve0_nonzero=0 kp_max=0.0 kd_max=3.0 sport_marker=1001 state_age_ms=2.2 cmd_age_ms=1.8 state_cb=5497 cmd_cb=5491 errorlist_messages=0
+t=12.0s soc=20% FR_hip=32C FL_hip=31C max=37C(RR_hip) reserve0_nonzero=0 kp_max=0.0 kd_max=3.0 sport_marker=1001 state_age_ms=1.6 cmd_age_ms=1.6 state_cb=5996 cmd_cb=5990 errorlist_messages=0
+t=13.0s soc=20% FR_hip=32C FL_hip=31C max=37C(RR_hip) reserve0_nonzero=0 kp_max=0.0 kd_max=3.0 sport_marker=1001 state_age_ms=1.3 cmd_age_ms=1.0 state_cb=6496 cmd_cb=6490 errorlist_messages=0
+t=14.0s soc=20% FR_hip=32C FL_hip=31C max=37C(RR_hip) reserve0_nonzero=0 kp_max=0.0 kd_max=3.0 sport_marker=1001 state_age_ms=1.0 cmd_age_ms=0.6 state_cb=6996 cmd_cb=6990 errorlist_messages=0
+samples=750 state_callbacks=7496 cmd_callbacks=7486 sport_callbacks=4495 error_callbacks=0 output=/home/nvidia/go2_diag/records/20261118-priority-readonly-prestand/monitor.csv
