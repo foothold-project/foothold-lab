@@ -9,6 +9,7 @@
 """
 from __future__ import annotations
 
+import os
 from dataclasses import dataclass
 
 import numpy as np
@@ -59,6 +60,16 @@ def to_room_frame(pos_local: np.ndarray, origin_xy=None) -> np.ndarray:
     return p
 
 
+# 선택 (기본 꺼짐 = 논문과 같은 날 미터 값): 부목표 관측 2 칸 나눗셈 상수 · 한계. 환경 변수 HIPAN_SUBGOAL_OBS_SCALE (나눌 값, 기본 1) · HIPAN_SUBGOAL_OBS_CLIP (나눈 뒤 ± 한계, 0 = 없음).
+SUBGOAL_OBS_SCALE = float(os.environ.get("HIPAN_SUBGOAL_OBS_SCALE", "1") or 1)
+SUBGOAL_OBS_CLIP = float(os.environ.get("HIPAN_SUBGOAL_OBS_CLIP", "0") or 0)
+
+
+def subgoal_obs_transform(body_xy: np.ndarray) -> np.ndarray:
+    out = np.asarray(body_xy, dtype=np.float64) / SUBGOAL_OBS_SCALE
+    return np.clip(out, -SUBGOAL_OBS_CLIP, SUBGOAL_OBS_CLIP) if SUBGOAL_OBS_CLIP > 0 else out
+
+
 def subgoal_in_body(pos_xy: np.ndarray, yaw: np.ndarray, subgoal_xy: np.ndarray) -> np.ndarray:
     """방 틀 부목표 -> 몸 틀 (x 앞, y 왼쪽). (n, 2)."""
     d = np.asarray(subgoal_xy, dtype=np.float64) - np.asarray(pos_xy, dtype=np.float64)
@@ -87,7 +98,7 @@ def build(voxels: dict, room_id, state, c_prev, subgoal_xy, layout: TeacherObsLa
         elev[idx] = tm.crop_elevation(voxels[int(rid)], pos[idx], yaw[idx], map_cfg)
     parts = {"o_p": state.proprio.astype(np.float32), "c_prev": c_prev.astype(np.float32),
              "x_m": np.concatenate([state.vel_b, state.ang_vel_b], axis=1).astype(np.float32),
-             "subgoal": subgoal_in_body(pos[:, :2], yaw, subgoal_xy).astype(np.float32),
+             "subgoal": subgoal_obs_transform(subgoal_in_body(pos[:, :2], yaw, subgoal_xy)).astype(np.float32),
              "occ": occ, "elev": elev}
     flat = np.concatenate([parts[k].reshape(n, -1).astype(np.float32) for k in layout.sizes], axis=1)
     if flat.shape[1] != layout.total or not np.isfinite(flat).all():

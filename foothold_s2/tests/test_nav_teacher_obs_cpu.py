@@ -63,3 +63,36 @@ def test_bad_shapes_unknown_rooms_and_nonfinite_values_are_refused(vox):
     state.proprio[0, 0] = np.nan
     with pytest.raises(RuntimeError, match="non-finite"):
         to.build(vox, [0], state, np.zeros((1, 3)), np.zeros((1, 2)))
+
+
+# 답을 아는 입력: 부목표 관측 2 칸 (몸 틀, x 앞 · y 왼쪽, 미터 그대로 · 논문 2604.26504 라인 491 「relative sub-goal position」)
+@pytest.mark.parametrize("yaw,sub_world_offset,expected", [
+    (0.0, (1.0, 0.0), (1.0, 0.0)),                  # 몸 앞 1 m
+    (0.0, (0.0, 1.0), (0.0, 1.0)),                  # 왼쪽 1 m
+    (0.0, (-1.0, 0.0), (-1.0, 0.0)),                # 뒤 1 m
+    (0.0, (0.0, -1.0), (0.0, -1.0)),                # 오른쪽 1 m
+    (np.pi / 2, (1.0, 0.0), (0.0, -1.0)),           # 몸이 90 도 돌아 +y 를 봄: 방 +x 는 몸 오른쪽
+    (np.pi / 2, (0.0, 1.0), (1.0, 0.0)),            # 방 +y 는 몸 앞
+    (-np.pi / 2, (1.0, 0.0), (0.0, 1.0)),
+    (np.pi, (1.0, 0.0), (-1.0, 0.0)),
+])
+def test_subgoal_obs_columns_match_known_body_frame_values_through_build(vox, yaw, sub_world_offset, expected):
+    state = _state([[0.0, 0.0, 0.34]], [yaw])
+    c = to.ROOM_ORIGIN_XY
+    out = to.build(vox, [0], state, np.zeros((1, 3)), np.array([[c[0] + sub_world_offset[0], c[1] + sub_world_offset[1]]]))
+    assert out["parts"]["subgoal"][0] == pytest.approx(expected, abs=1e-6)
+    a, b = to.TeacherObsLayout().offsets["subgoal"]
+    assert out["flat"][0, a:b] == pytest.approx(expected, abs=1e-6)          # 평탄 벡터의 같은 두 칸도 같은 값 (미터 그대로, 나눗셈 · 한계 없음)
+
+
+def test_subgoal_obs_transform_is_identity_by_default_and_divides_then_clips_when_asked(vox, monkeypatch):
+    assert to.SUBGOAL_OBS_SCALE == 1.0 and to.SUBGOAL_OBS_CLIP == 0.0
+    x = np.array([[7.0, -12.0]])
+    assert np.array_equal(to.subgoal_obs_transform(x), x)
+    monkeypatch.setattr(to, "SUBGOAL_OBS_SCALE", 5.0)
+    assert to.subgoal_obs_transform(x)[0] == pytest.approx([1.4, -2.4])
+    monkeypatch.setattr(to, "SUBGOAL_OBS_CLIP", 2.0)
+    assert to.subgoal_obs_transform(x)[0] == pytest.approx([1.4, -2.0])
+    c = to.ROOM_ORIGIN_XY                                                      # build 에도 반영
+    out = to.build(vox, [0], _state([[0.0, 0.0, 0.34]], [0.0]), np.zeros((1, 3)), np.array([[c[0] + 7.0, c[1] - 12.0]]))
+    assert out["parts"]["subgoal"][0] == pytest.approx([1.4, -2.0], abs=1e-6)
