@@ -1,0 +1,196 @@
+{
+  "callback_delta": {
+    "cmd_callbacks": 7476,
+    "error_callbacks": 0,
+    "sport_callbacks": 4489,
+    "state_callbacks": 7483
+  },
+  "duration_s": 14.980055232,
+  "error_callbacks_end": 0,
+  "global_max_temp_c": 37.0,
+  "global_max_temp_joint": "RR_hip",
+  "message_age_ms_max": {
+    "cmd_age_ms": 6.760195,
+    "sport_age_ms": 5.346893,
+    "state_age_ms": 3.19414
+  },
+  "motors": {
+    "FL_calf": {
+      "kd_max": 3.0,
+      "kp_max": 0.0,
+      "lost_max": 0,
+      "reserve0_nonzero_samples": 0,
+      "reserve0_values": [
+        0
+      ],
+      "temp_c": {
+        "end": 30.0,
+        "max": 30.0,
+        "start": 30.0
+      }
+    },
+    "FL_hip": {
+      "kd_max": 3.0,
+      "kp_max": 0.0,
+      "lost_max": 0,
+      "reserve0_nonzero_samples": 0,
+      "reserve0_values": [
+        0
+      ],
+      "temp_c": {
+        "end": 31.0,
+        "max": 31.0,
+        "start": 31.0
+      }
+    },
+    "FL_thigh": {
+      "kd_max": 3.0,
+      "kp_max": 0.0,
+      "lost_max": 0,
+      "reserve0_nonzero_samples": 0,
+      "reserve0_values": [
+        0
+      ],
+      "temp_c": {
+        "end": 29.0,
+        "max": 29.0,
+        "start": 29.0
+      }
+    },
+    "FR_calf": {
+      "kd_max": 3.0,
+      "kp_max": 0.0,
+      "lost_max": 0,
+      "reserve0_nonzero_samples": 0,
+      "reserve0_values": [
+        0
+      ],
+      "temp_c": {
+        "end": 30.0,
+        "max": 30.0,
+        "start": 30.0
+      }
+    },
+    "FR_hip": {
+      "kd_max": 3.0,
+      "kp_max": 0.0,
+      "lost_max": 0,
+      "reserve0_nonzero_samples": 0,
+      "reserve0_values": [
+        0
+      ],
+      "temp_c": {
+        "end": 32.0,
+        "max": 32.0,
+        "start": 32.0
+      }
+    },
+    "FR_thigh": {
+      "kd_max": 3.0,
+      "kp_max": 0.0,
+      "lost_max": 0,
+      "reserve0_nonzero_samples": 0,
+      "reserve0_values": [
+        0
+      ],
+      "temp_c": {
+        "end": 29.0,
+        "max": 29.0,
+        "start": 29.0
+      }
+    },
+    "RL_calf": {
+      "kd_max": 1.0,
+      "kp_max": 0.0,
+      "lost_max": 0,
+      "reserve0_nonzero_samples": 0,
+      "reserve0_values": [
+        0
+      ],
+      "temp_c": {
+        "end": 30.0,
+        "max": 30.0,
+        "start": 30.0
+      }
+    },
+    "RL_hip": {
+      "kd_max": 1.0,
+      "kp_max": 0.0,
+      "lost_max": 0,
+      "reserve0_nonzero_samples": 0,
+      "reserve0_values": [
+        0
+      ],
+      "temp_c": {
+        "end": 36.0,
+        "max": 36.0,
+        "start": 36.0
+      }
+    },
+    "RL_thigh": {
+      "kd_max": 1.0,
+      "kp_max": 0.0,
+      "lost_max": 0,
+      "reserve0_nonzero_samples": 0,
+      "reserve0_values": [
+        0
+      ],
+      "temp_c": {
+        "end": 29.0,
+        "max": 29.0,
+        "start": 29.0
+      }
+    },
+    "RR_calf": {
+      "kd_max": 1.0,
+      "kp_max": 0.0,
+      "lost_max": 0,
+      "reserve0_nonzero_samples": 0,
+      "reserve0_values": [
+        0
+      ],
+      "temp_c": {
+        "end": 30.0,
+        "max": 30.0,
+        "start": 30.0
+      }
+    },
+    "RR_hip": {
+      "kd_max": 1.0,
+      "kp_max": 0.0,
+      "lost_max": 0,
+      "reserve0_nonzero_samples": 0,
+      "reserve0_values": [
+        0
+      ],
+      "temp_c": {
+        "end": 37.0,
+        "max": 37.0,
+        "start": 37.0
+      }
+    },
+    "RR_thigh": {
+      "kd_max": 1.0,
+      "kp_max": 0.0,
+      "lost_max": 0,
+      "reserve0_nonzero_samples": 0,
+      "reserve0_values": [
+        0
+      ],
+      "temp_c": {
+        "end": 30.0,
+        "max": 30.0,
+        "start": 30.0
+      }
+    }
+  },
+  "samples": 750,
+  "soc_pct": {
+    "end": 20,
+    "start": 21
+  },
+  "sport_marker_counts": {
+    "0": 1,
+    "1001": 749
+  }
+}
