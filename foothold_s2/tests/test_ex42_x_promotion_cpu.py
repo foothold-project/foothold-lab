@@ -131,7 +131,7 @@ def test_default_off_in_the_sources():
     assert "track_x_progress: bool = False" in text and "if cfg.track_x_progress else None" in text
     assert "        if self.max_x is not None:\n            self.max_x = torch.maximum(" in text                 # nothing extra is computed when off
     entry = (ROOT / "foothold_s2/scripts/ex42_training_entry.py").read_text(encoding="utf-8")
-    assert "x_progress" not in entry and "terrain_promotion" not in entry                                   # the training entry is not changed
+    assert "x_progress" not in entry and entry.count("terrain_promotion") == 4                                # the training entry only carries the plan cell through the stage-zero view (the stage start path)
     assert "terrain_promotion" not in (ROOT / "foothold_s2/curriculum/ex42-prep.yaml").read_text(encoding="utf-8")
 
 
