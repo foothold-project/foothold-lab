@@ -25,6 +25,8 @@ FIELDS = ("samples", "ratio_sum", "stalled", "reward_sum", "reward_samples")
 SLOW_SPEED_BANDS = (("0.1-0.15", 0.1, 0.15), ("0.15-0.2", 0.15, 0.2),
                     ("0.2-0.3", 0.2, 0.3))
 SLOT_INDEX = {name: i for i, name in enumerate(EX39_SLOTS)}
+# Record-only reward sums by terrain family / kind: every active reward term whose name holds one of these.
+REWARD_TERM_KEYS = ("swing", "stumble", "foot_edge", "collision", "track_lin_vel")
 SLOW_SLOTS = ("forward", "reverse", "side_left", "side_right", "diag_fwd_left", "diag_fwd_right",
               "diag_back_left", "diag_back_right")
 
@@ -43,6 +45,11 @@ def narrow_support_mask(table, contract, *, device="cpu"):
         raise ValueError("EX-42 live monitor narrow-support columns invalid")
     selected = set(columns)
     return torch.tensor([c in selected for c in range(len(table))], device=device, dtype=torch.bool)
+
+
+def reward_term_picks(names):
+    """{reward term name: its column in reward_manager._step_reward} for the terms that hold a REWARD_TERM_KEYS word."""
+    return {n: i for i, n in enumerate(names) if any(k in n for k in REWARD_TERM_KEYS)}
 
 
 def decline_signal(peak, now, threshold):
@@ -115,6 +122,7 @@ class LiveMetrics:
             raise ValueError("EX-42 live monitor initial stages invalid")
         self._restore()
         self.iteration = None
+        self.reward_terms = None      # off until configure_reward_terms (record only, reads tensors, writes none)
 
     def _restore(self):
         path = self.log_dir / "ex42_live_metrics.jsonl"
@@ -139,6 +147,57 @@ class LiveMetrics:
             else:
                 self.off_block.append(row["survival"]["off"])
 
+    def configure_reward_terms(self, picks, table, *, missing=()):
+        """picks {term name: column of _step_reward}; table = the mesh column table ({family, kind} per column)."""
+        if not isinstance(table, list) or not table:
+            raise ValueError("EX-42 reward sums need the measured column table")
+        self.reward_terms = {"names": list(picks), "index": list(picks.values()), "table": table,
+                             "missing": list(missing), "off": None}
+
+    def reward_terms_off(self, error):
+        if self.reward_terms is not None:
+            self.reward_terms["off"] = str(error)[:300]
+
+    def add_reward_terms(self, step_reward, columns, *, valid=None):
+        """step_reward [envs, terms] (reward_manager._step_reward: weight * value, per second), columns [envs] mesh column
+        of each env. Sums per column over the update; family / kind come from the table in end()."""
+        cfg = self.reward_terms
+        if cfg is None or cfg["off"] is not None:
+            return
+        if self.iteration is None:
+            raise RuntimeError("EX-42 live metrics update not started")
+        values = step_reward.detach()[:, cfg["index"]].double()
+        finite = torch.isfinite(values).all(dim=1)
+        keep = finite if valid is None else finite & valid.bool()
+        columns = columns.detach().long().to(values.device)
+        if int(columns.min()) < 0 or int(columns.max()) >= len(cfg["table"]):
+            raise ValueError("EX-42 reward sums: terrain column outside the table")
+        self.reward_sum.index_add_(0, columns[keep], values[keep])
+        self.reward_count.index_add_(0, columns[keep], torch.ones(int(keep.sum()), dtype=torch.float64, device=values.device))
+        self.reward_nonfinite += (~finite).sum()
+
+    def _reward_rows(self):
+        cfg = self.reward_terms
+        if cfg["off"] is not None:
+            return {"off": cfg["off"]}
+        sums, counts = self.reward_sum.cpu().tolist(), self.reward_count.cpu().tolist()
+        groups = {"by_family": {}, "by_kind": {}}
+        for c, row in enumerate(cfg["table"]):
+            for key, label in (("by_family", row["family"]), ("by_kind", "%s/%s" % (row["family"], row["kind"]))):
+                g = groups[key].setdefault(label, {"env_steps": 0, "sum": [0.0] * len(cfg["names"])})
+                g["env_steps"] += int(counts[c])
+                g["sum"] = [a + b for a, b in zip(g["sum"], sums[c])]
+        out = {"unit": "reward_manager._step_reward = weight * value per second; sum over env-steps of the update; mean = sum / env_steps",
+               "terms": cfg["names"], "missing_keys": cfg["missing"],
+               "nonfinite_env_steps": int(self.reward_nonfinite)}
+        for key, table in groups.items():
+            out[key] = {label: {"env_steps": g["env_steps"],
+                                "sum": dict(zip(cfg["names"], g["sum"])),
+                                "mean": {n: (v / g["env_steps"] if g["env_steps"] else None)
+                                         for n, v in zip(cfg["names"], g["sum"])}}
+                        for label, g in table.items()}
+        return out
+
     def begin(self, iteration, *, device):
         if self.iteration is not None:
             raise RuntimeError("EX-42 live metrics previous update was not completed")
@@ -154,6 +213,11 @@ class LiveMetrics:
         self.noise_groups = torch.zeros((2, 3), dtype=torch.float64, device=device)  # noisy / rest: samples, ratio, stalled
         # noisy / rest x forward speed band: samples, ratio sum, stalled, body vx sum (record only)
         self.noise_bands = torch.zeros((2, len(SLOW_SPEED_BANDS), 4), dtype=torch.float64, device=device)
+        if self.reward_terms is not None:
+            self.reward_sum = torch.zeros((len(self.reward_terms["table"]), len(self.reward_terms["names"])),
+                                          dtype=torch.float64, device=device)
+            self.reward_count = torch.zeros(len(self.reward_terms["table"]), dtype=torch.float64, device=device)
+            self.reward_nonfinite = torch.zeros((), dtype=torch.float64, device=device)
 
     def _record_stand_start(self, cmd, vel, slot, flag, mode, done, finite, pre_speed, reset):
         if self.step_dt is None:
@@ -287,6 +351,11 @@ class LiveMetrics:
             self.values[:, :, 4].reshape(-1).scatter_add_(0, reward_index,
                                                            torch.ones_like(slow_value[reward_chosen], dtype=torch.float64))
 
+    def _reward_tensors(self):
+        if self.reward_terms is None:
+            return ()
+        return (self.reward_sum, self.reward_count, self.reward_nonfinite)
+
     def end(self):
         if self.iteration is None:
             raise RuntimeError("EX-42 live metrics update not started")
@@ -304,7 +373,7 @@ class LiveMetrics:
                 raise RuntimeError("EX-42 live metrics all ranks must participate")
             for tensor in (self.values, self.forward_bands, self.slow_slots, self.survival,
                            self.survival_family, self.start_counts, pending, self.invalid, self.noise_groups,
-                           self.noise_bands):
+                           self.noise_bands, *self._reward_tensors()):
                 dist.all_reduce(tensor, op=dist.ReduceOp.SUM)
             rank_rows = [None] * self.world_size
             dist.all_gather_object(rank_rows, {"rank": self.rank, "slow_forward_bands": local_bands,
@@ -460,6 +529,8 @@ class LiveMetrics:
                                 "mean_body_vx_mps": c[3] / c[0] if c[0] else None}
                         for (label, _, _), c in zip(SLOW_SPEED_BANDS, self.noise_bands[g].tolist())}
                 for g, group in enumerate(("noisy", "rest"))}
+        if self.reward_terms is not None:
+            row["reward_terms"] = self._reward_rows()        # added key only; every other key of the row is as before
         self.log_dir.mkdir(parents=True, exist_ok=True)
         if alerts and self.alert_run_id is not None:
             last = self.last_failed_alert_iteration

@@ -1352,6 +1352,7 @@ class EX42StageZeroRuntime:
                 off_survival_drop=config["map_off_survival_drop_alert"], initial=config["initial"],
                 alert_run_id=os.environ[alert_env], step_dt=float(self.env.step_dt),
                 **self._small_noise_record())
+            self._live_reward_terms_configure(table)
             adjustment_config = getattr(self, "live_adjustment_config", None)
             if not isinstance(adjustment_config, dict) or adjustment_config.get("file_env") != "EX42_UPDATE_ADJUST":
                 raise ValueError("EX-42 E1 live adjustment must be pinned in the plan")
@@ -1360,6 +1361,21 @@ class EX42StageZeroRuntime:
                 self, adjustment_config, plan_sha256=self.plan_sha256,
                 path=os.environ.get("EX42_UPDATE_ADJUST"), log_dir=self._record_dir(),
                 rank=int(os.environ.get("RANK", "0")), world_size=int(os.environ.get("WORLD_SIZE", "1")))
+
+    def _live_reward_terms_configure(self, table: Any) -> None:
+        """Record-only reward sums by terrain family / kind (swing, stumble, foot_edge, collision, track_lin_vel terms).
+        Reads reward_manager._step_reward after the step; never writes it. A failure turns the record off, not the run."""
+        from foothold_s2.ex42_live_metrics import REWARD_TERM_KEYS, reward_term_picks
+        try:
+            manager = self.env.reward_manager
+            names = list(manager.active_terms)
+            if not hasattr(manager, "_step_reward"):
+                raise AttributeError("reward_manager has no _step_reward")
+            picks = reward_term_picks(names)
+            missing = [k for k in REWARD_TERM_KEYS if not any(k in n for n in picks)]
+            self.live_metrics.configure_reward_terms(picks, table, missing=missing)
+        except Exception as exc:      # noqa: BLE001
+            print("EX42_REWARD_TERMS_OFF " + repr(exc), flush=True)
 
     def on_reset(self, env_ids: Any) -> None:
         if self.command_allocation is not None:
@@ -1479,6 +1495,7 @@ class EX42StageZeroRuntime:
             if terrain is None or not hasattr(terrain, "terrain_types"):
                 raise ValueError("EX-42 live monitor needs the measured terrain column table")
             columns = terrain.terrain_types.long()
+            self._live_pre_columns = columns.detach().clone()      # reward sums belong to the terrain this step ran on
             self._live_pre = (self.runner._consumed_command(self.iteration).detach().clone(),
                               term.slot_current.detach().clone(), term.heading.detach().clone(),
                               term.is_flag_env.detach().clone(), pstate.use_gt.detach().clone(),
@@ -1520,6 +1537,13 @@ class EX42StageZeroRuntime:
             self.live_metrics.add(command, velocity, slot, heading, flag, gt, off, done,
                                   time_out=time_out, sparse=sparse, pre_speed=pre_speed, reset=reset)
             self._live_pre = None
+            if getattr(self.live_metrics, "reward_terms", None) is not None:
+                try:
+                    self.live_metrics.add_reward_terms(self.env.reward_manager._step_reward,
+                                                       self._live_pre_columns)
+                except Exception as exc:      # noqa: BLE001
+                    self.live_metrics.reward_terms_off(repr(exc))
+                    print("EX42_REWARD_TERMS_OFF " + repr(exc), flush=True)
         if getattr(self, "learned_cells", None) is not None:
             try:
                 self.learned_cells.post_step(done, self.runner.pstate.map_off, self.iteration)
