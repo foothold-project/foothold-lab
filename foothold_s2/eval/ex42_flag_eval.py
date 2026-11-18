@@ -18,6 +18,7 @@ import yaml
 from isaaclab.app import AppLauncher
 
 from foothold_s2.eval.ex42_flag_cells import COUNTS, MODES, contract, score_trace
+from foothold_s2.eval import ex42_flag_turn_first
 from foothold_s2.eval.ex42_mesh_eval import preflight
 
 
@@ -33,6 +34,9 @@ parser.add_argument("--kind-name")
 parser.add_argument("--kind-level", type=int)
 parser.add_argument("--seed", type=int, required=True)
 parser.add_argument("--envs", type=int, default=64)
+parser.add_argument("--flag-turn-first", choices=("off", "plan"), default="off",
+                    help="off (default, the judged path) or plan: turn first toward the first flag as the plan row says (flag_turn_first_rad + flag_turn_first_scope)")
+parser.add_argument("--flag-turn-first-row", default="E2")
 parser.add_argument("--out", type=Path, required=True)
 AppLauncher.add_app_launcher_args(parser)
 args = parser.parse_args()
@@ -207,6 +211,8 @@ def main():
         ex42_friction.install_and_verify(raw, friction_policy)
         robot = raw.scene["robot"]
         term = raw.command_manager.get_term("base_velocity")
+        turn_first = ex42_flag_turn_first.resolve(args.flag_turn_first, plan, args.flag_turn_first_row)
+        term.flag_turn_first_override = turn_first           # None = off (the term reads the plan row only in training)
         dt = float(raw.step_dt)
         runner, _saved = adapters.load_s2_runner(env, agent_cfg.to_dict(), args.checkpoint,
                                                  args.device, checkpoint_state=checkpoint_state)
@@ -217,7 +223,7 @@ def main():
                    "mesh_sha256": mounted["mesh_sha256"], "seed": args.seed,
                    "kind_cell": ({"family": args.kind_family, "kind": args.kind_name,
                                   "level": args.kind_level} if kind_cell else None),
-                   "envs": args.envs, "count": args.count, "dt": dt,
+                   "envs": args.envs, "count": args.count, "dt": dt, "flag_turn_first": turn_first,
                    "dr_disabled": disabled, "checkpoint_preparation": checkpoint_preparation,
                    "run_identity": run_identity.safe_collect(args.device, _sha(args.checkpoint), eval_seed=args.seed),
                    "cases": {}}

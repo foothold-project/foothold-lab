@@ -1173,6 +1173,12 @@ def make_ex42_stage_zero_plan_view(source_plan: Any, stage: Any,
                 raise ValueError("EX-42 stage flag_turn_first_rad invalid (a number of radians in [0.1, 3.0])")
             from dataclasses import replace
             stage = replace(stage, flag_turn_first_rad=float(turn_first))
+        turn_scope = row.get("flag_turn_first_scope")
+        if turn_scope is not None:
+            if turn_scope not in ("first", "all") or turn_first is None:
+                raise ValueError("EX-42 stage flag_turn_first_scope invalid (first or all, and only with flag_turn_first_rad)")
+            from dataclasses import replace
+            stage = replace(stage, flag_turn_first_scope=str(turn_scope))
     return SimpleNamespace(
         command_contract=command_contract,
         is_ex41=True, stages=[stage], domain_randomization=source_plan.domain_randomization,

@@ -275,10 +275,22 @@ class MixedVelocityCommand(CommandTerm):
 
     def _flag_turn_first_rad(self):
         """The plan row's `flag_turn_first_rad` (stage 0 of the stage runtime = the running row), or None = off (E1, E1F and every plan without the cell)."""
+        override = getattr(self, "flag_turn_first_override", None)        # the official flag eval sets this (--flag-turn-first plan); None = the running row
+        if override is not None:
+            return float(override["rad"])
         runtime = getattr(self, "stage_runtime", None)
         stages = getattr(getattr(runtime, "plan", None), "stages", None)
         value = getattr(stages[0], "flag_turn_first_rad", None) if stages else None
         return float(value) if value else None
+
+    def _flag_turn_first_scope(self):
+        """The plan row's `flag_turn_first_scope` ("first" | "all"); "all" when the cell is missing."""
+        override = getattr(self, "flag_turn_first_override", None)
+        if override is not None:
+            return str(override["scope"])
+        runtime = getattr(self, "stage_runtime", None)
+        stages = getattr(getattr(runtime, "plan", None), "stages", None)
+        return str(getattr(stages[0], "flag_turn_first_scope", "all") or "all") if stages else "all"
 
     def _stone_env_all(self):
         """(num_envs,) bool: the env's terrain column is a stepping-stones kind (the EX-42 column table the entry puts on the env). A missing table is an error:
@@ -352,12 +364,18 @@ class MixedVelocityCommand(CommandTerm):
 
     _turn_sum = 0.0
     _turn_cnt = 0.0
+    _turn_first_sum = _turn_first_cnt = _turn_rest_sum = _turn_rest_cnt = 0.0
+    flag_turn_last_detail = None
 
     def flag_turn_summary(self):
         """Record only: (the running row's flag_turn_first_rad or None, share of flag-env steps since the last call that were on the turn-in-place branch, steps counted)."""
         frac = self._turn_sum / self._turn_cnt if self._turn_cnt else 0.0
         count = self._turn_cnt
+        self.flag_turn_last_detail = (self._flag_turn_first_scope(),
+                                      self._turn_first_sum / self._turn_first_cnt if self._turn_first_cnt else 0.0, self._turn_first_cnt,
+                                      self._turn_rest_sum / self._turn_rest_cnt if self._turn_rest_cnt else 0.0, self._turn_rest_cnt)
         self._turn_sum = self._turn_cnt = 0.0
+        self._turn_first_sum = self._turn_first_cnt = self._turn_rest_sum = self._turn_rest_cnt = 0.0
         return self._flag_turn_first_rad(), frac, count
 
     def slow_hold_summary(self):
@@ -404,7 +422,7 @@ class MixedVelocityCommand(CommandTerm):
 
         if len(self.flag_ids) > 0:
             self.flag_turn_first_rad = self._flag_turn_first_rad()
-            cmd = mc.flag_step(self.flag_state, pos[self.flag_ids], yaw[self.flag_ids], dt, self.params, self.flag_turn_first_rad)
+            cmd = mc.flag_step(self.flag_state, pos[self.flag_ids], yaw[self.flag_ids], dt, self.params, self.flag_turn_first_rad, self._flag_turn_first_scope())
             sel = self.is_flag_env[self.flag_ids]
             self.vel_command_b[self.flag_ids[sel]] = cmd[sel]
             self.goals[self.flag_ids[sel]] = self.flag_state.passed[sel]
@@ -413,6 +431,11 @@ class MixedVelocityCommand(CommandTerm):
             self.excluded_steps[self.flag_ids[sel]] += spin_or_back[sel].float()
             self._turn_sum += float(st.turning[sel].sum().item())      # record only
             self._turn_cnt += float(sel.sum().item())
+            first_flag = (st.idx == 0)[sel]                              # record only: the same split on the first flag and the later ones
+            self._turn_first_sum += float(st.turning_first[sel].sum().item())
+            self._turn_first_cnt += float(first_flag.sum().item())
+            self._turn_rest_sum += float((st.turning[sel] & ~first_flag).sum().item())
+            self._turn_rest_cnt += float((~first_flag).sum().item())
 
         self.ep_steps += 1.0
 

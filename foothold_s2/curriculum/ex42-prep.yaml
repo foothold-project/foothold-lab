@@ -632,7 +632,11 @@ stages:
   slow_hold_range_s: [6.0, 8.0]
   # Fence of a boundary adjustment of slow_hold_range_s (EX42_SEGMENT_ADJUST): an entry is null (off) or a pair inside it, and 0 < lo <= hi <= 30.
   slow_hold_fence_s: [4.0, 12.0]
-  # Flag envs turn first: OFF in this reserve version (lead 2026-11-17 07:35, planner 07:20 cause candidate 2): no flag_turn_first_rad cell = off.
+  # Flag envs turn first (lead 2026-11-18 10:54, team lead goal 10:52: turn the body first toward the first flag, then walk straight through the next ones):
+  # a walking flag env whose flag is more than flag_turn_first_rad (the 2026-11-17 07:27 terrain value) off its heading turns in place (vx = vy = 0, wz = clip(angle)).
+  # flag_turn_first_scope first = only on the first flag of the episode (flag_step idx == 0); from the second flag on it walks straight with the small wz. all = every flag.
+  flag_turn_first_rad: 0.5
+  flag_turn_first_scope: first
   slow_track_heading: true
   live_monitor:
     enabled: true

@@ -550,11 +550,14 @@ class StartRunner(OnPolicyRunner):
             return
         rad, frac, count = summary()
         shown = "off" if not rad else "%g" % rad
+        detail = getattr(self._command_term(), "flag_turn_last_detail", None) or ("all", 0.0, 0.0, 0.0, 0.0)
+        scope = detail[0] if rad else "off"
         if first:
             self._flag_turn_logged = True
-            print("EX42_FLAG_TURN_FIRST where=start rad=%s" % shown, flush=True)
+            print("EX42_FLAG_TURN_FIRST where=start rad=%s" % shown + (" scope=%s" % scope if rad else ""), flush=True)       # off keeps the old line
         if it % 50 == 0:
-            print("EX42_FLAG_TURN_FIRST it=%d rad=%s flag_turn_fraction=%.4f steps=%d" % (it, shown, frac, int(count)), flush=True)
+            print("EX42_FLAG_TURN_FIRST it=%d rad=%s flag_turn_fraction=%.4f steps=%d scope=%s first_flag_fraction=%.4f first_flag_steps=%d later_flags_fraction=%.4f later_flags_steps=%d"
+                  % (it, shown, frac, int(count), scope, detail[1], int(detail[2]), detail[3], int(detail[4])), flush=True)
 
     def _slow_hold_log(self, it: int) -> None:
         """v29-5, record only: per update the number of envs holding a slow command (long time_left) and their mean time_left."""
