@@ -27,7 +27,7 @@ def test_step_error_known_answers_three_quantities():
     pr[0] += 0.02                                              # 모든 칸 2 cm, 결측 없음 -> a = b = 2.0, c = 0
     pr[1, 0, 0] = 0.512                                        # 한 칸만 51.2 cm -> 평균 0.1 cm
     gt[2, 0, :] = -1.0                                         # 16 칸 결측(정답이 빔), 복원 0 -> b 는 16 x 100 / 512 = 3.125 cm, a 는 0
-    vm, vx, am, ax, mf, nf, rm, cl = (t.numpy() for t in ME.step_error(pr, gt))
+    vm, vx, am, ax, mf, nf, rm, cl = (t.numpy() for t in ME.step_error(pr, gt)[:8])
     assert np.allclose(vm, [2.0, 0.1, 0.0], atol=1e-4) and np.allclose(vx, [2.0, 51.2, 0.0], atol=1e-3)
     assert np.allclose(am, [2.0, 0.1, 3.125], atol=1e-4) and np.allclose(ax, [2.0, 51.2, 100.0], atol=1e-3)
     assert np.allclose(mf, [0.0, 0.0, 16 / 512.0], atol=1e-6)
@@ -36,7 +36,7 @@ def test_step_error_known_answers_three_quantities():
 def test_missing_only_case_valid_is_nan_not_zero_and_b_is_the_video_value():
     gt = torch.full((1, 32, 16), -1.0)                         # 결측 칸만 있는 경우: 비교할 유효 칸이 없다
     pr = torch.zeros(1, 32, 16)
-    vm, vx, am, ax, mf, nf, rm, cl = (t.numpy() for t in ME.step_error(pr, gt))
+    vm, vx, am, ax, mf, nf, rm, cl = (t.numpy() for t in ME.step_error(pr, gt)[:8])
     assert np.isnan(vm[0]) and np.isnan(vx[0])                 # «0 cm(완벽)» 로 둔갑하지 않는다
     assert abs(am[0] - 100.0) < 1e-4 and abs(ax[0] - 100.0) < 1e-4 and mf[0] == 1.0       # 영상 식은 100 cm, 결측 비율 1.0 이 이유를 말해 준다
     assert abs(am[0] - video_formula(pr[0].numpy(), gt[0].numpy())) < 1e-4
@@ -46,7 +46,7 @@ def test_step_error_matches_video_formula_on_random_input_and_a_excludes_exactly
     rng = np.random.default_rng(0)
     g, p = rng.normal(size=(5, 32, 16)).astype(np.float32), rng.normal(size=(5, 32, 16)).astype(np.float32)
     g[1, :4] = -1.0                                            # env 1 은 4 줄(64 칸)이 결측
-    vm, _vx, am, _ax, mf, _nf, _rm, _cl = (t.numpy() for t in ME.step_error(T(p), T(g)))
+    vm, _vx, am, _ax, mf, _nf, _rm, _cl = (t.numpy() for t in ME.step_error(T(p), T(g))[:8])
     assert np.allclose(am, [video_formula(p[i], g[i]) for i in range(5)], atol=1e-4)
     keep = g[1] != -1.0
     assert abs(vm[1] - float(np.abs(p[1][keep] - g[1][keep]).mean() * 100.0)) < 1e-4 and abs(mf[1] - 64 / 512.0) < 1e-6
@@ -59,7 +59,7 @@ def test_step_error_nan_cells_are_skipped_in_all_quantities():
     pr[0, 0, :] = float("nan")
     pr[0, 1, 0] = 0.5
     pr[1] = float("nan")
-    vm, vx, am, ax, _mf, nf, _rm, _cl = (t.numpy() for t in ME.step_error(pr, gt))
+    vm, vx, am, ax, _mf, nf, _rm, _cl = (t.numpy() for t in ME.step_error(pr, gt)[:8])
     assert abs(vm[0] - 0.5 / (512 - 16) * 100.0) < 1e-4 and abs(ax[0] - 50.0) < 1e-4 and abs(am[0] - vm[0]) < 1e-6
     assert np.isnan(vm[1]) and np.isnan(am[1]) and np.isnan(vx[1]) and np.isnan(ax[1])
 
@@ -68,7 +68,7 @@ def test_record_stores_only_when_refined_exists():
     last = {}
     gt = torch.zeros(2, 32, 16)
     ME.record(last, (None, None, {"refined": torch.full((2, 32, 16), 0.01)}), gt)
-    assert len(last["e"]) == len(ME.SERIES) == 8 and np.allclose(last["e"][0].numpy(), [1.0, 1.0])
+    assert len(last["e"]) == len(ME.SERIES) == 11 and np.allclose(last["e"][0].numpy(), [1.0, 1.0])
     ME.record(last, (None, None, {"mu": torch.zeros(2, 3)}), gt)                     # G0 계열: 복원 없음
     assert last["e"] is None
 
@@ -133,7 +133,7 @@ def test_save_env_arrays_writes_all_three_quantities_and_keeps_old_keys(tmp_path
         nf = np.zeros((S_, N), dtype=np.float32)
         nf[1, 0] = 2.0                                                         # env 0 의 한 step 에 비유한 칸 2 개
 
-        return np.stack([m, m * 2.0, m + 1.0, m * 3.0, mf, nf, mf * 0.5, mf * 0.5])      # ME.SERIES 순서
+        return np.stack([m, m * 2.0, m + 1.0, m * 3.0, mf, nf, mf * 0.5, mf * 0.5, m * 0.5, m * 1.5, mf * 0.1])      # ME.SERIES 순서
 
     ns, z = _exec_save(tmp_path, err)
     assert z["map_err_inrange_mean_cm"].tolist() == [1.0, 2.0, 3.0, 4.0] and z["map_err_inrange_cellmax_cm"].tolist() == [2.0, 4.0, 6.0, 8.0]
@@ -196,7 +196,7 @@ def test_inf_cell_is_counted_not_silently_dropped_verifier_case(tmp_path):
 def test_all_nonfinite_step_has_nan_means_but_counts_all_512_cells():
     gt = torch.zeros(1, 32, 16)
     pr = torch.full((1, 32, 16), float("inf"))
-    vm, vx, am, ax, _mf, nf, _rm, _cl = (t.numpy() for t in ME.step_error(pr, gt))
+    vm, vx, am, ax, _mf, nf, _rm, _cl = (t.numpy() for t in ME.step_error(pr, gt)[:8])
     assert np.isnan(vm[0]) and np.isnan(am[0]) and nf[0] == 512.0
 
 
@@ -209,7 +209,7 @@ def test_ray_miss_and_clip_low_are_counted_separately_and_both_leave_a():
     gt = torch.nan_to_num(rel, nan=-1.0, posinf=-1.0, neginf=-1.0).clamp(-1.0, 1.0).reshape(n, 32, 16)
     pr = gt.clone() + 0.01
     pr[0].reshape(-1)[36:100] = -1.5                                 # 복원이 구덩이 바닥을 -1.5 로 냄: clip 된 정답(-1.0)과 50 cm 차이
-    vm, vx, am, ax, mf, nf, rm, cl = (t.numpy() for t in ME.step_error(pr, gt, rel))
+    vm, vx, am, ax, mf, nf, rm, cl = (t.numpy() for t in ME.step_error(pr, gt, rel)[:8])
     assert abs(rm[0] - 36 / 512.0) < 1e-6 and abs(cl[0] - 64 / 512.0) < 1e-6 and abs(mf[0] - 100 / 512.0) < 1e-6      # 전체 = 광선 못 맞힘 + clip
     assert rm[1] == 0.0 and cl[1] == 0.0 and mf[1] == 0.0
     assert abs(vm[0] - 1.0) < 1e-3 and abs(vx[0] - 1.0) < 1e-3                                                  # (a) 에서는 두 경우가 모두 빠져 구덩이 바닥 오차가 안 보인다
@@ -228,3 +228,64 @@ def test_rel_none_gives_nan_split_and_record_checks_the_rebuild():
     assert last["rebuild_maxdiff"] == 0.0                                                                        # 원자료로 다시 만든 정답 지도가 obs 와 같다
     ME.record(last, (None, None, {"refined": pr}), gt + 0.25, rel)                                               # 다른 정답 지도가 들어오면 차이를 쌓는다
     assert last["rebuild_maxdiff"] == pytest.approx(0.25)
+
+
+# ---- (e) 모서리 칸만의 오차 (선택 칸 · 앞 여덟 칸은 그대로) ----
+def _pit_map():
+    g = np.zeros((1, 32, 16), np.float32)
+    g[0, 10:14, 4:8] = -0.3                                  # a 0.3 m deep rectangular pit
+    return g
+
+
+def test_edge_cell_mask_is_the_inner_band_of_sparse_terrains_edge_masks():
+    from foothold_s2.terrains import sparse_terrains as ST
+    rng = np.random.default_rng(1)
+    for _ in range(5):
+        g = (rng.integers(-4, 5, (32, 16)) * 0.07 * (rng.random((32, 16)) > 0.6)).astype(np.float32)          # steps of 7 cm: no difference sits exactly on the 0.2 m threshold
+        want, _outer = ST.edge_masks(g.astype(np.float64), drop=ME.EDGE_DROP_M)
+        assert (ME.edge_cell_mask(T(g[None]))[0].numpy() == want).all()
+    assert ME.EDGE_DROP_M == ST.EDGE_DROP_M
+    m = ME.edge_cell_mask(T(_pit_map()))[0].numpy()
+    assert m[10, 4] and m[9, 4] and m[13, 7] and m[14, 7] and not m[11, 5] and not m[0, 0]     # both sides of the drop, not the pit middle or flat ground
+
+
+def test_corner_error_is_only_over_the_edge_cells_and_the_first_eight_values_do_not_move():
+    gt = _pit_map()
+    pr = gt.copy(); pr[0, 9, 4] += 0.10; pr[0, 11, 5] += 0.50          # +10 cm on an edge cell, +50 cm on a non-edge cell (the pit middle)
+    out = ME.step_error(T(pr), T(gt))
+    base = ME.step_error(T(gt), T(gt))
+    assert len(out) == 11 and len(ME.SERIES) == 11
+    cm, cx, cf = (float(out[i][0]) for i in (8, 9, 10))
+    edge_n = int(ME.edge_cell_mask(T(gt)).sum())
+    assert abs(cx - 10.0) < 1e-3 and abs(cm - 10.0 / edge_n) < 1e-3 and abs(cf - edge_n / 512) < 1e-9
+    assert float(base[8][0]) == 0.0 and float(base[9][0]) == 0.0
+    plain = ME.step_error(T(pr), T(gt))[:8]
+    assert all(np.allclose(a.numpy(), b.numpy(), equal_nan=True) for a, b in zip(out[:8], plain))
+    assert abs(float(out[1][0]) - 50.0) < 1e-3                       # the all-cell maximum still sees the pit-middle error: (a) is unchanged
+
+
+def test_corner_error_skips_cells_whose_ground_truth_is_the_minus_one_sentinel_and_flat_maps_give_nan():
+    g = np.zeros((1, 32, 16), np.float32); g[0, 5, 5] = -1.0         # a saturated cell next to flat ground
+    p = g.copy(); p[0, 5, 5] = 0.0; p[0, 4, 5] = 0.2
+    out = ME.step_error(T(p), T(g))
+    assert abs(float(out[9][0]) - 20.0) < 1e-3                       # the (4,5) neighbour counts, the -1.0 cell itself does not
+    flat = ME.step_error(T(np.zeros((1, 32, 16), np.float32)), T(np.zeros((1, 32, 16), np.float32)))
+    assert np.isnan(float(flat[8][0])) and float(flat[10][0]) == 0.0
+
+
+def test_env_aggregate_and_report_carry_the_corner_columns_only_when_the_series_exists(tmp_path):
+    al = np.ones((3, 2), bool)
+    old = {k: np.full((3, 2), 1.0) for k in ME.SERIES[:8]}
+    assert "map_err_corner_mean_cm" not in ME.env_aggregate(old, al)          # an eight-series caller is unchanged
+    new = {**old, "corner_mean": np.full((3, 2), 2.0), "corner_cellmax": np.full((3, 2), 7.0), "corner_frac": np.full((3, 2), 0.1)}
+    agg = ME.env_aggregate(new, al)
+    assert np.allclose(agg["map_err_corner_mean_cm"], 2.0) and np.allclose(agg["map_err_corner_cellmax_cm"], 7.0) and np.allclose(agg["map_err_corner_frac_mean"], 0.1)
+    arrays = {**{k: np.asarray(v) for k, v in agg.items()}, "kind": np.array(["a", "a"])}
+    for key in ("map_err_inrange_mean_cm", "map_err_inrange_cellmax_cm", "map_err_all_mean_cm", "map_err_all_cellmax_cm", "map_err_gt_sat_frac_mean",
+                "map_err_ray_miss_frac_mean", "map_err_clip_low_frac_mean"):
+        arrays[key] = np.full(2, 1.0, np.float32)
+    np.savez(tmp_path / "env_arrays_eval_gt_fwd1.0.npz", **arrays)
+    res = ME.report({"L0~2": [tmp_path]}, modes=("eval_gt",), cmds=("fwd1.0",))
+    v = res["L0~2"]["eval_gt"]["fwd1.0"]["a"]
+    assert v["e_corner_mean_of_mean_cm"] == 2.0 and v["e_corner_max_of_cellmax_cm"] == 7.0 and v["a_mean_of_mean_cm"] == 1.0
+    assert "(e) 모서리 칸만" in ME.to_md(res)
