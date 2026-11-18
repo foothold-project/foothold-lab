@@ -80,6 +80,7 @@ footer p { max-width: none; font-size: 0.72rem; }
 <li><b>멈추는 말.</b> STOP 하나였던 것을 「멈춤 (Stop)」 과 「안전 정지 (Damp)」 로 나눴다 (제안). 조이스틱 L2+B 와 <code>wireless_remote</code> 읽기를 더했다.</li>
 <li><b>서버.</b> 「서버 (FastAPI)」 한 칸이 Caddy · uvicorn API · PostgreSQL 16 으로 나뉘고, 주소 <code>foothold-project.dev</code> 계획이 붙었다.</li>
 <li><b>관절 온도 · 배터리 경고.</b> 새 절. 팀장 11/19 03:14 에 정한 값 (50 · 60 · 70 °C · 이상 체크 · 배터리 20 % · 10 % 알림, 막지 않음) 과 agent · 서버 · 화면에서 만들 것.</li>
+<li><b>Jetson 설치.</b> 새 절. 11/19 CycloneDDS · Tailscale · 표시 화면 (L2 점구름) · 방 지도 녹화. 누가 무엇을 했는지와 다시 확인하는 명령은 <code>GO2X-JETSON-SETUP-1119.md</code>.</li>
 <li><b>망.</b> 랜선 노트북 하나에서 직결 <code>192.168.50.x</code> · Jetson Wi-Fi + Tailscale · 학원 Wi-Fi · 폰 핫스팟 네 가지로 늘었다.</li>
 <li><b>뺀 것.</b> 11/02 의 키 값 (1.5 m/s 등) · PD 값 · ROS 2 설명은 이번에 다시 재지 않아 이 판에서 뺐다. 11/02 판은 git 기록에 남아 있다. 「실시간 제어는 로봇 쪽에서만」 이라는 11/02 결론은 그대로다.</li>
 </ul>
@@ -540,7 +541,7 @@ footer p { max-width: none; font-size: 0.72rem; }
 <h2>제어는 Jetson 안에서 돌고, 망은 보기 · 기록 · 목표 · 시작과 정지만 나른다</h2>
 <div class="table-wrap"><table><thead><tr><th>방식</th><th>주소 · 장치</th><th>언제</th><th>상태</th></tr></thead><tbody>
 <tr><td>랜선 직결</td><td><code>ai-lx01</code> <code>eno1</code> = <code>go2-direct</code> <code>192.168.50.1/24</code> ↔ Jetson <code>.2</code> (ping 1.1 ms · SSH 22 · NoMachine 4000 열림)</td><td>처음 설정 · 받침대 시험. 랜선은 한 번에 한 컴퓨터만 꽂는다 (컴퓨터 쪽 주소가 <code>.1</code> 하나라서)</td><td><span class="tag code">있음</span> 팀장 설정 11/19 00:50</td></tr>
-<tr><td>Jetson Wi-Fi + Tailscale</td><td>Jetson 을 tailnet 에 넣음 (숙소 <code>ai-lx01</code> · 학원 <code>ai-lt01</code> 은 이미 같은 tailnet). Tailscale 은 인터넷이 있어야 붙는다</td><td>걷는 시험 · 숙소 ↔ 학원 원격 데이터</td><td><span class="tag plan">계획</span> 설치 동의 11/19 00:21 · 설치 명령은 팀장이 sudo</td></tr>
+<tr><td>Jetson Wi-Fi + Tailscale</td><td>Jetson 을 tailnet 에 넣음 (숙소 <code>ai-lx01</code> · 학원 <code>ai-lt01</code> 은 이미 같은 tailnet). Tailscale 은 인터넷이 있어야 붙는다</td><td>걷는 시험 · 숙소 ↔ 학원 원격 데이터</td><td><span class="tag code">있음</span> 11/19 04:3x 팀장 설치 · 인증 · 키 만료 끔 · tailnet 이름 <code>go2x-jetson</code> · ai-lx01 에서 tailnet 으로 SSH 확인</td></tr>
 <tr><td>같은 Wi-Fi (학원 망)</td><td>Tailscale 없이 같은 망</td><td>학원 안</td><td><span class="tag code">있음</span> 11/17~18 실제로 함</td></tr>
 <tr><td>폰 핫스팟 (또는 휴대용 공유기)</td><td>핫스팟 하나에 Jetson · 폰 · 노트북을 같이 붙인다. 핫스팟이 인터넷을 주면 앱 서버 · Tailscale 도 된다</td><td>발표장 · 바깥 (발표장 Wi-Fi 에 기대지 않는다)</td><td><span class="tag code">있음</span> 11/19 03:5x 팀장 아이폰 핫스팟에 Jetson 등록 · 연결 확인 (5 GHz)</td></tr>
 </tbody></table></div>
@@ -548,6 +549,23 @@ footer p { max-width: none; font-size: 0.72rem; }
 <li>Jetson Wi-Fi 등록은 SSH 에서 <code>nmcli dev wifi connect "&lt;이름&gt;" password "&lt;비번&gt;"</code> (비번은 팀장이 친다). NetworkManager 가 기억해 다음부터 저절로 붙는다. 아이폰 핫스팟 이름의 따옴표는 키보드의 <code>'</code> 가 아니라 굽은 따옴표 <code>’</code> 라서 명령으로 치면 「없는 이름」 이 된다. 화면 위 Wi-Fi 아이콘으로 고르거나 <code>nmcli dev wifi list</code> 에서 이름을 복사해 쓴다.</li>
 <li>바깥에서 앱으로 조종할 때 정책은 Jetson 안에서 돌고 앱은 목표 · 명령만 보낸다. 로봇 곁에 조이스틱 든 사람을 둔다.</li>
 <li>SSH 는 기기마다 따로 키를 만들어 공개키만 Jetson 에 더한다. 개인키는 옮기지 않는다.</li>
+</ul>
+</section>
+
+<section class="fig">
+<p class="eyebrow">Jetson · 11/19 설치한 것</p>
+<h2>Jetson 에 통신 플러그인 · Tailscale · 표시 화면을 올렸고, L2 점구름이 들어온다</h2>
+<p>누가 무엇을 했고 어떻게 다시 확인하는지는 <code>inbox/jay/20261101-app/GO2X-JETSON-SETUP-1119.md</code> 에 명령까지 적었다. 이 표는 요약이다.</p>
+<div class="table-wrap"><table><thead><tr><th>항목</th><th>누가</th><th>확인한 값</th><th>상태</th></tr></thead><tbody>
+<tr><td>CycloneDDS (ROS 2 통신 플러그인)</td><td>팀장 sudo · lead 가 패키지 받음</td><td><code>/utlidar/cloud</code> 15.4 Hz (좌표틀 <code>utlidar_lidar</code>). 기본 통신으로는 안 보이던 L2 가 보인다</td><td><span class="tag code">있음</span></td></tr>
+<tr><td>Tailscale</td><td>팀장 (설치 · 인증 · 이름)</td><td>tailnet 이름 <code>go2x-jetson</code> · 랜선 없이 SSH</td><td><span class="tag code">있음</span></td></tr>
+<tr><td>표시 화면 (RViz)</td><td>lead</td><td>색 25 Hz · 색에 맞춘 깊이 24 Hz · L2 점구름 · 관절 온도 창. <code>view_start.sh</code> · <code>view_stop.sh</code></td><td><span class="tag code">있음</span></td></tr>
+<tr><td>방 지도 1 차 (위에서 본 그림)</td><td>lead 가 녹화만 · 걷기는 팀장 조이스틱</td><td>Go2 가 <code>/utlidar/cloud_deskewed</code> 를 이미 바닥 기준 (<code>odom</code>) 으로 13.6 Hz 내보냄 → 녹화를 쌓으면 지도. <code>walk_record.sh</code></td><td><span class="tag plan">계획</span> 11/19 05:00 녹화 중</td></tr>
+<tr><td>Unitree 자체 SLAM (<code>/uslam/*</code>)</td><td>-</td><td>토픽은 있으나 꺼져 있음. 켜는 것은 로봇 API 요청이라 팀장 동의 뒤</td><td><span class="tag plan">계획</span></td></tr>
+</tbody></table></div>
+<ul>
+<li><b>하지 말 것:</b> <code>apt --fix-broken install</code> · <code>apt upgrade</code>. L4T 커널 · 부트로더가 고정돼 있어 apt 가 모든 설치를 거부하는데, fix-broken 은 그 묶음을 건드릴 수 있다. 새 패키지는 <code>apt-get download</code> 뒤 <code>sudo dpkg -i</code> 로 넣는다.</li>
+<li>ROS 2 명령 전에 <code>export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp</code>.</li>
 </ul>
 </section>
 
