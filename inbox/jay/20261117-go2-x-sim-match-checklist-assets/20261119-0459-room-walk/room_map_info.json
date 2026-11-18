@@ -1,0 +1,13 @@
+{
+ "cloud_frames": 7016,
+ "points_kept": 37567767,
+ "floor_z": -0.022998183965682983,
+ "extent_m": [
+  12.37,
+  14.14
+ ],
+ "obstacle_cells": 4492,
+ "floor_cells": 9546,
+ "path_s": 493.6,
+ "path_len_m": 20.75
+}
