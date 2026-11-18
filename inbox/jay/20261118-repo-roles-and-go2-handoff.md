@@ -45,6 +45,7 @@ foothold-lab main 을 pull 하고 이슈 #861 본문의 「지금 상태」 칸�
 ```
 
 - 긴 내용 (장비 표 · 측정 순서 · 금지선) 은 `inbox/jay/20261118-go2-x-ai-lx01-handoff.md` 처럼 문서로 두고 이슈 본문은 그 주소와 「지금 상태」 만 가진다. 대화 기억이나 기기 안 파일을 정본으로 쓰지 않는다.
+- Jetson 에 무엇을 설치 · 설정했고 어떻게 다시 확인하는지는 `inbox/jay/20261101-app/GO2X-JETSON-SETUP-1119.md` (CycloneDDS · Tailscale · 표시 화면 · 방 지도 녹화 · `apt --fix-broken` 금지).
 
 ## 4. 기기 사이 규칙
 
