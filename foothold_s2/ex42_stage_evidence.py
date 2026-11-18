@@ -37,10 +37,22 @@ def validate_m0_m3(path, template):
     if not pinned or mesh.get('geometry_sha256') != pinned['geometry_sha256']:
         raise ValueError('M0~M3 mesh geometry differs from E2 profile')
     files = mesh.get('files') or {}
+    differing, measured_dirs = [], set()
     for name in ('terrain_mesh.npz', 'mesh_manifest.json'):
         measured = _checked_ref(files.get(name), path.parent)
+        measured_dirs.add(str(Path(measured).resolve().parent))
         if digest(measured) != pinned['files'][name]['sha256']:
+            differing.append(name)
+    relaxed = None
+    if differing:      # lead 2026-11-18 15:59: edge profile = same measured mesh + edge_masks arrays only; any other difference stays STOP
+        from foothold_s2.tools.ex42_m0_m3 import edge_profile_relaxed
+        if len(measured_dirs) != 1:
             raise ValueError('M0~M3 mesh file differs from E2 profile')
+        try:
+            relaxed = edge_profile_relaxed(next(iter(measured_dirs)), pinned['directory'])
+        except Exception as exc:
+            raise ValueError('M0~M3 mesh file differs from E2 profile: ' + str(exc)) from exc
+        print(relaxed['line'], flush=True)
     try:
         from foothold_s2.tools.ex42_m0_m3 import verify_receipt
     except ImportError as exc:
@@ -48,6 +60,7 @@ def validate_m0_m3(path, template):
     rebuilt = verify_receipt(path, digest(path), mesh_dir=pinned['directory'])
     if rebuilt.get('status') != 'PASS':
         raise ValueError('M0~M3 raw measurement verification did not PASS')
+    return relaxed
 
 
 KIND_ORDER_KEY = 'prerequisites.kind_opening_order_recorded'
@@ -98,6 +111,7 @@ def produce(*, template_path, source_path, target, gate_path, manifest_path, out
     else:
         validate_source_exit(source, gate, gate_path, evaluation_plan=policy)
     bindings = {}
+    relaxed_m0_m3 = None
     paths = set(contract['required_sha256_paths']) | set(contract['required_string_paths'])
     paths |= set(contract['required_boolean_paths']) - {'critic_mirror'}
     if bindings_path:
@@ -107,7 +121,7 @@ def produce(*, template_path, source_path, target, gate_path, manifest_path, out
                 raise ValueError(f'unregistered binding: {key}')
             path = _checked_ref(value, Path(bindings_path).parent)
             if key == 'prerequisites.m0_m3_receipt_sha256':
-                validate_m0_m3(path, template)
+                relaxed_m0_m3 = validate_m0_m3(path, template)
             bindings[key] = dict(value, path=str(path))
     mesh_key = 'prerequisites.predecessor_exit.evaluation_mesh_sha256'
     if mesh_key in paths:
@@ -181,4 +195,9 @@ def produce(*, template_path, source_path, target, gate_path, manifest_path, out
     else:
         with output.open('x', encoding='utf-8') as stream:
             stream.write(text)
+    if relaxed_m0_m3 is not None:      # the EDGE_PROFILE_FILE_SHA_RELAXED line goes next to the evidence (also printed above)
+        side = output.parent / 'edge_profile_file_sha_relaxed.json'
+        side_text = json.dumps(relaxed_m0_m3, ensure_ascii=False, sort_keys=True, indent=2) + '\n'
+        if not side.exists() or side.read_text(encoding='utf-8') == side_text:
+            side.write_text(side_text, encoding='utf-8')
     return output

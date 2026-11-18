@@ -194,11 +194,45 @@ def attach_contract(doc,cpu_ref,probe_ref=None):
     return doc
 
 
+def edge_profile_relaxed(old_dir,new_dir):
+    """Lead 2026-11-18 15:59: the E2 edge profile carries a new npz/manifest (file sha differs) but the same measured mesh.
+    Passes ONLY when all three hold: geometry sha + seed same; every array of the old npz is in the new npz with the same dtype, shape and
+    bytes (vertices, faces and every other array the M0~M3 measurement reads); the arrays the new npz adds are edge_masks keys only
+    (and the manifest differs only in the `edge_masks` and `mesh_file_sha256` keys). Anything else raises (STOP)."""
+    from foothold_s2.terrains import ex42_edge_masks as em
+    old_dir,new_dir=Path(old_dir).resolve(strict=True),Path(new_dir).resolve(strict=True)
+    mo=json.loads((old_dir/'mesh_manifest.json').read_text()); mn=json.loads((new_dir/'mesh_manifest.json').read_text())
+    if mo['mesh_sha256']!=mn['mesh_sha256'] or mo['seed']!=mn['seed']: raise ValueError('edge profile: geometry sha or seed differs')
+    if sha(old_dir/'terrain_manifest.json')!=sha(new_dir/'terrain_manifest.json'): raise ValueError('edge profile: terrain manifest differs')
+    differ={k for k in set(mo)|set(mn) if mo.get(k)!=mn.get(k)}
+    if not differ<={'edge_masks','mesh_file_sha256'}: raise ValueError('edge profile: mesh manifest differs beyond edge_masks: '+','.join(sorted(differ)))
+    with np.load(old_dir/'terrain_mesh.npz',allow_pickle=False) as a, np.load(new_dir/'terrain_mesh.npz',allow_pickle=False) as b:
+        names_old,names_new=set(a.files),set(b.files)
+        if not names_old<=names_new: raise ValueError('edge profile: new npz lacks arrays '+','.join(sorted(names_old-names_new)))
+        extra=names_new-names_old
+        if not extra or not extra<=set(em.EDGE_KEYS): raise ValueError('edge profile: unknown arrays added: '+','.join(sorted(extra-set(em.EDGE_KEYS)) or ['(none added)']))
+        for name in sorted(names_old):
+            x,y=a[name],b[name]
+            if x.dtype!=y.dtype or x.shape!=y.shape or x.tobytes()!=y.tobytes(): raise ValueError(f'edge profile: array {name} differs')
+        same=sorted(names_old)
+    old_sha,new_sha=sha(old_dir/'terrain_mesh.npz'),sha(new_dir/'terrain_mesh.npz')
+    line=f'EDGE_PROFILE_FILE_SHA_RELAXED old_npz_sha256={old_sha} new_npz_sha256={new_sha} same_arrays={",".join(same)} added_arrays={",".join(sorted(extra))}'
+    return {'line':line,'old_dir':str(old_dir),'new_dir':str(new_dir),'old_npz_sha256':old_sha,'new_npz_sha256':new_sha,'same_arrays':same,'added_arrays':sorted(extra)}
+
+
 def verify_receipt(path,expected_sha256,*,mesh_dir):
     """Consumer entry. Hash refs + current NPZ identity + raw timing recount, no claimed PASS trust."""
     doc=read_ref({'path':str(path),'sha256':expected_sha256})
-    if doc.get('format')!=FORMAT or doc.get('stage_id')!='E2' or doc.get('identity')!=identity(mesh_dir):
-        raise ValueError('M0-M3 identity mismatch')
+    if doc.get('format')!=FORMAT or doc.get('stage_id')!='E2': raise ValueError('M0-M3 identity mismatch')
+    try: same_identity=doc.get('identity')==identity(mesh_dir)
+    except (FileNotFoundError,KeyError): same_identity=False
+    if not same_identity:
+        # edge profile (lead 15:59): the receipt measured the old mesh folder; recount against that folder, and only if the pinned folder is the same mesh plus edge masks
+        old_dir=doc.get('mesh_dir')
+        if not old_dir or Path(old_dir).resolve()==Path(mesh_dir).resolve() or doc.get('identity')!=identity(old_dir):
+            raise ValueError('M0-M3 identity mismatch')
+        edge_profile_relaxed(old_dir,mesh_dir)
+        mesh_dir=old_dir
     cpu=read_ref(doc['cpu_ref'])
     if any(cpu.get(k)!=doc.get(k) for k in ('identity','M0','M1')):
         raise ValueError('CPU raw receipt differs')
