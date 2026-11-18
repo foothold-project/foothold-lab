@@ -97,7 +97,8 @@ def cpu_inventory(folder,table):
             'rss_before_bytes':current_before,'rss_after_bytes':rss_bytes(),
             'maxrss_before_bytes':rss_before,'maxrss_after_bytes':resource.getrusage(resource.RUSAGE_SELF).ru_maxrss*1024})
         if label.startswith('cold'): del data,flags
-    proof=verify_ladder_splice(folder) if is_ladder_splice(folder) else verify_annotation(folder)
+    from foothold_s2.scripts.ex42_beam_splice_mesh import is_beam_splice,verify_beam_splice
+    proof=(verify_beam_splice(folder) if is_beam_splice(folder) else verify_ladder_splice(folder) if is_ladder_splice(folder) else verify_annotation(folder))
     meta=json.loads((folder/'mesh_manifest.json').read_text())
     manifest=json.loads((folder/'terrain_manifest.json').read_text())
     plan=EX42Plan.load(table);plan.validate_terrain_manifest(manifest)
