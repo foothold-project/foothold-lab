@@ -17,7 +17,7 @@ import torch.nn.functional as F
 from torch.func import functional_call
 from torch.nn.utils.rnn import pack_padded_sequence, pad_packed_sequence
 
-from foothold_s2.models.start_perception import MAP_X, MAP_Y, kl_standard_normal, loss_tr, v_loss_term, velocity_band_sums, velocity_loss
+from foothold_s2.models.start_perception import MAP_X, MAP_Y, kl_standard_normal, loss_tr, stone_tr_weight, v_loss_term, velocity_band_sums, velocity_loss
 
 _GRU_CACHE: dict = {}
 
@@ -114,7 +114,7 @@ def _losses_flat(p, b, eps, H_prop, H_terr):
     if p.trnet is not None:
         rough = p.trnet.rough(H_terr.flatten(0, 1)).view(-1, MAP_X, MAP_Y)
         refined = p.trnet.refine(rough)
-        res["tr"] = loss_tr(rough, refined, gt)
+        res["tr"] = loss_tr(rough, refined, gt, stone_tr_weight(None if b.get("stone_env") is None else b["stone_env"].flatten()))
         hmap = torch.where(b["use_gt"].flatten()[:, None, None], gt, refined.detach())
     else:
         res["tr"] = torch.zeros((), device=gt.device)
@@ -144,7 +144,7 @@ def _losses_stepwise(p, b, eps, H_prop, H_terr):
         gt = b["gt_map"][t]
         if p.trnet is not None:
             rough, refined = p.trnet.decode(H_terr[t])
-            sums["tr"] = sums["tr"] + loss_tr(rough, refined, gt)
+            sums["tr"] = sums["tr"] + loss_tr(rough, refined, gt, stone_tr_weight(None if b.get("stone_env") is None else b["stone_env"][t]))
             hmap = torch.where(b["use_gt"][t][:, None, None], gt, refined.detach())
             refs.append(refined)
         else:

@@ -24,7 +24,7 @@ from foothold_s2.models.start_perception import (
 
 
 class PerceptionReplay:
-    def __init__(self, num_envs: int, num_steps: int, device, depth_dtype=torch.float16) -> None:
+    def __init__(self, num_envs: int, num_steps: int, device, depth_dtype=torch.float16, with_stone: bool = False) -> None:
         self.N, self.T, self.device = num_envs, num_steps, device
         z = lambda *s, dt=torch.float32: torch.zeros(*s, dtype=dt, device=device)  # noqa: E731
         self.data = {
@@ -41,6 +41,8 @@ class PerceptionReplay:
             "use_gt": z(num_steps, num_envs, dt=torch.bool),
             "map_off": z(num_steps, num_envs, dt=torch.bool),                  # EX-33 S-B: 그 스텝에 정책이 받은 est 를 만들 때 지도 토큰을 껐는가(재생에서 같은 마스크를 쓰려고 저장)
         }
+        if with_stone:                                                          # o4 후보: 징검돌 env 지각 손실 무게 (PERCEPTION_STONE_TR_WEIGHT != 1.0 일 때만 만든다, 꺼짐이면 버퍼가 옛것과 같다)
+            self.data["stone_env"] = z(num_steps, num_envs, dt=torch.bool)
         self.h_prop0 = z(num_envs, 128)
         self.h_terr0 = z(num_envs, 128)
         self.step = 0
@@ -51,7 +53,7 @@ class PerceptionReplay:
         self.h_terr0.copy_(h_terr)
         self.step = 0
 
-    def add_pre(self, inp: dict, obs: torch.Tensor, gt_map, gt_feet, base_vel, use_gt, map_off=None) -> None:
+    def add_pre(self, inp: dict, obs: torch.Tensor, gt_map, gt_feet, base_vel, use_gt, map_off=None, stone_env=None) -> None:
         """env.step 전, 이번 스텝의 지각 입력과 정답."""
         if self.step >= self.T:
             raise OverflowError("지각 재생 버퍼가 찼다. start() 를 먼저 불러야 한다")
@@ -68,6 +70,10 @@ class PerceptionReplay:
         d["use_gt"][t].copy_(use_gt)
         if map_off is not None:
             d["map_off"][t].copy_(map_off)
+        if "stone_env" in d:
+            if stone_env is None:
+                raise ValueError("the replay keeps stone_env but add_pre got none")
+            d["stone_env"][t].copy_(stone_env)
 
     def add_post(self, next_obs: torch.Tensor, done: torch.Tensor) -> None:
         """env.step 뒤. done 이면 next_obs 는 새 에피소드 첫 관측이라 ô 정답으로 쓰지 않는다(재생에서 마스크)."""

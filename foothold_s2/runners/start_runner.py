@@ -300,8 +300,8 @@ class StartRunner(OnPolicyRunner):
         self.cfg["obs_groups"] = resolve_obs_groups(template, dict(OBS_GROUPS), ["critic"])
         self.alg = self._construct_algorithm(template)
         self.replay = (None if pcfg["fast_gt_only"] else PerceptionReplay(
-            self.env.num_envs, self.num_steps_per_env, device, getattr(torch, pcfg["depth_dtype"])
-        ))
+            self.env.num_envs, self.num_steps_per_env, device, getattr(torch, pcfg["depth_dtype"]),
+            with_stone=sp.PERCEPTION_STONE_TR_WEIGHT != 1.0))
         self.map_switch_gen = make_generator(device, pcfg["map_switch_seed"]) if p_off > 0.0 else None
         self.map_switch = MapSwitchRecorder(self.env.num_envs, device) if p_off > 0.0 else None
 
@@ -441,6 +441,7 @@ class StartRunner(OnPolicyRunner):
         print("EX42_PERCEPTION_LR where=%s lr=%s override=%s" % (
             where, ",".join("%g" % g["lr"] for g in self.perception_optimizer.param_groups), PERCEPTION_LR_OVERRIDE), flush=True)
         print("EX42_PERCEPTION_V_LOSS_COEF where=%s value=%g" % (where, sp.PERCEPTION_V_LOSS_COEF), flush=True)
+        print("EX42_PERCEPTION_STONE_TR_WEIGHT where=%s value=%g" % (where, sp.PERCEPTION_STONE_TR_WEIGHT), flush=True)
         _on, _b, _band = vx_corr_params()
         print("EX42_PERCEPTION_VX_CORR where=%s on=%d b=%.3f ramp=%g band=%g" % (where, int(_on), _b, VX_CORR_RAMP, _band), flush=True)
 
@@ -908,7 +909,8 @@ class StartRunner(OnPolicyRunner):
                     self._vbias_collect(o, ppo_obs, vel)
                     self._step_small_noise(o)
                     if self.replay is not None:
-                        self.replay.add_pre(inp, o, gmap, gfeet, vel, self.pstate.use_gt, self.pstate.map_off)
+                        self.replay.add_pre(inp, o, gmap, gfeet, vel, self.pstate.use_gt, self.pstate.map_off,
+                                            None if "stone_env" not in self.replay.data else self._command_term()._stone_env_all())
                     gt_steps += self.pstate.use_gt.float().mean()
                     _off = self.pstate.map_off.bool()
                     _gt = self.pstate.use_gt.bool()

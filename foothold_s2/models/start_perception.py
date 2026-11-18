@@ -186,9 +186,25 @@ def kl_standard_normal(mu: torch.Tensor, logvar: torch.Tensor) -> torch.Tensor:
     return (-0.5 * (1 + logvar - mu.pow(2) - logvar.exp()).sum(-1)).mean()
 
 
-def loss_tr(rough: torch.Tensor, refined: torch.Tensor, hb: torch.Tensor) -> torch.Tensor:
-    """식 4: MSE(H_rough, H^b) + L1(H_refined, H^b). 칸 평균."""
-    return F.mse_loss(rough, hb) + F.l1_loss(refined, hb)
+# EX-42 o4 후보 (lead 11/18 18:34 · 적용 안 함): 지각 손실 TRNet 항 (식 4) 의 징검돌 env 표본 무게. 1.0 = 꺼짐 (이전 동작과 비트 동일: 버퍼에 칸을 안 만들고 loss_tr 도 w 없이 부른다).
+# 켜려면 이 한 줄을 5.0 으로 (예): 징검돌 env 의 (rough 제곱오차 + refined 절대오차) 에만 W 를 곱한다 (env 별 칸 평균 뒤 env 평균, 정규화 안 함 = 오프라인 맞춤 b2a_stones_mix 와 같은 평균 축).
+# 징검돌 판별은 EX-42 열 표 (raw._ex42_column_table) 의 kind 가 stepping_stones* 인 열 (commands.mixed_command._stone_env_all).
+PERCEPTION_STONE_TR_WEIGHT = 1.0
+
+
+def stone_tr_weight(stone_env: torch.Tensor | None) -> torch.Tensor | None:
+    """(…,) bool 징검돌 env 표시 -> 같은 모양 float 무게 (1 또는 W). 꺼짐 (W == 1.0) 이거나 표시가 없으면 None = loss_tr 가 옛 식 그대로."""
+    if stone_env is None or PERCEPTION_STONE_TR_WEIGHT == 1.0:
+        return None
+    return 1.0 + (PERCEPTION_STONE_TR_WEIGHT - 1.0) * stone_env.float()
+
+
+def loss_tr(rough: torch.Tensor, refined: torch.Tensor, hb: torch.Tensor, w: torch.Tensor | None = None) -> torch.Tensor:
+    """식 4: MSE(H_rough, H^b) + L1(H_refined, H^b). 칸 평균. w (B,) 가 있으면 env 별 칸 평균에 곱한 뒤 env 평균 (w 가 없으면 옛 식 그대로, 비트 동일)."""
+    if w is None:
+        return F.mse_loss(rough, hb) + F.l1_loss(refined, hb)
+    per = ((rough - hb) ** 2).flatten(1).mean(1) + (refined - hb).abs().flatten(1).mean(1)
+    return (w * per).mean()
 
 
 # EX-42 v28g 후보: 속도 추정 손실의 저속 가중. 1.0 = 꺼짐 (이전 동작과 비트 동일, F.mse_loss 를 그대로 부른다).
@@ -495,7 +511,7 @@ class StartPerception(nn.Module):
                 batch["use_gt"][t], batch["gt_map"][t], *self._off_args(batch.get("map_off"), t),
             )
             if self.trnet is not None:
-                sums["tr"] = sums["tr"] + loss_tr(out["rough"], out["refined"], batch["gt_map"][t])
+                sums["tr"] = sums["tr"] + loss_tr(out["rough"], out["refined"], batch["gt_map"][t], stone_tr_weight(None if batch.get("stone_env") is None else batch["stone_env"][t]))
             z = out["mu"] + eps[t] * torch.exp(0.5 * out["logvar"])
             sums["kl"] = sums["kl"] + kl_standard_normal(out["mu"], out["logvar"])
             sums["v"] = sums["v"] + velocity_loss(out["v"], batch["base_vel"][t])
