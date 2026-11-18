@@ -139,6 +139,16 @@ def test_shaping_is_zero_for_level_2_envs_and_decays_over_100_iterations_after_1
     assert t2.shape_scale == 1.0                                                # nobody at level 2: no decay
 
 
+def test_shape_decay_off_keeps_the_scale_at_one():
+    t = _task(0.0)
+    t.shape_w = 5.0; t.shape_decay = False
+    t.step(_st(t._pos_prev.copy(), [[0.5, 0, 0]] * 2))
+    t.pgcl[1].level = 2
+    for _ in range(150):
+        t.step(_st(np.stack([_along(t, 0, 0.1), _along(t, 1, 0.1)]), [[0.5, 0, 0]] * 2)); s = t.take_stats()
+    assert t.shape_scale == 1.0 and s["nv_shape_scale"] == 1.0
+
+
 def _near_first_subgoal(t, d):
     """각 env 의 지금 부목표에서 +x 로 d m 떨어진 위치."""
     return np.stack([np.asarray(t.pgcl[i].target.point, float) + [d, 0.0] for i in range(2)])

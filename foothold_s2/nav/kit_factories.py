@@ -118,7 +118,11 @@ def _build(cfg: dict, with_camera: bool):
     if shape not in ("off", "path_potential"):
         raise ValueError(f"shaping must be off or path_potential, got {shape!r}")
     task.shape_w = float(cfg.get("shaping_w", 5.0)) if shape == "path_potential" else 0.0
-    print(f"SHAPING={shape} w={task.shape_w:g} clip={task.shape_clip} start_frac={task.shape_start_frac} decay_iters={task.shape_decay_iters}", flush=True)
+    sd = str(cfg.get("shape_decay", "on"))
+    if sd not in ("on", "off"):
+        raise ValueError(f"shape_decay must be on or off, got {sd!r}")
+    task.shape_decay = sd == "on"
+    print(f"SHAPING={shape} w={task.shape_w:g} clip={task.shape_clip} start_frac={task.shape_start_frac} decay_iters={task.shape_decay_iters} decay={sd}" + ("" if sd == "on" else " DECAY_OFF (논문 밖: 배율 1.0 고정)"), flush=True)
     task.redraw_on_fall = bool(cfg.get("task_redraw_on_fall", False))           # False (기본) = 같은 과제 유지 (논문) · True = 넘어지면 표에서 새 과제 (02:2x 판)
     print(f"TASK_RESET_ON_FALL {'new_task_from_table' if task.redraw_on_fall else 'same_task_kept'} table_tol_m {task.table_tol_m}", flush=True)
     depth_fn = (lambda: th(raw.scene["depth_camera"].data.output["distance_to_image_plane"])) if with_camera else None
