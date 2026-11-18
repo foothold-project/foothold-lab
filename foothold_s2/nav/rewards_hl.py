@@ -67,9 +67,9 @@ class HLState:
     collision: np.ndarray     # (N,) bool
 
 
-def reward_terms(s: HLState, pose_active: bool = False) -> dict:
+def reward_terms(s: HLState, pose_active: bool = False, arrive_m: float = ARRIVE_M) -> dict:
     """항마다 (N,) 값 (가중치 곱하기 전) 을 돌려준다."""
-    arrive = (np.linalg.norm(s.pos_xy - s.subgoal_xy, axis=1) < ARRIVE_M).astype(np.float64)
+    arrive = (np.linalg.norm(s.pos_xy - s.subgoal_xy, axis=1) < arrive_m).astype(np.float64)
     speed = np.linalg.norm(s.v_xy, axis=1)
     cols = 5 if pose_active else 3
     if s.actual.shape[1] < cols or s.cmd.shape[1] < cols:
@@ -88,10 +88,10 @@ def reward_terms(s: HLState, pose_active: bool = False) -> dict:
     }
 
 
-def reward_total(s: HLState, pose_active: bool = False, weights: dict | None = None) -> tuple[np.ndarray, dict]:
+def reward_total(s: HLState, pose_active: bool = False, weights: dict | None = None, arrive_m: float = ARRIVE_M) -> tuple[np.ndarray, dict]:
     """(합 (N,), 가중치를 곱한 항 dict)."""
     w = WEIGHTS if weights is None else weights
     if set(w) != set(WEIGHTS):
         raise ValueError("weights must name r1..r10")
-    terms = {k: w[k] * v for k, v in reward_terms(s, pose_active).items()}
+    terms = {k: w[k] * v for k, v in reward_terms(s, pose_active, arrive_m).items()}
     return sum(terms.values()), terms

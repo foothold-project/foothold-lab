@@ -23,6 +23,6 @@ def to_hl_state(state, *, pos_room_xy, subgoal_xy, eta, v_des, cmd_prev, cmd_pre
         collision=np.asarray(state.collision, bool))
 
 
-def reward(state, **kw) -> tuple:
-    """(합 (n,), 가중치를 곱한 항 dict). 자세 스위치는 끈 채 (설계 결정 1: 상위 출력 3 칸)."""
-    return rh.reward_total(to_hl_state(state, **kw), pose_active=False)
+def reward(state, arrive_m: float = rh.ARRIVE_M, **kw) -> tuple:
+    """(합 (n,), 가중치를 곱한 항 dict). 자세 스위치는 끈 채 (설계 결정 1: 상위 출력 3 칸). arrive_m = r1 의 도달 반경 (기본 논문 0.1 m)."""
+    return rh.reward_total(to_hl_state(state, **kw), pose_active=False, arrive_m=arrive_m)

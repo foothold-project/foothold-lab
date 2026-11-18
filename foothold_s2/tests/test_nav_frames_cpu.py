@@ -40,12 +40,12 @@ def test_the_only_term_that_pays_for_getting_closer_to_the_subgoal_is_r1_inside_
     assert list(toward["r1"]) == [0.0, 0.0, 1.0]                            # 2 m and 1 m away: nothing; 0.05 m: 1
 
 
-def _task(weight=0.0):
+def _task(weight=0.0, **kw):
     from pathlib import Path
     from foothold_s2.nav import grade_map as gm, room_generator as rg
     table = gm.load_grade_table(str(Path(__file__).resolve().parents[1] / "nav" / "grade_table_draft.yaml"))
     room = rg.make_room(1000, rg.RoomConfig(sparse_patch_kinds=()))[1]
-    t = nav_task.NavTask([nav_task.make_asset(room, table)], 2, np.random.default_rng(3))
+    t = nav_task.NavTask([nav_task.make_asset(room, table)], 2, np.random.default_rng(3), **kw)
     starts = [rg.start_points(room, 4, seed=1000)[:, :2]]
     t.build_table(starts, per_start=8, seed=0)
     t.origin_xy = np.zeros((2, 2))
@@ -137,3 +137,48 @@ def test_shaping_is_zero_for_level_2_envs_and_decays_over_100_iterations_after_1
     t2.shape_w = 5.0
     t2.step(_st(t2._pos_prev.copy(), [[0.5, 0, 0]] * 2)); t2.take_stats()
     assert t2.shape_scale == 1.0                                                # nobody at level 2: no decay
+
+
+def _near_first_subgoal(t, d):
+    """각 env 의 지금 부목표에서 +x 로 d m 떨어진 위치."""
+    return np.stack([np.asarray(t.pgcl[i].target.point, float) + [d, 0.0] for i in range(2)])
+
+
+def test_reach_radius_default_is_the_paper_0_1_and_0_3_counts_a_0_25_m_distance_as_reached():
+    from foothold_s2.nav import pgcl
+    t = _task()
+    assert t.reach_m == pgcl.REACH_M == rewards_hl.ARRIVE_M == 0.1 and all(p.reach_m == 0.1 for p in t.pgcl)
+    out = t.step(_st(_near_first_subgoal(t, 0.25), [[0.5, 0, 0]] * 2))
+    assert t.take_stats()["nv_sub_reached"] == 0 and (out["terms"]["r1"] == 0).all()          # 0.25 m is not a reach at the default 0.1
+    w = _task(reach_m=0.3)
+    assert w.reach_m == 0.3 and all(p.reach_m == 0.3 for p in w.pgcl)
+    out = w.step(_st(_near_first_subgoal(w, 0.25), [[0.5, 0, 0]] * 2))
+    stats = w.take_stats()
+    assert stats["nv_sub_reached"] == 2 and (out["terms"]["r1"] > 0).all()                      # 0.25 m < 0.3 m: reached (both PGCL and r1)
+    far = _task(reach_m=0.3)
+    far.step(_st(_near_first_subgoal(far, 0.35), [[0.5, 0, 0]] * 2))
+    assert far.take_stats()["nv_sub_reached"] == 0                                              # 0.35 m is still outside 0.3 m
+
+
+def test_reward_terms_arrive_radius_follows_the_argument_and_defaults_to_the_paper_value():
+    n = 1
+    z = np.zeros
+    base = dict(pos_xy=np.array([[0.25, 0.0]]), subgoal_xy=np.zeros((n, 2)), v_xy=z((n, 2)), v_z=z(n), omega_xy=z((n, 2)), q=z((n, 12)), q0=z(12),
+                cmd=z((n, 3)), cmd_prev=z((n, 3)), cmd_prev2=z((n, 3)), actual=z((n, 3)), v_des=np.full(n, 0.5), eta=np.ones(n), limited=z(n, bool), collision=z(n, bool))
+    s = rewards_hl.HLState(**base)
+    assert rewards_hl.reward_terms(s)["r1"][0] == 0.0 and rewards_hl.reward_terms(s, arrive_m=0.3)["r1"][0] == 1.0
+
+
+def test_dsub_min_is_the_median_over_unfinished_episodes_of_the_closest_approach_to_the_current_subgoal():
+    t = _task()
+    for d in (0.8, 0.6, 0.5, 0.7):                                                              # env 0 gets as close as 0.5 m, env 1 as close as 0.7 m
+        pos = np.stack([np.asarray(t.pgcl[0].target.point, float) + [d, 0.0], np.asarray(t.pgcl[1].target.point, float) + [d + 0.2 if d == 0.5 else 0.9, 0.0]])
+        t.step(_st(pos, [[0.5, 0, 0]] * 2))
+    t.reset_envs([0, 1], start_xy=np.stack([t.start[0], t.start[1]]))                         # both episodes end without reaching
+    stats = t.take_stats()
+    assert abs(stats["nv_dsub_min"] - np.median([0.5, 0.7])) < 1e-9 and stats["nv_episodes"] == 2
+    assert t.take_stats() == {}                                                                 # nothing since: no key, no stale value
+    r = _task()
+    r.step(_st(_near_first_subgoal(r, 0.05), [[0.5, 0, 0]] * 2))                              # both reached the first subgoal and then are measured against the next one
+    r.reset_envs([0, 1], start_xy=np.stack([r.start[0], r.start[1]]))
+    assert r.take_stats()["nv_dsub_min"] > 0.1

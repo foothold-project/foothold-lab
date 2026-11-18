@@ -72,11 +72,11 @@ def prepare_rooms(cfg: dict) -> dict:
     return {"manifest": manifest, "mesh": out / "terrain_mesh.npz", "assets": [nav_task.make_asset(r, table) for r in rooms]}
 
 
-def make_task(assets, num_envs: int, seed: int, rows, env_origins_xy, table_starts=None, per_start: int = 32):
+def make_task(assets, num_envs: int, seed: int, rows, env_origins_xy, table_starts=None, per_start: int = 32, reach_m: float | None = None):
     """table_starts = 방마다 시작점 (K, 2) 목록이면 시작 · 목표 · 경로 표를 미리 만든다 (학습 중 새 과제는 표에서 뽑기만). None 이면 옛 꼴 (뽑을 때마다 길을 냄)."""
     from foothold_s2.nav import nav_task
 
-    task = nav_task.NavTask(assets, num_envs, np.random.default_rng(seed))
+    task = nav_task.NavTask(assets, num_envs, np.random.default_rng(seed)) if reach_m is None else nav_task.NavTask(assets, num_envs, np.random.default_rng(seed), reach_m=reach_m)
     task.set_rooms_from_rows(rows, env_origins_xy)
     if table_starts is not None:
         import time
@@ -109,7 +109,11 @@ def _build(cfg: dict, with_camera: bool):
     from foothold_s2.nav import room_generator as rg
 
     starts = None if not int(cfg.get("task_table_per_start", 32)) else [rg.start_points(a.room, int(cfg["n_starts"]), seed=int(cfg["room_seed"]) + row)[:, :2] for row, a in enumerate(prepared["assets"])]
-    task = make_task(prepared["assets"], int(cfg["num_envs"]), int(cfg["seed"]), rows, raw.scene.env_origins[:, :2].cpu().numpy(), starts, int(cfg.get("task_table_per_start", 32)))
+    task = make_task(prepared["assets"], int(cfg["num_envs"]), int(cfg["seed"]), rows, raw.scene.env_origins[:, :2].cpu().numpy(), starts, int(cfg.get("task_table_per_start", 32)), reach_m=float(cfg["reach_m"]) if "reach_m" in cfg else None)
+    if task.reach_m <= 0:
+        raise ValueError(f"reach_m must be > 0, got {task.reach_m}")
+    from foothold_s2.nav import pgcl as _pgcl
+    print(f"REACH_M={task.reach_m:g} paper={_pgcl.REACH_M:g}" + ("" if task.reach_m == _pgcl.REACH_M else " OUTSIDE_PAPER (부목표 도달 반경을 논문 값 밖으로 바꿈: PGCL 도달 판정 · r1 arrive 같은 값)"), flush=True)
     shape = str(cfg.get("shaping", "off"))                                # off (기본) | path_potential (논문 밖 덧붙임, 남은 경로 길이가 준 만큼 보상)
     if shape not in ("off", "path_potential"):
         raise ValueError(f"shaping must be off or path_potential, got {shape!r}")

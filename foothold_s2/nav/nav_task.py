@@ -44,14 +44,17 @@ EPISODE_SPEED_MPS, EPISODE_EXTRA_S = 0.3, 10.0   # 에피소드 길이 = 경로 
 class NavTask:
     def __init__(self, assets: list, num_envs: int, rng: np.random.Generator, *, d0: float = 1.0, step: float = 1.0,
                  final_successes: int = 5, v_des_range=rewards_hl.V_DES_RANGE, min_task_m: float = 2.0, max_task_tries: int = 20, origin_xy=None,
-                 room_rows=None, straighten: bool = True, path_range_m=(4.0, 25.0), winding_frac: float = 0.5, winding_min: float = 1.2, goal_candidates: int = 8):
+                 room_rows=None, straighten: bool = True, path_range_m=(4.0, 25.0), winding_frac: float = 0.5, winding_min: float = 1.2, goal_candidates: int = 8,
+                 reach_m: float = pgcl.REACH_M):
         if not assets or num_envs < 1:
             raise ValueError("assets and num_envs are required")
         self.assets, self.n, self.rng = assets, int(num_envs), rng
         self.room_id = np.arange(self.n) % len(assets)
         if room_rows is not None:
             self.set_rooms_from_rows(room_rows)
-        self.pgcl = [pgcl.PGCL(d0, step, final_successes=final_successes) for _ in range(self.n)]
+        self.reach_m = float(reach_m)     # 부목표 도달 반경 (기본 pgcl.REACH_M = 논문 0.1 m · 바꾸면 논문 밖: PGCL 도달 판정과 r1 의 arrive 가 같은 값)
+        self.pgcl = [pgcl.PGCL(d0, step, reach_m=self.reach_m, final_successes=final_successes) for _ in range(self.n)]
+        self._dmin = np.full(self.n, np.inf)   # env 별: 지금 부목표까지 이 에피소드에서 가장 가까웠던 거리 (부목표가 바뀌면 다시)
         self.start = np.zeros((self.n, 2)); self.goal = np.zeros((self.n, 2)); self.path = [None] * self.n
         self.v_des = np.zeros(self.n); self.v_des_range = v_des_range
         self.visit = rewards_hl.VisitGrid(self.n)
@@ -221,6 +224,9 @@ class NavTask:
         if not p._sub:
             return
         st["eps"] += 1
+        if not p.all_reached and np.isfinite(self._dmin[i]):
+            st.setdefault("dmin", []).append(float(self._dmin[i]))     # 끝까지 못 닿은 에피소드의 마지막 부목표 최소 거리
+        self._dmin[i] = np.inf
         st["prog"] += p._i / len(p._sub)
         tgt = p._sub[min(p._i, len(p._sub) - 1)].point
         if not np.isnan(self._pos_prev[i, 0]):
@@ -254,6 +260,7 @@ class NavTask:
         out["nv_ep_ticks"] = st["ep_ticks"] / e
         out["nv_cos_vel_sub"] = st["cos"] / st["cos_n"] if st["cos_n"] else 0.0
         out["nv_cos_n"] = st["cos_n"]
+        out["nv_dsub_min"] = float(np.median(st["dmin"])) if st.get("dmin") else -1.0      # 에피소드마다 (끝까지 못 닿은 것) 지금 부목표까지 최소 거리의 중앙값 · -1 = 해당 에피소드 없음
         if self.shape_w:
             out["nv_shape_scale"] = self.shape_scale
             if not self._shape_decay_on and (st["lvl"][1] + st["lvl"][2]) / t > self.shape_start_frac:
@@ -376,10 +383,16 @@ class NavTask:
             tgt = self.pgcl[i].update(pos_room[i, :2])
             self.subgoal[i] = (self.goal[i] if tgt is None else tgt.point)
         st["sub_reached"] += sum(p._i for p, d in zip(self.pgcl, done) if not d) - i0
+        for i in range(self.n):                                          # nv_dsub_min 재료: 지금 부목표까지 가장 가까웠던 거리 (부목표가 넘어가면 다시 잰다)
+            if done[i] or self.pgcl[i].target is None:
+                continue
+            if self.pgcl[i]._i != i_before[i]:
+                self._dmin[i] = np.inf
+            self._dmin[i] = min(self._dmin[i], float(np.linalg.norm(pos_room[i, :2] - np.asarray(self.pgcl[i].target.point))))
         eta = self.visit.visit(pos_room[:, :2], active=~done)
         total, terms = hl_rewards_term.reward(
             state, pos_room_xy=pos_room[:, :2], subgoal_xy=self.subgoal, eta=eta, v_des=self.v_des,
-            cmd_prev=self.cmd_prev, cmd_prev2=self.cmd_prev2)
+            cmd_prev=self.cmd_prev, cmd_prev2=self.cmd_prev2, arrive_m=self.reach_m)
         # r1 (부목표 도달): update 가 부목표를 넘긴 뒤 바뀐 subgoal 로 재면 닿은 틱에 이미 다음 부목표를 봐서 늘 0 이었다 (G3 nv_r1 = 0). 넘긴 개수 (한 틱에 둘이면 2) 를 직접 준다.
         passed = np.array([p._i for p in self.pgcl]) - i_before
         terms = dict(terms)
