@@ -223,7 +223,7 @@ class NavTask:
     def _stat(self):
         if self._st is None:
             self._st = {"ticks": 0, "sub_reached": 0, "lvl": np.zeros(3), "r": {}, "vcmd": 0.0, "vbody": 0.0, "stand": 0.0,
-                        "eps": 0, "cos": 0.0, "cos_n": 0, "prog": 0.0, "dsub0": 0.0, "dsub1": 0.0, "plen": 0.0, "ep_ticks": 0.0,
+                        "eps": 0, "cos": 0.0, "cos_n": 0, "cosd": 0.0, "cosd_n": 0, "yerr": 0.0, "yok": 0, "yn": 0, "prog": 0.0, "dsub0": 0.0, "dsub1": 0.0, "plen": 0.0, "ep_ticks": 0.0,
                         "out": {"hold": 0, "level_up": 0, "final_success": 0, "new_task": 0},
                         "lv": {k: np.zeros(7) for k in LV_KEYS}}     # 수준별 (l1 · l2 · l3p): [eps, prog, dend, succ, sub_reached, cos, cos_n]
         if getattr(self, "_ep_n", None) is None:
@@ -278,6 +278,11 @@ class NavTask:
         out["nv_ep_ticks"] = st["ep_ticks"] / e
         out["nv_cos_vel_sub"] = st["cos"] / st["cos_n"] if st["cos_n"] else 0.0
         out["nv_cos_n"] = st["cos_n"]
+        out["nv_cos_disp"] = st["cosd"] / st["cosd_n"] if st["cosd_n"] else 0.0         # 틱 사이 위치 변화 방향과 부목표 방향의 cos (yaw 안 씀)
+        out["nv_cos_disp_n"] = st["cosd_n"]
+        out["nv_yaw_err_deg"] = st["yerr"] / st["yn"] if st["yn"] else -1.0            # 해석 yaw 대 (위치 변화 방향 - 몸 속도 방향) 의 절대 차 평균 (도). 쿼터니언 순서가 맞으면 작다
+        out["nv_yaw_ok_frac"] = st["yok"] / st["yn"] if st["yn"] else -1.0             # 그 차가 30 도 안인 비율
+        out["nv_yaw_n"] = st["yn"]
         for k, (n_e, prog, dend, succ, subr, cos, cos_n) in ((k, st["lv"][k]) for k in LV_KEYS):   # 수준별 (읽기만): 에피소드가 없으면 -1
             out[f"nv_eps_{k}"] = int(n_e); out[f"nv_sub_reached_{k}"] = int(subr); out[f"nv_cos_n_{k}"] = int(cos_n)
             out[f"nv_prog_{k}"] = prog / n_e if n_e else -1.0
@@ -437,6 +442,7 @@ class NavTask:
         self.cmd_prev2 = self.cmd_prev.copy()
         self.cmd_prev = np.asarray(state.applied)[:, :3].copy()
         reached = np.array([p.all_reached for p in self.pgcl]) & ~done
+        self._quat0 = np.asarray(state.quat_w)[0]
         self._note_cos(state, pos_room[:, :2], done)
         self._note_tick(state, pos_room[:, :2], terms, done)
         return {"reward": total, "terms": terms, "subgoal": self.subgoal.copy(), "room_id": self.room_id.copy(),
@@ -473,6 +479,7 @@ class NavTask:
         st = self._stat()
         v = np.asarray(state.vel_b)[:, :2]
         yaw = teacher_obs.yaw_from_quat_wxyz(state.quat_w)
+        self._note_disp(v, yaw, pos_xy, done)
         c, s_ = np.cos(yaw), np.sin(yaw)
         vw = np.stack([c * v[:, 0] - s_ * v[:, 1], s_ * v[:, 0] + c * v[:, 1]], axis=1)
         d = self.subgoal - pos_xy
@@ -485,6 +492,40 @@ class NavTask:
             for i in np.nonzero(ok)[0]:
                 a = st["lv"][_lv_key(self.pgcl[i].level)]
                 a[5] += float(cc[i]); a[6] += 1
+
+    QUAT_CHECK_TICKS = 50          # 처음 이 틱 수 동안 env 0 의 쿼터니언 · yaw 점검 줄을 찍는다 (QUAT_CHECK)
+    YAW_TOL_DEG = 30.0
+
+    def _note_disp(self, v_b, yaw, pos_xy, done) -> None:
+        """yaw 에 의존하지 않는 측정: 앞 틱 위치 -> 지금 위치 변화 (월드) 와 부목표 방향의 cos (nv_cos_disp), 그리고 쿼터니언 순서 점검
+        (변화 방향 - 몸 속도 방향 = 몸이 본 방향 yaw 의 독립 추정; 해석한 yaw 와 비교). `_pos_prev` 는 이 틱이 끝나기 전의 앞 틱 위치."""
+        st = self._stat()
+        prev = self._pos_prev
+        disp = pos_xy - prev
+        dn, vn = np.linalg.norm(disp, axis=1), np.linalg.norm(v_b, axis=1)
+        thr = 0.05 * self.tick_s if self.tick_s else 0.005
+        d2 = self.subgoal - prev
+        n2 = np.linalg.norm(d2, axis=1)
+        ok = ~np.isnan(prev[:, 0]) & ~done & (dn >= thr) & (n2 > 1e-9)
+        if ok.any():
+            st["cosd"] += float(((disp[ok] * d2[ok]).sum(1) / (dn[ok] * n2[ok])).sum())
+            st["cosd_n"] += int(ok.sum())
+        mv = ok & (vn >= 0.05)
+        if mv.any():
+            est = np.arctan2(disp[:, 1], disp[:, 0]) - np.arctan2(v_b[:, 1], v_b[:, 0])
+            err = np.degrees(np.abs((est - yaw + np.pi) % (2 * np.pi) - np.pi))
+            st["yerr"] += float(err[mv].sum()); st["yok"] += int((err[mv] <= self.YAW_TOL_DEG).sum()); st["yn"] += int(mv.sum())
+            qc = getattr(self, "_qc_n", 0)
+            if qc < self.QUAT_CHECK_TICKS:
+                self._qc_n = qc + 1
+                self._qc_err = getattr(self, "_qc_err", []) + [err[mv]]
+                if mv[0] and qc < 8:
+                    q = getattr(self, "_quat0", None)
+                    print(f"QUAT_CHECK tick={qc} env0 quat_wxyz={None if q is None else np.round(q, 4).tolist()} yaw_deg={np.degrees(yaw[0]):.1f} yaw_from_motion_deg={np.degrees(est[0]):.1f} err_deg={err[0]:.1f}", flush=True)
+                if self._qc_n == self.QUAT_CHECK_TICKS:
+                    e = np.concatenate(self._qc_err)
+                    print(f"QUAT_CHECK summary ticks={self.QUAT_CHECK_TICKS} samples={len(e)} err_deg_median={np.median(e):.1f} within_{self.YAW_TOL_DEG:g}deg={float((e <= self.YAW_TOL_DEG).mean()):.2f} (yaw 해석이 맞으면 median 은 작고 비율은 1 에 가깝다)", flush=True)
+                    self._qc_err = []
 
     def _note_tick(self, state, pos_xy, terms, done) -> None:
         st = self._stat()

@@ -28,6 +28,12 @@ class TeacherVecEnv:
         except (AttributeError, TypeError, ValueError):
             pass
 
+    def heading_selfcheck(self):
+        """학습 첫 회차 전: 하위만 몸 +x 로 1 초 걸어 월드 변위 방향 = 해석 yaw 인지 확인 (어긋나면 RuntimeError). 가짜 env 면 건너뜀."""
+        from foothold_s2.nav import heading_check
+
+        return heading_check.run(self.nav)
+
     def take_nav_stats(self) -> dict:
         take = getattr(self.task, "take_stats", None)
         return take() if take is not None else {}

@@ -258,3 +258,74 @@ def test_r1_r2_sums_are_in_the_iteration_row():
     t.step(_st(_near_first_subgoal(t, 0.4), [[0.5, 0, 0]] * 2))
     s = t.take_stats()
     assert abs(s["nv_r2_sum"] - s["nv_r2"] * 2) < 1e-12 and abs(s["nv_r1_sum"] - s["nv_r1"] * 2) < 1e-12 and s["nv_r2_sum"] > 0
+
+
+def test_cos_disp_is_plus_one_toward_minus_one_away_and_yaw_error_is_small_only_for_the_right_yaw():
+    t = _task()
+    start = t._pos_prev.copy()
+    d = t.subgoal - start
+    u = d / np.linalg.norm(d, axis=1, keepdims=True)
+    yaw = np.pi / 2                                                        # body +x points world +y: a body velocity (0.5, 0) moves the body along +y
+    t.step(_st(start + 0.05 * u, [[0.5, 0, 0]] * 2, yaw=0.0))                # displacement toward the subgoal, state yaw 0
+    s = t.take_stats()
+    assert s["nv_cos_disp_n"] == 2 and abs(s["nv_cos_disp"] - 1.0) < 1e-9
+    t2 = _task(); p = t2._pos_prev.copy(); u2 = (t2.subgoal - p) / np.linalg.norm(t2.subgoal - p, axis=1, keepdims=True)
+    t2.step(_st(p - 0.05 * u2, [[0.5, 0, 0]] * 2, yaw=0.0))
+    assert abs(t2.take_stats()["nv_cos_disp"] + 1.0) < 1e-9
+    # yaw check: world displacement along +y with body velocity (0.5, 0) means the true yaw is 90 deg
+    ok, bad = _task(), _task()
+    for tk, y in ((ok, np.pi / 2), (bad, 0.0)):
+        p0 = tk._pos_prev.copy()
+        tk.step(_st(p0 + np.array([[0.0, 0.05]] * 2), [[0.5, 0, 0]] * 2, yaw=y))
+    a, b = ok.take_stats(), bad.take_stats()
+    assert a["nv_yaw_n"] == 2 and a["nv_yaw_err_deg"] < 1e-6 and a["nv_yaw_ok_frac"] == 1.0
+    assert abs(b["nv_yaw_err_deg"] - 90.0) < 1e-6 and b["nv_yaw_ok_frac"] == 0.0
+    assert _task().take_stats() == {}                                         # nothing since: no key
+
+
+def test_heading_judge_passes_for_the_true_yaw_and_stops_for_a_wrong_quaternion_order_or_no_motion():
+    from foothold_s2.nav import heading_check as hc
+    n = 6
+    for yaw0 in (0.0, np.pi / 2, np.pi, -np.pi / 2, 0.7):
+        yaw = np.full((10, n), yaw0); vb = np.tile([0.4, 0.0], (10, n, 1)); p0 = np.zeros((n, 2)); p1 = 0.35 * np.stack([np.cos(yaw0) * np.ones(n), np.sin(yaw0) * np.ones(n)], 1)
+        r = hc.judge(yaw, vb, p0, p1, np.zeros(n, bool))
+        assert r["ok"] and r["err_vs_yaw_median_deg"] < 1e-6, (yaw0, r)
+        wrong = hc.judge(yaw + np.pi / 2, vb, p0, p1, np.zeros(n, bool))          # a yaw read 90 deg off
+        assert not wrong["ok"] and "interpreted yaw" in wrong["reason"]
+    still = hc.judge(np.zeros((10, n)), np.tile([0.4, 0.0], (10, n, 1)), np.zeros((n, 2)), np.zeros((n, 2)) + 0.01, np.zeros(n, bool))
+    assert not still["ok"] and "inconclusive" in still["reason"]
+    fell = hc.judge(np.zeros((10, n)), np.tile([0.4, 0.0], (10, n, 1)), np.zeros((n, 2)), np.tile([0.35, 0.0], (n, 1)), np.ones(n, bool))
+    assert not fell["ok"] and "inconclusive" in fell["reason"]                      # envs that ended inside the window do not count
+
+
+class _FakeNav:
+    """몸 +x 로 가라는 명령에 진짜 yaw 방향으로 움직이는 가짜 NavEnv. quat_order: 'wxyz' (맞음) 또는 'xyzw' (순서를 잘못 읽은 값을 줌)."""
+    class _Raw: step_dt = 0.02
+    def __init__(self, quat_order, n=8, yaw0=0.9):
+        from foothold_s2.nav.command_space import CommandSpace
+        self.n, self.hold, self.raw, self.quat_order, self.yaw0 = n, 5, self._Raw(), quat_order, yaw0
+        self.space = type("S", (), {"mode": "clip"})()
+        self.pos = np.zeros((n, 2))
+    def _state(self):
+        w, z = np.cos(self.yaw0 / 2), np.sin(self.yaw0 / 2)
+        q = [w, 0, 0, z] if self.quat_order == "wxyz" else [0, 0, z, w]
+        s = _st(self.pos.copy(), [[0.4, 0.0, 0.0]] * self.n)
+        s.quat_w = np.tile(q, (self.n, 1)); s.pos_local = np.c_[self.pos, np.full(self.n, 0.35)]; s.done = np.zeros(self.n, bool)
+        return s
+    def reset(self):
+        self.pos[:] = 0.0; return self._state()
+    def step(self, action):
+        assert np.allclose(np.asarray(action)[:, 0], 0.5) and np.allclose(np.asarray(action)[:, 1:], 0.0)
+        self.pos += 0.4 * 0.1 * np.array([np.cos(self.yaw0), np.sin(self.yaw0)]); return self._state()
+
+
+def test_heading_selfcheck_run_passes_with_the_right_quaternion_order_and_raises_with_the_wrong_one():
+    from foothold_s2.nav import heading_check as hc
+    assert hc.run(_FakeNav("wxyz"))["ok"]
+    try:
+        hc.run(_FakeNav("xyzw"))
+    except RuntimeError as e:
+        assert "HEADING_SELFCHECK FAILED" in str(e)
+    else:
+        raise AssertionError("a wrongly read quaternion must stop training")
+    assert hc.run(object()) is None                                                    # fake env without the attributes: skipped

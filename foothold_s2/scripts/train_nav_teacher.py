@@ -133,6 +133,7 @@ def main(argv=None) -> int:
         nav_env, task = getattr(importlib.import_module(mod), fn)()
         ppo = cfg.TeacherPPO(**ppo_kwargs(a.num_envs, a.save_interval))
         env = hl_train.TeacherVecEnv(nav_env, task, device="cuda:0" if _cuda() else "cpu")
+        env.heading_selfcheck()                          # 쿼터니언 순서 · 몸 틀 속도 해석이 틀리면 여기서 멈춘다 (Pod 돈 아낌)
         last, saved = hl_train.train(env, ppo, out_dir=out, iterations=a.iterations, receipt=receipt, resume=a.resume, seed=a.seed,
                                      device=env.device)
         print(json.dumps({"last_iteration": last, "saved": saved}), flush=True)
