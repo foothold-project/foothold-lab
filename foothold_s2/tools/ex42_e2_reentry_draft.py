@@ -98,7 +98,7 @@ def draft(source_dir: Path, run_dir: Path, iteration: int, mesh_dir: Path, out: 
     out.mkdir(parents=True)
     for path in source_dir.rglob("*"):
         rel = path.relative_to(source_dir)
-        if path.is_file() and "provenance" not in rel.parts and path.name not in ("transition.json", "ex42-prep.yaml", "ex42-approvals.yaml"):
+        if path.is_file() and "provenance" not in rel.parts and ".git" not in rel.parts and path.name not in ("transition.json", "ex42-prep.yaml", "ex42-approvals.yaml"):
             (out / rel).parent.mkdir(parents=True, exist_ok=True)
             shutil.copyfile(path, out / rel)
     (out / "ex42-prep.yaml").write_bytes(plan_bytes)
