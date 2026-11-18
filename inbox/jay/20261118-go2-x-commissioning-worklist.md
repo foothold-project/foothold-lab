@@ -3,7 +3,7 @@
 > 근거: 20261117 현장 인수 기록 · 20261117 sim-match checklist · 정본 3 contract · foothold-app main README
 > 목표: 현재 개체의 하드웨어·센서·통신·안전 상태를 증거로 확정하고, Depth/LiDAR/SLAM을 눈과 데이터로 검증한 뒤 정본 3 ONNX 저수준 정책과 `foothold-app` 실기 연결까지 단계적으로 진행한다.
 > 상태: 냉각·재부팅 뒤 read-only monitor와 Classic 좌·우 주행에서 열 사건 미재발 · 카메라 35° 유지성 통과 · HDMI 없는 1080p 정상 전원 사이클 2회 통과 · 업체 공식 열 판정과 D435i 1초 reset 원인은 대기
-> 판: v1.3
+> 판: v1.4
 
 # Go2 X 실기 commissioning 작업목록
 
@@ -179,6 +179,14 @@
 3. 읽기 전용 측정 기간에는 service를 비활성화할지 사용자·팀원 합의로 결정한다. 현재 상태에서는 재부팅·수동 start·r5 복구가 없으면 service가 스스로 살아나 측정을 방해하지 않는다.
 4. P0 열 사건 업체 판정 전에는 저수준 명령·정책 송신·새 APP 제어 시험을 하지 않는다.
 
+### 원시자료 보존 규칙
+
+1. Jetson `/home/nvidia/go2_diag/records/`는 전원이 켜진 동안의 **임시 수집·복구 사본**이다. 팀 공유 정본이 아니다.
+2. 각 측정이 끝나면 같은 작업 단위 안에서 원본 CSV/NPY/NPZ·console log·summary·실행 명령을 ai-lt01의 `inbox/jay/20261117-go2-x-sim-match-checklist-assets/<측정명>/`으로 회수한다.
+3. 회수 뒤 Jetson 원본과 ai-lt01 사본의 SHA-256을 대조하고, 비밀번호·token·개인키·장치 serial이 없는지 검사한다. 큰 파일은 Git LFS 여부를 먼저 확인한다.
+4. 검증된 파일과 README를 PR로 main에 병합한다. 다른 Ubuntu 장비 ai-lx01은 `git pull`과 필요 시 `git lfs pull`로 받는다.
+5. Git 반영 전에는 Jetson 원본을 지우지 않는다. Git 반영 뒤 삭제도 별도 승인 없이는 하지 않는다.
+
 ### 우선순위 1 · 시뮬 재투영에 직접 필요한 실측
 
 1. receive-only 온도·reserve·lowcmd 감시를 먼저 실행하고, 사용자가 순정 조이스틱으로 한 번만 Stand한다.
@@ -226,6 +234,7 @@
 
 | 판 | 날짜 | 내용 |
 |---|---|---|
+| v1.4 | 2026-11-18 | Jetson은 임시 수집·복구 사본으로만 사용하고 매 측정 뒤 ai-lt01 Git assets로 회수·SHA-256/비밀정보 검사·main 병합하는 원시자료 보존 규칙 추가 |
 | v1.3 | 2026-11-18 | 짧은 Stand 기하 측정 뒤 젠더 A/B/C 운영 경로를 먼저 선별하고, 30분 timestamp·무효 히트맵·평지/턱/계단 정본 원시자료는 선택 젠더로 수집하도록 현장 순서 수정 |
 | v1.2 | 2026-11-18 | 팀원 APP 자동실행의 현재/잠재 영향 분리 · `5000M` 순간 협상과 젠더 안정성 통과 구분 · 시뮬 lead 실측, timestamp/무효 depth/정적 장면, A/B/C, LiDAR/SLAM/APP/정책을 우선순위 0~4로 재정렬 · 정책용 60×60 전처리를 APP 필수 후속으로 명시 |
 | v1.1 | 2026-11-18 | 냉각 뒤 Classic 주행 안전 표본과 카메라 35° 유지성 반영 · HDMI 없는 부팅 root cause/custom EDID 적용·rollback·첫 재부팅 통과 · C-to-A A/B/C 선별과 frame reset 계수 · 현재 후속 순서 갱신 |

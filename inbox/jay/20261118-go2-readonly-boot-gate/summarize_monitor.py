@@ -25,6 +25,18 @@ def summarize(rows):
     if not rows:
         raise ValueError("monitor CSV has no data rows")
 
+    body_heights = finite([
+        float(row.get("body_height", "nan")) for row in rows
+    ])
+    body_height_mean = (
+        sum(body_heights) / len(body_heights) if body_heights else None
+    )
+    body_height_stddev = (
+        math.sqrt(sum((value - body_height_mean) ** 2 for value in body_heights)
+                  / len(body_heights))
+        if body_heights else None
+    )
+
     result = {
         "samples": len(rows),
         "duration_s": floats(rows, "t_s")[-1] - floats(rows, "t_s")[0],
@@ -44,6 +56,15 @@ def summarize(rows):
             "end": int(rows[-1]["soc_pct"]),
         },
         "sport_marker_counts": dict(Counter(row["sport_error_code"] for row in rows)),
+        "sport_mode_counts": dict(Counter(row.get("sport_mode", "") for row in rows)),
+        "gait_type_counts": dict(Counter(row.get("gait_type", "") for row in rows)),
+        "body_height_m": {
+            "samples": len(body_heights),
+            "mean": body_height_mean,
+            "population_stddev": body_height_stddev,
+            "min": min(body_heights) if body_heights else None,
+            "max": max(body_heights) if body_heights else None,
+        },
         "error_callbacks_end": int(rows[-1]["error_callbacks"]),
         "motors": {},
     }

@@ -83,6 +83,7 @@ Stand가 끝난 뒤 아래를 원본 그대로 보존한다.
 - 사용자가 누른 조이스틱 버튼 순서와 화면에 보인 mode 이름.
 - 전면 LED 영상 또는 사진.
 - 시작·최고·종료 온도와 `reserve[0]`, kp/kd 전환 시각.
+- `SportModeState.body_height`의 유효 표본 수·평균·모집단 표준편차·최소·최대. 이 값은 SDK 추정값이며 바닥에서 자로 잰 몸 중심 높이와 별도로 기록한다.
 
 CSV 요약은 다음 명령으로 만들고 원본과 같이 둔다. 요약기는 숫자를 모을 뿐 안전 합격을 자동 판정하지 않는다.
 
@@ -91,6 +92,8 @@ python3 summarize_monitor.py \
   /home/nvidia/go2_diag/records/20261118-cold-damping/monitor.csv \
   /home/nvidia/go2_diag/records/20261118-cold-damping/summary.json
 ```
+
+요약 JSON의 `body_height_m`에는 유효 표본 수와 평균·모집단 표준편차·최소·최대가, `sport_mode_counts`와 `gait_type_counts`에는 기록 중 mode 분포가 들어간다.
 
 ## 실행 뒤 판정하지 말아야 할 것
 

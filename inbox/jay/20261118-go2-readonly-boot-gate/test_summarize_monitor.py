@@ -4,7 +4,7 @@ import unittest
 from summarize_monitor import JOINTS, summarize
 
 
-def row(sample, temp_fr, temp_fl, reserve_fr, kp):
+def row(sample, temp_fr, temp_fl, reserve_fr, kp, body_height="0.33"):
     value = {
         "sample": str(sample),
         "t_s": str(sample * 0.02),
@@ -17,6 +17,9 @@ def row(sample, temp_fr, temp_fl, reserve_fr, kp):
         "sport_age_ms": "4.0",
         "soc_pct": "81",
         "sport_error_code": "1001",
+        "sport_mode": "0",
+        "gait_type": "0",
+        "body_height": body_height,
     }
     for joint in JOINTS:
         value[f"temp_{joint}"] = str(
@@ -48,6 +51,20 @@ class SummarizeMonitorTest(unittest.TestCase):
     def test_rejects_empty_input(self):
         with self.assertRaisesRegex(ValueError, "no data rows"):
             summarize([])
+
+    def test_reports_finite_body_height_distribution(self):
+        summary = summarize([
+            row(0, 40, 41, 0, 1, "0.31"),
+            row(1, 40, 41, 0, 1, "nan"),
+            row(2, 40, 41, 0, 1, "0.35"),
+        ])
+        self.assertEqual(summary["body_height_m"]["samples"], 2)
+        self.assertAlmostEqual(summary["body_height_m"]["mean"], 0.33)
+        self.assertAlmostEqual(summary["body_height_m"]["population_stddev"], 0.02)
+        self.assertEqual(summary["body_height_m"]["min"], 0.31)
+        self.assertEqual(summary["body_height_m"]["max"], 0.35)
+        self.assertEqual(summary["sport_mode_counts"], {"0": 3})
+        self.assertEqual(summary["gait_type_counts"], {"0": 3})
 
 
 if __name__ == "__main__":
