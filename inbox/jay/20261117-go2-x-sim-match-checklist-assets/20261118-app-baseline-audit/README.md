@@ -27,9 +27,13 @@
 | D435i | `8086:0b3a`, Jetson USB tree `5000M` |
 | system packages | 당일 apt/dpkg 설치 기록 없음. Docker 없음 |
 
+`5000M`은 이 조회 시점에 D435i와 Jetson 사이 USB link가 5,000 Mbit/s SuperSpeed로 협상됐다는 뜻이다. 기존 업체 젠더가 항상 이 속도를 유지한다거나 장시간 reset이 없다는 뜻은 아니다. 과거에는 같은 실기 구성 점검 중 `480M` fallback과 SuperSpeed disconnect가 있었고, 180초 기록에는 D435i frame number `287→0` reset과 약 1초 공통 정지가 있었다. 따라서 사용자가 새로 구입한 C-to-A 젠더는 불필요해진 것이 아니다. 기존 젠더와 신규 젠더를 A/B/C로 구분해 재연결·5분·30분 안정성을 비교해야 운영 부품을 확정할 수 있다.
+
 APP의 설치본에는 ONNX, PT, `contract.json`, 배포 YAML이 없다. 따라서 정본 3 보행 정책은 설치·실행되지 않았다. APP의 depth 코드는 ROS metric depth를 사람이 보는 색상 JPEG로 축소하는 경로이며, 정책의 640×480→60×60·10 Hz 전처리가 아니다. 현재 APP 경로를 정책 입력 parity의 근거로 쓰면 안 된다.
 
 현재 `/lowcmd`에는 bare DDS publisher 1개와 subscriber 1개가 보인다. APP 프로세스와 TCP 9539 listener는 없으며, APP 로그에도 `LowCmd` 송신 증거가 없다. 이 publisher는 순정 로봇 내부 명령 스트림으로 취급하되, 저수준 실험 전에는 source ownership을 별도로 검증한다.
+
+`foothold-robot.service`의 문제는 “현재 백그라운드에서 움직이고 있다”가 아니다. 현재는 r5 `launch.py`가 없어 failed 상태이고 start-limit 뒤 저절로 다시 실행되지 않으므로, 재부팅·service 수동 시작·r5 복구가 없다면 지금의 읽기 전용 측정을 방해하지 않는다. 문제는 서비스가 여전히 enabled라서 r5 파일이 완성된 뒤 다음 로그인/부팅에는 사용자 확인 없이 APP가 시작될 수 있다는 점이다. APP는 시작·연결 끊김·output stall 때 안전 동작으로 고수준 `StopMove`를 호출하므로 순정 조이스틱, 측정 자세, 장래 저수준 정책과 command ownership이 겹칠 수 있고 실험 원인 분리를 깨뜨린다. 비활성화는 APP 파일이나 수동 실행 기능을 지우지 않지만, 팀원의 자동접속 검증에는 영향을 주므로 사용자와 팀원의 운용 의도를 확인한 뒤 적용한다.
 
 ## D435i 내부값 재확인
 

@@ -3,7 +3,7 @@
 > 근거: 20261117 현장 인수 기록 · 20261117 sim-match checklist · 정본 3 contract · foothold-app main README
 > 목표: 현재 개체의 하드웨어·센서·통신·안전 상태를 증거로 확정하고, Depth/LiDAR/SLAM을 눈과 데이터로 검증한 뒤 정본 3 ONNX 저수준 정책과 `foothold-app` 실기 연결까지 단계적으로 진행한다.
 > 상태: 냉각·재부팅 뒤 read-only monitor와 Classic 좌·우 주행에서 열 사건 미재발 · 카메라 35° 유지성 통과 · HDMI 없는 1080p 정상 전원 사이클 2회 통과 · 업체 공식 열 판정과 D435i 1초 reset 원인은 대기
-> 판: v1.1
+> 판: v1.2
 
 # Go2 X 실기 commissioning 작업목록
 
@@ -23,8 +23,8 @@
 | 개체/컴퓨팅 보드 | [x] | `NVIDIA Jetson Orin NX 16GB - AVerMedia NX215B`, Ubuntu 22.04.5, L4T R36.4.7 | Go2 X 명칭은 업체 전달값이라 본체/펌웨어 식별값이 나오면 보강 |
 | 유선 관리망 | [x] | ai-lt01 `192.168.50.1` ↔ Jetson `192.168.50.2`, SSH key·22/tcp·4000/tcp 성공, 자동연결 manual profile | 재부팅 뒤 Wi-Fi 없이 SSH/NoMachine 1회 재확인 |
 | 내부망 | [x] | Jetson `enP8p1s0=192.168.123.99/24` ↔ Go2 `192.168.123.161`, 1 Gb/s full duplex | firmware/network reset 뒤 절대 불변을 뜻하지 않음 |
-| NoMachine | [~] | NVIDIA custom EDID 적용 뒤 물리 HDMI disconnected 상태 재부팅 1회에서 1920×1080@60, GDM/GNOME, NoMachine 통과 | 다음 정상 전원 사이클 1회 반복과 RViz/OpenGL renderer 확인 뒤 완료 |
-| D435i 정체·USB | [~] | D435i, USB ID `8086:0b3a`, firmware 5.17.0.10, Jetson에서 5000M와 영상 수신 | 새 젠더 비교·장시간 재연결/프레임 drop/CPU·온도 |
+| NoMachine | [~] | NVIDIA custom EDID 적용 뒤 물리 HDMI disconnected 정상 전원 사이클 2회에서 1920×1080@60, GDM/GNOME, NoMachine 통과 | RViz/OpenGL renderer 확인 뒤 완료 |
+| D435i 정체·USB | [~] | D435i, USB ID `8086:0b3a`, firmware 5.17.0.10, 현재 조회에서 5000M와 영상 수신 | `5000M`은 순간 link 상태일 뿐. 새 젠더 A/B/C·장시간 재연결/프레임 reset/CPU·온도 비교 필요 |
 | D435i 영상 | [~] | depth 640×480 약 30 fps. 최종 Classic 180초 5,365프레임·평균 29.81 fps·무효/범위 밖 11.18% | 약 10초에 DDS/Depth 공통 1초 정지와 frame number 287→0 reset 1회. color/aligned GUI·계단 앞·30분 안정성 필요 |
 | D435i IMU | [~] | 격리 RSUSB에서 gyro 약 200 Hz, accel 약 100 Hz; 상대각 3회 기록 | 시스템 기본 V4L2는 HID 실패. 운영 wrapper·장시간 안정성 필요 |
 | 카메라 위치 | [x] | 몸 중심 기준 약 `(x,y,z)=(+0.350,0,+0.070) m`, 시뮬보다 10 cm 앞·5 cm 낮음 | 각도 조정 시 x/z 재확인 |
@@ -86,6 +86,10 @@
   - depth/color 실제 fps, forward frame gap뿐 아니라 frame number 감소/reset, 40/100/500 ms 초과 간격, USB reset/disconnect.
   - gyro/accel rate, NaN/정지 구간, CPU·메모리·Jetson 온도.
   - 원본과 정책용 60×60·10 Hz·0.2~3.0 m clip·무효=max 전처리 결과를 함께 저장.
+- [ ] 정책용 전처리를 별도 정본 구현으로 만든다. 현재 Jetson APP의 depth JPEG 변환은 이 전처리가 아니다.
+  - 실측 640×480 intrinsics에서 시뮬 60×60 `fx=55.9`, `fy=54.1`에 맞도록 약 0.1444배 축소한 뒤 가운데 60×60 crop하는 후보를 정확한 반올림·보간법까지 고정한다.
+  - 30 Hz 원본에서 device timestamp를 기준으로 10 Hz frame을 선택하고, 0.1초 관측 지연·0.2~3.0 m clip·0/무효=max 규칙을 contract와 함께 검증한다.
+  - 원본, resize 중간판, crop 60×60, 정규화 입력을 같은 frame number/timestamp로 저장해 시뮬 재투영과 픽셀 단위 대조한다.
 - [ ] 평지뿐 아니라 계단 앞에서 zero/범위 밖 비율과 가까운 단차 표현을 저장한다.
 - [x] D435i↔Go2 상대각 실시간 도구로 몸통 기준 35°를 맞추고 브라켓을 재체결했다.
   - [x] 최종 체결 직후 독립 3회 평균 35.068°·표준편차 0.004°.
@@ -158,6 +162,8 @@
   - command lease, heartbeat, STOP latch, ownership, stale timeout.
   - sim/real source 표시와 절대 혼동 방지.
 - [ ] 처음에는 상태·영상·지도 receive-only adapter만 연결한다.
+- [ ] APP의 D435i 경로에 원본 depth 메타데이터와 검증된 정책 전처리 결과를 추가한다. 화면용 색상 JPEG만으로 map_on 정책 입력을 대신하지 않는다.
+- [ ] APP에서 `map_off`/`map_on`, 순정 고수준 Sport, 저수준 정책을 서로 다른 명시적 mode와 ownership lease로 분리하고 현재 owner를 UI와 Jetson log에 모두 표시한다.
 - [ ] 앱 STOP은 UI 응답이 아니라 Jetson gateway의 명령 0/잠금과 로봇의 실제 정지까지 각각 검증한다.
 - [ ] 실기 수동 고수준 조종과 저수준 ONNX 제어를 별도 mode로 분리하고 동시에 활성화하지 않는다.
 - [ ] SLAM 지도 저장/목록/재열기부터 연결하고 Nav2 자동 이동은 마지막 별도 관문으로 둔다.
@@ -166,13 +172,43 @@
 
 ## 3. 현재 중단점에서 이어서 할 실제 순서
 
-1. NVIDIA custom EDID는 HDMI 없는 정상 전원 사이클 2회를 통과했다. RViz/OpenGL 실제 표시만 P3에서 확인하고 설정은 유지한다.
-2. 새 C-to-A 젠더 두 개와 기존 젠더를 A/B/C로 표시해 동일 포트·케이블에서 5회 재연결+후보당 5분 시험하고 운영 젠더 하나를 고른다.
-3. 선택 젠더로 D435i RGB, depth colormap, aligned overlay를 GUI에서 눈으로 확인한다. 이때 카메라 브라켓은 조정하지 않는다.
-4. D435i depth/color/IMU와 Go2 DDS age를 30분 동시 기록해 180초 기록의 frame `287→0`·약 1초 공통 정지가 재현되는지 확인한다.
-5. 평지와 계단 앞에서 원본 depth와 정책용 60×60·10 Hz 전처리 결과, zero/범위 밖 비율을 저장한다.
-6. L2 PointCloud/TF를 RViz에 띄워 실제 교실 방향·바닥·벽·움직이는 사람과 10분 rate/packet loss를 확인한다.
-7. 그다음에만 SLAM 폐곡선·지도 저장/재로딩으로 간다. 저수준 ONNX는 계속 shadow 이전 단계에 둔다.
+### 우선순위 0 · 현재 기준선과 command ownership 고정
+
+1. Go2는 사용자가 바꾸기 전까지 순정 앉기 상태를 유지한다. 현재 failed/no process인 APP service와 포트 9539를 재확인한다.
+2. 팀원에게 r5 설치 중단 원인, 자동실행 의도, APP가 호출한 `StopMove`, 조이스틱과의 ownership 설계를 확인한다.
+3. 읽기 전용 측정 기간에는 service를 비활성화할지 사용자·팀원 합의로 결정한다. 현재 상태에서는 재부팅·수동 start·r5 복구가 없으면 service가 스스로 살아나 측정을 방해하지 않는다.
+4. P0 열 사건 업체 판정 전에는 저수준 명령·정책 송신·새 APP 제어 시험을 하지 않는다.
+
+### 우선순위 1 · 시뮬 재투영에 직접 필요한 실측
+
+1. receive-only 온도·reserve·lowcmd 감시를 먼저 실행하고, 사용자가 순정 조이스틱으로 한 번만 Stand한다.
+2. 동일 Stand에서 카메라-몸통 상대각을 독립 5초씩 3회 재측정해 기존 35.068°/35.023°와 비교한다. 앉은 자세 35.225°는 drift 판정에 쓰지 않는다.
+3. Stand와 Classic에서 `SportModeState.position[2]` 등 SDK base 높이의 평균·표준편차를 기록하고, 바닥→몸 중심 실측 및 `카메라 높이 ≈ 몸 높이+0.07 m`와 대조한다.
+4. 카메라 `(x,y,z)≈(0.35,0,0.07)m`의 원점을 1 cm 단위로 재정의한다. 몸 중심이 IMU인지 `base_link`인지, depth optical origin이 렌즈 전면인지 센서 내부 원점인지 명시한다.
+5. 640×480 intrinsics와 depth scale은 재확인 완료. 정확한 640×480→약 0.1444배 resize→중앙 60×60 crop 후보를 코드·보간·반올림·무효값 규칙까지 고정하고 시뮬과 픽셀 parity를 본다.
+
+### 우선순위 2 · 시간·무효 깊이·정적 장면 원시자료
+
+1. depth frame number, device timestamp, timestamp domain, host 수신 monotonic/realtime timestamp를 함께 기록해 지연·jitter 분포와 30→10 Hz 선택 기준을 정한다.
+2. 기존 frame `287→0` 약 1초 사건을 포함하도록 Depth와 DDS state age를 30분 동시 기록하고 reset 전후 30초 원시 구간을 분리한다.
+3. 640×480과 정책 후보 60×60에서 무효/0.2~3.0 m 밖 픽셀의 누적 히트맵을 만든다.
+4. 순정 Stand로 (a) 평지, (b) 높이를 잰 턱, (c) 계단 첫 단 0.5 m·1.0 m에서 원본 depth를 각각 10초 저장하고 실제 높이·거리를 함께 기록한다.
+5. Go2 body IMU 갱신률·callback age와 D435i accel timestamp를 기록해 projected gravity와 카메라 IMU의 시간 어긋남을 추정한다.
+
+### 우선순위 3 · D435i 물리 연결과 장시간 운영 확정
+
+1. 기존 젠더와 가져온 새 C-to-A 젠더를 A/B/C로 표시한다. 동일 Jetson 포트·동일 C-to-C 케이블에서 후보별 5회 재연결과 5분 depth/color/IMU 시험을 한다.
+2. 매 연결마다 `5000M`을 확인한다. 한 번이라도 `480M`, disconnect, frame reset이 나오면 운영 후보에서 제외한다.
+3. 선택 젠더로 RGB, depth colormap, aligned overlay, 중앙 주점과 영상 방향을 GUI에서 확인한다.
+4. 선택 경로에서 30분 안정성, CPU·메모리·Jetson 온도와 D435i reset을 측정한다. 새 젠더를 샀다는 사실이나 한 번의 `5000M`만으로 통과 처리하지 않는다.
+
+### 우선순위 4 · LiDAR·SLAM·APP·정책
+
+1. L2 PointCloud/TF를 RViz에서 실제 교실과 대조하고 10분 rate/point count/packet loss/timestamp를 기록한다.
+2. 순정 Classic 저속 폐곡선으로 SLAM 지도·odom·TF·loop closure를 확인하고 저장·재로딩한다.
+3. APP receive-only adapter에 body/joint/BMS/fault, RGB/depth, L2 cloud, odom/TF/map을 연결한다. 화면용 JPEG와 정책용 depth tensor를 분리한다.
+4. Jetson ONNX runtime을 고른 뒤 정본 test vector offline parity→50 Hz publisher 없는 shadow mode→watchdog fault injection 순서로 진행한다.
+5. 업체 열 안전 판정·조이스틱 E-stop·2인 매달기 관문 뒤에만 저수준 관절 확인→평지 `map_off`를 시험한다. 실측 전처리와 재투영/fine-tune이 검증된 뒤에만 `map_on`을 검토한다.
 
 ## 4. 정본과 증거 위치
 
@@ -190,5 +226,6 @@
 
 | 판 | 날짜 | 내용 |
 |---|---|---|
+| v1.2 | 2026-11-18 | 팀원 APP 자동실행의 현재/잠재 영향 분리 · `5000M` 순간 협상과 젠더 안정성 통과 구분 · 시뮬 lead 실측, timestamp/무효 depth/정적 장면, A/B/C, LiDAR/SLAM/APP/정책을 우선순위 0~4로 재정렬 · 정책용 60×60 전처리를 APP 필수 후속으로 명시 |
 | v1.1 | 2026-11-18 | 냉각 뒤 Classic 주행 안전 표본과 카메라 35° 유지성 반영 · HDMI 없는 부팅 root cause/custom EDID 적용·rollback·첫 재부팅 통과 · C-to-A A/B/C 선별과 frame reset 계수 · 현재 후속 순서 갱신 |
 | v1.0 | 2026-11-18 | 완료·부분 완료·미완료 감사, P0 열 안전부터 P7 foothold-app 실기 연결까지 단계별 관문, 다음 전원 투입 read-only 묶음 작성 |
