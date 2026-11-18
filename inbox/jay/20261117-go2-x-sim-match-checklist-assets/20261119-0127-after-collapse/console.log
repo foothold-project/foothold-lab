@@ -1,0 +1,11 @@
+t=0.0s soc=16% FR_hip=35C FL_hip=35C max=71C(RR_hip) reserve0_nonzero=1 kp_max=0.0 kd_max=3.0 sport_marker=1001 state_age_ms=1.2 cmd_age_ms=0.3 state_cb=20 cmd_cb=15 errorlist_messages=0
+t=1.0s soc=16% FR_hip=35C FL_hip=35C max=71C(RR_hip) reserve0_nonzero=1 kp_max=0.0 kd_max=3.0 sport_marker=1001 state_age_ms=0.9 cmd_age_ms=0.3 state_cb=520 cmd_cb=512 errorlist_messages=0
+t=2.0s soc=16% FR_hip=35C FL_hip=35C max=71C(RR_hip) reserve0_nonzero=1 kp_max=0.0 kd_max=3.0 sport_marker=1001 state_age_ms=1.0 cmd_age_ms=0.4 state_cb=1020 cmd_cb=1010 errorlist_messages=0
+t=3.0s soc=16% FR_hip=35C FL_hip=35C max=71C(RR_hip) reserve0_nonzero=1 kp_max=0.0 kd_max=3.0 sport_marker=1001 state_age_ms=1.3 cmd_age_ms=0.5 state_cb=1520 cmd_cb=1508 errorlist_messages=0
+t=4.0s soc=16% FR_hip=35C FL_hip=35C max=71C(RR_hip) reserve0_nonzero=1 kp_max=0.0 kd_max=3.0 sport_marker=1001 state_age_ms=1.2 cmd_age_ms=0.5 state_cb=2018 cmd_cb=2008 errorlist_messages=0
+t=5.0s soc=16% FR_hip=35C FL_hip=35C max=71C(RR_hip) reserve0_nonzero=1 kp_max=0.0 kd_max=3.0 sport_marker=1001 state_age_ms=1.2 cmd_age_ms=0.6 state_cb=2518 cmd_cb=2508 errorlist_messages=0
+t=6.0s soc=16% FR_hip=35C FL_hip=35C max=71C(RR_hip) reserve0_nonzero=1 kp_max=0.0 kd_max=3.0 sport_marker=1001 state_age_ms=1.2 cmd_age_ms=0.6 state_cb=3018 cmd_cb=3008 errorlist_messages=0
+t=7.0s soc=16% FR_hip=35C FL_hip=35C max=71C(RR_hip) reserve0_nonzero=1 kp_max=0.0 kd_max=3.0 sport_marker=1001 state_age_ms=1.4 cmd_age_ms=0.5 state_cb=3518 cmd_cb=3508 errorlist_messages=0
+t=8.0s soc=16% FR_hip=35C FL_hip=35C max=71C(RR_hip) reserve0_nonzero=1 kp_max=0.0 kd_max=3.0 sport_marker=1001 state_age_ms=1.5 cmd_age_ms=0.6 state_cb=4018 cmd_cb=4008 errorlist_messages=0
+t=9.0s soc=16% FR_hip=35C FL_hip=35C max=71C(RR_hip) reserve0_nonzero=1 kp_max=0.0 kd_max=3.0 sport_marker=1001 state_age_ms=1.0 cmd_age_ms=0.6 state_cb=4518 cmd_cb=4508 errorlist_messages=0
+samples=500 state_callbacks=5018 cmd_callbacks=5008 sport_callbacks=3003 error_callbacks=0 output=/home/nvidia/go2_diag/records/20261119-0127-after-collapse/monitor.csv
