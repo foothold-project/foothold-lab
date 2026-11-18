@@ -25,10 +25,10 @@
 | 내부망 | [x] | Jetson `enP8p1s0=192.168.123.99/24` ↔ Go2 `192.168.123.161`, 1 Gb/s full duplex | firmware/network reset 뒤 절대 불변을 뜻하지 않음 |
 | NoMachine | [~] | Wi-Fi·유선 접속, HDMI를 실행 중 분리해도 정상 | HDMI 없이 부팅하면 640×480. headless 1920×1080 고정 미완료 |
 | D435i 정체·USB | [~] | D435i, USB ID `8086:0b3a`, firmware 5.17.0.10, Jetson에서 5000M와 영상 수신 | 새 젠더 비교·장시간 재연결/프레임 drop/CPU·온도 |
-| D435i 영상 | [x] | depth 640×480 약 30 fps, Classic 60초 1,799프레임·번호 누락 0·40 ms 초과 0, 무효/범위 밖 평균 11.30% | color/aligned depth와 GUI 시각 확인, 계단 앞 무효 비율 |
+| D435i 영상 | [~] | depth 640×480 약 30 fps. 최종 Classic 180초 5,365프레임·평균 29.81 fps·무효/범위 밖 11.18% | 약 10초에 DDS/Depth 공통 1초 정지와 frame number 287→0 reset 1회. color/aligned GUI·계단 앞·30분 안정성 필요 |
 | D435i IMU | [~] | 격리 RSUSB에서 gyro 약 200 Hz, accel 약 100 Hz; 상대각 3회 기록 | 시스템 기본 V4L2는 HID 실패. 운영 wrapper·장시간 안정성 필요 |
 | 카메라 위치 | [x] | 몸 중심 기준 약 `(x,y,z)=(+0.350,0,+0.070) m`, 시뮬보다 10 cm 앞·5 cm 낮음 | 각도 조정 시 x/z 재확인 |
-| 카메라 각 | [~] | 바닥 평면 보정 직후 34.81°, D435i↔Go2 IMU 상대각 3회 평균 33.262°·표준편차 0.095° | 안전 관문 뒤 약 1.7° 하향 조정 여부 결정·재측정 |
+| 카메라 각 | [x] | 최종 체결 직후 35.068°·표준편차 0.004°, Classic 좌·우 ㅁ자 주행 뒤 35.023°·표준편차 0.023°, 전후 -0.045° | 몸통 기준 35°와 이 주행 범위의 브라켓 단기 유지성 통과. 장기 반복·충격 뒤 재확인 |
 | Go2 body IMU/관절/BMS | [x] | native DDS와 receive-only ROS 변환으로 값·수신률 확인, 정지/보행 60초 통계 기록 | 순정 Stand 열 사건 원인과 안전 한계 확정 |
 | LiDAR 모델·상태 | [x] | L2 운용 판정: cloud 약 62k, 15.35~15.38 Hz, IMU 약 250 Hz, packet loss 0 | 본체 라벨 식별 보강은 선택; PointCloud/TF 시각 검증은 별도 |
 | LiDAR 눈 확인 | [ ] | `/utlidar/cloud`와 변환 publish 존재만 확인 | RViz에서 실제 3D 점군·방향·TF·움직임 확인 |
@@ -50,6 +50,7 @@
   - 첫 Stand lowcmd `kp=1`, 재진입 뒤 `kp=100`, `kd=5`; 앞 hip PD torque proxy 약 ±9.1 Nm.
   - `SportModeState.error_code=1001`은 공식 SDK의 Damp API ID이며 고장 코드로 보지 않음.
 - [ ] 다음 전원 투입은 Damping 상태로만 시작하고, 읽기 전용 온도·reserve·LED·lowcmd 감시를 먼저 실행한다.
+  - 준비된 source와 실행법: [`20261118-go2-readonly-boot-gate/`](20261118-go2-readonly-boot-gate/README.md). Jetson SDK build와 5초 receive-only smoke run까지 통과했다.
 - [ ] 조이스틱의 정확한 Damping→Stand 버튼 순서와 앱/조이스틱 모드 표시를 기록하고 짧은 전환 1회만 수행한다.
 - [ ] 아래 중 하나면 즉시 Damping/전원 종료하고 업체 판단 전 중단한다: 적색 점멸, `0x04` 재발, 앞 hip 급상승, 예상하지 않은 고이득 지속, 비정상 자세/소리.
 
@@ -81,11 +82,10 @@
   - gyro/accel rate, NaN/정지 구간, CPU·메모리·Jetson 온도.
   - 원본과 정책용 60×60·10 Hz·0.2~3.0 m clip·무효=max 전처리 결과를 함께 저장.
 - [ ] 평지뿐 아니라 계단 앞에서 zero/범위 밖 비율과 가까운 단차 표현을 저장한다.
-- [ ] P0 통과 뒤 상대각 33.262°를 근거로 브라켓을 약 1.7° 더 내릴지 결정한다. 조정하면:
-  - witness mark를 남긴다.
-  - 몸 기준 x/y/z를 다시 잰다.
-  - D435i↔Go2 상대각 3회와 바닥 평면을 모두 다시 측정한다.
-  - 짧은 순정 주행 전후 상대각 유지 여부를 확인한다.
+- [x] D435i↔Go2 상대각 실시간 도구로 몸통 기준 35°를 맞추고 브라켓을 재체결했다.
+  - [x] 최종 체결 직후 독립 3회 평균 35.068°·표준편차 0.004°.
+  - [x] Classic 좌·우 ㅁ자 주행 뒤 3회 평균 35.023°·표준편차 0.023°, 전후 변화 -0.045°.
+  - [ ] 장기 반복·충격 뒤 witness mark와 상대각을 재확인하고 몸 기준 x/y/z 정밀값을 갱신한다.
 
 통과 기준: 선택한 물리 연결과 wrapper에서 영상+IMU가 장시간 안정적이고, 사람이 보는 GUI와 저장 통계가 일치하며, 실측 extrinsic/intrinsics/preprocess가 정본 문서에 고정된다.
 
