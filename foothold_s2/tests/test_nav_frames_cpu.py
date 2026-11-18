@@ -149,6 +149,22 @@ def test_shape_decay_off_keeps_the_scale_at_one():
     assert t.shape_scale == 1.0 and s["nv_shape_scale"] == 1.0
 
 
+def _level2_shape(all_levels):
+    t = _task(0.0)
+    t.shape_w = 5.0; t.shape_all_levels = all_levels
+    t.step(_st(t._pos_prev.copy(), [[0.5, 0, 0]] * 2))
+    t.pgcl[1].level = 2
+    out = t.step(_st(np.stack([_along(t, 0, 0.1), _along(t, 1, 0.1)]), [[0.5, 0, 0]] * 2))
+    return out["terms"]["r_shape"]
+
+
+def test_shape_levels_all_gives_level2_envs_the_approach_reward_and_default_does_not():
+    off = _level2_shape(False)
+    on = _level2_shape(True)
+    assert off[1] == 0.0 and off[0] > 0.0                       # default 1: level 2 env reads 0, level 1 env pays
+    assert on[1] > 0.0 and np.isclose(on[0], off[0])            # all: level 2 pays too, level 1 unchanged
+
+
 def _near_first_subgoal(t, d):
     """각 env 의 지금 부목표에서 +x 로 d m 떨어진 위치."""
     return np.stack([np.asarray(t.pgcl[i].target.point, float) + [d, 0.0] for i in range(2)])

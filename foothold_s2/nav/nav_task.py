@@ -75,6 +75,7 @@ class NavTask:
         # shape_w 0 (기본) = 끔. 수준 2 이상 env 는 0. 수준 2 이상 env 비율이 shape_start_frac 을 넘으면 (회차 평균) 그 뒤 shape_decay_iters 회에 걸쳐 w 가 0 으로.
         self.shape_w, self.shape_clip, self.shape_start_frac, self.shape_decay_iters = 0.0, 0.5, 0.10, 100
         self.shape_scale, self._shape_decay_on, self._tail = 1.0, False, {}
+        self.shape_all_levels = False      # True (--shape-levels all) = 수준 2 이상 env 에도 r_shape (기본 False = 수준 1 만, 지금과 같음)
         self.shape_decay = True            # False (--shape-decay off) = 배율 1.0 고정 (감쇠 안 함 · 기본 True = 지금과 같음)
         self.redraw_on_fall = False       # True = 넘어진 뒤 (과제를 못 끝냄) 에도 표에서 새 과제 · False (기본, 논문 IV-C2) = 같은 과제 유지: 새 과제는 PGCL 이 요청할 때만
         self.tick_s = None                # 상위 틱 한 번의 초 (hold x step_dt). 호출한 쪽이 넣는다. None = 에피소드 길이는 틱 수로만
@@ -429,11 +430,11 @@ class NavTask:
         return float(np.linalg.norm(np.asarray(xy, float) - pts[min(k, len(pts) - 1)]) + tail[min(k, len(pts) - 1)])
 
     def _shape_reward(self, pos_xy, i_now) -> np.ndarray:
-        """w x (앞 틱 - 지금 남은 길이). 둘 다 지금 부목표 번호로 재서 부목표를 넘는 틱에도 값이 안 튄다. 첫 틱 (앞 위치 없음) 0, 수준 2 이상 env 0."""
+        """w x (앞 틱 - 지금 남은 길이). 둘 다 지금 부목표 번호로 재서 부목표를 넘는 틱에도 값이 안 튄다. 첫 틱 (앞 위치 없음) 0, 수준 2 이상 env 0 (shape_all_levels 가 True 이면 수준 2 이상도 같은 식)."""
         out = np.zeros(self.n)
         prev = self._pos_prev
         for i in range(self.n):
-            if self.pgcl[i].level >= 2 or not self.pgcl[i]._sub or np.isnan(prev[i, 0]):
+            if (self.pgcl[i].level >= 2 and not self.shape_all_levels) or not self.pgcl[i]._sub or np.isnan(prev[i, 0]):
                 continue
             out[i] = self._remaining(i, prev[i], int(i_now[i])) - self._remaining(i, pos_xy[i], int(i_now[i]))
         return np.clip(self.shape_w * out, -self.shape_clip, self.shape_clip) * self.shape_scale
