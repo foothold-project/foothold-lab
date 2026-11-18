@@ -803,6 +803,8 @@ def prepare_terrain_cfg(env_cfg,plan,*,initial_policy=None,initial_level_cap=Non
         params.update(x_progress_kinds=promotion['x_progress_kinds'],x_progress_fraction=promotion['x_progress_fraction'],
                       x_progress_forward_only=promotion['forward_only'])
         env_cfg.commands.base_velocity.track_x_progress=True
+        print(f"EX42_X_PROMOTION where=start kinds={len(promotion['x_progress_kinds'])} fraction={promotion['x_progress_fraction']} "
+              f"forward_only={promotion['forward_only']}",flush=True)       # the first-update check reads this line (only a plan with the cell prints it)
     env_cfg.curriculum.terrain_levels=CurriculumTermCfg(func=ex41_terrain_levels,params=params)
     return {'policy':initial_policy or 'fixed_l02','max_init_terrain_level':2,
             'promotion_enabled':initial_policy=='performance',
@@ -823,6 +825,9 @@ def x_progress_rule(env,terrain,term,ids,kinds,fraction,forward_only):
     if unknown or getattr(term,'max_x',None) is None:
         raise ValueError(f'EX-41 terrain_promotion kinds not in the mesh {unknown} or the command term does not track x progress')
     member=torch.as_tensor([name in kinds for name in names],dtype=torch.bool,device=terrain.terrain_types.device)
+    if not getattr(x_progress_rule,'_announced',False):
+        x_progress_rule._announced=True
+        print(f"EX42_X_PROMOTION where=first_judged columns={int(member.sum())}/{len(names)} kinds={len(kinds)}",flush=True)
     return {'progress_x':term.max_x[ids],'x_mask':member[terrain.terrain_types[ids].long()].to(term.max_x.device),
             'x_fraction':fraction,'forward_only':forward_only}
 
