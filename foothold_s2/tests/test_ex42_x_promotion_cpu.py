@@ -128,7 +128,7 @@ def test_the_runtime_mask_follows_the_column_of_each_env_and_refuses_what_it_can
 
 def test_default_off_in_the_sources():
     text = (ROOT / "foothold_s2/commands/mixed_command.py").read_text(encoding="utf-8")
-    assert "track_x_progress: bool = False" in text and "if cfg.track_x_progress else None" in text
+    assert "track_x_progress: bool = False" in text and "if getattr(cfg, \"track_x_progress\", False) else None" in text
     assert "        if self.max_x is not None:\n            self.max_x = torch.maximum(" in text                 # nothing extra is computed when off
     entry = (ROOT / "foothold_s2/scripts/ex42_training_entry.py").read_text(encoding="utf-8")
     assert "x_progress" not in entry and entry.count("terrain_promotion") == 4                                # the training entry only carries the plan cell through the stage-zero view (the stage start path)

@@ -67,7 +67,7 @@ class MixedVelocityCommand(CommandTerm):
 
         self.start_xy = torch.zeros(n, 2, device=dev)
         self.max_dist = torch.zeros(n, device=dev)
-        self.max_x = torch.zeros(n, device=dev) if cfg.track_x_progress else None    # 진행 축 x 최대 이동 (듬성 종류 승급 규칙용 · 기본 꺼짐: None)
+        self.max_x = torch.zeros(n, device=dev) if getattr(cfg, "track_x_progress", False) else None    # 진행 축 x 최대 이동 (듬성 종류 승급 규칙용 · 기본 꺼짐: None)
         self.cmd_sum_xy = torch.zeros(n, 2, device=dev)
         self.cmd_sum_w = torch.zeros(n, 2, device=dev)       # J-T10: 세계 좌표 기대 변위 합 R(yaw_t) · 명령 (매 스텝 실제 yaw). 기본은 판정에 안 쓰고 병행 기록만
         self.frame_stats = curriculum_rules.FrameCompareStats()
