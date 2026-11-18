@@ -8,6 +8,12 @@ import sys
 
 from foothold_s2.eval.ex42_mapfit_record import Recorder
 
+if os.environ.get("MAPFIT_NO_DEPTH_AUG") == "1":
+    # 잡음 없는 깊이로 기록 (B2a 가르기 ④): start_obs 가 부르는 augment 를 normalize 만 하는 것으로 바꾼다 (start_obs 는 Kit 이 뜬 뒤에 import 되므로 depth_aug 쪽을 먼저 바꿔 둔다).
+    from foothold_s2.sensors import depth_aug
+
+    depth_aug.augment = lambda depth_m, cfg, generator=None: depth_aug.normalize(depth_m)
+
 recorder = Recorder()
 recorder.install()
 _real_exit = os._exit
