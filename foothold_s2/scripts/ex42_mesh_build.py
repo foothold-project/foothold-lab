@@ -227,6 +227,8 @@ def build_parser(app_launcher: Any | None = None) -> argparse.ArgumentParser:
     parser.add_argument("--family", action="append", choices=SUPPORTED_FAMILIES,
                         help="repeatable; default A B C D E; F jump terrain is opt-in")
     parser.add_argument("--seed", type=int, default=42)
+    parser.add_argument("--easy_stone_low", action="store_true",
+                        help="family A: stepping_stones_low rows 0/1/2 get the easy gap x table of start_go2_v2 (off by default)")
     if app_launcher is None:
         parser.add_argument("--device", default="cuda:1")
         parser.add_argument("--headless", action="store_true", default=True)
@@ -241,6 +243,9 @@ def main(argv: list[str] | None = None) -> int:
 
     args, _ = build_parser(AppLauncher).parse_known_args(argv)
     families = args.family or list(ALL_FAMILIES)
+    if args.easy_stone_low:
+        from foothold_s2.terrains import start_go2_v2
+        start_go2_v2.set_easy_stone_low(True)
     app = AppLauncher(args).app
     code = 0
     try:
