@@ -50,7 +50,7 @@ def test_shipped_stage_mesh_selection_is_explicit_and_e1f_keeps_common_path():
     d = yaml.safe_load(launcher.PLAN.read_text())
     for stage in STAGES:
         row = next(r for r in d['stages'] if r['id'] == stage)
-        assert row['training_mesh_profile'] == 'e2_named_flags_v2'
+        assert row['training_mesh_profile'] == 'e2_easy10_edge'     # one mesh for E2 to E6b (lead 11/19 01:1x)
     assert 'training_mesh_profile' not in next(r for r in d['stages'] if r['id'] == 'E1F')
 
 

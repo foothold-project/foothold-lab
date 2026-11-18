@@ -20,7 +20,7 @@ Pure python + torch; Kit only supplies the terrain object.
 """
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, Mapping
 
 
 def exposure_by_column(plan_terrain: dict[str, Any], table: list[dict[str, Any]],
@@ -104,6 +104,44 @@ def raise_continuous_cap(plan_terrain: dict[str, Any], stage_id: str, boundary_i
     cap = min(cell["start"] + cell["step_per_boundary"] * raises, cell["end"])
     positive = [dict(rule, level_cap=cap) if i == hits[0] else rule for i, rule in enumerate(rules)]
     return {**plan_terrain, f"exposure_at_{stage_id}": {**block, "positive": positive}}, cap
+
+
+def raise_kind_caps(plan_terrain: dict[str, Any], stage_id: str, boundary_index: int,
+                    outcomes: list[Mapping[str, Any]] | None = None) -> tuple[dict[str, Any], list[dict[str, Any]]]:
+    """D axis (CG v0.18 draft E.12 `terrain_kind_level_cap`): the level cap of one named kind rises by `step_per_boundary` at a
+    boundary when that kind passed the window that ended there (`outcomes[b - 1][family/kind].first_window_pass`, the evidence
+    `ex42_kind_stage_judge.write_ladder_evidence` leaves, judged at the cap the kind was open at), up to `end`. The stage row carries
+
+        kind_level_cap: {end: 5, step_per_boundary: 1}
+
+    (a row without the cell is returned as is). Kinds at or above `end` and the continuous rule (its own L+ cell) never move; no
+    evidence for a kind is a hold, never a pass. Returns (terrain, one receipt per move: boundary, axis, kind, before, after).
+    The plan itself never changes between segments, so a continued segment keeps its plan SHA."""
+    cell = plan_terrain.get("kind_level_cap")
+    if cell is None:
+        return dict(plan_terrain), []
+    if type(boundary_index) is not int or boundary_index < 0:
+        raise ValueError("EX-42 kind level cap boundary count must be a nonnegative integer")
+    if not isinstance(cell, dict) or set(cell) != {"end", "step_per_boundary"} or any(type(v) is not int for v in cell.values()) \
+            or cell["end"] < 0 or cell["step_per_boundary"] < 1:
+        raise ValueError(f"EX-42 {stage_id} kind_level_cap needs integer end >= 0 and step_per_boundary >= 1")
+    block = plan_terrain.get(f"exposure_at_{stage_id}")
+    rules = block.get("positive") if isinstance(block, dict) else None
+    if not isinstance(rules, list):
+        raise ValueError(f"EX-42 {stage_id} kind_level_cap needs terrain.exposure_at_{stage_id}.positive")
+    outcomes = list(outcomes or [])
+    caps = {f"{r['family']}/{r['kind']}": int(r["level_cap"]) for r in rules if "kind" in r and "share" in r}
+    moves: list[dict[str, Any]] = []
+    for boundary in range(1, boundary_index + 1):
+        evidence = outcomes[boundary - 1] if boundary <= len(outcomes) else {}
+        for kind in caps:                                          # plan order, every passed kind moves at the same boundary
+            if caps[kind] < cell["end"] and evidence.get(kind, {}).get("first_window_pass") is True:
+                after = min(caps[kind] + cell["step_per_boundary"], cell["end"])
+                moves.append({"boundary": boundary, "axis": "terrain_kind_level_cap", "kind": kind,
+                              "before": caps[kind], "after": after, "because": "first_window_pass"})
+                caps[kind] = after
+    positive = [dict(r, level_cap=caps[f"{r['family']}/{r['kind']}"]) if "kind" in r and "share" in r else r for r in rules]
+    return {**plan_terrain, f"exposure_at_{stage_id}": {**block, "positive": positive}}, moves
 
 
 def column_shares(plan_terrain: dict[str, Any], table: list[dict[str, Any]], stage_id: str) -> list[float | None]:

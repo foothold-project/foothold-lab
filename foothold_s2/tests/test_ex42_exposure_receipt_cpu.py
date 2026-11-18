@@ -308,3 +308,53 @@ def test_swapping_the_kinds_of_an_open_and_a_closed_column_is_caught_by_the_mesh
     other = json.loads(json.dumps(body)); other["mesh_sha256"] = "0" * 64; other["sha256"] = er._sha(other)
     with pytest.raises(ValueError, match="mesh_sha256 differs"):
         er.recompute_from_plan(other, plan)
+
+
+# ---- D axis (terrain_kind_level_cap): a bundle kind that passed the window ending at a boundary gets its cap +1 ----
+PASS = {"first_window_pass": True, "target_level_reached": False}
+
+
+def _e2_terrain():
+    return er.plan_stage_terrain(EX42Plan.load(PLAN), "E2")
+
+
+def _caps(terrain, stage="E2"):
+    return {f"{r['family']}/{r['kind']}": r["level_cap"] for r in terrain[f"exposure_at_{stage}"]["positive"] if "kind" in r}
+
+
+def test_a_kind_that_passed_gets_its_cap_up_by_one_and_the_receipt_has_before_and_after():
+    from foothold_s2.terrains.ex42_exposure import raise_kind_caps
+    start = _e2_terrain()
+    assert set(_caps(start).values()) == {2}                                       # the bundle opens at cap 2 on K
+    moved, moves = raise_kind_caps(start, "E2", 2, [{"A/gaps": PASS, "B/gap": {"first_window_pass": False}}, {"A/gaps": PASS, "C/gap": PASS}])
+    assert _caps(moved) == {"A/gaps": 4, "B/gap": 2, "C/gap": 3, "B/beam": 2, "A/balance_beams": 2}
+    assert [(m["boundary"], m["kind"], m["before"], m["after"]) for m in moves] == [(1, "A/gaps", 2, 3), (2, "A/gaps", 3, 4), (2, "C/gap", 2, 3)]
+    assert all(m["axis"] == "terrain_kind_level_cap" and m["because"] == "first_window_pass" for m in moves)
+    assert _caps(start) == {k: 2 for k in _caps(start)}                            # the plan itself never changes
+
+
+def test_no_evidence_is_a_hold_and_the_cap_stops_at_end_and_the_continuous_rule_never_moves():
+    from foothold_s2.terrains.ex42_exposure import raise_kind_caps
+    start = _e2_terrain()
+    assert raise_kind_caps(start, "E2", 3, None)[1] == [] and raise_kind_caps(start, "E2", 0, [{"A/gaps": PASS}])[1] == []
+    moved, moves = raise_kind_caps(start, "E2", 5, [{"A/gaps": PASS}] * 5)
+    assert _caps(moved)["A/gaps"] == 5 and len(moves) == 3                         # 2 -> 5, then nothing more
+    continuous = [r for r in moved["exposure_at_E2"]["positive"] if "kinds_of" in r][0]
+    assert continuous["level_cap"] == 5
+    graduated = _e2_terrain(); no_cell = {k: v for k, v in graduated.items() if k != "kind_level_cap"}
+    assert raise_kind_caps(no_cell, "E2", 2, [{"A/gaps": PASS}] * 2)[1] == []      # a row without the cell is unchanged
+    with pytest.raises(ValueError, match="kind_level_cap"):
+        raise_kind_caps({**graduated, "kind_level_cap": {"end": 5}}, "E2", 1, [])
+
+
+@need_mesh
+def test_the_e2_boundary_receipt_records_the_cap_move_and_the_consumer_replays_it():
+    plan = EX42Plan.load(PLAN)
+    contract = _contract("E2", k=1, outcomes=[{"A/gaps": PASS, "B/beam": PASS}])
+    body = er.build_receipt(contract, stage_id="E2", plan_sha256=PSHA, iteration=250, kind="boundary")
+    assert [(m["kind"], m["before"], m["after"]) for m in body["k_ladder_moves"]] == [("A/gaps", 2, 3), ("B/beam", 2, 3)]
+    assert body["opened_kinds"]["A/gaps"] == 3 and body["opened_kinds"]["B/gap"] == 2
+    assert [m["kind"] for m in er.recompute_from_plan(body, plan)["moves"]] == ["A/gaps", "B/beam"]
+    fake = json.loads(json.dumps(body)); fake["k_ladder_moves"] = []; fake["sha256"] = er._sha(fake)
+    with pytest.raises(ValueError, match="k moves differ"):
+        er.recompute_from_plan(fake, plan)

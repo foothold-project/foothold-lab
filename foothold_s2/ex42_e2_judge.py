@@ -266,4 +266,4 @@ class E2KindTwoWindowJudge(StageJudge):
         return {"stage_exit": exit_row}
 
 
-register(E2KindTwoWindowJudge())
+# Not registered since CG v0.18 draft E.12: the E2 bundle is judged by `ex42_kind_stage_judge` (same adapter name kind_two_window_e2).

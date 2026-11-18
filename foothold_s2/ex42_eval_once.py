@@ -974,29 +974,7 @@ def run(checkpoint, expected_sha256, output, device, *, eval_seed=None, mesh_dir
             row.update(state="HOLD", reason=f"EX-42 E1F flag evaluation failed: {exc}")
             _atomic(output / "eval_receipt.json", row)
             return 5
-    if p1_stage_id == "E2" and p1_plan is not None:
-        from foothold_s2.curriculum.ex42_prep import EX42Plan
-        try:
-            kind_plan = EX42Plan.load(policy_path)
-
-            def record_kind(phase, child):
-                row["steps"][phase] = child
-                _atomic(output / "eval_receipt.json", row)
-
-            execute_e2_kind_children(
-                checkpoint, output, device, task=cfg["task"], plan_path=policy_path,
-                plan=kind_plan, mesh_dir=mesh_dir, mesh=mesh,
-                checkpoint_sha256=expected_sha256, seed=seed, process=process,
-                env=env, physical_gpu=physical_gpu, record=record_kind)
-        except (OSError, ValueError, KeyError, subprocess.SubprocessError) as exc:
-            marker = output / "kind_cells" / "child_failures.json"
-            marker.parent.mkdir(parents=True, exist_ok=True)
-            _atomic(marker, {"format": "foothold-ex42-e2-child-failures/1",
-                             "checkpoint_sha256": expected_sha256,
-                             "reason": f"{type(exc).__name__}: {exc}"})
-            row["e2_kind_child_failure"] = {"path": str(marker), "sha256": digest(marker)}
-            _atomic(output / "eval_receipt.json", row)
-    if p1_stage_id in ("E3", "E4", "E5") and p1_plan is not None:
+    if p1_stage_id in ("E2", "E3", "E4", "E5") and p1_plan is not None:
         from foothold_s2.curriculum.ex42_prep import EX42Plan
         from foothold_s2.ex42_kind_stage_judge import opened_kinds, required_kinds
         try:
@@ -1177,14 +1155,7 @@ def main(argv=None):
                                       task=config()[0]["task"], plan_path=policy_path,
                                       mesh_dir=args.mesh_dir, mesh_sha256=args.expected_mesh_sha256,
                                       seed=config()[0]["eval_seed"] if args.eval_seed is None else args.eval_seed)]}
-        if args.p1_stage_id == "E2" and args.p1_plan is not None:
-            plan["e2_kind_cells"] = {"state": "planned", "commands": [argv for _, argv in
-                e2_kind_kit_commands(args.checkpoint, args.out, args.device,
-                                     task=config()[0]["task"], plan_path=policy_path,
-                                     plan=policy.document, mesh_dir=args.mesh_dir,
-                                     mesh_sha256=args.expected_mesh_sha256,
-                                     seed=config()[0]["eval_seed"] if args.eval_seed is None else args.eval_seed)]}
-        if args.p1_stage_id in ("E3", "E4", "E5") and args.p1_plan is not None:
+        if args.p1_stage_id in ("E2", "E3", "E4", "E5") and args.p1_plan is not None:
             from foothold_s2.curriculum.ex42_prep import EX42Plan
             from foothold_s2.ex42_kind_stage_judge import opened_kinds, required_kinds
             execution = EX42Plan.load(args.p1_plan)

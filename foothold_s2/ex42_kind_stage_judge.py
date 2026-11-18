@@ -1,4 +1,4 @@
-"""E3, E4 and E5 named-kind exit: one two-window judge per stage over the kinds the training receipt says are open.
+"""E2, E3, E4 and E5 named-kind exit (E2 joined with the five-kind bundle, CG v0.18 draft E.12; its old one-kind judge is retired): one two-window judge per stage over the kinds the training receipt says are open.
 
 planner DESIGN-E3E5-EXIT-JUDGE-1116 section 2.1 (lead + planner adopted it under the team lead's delegation). It generalizes
 `ex42_e2_judge` from one kind (stepping_stones_low, level 0) to the stage's kind list, nothing else:
@@ -24,7 +24,7 @@ from foothold_s2.eval.ex42_kind_completion import read_start_kind_cell
 from foothold_s2.ex42_stage_judges import StageJudge, aggregate, previous_window, register
 
 MODES = ("eval_gt", "eval_pred", "probe_prop_only")
-STAGES = ("E3", "E4", "E5")
+STAGES = ("E2", "E3", "E4", "E5")
 RULES = ("travel", "center_max", "forward_x")
 
 
@@ -251,7 +251,7 @@ def gate_checked(learned, mismatch):
 class KindStageTwoWindowJudge(StageJudge):
     def __init__(self, stage_id: str):
         if stage_id not in STAGES:
-            raise ValueError("EX-42 named-kind stage judge is for E3, E4 and E5")
+            raise ValueError("EX-42 named-kind stage judge is for E2, E3, E4 and E5")
         self.stage_id = stage_id
         self.name = f"kind_two_window_{stage_id.lower()}"
 

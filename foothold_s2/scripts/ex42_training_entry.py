@@ -271,7 +271,9 @@ def prepare_e0_env_cfg(env_cfg: Any, plan: EX42Plan, mesh_dir: str | Path, stage
     stage_terrain = {**stage_row, "kind_task": _kind_task(plan, stage_id)}
     from foothold_s2.terrains.ex42_k_ladder import ladder_terrain
     stage_terrain, ladder_receipt = ladder_terrain(stage_terrain, stage_id, boundary_index, ladder_outcomes)   # a continued segment: k boundaries on
-    from foothold_s2.terrains.ex42_exposure import raise_continuous_cap
+    from foothold_s2.terrains.ex42_exposure import raise_continuous_cap, raise_kind_caps
+    stage_terrain, cap_moves = raise_kind_caps(stage_terrain, stage_id, boundary_index, ladder_outcomes)   # D axis: +1 cap per kind that passed, receipt before/after
+    ladder_receipt = [*ladder_receipt, *cap_moves]
     stage_terrain, continuous_cap = raise_continuous_cap(stage_terrain, stage_id, boundary_index)   # L+: +1 per boundary passed
     exposure, level_caps = exposure_by_column(stage_terrain, table, stage_id)       # plan values; raises if none positive
     from foothold_s2.terrains.ex42_exposure import column_shares

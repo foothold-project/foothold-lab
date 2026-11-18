@@ -170,7 +170,7 @@ def build(env, *, dry_run=False, now=None):
         # Two-rank NCCL on this machine dies with Cuda 700 at the first broadcast without it (E1F 11/16 19:06; the E1 start
         # scripts set it). setdefault: a value the caller put in the environment wins. The one-rank dry run has no NCCL.
         child.setdefault("NCCL_SHM_DISABLE", "1")
-    if action == "continue" and stage in ("E3", "E4", "E5"):
+    if action == "continue" and stage in ("E2", "E3", "E4", "E5"):
         # the K ladder reads one evidence entry per boundary passed; the stage judge keeps that list next to each score
         import re
         import yaml

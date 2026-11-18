@@ -111,8 +111,8 @@ def judge_two_boundaries(checkpoint: Path, *, stage_id: str, plan: dict,
                          previous_kind_pass: bool,
                          named_kinds: dict[tuple[str, str], bool] | None = None) -> dict:
     """CG:381 registration, two adjacent save windows, no proxy counts."""
-    # `named_kinds` (E3 and later): {(family, kind): this kind passed its previous window}; E2 has the one kind below.
-    if stage_id not in ("E2", "E3", "E4", "E5") or (stage_id == "E2") != (named_kinds is None) or \
+    # `named_kinds` (E3 and later): {(family, kind): this kind passed its previous window}; E2 may still pass None (the retired one-kind path); the real E2 passes its bundle.
+    if stage_id not in ("E2", "E3", "E4", "E5") or (stage_id != "E2" and named_kinds is None) or \
             type(min_episodes) is not int or min_episodes < 1:
         raise ValueError("EX-42 learned_cells stage threshold invalid")
     checkpoint = Path(checkpoint)
