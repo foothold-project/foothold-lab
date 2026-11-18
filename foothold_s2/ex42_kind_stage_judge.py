@@ -62,7 +62,11 @@ def required_kinds(plan: dict, stage_id: str) -> list[str]:
     """The stage's named kinds, `family/kind`: start-block rules that name one kind, then the ladder order."""
     row = next(r for r in plan["stages"] if r["id"] == stage_id)
     terrain = row["terrain"]
-    names = [f"{rule['family']}/{rule['kind']}" for rule in terrain[f"exposure_at_{stage_id}"]["positive"] if "kind" in rule]
+    floor = (terrain.get("k_ladder") or {}).get("kind_floor")
+    # CG v0.18 draft E.12: a kind held at the maintenance floor (share <= kind_floor, an earlier bundle already graduated) is not a named kind of
+    # this stage; the maintenance table keeps it (-3/64 survival). Without a kind_floor in the row every start-block kind is named (E2, E5).
+    names = [f"{rule['family']}/{rule['kind']}" for rule in terrain[f"exposure_at_{stage_id}"]["positive"]
+             if "kind" in rule and not (floor is not None and rule.get("share") is not None and rule["share"] <= floor + 1e-9)]
     names += [f"{entry['family']}/{entry['kind']}" for entry in (terrain.get("k_ladder") or {}).get("order", [])]
     if len(set(names)) != len(names):
         raise ValueError("EX-42 stage kind list repeats a kind")

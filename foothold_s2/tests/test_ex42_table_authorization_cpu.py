@@ -168,16 +168,19 @@ def test_e2_draft_six_additions_are_not_launch_permission():
     assert c['scope']['parent_sha256'] is None
     assert c['prerequisites']['kind_cell_evaluator']=='pending'
     assert c['prerequisites']['stage_judgment_policy']=='pending'
-    assert c['kind_choice']=={'prep':'start_stones_l0','mesh_kind':'stepping_stones_low'}
-    assert c['boundary']['exposure_delta']=={'family':'A','kind':'stepping_stones_low',
-        'prep_alias':'start_stones_l0','share':{'from':0.0,'to':0.05},'level_cap':0,'donor':'continuous'}
+    # CG E.12 draft: the one-kind choice (start_stones_l0) is replaced by a four-kind bundle opened on K once.
+    assert 'kind_choice' not in c
+    assert c['kind_bundle']==[{'family':'A','kind':'gaps'},{'family':'C','kind':'gap'},{'family':'B','kind':'beam'},{'family':'A','kind':'balance_beams'}]
+    assert [(d['family'],d['kind'],d['share'],d['level_cap'],d['donor']) for d in c['boundary']['exposure_delta']]==[
+        ('A','gaps',{'from':0.0,'to':0.11},2,'continuous'),('C','gap',{'from':0.0,'to':0.11},2,'continuous'),
+        ('B','beam',{'from':0.0,'to':0.11},2,'continuous'),('A','balance_beams',{'from':0.0,'to':0.11},2,'continuous')]
     # CG:265. These are planned criteria, not an implemented sparse-cell score adapter.
     g=c['exit_gate']
     assert (g['success_min'],g['survival_min'],g['windows'],g['learned_cells_min'])==(52,60,2,32)
     assert g['denominator']=='forward+flag_all' and g['completion']=='last_support_0.5s'
-    assert c['judge_cells_added'][0]['modes']==['gt','pred']
-    assert c['judge_cells_added'][0]['record_modes']==['off']
-    assert c['record_cells_added'][0]['command']=='flag_reach'
+    assert c['exit_gate']['cells']=='opened_kinds_at_level_cap'
+    assert len(c['judge_cells_added'])==4 and all(x['modes']==['gt','pred'] and x['record_modes']==['off'] for x in c['judge_cells_added'])
+    assert [x['command'] for x in c['record_cells_added']]==['flag_reach']*4
 
 
 def test_m_branch_cannot_replace_e5_graduation():

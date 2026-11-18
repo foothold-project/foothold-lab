@@ -35,8 +35,10 @@ def test_decision_budget_caps_floor_and_approval_pin():
         cell=approval[f'stage_{stage.lower()}_authorization']
         assert cell['scope']['maximum_updates'] == cap
         assert cell['scope_amendment']['decision_source']['commit'] == DECISION
+    # E4 hold floor moved to 0.03 (CG v0.18 draft E.12 #4, lead 11/18 23:3x); E6b keeps the approved 1.5 %. E4 keeps the 19:38 source key as history.
+    assert rows['E4']['terrain']['k_ladder']['kind_floor'] == .03
+    assert rows['E6b']['terrain']['k_ladder']['kind_floor'] == .015
     for stage in ('E4','E6b'):
-        assert rows[stage]['terrain']['k_ladder']['kind_floor'] == .015
         assert rows[stage]['terrain']['k_ladder']['kind_floor_decision_source'] == DECISION
 
 

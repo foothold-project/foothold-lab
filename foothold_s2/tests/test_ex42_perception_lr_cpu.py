@@ -17,8 +17,8 @@ E0_RUN = pathlib.Path("/home/jay/data/foothold/s2_lab/ex42_main_20261111_072218/
 if not E0_RUN.is_dir():
     E0_RUN = pathlib.Path("/mnt/win-d/mai/data/foothold/s2_lab/ex42_main_20261111_072218/main/EX-42-B-E0_20261111_072218")
 needs_run = pytest.mark.skipif(not (E0_RUN / "model_250.pt").is_file(), reason="the E0 run is not on this machine")
-PLAN_SHA = "f0e0f738b0b98295880c7679eb331c587ab25f7cdc2a4d8d62ca3be3eecefda9"
-APPROVALS_SHA = "bf8b20b377e8c73c3f93d96e29912d93e40327d20814c730b773d6ed2c7b5b8c"
+PLAN_SHA = "b7334b8c6dee0632c0cab0d35fbea3efed4da43f6d32097aa7dd7542b8ae278d"
+APPROVALS_SHA = "6e41d0ff636a3684def80bf31296831ca19af090b687acf83d0d6e9846573872"
 
 
 def _runner(seed=3):

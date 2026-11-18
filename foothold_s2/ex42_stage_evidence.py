@@ -73,7 +73,13 @@ def kind_opening_order_file(row, template, target, output_dir):
     What it says: the order in which the kinds open was written down in the plan BEFORE any result of the stage; `order_sha256` is the
     sha256 of that order in sorted-key compact JSON. What it does not say: which kinds actually opened. That is a different record, the
     exposure receipt's `ladder_outcomes` (ex42_exposure_receipt.py), written while the stage runs. Nothing is measured here."""
-    order = ((row.get('terrain') or {}).get('k_ladder') or {}).get('order')
+    terrain = row.get('terrain') or {}
+    order = (terrain.get('k_ladder') or {}).get('order')
+    if order == []:
+        # CG E.12: the bundle opens in the start block, the ladder opens nothing more. The order written before any result is then the
+        # start block's named kinds in plan order (an empty order is NOT the same as no order: a missing key still refuses).
+        order = [{'family': r['family'], 'kind': r['kind'], 'level_cap': r['level_cap']}
+                 for r in (terrain.get(f'exposure_at_{target}') or {}).get('positive', []) if 'kind' in r]
     if not isinstance(order, list) or not order:
         raise ValueError(f'{target} row registers no kind opening order (terrain.k_ladder.order)')
     order_sha = hashlib.sha256(json.dumps(order, sort_keys=True, separators=(',', ':'), ensure_ascii=False,

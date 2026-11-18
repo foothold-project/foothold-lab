@@ -15,8 +15,8 @@ from foothold_s2.runners.start_runner import StartRunner
 from foothold_s2.tests.start_fake_env import FakeStartEnv, train_cfg
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
-PLAN_SHA = "f0e0f738b0b98295880c7679eb331c587ab25f7cdc2a4d8d62ca3be3eecefda9"
-APPROVALS_SHA = "bf8b20b377e8c73c3f93d96e29912d93e40327d20814c730b773d6ed2c7b5b8c"
+PLAN_SHA = "b7334b8c6dee0632c0cab0d35fbea3efed4da43f6d32097aa7dd7542b8ae278d"
+APPROVALS_SHA = "6e41d0ff636a3684def80bf31296831ca19af090b687acf83d0d6e9846573872"
 OLD_KEYS = {"l_tr", "l_ie", "kl", "o_next", "v", "hf", "hb"}
 
 

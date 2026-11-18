@@ -96,7 +96,7 @@ def row_of(w, stage_id):
 
 # ---------- (1) boundary_axis ----------
 
-@pytest.mark.parametrize("target, axis", [("E3", "terrain_kind_level_cap"), ("E4", "terrain_exposure"), ("E5", "terrain_exposure")])
+@pytest.mark.parametrize("target, axis", [("E3", "terrain_exposure"), ("E4", "terrain_exposure"), ("E5", "terrain_exposure")])
 def test_a_multi_axis_row_gets_the_axis_its_plan_registered_as_entry_axis(world, target, axis):
     row = row_of(world, target)
     assert len(row["boundary_axes"]) > 1 and row["boundary"]["entry_axis"] == axis       # the registered value, not a choice made here
@@ -123,15 +123,21 @@ def test_a_one_axis_row_is_written_exactly_as_before(world):
 
 # ---------- (2) kind_opening_order_recorded ----------
 
+def _named_order(row):
+    """An empty `k_ladder.order` registers the start block's named kinds in plan order (ex42_stage_evidence.kind_opening_order_file)."""
+    return [{"family": r["family"], "kind": r["kind"], "level_cap": r["level_cap"]}
+            for r in row["terrain"]["exposure_at_E3"]["positive"] if "kind" in r]
+
+
 def test_the_opening_order_file_is_the_plan_order_and_its_sha_is_the_binding_value(world):
     out = Path(world.produce("E3"))
     document = body(out)
     ref = document["bindings"]["prerequisites.kind_opening_order_recorded"]
-    order = row_of(world, "E3")["terrain"]["k_ladder"]["order"]
+    order = _named_order(row_of(world, "E3"))          # CG v0.18 draft E.12: `k_ladder.order` is empty, the order is the start block's named kinds
     record = body(ref["path"])
     expected = hashlib.sha256(json.dumps(order, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode("utf-8")).hexdigest()
     assert record["order"] == order and record["order_sha256"] == expected == body(ref["path"])["order_sha256"]
-    assert ref["pointer"] == "order_sha256" and ref["sha256"] == sha(ref["path"]) and len(order) == 12
+    assert ref["pointer"] == "order_sha256" and ref["sha256"] == sha(ref["path"]) and len(order) == 7
     assert record["format"] == evidence.KIND_ORDER_FORMAT and record["target_stage"] == "E3"
 
 
@@ -139,7 +145,7 @@ def test_the_same_inputs_give_the_same_file_and_a_different_order_gives_a_differ
     first = body(body(world.produce("E3", "one"))["bindings"]["prerequisites.kind_opening_order_recorded"]["path"])
     again = world.produce("E3", "one")                                                       # same folder again: identical, not "differs"
     assert body(body(again)["bindings"]["prerequisites.kind_opening_order_recorded"]["path"]) == first
-    world.mutate(lambda rows: rows["E3"]["terrain"]["k_ladder"]["order"].reverse())
+    world.mutate(lambda rows: rows["E3"]["terrain"]["exposure_at_E3"]["positive"].reverse())
     swapped = body(body(world.produce("E3", "two"))["bindings"]["prerequisites.kind_opening_order_recorded"]["path"])
     assert swapped["order_sha256"] != first["order_sha256"] and swapped["order"] == list(reversed(first["order"]))
 
@@ -237,9 +243,9 @@ def test_e3_materializes_from_the_produced_evidence_and_the_approval_cell_is_fil
                            manifest_path=e2_exit.manifest, output_dir=e2_exit.tmp / "e3-evidence")
     made = _materialize_e3(e2_exit, out, "ok")
     approvals = yaml.safe_load(Path(made["approvals"]).read_text(encoding="utf-8"))["stage_e3_authorization"]
-    order = row_of_plan(e2_exit.plan, "E3")["terrain"]["k_ladder"]["order"]
+    order = _named_order(row_of_plan(e2_exit.plan, "E3"))
     expected = hashlib.sha256(json.dumps(order, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode("utf-8")).hexdigest()
-    assert approvals["boundary"]["axis"] == "terrain_kind_level_cap"
+    assert approvals["boundary"]["axis"] == "terrain_exposure"          # E3 is entered on K once (CG v0.18 draft E.12)
     assert approvals["prerequisites"]["kind_opening_order_recorded"] == expected               # the template's null was filled in the copy
     # the shipped template is untouched (its sha is the plan sha the S4 rehearsal pins)
     assert sha(CURRICULUM / "ex42-prep.yaml") == EX42Plan.load(CURRICULUM / "ex42-prep.yaml").sha256

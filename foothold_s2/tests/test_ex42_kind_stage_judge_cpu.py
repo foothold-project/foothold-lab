@@ -19,8 +19,20 @@ PSHA = rt.PSHA
 LOW_PASS = rt.LOW_PASS
 
 
-def _plan():
+_LEGACY = []
+
+
+def _real_plan():
     return EX42Plan.load(PLAN)
+
+
+def _plan():
+    """The plan with E3's one-kind K ladder put back (stepping_stones_low `new`, C/flat next): CG v0.18 draft E.12 opens E3's bundle in the start
+    block and keeps `k_ladder.order: []`, so the machinery tests below run on this synthetic plan; the real rows are tested on `_real_plan()`."""
+    if not _LEGACY:
+        import tempfile
+        _LEGACY.append(rt._ladder_plan(pathlib.Path(tempfile.mkdtemp(prefix="ex42-legacy-ladder-"))))
+    return _LEGACY[0]
 
 
 def _cell(valid, success, survival):
@@ -32,7 +44,7 @@ def _score(cell, valid_min=24):
 
 
 def test_the_three_stages_have_registered_judges_and_the_next_entry_resolves():
-    plan = _plan()
+    plan = _real_plan()
     for stage in ("E3", "E4", "E5"):
         assert adapter_for(plan.document, stage).name == f"kind_two_window_{stage.lower()}"
     rows = {r["id"]: r for r in plan.document["stages"]}
@@ -42,10 +54,13 @@ def test_the_three_stages_have_registered_judges_and_the_next_entry_resolves():
 
 
 def test_the_stage_kind_lists_come_from_the_real_rows_and_never_name_a_continuous_kind():
-    plan = _plan().document
+    plan = _real_plan().document
     e3, e4, e5 = (ks.required_kinds(plan, s) for s in ("E3", "E4", "E5"))
-    assert e3[0] == "A/stepping_stones_low" and len(e3) == 13 and e3[1] == "C/flat"
-    assert len(e4) == 28 and len(e5) == 28 and set(e4) == set(e5)
+    # CG v0.18 draft E.12: the judged kinds are the stage's NEW bundle (the maintenance table keeps the earlier ones at 0.03)
+    assert e3 == ["B/pallets", "A/stepping_beams", "A/stepping_stones_low"]
+    assert e4 == ["B/stones", "A/stepping_stones_high"]
+    assert len(e5) == 9 and set(e5) == {"A/gaps", "C/gap", "B/beam", "A/balance_beams", "B/pallets", "A/stepping_beams",
+                                          "A/stepping_stones_low", "B/stones", "A/stepping_stones_high"}
     assert not any(k in e3 for k in ("A/continuous",))
     spec = ks._spec(plan)
     assert spec["envs_per_kind"] == 32 and spec["valid_min_each"] == 24
@@ -109,7 +124,7 @@ def test_the_ladder_evidence_follows_the_judgement_of_each_kind():
 
 
 def _write_boundary_receipts(folder, stage, k, outcomes, iteration):
-    body = rt.er.build_receipt(rt._contract(stage=stage, k=k, outcomes=outcomes), stage_id=stage, plan_sha256=PSHA,
+    body = rt.er.build_receipt(rt._contract(stage=stage, k=k, outcomes=outcomes, plan=_plan()), stage_id=stage, plan_sha256=PSHA,
                                iteration=iteration, kind="boundary")
     rt.er.write_receipt(folder, body)
     return body
@@ -263,9 +278,9 @@ def _verify_fixture(tmp_path, monkeypatch, *, required=None, old_passes=True):
     plan = _plan().document
     body = _write_boundary_receipts(tmp_path, "E3", 2, [LOW_PASS, {}], 500)
     opened = dict(body["opened_kinds"])
-    levels = {k: opened[k] for k in ("A/stepping_stones_low", "C/flat")}
     if required is not None:
         monkeypatch.setattr(ks, "required_kinds", lambda *_: required)
+    levels = {k: opened[k] for k in ks.required_kinds(plan, "E3") if k in opened}      # every named kind that is open (the bundle and the ladder's flat)
     run = tmp_path / "m500"
     (run / "map64").mkdir(parents=True)
     (run / "kind_cells").mkdir()
@@ -314,7 +329,7 @@ def test_p1_verify_accepts_the_honest_exit_and_each_forgery_is_refused(tmp_path,
 
 @need_mesh
 def test_p1_verify_refuses_a_pass_while_the_ladder_is_not_finished_or_a_window_failed(tmp_path, monkeypatch):
-    plan, score, verdict = _verify_fixture(tmp_path, monkeypatch)            # the real E3 list has 13 kinds, two are open
+    plan, score, verdict = _verify_fixture(tmp_path, monkeypatch)            # the E3 list of the legacy-ladder plan names the bundle, the earlier kinds, C/flat and B/rough; B/rough stays closed
     assert verdict == "HOLD" and score["stage_exit"]["items"]["kind_ladder"]["judgement"] == "HOLD"
     adapter = adapter_for(plan, "E3")
     assert adapter.verify(score, "HOLD", "PASS", plan=plan)

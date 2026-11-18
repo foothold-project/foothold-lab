@@ -71,6 +71,17 @@ training_mesh_profiles:
       terrain_mesh.npz: b4e9c051fcb9ed7dd24ac3265177ac98d5d3b4554ee9c1ed16730524aadcae2e
       mesh_manifest.json: b31da042571252cc9f32f744495f8791a9909962c0dbcff41f1dab2bcd5854f5
       terrain_manifest.json: 7e9dab9420c3c6694df9e2e5d5d9155ff4a5448d1ac7a9936a96c07d2a7a6740
+  # e2_named_flags_v2_edge with the A stepping_stones_low rows 0..9 replaced by the easy ladder (feature/sonnet-code-e2-easystone5-1118 · splice,
+  # every other tile byte-identical). Same edge masks. M0 M1 M2 M3 receipt e51e8fae8804 (PASS) under
+  # /home/jay/data/foothold/s2_lab/ex42_m0m3_1118_easy10/20261119_002338/m0-m3.json. The lower-column declaration is
+  # inbox/jay/20261111-analysis/evidence/ex42-declarations-1118-easy10.json (the 1111 file stays for the old mesh).
+  e2_easy10_edge:
+    directory: /home/jay/data/foothold/s2_lab/ex42_mesh_1118_easy10/seed42_E0_c333_flags_E2_1111_v2_edge_easy10
+    geometry_sha256: 95471953ec1eafebe1a5db1842408b4d828e596c9e446edea38e79a75485f81d
+    files:
+      terrain_mesh.npz: 56ea999610009dcd7e167302674329c0ba5bf13ff2fd6ff5a8d81070c01e10c3
+      mesh_manifest.json: f0a26869394d46ff93d42cccacd0e742f0443479bf781aafe23bdfd716b4f187
+      terrain_manifest.json: 4c72204f20153569ba8b49b8dcf56e156936244a0667aa50ed251867b05df69d
 environment:
   num_envs: 6144
   task_id: FootholdS2-Go2-S2-SB-v0
@@ -152,7 +163,7 @@ stage_zero:
     cumulative_update: 12000
     manifest_local_update: 6000
     sha256: 1c6af6319c823c718af4965064f1c312b0d25177f5223a49c323aab3b6f1e613
-  approval_sha256: bf8b20b377e8c73c3f93d96e29912d93e40327d20814c730b773d6ed2c7b5b8c
+  approval_sha256: 6e41d0ff636a3684def80bf31296831ca19af090b687acf83d0d6e9846573872
   minimum_updates: 1000
   maximum_updates: 1000
   extension_updates: 0
@@ -681,7 +692,7 @@ stages:
     runtime_start:
       policy_std_cap: 0.0
   exit_judge: kind_two_window_e2
-  training_mesh_profile: e2_named_flags_v2_edge
+  training_mesh_profile: e2_easy10_edge
   # START foot-edge term (core.WEIGHTS[foot_edge] = -1.0, the paper default) from the first update of this stage. 0 or no key = off (as before).
   # Needs the _edge mesh above (ex42_training_entry._foot_edge_weight raises on a mesh without masks). Fence [-1.0, 0.0], fixed by the plan: not a boundary cell.
   foot_edge_weight: -1.0
@@ -706,13 +717,24 @@ stages:
     required_boolean_paths:
     - critic_mirror
     required_stage_values: {}
-  name: one_easy_new_terrain_kind
+  name: gap_and_wide_door_bundle
   minimum_updates: 250
   maximum_updates: 1500
   extension_updates: 500
   extension_max_count: 2
+  # E2 enters on K once (the four-kind bundle opens together at cap 2, CG E.12). Inside the stage the bundle cap rises 2 -> 5 on D, one axis per boundary.
   boundary_axes:
   - terrain_exposure
+  - terrain_kind_level_cap
+  boundary:
+    entry_axis: terrain_exposure
+    axis_order: [terrain_exposure, terrain_kind_level_cap]
+    rule: rotate_in_order_one_axis_per_boundary
+    not_eligible: skip
+    none_eligible: no_axis_change
+    source:
+      canon: CURRICULUM-GATES v0.18 draft E.12 (bundle open on K once, cap +1 on D)
+      decisions: ['2026-11-18 23:4x lead']
   # Command shares = the E1F vector. CG E.2 E2 one-axis row: the K boundary changes no continuous cap, no command share and
   # no flag share (연속 상한 · 명령 몫 · 깃발 변경 0).
   shares:
@@ -731,7 +753,7 @@ stages:
     diag_back_right: 0.025
     flag: 0.1
   enabled: true
-  kind_choice: start_stones_l0
+  # kind_choice / kind_alternatives (one kind, L0) are gone: E2 opens a four-kind bundle (terrain.exposure_at_E2), CG E.12.
   hold_policy: hold_exposure_continue_training
   terrain:
     # planner 14:5x 표 (CG:258~262 D163); 연속 상한 5 와 새 종류 L0 5 % 는 가정, E1F 끝 상한 증거로 바꿀 것
@@ -774,9 +796,6 @@ stages:
       # CG:380 (E.3): continuous L0~2 envs >= 30 % of the continuous envs, held from the E1F start.
       # The 30 is an assumption (CG marks 2 / 30 / 32 as assumptions); the planner contract 16:2x records it.
       continuous_low_level_floor: {levels: [0, 2], fraction_of_continuous: 0.30, class: assumption, source: CG:380}
-  kind_alternatives:
-  - start_beam_l0
-  - start_gap_l0
 - id: E3
   # Inherits E2's last reward values (slow_progress up to 0.6, slow_track_sigma down to 0.35): the same row fence as E1F/E2, read by
   # commands.ex42_segment_adjust.row_reward_fence (no live adjustment here). The limits file keeps its bytes.
@@ -790,7 +809,7 @@ stages:
     shares: {forward: 0.19, walk_left: 0.06, walk_right: 0.06, spin_left: 0.09, spin_right: 0.09, stand: 0.1, reverse: 0.14, side_left: 0.09, side_right: 0.09, diag_fwd_left: 0.02, diag_fwd_right: 0.02, diag_back_left: 0.025, diag_back_right: 0.025}
     ranges: {forward_vx: [0.1, 1.5], walk_vx: [0.3, 1.2], walk_wz_abs: [0.1, 1.0], spin_wz_abs: [0.15, 1.5], reverse_vx: [-1.3, -0.2], side_vy_abs: [0.1, 0.8], diag_vx_abs: [0.3, 0.6], diag_vy_abs: [0.2, 0.5]}
     turn_overlay: {fraction: 0.25, wz_abs: [0.2, 0.6]}
-  training_mesh_profile: e2_named_flags_v2
+  training_mesh_profile: e2_easy10_edge
   authorization_contract:
     validator: bounded
     source_stage_ids:
@@ -815,17 +834,19 @@ stages:
   extension_updates: 1000
   extension_max_count: 2
   boundary_axes:
-  - terrain_kind_level_cap
   - terrain_exposure
+  - terrain_kind_level_cap
   - terrain_level_cap
   - command_allocation
   # Fixed before any result of this stage is seen (lead 2026-11-12 01:40). One axis per boundary (CG one-axis rule).
-  # CG order as written: D, K, L+, C (E.1 E3 row and E.2 E3 one-axis row). The entry axis is the first one.
+  # v0.18 draft (CG E.12): E3 is entered on K once (the three-kind bundle opens together at cap 2 in the start block below), so K is the entry axis
+  # and D (the bundle cap +1) follows at the next boundaries. Before: D, K, L+, C with D as entry (one kind, cap 0 -> 1). K opens nothing more
+  # inside the stage (no k_ladder order), so K is skipped as not eligible when the rotation comes back to it.
   # L+ is the continuous cap +1 per boundary up to L9: decisions.tsv 2026-11-06 22:3x, 23:2x, 2026-11-08 19:0x.
   # An axis whose CG condition is not met is skipped; with none eligible the boundary changes no axis (CG E.1 E1 row).
   boundary:
-    entry_axis: terrain_kind_level_cap
-    axis_order: [terrain_kind_level_cap, terrain_exposure, terrain_level_cap, command_allocation]
+    entry_axis: terrain_exposure
+    axis_order: [terrain_exposure, terrain_kind_level_cap, terrain_level_cap, command_allocation]
     rule: rotate_in_order_one_axis_per_boundary
     not_eligible: skip
     none_eligible: no_axis_change
@@ -881,8 +902,8 @@ stages:
     # 연속 몫 0.56 이라 실효 연속 하한 42.9 % (CG E.3 · D176 ④) 를 그대로 지킨다.
     # A stepping_stones_low 는 쉬운 징검돌 사다리 메시 (가지 feature/sonnet-code-e2-easystone5-1118) 가 학습 메시로 승인되어야 한다.
     # 유지 하한 네 종의 level_cap = 졸업 레벨 5 그대로 (내리지도 올리지도 않음 · lead 11/18 23:4x).
-    # 이 행의 boundary.entry_axis (D) 와 아래 k_ladder (등급 0.05 / 0.10 / 0.03 · 순서에 이 블록의 종류가 겹침) 는 옛 값 그대로다
-    # (sonnet 몫 · lead 배정 · CG E.12).
+    # 이 행의 boundary.entry_axis 는 K (terrain_exposure) 로 고쳤고 (묶음을 함께 여는 K 한 번 · 그 뒤 D 가 상한 +1), 아래 k_ladder 는
+    # 순서를 비우고 유지 하한 0.03 만 남겼다 (경계마다 한 종류를 더 여는 사다리는 몫 합 0.44 를 깨므로 쓰지 않음).
     exposure_at_E3:
       default:
         exposure: 0.0
@@ -920,22 +941,13 @@ stages:
         kind: stepping_stones_low
         share: 0.1066666667
         level_cap: 2
-    # K 경계 사다리 (planner §2 여는 순서 · 가정): 경계마다 종류 하나 열기 (5 %), 다음 경계 현재 (10 %), 그다음 쉬움 (3 %)
+    # K 경계 사다리: 새 묶음 열기는 시작 블록이 한다 (CG E.12). 경계마다 종류 하나를 더 여는 옛 순서 (C flat 부터 열두 종) 는 비웠다.
+    # 몫 합 0.44 를 깨고 시작 블록의 종류와도 겹치기 때문이다. 유지 하한은 0.03 (CG E.12 #4). 여는 순서 기록 (kind_opening_order_recorded)
+    # 은 비어 있으면 시작 블록의 이름 있는 종류를 plan 순서로 쓴다 (ex42_stage_evidence.kind_opening_order_file).
     k_ladder:
-      grades: {new: 0.05, current: 0.1, easy: 0.03}
-      order:
-      - {family: C, kind: flat, level_cap: 0}
-      - {family: B, kind: rough, level_cap: 0}
-      - {family: C, kind: discrete_grid, level_cap: 0}
-      - {family: A, kind: stepping_stones_high, level_cap: 0}
-      - {family: C, kind: pyramid_stairs, level_cap: 0}
-      - {family: C, kind: inverted_pyramid_stairs, level_cap: 0}
-      - {family: B, kind: stair_up, level_cap: 0}
-      - {family: B, kind: stair_down, level_cap: 0}
-      - {family: B, kind: boxes, level_cap: 0}
-      - {family: A, kind: balance_beams, level_cap: 0}
-      - {family: A, kind: stepping_beams, level_cap: 0}
-      - {family: A, kind: gaps, level_cap: 0}
+      grades: {new: 0.05, current: 0.1}
+      kind_floor: 0.03
+      order: []
     floors:
       global_command_floor:
         reverse: 0.05
@@ -957,7 +969,7 @@ stages:
     shares: {forward: 0.19, walk_left: 0.06, walk_right: 0.06, spin_left: 0.09, spin_right: 0.09, stand: 0.1, reverse: 0.14, side_left: 0.09, side_right: 0.09, diag_fwd_left: 0.02, diag_fwd_right: 0.02, diag_back_left: 0.025, diag_back_right: 0.025}
     ranges: {forward_vx: [0.1, 1.5], walk_vx: [0.3, 1.2], walk_wz_abs: [0.1, 1.0], spin_wz_abs: [0.15, 1.5], reverse_vx: [-1.3, -0.2], side_vy_abs: [0.1, 0.8], diag_vx_abs: [0.3, 0.6], diag_vy_abs: [0.2, 0.5]}
     turn_overlay: {fraction: 0.25, wz_abs: [0.2, 0.6]}
-  training_mesh_profile: e2_named_flags_v2
+  training_mesh_profile: e2_easy10_edge
   authorization_contract:
     validator: bounded
     source_stage_ids:
@@ -1044,8 +1056,7 @@ stages:
     # 듬성 합은 늘 0.44 (lead 11/18 23:3x · (가) 채택으로 닫음): 지금 묶음 합 = 0.44 - 앞 일곱 종 유지 하한 합 0.21 = 0.23 (각 0.115).
     # 연속 몫 0.56 이라 실효 연속 하한 42.9 % (CG E.3 · D176 ④) 를 그대로 지킨다.
     # 유지 하한 일곱 종의 level_cap = 졸업 레벨 5 그대로 (내리지도 올리지도 않음 · lead 11/18 23:4x).
-    # 아래 k_ladder (kind_floor 0.015 · 순서에 이 블록의 종류 B stones · pallets · beam · gap · C gap 이 겹침) 는 옛 값 그대로다
-    # (sonnet 몫 · lead 배정 · CG E.12 · 유지 하한은 0.03).
+    # 아래 k_ladder 는 순서를 비우고 kind_floor 를 0.03 으로 고쳤다 (E3 와 같은 까닭 · 옛 순서는 이 블록의 종류와 겹쳤다).
     exposure_at_E4:
       default:
         exposure: 0.0
@@ -1091,26 +1102,12 @@ stages:
         kind: stepping_stones_high
         share: 0.115
         level_cap: 2
-    # K 경계 사다리: 쉬움 하한 1.5 %는 팀장 19:38 확정
+    # K 경계 사다리: 묶음 열기는 시작 블록이 한다 (E3 와 같음). 유지 하한은 0.03 (CG E.12 #4 · 옛 1.5 % 는 팀장 19:38 값 이력).
     k_ladder:
       grades: {new: 0.05, current: 0.1}
-      kind_floor: 0.015      # teamlead 19:38 approved easy-kind floor
-      kind_floor_decision_source: 7121e0188cf1cbe558704764227e306e6097149f
-      order:
-      - {family: B, kind: climb_down, level_cap: 0}
-      - {family: C, kind: box, level_cap: 0}
-      - {family: C, kind: discrete_obstacles, level_cap: 0}
-      - {family: B, kind: obstacles, level_cap: 0}
-      - {family: B, kind: stones, level_cap: 0}
-      - {family: B, kind: pallets, level_cap: 0}
-      - {family: B, kind: consecutive, level_cap: 0}
-      - {family: B, kind: beam, level_cap: 0}
-      - {family: B, kind: gap, level_cap: 0}
-      - {family: C, kind: gap, level_cap: 0}
-      - {family: E, kind: stairs_high, level_cap: 0}
-      - {family: E, kind: stairs_high_inv, level_cap: 0}
-      - {family: E, kind: slope_steep, level_cap: 0}
-      - {family: E, kind: slope_steep_inv, level_cap: 0}
+      kind_floor: 0.03
+      kind_floor_decision_source: 7121e0188cf1cbe558704764227e306e6097149f   # 이력: 1.5 % 승인 줄. 0.03 은 lead 11/18 23:3x (CG E.12 #4)
+      order: []
     floors:
       global_command_floor:
         reverse: 0.05
@@ -1139,7 +1136,7 @@ stages:
     shares: {forward: 0.19, walk_left: 0.06, walk_right: 0.06, spin_left: 0.09, spin_right: 0.09, stand: 0.1, reverse: 0.14, side_left: 0.09, side_right: 0.09, diag_fwd_left: 0.02, diag_fwd_right: 0.02, diag_back_left: 0.025, diag_back_right: 0.025}
     ranges: {forward_vx: [0.1, 1.5], walk_vx: [0.3, 1.2], walk_wz_abs: [0.1, 1.0], spin_wz_abs: [0.15, 1.5], reverse_vx: [-1.3, -0.2], side_vy_abs: [0.1, 0.8], diag_vx_abs: [0.3, 0.6], diag_vy_abs: [0.2, 0.5]}
     turn_overlay: {fraction: 0.25, wz_abs: [0.2, 0.6]}
-  training_mesh_profile: e2_named_flags_v2
+  training_mesh_profile: e2_easy10_edge
   authorization_contract:
     validator: bounded
     source_stage_ids:
