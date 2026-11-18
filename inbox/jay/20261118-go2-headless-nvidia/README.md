@@ -1,7 +1,7 @@
 > 분류: Jetson 원격 관리 · 가역적 시스템 설정
 > 작성: 오흥재 · 2026-11-18
 > 대상: NVIDIA Jetson Orin NX 16GB / AVerMedia NX215B / L4T 36.4.7 / GDM Xorg / NoMachine 9.8.2
-> 상태: 원인 진단·EDID 확보·installer 단위시험·실제 적용·HDMI 없는 재부팅 1회 통과 · 다음 정상 전원 사이클 반복 검증과 RViz/OpenGL 확인 대기
+> 상태: 원인 진단·EDID 확보·installer 단위시험·실제 적용·HDMI 없는 정상 전원 사이클 2회 통과 · RViz/OpenGL 확인 대기
 
 # HDMI 없는 NoMachine 1920×1080 물리 데스크톱
 
@@ -85,7 +85,15 @@ ssh nvidia@192.168.50.2 '
 - GDM, NVIDIA Xorg, GNOME shell과 NoMachine server/node/nxd가 active였고 사용자가 NoMachine에서 정상 Jetson desktop을 확인했다.
 - `glxinfo`는 설치돼 있지 않아 별도 package를 추가하지 않았다. NVIDIA Xorg 사용은 log로 확인했고 실제 RViz/OpenGL 표시는 P3에서 재검증한다.
 
-판정: HDMI 없는 1920×1080 재부팅 **1회 통과**. 설정은 `/etc/X11`에 영구 설치돼 이후 Jetson 재부팅과 Go2 전원 사이클에도 적용되는 구조다. 다음 정상 전원 사이클에서 같은 검사를 한 번 더 통과하면 반복성 관문을 닫는다. 이 검증만을 위해 로봇 전원을 다시 순환하지 않는다.
+## 2026-11-18 두 번째 정상 전원 사이클 결과
+
+- 새 boot 시각 `2026-11-18 10:22:14 UTC`.
+- kernel DRM physical connector는 다시 `disconnected`였다.
+- GDM과 NoMachine server/node/nxd가 active였고 사용자가 HDMI 없이 NoMachine GNOME desktop에 접속했다.
+- XRandR current는 `1920×1080`, 60 Hz였다.
+- Xorg log는 `/etc/X11/go2-headless-1920x1080.edid`의 `CustomEDID`를 읽고 virtual screen 1920×1080, `DFP-0:nvidia-auto-select` mode를 설정했다.
+
+판정: HDMI 없는 1920×1080 정상 전원 사이클 **2회 통과**. 반복성 관문을 닫는다. 설정은 `/etc/X11`에 영구 설치돼 이후 Jetson 재부팅과 Go2 전원 사이클에도 적용되는 구조다. 실제 RViz/OpenGL 표시는 P3에서 별도로 확인한다.
 
 ## SSH 복구
 

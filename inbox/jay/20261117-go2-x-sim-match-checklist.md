@@ -171,6 +171,14 @@ SDK 벡터를 Isaac 순서로 읽는 SDK index 순열은 `[3,0,9,6,4,1,10,7,5,2,
 
 ## 7. 다음 현장 측정
 
+### 7.1 팀원 APP 설치 뒤 기준선 재감사
+
+오현민 팀원의 Jetson APP 연결 작업 뒤 읽기 전용 감사를 수행했다. 완성된 r4 사용자 venv와 설치가 중단된 r5 폴더, 부팅 자동실행으로 enable된 `foothold-robot.service`가 추가됐다. r5에는 `INCOMPLETE`가 있고 `launch.py`가 없어 부팅 뒤 6회 실패했으며 현재 APP 프로세스와 TCP 9539 listener는 없다. 과거 APP 로그에서는 고수준 Sport SDK `StopMove` 호출은 확인됐지만 `StandUp`·`StandDown`이나 저수준 `LowCmd` 송신 증거는 없었다.
+
+정본 3 ONNX/PT/contract/deploy 파일은 Jetson APP 설치본에 없다. APP의 depth 코드는 정책용 60×60 입력이 아니라 화면 전송용 색상 JPEG 변환이다. D435i는 계속 USB `5000M`이고, 640×480×30 내부값을 재측정해 `fx=fy=387.124359`, `ppx=319.636017`, `ppy=242.064362`, Brown-Conrady coeffs 0, depth scale `0.001 m`로 이전값과 일치했다. 원시 감사·명령은 [`20261118-app-baseline-audit/README.md`](20261117-go2-x-sim-match-checklist-assets/20261118-app-baseline-audit/README.md)에 기록했다.
+
+앉은 자세에서 읽은 카메라-몸통 상대각 35.225°는 기존 Stand 기준과 자세가 달라 drift 판정에 쓰지 않는다. 자동실행 비활성화와 같은 순정 Stand 3회 재측정이 다음 관문이다.
+
 - **최우선:** Go2를 완전히 냉각하고 업체에 전면 hip 78/81°C, FR `reserve[0]=0x04`, 전면 적색 점멸, Damping→Stand 뒤 lowcmd `kp=100/kd=5`를 전달한다. `1001`은 공식 SDK상 Damp API ID라는 점을 함께 적는다.
 - 업체 답변 또는 안전한 냉각 뒤, 로봇을 바로 Stand시키지 말고 읽기 전용 온도·lowcmd 감시를 먼저 시작한다. 순정 조이스틱 입력 순서와 모드 표시를 기록한 짧은 Damping→Stand 1회만 시험하고, 온도가 빠르게 오르거나 고이득 상태가 반복되면 중단한다.
 - 카메라 상대각 35°와 Classic 좌·우 ㅁ자 주행 전후 브라켓 단기 유지성은 통과했다. 장기 반복·충격 뒤 witness mark와 상대각을 재확인한다.
