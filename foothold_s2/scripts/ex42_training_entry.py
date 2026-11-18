@@ -1246,6 +1246,9 @@ def make_ex42_stage_zero_plan_view(source_plan: Any, stage: Any,
         fixed_schedule=source_plan.fixed_schedule,
         parent_sha256=parent_receipt["parent_sha256"], parent_update=parent_update,
         ex42_stage_zero=True, parent_receipt=dict(parent_receipt),
+        # the stage's level-up rule cell: prepare_terrain_cfg reads plan.document['terrain_promotion'] (absent = today's rule)
+        document=({"terrain_promotion": ex42_plan.document["terrain_promotion"]}
+                  if ex42_plan is not None and "terrain_promotion" in ex42_plan.document else {}),
     )
 
 
