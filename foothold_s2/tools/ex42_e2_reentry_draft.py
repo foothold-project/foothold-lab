@@ -66,25 +66,27 @@ def parent_pin(source_row: dict, run_dir: Path, iteration: int) -> dict:
 
 
 def draft(source_dir: Path, run_dir: Path, iteration: int, mesh_dir: Path, out: Path, *, profile: str = "e2_easy10_beam_edge",
-          promotion: dict | None = None, adjust_from: Path | None = None) -> dict:
+          promotion: dict | None = None, adjust_from: Path | None = None, keep_mesh: bool = False) -> dict:
     source_dir, out = Path(source_dir).resolve(strict=True), Path(out).absolute()
     if out.exists():
         raise FileExistsError(f"{out} exists (a draft folder is never reused)")
     plan = yaml.safe_load((source_dir / "ex42-prep.yaml").read_text(encoding="utf-8-sig"))
     approvals = yaml.safe_load((source_dir / "ex42-approvals.yaml").read_text(encoding="utf-8-sig"))
     old_plan_sha = _sha(source_dir / "ex42-prep.yaml")
-    if profile in plan["training_mesh_profiles"]:
+    if profile in plan["training_mesh_profiles"] and not keep_mesh:
         raise ValueError(f"profile {profile} already exists in the plan")
     row = next(r for r in plan["stages"] if r["id"] == STAGE)
     pin = parent_pin(row, run_dir, iteration)
     row["parent"] = pin
-    moved = [r["id"] for r in plan["stages"] if r.get("training_mesh_profile") == OLD_PROFILE]
-    if not moved:
-        raise ValueError(f"no stage names {OLD_PROFILE}")
-    plan["training_mesh_profiles"][profile] = mesh_profile(mesh_dir)
-    for r in plan["stages"]:
-        if r.get("training_mesh_profile") == OLD_PROFILE:
-            r["training_mesh_profile"] = profile
+    moved = []
+    if not keep_mesh:       # keep_mesh: the same weights on the plan's own mesh (the way back when the new mesh or rule fails its first-update check)
+        moved = [r["id"] for r in plan["stages"] if r.get("training_mesh_profile") == OLD_PROFILE]
+        if not moved:
+            raise ValueError(f"no stage names {OLD_PROFILE}")
+        plan["training_mesh_profiles"][profile] = mesh_profile(mesh_dir)
+        for r in plan["stages"]:
+            if r.get("training_mesh_profile") == OLD_PROFILE:
+                r["training_mesh_profile"] = profile
     if promotion is not None:
         plan["terrain_promotion"] = promotion
     plan.pop("materialization", None)
@@ -103,7 +105,7 @@ def draft(source_dir: Path, run_dir: Path, iteration: int, mesh_dir: Path, out: 
     (out / "ex42-approvals.yaml").write_bytes(approval_bytes)
     record = {"format": REENTRY_FORMAT, "stage": STAGE, "source_dir": str(source_dir), "source_plan_sha256": old_plan_sha,
               "new_plan_sha256": hashlib.sha256(plan_bytes).hexdigest(), "approval_sha256": plan["stage_zero"]["approval_sha256"],
-              "parent": pin, "run_dir": str(Path(run_dir).resolve()), "mesh_profile": profile, "mesh_stages": moved,
+              "parent": pin, "run_dir": str(Path(run_dir).resolve()), "mesh_profile": None if keep_mesh else profile, "mesh_stages": moved, "keep_mesh": keep_mesh,
               "terrain_promotion": promotion, "training_started": False}
     if adjust_from is not None:
         # the live (per update) adjustment file binds the plan sha256: the same decisions, re-bound to the new plan. Nothing is added or decided here.
@@ -122,9 +124,10 @@ def main(argv=None):
     p.add_argument("--source-dir", type=Path, required=True)
     p.add_argument("--run-dir", type=Path, required=True)
     p.add_argument("--iteration", type=int, required=True)
-    p.add_argument("--mesh-dir", type=Path, required=True)
+    p.add_argument("--mesh-dir", type=Path, required=True, help="ignored with --keep-mesh (but must exist)")
     p.add_argument("--out", type=Path, required=True)
     p.add_argument("--profile", default="e2_easy10_beam_edge")
+    p.add_argument("--keep-mesh", action="store_true", help="do not change the mesh pin (rollback draft: same weights, old mesh)")
     p.add_argument("--no-promotion", action="store_true", help="leave the level-up rule as it is (no terrain_promotion cell)")
     p.add_argument("--x-fraction", type=float, default=0.5)
     p.add_argument("--adjust-from", type=Path, help="an e2 ex42-update-adjust/1 file to copy with the new plan sha256")
@@ -132,7 +135,7 @@ def main(argv=None):
     a = p.parse_args(argv)
     cell = None if a.no_promotion else {"x_progress_kinds": a.kinds, "x_progress_fraction": a.x_fraction, "forward_only": True}
     print(json.dumps(draft(a.source_dir, a.run_dir, a.iteration, a.mesh_dir, a.out, profile=a.profile, promotion=cell,
-                                          adjust_from=a.adjust_from), indent=1))
+                                          adjust_from=a.adjust_from, keep_mesh=a.keep_mesh), indent=1))
 
 
 if __name__ == "__main__":

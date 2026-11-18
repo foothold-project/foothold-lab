@@ -6,7 +6,8 @@
 # 3. runs the stage launcher --dry-run (canon check, mesh pin, parent pin, approval, cumulative update) and --print (the P1 evaluation
 #    argv must carry the new mesh dir and its geometry sha).
 # When the m750 checkpoint exists: the same script with 750 and a new folder name.
-# Settings by environment (defaults are today's run): E2_RUN, E2_SOURCE_DIR, E2_MESH_DIR, E2_ADJUST_FROM, E2_OUT_ROOT.
+# Settings by environment (defaults are today's run): E2_RUN, E2_SOURCE_DIR, E2_MESH_DIR, E2_ADJUST_FROM, E2_OUT_ROOT,
+# E2_DRAFT_ARGS (extra draft flags, e.g. "--keep-mesh --no-promotion" for the rollback draft: same weights, old mesh and rule).
 set -euo pipefail
 it="${1:?iteration}"; name="${2:?draft folder name}"
 here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"; repo="$(cd "$here/../.." && pwd)"
@@ -22,7 +23,7 @@ pin="taskset -c 37-44"
 cd "$repo"
 out="$root/$name"
 $pin "$py" -m foothold_s2.tools.ex42_e2_reentry_draft --source-dir "$src" --run-dir "$run" --iteration "$it" --mesh-dir "$mesh" \
-    --out "$out" --adjust-from "$adjust" > "$out.draft.json"
+    --out "$out" --adjust-from "$adjust" ${E2_DRAFT_ARGS:-} > "$out.draft.json"
 echo "draft: $out ($(grep -o '"new_plan_sha256": "[0-9a-f]*"' "$out.draft.json"))"
 $pin "$py" - "$out" "$run" <<'PY'
 import sys

@@ -91,3 +91,15 @@ def test_a_checkpoint_the_manifest_has_not_published_is_refused(tmp_path):
     run, _ = _fake_run(tmp_path)
     with pytest.raises(ValueError, match="has not published"):
         rd.draft(SOURCE, run, 750, MESH, tmp_path / "draft")
+
+
+@needs_real
+def test_the_rollback_draft_keeps_the_plans_own_mesh_and_rule(tmp_path):
+    run, sha = _fake_run(tmp_path)
+    out = tmp_path / "rollback"
+    record = rd.draft(SOURCE, run, 550, MESH, out, keep_mesh=True)
+    old = yaml.safe_load((SOURCE / "ex42-prep.yaml").read_text(encoding="utf-8-sig"))
+    new = yaml.safe_load((out / "ex42-prep.yaml").read_text(encoding="utf-8-sig"))
+    assert record["mesh_stages"] == [] and new["training_mesh_profiles"] == old["training_mesh_profiles"] and "terrain_promotion" not in new
+    assert [r.get("training_mesh_profile") for r in new["stages"]] == [r.get("training_mesh_profile") for r in old["stages"]]
+    assert next(r for r in new["stages"] if r["id"] == "E2")["parent"]["sha256"] == sha
