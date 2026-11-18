@@ -734,7 +734,7 @@ stages:
         level_cap: 5
       - family: A
         kind: stepping_stones_low
-        share: 0.05
+        share: 0.20
         level_cap: 5
     floors:
       global_command_floor:
