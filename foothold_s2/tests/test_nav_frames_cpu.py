@@ -208,3 +208,24 @@ def test_dsub_min_is_the_median_over_unfinished_episodes_of_the_closest_approach
     r.step(_st(_near_first_subgoal(r, 0.05), [[0.5, 0, 0]] * 2))                              # both reached the first subgoal and then are measured against the next one
     r.reset_envs([0, 1], start_xy=np.stack([r.start[0], r.start[1]]))
     assert r.take_stats()["nv_dsub_min"] > 0.1
+
+
+def test_per_level_columns_average_each_pgcl_level_separately_and_sum_back_to_the_mixed_totals():
+    t = _task()
+    t.pgcl[1].level = 3                                                           # env 0 at level 1, env 1 at level 3 (level 2 stays empty)
+    sub = t.subgoal.copy()
+    behind = sub - np.array([[1.0, 0.0], [1.0, 0.0]])
+    t.step(_st(behind, [[-0.5, 0.0, 0.0], [0.5, 0.0, 0.0]]))                    # env 0 moves away (cos -1), env 1 toward (cos +1)
+    t.step(_st(np.stack([np.asarray(t.pgcl[0].target.point, float) + [0.05, 0.0], behind[1]]), [[0.5, 0, 0]] * 2))   # env 0 reaches its first subgoal
+    n0 = len(t.pgcl[0]._sub)
+    prog0 = t.pgcl[0]._i / n0
+    d1 = float(np.linalg.norm(behind[1] - np.asarray(t.pgcl[1]._sub[0].point)))
+    t.reset_envs([0, 1], start_xy=np.stack([t.start[0], t.start[1]]))
+    s = t.take_stats()
+    assert (s["nv_eps_l1"], s["nv_eps_l2"], s["nv_eps_l3p"]) == (1, 0, 1)
+    assert s["nv_sub_reached_l1"] == 1 and s["nv_sub_reached_l3p"] == 0 and s["nv_sub_reached_l1"] + s["nv_sub_reached_l2"] + s["nv_sub_reached_l3p"] == s["nv_sub_reached"]
+    assert s["nv_cos_n_l1"] == 2 and s["nv_cos_n_l3p"] == 2 and s["nv_cos_n_l1"] + s["nv_cos_n_l2"] + s["nv_cos_n_l3p"] == s["nv_cos_n"] == 4
+    assert abs(s["nv_cos_l3p"] - 1.0) < 1e-9 and s["nv_cos_l2"] == -1.0 and s["nv_prog_l2"] == s["nv_dend_l2"] == s["nv_succ_l2"] == -1.0   # empty level reads -1
+    assert abs(s["nv_prog_l1"] - prog0) < 1e-12 and s["nv_prog_l3p"] == 0.0 and abs((s["nv_prog_l1"] + s["nv_prog_l3p"]) / 2 - s["nv_progress_end"]) < 1e-12
+    assert abs(s["nv_dend_l3p"] - d1) < 1e-9 and abs((s["nv_dend_l1"] + s["nv_dend_l3p"]) / 2 - s["nv_dsub_end"]) < 1e-9
+    assert s["nv_succ_l1"] == 0.0 and s["nv_succ_l3p"] == 0.0

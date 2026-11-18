@@ -38,6 +38,13 @@ def make_asset(room, table: dict) -> RoomAsset:
     return RoomAsset(room, gm.make_grade_map(room, table), teacher_maps.RoomVoxels.from_room(room))
 
 
+LV_KEYS = ("l1", "l2", "l3p")        # 회차 행의 수준별 칸 접미사 (PGCL 수준 1 · 2 · 3 이상)
+
+
+def _lv_key(level: int) -> str:
+    return LV_KEYS[min(max(int(level), 1), 3) - 1]
+
+
 SAME_START_M = 0.05                  # 리셋 뒤 몸이 과제 시작 자리에서 이만큼 안이면 같은 과제를 그대로 (길을 다시 내지 않음)
 EPISODE_SPEED_MPS, EPISODE_EXTRA_S = 0.3, 10.0   # 에피소드 길이 = 경로 길이 / 0.3 + 10 초 (planner 03:57 가정)
 
@@ -215,7 +222,8 @@ class NavTask:
         if self._st is None:
             self._st = {"ticks": 0, "sub_reached": 0, "lvl": np.zeros(3), "r": {}, "vcmd": 0.0, "vbody": 0.0, "stand": 0.0,
                         "eps": 0, "cos": 0.0, "cos_n": 0, "prog": 0.0, "dsub0": 0.0, "dsub1": 0.0, "plen": 0.0, "ep_ticks": 0.0,
-                        "out": {"hold": 0, "level_up": 0, "final_success": 0, "new_task": 0}}
+                        "out": {"hold": 0, "level_up": 0, "final_success": 0, "new_task": 0},
+                        "lv": {k: np.zeros(7) for k in LV_KEYS}}     # 수준별 (l1 · l2 · l3p): [eps, prog, dend, succ, sub_reached, cos, cos_n]
         if getattr(self, "_ep_n", None) is None:
             self._ep_n = np.zeros(self.n, dtype=np.int64)
             self._pos_prev = np.full((self.n, 2), np.nan)
@@ -231,8 +239,11 @@ class NavTask:
         self._dmin[i] = np.inf
         st["prog"] += p._i / len(p._sub)
         tgt = p._sub[min(p._i, len(p._sub) - 1)].point
+        lv = st["lv"][_lv_key(p.level)]
+        lv[0] += 1; lv[1] += p._i / len(p._sub); lv[3] += float(p.all_reached)
         if not np.isnan(self._pos_prev[i, 0]):
             st["dsub1"] += float(np.linalg.norm(self._pos_prev[i] - np.asarray(tgt)))
+            lv[2] += float(np.linalg.norm(self._pos_prev[i] - np.asarray(tgt)))
         st["ep_ticks"] += float(self._ep_n[i])
 
     def _note_outcome(self, name: str) -> None:
@@ -262,6 +273,12 @@ class NavTask:
         out["nv_ep_ticks"] = st["ep_ticks"] / e
         out["nv_cos_vel_sub"] = st["cos"] / st["cos_n"] if st["cos_n"] else 0.0
         out["nv_cos_n"] = st["cos_n"]
+        for k, (n_e, prog, dend, succ, subr, cos, cos_n) in ((k, st["lv"][k]) for k in LV_KEYS):   # 수준별 (읽기만): 에피소드가 없으면 -1
+            out[f"nv_eps_{k}"] = int(n_e); out[f"nv_sub_reached_{k}"] = int(subr); out[f"nv_cos_n_{k}"] = int(cos_n)
+            out[f"nv_prog_{k}"] = prog / n_e if n_e else -1.0
+            out[f"nv_dend_{k}"] = dend / n_e if n_e else -1.0
+            out[f"nv_succ_{k}"] = succ / n_e if n_e else -1.0
+            out[f"nv_cos_{k}"] = cos / cos_n if cos_n else -1.0
         out["nv_dsub_min"] = float(np.median(st["dmin"])) if st.get("dmin") else -1.0      # 에피소드마다 (끝까지 못 닿은 것) 지금 부목표까지 최소 거리의 중앙값 · -1 = 해당 에피소드 없음
         if self.shape_w:
             out["nv_shape_scale"] = self.shape_scale
@@ -399,6 +416,8 @@ class NavTask:
         passed = np.array([p._i for p in self.pgcl]) - i_before
         terms = dict(terms)
         terms["r1"] = rewards_hl.WEIGHTS["r1"] * passed.astype(np.float64)
+        for i in np.nonzero(passed)[0]:
+            st["lv"][_lv_key(self.pgcl[i].level)][4] += int(passed[i])
         if self.shape_w:
             terms["r_shape"] = self._shape_reward(pos_room[:, :2], i_now=np.array([p._i for p in self.pgcl]))
         total = sum(terms.values())
@@ -450,8 +469,12 @@ class NavTask:
         nv, nd = np.linalg.norm(vw, axis=1), np.linalg.norm(d, axis=1)
         ok = (nv >= 0.05) & (nd > 1e-9) & ~done
         if ok.any():
-            st["cos"] += float(((vw[ok] * d[ok]).sum(1) / (nv[ok] * nd[ok])).sum())
+            cc = (vw * d).sum(1) / np.maximum(nv * nd, 1e-12)
+            st["cos"] += float(cc[ok].sum())
             st["cos_n"] += int(ok.sum())
+            for i in np.nonzero(ok)[0]:
+                a = st["lv"][_lv_key(self.pgcl[i].level)]
+                a[5] += float(cc[i]); a[6] += 1
 
     def _note_tick(self, state, pos_xy, terms, done) -> None:
         st = self._stat()
