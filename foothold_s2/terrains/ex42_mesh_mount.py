@@ -128,8 +128,51 @@ def column_tile_sizes(origins) -> tuple[np.ndarray, float, list[dict[str, float]
     return tile_x, (float(np.median(dy)) if len(dy) else float(tile_x.mean())), irregular
 
 
-def mesh_file_generator_cfg(npz_path: str | Path, mesh_sha256: str | None = None):
-    """Isaac-side cfg whose class_type loads the saved mesh. Kit python only."""
+# CPU-only evaluation aid: the joined mesh has millions of triangles and a single PhysX contact pair can spend minutes in
+# BV4 overlap tests over them (2026-11-19). `crop_to_cells` keeps only the triangles around the evaluated (level, column)
+# cells. World coordinates, origins and column families are untouched. Never used by training or GPU evaluation.
+CROP_MARGIN_DEFAULT_M = 8.0
+LAST_CROP_RECORD: dict[str, Any] = {}      # set by the cropped generator when it runs (same process as the evaluator)
+
+
+def crop_to_cells(vertices: np.ndarray, faces: np.ndarray, origins, tile_x, tile_y: float,
+                  cells, margin: float) -> tuple[np.ndarray, np.ndarray, dict[str, Any]]:
+    """Faces whose centroid lies within tile/2 + margin (x and y) of any cell origin; vertices renumbered, coordinates kept.
+
+    `cells` is a list of (row, column) into `origins` (rows, columns, 3); `tile_x` is the per-column tile length, `tile_y`
+    the column pitch (column_tile_sizes). Raises when a cell is outside the grid, the margin is negative or nothing is kept.
+    """
+    o = np.asarray(origins, dtype=np.float64)
+    tx = np.asarray(tile_x, dtype=np.float64)
+    if not cells or margin < 0 or not np.isfinite(margin):
+        raise ValueError("crop needs at least one cell and a finite non-negative margin")
+    centroid = np.asarray(vertices, dtype=np.float64)[np.asarray(faces)].mean(axis=1)
+    keep = np.zeros(len(faces), dtype=bool)
+    clean = []
+    for row, col in cells:
+        if not (0 <= int(row) < o.shape[0] and 0 <= int(col) < o.shape[1]):
+            raise ValueError(f"crop cell ({row}, {col}) is outside the {o.shape[0]}x{o.shape[1]} grid")
+        ox, oy = o[int(row), int(col), 0], o[int(row), int(col), 1]
+        keep |= (np.abs(centroid[:, 0] - ox) <= tx[int(col)] / 2 + margin) & (np.abs(centroid[:, 1] - oy) <= tile_y / 2 + margin)
+        clean.append([int(row), int(col)])
+    kept = np.asarray(faces)[keep]
+    if len(kept) == 0:
+        raise ValueError("crop kept no triangle")
+    used = np.unique(kept)
+    renumber = np.full(len(vertices), -1, dtype=np.int64)
+    renumber[used] = np.arange(len(used))
+    new_vertices, new_faces = np.asarray(vertices)[used], renumber[kept]
+    sha = hashlib.sha256(new_vertices.astype(np.float32).tobytes() + new_faces.astype(np.int32).tobytes()).hexdigest()
+    return new_vertices, new_faces, {"cropped": True, "margin_m": float(margin), "cells": clean, "faces_before": int(len(faces)),
+                                     "faces_after": int(len(new_faces)), "cropped_mesh_sha256": sha}
+
+
+def mesh_file_generator_cfg(npz_path: str | Path, mesh_sha256: str | None = None, *, crop_cells=None, crop_margin: float | None = None):
+    """Isaac-side cfg whose class_type loads the saved mesh. Kit python only.
+
+    `crop_cells` (CPU evaluation only, default None) returns a cfg whose generator keeps just the triangles around those
+    (row, column) cells (`crop_to_cells`); with None the cfg is the very same one as before.
+    """
     from isaaclab.utils import configclass
 
     loaded = load_combined_mesh(npz_path, mesh_sha256)
@@ -164,4 +207,30 @@ def mesh_file_generator_cfg(npz_path: str | Path, mesh_sha256: str | None = None
         curriculum: bool = True
         use_cache: bool = False
 
-    return CombinedMeshGeneratorCfg()
+    if crop_cells is None:
+        return CombinedMeshGeneratorCfg()
+
+    cells = tuple((int(r), int(c)) for r, c in crop_cells)
+    margin = CROP_MARGIN_DEFAULT_M if crop_margin is None else float(crop_margin)
+
+    class CroppedMeshGenerator(CombinedMeshGenerator):
+        def __init__(self, cfg, device="cpu"):
+            import trimesh
+
+            data = load_combined_mesh(cfg.mesh_npz, cfg.mesh_sha256)
+            vertices, faces, record = crop_to_cells(data["vertices"], data["faces"], data["origins"], tile_x, tile_y,
+                                                    cfg.crop_cells, cfg.crop_margin)
+            record["source_mesh_sha256"] = data["mesh_sha256"]
+            LAST_CROP_RECORD.clear()
+            LAST_CROP_RECORD.update(record)
+            self.terrain_mesh = trimesh.Trimesh(vertices=vertices.astype(np.float64), faces=faces.astype(np.int64), process=False)
+            self.terrain_origins = data["origins"]
+            self.flat_patches = {}
+
+    @configclass
+    class CroppedMeshGeneratorCfg(CombinedMeshGeneratorCfg):
+        class_type: type = CroppedMeshGenerator
+        crop_cells: tuple = cells
+        crop_margin: float = margin
+
+    return CroppedMeshGeneratorCfg()
