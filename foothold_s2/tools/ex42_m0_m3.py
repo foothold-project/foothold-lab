@@ -81,6 +81,7 @@ def cpu_inventory(folder,table):
     from foothold_s2.terrains.ex42_mesh_mount import load_combined_mesh
     from foothold_s2.terrains.ex42_column_reset import build_column_table
     from foothold_s2.tools.ex42_mesh_flags import verify_annotation
+    from foothold_s2.tools.ex42_ladder_splice import is_ladder_splice,verify_ladder_splice
     from foothold_s2.tools.ex42_execution_manifest import column_face_mask
     folder=Path(folder).resolve(strict=True)
     # Measure first access before verification warms the file in this process.
@@ -96,7 +97,7 @@ def cpu_inventory(folder,table):
             'rss_before_bytes':current_before,'rss_after_bytes':rss_bytes(),
             'maxrss_before_bytes':rss_before,'maxrss_after_bytes':resource.getrusage(resource.RUSAGE_SELF).ru_maxrss*1024})
         if label.startswith('cold'): del data,flags
-    proof=verify_annotation(folder)
+    proof=verify_ladder_splice(folder) if is_ladder_splice(folder) else verify_annotation(folder)
     meta=json.loads((folder/'mesh_manifest.json').read_text())
     manifest=json.loads((folder/'terrain_manifest.json').read_text())
     plan=EX42Plan.load(table);plan.validate_terrain_manifest(manifest)
