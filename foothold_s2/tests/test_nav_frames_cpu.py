@@ -229,3 +229,32 @@ def test_per_level_columns_average_each_pgcl_level_separately_and_sum_back_to_th
     assert abs(s["nv_prog_l1"] - prog0) < 1e-12 and s["nv_prog_l3p"] == 0.0 and abs((s["nv_prog_l1"] + s["nv_prog_l3p"]) / 2 - s["nv_progress_end"]) < 1e-12
     assert abs(s["nv_dend_l3p"] - d1) < 1e-9 and abs((s["nv_dend_l1"] + s["nv_dend_l3p"]) / 2 - s["nv_dsub_end"]) < 1e-9
     assert s["nv_succ_l1"] == 0.0 and s["nv_succ_l3p"] == 0.0
+
+
+def _eta_after_two_episodes(mode, new_task_between):
+    t = _task()
+    t.visit_reset = mode
+    t.step(_st(_near_first_subgoal(t, 0.4), [[0.5, 0, 0]] * 2))
+    n_before = int(t.visit.counts[0].sum())
+    if new_task_between:
+        t.pgcl[0].needs_new_task = True
+    t.reset_envs([0, 1], start_xy=np.stack([t.start[0], t.start[1]]))                 # episode 1 ends, same start
+    return n_before, int(t.visit.counts[0].sum()), int(t.visit.counts[1].sum())
+
+
+def test_visit_reset_task_keeps_eta_across_episodes_of_the_same_task_and_clears_it_on_a_new_task():
+    b, kept0, kept1 = _eta_after_two_episodes("task", False)
+    assert b > 0 and kept0 == b and kept1 == b                                         # same task: both envs keep the grid
+    b, c0, c1 = _eta_after_two_episodes("task", True)
+    assert c0 == 0 and c1 == b                                                         # env 0 got a new task: cleared; env 1 kept
+    b, e0, e1 = _eta_after_two_episodes("episode", False)
+    assert e0 == 0 and e1 == 0                                                         # default: cleared every episode (as before)
+    assert _task().visit_reset == "episode"
+
+
+def test_r1_r2_sums_are_in_the_iteration_row():
+    t = _task()
+    t.step(_st(_near_first_subgoal(t, 0.4), [[0.5, 0, 0]] * 2))
+    t.step(_st(_near_first_subgoal(t, 0.4), [[0.5, 0, 0]] * 2))
+    s = t.take_stats()
+    assert abs(s["nv_r2_sum"] - s["nv_r2"] * 2) < 1e-12 and abs(s["nv_r1_sum"] - s["nv_r1"] * 2) < 1e-12 and s["nv_r2_sum"] > 0

@@ -65,6 +65,8 @@ class NavTask:
         self.start = np.zeros((self.n, 2)); self.goal = np.zeros((self.n, 2)); self.path = [None] * self.n
         self.v_des = np.zeros(self.n); self.v_des_range = v_des_range
         self.visit = rewards_hl.VisitGrid(self.n)
+        self.visit_reset = "episode"      # "task" (--visit-reset task) = 방문 격자 (η) 를 새 과제를 뽑을 때만 비움 (같은 과제를 PGCL 이 유지하는 동안 쌓임) · 기본 "episode" = 에피소드마다 비움 (지금과 같음 · 논문 미기재)
+        self._fresh_task: set = set()     # 이번 reset 에서 새 과제가 뽑힌 env (visit_reset == "task" 일 때 격자를 비울 대상)
         self.cmd_prev = np.zeros((self.n, 3)); self.cmd_prev2 = np.zeros((self.n, 3))
         self.subgoal = np.zeros((self.n, 2))
         self.min_task_m, self.max_task_tries = min_task_m, max_task_tries
@@ -270,6 +272,9 @@ class NavTask:
                "nv_dsub_start": st["dsub0"] / e, "nv_dsub_end": st["dsub1"] / e, "nv_path_len": st["plen"] / e}
         out.update({f"nv_out_{k}": v for k, v in st["out"].items()})
         out.update({f"nv_{k}": v / t for k, v in st["r"].items()})
+        for k in ("r1", "r2"):
+            if k in st["r"]:
+                out[f"nv_{k}_sum"] = st["r"][k]          # 회차 안 틱마다 env 평균 보상의 합 (nv_r1 · nv_r2 는 그 합 / 틱 수)
         out["nv_ep_ticks"] = st["ep_ticks"] / e
         out["nv_cos_vel_sub"] = st["cos"] / st["cos_n"] if st["cos_n"] else 0.0
         out["nv_cos_n"] = st["cos_n"]
@@ -296,6 +301,7 @@ class NavTask:
         straight = float(np.linalg.norm(s - t))
         r = self._length(pts) / max(straight, 1e-6)
         self.task_new += 1
+        self._fresh_task.add(int(i))
         self.task_winding += int(r >= self.winding_min)
         self.ratio_hist[int(np.searchsorted(self.ratio_edges, r, side="right"))] += 1
 
@@ -378,7 +384,11 @@ class NavTask:
             self.subgoal[i] = p.target.point
             self._note_episode_start(i, p, s)
         self.v_des[ids] = rewards_hl.sample_v_des(self.rng, len(ids), self.v_des_range)
-        self.visit.reset(ids)
+        if self.visit_reset == "task":
+            self.visit.reset([int(i) for i in np.atleast_1d(ids) if int(i) in self._fresh_task])
+        else:
+            self.visit.reset(ids)
+        self._fresh_task.difference_update(int(i) for i in np.atleast_1d(ids))
         self.cmd_prev[ids] = 0.0; self.cmd_prev2[ids] = 0.0
         yaw = self.rng.uniform(-np.pi, np.pi, len(ids))
         return {"start_xy": self.start[ids].copy(), "yaw": yaw, "outcome": outcome}

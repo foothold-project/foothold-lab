@@ -126,6 +126,11 @@ def _build(cfg: dict, with_camera: bool):
     if sl not in ("1", "all"):
         raise ValueError(f"shape_levels must be 1 or all, got {sl!r}")
     task.shape_all_levels = sl == "all"
+    vr = str(cfg.get("visit_reset", "episode"))
+    if vr not in ("episode", "task"):
+        raise ValueError(f"visit_reset must be episode or task, got {vr!r}")
+    task.visit_reset = vr
+    print(f"VISIT_RESET={vr}" + ("" if vr == "episode" else " TASK_SCOPED (논문 밖: 방문 격자 η 를 새 과제를 뽑을 때만 비움)"), flush=True)
     print(f"SHAPING={shape} w={task.shape_w:g} clip={task.shape_clip} start_frac={task.shape_start_frac} decay_iters={task.shape_decay_iters} decay={sd}" + ("" if sd == "on" else " DECAY_OFF (논문 밖: 배율 1.0 고정)"), flush=True)
     print(f"SHAPE_LEVELS={sl}" + ("" if sl == "1" else " ALL_LEVELS (논문 밖: 수준 2 이상 env 에도 r_shape)"), flush=True)
     task.redraw_on_fall = bool(cfg.get("task_redraw_on_fall", False))           # False (기본) = 같은 과제 유지 (논문) · True = 넘어지면 표에서 새 과제 (02:2x 판)
