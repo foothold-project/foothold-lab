@@ -1,0 +1,8 @@
+samples=5365
+measured_seconds=179.973647992
+measured_fps=29.809919729
+frame_number_gaps=0
+max_arrival_dt_ms=1045.210041000
+mean_zero_ratio=0.101273966
+mean_outside_0p2_3p0_ratio=0.111793997
+output=records/20261118-camera-bracket-walk-1/depth_walk.csv
