@@ -241,28 +241,35 @@ stage_e2_authorization:
       kind: gaps
       share:
         from: 0.0
-        to: 0.11
+        to: 0.088
+      level_cap: 2
+      donor: continuous
+    - family: B
+      kind: gap
+      share:
+        from: 0.0
+        to: 0.088
       level_cap: 2
       donor: continuous
     - family: C
       kind: gap
       share:
         from: 0.0
-        to: 0.11
+        to: 0.088
       level_cap: 2
       donor: continuous
     - family: B
       kind: beam
       share:
         from: 0.0
-        to: 0.11
+        to: 0.088
       level_cap: 2
       donor: continuous
     - family: A
       kind: balance_beams
       share:
         from: 0.0
-        to: 0.11
+        to: 0.088
       level_cap: 2
       donor: continuous
   extension_authorized: false
@@ -275,9 +282,10 @@ stage_e2_authorization:
   - landing_evaluation_mesh_sha256
   - flag_baseline
   - m0_m3_receipt_sha256
-  # CG E.12 draft: E2 opens a four-kind bundle (B gap left out) on K once; the old one-kind choice (start_stones_l0) is gone.
+  # CG E.12 draft: E2 opens a five-kind bundle (B gap back in on the GPU 32|32 measure, planner 11/19) on K once; the old one-kind choice (start_stones_l0) is gone.
   kind_bundle:
   - {family: A, kind: gaps}
+  - {family: B, kind: gap}
   - {family: C, kind: gap}
   - {family: B, kind: beam}
   - {family: A, kind: balance_beams}
@@ -295,6 +303,15 @@ stage_e2_authorization:
   judge_cells_added:
   - family: A
     kind: gaps
+    level: opened_cap
+    command: forward_1.0
+    modes:
+    - gt
+    - pred
+    record_modes:
+    - 'off'
+  - family: B
+    kind: gap
     level: opened_cap
     command: forward_1.0
     modes:
@@ -332,6 +349,11 @@ stage_e2_authorization:
   record_cells_added:
   - family: A
     kind: gaps
+    level: opened_cap
+    command: flag_reach
+    flags: 1
+  - family: B
+    kind: gap
     level: opened_cap
     command: flag_reach
     flags: 1

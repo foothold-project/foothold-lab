@@ -76,16 +76,18 @@ def test_a_multi_axis_stage_without_the_block_is_refused():
 
 
 def test_e3_start_block_is_the_e2_end_state_plus_the_k_bundle_once():
-    """CG v0.18 draft E.12: E3 = the E2 four kinds held at 0.03 (cap 5, graduated) plus the three-kind bundle opened on K once (cap 2)."""
+    """CG v0.18 draft E.12: E3 = the E2 five kinds held at 0.03 (cap 5, graduated) plus the three-kind bundle opened on K once (cap 2)."""
     rows = _rows()
-    e2 = {(r.get("kind") or r.get("kinds_of")): r for r in rows["E2"]["terrain"]["exposure_at_E2"]["positive"]}
-    e3 = {(r.get("kind") or r.get("kinds_of")): r for r in rows["E3"]["terrain"]["exposure_at_E3"]["positive"]}
-    assert set(e3) - set(e2) == {"pallets", "stepping_beams", "stepping_stones_low"}       # the bundle opens at the stage entry
+    key = lambda r: (r["family"], r.get("kind") or r.get("kinds_of"))                   # a kind name repeats across families (B/gap, C/gap)
+    e2 = {key(r): r for r in rows["E2"]["terrain"]["exposure_at_E2"]["positive"]}
+    e3 = {key(r): r for r in rows["E3"]["terrain"]["exposure_at_E3"]["positive"]}
+    bundle = {("B", "pallets"), ("A", "stepping_beams"), ("A", "stepping_stones_low")}
+    assert set(e3) - set(e2) == bundle                                                     # the bundle opens at the stage entry
     assert set(e2) - set(e3) == set()
-    assert e3["continuous"] == e2["continuous"]                                           # the continuous cap does not move (L+ is its own boundary)
-    for name in ("gaps", "gap", "beam", "balance_beams"):                                 # held at the floor, graduated level
+    assert e3[("A", "continuous")] == e2[("A", "continuous")]                              # the continuous cap does not move (L+ is its own boundary)
+    for name in set(e2) - {("A", "continuous")}:                                           # held at the floor, graduated level
         assert e3[name]["share"] == 0.03 and e3[name]["level_cap"] == 5
-    assert all(e3[name]["level_cap"] == 2 for name in ("pallets", "stepping_beams", "stepping_stones_low"))
+    assert all(e3[name]["level_cap"] == 2 for name in bundle)
     assert abs(sum(r["share"] for r in e3.values() if "share" in r) - 0.44) < 1e-9
     ladder = rows["E3"]["terrain"]["k_ladder"]
     assert ladder["order"] == [] and ladder["kind_floor"] == 0.03                         # the bundle opens in the start block, not on the ladder

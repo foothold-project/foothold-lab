@@ -59,8 +59,9 @@ def test_the_stage_kind_lists_come_from_the_real_rows_and_never_name_a_continuou
     # CG v0.18 draft E.12: the judged kinds are the stage's NEW bundle (the maintenance table keeps the earlier ones at 0.03)
     assert e3 == ["B/pallets", "A/stepping_beams", "A/stepping_stones_low"]
     assert e4 == ["B/stones", "A/stepping_stones_high"]
-    assert len(e5) == 9 and set(e5) == {"A/gaps", "C/gap", "B/beam", "A/balance_beams", "B/pallets", "A/stepping_beams",
-                                          "A/stepping_stones_low", "B/stones", "A/stepping_stones_high"}
+    assert len(e5) == 14 and set(e5) == {"A/gaps", "B/gap", "C/gap", "B/beam", "A/balance_beams", "B/pallets", "A/stepping_beams",
+                                           "A/stepping_stones_low", "B/stones", "A/stepping_stones_high",
+                                           "E/stairs_high", "C/box", "B/climb_down", "E/stairs_high_inv"}
     assert not any(k in e3 for k in ("A/continuous",))
     spec = ks._spec(plan)
     assert spec["envs_per_kind"] == 32 and spec["valid_min_each"] == 24

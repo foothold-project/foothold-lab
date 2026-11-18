@@ -170,17 +170,16 @@ def test_e2_draft_six_additions_are_not_launch_permission():
     assert c['prerequisites']['stage_judgment_policy']=='pending'
     # CG E.12 draft: the one-kind choice (start_stones_l0) is replaced by a four-kind bundle opened on K once.
     assert 'kind_choice' not in c
-    assert c['kind_bundle']==[{'family':'A','kind':'gaps'},{'family':'C','kind':'gap'},{'family':'B','kind':'beam'},{'family':'A','kind':'balance_beams'}]
+    assert c['kind_bundle']==[{'family':'A','kind':'gaps'},{'family':'B','kind':'gap'},{'family':'C','kind':'gap'},{'family':'B','kind':'beam'},{'family':'A','kind':'balance_beams'}]
     assert [(d['family'],d['kind'],d['share'],d['level_cap'],d['donor']) for d in c['boundary']['exposure_delta']]==[
-        ('A','gaps',{'from':0.0,'to':0.11},2,'continuous'),('C','gap',{'from':0.0,'to':0.11},2,'continuous'),
-        ('B','beam',{'from':0.0,'to':0.11},2,'continuous'),('A','balance_beams',{'from':0.0,'to':0.11},2,'continuous')]
+        (f,k,{'from':0.0,'to':0.088},2,'continuous') for f,k in (('A','gaps'),('B','gap'),('C','gap'),('B','beam'),('A','balance_beams'))]
     # CG:265. These are planned criteria, not an implemented sparse-cell score adapter.
     g=c['exit_gate']
     assert (g['success_min'],g['survival_min'],g['windows'],g['learned_cells_min'])==(52,60,2,32)
     assert g['denominator']=='forward+flag_all' and g['completion']=='last_support_0.5s'
     assert c['exit_gate']['cells']=='opened_kinds_at_level_cap'
-    assert len(c['judge_cells_added'])==4 and all(x['modes']==['gt','pred'] and x['record_modes']==['off'] for x in c['judge_cells_added'])
-    assert [x['command'] for x in c['record_cells_added']]==['flag_reach']*4
+    assert len(c['judge_cells_added'])==5 and all(x['modes']==['gt','pred'] and x['record_modes']==['off'] for x in c['judge_cells_added'])
+    assert [x['command'] for x in c['record_cells_added']]==['flag_reach']*5
 
 
 def test_m_branch_cannot_replace_e5_graduation():

@@ -13,9 +13,9 @@ needs_mesh = pytest.mark.skipif(not (REAL / "terrain_mesh.npz").is_file(), reaso
 STAGES = ["E2", "E3", "E4", "E5", "M", "E6a", "E6b"]
 # sparse share added up at the stage start (planner table, computed): the sparse part must stay inside 57.1 % (CG:380)
 # CG v0.18 draft E.12 (lead 11/18 23:3x): the sparse sum is 0.44 at every start of E2..E5 (the new bundle takes 0.44 minus the hold floors of
-# the earlier kinds; E5 mixes nine kinds at 0.44 / 9). Continuous stays 0.56 so the effective continuous floor 42.9 % holds. M / E6a / E6b are
+# the earlier kinds; E5 mixes ten kinds at 0.044 and adds four tail kinds (cap 6) at 0.03 each outside the 0.44, sparse 0.56 total, planner 11/19). Continuous stays 0.56 so the effective continuous floor 42.9 % holds. M / E6a / E6b are
 # the old 28-kind carry-over (not touched here).
-SPARSE = {"E2": 0.44, "E3": 0.44, "E4": 0.44, "E5": 0.44, "M": 0.56, "E6a": 0.56, "E6b": 0.47}
+SPARSE = {"E2": 0.44, "E3": 0.44, "E4": 0.44, "E5": 0.56, "M": 0.56, "E6a": 0.56, "E6b": 0.47}
 
 
 def _rows():
@@ -40,4 +40,4 @@ def test_each_stage_start_block_resolves_on_the_real_mesh_with_its_planned_share
 def test_a_later_stage_block_is_present_for_every_stage_and_the_sparse_columns_grow_by_stage():
     rows = _rows()
     assert all(f"exposure_at_{stage}" in rows[stage]["terrain"] for stage in STAGES)
-    assert [len(rows[s]["terrain"][f"exposure_at_{s}"]["positive"]) for s in ("E2", "E3", "E4", "E5", "E6b")] == [5, 8, 10, 10, 30]
+    assert [len(rows[s]["terrain"][f"exposure_at_{s}"]["positive"]) for s in ("E2", "E3", "E4", "E5", "E6b")] == [6, 9, 11, 15, 30]

@@ -137,7 +137,7 @@ def test_the_opening_order_file_is_the_plan_order_and_its_sha_is_the_binding_val
     record = body(ref["path"])
     expected = hashlib.sha256(json.dumps(order, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode("utf-8")).hexdigest()
     assert record["order"] == order and record["order_sha256"] == expected == body(ref["path"])["order_sha256"]
-    assert ref["pointer"] == "order_sha256" and ref["sha256"] == sha(ref["path"]) and len(order) == 7
+    assert ref["pointer"] == "order_sha256" and ref["sha256"] == sha(ref["path"]) and len(order) == 8
     assert record["format"] == evidence.KIND_ORDER_FORMAT and record["target_stage"] == "E3"
 
 

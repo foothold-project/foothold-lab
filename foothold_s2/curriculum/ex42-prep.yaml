@@ -163,7 +163,7 @@ stage_zero:
     cumulative_update: 12000
     manifest_local_update: 6000
     sha256: 1c6af6319c823c718af4965064f1c312b0d25177f5223a49c323aab3b6f1e613
-  approval_sha256: 6e41d0ff636a3684def80bf31296831ca19af090b687acf83d0d6e9846573872
+  approval_sha256: 436b385ae301824b1e4cc28a5beb48ef8356fe047907d7d0bc2e25bb3d26e62a
   minimum_updates: 1000
   maximum_updates: 1000
   extension_updates: 0
@@ -757,11 +757,11 @@ stages:
   hold_policy: hold_exposure_continue_training
   terrain:
     # planner 14:5x 표 (CG:258~262 D163); 연속 상한 5 와 새 종류 L0 5 % 는 가정, E1F 끝 상한 증거로 바꿀 것
-    # CG v0.18 초안 (E.12 · lead 11/18 23:2x 결정 · 팀장 11/18 21:37 승인 · 병합 전): 네 종을 함께 연다 (K 축 한 번).
-    # 묶음 ③ 틈 둘 (A gaps · C gap) + 묶음 ④ 의 넓은 문 둘 (B beam · A balance_beams) · 종류마다 0.11 (합 0.44) · 상한 2 에서 시작.
+    # CG v0.18 초안 (E.12 · lead 11/18 23:2x 결정 · 팀장 11/18 21:37 승인 · 병합 전): 다섯 종을 함께 연다 (K 축 한 번).
+    # 묶음 ③ 틈 셋 (A gaps · B gap · C gap) + 묶음 ④ 의 넓은 문 둘 (B beam · A balance_beams) · 종류마다 0.088 (합 0.44) · 상한 2 에서 시작.
     # 앞 값은 A stepping_stones_low 하나 share 0.20 · level_cap 5 였다 (이 종류는 E3 로 감).
-    # B gap 은 뺐다 (lead 11/18 23:3x): 정본 3 L0 값이 측정 불가 (평가 자식이 PRED 지도 칸에서 끝나지 않음 · 두 번 · planner 11/18 23:3x).
-    # 측정 불가 · 까닭 조사 뒤 E3 이후 (까닭 조사는 sonnet 몫 · lead 배정). E3 · E4 · E5 블록에도 넣지 않았다.
+    # B gap 은 다시 넣었다 (lead 11/19 00:3x): B/gap L0 는 CPU 평가 (32 env) 에서 평가 자식이 PRED 칸에서 끝나지 않아 GPU 로 쟀다
+    # (sonnet-code-lx 11/19 00:30 · cuda:1 · 32|32 · 3.0 m) · 까닭 조사는 sonnet 몫.
     # 이 행의 kind_choice · kind_alternatives · name · exit_judge 는 옛 「한 종류」 값 그대로다 (sonnet 몫 · lead 배정 · CG E.12).
     exposure_at_E2:
       default:
@@ -774,19 +774,23 @@ stages:
         level_cap: 5
       - family: A
         kind: gaps
-        share: 0.11
+        share: 0.088
+        level_cap: 2
+      - family: B
+        kind: gap
+        share: 0.088
         level_cap: 2
       - family: C
         kind: gap
-        share: 0.11
+        share: 0.088
         level_cap: 2
       - family: B
         kind: beam
-        share: 0.11
+        share: 0.088
         level_cap: 2
       - family: A
         kind: balance_beams
-        share: 0.11
+        share: 0.088
         level_cap: 2
     floors:
       global_command_floor:
@@ -896,12 +900,12 @@ stages:
     # continuous cap stays the E2 value and C/flat opens first on the K ladder instead of in this block.
     # planner 표 (CG:275~281); 세 등급 몫 · 시작 상한은 가정
     # CG v0.18 초안 (E.12 · lead 11/18 23:2x 결정 · 팀장 11/18 21:37 승인 · 병합 전): 위 네 줄 (진입 축 D · stepping_stones_low 0.05 · 상한 1) 은 옛 값이다.
-    # 새 시작 블록 = E2 끝 + K 축 한 번: E2 의 네 종을 유지 하한 0.03 으로 내리고 묶음 ④ 가운데 문 셋을 함께 연다
+    # 새 시작 블록 = E2 끝 + K 축 한 번: E2 의 다섯 종을 유지 하한 0.03 으로 내리고 묶음 ④ 가운데 문 셋을 함께 연다
     # (B pallets · A stepping_beams · A stepping_stones_low · 상한 2 에서 시작).
-    # 듬성 합은 늘 0.44 (lead 11/18 23:3x · (가) 채택으로 닫음): 지금 묶음 합 = 0.44 - 앞 네 종 유지 하한 합 0.12 = 0.32 를 같은 몫 (0.32 / 3 · 하나는 0.1066666666).
+    # ④ ③ 묶음의 합은 늘 0.44 (lead 11/18 23:3x · (가) 채택으로 닫음): 지금 묶음 합 = 0.44 - 앞 다섯 종 유지 하한 합 0.15 = 0.29 를 같은 몫 (0.29 / 3 · 하나는 0.0966666666).
     # 연속 몫 0.56 이라 실효 연속 하한 42.9 % (CG E.3 · D176 ④) 를 그대로 지킨다.
     # A stepping_stones_low 는 쉬운 징검돌 사다리 메시 (가지 feature/sonnet-code-e2-easystone5-1118) 가 학습 메시로 승인되어야 한다.
-    # 유지 하한 네 종의 level_cap = 졸업 레벨 5 그대로 (내리지도 올리지도 않음 · lead 11/18 23:4x).
+    # 유지 하한 다섯 종의 level_cap = 졸업 레벨 5 그대로 (내리지도 올리지도 않음 · lead 11/18 23:4x).
     # 이 행의 boundary.entry_axis 는 K (terrain_exposure) 로 고쳤고 (묶음을 함께 여는 K 한 번 · 그 뒤 D 가 상한 +1), 아래 k_ladder 는
     # 순서를 비우고 유지 하한 0.03 만 남겼다 (경계마다 한 종류를 더 여는 사다리는 몫 합 0.44 를 깨므로 쓰지 않음).
     exposure_at_E3:
@@ -915,6 +919,10 @@ stages:
         level_cap: 5
       - family: A
         kind: gaps
+        share: 0.03
+        level_cap: 5
+      - family: B
+        kind: gap
         share: 0.03
         level_cap: 5
       - family: C
@@ -931,15 +939,15 @@ stages:
         level_cap: 5
       - family: B
         kind: pallets
-        share: 0.1066666666
+        share: 0.0966666666
         level_cap: 2
       - family: A
         kind: stepping_beams
-        share: 0.1066666667
+        share: 0.0966666667
         level_cap: 2
       - family: A
         kind: stepping_stones_low
-        share: 0.1066666667
+        share: 0.0966666667
         level_cap: 2
     # K 경계 사다리: 새 묶음 열기는 시작 블록이 한다 (CG E.12). 경계마다 종류 하나를 더 여는 옛 순서 (C flat 부터 열두 종) 는 비웠다.
     # 몫 합 0.44 를 깨고 시작 블록의 종류와도 겹치기 때문이다. 유지 하한은 0.03 (CG E.12 #4). 여는 순서 기록 (kind_opening_order_recorded)
@@ -1051,11 +1059,11 @@ stages:
   terrain:
     # planner 표 (CG:292~298 D159 D176); 쉬움 1.5 % 는 가정 (연 종류 하한 산수)
     # CG v0.18 초안 (E.12 · lead 11/18 23:2x 결정 · 팀장 11/18 21:37 승인 · 병합 전): 앞 값은 13 종 0.015 + B climb_up 0.05 였다.
-    # 새 시작 블록 = E3 끝 + K 축 한 번: E3 의 세 종을 유지 하한 0.03 으로 내리고 (앞 일곱 종 0.03) 묶음 ④ 뒤 문 둘을 함께 연다
+    # 새 시작 블록 = E3 끝 + K 축 한 번: E3 의 세 종을 유지 하한 0.03 으로 내리고 (앞 여덟 종 0.03) 묶음 ④ 뒤 문 둘을 함께 연다
     # (B stones · A stepping_stones_high · 상한 2 에서 시작).
-    # 듬성 합은 늘 0.44 (lead 11/18 23:3x · (가) 채택으로 닫음): 지금 묶음 합 = 0.44 - 앞 일곱 종 유지 하한 합 0.21 = 0.23 (각 0.115).
+    # ④ ③ 묶음의 합은 늘 0.44 (lead 11/18 23:3x · (가) 채택으로 닫음): 지금 묶음 합 = 0.44 - 앞 여덟 종 유지 하한 합 0.24 = 0.20 (각 0.10).
     # 연속 몫 0.56 이라 실효 연속 하한 42.9 % (CG E.3 · D176 ④) 를 그대로 지킨다.
-    # 유지 하한 일곱 종의 level_cap = 졸업 레벨 5 그대로 (내리지도 올리지도 않음 · lead 11/18 23:4x).
+    # 유지 하한 여덟 종의 level_cap = 졸업 레벨 5 그대로 (내리지도 올리지도 않음 · lead 11/18 23:4x).
     # 아래 k_ladder 는 순서를 비우고 kind_floor 를 0.03 으로 고쳤다 (E3 와 같은 까닭 · 옛 순서는 이 블록의 종류와 겹쳤다).
     exposure_at_E4:
       default:
@@ -1068,6 +1076,10 @@ stages:
         level_cap: 9
       - family: A
         kind: gaps
+        share: 0.03
+        level_cap: 5
+      - family: B
+        kind: gap
         share: 0.03
         level_cap: 5
       - family: C
@@ -1096,11 +1108,11 @@ stages:
         level_cap: 5
       - family: B
         kind: stones
-        share: 0.115
+        share: 0.10
         level_cap: 2
       - family: A
         kind: stepping_stones_high
-        share: 0.115
+        share: 0.10
         level_cap: 2
     # K 경계 사다리: 묶음 열기는 시작 블록이 한다 (E3 와 같음). 유지 하한은 0.03 (CG E.12 #4 · 옛 1.5 % 는 팀장 19:38 값 이력).
     k_ladder:
@@ -1196,11 +1208,13 @@ stages:
   terrain:
     # planner 표 (CG:309~314); 28 종 고르게 2 % · 상한은 E4 목표값 (가정), 실제 E4 끝 값으로 바꿀 것
     # CG v0.18 초안 (E.12 · lead 11/18 23:2x 결정 · 팀장 11/18 21:37 승인 · 병합 전): 앞 값은 28 종 각 0.02 였다.
-    # 새 시작 블록 = E4 끝 + K 축 한 번: E5 는 섞기라 익힌 아홉 종을 유지 하한이 아니라 같은 몫으로 나눈다 (lead 11/18 23:4x):
-    # 합 0.44 · 종류마다 0.44 / 9 (0.0488888889 여덟 · 0.0488888888 하나) · 연속 0.56.
-    # 묶음 ② 높이 18 종 (B · C · E 가족의 본 적 없는 종류) 은 지금 E2~E5 어디에도 없다. L3 · L6 표 (planner · 재는 중) 가 나오면 자리를 정한다:
-    # 무너지면 E2 앞 한 단계 · 안 무너지면 E5 섞기에 0.44 밖의 연속 쪽 몫으로 (지금은 L3 · L6 뒤 표시만 · lead 11/18 23:4x). 그래서 앞 값의 나머지 19 종 (stair_up · rough · climb_up · flat · slope_steep 들 · 측정 불가인 B gap 포함) 은
-    # 이 블록에서 뺐다. 익힌 아홉 종의 level_cap = 졸업 레벨 5 그대로 (E5 섞기는 아홉 종 상한 5 · lead 11/18 23:4x).
+    # 새 시작 블록 = E4 끝 + K 축 한 번: E5 는 섞기라 익힌 열 종을 유지 하한이 아니라 같은 몫으로 나눈다 (lead 11/18 23:4x · 11/19 00:3x):
+    # 합 0.44 · 종류마다 0.044 (0.44 / 10). 익힌 열 종 0.44 + ② 꼬리 넷 0.12 = 0.56 · 연속 0.44 (④ ③ 묶음의 합은 늘 0.44 · E5 는 ② 꼬리 넷 0.12 가 그 밖에 더해짐).
+    # 묶음 ② 높이 18 종 (A 넷은 배운 종류 · B · C · E 14 종은 본 적 없음) 은 L3 · L6 에서 무너지지 않았다 (planner CPU 실측 11/18~19 · 표 KINDS-L0-ORDER-1118).
+    # 그래서 따로 단계 없이 E5 섞기에 0.44 밖 몫으로 넣는다 (lead 11/19 00:5x): 꼬리 넷 (E stairs_high · C box · B climb_down · E stairs_high_inv) 을 먼저 · 각 0.03 (합 0.12).
+    # 연속 0.56 - 0.12 = 0.44 로 하한 0.429 위 · 다섯 종부터는 하한을 깨서 (0.15 -> 0.41) 한 번에 넷 (planner 손계산 11/19 · lead 11/19 00:5x 대조 · 동의).
+    # 꼬리 넷이 L6 판정을 넘으면 그 다음 약한 종류 (L6 표 생존 낮은 순) 로 바꿔 끼운다 (lead 11/19 00:5x). 앞 값의 나머지 14 종 (stair_up · rough · climb_up · flat · slope_steep 들) 은
+    # 이 블록에서 뺐다. 익힌 열 종의 level_cap = 졸업 레벨 5 그대로 (E5 섞기는 열 종 상한 5 · lead 11/18 23:4x).
     # M · E6a · E6b 의 시작 블록은 옛 E5 값 (28 종) 을 이어받은 그대로다 (sonnet 몫 · lead 배정 · CG E.12).
     exposure_at_E5:
       default:
@@ -1213,40 +1227,61 @@ stages:
         level_cap: 9
       - family: A
         kind: gaps
-        share: 0.0488888889
+        share: 0.044
+        level_cap: 5
+      - family: B
+        kind: gap
+        share: 0.044
         level_cap: 5
       - family: C
         kind: gap
-        share: 0.0488888889
+        share: 0.044
         level_cap: 5
       - family: B
         kind: beam
-        share: 0.0488888889
+        share: 0.044
         level_cap: 5
       - family: A
         kind: balance_beams
-        share: 0.0488888889
+        share: 0.044
         level_cap: 5
       - family: B
         kind: pallets
-        share: 0.0488888889
+        share: 0.044
         level_cap: 5
       - family: A
         kind: stepping_beams
-        share: 0.0488888889
+        share: 0.044
         level_cap: 5
       - family: A
         kind: stepping_stones_low
-        share: 0.0488888889
+        share: 0.044
         level_cap: 5
       - family: B
         kind: stones
-        share: 0.0488888889
+        share: 0.044
         level_cap: 5
       - family: A
         kind: stepping_stones_high
-        share: 0.0488888888
+        share: 0.044
         level_cap: 5
+      # ② 꼬리 넷 (0.44 밖 · 각 0.03): 상한 6 · 판정도 L6 (lead 11/19 00:5x)
+      - family: E
+        kind: stairs_high
+        share: 0.03
+        level_cap: 6
+      - family: C
+        kind: box
+        share: 0.03
+        level_cap: 6
+      - family: B
+        kind: climb_down
+        share: 0.03
+        level_cap: 6
+      - family: E
+        kind: stairs_high_inv
+        share: 0.03
+        level_cap: 6
     floors:
       global_command_floor:
         reverse: 0.05
@@ -1369,7 +1404,7 @@ stages:
         kind: climb_down
         share: 0.02
         level_cap: 3
-      # B gap: 조사 뒤 다시 (CG v0.18 초안 E.12)
+      # B gap: CPU 평가 32 env 전용 멈춤 · 학습 GPU 무관 (CG v0.18 초안 E.12)
       - family: B
         kind: gap
         share: 0.02
@@ -1566,7 +1601,7 @@ stages:
         kind: climb_down
         share: 0.02
         level_cap: 3
-      # B gap: 조사 뒤 다시 (CG v0.18 초안 E.12)
+      # B gap: CPU 평가 32 env 전용 멈춤 · 학습 GPU 무관 (CG v0.18 초안 E.12)
       - family: B
         kind: gap
         share: 0.02
@@ -1766,7 +1801,7 @@ stages:
         kind: climb_down
         share: 0.015
         level_cap: 3
-      # B gap: 조사 뒤 다시 (CG v0.18 초안 E.12)
+      # B gap: CPU 평가 32 env 전용 멈춤 · 학습 GPU 무관 (CG v0.18 초안 E.12)
       - family: B
         kind: gap
         share: 0.015
