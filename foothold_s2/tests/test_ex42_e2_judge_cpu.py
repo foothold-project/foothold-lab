@@ -5,7 +5,8 @@ import pytest
 import yaml
 
 from foothold_s2 import ex42_eval_once
-from foothold_s2.ex42_e2_judge import checked_previous_bundle, score_mode
+# The real E2 is judged by ex42_kind_stage_judge since CG v0.18 draft E.12; the retired one-kind class stays and keeps its own tests.
+from foothold_s2.ex42_e2_judge import E2KindTwoWindowJudge, checked_previous_bundle, score_mode
 from foothold_s2.ex42_stage_judges import adapter_for
 
 
@@ -69,7 +70,7 @@ def test_e2_stage_registration_and_kit_commands_are_named_kind_and_three_modes(m
 
 def test_e2_p1_cannot_forge_pass_without_training_exposure_evidence(monkeypatch):
     plan = yaml.safe_load((ROOT / "foothold_s2/curriculum/ex42-prep.yaml").read_text(encoding="utf-8"))
-    adapter = adapter_for(plan, "E2")
+    adapter = E2KindTwoWindowJudge()
     keys = ("maintenance_current", "maintenance_previous", "learned_cells", "exchange_watch",
             "eval_gt_current", "eval_gt_previous", "eval_pred_current", "eval_pred_previous")
     items = {key: {"role": "judge", "judgement": "PASS"} for key in keys}
@@ -177,7 +178,7 @@ def test_e2_failed_kind_child_produces_scored_hold_not_missing_p1(monkeypatch, t
                           digest=lambda *_: "a" * 64, plan=plan, plan_path=policy,
                           evaluation=evaluation, checkpoint=tmp_path / "model_250.pt",
                           checkpoint_sha="c" * 64, seed=42, stage_id="E2")
-    result = adapter_for(plan, "E2").judge(ctx, {"conditions": {"eval_seed": 42}})
+    result = E2KindTwoWindowJudge().judge(ctx, {"conditions": {"eval_seed": 42}})
     assert result["judgement"] == "HOLD"
     assert result["stage_exit"]["items"]["eval_gt_current"]["reason"] == "Kit child rc=1"
     assert result["e2_kind"]["child_failure"]["sha256"]
@@ -188,7 +189,7 @@ def test_e2_p1_pass_rereads_current_raw_before_accepting(monkeypatch, tmp_path):
     from foothold_s2.eval import ex42_mesh_eval
 
     plan = yaml.safe_load((ROOT / "foothold_s2/curriculum/ex42-prep.yaml").read_text(encoding="utf-8"))
-    adapter = adapter_for(plan, "E2")
+    adapter = E2KindTwoWindowJudge()
     folder = tmp_path / "m500" / "kind_cells"
     (folder.parent / "map64").mkdir(parents=True)
     folder.mkdir()
@@ -278,7 +279,7 @@ def test_each_e2_exit_source_independently_blocks_pass(monkeypatch, tmp_path, bl
                           digest=lambda *_: "a" * 64, plan=plan, plan_path=policy,
                           evaluation=evaluation, checkpoint=tmp_path / "model_250.pt",
                           checkpoint_sha="c" * 64, seed=42, stage_id="E2")
-    result = adapter_for(plan, "E2").judge(ctx, {"conditions": {"eval_seed": 42}})
+    result = E2KindTwoWindowJudge().judge(ctx, {"conditions": {"eval_seed": 42}})
     assert result["judgement"] == "HOLD"
     if blocked == "child_failure":
         assert result["e2_kind"]["child_failure"]["sha256"]
@@ -292,7 +293,7 @@ def test_each_e2_exit_source_independently_blocks_pass(monkeypatch, tmp_path, bl
 def test_e2_p1_training_evidence_guard_is_independent_of_aggregate(monkeypatch):
     from foothold_s2 import ex42_e2_judge, ex42_stage_judges
     plan = yaml.safe_load((ROOT / "foothold_s2/curriculum/ex42-prep.yaml").read_text(encoding="utf-8"))
-    judge = adapter_for(plan, "E2")
+    judge = E2KindTwoWindowJudge()
     keys = ("maintenance_current", "maintenance_previous", "learned_cells", "exchange_watch",
             "eval_gt_current", "eval_gt_previous", "eval_pred_current", "eval_pred_previous")
     items = {key: {"role": "judge", "judgement": "PASS"} for key in keys}

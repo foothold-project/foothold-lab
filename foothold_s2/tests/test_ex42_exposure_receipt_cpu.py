@@ -41,7 +41,7 @@ def _cfg():
     events = types.SimpleNamespace(
         reset_base=Term(params={"pose_range": {}, "velocity_range": {"x": (0.0, 0.0)}}),
         ex40_push=Term(func=lambda *a: None, mode="interval", params={"velocity_range": {"x": (-1, 1)}}))
-    return types.SimpleNamespace(events=events, commands=types.SimpleNamespace(
+    return types.SimpleNamespace(rewards=types.SimpleNamespace(foot_edge=types.SimpleNamespace(weight=0.0)), events=events, commands=types.SimpleNamespace(
                                      base_velocity=types.SimpleNamespace(flag_provider=None)),
                                  scene=types.SimpleNamespace(terrain=types.SimpleNamespace(terrain_generator=None)))
 
@@ -59,6 +59,7 @@ def _ladder_plan(tmp_path):
     for rule in terrain["exposure_at_E3"]["positive"]:
         if rule.get("kind") == "stepping_stones_low":
             rule["share"], rule["level_cap"] = 0.05, 0
+    terrain.pop("kind_level_cap", None)                                # this helper tests the K ladder alone, not the D axis
     terrain["k_ladder"] = {"grades": {"new": 0.05, "current": 0.1}, "kind_floor": 0.02,
                            "order": [{"family": "C", "kind": "flat", "level_cap": 0}, {"family": "B", "kind": "rough", "level_cap": 0}]}
     for sibling in PLAN.parent.iterdir():                              # the plan reads its source plan and approvals beside it

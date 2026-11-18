@@ -190,9 +190,7 @@ def test_learned_cells_registers_the_kinds_the_boundary_exposure_opened_in_any_f
     with pytest.raises(ValueError, match="threshold invalid"):
         judge_two_boundaries(checkpoint, stage_id="E3", plan=plan, plan_sha256=PSHA, interval=250, min_episodes=32,
                              previous_kind_pass=False)                   # E3 without its kind list
-    with pytest.raises(ValueError, match="threshold invalid"):
-        judge_two_boundaries(checkpoint, stage_id="E2", plan=plan, plan_sha256=PSHA, interval=250, min_episodes=32,
-                             previous_kind_pass=False, named_kinds={})   # E2 keeps its one kind
+    # E2 takes its bundle kind list like the later stages since CG v0.18 draft E.12 (the one-kind None path is retired)
 
 
 def test_the_exchange_watch_compares_the_kind_cells_it_is_given_by_name():
