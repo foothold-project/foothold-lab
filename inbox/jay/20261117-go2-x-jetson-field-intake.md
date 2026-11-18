@@ -4,8 +4,8 @@
 > 작성: 오흥재 · 2026-11-17 17:24
 > 근거: 업체 제공 「Unitree Go2 + Intel RealSense D435i 제어기 사용자 매뉴얼」 · 2026-11-17 현장 터미널 출력 · NoMachine 접속 실측 · 정본 3 전달 문서
 > 요지: 교체받은 Go2 X 계통의 현재 연결과 원격 접속을 확정값 · 업체 문서값 · 미확인값으로 나누고, 저수준 정책 시험 전 점검 순서를 고정한다
-> 상태: 현장 기록 v0.13 · D435i↔Go2 상대각 35° 최종 체결 · Classic 좌·우 ㅁ자 주행 전후 유지성 통과 · 약 1초 stream/DDS 정지 별도 관문
-> 판: v0.13
+> 상태: 현장 기록 v0.15 · D435i↔Go2 상대각 35° 유지성 통과 · NVIDIA custom EDID headless 1080p 실제 적용과 HDMI 없는 재부팅 1회 통과
+> 판: v0.15
 
 ## 0. 이 기록의 범위
 
@@ -112,6 +112,12 @@ ai-lt01 전용 ED25519 key를 Jetson `nvidia` 계정에 등록했고 `BatchMode=
 HDMI가 빠진 상태로 재부팅한 뒤 Jetson, GDM, GNOME과 NoMachine 서비스는 모두 정상이었지만 Xorg의 현재 화면은 `640×480`이었다. `/var/log/Xorg.0.log`에도 `Virtual screen size determined to be 640 x 480`이 남았다. NoMachine 장애가 아니라 모니터 EDID가 없는 Tegra Xorg의 기본 fallback이다.
 
 HDMI 모니터를 같은 안쪽 포트에 다시 연결하자 재부팅 없이 `HDMI-0 connected primary 1920x1080+0+0`, 60 Hz로 복구됐다. 현재 `/etc/X11/xorg.conf`에는 `AllowEmptyInitialConfiguration=true`만 있고 headless 고정 해상도는 없다. 영구 headless 운용은 HDMI dummy plug 또는 복구 가능한 Xorg 1920×1080 가상 화면 설정을 별도 관문으로 적용한다. 설정 전에는 SSH 복구 경로와 원본 `xorg.conf` 백업을 확보한다.
+
+2026-11-18 다시 확인한 부팅에서는 HDMI가 연결된 시점에 Xorg가 `JRY HDMI (DFP-0)` EDID를 읽어 1920×1080으로 시작했고, 분리 뒤 `DFP-0: disconnected`와 `Setting mode "NULL"`을 기록했지만 그 부팅의 root screen 크기는 1920×1080으로 남았다. 따라서 파일·아이콘 위치는 같아도 HDMI 없는 최초 부팅의 640×480 root screen에서는 같은 NVIDIA 배경이 확대/crop돼 다른 desktop처럼 보인다. NoMachine 계정이나 홈 디렉터리가 바뀐 현상은 아니다.
+
+해당 모니터 EDID 256 bytes를 Jetson `/home/nvidia/go2_diag/display/`에만 보존하고 NVIDIA `CustomEDID`로 DFP-0 1920×1080을 만드는 가역적 bundle을 [`20261118-go2-headless-nvidia/`](20261118-go2-headless-nvidia/README.md)에 작성했다. 기존 `xserver-xorg-video-dummy` 설정은 NVIDIA 물리 X screen을 우회해 RViz/OpenGL 검증에 불리하므로 활성화하지 않는다. 실제 적용과 HDMI 없는 재부팅 2회, NVIDIA renderer 검증 전에는 완료로 판정하지 않는다.
+
+같은 날 bundle을 실제 적용했다. 최초 `/etc/X11/xorg.conf` backup을 보존했고 물리 HDMI가 `disconnected`인 상태로 재부팅했다. 새 Xorg는 `ConnectedMonitor=DFP-0`와 custom EDID를 읽어 1920×1080@60 mode를 설정했고 GDM/GNOME X11, NoMachine 서비스와 사용자 화면이 정상 복귀했다. XRandR의 논리 `HDMI-0 connected`와 kernel DRM의 물리 `disconnected`는 custom EDID 사용 시 서로 다른 의미다. 이 1회는 통과이며 다음 정상 전원 사이클 반복과 실제 RViz/OpenGL 표시가 남았다.
 
 ## 4. 시스템 · 센서 · ROS 실측
 
@@ -344,6 +350,8 @@ Unitree Go2 사용자 매뉴얼에는 머리 표시등이 노란색으로 느리
 
 | 판 | 날짜 | 내용 |
 |---|---|---|
+| v0.15 | 2026-11-18 | NVIDIA custom EDID 실제 적용 · 최초 xorg.conf backup 보존 · physical HDMI disconnected 재부팅에서 1920×1080@60/GDM/GNOME/NoMachine 통과 · 다음 정상 전원 사이클 반복과 RViz/OpenGL 확인 대기 |
+| v0.14 | 2026-11-18 | HDMI 연결 부팅→분리와 HDMI 없는 부팅의 Xorg mode 차이 확정 · 같은 GNOME desktop의 배경 crop 현상 설명 · NVIDIA custom EDID headless 1080p bundle/최초 백업/SSH rollback 준비 · 실제 적용·재부팅 검증 대기 |
 | v0.13 | 2026-11-18 | 브라켓 재체결 직후 상대각 3회 평균 35.068°/표준편차 0.004° · Classic 좌·우 ㅁ자 주행 뒤 35.023°/0.023° · 전후 -0.045°로 단기 유지성 통과 · 180초 Depth에서 DDS/Depth 약 1초 공통 정지와 frame number reset 1회 기록 |
 | v0.12 | 2026-11-18 | D435i↔Go2 실시간 상대각 도구 검증 · 재조정 직후 3회 평균 35.042°/표준편차 0.005° · 오른쪽 체결부 헛돎 뒤 평균 35.252°로 0.210° 이동 · 광학 중심 높이 실측 0.395 m와 Depth 평면 0.3954 m 일치 · 기계 고정 미합격으로 최종 extrinsic 보류 |
 | v0.11 | 2026-11-18 | D435i↔Go2 상대각 3회 평균 33.262° · 순정 Damping→Stand 뒤 전면 hip 78/81°C와 적색 점멸로 안전 중단 · Jetson 정상 종료 뒤 Go2 종료 · `1001`은 공식 SDK상 Damp API ID로 정정 · 다음 작업을 별도 commissioning worklist로 분리 |

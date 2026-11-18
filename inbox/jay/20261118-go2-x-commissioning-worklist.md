@@ -2,12 +2,12 @@
 > 작성: 오흥재 · 2026-11-18
 > 근거: 20261117 현장 인수 기록 · 20261117 sim-match checklist · 정본 3 contract · foothold-app main README
 > 목표: 현재 개체의 하드웨어·센서·통신·안전 상태를 증거로 확정하고, Depth/LiDAR/SLAM을 눈과 데이터로 검증한 뒤 정본 3 ONNX 저수준 정책과 `foothold-app` 실기 연결까지 단계적으로 진행한다.
-> 상태: P0 열 안전 관문에서 중단 · Jetson 정상 종료 후 Go2 전원 종료 완료
-> 판: v1.0
+> 상태: 냉각·재부팅 뒤 read-only monitor와 Classic 좌·우 주행에서 열 사건 미재발 · 카메라 35° 유지성 통과 · 업체 공식 열 판정과 D435i 1초 reset 원인·headless 재부팅 검증은 대기
+> 판: v1.1
 
 # Go2 X 실기 commissioning 작업목록
 
-현재 중단점은 순정 Damping→Stand 직후 앞 hip 78/81°C와 전면 적색 점멸이다. **P0 안전 관문 전에는 다시 Stand·카메라 조정·정책 시험을 하지 않는다.**
+과거 순정 Damping→Stand 직후 앞 hip 78/81°C와 전면 적색 점멸이 있었고 업체 공식 판정은 아직 대기 중이다. 이후 냉각·재부팅과 receive-only monitor 아래 순정 Stand/Classic 주행에서는 최고 56°C, `reserve[0]` nonzero 0, errorlist 0으로 재발하지 않았다. 이 결과는 현 운용 표본이지 업체 공식 안전 한계를 대신하지 않는다. **저수준 정책 시험은 P0 공식 관문 전까지 금지한다.**
 
 ## 0. 상태 표기
 
@@ -23,7 +23,7 @@
 | 개체/컴퓨팅 보드 | [x] | `NVIDIA Jetson Orin NX 16GB - AVerMedia NX215B`, Ubuntu 22.04.5, L4T R36.4.7 | Go2 X 명칭은 업체 전달값이라 본체/펌웨어 식별값이 나오면 보강 |
 | 유선 관리망 | [x] | ai-lt01 `192.168.50.1` ↔ Jetson `192.168.50.2`, SSH key·22/tcp·4000/tcp 성공, 자동연결 manual profile | 재부팅 뒤 Wi-Fi 없이 SSH/NoMachine 1회 재확인 |
 | 내부망 | [x] | Jetson `enP8p1s0=192.168.123.99/24` ↔ Go2 `192.168.123.161`, 1 Gb/s full duplex | firmware/network reset 뒤 절대 불변을 뜻하지 않음 |
-| NoMachine | [~] | Wi-Fi·유선 접속, HDMI를 실행 중 분리해도 정상 | HDMI 없이 부팅하면 640×480. headless 1920×1080 고정 미완료 |
+| NoMachine | [~] | NVIDIA custom EDID 적용 뒤 물리 HDMI disconnected 상태 재부팅 1회에서 1920×1080@60, GDM/GNOME, NoMachine 통과 | 다음 정상 전원 사이클 1회 반복과 RViz/OpenGL renderer 확인 뒤 완료 |
 | D435i 정체·USB | [~] | D435i, USB ID `8086:0b3a`, firmware 5.17.0.10, Jetson에서 5000M와 영상 수신 | 새 젠더 비교·장시간 재연결/프레임 drop/CPU·온도 |
 | D435i 영상 | [~] | depth 640×480 약 30 fps. 최종 Classic 180초 5,365프레임·평균 29.81 fps·무효/범위 밖 11.18% | 약 10초에 DDS/Depth 공통 1초 정지와 frame number 287→0 reset 1회. color/aligned GUI·계단 앞·30분 안정성 필요 |
 | D435i IMU | [~] | 격리 RSUSB에서 gyro 약 200 Hz, accel 약 100 Hz; 상대각 3회 기록 | 시스템 기본 V4L2는 HID 실패. 운영 wrapper·장시간 안정성 필요 |
@@ -42,16 +42,16 @@
 ### P0. 열 사건 안전 관문 · 다른 모든 작업보다 먼저
 
 - [x] Jetson에서 `sudo shutdown -h now` 실행 후 Go2 전원 종료.
-- [ ] 충분히 냉각한다. 앞 좌·우 hip 외장이 주변 관절과 비슷한 온도가 되기 전에는 재부팅하지 않는다.
-- [ ] 업체에 아래 원본 사실을 전달하고 공식 판정을 받는다.
+- [x] 충분히 냉각한 뒤 재부팅했다. 냉간 `reserve[0]` 12개 모두 0, 시작 최고 온도 47°C를 확인했다.
+- [~] 업체에 아래 원본 사실을 문의했다. 공식 판정과 안전 재개 조건은 아직 받지 못했다.
   - FR/FL hip 최고 78/81°C, 약 10분 뒤 65/68°C.
   - 전면 적색 점멸, FR `motor_state[0].reserve[0]=0x04` 지속.
   - BMS SOC 81%, cell 3942~3950 mV, motor lost 0.
   - 첫 Stand lowcmd `kp=1`, 재진입 뒤 `kp=100`, `kd=5`; 앞 hip PD torque proxy 약 ±9.1 Nm.
   - `SportModeState.error_code=1001`은 공식 SDK의 Damp API ID이며 고장 코드로 보지 않음.
-- [ ] 다음 전원 투입은 Damping 상태로만 시작하고, 읽기 전용 온도·reserve·LED·lowcmd 감시를 먼저 실행한다.
+- [x] 냉각 뒤 전원 투입에서 읽기 전용 온도·reserve·LED·lowcmd 감시를 먼저 실행했다.
   - 준비된 source와 실행법: [`20261118-go2-readonly-boot-gate/`](20261118-go2-readonly-boot-gate/README.md). Jetson SDK build와 5초 receive-only smoke run까지 통과했다.
-- [ ] 조이스틱의 정확한 Damping→Stand 버튼 순서와 앱/조이스틱 모드 표시를 기록하고 짧은 전환 1회만 수행한다.
+- [~] 순정 Stand와 Classic 좌·우 ㅁ자 주행을 monitor 아래 수행했고 최고 온도 56°C, 배터리 74→72%, `reserve[0]` nonzero 0, errorlist 0이었다. 조이스틱의 정확한 버튼 순서와 업체가 설명하는 고이득 전환 의미는 미확정이다.
 - [ ] 아래 중 하나면 즉시 Damping/전원 종료하고 업체 판단 전 중단한다: 적색 점멸, `0x04` 재발, 앞 hip 급상승, 예상하지 않은 고이득 지속, 비정상 자세/소리.
 
 통과 기준: 냉간 부팅에서 fault 표시가 없고, 짧은 순정 Stand 동안 온도가 안정적이며, lowcmd 전환의 의미를 설명할 수 있고, 업체가 계속 사용 가능하다고 확인한다. **단순히 다시 일어섰다는 이유로 통과하지 않는다.**
@@ -62,23 +62,28 @@
 - [x] NoMachine: Wi-Fi와 유선 TCP 4000 연결 성공.
 - [ ] Go2/Jetson 재부팅 뒤 Wi-Fi를 끈 ai-lt01에서 `.50.2` SSH와 NoMachine을 다시 확인한다.
 - [ ] HDMI 없이 부팅해도 1920×1080 NoMachine이 나오게 한다.
-  - 대여 장비의 최소 변경안은 HDMI dummy plug이다.
-  - Xorg 가상 화면을 쓸 경우 `/etc/X11/xorg.conf` 원본 백업, SSH rollback 명령, HDMI 복구선을 먼저 준비한다.
+  - 원인은 HDMI 없는 부팅에서 NVIDIA Xorg가 `mode "NULL"`/640×480으로 시작하고, NoMachine이 그 물리 desktop을 공유하는 것이다. HDMI 연결 부팅 뒤 분리하면 같은 부팅의 1920×1080은 유지된다.
+  - NVIDIA custom EDID 방식의 설치기·최초 백업 보존·rollback·단위시험을 [`20261118-go2-headless-nvidia/`](20261118-go2-headless-nvidia/README.md)에 준비했다. 기존 dummy driver 설정은 RViz/OpenGL 경로 때문에 활성화하지 않는다.
   - 적용 뒤 HDMI 분리 상태 재부팅 2회에서 해상도, GDM/GNOME, NoMachine, SSH를 확인한다.
+  - [x] 2026-11-18 첫 재부팅: physical DRM HDMI `disconnected`, Xorg custom EDID 1920×1080@60, GDM/GNOME X11, NoMachine service와 사용자 화면 통과.
+  - [ ] 다음 정상 전원 사이클에서 같은 검사를 한 번 더 수행한다. 이 검증만을 위해 Go2 전원을 다시 순환하지 않는다.
 - [ ] NoMachine 무료판 동시 1 physical desktop 제약을 팀 운용 규칙에 남긴다.
 
 통과 기준: HDMI·Wi-Fi 없이 유선 하나로 SSH와 1920×1080 NoMachine에 재접속할 수 있고, 실패 시 SSH/HDMI로 복구할 수 있다.
 
 ### P2. D435i 운영 경로 · 눈 확인과 데이터 확인을 같이
 
-- [ ] 기존 젠더와 새 젠더를 동일 포트·케이블에서 각각 시험해 `lsusb -t` 5000M, disconnect 0인 것을 선별한다.
+- [ ] 기존 젠더와 새 젠더 2개를 A/B/C로 표시하고 동일 USB-A 포트·동일 C-to-C 케이블에서 각각 시험한다.
+  - 각 후보를 5회 재연결하고 매회 `lsusb -t`의 `5000M`과 동일 device identity를 확인한다.
+  - 후보당 5분 depth+color+IMU를 수신하면서 kernel USB disconnect/reset, librealsense notification, frame reset을 센다.
+  - 한 번이라도 `480M`, disconnect 또는 reset이 재현되면 운영 젠더에서 제외한다. 브라켓 나사는 건드리지 않는다.
 - [ ] 격리 RSUSB build를 재현 가능한 wrapper/service 후보로 정리한다. 시스템 `/opt/ros/humble` librealsense와 firmware는 업체 승인 없이 교체하지 않는다.
 - [ ] GUI에서 동시에 눈으로 확인한다.
   - RGB 영상 방향/좌우, depth colormap, aligned depth overlay.
   - 중앙 주점 `(320,242)`과 35° 목표 바닥점 표시.
   - 카메라를 가리거나 가까운 물체를 움직였을 때 depth가 즉시 변하는지.
 - [ ] 데이터로 30분 이상 기록한다.
-  - depth/color 실제 fps, frame-number gap, 40/100 ms 초과 간격, USB reset/disconnect.
+  - depth/color 실제 fps, forward frame gap뿐 아니라 frame number 감소/reset, 40/100/500 ms 초과 간격, USB reset/disconnect.
   - gyro/accel rate, NaN/정지 구간, CPU·메모리·Jetson 온도.
   - 원본과 정책용 60×60·10 Hz·0.2~3.0 m clip·무효=max 전처리 결과를 함께 저장.
 - [ ] 평지뿐 아니라 계단 앞에서 zero/범위 밖 비율과 가까운 단차 표현을 저장한다.
@@ -157,18 +162,15 @@
 
 통과 기준: 앱 화면이 실기 원본 상태·Depth/LiDAR/지도와 일치하고, 연결 단절/STOP/소유권 시험을 통과하며, sim/real과 고수준/저수준 제어가 명확히 격리된다.
 
-## 3. 다음 전원 투입 때 실제로 할 한 묶음
+## 3. 현재 중단점에서 이어서 할 실제 순서
 
-P0 업체 답변 또는 안전 재개 조건이 충족됐다는 전제에서 다음 한 묶음만 수행한다.
-
-1. Go2를 Damping으로 부팅하고 Stand시키지 않는다.
-2. 유선 `.50.2` SSH 접속 후 BMS·12개 모터 온도·reserve·lowcmd 읽기 전용 monitor를 시작한다.
-3. 냉간 기준값과 전면 LED를 기록한다. fault가 남으면 종료한다.
-4. Wi-Fi를 끈 ai-lt01에서 SSH·NoMachine 직결 재접속을 확인한다.
-5. D435i `lsusb -t`와 RSUSB depth/color/IMU를 켜고 GUI로 RGB/depth/alignment를 확인한다.
-6. LiDAR receive-only cloud를 RViz에 띄워 교실 형상과 TF를 확인한다.
-7. 이때까지 로봇은 Damping이며 어떤 motion command도 보내지 않는다.
-8. 모든 read-only 항목이 정상이고 업체가 허용했을 때만, 온도 monitor를 유지한 채 순정 Stand 전환 1회를 별도 시험한다.
+1. NVIDIA custom EDID를 적용하고 HDMI를 뺀 상태로 재부팅한다. SSH를 먼저 확인한 뒤 NoMachine 1920×1080, GDM/GNOME, NVIDIA renderer를 검증한다. 실패하면 SSH rollback한다. 같은 조건 2회 통과가 P1 완료다.
+2. 새 C-to-A 젠더 두 개와 기존 젠더를 A/B/C로 표시해 동일 포트·케이블에서 5회 재연결+후보당 5분 시험하고 운영 젠더 하나를 고른다.
+3. 선택 젠더로 D435i RGB, depth colormap, aligned overlay를 GUI에서 눈으로 확인한다. 이때 카메라 브라켓은 조정하지 않는다.
+4. D435i depth/color/IMU와 Go2 DDS age를 30분 동시 기록해 180초 기록의 frame `287→0`·약 1초 공통 정지가 재현되는지 확인한다.
+5. 평지와 계단 앞에서 원본 depth와 정책용 60×60·10 Hz 전처리 결과, zero/범위 밖 비율을 저장한다.
+6. L2 PointCloud/TF를 RViz에 띄워 실제 교실 방향·바닥·벽·움직이는 사람과 10분 rate/packet loss를 확인한다.
+7. 그다음에만 SLAM 폐곡선·지도 저장/재로딩으로 간다. 저수준 ONNX는 계속 shadow 이전 단계에 둔다.
 
 ## 4. 정본과 증거 위치
 
@@ -186,4 +188,5 @@ P0 업체 답변 또는 안전 재개 조건이 충족됐다는 전제에서 다
 
 | 판 | 날짜 | 내용 |
 |---|---|---|
+| v1.1 | 2026-11-18 | 냉각 뒤 Classic 주행 안전 표본과 카메라 35° 유지성 반영 · HDMI 없는 부팅 root cause/custom EDID 적용·rollback·첫 재부팅 통과 · C-to-A A/B/C 선별과 frame reset 계수 · 현재 후속 순서 갱신 |
 | v1.0 | 2026-11-18 | 완료·부분 완료·미완료 감사, P0 열 안전부터 P7 foothold-app 실기 연결까지 단계별 관문, 다음 전원 투입 read-only 묶음 작성 |
