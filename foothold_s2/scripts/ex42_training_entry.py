@@ -58,6 +58,10 @@ def e_stage_table(stages: list[dict[str, Any]]) -> dict[str, dict[str, Any]]:
                 if type(updates) is int else set())      # this row's finished run may have saved one of these (read by the next row's parent check)
         parent = row.get("parent")
         if isinstance(parent, dict):
+            if parent.get("source_stage_id") == row["id"]:
+                # A run seeded from its own stage's boundary checkpoint (the plan changed under a running stage, so it restarts as a new
+                # OUT, lead-lx 11/19 07:1x): the "previous stage" the parent's saved state must name is this stage, with its own caps and mirror.
+                previous, previous_caps, previous_mirror = row["id"], caps, mirror
             table[row["id"]] = {
                 "updates": row.get("maximum_updates", row["minimum_updates"]),     # the base cap; the first check (minimum) is not a limit
                 "extension_updates": row.get("extension_updates") or 0, "extension_max_count": row.get("extension_max_count") or 0, "parent_local": parent["manifest_local_update"],
