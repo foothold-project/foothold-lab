@@ -1215,8 +1215,8 @@ stages:
     # 합 0.44 · 종류마다 0.044 (0.44 / 10). 익힌 열 종 0.44 + ② 꼬리 넷 0.12 = 0.56 · 연속 0.44 (④ ③ 묶음의 합은 늘 0.44 · E5 는 ② 꼬리 넷 0.12 가 그 밖에 더해짐).
     # 묶음 ② 높이 18 종 (A 넷은 배운 종류 · B · C · E 14 종은 본 적 없음) 은 L3 · L6 에서 무너지지 않았다 (planner CPU 실측 11/18~19 · 표 KINDS-L0-ORDER-1118).
     # 그래서 따로 단계 없이 E5 섞기에 0.44 밖 몫으로 넣는다 (lead 11/19 00:5x): 꼬리 넷 (E stairs_high · C box · B climb_down · E stairs_high_inv) 을 먼저 · 각 0.03 (합 0.12).
-    # 연속 0.56 - 0.12 = 0.44 로 하한 0.429 위 · 다섯 종부터는 하한을 깨서 (0.15 -> 0.41) 한 번에 넷 (planner 손계산 11/19 · lead 대조 전).
-    # 꼬리 넷 다음 종류로 바꿔 끼우는 규칙과 이 넷의 상한은 lead 가 정할 것. 앞 값의 나머지 14 종 (stair_up · rough · climb_up · flat · slope_steep 들) 은
+    # 연속 0.56 - 0.12 = 0.44 로 하한 0.429 위 · 다섯 종부터는 하한을 깨서 (0.15 -> 0.41) 한 번에 넷 (planner 손계산 11/19 · lead 11/19 00:5x 대조 · 동의).
+    # 꼬리 넷이 L6 판정을 넘으면 그 다음 약한 종류 (L6 표 생존 낮은 순) 로 바꿔 끼운다 (lead 11/19 00:5x). 앞 값의 나머지 14 종 (stair_up · rough · climb_up · flat · slope_steep 들) 은
     # 이 블록에서 뺐다. 익힌 열 종의 level_cap = 졸업 레벨 5 그대로 (E5 섞기는 열 종 상한 5 · lead 11/18 23:4x).
     # M · E6a · E6b 의 시작 블록은 옛 E5 값 (28 종) 을 이어받은 그대로다 (sonnet 몫 · lead 배정 · CG E.12).
     exposure_at_E5:
@@ -1268,23 +1268,23 @@ stages:
         kind: stepping_stones_high
         share: 0.044
         level_cap: 5
-      # ② 꼬리 넷 (0.44 밖 · 각 0.03): 상한은 옛 값 그대로 (2e47b49ff 의 exposure_at_E5 값 3) · lead 가 정할 것
+      # ② 꼬리 넷 (0.44 밖 · 각 0.03): 상한 6 · 판정도 L6 (lead 11/19 00:5x)
       - family: E
         kind: stairs_high
         share: 0.03
-        level_cap: 3
+        level_cap: 6
       - family: C
         kind: box
         share: 0.03
-        level_cap: 3
+        level_cap: 6
       - family: B
         kind: climb_down
         share: 0.03
-        level_cap: 3
+        level_cap: 6
       - family: E
         kind: stairs_high_inv
         share: 0.03
-        level_cap: 3
+        level_cap: 6
     floors:
       global_command_floor:
         reverse: 0.05
