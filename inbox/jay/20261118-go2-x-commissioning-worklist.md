@@ -2,7 +2,7 @@
 > 작성: 오흥재 · 2026-11-18
 > 근거: 20261117 현장 인수 기록 · 20261117 sim-match checklist · 정본 3 contract · foothold-app main README
 > 목표: 현재 개체의 하드웨어·센서·통신·안전 상태를 증거로 확정하고, Depth/LiDAR/SLAM을 눈과 데이터로 검증한 뒤 정본 3 ONNX 저수준 정책과 `foothold-app` 실기 연결까지 단계적으로 진행한다.
-> 상태: 냉각·재부팅 뒤 read-only monitor와 Classic 좌·우 주행에서 열 사건 미재발 · 카메라 35° 유지성 통과 · 업체 공식 열 판정과 D435i 1초 reset 원인·headless 재부팅 검증은 대기
+> 상태: 냉각·재부팅 뒤 read-only monitor와 Classic 좌·우 주행에서 열 사건 미재발 · 카메라 35° 유지성 통과 · HDMI 없는 1080p 정상 전원 사이클 2회 통과 · 업체 공식 열 판정과 D435i 1초 reset 원인은 대기
 > 판: v1.1
 
 # Go2 X 실기 commissioning 작업목록
@@ -61,12 +61,12 @@
 - [x] SSH key: ai-lt01 → `nvidia@192.168.50.2`, `BatchMode=yes` 성공.
 - [x] NoMachine: Wi-Fi와 유선 TCP 4000 연결 성공.
 - [ ] Go2/Jetson 재부팅 뒤 Wi-Fi를 끈 ai-lt01에서 `.50.2` SSH와 NoMachine을 다시 확인한다.
-- [ ] HDMI 없이 부팅해도 1920×1080 NoMachine이 나오게 한다.
+- [x] HDMI 없이 부팅해도 1920×1080 NoMachine이 나오게 한다.
   - 원인은 HDMI 없는 부팅에서 NVIDIA Xorg가 `mode "NULL"`/640×480으로 시작하고, NoMachine이 그 물리 desktop을 공유하는 것이다. HDMI 연결 부팅 뒤 분리하면 같은 부팅의 1920×1080은 유지된다.
   - NVIDIA custom EDID 방식의 설치기·최초 백업 보존·rollback·단위시험을 [`20261118-go2-headless-nvidia/`](20261118-go2-headless-nvidia/README.md)에 준비했다. 기존 dummy driver 설정은 RViz/OpenGL 경로 때문에 활성화하지 않는다.
   - 적용 뒤 HDMI 분리 상태 재부팅 2회에서 해상도, GDM/GNOME, NoMachine, SSH를 확인한다.
   - [x] 2026-11-18 첫 재부팅: physical DRM HDMI `disconnected`, Xorg custom EDID 1920×1080@60, GDM/GNOME X11, NoMachine service와 사용자 화면 통과.
-  - [ ] 다음 정상 전원 사이클에서 같은 검사를 한 번 더 수행한다. 이 검증만을 위해 Go2 전원을 다시 순환하지 않는다.
+  - [x] 2026-11-18 두 번째 정상 전원 사이클: physical HDMI `disconnected`, XRandR 1920×1080@60, GDM과 NoMachine active. CustomEDID를 다시 읽고 NVIDIA Xorg mode를 설정했다.
 - [ ] NoMachine 무료판 동시 1 physical desktop 제약을 팀 운용 규칙에 남긴다.
 
 통과 기준: HDMI·Wi-Fi 없이 유선 하나로 SSH와 1920×1080 NoMachine에 재접속할 수 있고, 실패 시 SSH/HDMI로 복구할 수 있다.
@@ -150,6 +150,8 @@
 ### P7. `foothold-app`에서 시뮬·실기 공통 제어
 
 - [x] 현재 [`foothold-app`](https://github.com/foothold-project/foothold-app)은 시뮬 연결 화면/서버가 있지만 README가 실 Go2 연결과 SLAM/Nav2를 미구현으로 명시한다.
+- [x] 2026-11-18 팀원 설치 뒤 읽기 전용 감사: 사용자 venv r4, 중단된 r5, enable된 user systemd service를 확인했다. 과거 r4는 고수준 `StopMove`를 호출했지만 정본 3 정책·저수준 ONNX는 설치되지 않았다. [원시 감사](20261117-go2-x-sim-match-checklist-assets/20261118-app-baseline-audit/README.md)
+- [ ] 자동실행 service를 측정 기간 비활성화하고, APP의 조이스틱·순정 Sport SDK·향후 저수준 정책 간 command ownership을 확정한다.
 - [ ] 기존 `contracts/v1`을 읽고 실기 adapter가 제공할 최소 계약을 별도 버전으로 정의한다.
   - robot identity/mode, battery, joint/IMU/temperature/fault.
   - RGB/depth, LiDAR cloud, odom/TF, map/pose.
@@ -164,7 +166,7 @@
 
 ## 3. 현재 중단점에서 이어서 할 실제 순서
 
-1. NVIDIA custom EDID를 적용하고 HDMI를 뺀 상태로 재부팅한다. SSH를 먼저 확인한 뒤 NoMachine 1920×1080, GDM/GNOME, NVIDIA renderer를 검증한다. 실패하면 SSH rollback한다. 같은 조건 2회 통과가 P1 완료다.
+1. NVIDIA custom EDID는 HDMI 없는 정상 전원 사이클 2회를 통과했다. RViz/OpenGL 실제 표시만 P3에서 확인하고 설정은 유지한다.
 2. 새 C-to-A 젠더 두 개와 기존 젠더를 A/B/C로 표시해 동일 포트·케이블에서 5회 재연결+후보당 5분 시험하고 운영 젠더 하나를 고른다.
 3. 선택 젠더로 D435i RGB, depth colormap, aligned overlay를 GUI에서 눈으로 확인한다. 이때 카메라 브라켓은 조정하지 않는다.
 4. D435i depth/color/IMU와 Go2 DDS age를 30분 동시 기록해 180초 기록의 frame `287→0`·약 1초 공통 정지가 재현되는지 확인한다.
