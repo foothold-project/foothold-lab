@@ -3,7 +3,7 @@
 > 근거: 20261117 현장 인수 기록 · 20261117 sim-match checklist · 정본 3 contract · foothold-app main README
 > 목표: 현재 개체의 하드웨어·센서·통신·안전 상태를 증거로 확정하고, Depth/LiDAR/SLAM을 눈과 데이터로 검증한 뒤 정본 3 ONNX 저수준 정책과 `foothold-app` 실기 연결까지 단계적으로 진행한다.
 > 상태: 냉각·재부팅 뒤 read-only monitor와 Classic 좌·우 주행에서 열 사건 미재발 · 카메라 35° 유지성 통과 · HDMI 없는 1080p 정상 전원 사이클 2회 통과 · 업체 공식 열 판정과 D435i 1초 reset 원인은 대기
-> 판: v1.2
+> 판: v1.3
 
 # Go2 X 실기 commissioning 작업목록
 
@@ -187,20 +187,20 @@
 4. 카메라 `(x,y,z)≈(0.35,0,0.07)m`의 원점을 1 cm 단위로 재정의한다. 몸 중심이 IMU인지 `base_link`인지, depth optical origin이 렌즈 전면인지 센서 내부 원점인지 명시한다.
 5. 640×480 intrinsics와 depth scale은 재확인 완료. 정확한 640×480→약 0.1444배 resize→중앙 60×60 crop 후보를 코드·보간·반올림·무효값 규칙까지 고정하고 시뮬과 픽셀 parity를 본다.
 
-### 우선순위 2 · 시간·무효 깊이·정적 장면 원시자료
-
-1. depth frame number, device timestamp, timestamp domain, host 수신 monotonic/realtime timestamp를 함께 기록해 지연·jitter 분포와 30→10 Hz 선택 기준을 정한다.
-2. 기존 frame `287→0` 약 1초 사건을 포함하도록 Depth와 DDS state age를 30분 동시 기록하고 reset 전후 30초 원시 구간을 분리한다.
-3. 640×480과 정책 후보 60×60에서 무효/0.2~3.0 m 밖 픽셀의 누적 히트맵을 만든다.
-4. 순정 Stand로 (a) 평지, (b) 높이를 잰 턱, (c) 계단 첫 단 0.5 m·1.0 m에서 원본 depth를 각각 10초 저장하고 실제 높이·거리를 함께 기록한다.
-5. Go2 body IMU 갱신률·callback age와 D435i accel timestamp를 기록해 projected gravity와 카메라 IMU의 시간 어긋남을 추정한다.
-
-### 우선순위 3 · D435i 물리 연결과 장시간 운영 확정
+### 우선순위 2 · D435i 물리 연결과 운영 경로 선별
 
 1. 기존 젠더와 가져온 새 C-to-A 젠더를 A/B/C로 표시한다. 동일 Jetson 포트·동일 C-to-C 케이블에서 후보별 5회 재연결과 5분 depth/color/IMU 시험을 한다.
 2. 매 연결마다 `5000M`을 확인한다. 한 번이라도 `480M`, disconnect, frame reset이 나오면 운영 후보에서 제외한다.
 3. 선택 젠더로 RGB, depth colormap, aligned overlay, 중앙 주점과 영상 방향을 GUI에서 확인한다.
-4. 선택 경로에서 30분 안정성, CPU·메모리·Jetson 온도와 D435i reset을 측정한다. 새 젠더를 샀다는 사실이나 한 번의 `5000M`만으로 통과 처리하지 않는다.
+4. 새 젠더를 샀다는 사실이나 한 번의 `5000M`만으로 통과 처리하지 않는다. 아래 우선순위 3의 정본 원시자료는 이 단계에서 선택한 운영 경로로 수집한다.
+
+### 우선순위 3 · 시간·무효 깊이·정적 장면·장시간 원시자료
+
+1. depth frame number, device timestamp, timestamp domain, host 수신 monotonic/realtime timestamp를 함께 기록해 지연·jitter 분포와 30→10 Hz 선택 기준을 정한다.
+2. 선택 젠더 경로에서 Depth와 DDS state age를 30분 동시 기록하고 CPU·메모리·Jetson 온도, USB reset/disconnect를 함께 센다. 기존 frame `287→0` 약 1초 사건이 재현되면 전후 30초 원시 구간을 분리한다.
+3. 640×480과 정책 후보 60×60에서 무효/0.2~3.0 m 밖 픽셀의 누적 히트맵을 만든다.
+4. 순정 Stand로 (a) 평지, (b) 높이를 잰 턱, (c) 계단 첫 단 0.5 m·1.0 m에서 원본 depth를 각각 10초 저장하고 실제 높이·거리를 함께 기록한다.
+5. Go2 body IMU 갱신률·callback age와 D435i accel timestamp를 기록해 projected gravity와 카메라 IMU의 시간 어긋남을 추정한다.
 
 ### 우선순위 4 · LiDAR·SLAM·APP·정책
 
@@ -226,6 +226,7 @@
 
 | 판 | 날짜 | 내용 |
 |---|---|---|
+| v1.3 | 2026-11-18 | 짧은 Stand 기하 측정 뒤 젠더 A/B/C 운영 경로를 먼저 선별하고, 30분 timestamp·무효 히트맵·평지/턱/계단 정본 원시자료는 선택 젠더로 수집하도록 현장 순서 수정 |
 | v1.2 | 2026-11-18 | 팀원 APP 자동실행의 현재/잠재 영향 분리 · `5000M` 순간 협상과 젠더 안정성 통과 구분 · 시뮬 lead 실측, timestamp/무효 depth/정적 장면, A/B/C, LiDAR/SLAM/APP/정책을 우선순위 0~4로 재정렬 · 정책용 60×60 전처리를 APP 필수 후속으로 명시 |
 | v1.1 | 2026-11-18 | 냉각 뒤 Classic 주행 안전 표본과 카메라 35° 유지성 반영 · HDMI 없는 부팅 root cause/custom EDID 적용·rollback·첫 재부팅 통과 · C-to-A A/B/C 선별과 frame reset 계수 · 현재 후속 순서 갱신 |
 | v1.0 | 2026-11-18 | 완료·부분 완료·미완료 감사, P0 열 안전부터 P7 foothold-app 실기 연결까지 단계별 관문, 다음 전원 투입 read-only 묶음 작성 |
