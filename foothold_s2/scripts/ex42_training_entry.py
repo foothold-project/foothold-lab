@@ -585,8 +585,13 @@ def continuation_state_matches(live: Any, saved: Any) -> bool:
     """After a resumed segment loaded its checkpoint: the live runtime state is the checkpoint's, apart from the two
     fields a later segment carries higher, the L+ level cap and the stage bound of a HOLD extension. `load_state_dict`
     has already refused any value outside their allowance, so they are left out of this readback."""
+    # The command allocation counters are record-only and `load_state_dict` restarts them at zero on every rank
+    # (`restart_counts`: a shared DDP checkpoint stores only rank 0's), so the live counts never equal the saved
+    # ones. The contract is still compared. (lead-lx 11/19 04:1x: E2 m250 resume refused on this field.)
     def rest(state):
-        return {**state, "maximum_updates": None, "terrain": {**(state.get("terrain") or {}), "level_cap": None}}
+        allocation = state.get("command_allocation")
+        return {**state, "maximum_updates": None, "terrain": {**(state.get("terrain") or {}), "level_cap": None},
+                **({"command_allocation": {**allocation, "counts": None}} if isinstance(allocation, dict) else {})}
     return isinstance(live, dict) and isinstance(saved, dict) and rest(live) == rest(saved)
 
 
