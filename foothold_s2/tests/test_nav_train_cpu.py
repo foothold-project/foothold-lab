@@ -108,3 +108,18 @@ def test_adaptive_lr_stops_at_lr_max_and_kl_warn_line_and_kl_max_are_logged(tmp_
     quiet = []
     hl_train.train(FakeEnv(8), _ppo(kl_warn=1e9), out_dir=tmp_path / "q", iterations=2, receipt={"receipt_sha256": "aa"}, log=quiet.append)
     assert not any(s.startswith("KL_WARN") for s in quiet)
+
+
+def test_noise_std_floor_is_off_by_default_and_holds_the_policy_std_when_on(tmp_path):
+    """탐색 잡음 하한: 기본 꺼짐 (줄 없음). 켜면 lr 이 커도 std 가 하한 아래로 안 내려가고 첫 줄에 NOISE_STD_MIN 이 찍힌다. 범위 밖 값은 거절."""
+    off = []
+    hl_train.train(FakeEnv(8), _ppo(), out_dir=tmp_path / "off", iterations=1, receipt={"receipt_sha256": "aa"}, log=off.append)
+    assert not any("NOISE_STD_MIN" in str(x) for x in off)
+    on = []
+    hl_train.train(FakeEnv(8), _ppo(learning_rate=0.5, lr_max=1.0), out_dir=tmp_path / "on", iterations=2, receipt={"receipt_sha256": "aa"},
+                   log=on.append, noise_std_min=0.45)
+    assert any("NOISE_STD_MIN 0.45" in str(x) for x in on)
+    rows = [json.loads(x) for x in on if str(x).startswith('{"iteration"')]
+    assert rows and all(r["noise_std"] >= 0.45 - 1e-6 for r in rows)
+    with pytest.raises(ValueError, match="noise_std_min"):
+        hl_train.train(FakeEnv(8), _ppo(), out_dir=tmp_path / "bad", iterations=1, receipt={"receipt_sha256": "aa"}, log=lambda s: None, noise_std_min=0.9)

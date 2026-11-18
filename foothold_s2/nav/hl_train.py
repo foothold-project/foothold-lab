@@ -105,7 +105,7 @@ def _policy_parts(ppo):
     return actor, critic, log_std
 
 
-def train(env, ppo, *, out_dir, iterations, receipt: dict, resume=None, device="cpu", seed=0, log=print):
+def train(env, ppo, *, out_dir, iterations, receipt: dict, resume=None, device="cpu", seed=0, log=print, noise_std_min=None):
     """`iterations` = 이 호출에서 돌 회 수. 돌려주는 값: 마지막 회 번호 · 저장 경로 목록."""
     import torch
 
@@ -115,6 +115,13 @@ def train(env, ppo, *, out_dir, iterations, receipt: dict, resume=None, device="
     actor, critic, log_std = _policy_parts(ppo)
     actor.to(device), critic.to(device)
     log_std.data = log_std.data.to(device)
+    log_floor = None
+    if noise_std_min is not None:      # 탐색 잡음 하한 (손잡이 · 기본 꺼짐): policy std 가 이 값 아래로 내려가지 않게 매 optimizer 걸음 뒤 log_std 를 자른다
+        if not 0.0 < float(noise_std_min) <= float(ppo.init_noise_std):
+            raise ValueError(f"noise_std_min must be in (0, init_noise_std={ppo.init_noise_std}], got {noise_std_min}")
+        log_floor = float(np.log(float(noise_std_min)))
+        log_std.data.clamp_(min=log_floor)
+        log(f"NOISE_STD_MIN {float(noise_std_min)} (policy std floor on)")
     params = list(actor.parameters()) + list(critic.parameters()) + [log_std]
     opt = torch.optim.Adam(params, lr=ppo.learning_rate)
     it0, lr = 0, ppo.learning_rate
@@ -178,6 +185,8 @@ def train(env, ppo, *, out_dir, iterations, receipt: dict, resume=None, device="
                 opt.zero_grad(); loss.backward()
                 torch.nn.utils.clip_grad_norm_(params, ppo.max_grad_norm)
                 opt.step()
+                if log_floor is not None:
+                    log_std.data.clamp_(min=log_floor)
             with torch.no_grad():       # 적응형 학습률: KL 이 목표의 두 배 넘으면 줄이고 절반 미만이면 키운다 (rsl-rl 방식)
                 full = torch.distributions.Normal(actor(bO), log_std.exp())
                 kl = (bLP - full.log_prob(bA).sum(-1)).mean().item()

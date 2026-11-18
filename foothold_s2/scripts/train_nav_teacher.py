@@ -10,6 +10,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import os
 import sys
 from pathlib import Path
 
@@ -95,6 +96,7 @@ def main(argv=None) -> int:
     p.add_argument("--out-dir", default=None)
     p.add_argument("--iterations", type=int, default=None)
     p.add_argument("--seed", type=int, default=0)
+    p.add_argument("--noise-std-min", type=float, default=None, help="policy std floor (default off; env HIPAN_NOISE_STD_MIN when the flag is absent). Not part of the PPO identity: a resume may change it")
     p.add_argument("--receipt-out", default=None, help="also write the receipt here (never overwritten)")
     a = p.parse_args(argv)
     if not a.dry:
@@ -134,8 +136,9 @@ def main(argv=None) -> int:
         ppo = cfg.TeacherPPO(**ppo_kwargs(a.num_envs, a.save_interval))
         env = hl_train.TeacherVecEnv(nav_env, task, device="cuda:0" if _cuda() else "cpu")
         env.heading_selfcheck()                          # 쿼터니언 순서 · 몸 틀 속도 해석이 틀리면 여기서 멈춘다 (Pod 돈 아낌)
+        floor = a.noise_std_min if a.noise_std_min is not None else (float(os.environ["HIPAN_NOISE_STD_MIN"]) if os.environ.get("HIPAN_NOISE_STD_MIN") else None)
         last, saved = hl_train.train(env, ppo, out_dir=out, iterations=a.iterations, receipt=receipt, resume=a.resume, seed=a.seed,
-                                     device=env.device)
+                                     device=env.device, noise_std_min=floor)
         print(json.dumps({"last_iteration": last, "saved": saved}), flush=True)
     except BaseException:
         import traceback
