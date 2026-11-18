@@ -33,6 +33,14 @@ KIND = "stepping_stones_low"
 TOL = 1e-4
 
 
+def _git_head() -> str:
+    import subprocess
+    try:
+        return subprocess.run(["git", "rev-parse", "HEAD"], capture_output=True, text=True, cwd=Path(__file__).resolve().parent, check=True).stdout.strip()
+    except Exception:       # noqa: BLE001
+        return "unknown"
+
+
 def _digest(path: Path) -> str:
     h = hashlib.sha256()
     with path.open("rb") as stream:
@@ -106,7 +114,7 @@ def measure_tile(stones, x0t, y0t):
             "height_jitter_max_abs_m": round(float(np.abs(tops).max()), 4), "height_jitter_std_m": round(float(tops.std()), 4)}
 
 
-def build(src: Path, dst: Path) -> dict:
+def build(src: Path, dst: Path, *, training: bool = False, aggregate_from: Path | None = None) -> dict:
     if dst.exists() and any(dst.iterdir()):
         raise SystemExit(f"destination is not empty: {dst}")
     data = np.load(src / "terrain_mesh.npz", allow_pickle=False)
@@ -181,26 +189,41 @@ def build(src: Path, dst: Path) -> dict:
         t["new_measured"] = measure_tile(st, x0t, y0t)
     dst.mkdir(parents=True, exist_ok=True)
     np.savez_compressed(dst / "terrain_mesh.npz", **new_arrays)
-    shutil.copy2(src / "terrain_manifest.json", dst / "terrain_manifest.json")
+    if not training:
+        shutil.copy2(src / "terrain_manifest.json", dst / "terrain_manifest.json")
     manifest = json.loads((src / "mesh_manifest.json").read_text(encoding="utf-8-sig"))
     manifest["mesh_sha256"] = hashlib.sha256(out_v.tobytes() + out_f.tobytes()).hexdigest()
     manifest["vertex_count"], manifest["face_count"] = int(len(out_v)), int(len(out_f))
     manifest["mesh_file_sha256"] = _digest(dst / "terrain_mesh.npz")
     manifest["edge_masks"] = {**manifest.get("edge_masks", {}), "sha256": em.masks_sha256(packed), "inner_cells": int(built["inner"].sum()), "outer_cells": int(built["outer"].sum())}
-    manifest["stone_gap_test_mesh"] = {"NOT_FOR_TRAINING": True, "source_mesh_dir": str(src), "source_geometry_sha256": json.loads((src / "mesh_manifest.json").read_text(encoding="utf-8-sig")).get("mesh_sha256"),
+    block = "ladder_splice" if training else "stone_gap_test_mesh"
+    if training:                    # 학습용 폴더: 원본 (옛 메시 폴더) 에 묶고, 깃발 sha 를 새로 적고, aggregate 는 옛 것을 물려받음 (기하가 바뀌었으니 Kit 재측정 전 물려받은 값)
+        if aggregate_from is None or not (aggregate_from / manifest["aggregate_file"]).is_file():
+            raise SystemExit("training build needs --aggregate-from (folder with the source aggregate file)")
+        shutil.copy2(aggregate_from / manifest["aggregate_file"], dst / manifest["aggregate_file"])
+        manifest["flag_provenance"] = {**manifest["flag_provenance"], "sha256": hashlib.sha256(flags.tobytes()).hexdigest(),
+                                       "ladder_splice_note": "cells of the changed A stepping_stones_low tiles were recomputed with ex42_flag_producer.tile_flags; per-cell metadata above is the source's"}
+        manifest["flag_annotation_source"] = {**manifest.get("flag_annotation_source", {}), "geometry_preserved": False,
+                                              "superseded_by": "ladder_splice"}
+    manifest[block] = {"NOT_FOR_TRAINING": not training, "source_mesh_dir": str(src),
+                                       "source_manifest_sha256": _digest(src / "mesh_manifest.json"), "source_npz_sha256": _digest(src / "terrain_mesh.npz"),
+                                       "aggregate_inherited_from": None if aggregate_from is None else str(aggregate_from),
+                                       "new_kit_validation": False, "generator_commit": _git_head(), "source_geometry_sha256": json.loads((src / "mesh_manifest.json").read_text(encoding="utf-8-sig")).get("mesh_sha256"),
                                        "kind": KIND, "columns": stone_cols, "rows": list(ROWS_CHANGED),
                                        "easy_gap_x_m_by_row": {str(k): v for k, v in v2.EASY_STONE_LOW_GAP_X.items()},
                                        "row_map": {str(r): ("easy" if r in v2.EASY_STONE_LOW_GAP_X else "old level %d" % (r - v2.EASY_STONE_LOW_SHIFT)) for r in ROWS_CHANGED},
                                        "easy_height_jitter_m": v2.EASY_STONE_LOW_HEIGHT_JITTER, "tiles": report}
     (dst / "mesh_manifest.json").write_text(json.dumps(manifest, indent=1, ensure_ascii=False), encoding="utf-8")
-    (dst / "stone_gap_levels.json").write_text(json.dumps(manifest["stone_gap_test_mesh"], indent=1, ensure_ascii=False), encoding="utf-8")
-    return manifest["stone_gap_test_mesh"] | {"mesh_sha256": manifest["mesh_sha256"], "mesh_file_sha256": manifest["mesh_file_sha256"], "vertices": len(out_v), "faces": len(out_f)}
+    (dst / ("ladder_rows.json" if training else "stone_gap_levels.json")).write_text(json.dumps(manifest[block], indent=1, ensure_ascii=False), encoding="utf-8")
+    return manifest[block] | {"mesh_sha256": manifest["mesh_sha256"], "mesh_file_sha256": manifest["mesh_file_sha256"], "vertices": len(out_v), "faces": len(out_f)}
 
 
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()
     ap.add_argument("--src", required=True); ap.add_argument("--dst", required=True)
+    ap.add_argument("--training", action="store_true", help="학습용 폴더: ladder_splice 블록 · aggregate 물려받음 (--aggregate-from) · terrain_manifest 는 따로 만든다")
+    ap.add_argument("--aggregate-from", default=None)
     a = ap.parse_args()
-    res = build(Path(a.src), Path(a.dst))
+    res = build(Path(a.src), Path(a.dst), training=a.training, aggregate_from=None if a.aggregate_from is None else Path(a.aggregate_from))
     print(json.dumps({k: v for k, v in res.items() if k != "tiles"}, indent=1))
     print("tiles", len(res["tiles"]), "old xy reproduced with easy off", sum(t["old_xy_reproduced_with_easy_off"] for t in res["tiles"]))
