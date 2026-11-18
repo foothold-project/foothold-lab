@@ -4,8 +4,8 @@
 > 작성: 오흥재 · 2026-11-17 17:24
 > 근거: 업체 제공 「Unitree Go2 + Intel RealSense D435i 제어기 사용자 매뉴얼」 · 2026-11-17 현장 터미널 출력 · NoMachine 접속 실측 · 정본 3 전달 문서
 > 요지: 교체받은 Go2 X 계통의 현재 연결과 원격 접속을 확정값 · 업체 문서값 · 미확인값으로 나누고, 저수준 정책 시험 전 점검 순서를 고정한다
-> 상태: 현장 기록 v0.10 · 격리 RSUSB build로 D435i 영상과 IMU 동시 수신 검증
-> 판: v0.10
+> 상태: 현장 기록 v0.11 · 격리 RSUSB build로 D435i 영상과 IMU 동시 수신 검증 · 순정 Stand 열 사건 뒤 안전 종료
+> 판: v0.11
 
 ## 0. 이 기록의 범위
 
@@ -50,7 +50,7 @@
 | Jetson의 Go2 내부망 주소 | `192.168.123.99/24` 고정 | `enP8p1s0` 귀속과 route `192.168.123.0/24` `확인됨` |
 | Go2 주소 | `192.168.123.161` | Jetson `enP8p1s0`에서 3/3 ping, 0% loss, 약 0.22 ms 및 ARP neighbor 수신 `확인됨` |
 | D435i USB ID | `8086:0b3a` | 제품명 Intel RealSense Depth Camera 435i와 함께 `확인됨` |
-| D435i 매뉴얼 설정 | color 640×480 30 fps · depth 640×480 30 fps · aligned depth · gyro 200 Hz · accel 100 Hz | depth/color 640×480×30 실행과 약 28~30 Hz 수신 `확인됨`. D435i HID Motion Sensor Failure로 gyro/accel은 아직 미수신 |
+| D435i 매뉴얼 설정 | color 640×480 30 fps · depth 640×480 30 fps · aligned depth · gyro 200 Hz · accel 100 Hz | 격리 RSUSB backend에서 depth/color 약 28~30 Hz, gyro 약 200 Hz, accel 약 100 Hz 동시 수신 `확인됨`. 시스템 기본 V4L2 backend의 HID 실패는 남아 있어 운영 wrapper·장시간 검증 필요 |
 | 기본 통합 런치 | `ros2 launch wego_teleop wego_teleop.launch.py` | `미실행` |
 | 통합 런치 기본 안전값 | `receive_only:=true` | `wego_teleop.launch.py` 기본값과 `go2_driver` 송신 차단 코드를 확인했고, 명시적 receive-only 단독 실행으로 상태만 수신했다 `확인됨` |
 
@@ -328,6 +328,7 @@ Unitree Go2 사용자 매뉴얼에는 머리 표시등이 노란색으로 느리
 
 ## 7. 팀원이 이어서 볼 위치
 
+- 전체 실행 순서: [`20261118-go2-x-commissioning-worklist.md`](20261118-go2-x-commissioning-worklist.md)
 - 정본 3 전달: [`HANDOFF-START-m15500-CANON3.md`](20261103-policy-handoff/HANDOFF-START-m15500-CANON3.md)
 - 앱 전달과 남은 실기 경로: [`APP-HANDOFF-1117.md`](20261103-policy-handoff/APP-HANDOFF-1117.md)
 - 시뮬 대 실기 제원: [`docs/research/20260908-go2-spec-sim-vs-real.md`](../../docs/research/20260908-go2-spec-sim-vs-real.md)
@@ -339,6 +340,7 @@ Unitree Go2 사용자 매뉴얼에는 머리 표시등이 노란색으로 느리
 
 | 판 | 날짜 | 내용 |
 |---|---|---|
+| v0.11 | 2026-11-18 | D435i↔Go2 상대각 3회 평균 33.262° · 순정 Damping→Stand 뒤 전면 hip 78/81°C와 적색 점멸로 안전 중단 · Jetson 정상 종료 뒤 Go2 종료 · `1001`은 공식 SDK상 Damp API ID로 정정 · 다음 작업을 별도 commissioning worklist로 분리 |
 | v0.10 | 2026-11-17 | 격리 librealsense 2.58.4 RSUSB build · gyro 약 195~200 Hz와 accel 약 100~101 Hz 실수신 · ROS depth/color/IMU 동시 발행 확인 · 현재 firmware에서 IMU hardware 정상과 V4L2 backend 원인 확정 · RSUSB 시작 경고와 장시간 관문 기록 |
 | v0.9 | 2026-11-17 | D435i IMU failure가 현재 V4L2 backend에서 HID device info를 찾지 못하는 상태임을 debug log로 확인 · JetPack 6 알려진 문제와 RSUSB 별도 build 후보 · firmware 5.17.0.10과 SDK 권장 5.17.3.10 이상 차이 및 firmware update 보류 관문 기록 |
 | v0.8 | 2026-11-17 | HDMI 없는 재부팅의 640×480 fallback과 HDMI 연결 즉시 1080p 복구 · 직결 LAN 자동연결 · Jetson 현재 D435i 5000M와 depth/color 30 fps급 실측 · D435i IMU HID 실패 · Go2 배터리/관절/IMU/LiDAR receive-only 수신률 · 업체 `wego_ws`의 stale serial/interface/MID-360 구성 불일치 · ONNX runtime 개발환경 공백 기록 |
