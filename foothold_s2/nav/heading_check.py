@@ -71,3 +71,48 @@ def run(nav) -> dict | None:
     if not res["ok"]:
         raise RuntimeError("HEADING_SELFCHECK FAILED: " + res.get("reason", "?") + " (quaternion order or body-frame velocity interpretation is wrong; training not started)")
     return res
+
+
+class WindowYawCheck:
+    """QUAT_CHECK 의 이동 창 판 (선택). 한 틱 변위는 걸음 흔들림에 크게 흔들리므로, W 틱 창에서
+    (창 변위 방향) - (창 평균 vel_b 방향) 을 몸이 본 방향의 독립 추정으로 삼아 창 안 해석 yaw (원 평균) 와 비교한다.
+    창 변위가 min_disp m 이상이고 창 안에서 끝나지 않은 표본만 쓴다. 판정 줄 (결과 전 고정): 가장 긴 창 중앙값이 10 도 안이면 틀 결함 없음."""
+
+    def __init__(self, windows=(1, 5, 10), min_disp=0.05, min_speed=0.05):
+        self.windows, self.min_disp, self.min_speed = tuple(sorted(windows)), min_disp, min_speed
+        self.H = max(self.windows) + 1
+        self.pos, self.vb, self.yaw, self.age = [], [], [], None
+        self.errs = {w: [] for w in self.windows}
+        self.ticks = 0
+
+    def push(self, pos_xy, v_b, yaw, done) -> None:
+        pos_xy, v_b, yaw, done = (np.asarray(x, float) for x in (pos_xy, v_b, yaw, done))
+        done = done.astype(bool)
+        self.age = np.zeros(len(yaw), int) if self.age is None else np.where(done, 0, self.age + 1)
+        self.pos.append(pos_xy.copy()); self.vb.append(v_b[:, :2].copy()); self.yaw.append(yaw.copy())
+        self.pos, self.vb, self.yaw = self.pos[-self.H:], self.vb[-self.H:], self.yaw[-self.H:]
+        self.ticks += 1
+        for w in self.windows:
+            if len(self.pos) <= w:
+                continue
+            disp = self.pos[-1] - self.pos[-1 - w]
+            vm = np.sum(self.vb[-w:], axis=0)
+            ys = np.stack(self.yaw[-w:])
+            ym = np.arctan2(np.sin(ys).mean(0), np.cos(ys).mean(0))
+            use = (self.age >= w + 1) & (np.linalg.norm(disp, axis=1) >= self.min_disp) & (np.linalg.norm(vm, axis=1) >= self.min_speed * w)
+            if use.any():
+                est = np.arctan2(disp[:, 1], disp[:, 0]) - np.arctan2(vm[:, 1], vm[:, 0])
+                self.errs[w].append(_wrap_deg(est - ym)[use])
+
+    def table(self) -> dict:
+        out = {}
+        for w in self.windows:
+            e = np.concatenate(self.errs[w]) if self.errs[w] else np.zeros(0)
+            out[w] = {"samples": int(len(e)), "median_deg": float(np.median(e)) if len(e) else None,
+                      "within_30": float((e <= 30).mean()) if len(e) else None, "within_10": float((e <= 10).mean()) if len(e) else None}
+        return out
+
+    def summary_line(self) -> str:
+        parts = [f"W={w} n={r['samples']} median={r['median_deg']:.1f} in30={r['within_30']:.2f} in10={r['within_10']:.2f}"
+                 for w, r in self.table().items() if r["samples"]]
+        return "QUAT_WINDOWS ticks=%d min_disp=%g | %s" % (self.ticks, self.min_disp, " | ".join(parts) or "no samples")

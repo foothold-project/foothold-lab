@@ -9,6 +9,7 @@ env 의 방 번호: 기본은 round robin (env i -> 방 i mod 방 수), 여러 �
 from __future__ import annotations
 
 import hashlib
+import os
 from dataclasses import dataclass
 
 import numpy as np
@@ -495,6 +496,8 @@ class NavTask:
 
     QUAT_CHECK_TICKS = 50          # 처음 이 틱 수 동안 env 0 의 쿼터니언 · yaw 점검 줄을 찍는다 (QUAT_CHECK)
     YAW_TOL_DEG = 30.0
+    QUAT_WINDOWS = tuple(int(x) for x in os.environ.get("HIPAN_QUAT_WINDOWS", "").split(",") if x.strip())
+    QUAT_WINDOWS_TICKS = 200
 
     def _note_disp(self, v_b, yaw, pos_xy, done) -> None:
         """yaw 에 의존하지 않는 측정: 앞 틱 위치 -> 지금 위치 변화 (월드) 와 부목표 방향의 cos (nv_cos_disp), 그리고 쿼터니언 순서 점검
@@ -526,6 +529,15 @@ class NavTask:
                     e = np.concatenate(self._qc_err)
                     print(f"QUAT_CHECK summary ticks={self.QUAT_CHECK_TICKS} samples={len(e)} err_deg_median={np.median(e):.1f} within_{self.YAW_TOL_DEG:g}deg={float((e <= self.YAW_TOL_DEG).mean()):.2f} (yaw 해석이 맞으면 median 은 작고 비율은 1 에 가깝다)", flush=True)
                     self._qc_err = []
+        if self.QUAT_WINDOWS:                                    # 선택: 창별 QUAT_CHECK (환경 변수 HIPAN_QUAT_WINDOWS="1,5,10"; 기본 꺼짐 = 학습 값 그대로)
+            qw = getattr(self, "_qw", None)
+            if qw is None:
+                from foothold_s2.nav.heading_check import WindowYawCheck
+                qw = self._qw = WindowYawCheck(self.QUAT_WINDOWS)
+            if qw.ticks < self.QUAT_WINDOWS_TICKS:
+                qw.push(pos_xy, v_b, yaw, done)
+                if qw.ticks == self.QUAT_WINDOWS_TICKS:
+                    print(qw.summary_line(), flush=True)
 
     def _note_tick(self, state, pos_xy, terms, done) -> None:
         st = self._stat()

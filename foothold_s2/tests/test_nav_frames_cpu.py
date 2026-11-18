@@ -329,3 +329,34 @@ def test_heading_selfcheck_run_passes_with_the_right_quaternion_order_and_raises
     else:
         raise AssertionError("a wrongly read quaternion must stop training")
     assert hc.run(object()) is None                                                    # fake env without the attributes: skipped
+
+
+def _walk(yaw_read_offset, n=64, T=200, dt=0.1, seed=0):
+    """진짜 yaw 로 걷는 가짜 로봇 (걸음 흔들림: 몸 속도 · 위치에 잡음). yaw_read_offset 만큼 틀리게 읽은 yaw 를 준다 (0 = 맞게 읽음)."""
+    from foothold_s2.nav.heading_check import WindowYawCheck
+    rng = np.random.default_rng(seed)
+    yaw = rng.uniform(-np.pi, np.pi, n); pos = np.zeros((n, 2)); w = WindowYawCheck((1, 5, 10))
+    for _ in range(T):
+        yaw = yaw + rng.normal(0, 0.05, n)                                   # 몸이 천천히 돈다
+        vb = np.stack([0.4 + rng.normal(0, 0.08, n), rng.normal(0, 0.08, n)], 1)
+        c, s = np.cos(yaw), np.sin(yaw)
+        step = np.stack([c * vb[:, 0] - s * vb[:, 1], s * vb[:, 0] + c * vb[:, 1]], 1) * dt + rng.normal(0, 0.012, (n, 2))   # 위치 흔들림
+        pos = pos + step
+        w.push(pos, vb, yaw + yaw_read_offset, np.zeros(n, bool))
+    return w.table()
+
+
+def test_window_yaw_check_gets_better_with_longer_windows_and_catches_a_wrong_yaw():
+    ok = _walk(0.0)
+    assert ok[10]["median_deg"] < ok[1]["median_deg"] and ok[10]["median_deg"] < 10.0 and ok[10]["within_30"] > 0.95
+    bad = _walk(np.pi / 2)                                                    # 쿼터니언 순서를 틀리게 읽은 꼴 (90 도 어긋남)
+    assert all(r["median_deg"] > 60.0 for r in bad.values())
+
+
+def test_window_yaw_check_skips_samples_that_cross_a_reset_and_is_off_by_default():
+    from foothold_s2.nav.heading_check import WindowYawCheck
+    w = WindowYawCheck((5,))
+    for t in range(12):
+        w.push(np.full((1, 2), float(t)), np.ones((1, 2)), np.zeros(1), np.array([t == 8]))
+    assert w.table()[5]["samples"] == 2                                      # t=6,7 만 (리셋 t=8 뒤에는 6 틱이 지나야 다시 쓰임; 12 틱 안에는 없음)
+    assert nav_task.NavTask.QUAT_WINDOWS == ()
