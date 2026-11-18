@@ -46,11 +46,16 @@ def document(pinned):
     return d
 
 
+EDGE_STAGES = ('E2', 'E3', 'E4', 'E5')
+
+
 def test_shipped_stage_mesh_selection_is_explicit_and_e1f_keeps_common_path():
     d = yaml.safe_load(launcher.PLAN.read_text())
     for stage in STAGES:
         row = next(r for r in d['stages'] if r['id'] == stage)
-        assert row['training_mesh_profile'] == 'e2_named_flags_v2'
+        # E2 (and E3~E5 on the inheritance candidate) read the edge-mask mesh (same geometry sha, ex42_edge_masks); the other rows keep the common mesh
+        assert row['training_mesh_profile'] == ('e2_named_flags_v2_edge' if stage in EDGE_STAGES else 'e2_named_flags_v2')
+        assert (row.get('foot_edge_weight') == -1.0) == (stage in EDGE_STAGES)
     assert 'training_mesh_profile' not in next(r for r in d['stages'] if r['id'] == 'E1F')
 
 
