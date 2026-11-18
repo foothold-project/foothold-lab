@@ -33,19 +33,30 @@ STEP_BEAM_WIDTH = tuple(v * SCALE_X for v in ss.STEP_BEAM_WIDTH)
 STEP_BEAM_GAP = tuple(v * SCALE_X for v in ss.STEP_BEAM_GAP)
 GAP_WIDTH = tuple(v * SCALE_X for v in ss.GAP_WIDTH)
 
-# Easy first rows of the LOW stepping-stone columns: the stone gap along x (metres, final value, not a pre-scale
-# one) per level (= mesh row), and the stone top height jitter (+- metres, instead of HEIGHT_JITTER) on those rows.
-# OFF by default: nothing changes until `set_easy_stone_low(True)` (the mesh builder's --easy_stone_low flag). Only kind
-# stepping_stones_low and only the levels listed here are touched; stone size (still by level), gap y, xy jitter
-# (low kind: randomness 0) and every other kind / level go through the same code as before.
+# Easy ladder on the LOW stepping-stone columns (kind stepping_stones_low only), OFF by default: nothing changes until
+# `set_easy_stone_low(True)` (the mesh builder's --easy_stone_low flag). ON, mesh row r (= level r) becomes:
+#   rows 0..4 : stone size of level 0 (0.554 x 0.4425, gap y 0.0885), gap x from EASY_STONE_LOW_GAP_X (metres, final
+#               value), stone top height jitter +-EASY_STONE_LOW_HEIGHT_JITTER instead of HEIGHT_JITTER. Only gap x grows.
+#   row 5     : the old level 0 geometry (gap x 0.194, stone 0.554 x 0.4425, jitter +-5 cm), so the ladder leads into it
+#   rows 6..9 : the old levels 1..4 (row number shifted by EASY_STONE_LOW_SHIFT = 5); old levels 5..9 drop out of the column.
+# Everything else (other kinds, xy jitter: low kind is randomness 0, the seed of each tile) goes through the same code.
 EASY_STONE_LOW_GAP_X = {0: 0.05, 1: 0.07, 2: 0.09, 3: 0.11, 4: 0.14}
 EASY_STONE_LOW_HEIGHT_JITTER = 0.02
+EASY_STONE_LOW_SHIFT = len(EASY_STONE_LOW_GAP_X)
 _EASY = {"stone_low": False}
 
 
 def set_easy_stone_low(on):
-    """The one switch. True: levels in EASY_STONE_LOW_GAP_X of stepping_stones_low use those gap x values."""
+    """The one switch."""
     _EASY["stone_low"] = bool(on)
+
+
+def easy_stone_low_args(row):
+    """generate() arguments {level, gap_x, height_jitter} of mesh row `row` of a stepping_stones_low column when the easy
+    ladder is on (see above)."""
+    if row in EASY_STONE_LOW_GAP_X:
+        return {"level": 0, "gap_x": EASY_STONE_LOW_GAP_X[row], "height_jitter": EASY_STONE_LOW_HEIGHT_JITTER}
+    return {"level": row - EASY_STONE_LOW_SHIFT, "gap_x": None, "height_jitter": None}
 
 
 # Shared shape/noise conventions, never mutate the legacy module's constants.
@@ -171,9 +182,8 @@ def build_tile(kind, difficulty):
     if start_kind is None:
         # Flat is identical in both presets.
         return legacy.build_tile(kind, difficulty)
-    easy = EASY_STONE_LOW_GAP_X.get(level) if _EASY["stone_low"] and kind == "stepping_stones_low" else None
-    geom = generate(start_kind, level, rng, randomness=randomness, gap_x=easy,
-                    height_jitter=None if easy is None else EASY_STONE_LOW_HEIGHT_JITTER)
+    easy = easy_stone_low_args(level) if _EASY["stone_low"] and kind == "stepping_stones_low" else {}
+    geom = generate(start_kind, easy.pop("level", level), rng, randomness=randomness, **easy)
     shifted = [(x0, x1, y0 + legacy.STRIP[0], y1 + legacy.STRIP[0], z0, z1)
                for x0, x1, y0, y1, z0, z1 in geom.boxes[3:]]
     boxes = np.asarray(legacy._frame(geom.depth) + shifted, dtype=float)

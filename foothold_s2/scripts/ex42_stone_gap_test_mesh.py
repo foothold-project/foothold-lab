@@ -1,12 +1,12 @@
-"""징검돌 낮은 열의 쉬운 줄 (0~4) 시험 메시 (학습 · 평가 메시 아님 · Isaac 없음 · 옛 폴더는 읽기만).
+"""징검돌 낮은 열의 쉬운 사다리 (줄 0~9) 시험 메시 (학습 · 평가 메시 아님 · Isaac 없음 · 옛 폴더는 읽기만).
 
     python -m foothold_s2.scripts.ex42_stone_gap_test_mesh --src <합친 메시 폴더> --dst <새 폴더>
 
-합친 메시의 징검돌 낮은 열 (family A 의 stepping_stones_low 열 전부) 의 줄 0~4 칸을 지우고 같은 자리에 새 칸을 넣는다.
+합친 메시의 징검돌 낮은 열 (family A 의 stepping_stones_low 열 전부) 의 줄 0~9 칸을 지우고 같은 자리에 새 칸을 넣는다.
 새 칸 = start_go2_v2.build_tile 그대로 (set_easy_stone_low(True): 틈 x 표 EASY_STONE_LOW_GAP_X · 돌 높이 흔들림 +-2 cm).
-돌 크기는 줄 (레벨) 마다 생성기 값 그대로 (줄이 오를수록 작아짐), 틈 y · xy 흔들림 0 은 그대로.
+줄 0~4 는 레벨 0 돌 크기 · 틈 y 로 틈 x 만 커진다. 줄 5 = 옛 L0, 줄 6~9 = 옛 L1~L4 (옛 L5~L9 는 이 열에서 빠짐).
 같은 생성기를 꺼 둔 채 (옛 값) 다시 만든 칸이 옛 메시의 칸과 일치하는지 (돌 위치 xy) 줄마다 확인해 보고한다.
-줄 5 이상 · 다른 열 · 다른 가족은 바이트 그대로 (정점 순서만 바뀜: 바뀐 칸을 맨 뒤로 붙임).
+다른 열 · 다른 가족은 바이트 그대로 (정점 순서만 바뀜: 바뀐 칸을 맨 뒤로 붙임).
 깃발은 새 칸에서 ex42_flag_producer.tile_flags 로 다시 구하고, 가장자리 마스크는 합친 메시에서 다시 만든다.
 줄별 실측 (틈 x · 돌 크기 · 높이 흔들림) 은 만든 메시를 다시 읽어 잰다 (stone_gap_levels.json).
 mesh_sha256 은 바뀐다 (학습에 넣는 판이 아님: M0~M3 영수증은 이 폴더를 가리키지 않는다).
@@ -28,7 +28,7 @@ from foothold_s2.terrains import sparse_terrains as legacy
 from foothold_s2.terrains import start_go2_v2 as v2
 
 TILE = legacy.TILE
-ROWS_CHANGED = (0, 1, 2, 3, 4)
+ROWS_CHANGED = tuple(range(10))
 KIND = "stepping_stones_low"
 TOL = 1e-4
 
@@ -82,14 +82,12 @@ def tile_corner(row, col, rows, cols):
 def new_tile_boxes(row: int, easy: bool, depth: float, seed_key: str):
     """칸 좌표 (0..8) 상자 (N, 6): 틀 3 개 + 돌. start_go2_v2.generate (옛 메시를 만든 같은 생성기) 를 레벨 = 줄 · 무작위 0 으로 부르고
     build_tile 과 같은 이음 (띠 y + STRIP) 을 붙인다. 구덩이 깊이는 옛 칸의 값으로 고정 (옛 메시는 칸마다 깊이 · 높이 난수가 다르다).
-    easy=True 는 생성기의 쉬운 줄 값 (틈 x 표 · 높이 흔들림) 을 넘긴다. easy=False 는 옛 값."""
+    easy=True 는 생성기의 쉬운 사다리 인자 (v2.easy_stone_low_args: 줄 0~4 틈 x 표 · 줄 5 = 옛 L0 · 줄 6~9 = 옛 L1~L4) 를 넘긴다. easy=False 는 옛 값 (레벨 = 줄)."""
     rng = np.random.default_rng(legacy.seed_of(seed_key, 0.0))
     saved = v2.DEPTH_RANGE
     v2.DEPTH_RANGE = (depth, depth)
     try:
-        geom = v2.generate("stepping_stones", row, rng, randomness=0.0,
-                           gap_x=v2.EASY_STONE_LOW_GAP_X[row] if easy else None,
-                           height_jitter=v2.EASY_STONE_LOW_HEIGHT_JITTER if easy else None)
+        geom = v2.generate("stepping_stones", **(v2.easy_stone_low_args(row) if easy else {"level": row}), rng=rng, randomness=0.0)
     finally:
         v2.DEPTH_RANGE = saved
     assert abs(geom.depth - depth) < 1e-12
@@ -119,8 +117,8 @@ def build(src: Path, dst: Path) -> dict:
     nA = sum(1 for f in fam if f == "A")
     names = columns.column_types(columns.FULL, nA)
     stone_cols = [c for c in range(nA) if names[c] == KIND]
-    if sorted(v2.EASY_STONE_LOW_GAP_X) != list(ROWS_CHANGED):
-        raise SystemExit("the generator's easy rows %s differ from ROWS_CHANGED" % sorted(v2.EASY_STONE_LOW_GAP_X))
+    if len(v2.EASY_STONE_LOW_GAP_X) + 5 != len(ROWS_CHANGED):
+        raise SystemExit("the generator's ladder (%d easy rows + old L0..L4) does not fill rows %s" % (len(v2.EASY_STONE_LOW_GAP_X), ROWS_CHANGED))
     wanted = [(r, c) for c in stone_cols for r in ROWS_CHANGED]
     labels = components(faces, len(vertices))
     old = tile_boxes_world(vertices, faces, labels, rows_total, cols_total, rows_total, nA, wanted)
@@ -192,6 +190,7 @@ def build(src: Path, dst: Path) -> dict:
     manifest["stone_gap_test_mesh"] = {"NOT_FOR_TRAINING": True, "source_mesh_dir": str(src), "source_geometry_sha256": json.loads((src / "mesh_manifest.json").read_text(encoding="utf-8-sig")).get("mesh_sha256"),
                                        "kind": KIND, "columns": stone_cols, "rows": list(ROWS_CHANGED),
                                        "easy_gap_x_m_by_row": {str(k): v for k, v in v2.EASY_STONE_LOW_GAP_X.items()},
+                                       "row_map": {str(r): ("easy" if r in v2.EASY_STONE_LOW_GAP_X else "old level %d" % (r - v2.EASY_STONE_LOW_SHIFT)) for r in ROWS_CHANGED},
                                        "easy_height_jitter_m": v2.EASY_STONE_LOW_HEIGHT_JITTER, "tiles": report}
     (dst / "mesh_manifest.json").write_text(json.dumps(manifest, indent=1, ensure_ascii=False), encoding="utf-8")
     (dst / "stone_gap_levels.json").write_text(json.dumps(manifest["stone_gap_test_mesh"], indent=1, ensure_ascii=False), encoding="utf-8")
