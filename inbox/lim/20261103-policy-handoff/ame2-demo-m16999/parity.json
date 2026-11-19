@@ -7,6 +7,8 @@
    "mean_abs_action_onnx_vs_torch": 4.2673977418417053e-07,
    "step_of_max": 24,
    "max_abs_gaze_r_onnx_vs_torch": 1.7881393432617188e-07,
+   "max_abs_gaze_logits_onnx_vs_torch": 1.1920928955078125e-06,
+   "gaze_offset_steps_differing": 0,
    "max_abs_action_onnx_vs_env_gpu": 0.00021886825561523438,
    "max_abs_action_torch_cpu_vs_env_gpu": 0.00021839141845703125,
    "max_abs_action_torch_vs_jit_twin": 0.0,
@@ -19,6 +21,8 @@
    "mean_abs_action_onnx_vs_torch": 4.330285321429983e-07,
    "step_of_max": 8,
    "max_abs_gaze_r_onnx_vs_torch": 2.384185791015625e-07,
+   "max_abs_gaze_logits_onnx_vs_torch": 9.834766387939453e-07,
+   "gaze_offset_steps_differing": 0,
    "max_abs_action_onnx_vs_env_gpu": 0.0002104640007019043,
    "max_abs_action_torch_cpu_vs_env_gpu": 0.000209808349609375,
    "max_abs_action_torch_vs_jit_twin": 0.0,
@@ -30,8 +34,8 @@
  "pass": true,
  "onnx": {
   "file": "ame2-demo-m16999.onnx",
-  "sha256": "56a492c6bf5684ef3bde2c1df0b545a0324e87060ecfeea37b4022b5b017ea0b",
-  "bytes": 5038171
+  "sha256": "2f7a8b18e8a3cc89ab5975836fff4870165df5c5bb8102ac823b56fe75b472ce",
+  "bytes": 5038652
  },
  "runtime": {
   "onnxruntime": "1.26.0",
@@ -108,12 +112,14 @@
    "flat": {
     "steps": 200,
     "max_abs_action_web_vs_torch": 1.7881393432617188e-06,
-    "step_of_max": 67
+    "step_of_max": 67,
+    "gaze_offset_steps_differing": 0
    },
    "stairs": {
     "steps": 200,
     "max_abs_action_web_vs_torch": 3.0994415283203125e-06,
-    "step_of_max": 71
+    "step_of_max": 71,
+    "gaze_offset_steps_differing": 0
    }
   },
   "max_abs_action_web_vs_torch": 3.0994415283203125e-06,

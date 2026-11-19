@@ -1,5 +1,5 @@
 {
- "format": "ame2-demo-onnx/1",
+ "format": "ame2-demo-onnx/2",
  "name": "ame2-demo-m16999",
  "final_name": "ame2-oh2l2",
  "checkpoint": {
@@ -84,7 +84,25 @@
     2
    ],
    "dtype": "float32",
-   "meaning": "diagnostic: gaze location r = sigmoid(gaze logits) in (0,1)^2; crop corner ox = clamp(round(r0 * 17), 0, 17), oy = clamp(round(r1 * 3), 0, 3) (12 x 10 window of the 29 x 13 map)"
+   "meaning": "diagnostic: gaze location r = sigmoid(gaze_logits) in (0,1)^2 (_last_gaze_r of the original get_latent)"
+  },
+  {
+   "name": "gaze_logits",
+   "shape": [
+    1,
+    2
+   ],
+   "dtype": "float32",
+   "meaning": "diagnostic: output of the original gaze_head before the sigmoid (forward hook); equals the mu of the code's as_jit twin forward_with_gaze"
+  },
+  {
+   "name": "gaze_offset",
+   "shape": [
+    1,
+    2
+   ],
+   "dtype": "float32",
+   "meaning": "diagnostic: integer crop corner (ox, oy) returned by the original _crop_window, cast to float32: ox in 0..17 over the 29 x cells, oy in 0..3 over the 13 y cells; the 12 x 10 window is mapping[ox:ox+12, oy:oy+10]"
   }
  ],
  "actor_input_order": [
@@ -414,7 +432,7 @@
  "onnx": {
   "opset": 17,
   "ir_version": 8,
-  "nodes": 236,
+  "nodes": 242,
   "batch": 1,
   "dtype": "float32",
   "checker": "check_model full_check passed",
@@ -443,18 +461,78 @@
  "artifacts": [
   {
    "path": "ame2-demo-m16999.onnx",
-   "sha256": "56a492c6bf5684ef3bde2c1df0b545a0324e87060ecfeea37b4022b5b017ea0b",
-   "bytes": 5038171
+   "sha256": "2f7a8b18e8a3cc89ab5975836fff4870165df5c5bb8102ac823b56fe75b472ce",
+   "bytes": 5038652
   },
   {
    "path": "parity.json",
-   "sha256": "2f324e7b7974d5e8ad6132ee0736c0a7ca7bfc7bc7860758f44c9aeae8459410",
-   "bytes": 12667
+   "sha256": "75786dc79ef4027bc743a7475986aa4aef42849b4e7ed336dd13000201754327",
+   "bytes": 12944
   },
   {
    "path": "test_vectors_flat20.npz",
-   "sha256": "46ed70a8ab84bad72255f21998daf83dcdf97d9265405a0900e6df7f7dc8bdeb",
-   "bytes": 104290
+   "sha256": "c92c65adb69eb4bbccb070d0de5f6be0e3b5783fc26e738ef4dfd0c144820173",
+   "bytes": 105698
+  },
+  {
+   "path": "tools/README.md",
+   "sha256": "6ff27dce9ed0089d94325d81b5d740835c66c897c6a97a0b79878673ca07db8e",
+   "bytes": 3326
+  },
+  {
+   "path": "tools/export_ame2_onnx.py",
+   "sha256": "1b4a43acb87ae4812d8947a1a3db63753a75b826dc057f633bf7737471bf413b",
+   "bytes": 7575
+  },
+  {
+   "path": "tools/rec_onnx_vectors.py",
+   "sha256": "ec17841888ccc314d17af36c0e3d65f0e72615e75088c9108da89f72e3ba4cc8",
+   "bytes": 9422
+  },
+  {
+   "path": "tools/parity_ref.py",
+   "sha256": "4fde00b7256600a2b335b82ebccc736310f4562284b251fa43c115228fd8c771",
+   "bytes": 2801
+  },
+  {
+   "path": "tools/parity_ort.py",
+   "sha256": "a0f7b8464c4e335118223acb0142adbd4a251c711e750787873c2380b785a522",
+   "bytes": 5275
+  },
+  {
+   "path": "tools/parity_web.mjs",
+   "sha256": "b289180edf9169f4dac79f3dc5378a9c3a70d6217d4bf8347599578f00c19145",
+   "bytes": 1774
+  },
+  {
+   "path": "tools/speed_goal.py",
+   "sha256": "98b7568425c289765d2747b2b77fe7ce7dfc5ef20487d95046da1db30e1cca3e",
+   "bytes": 4828
+  },
+  {
+   "path": "tools/cmp_depth07.py",
+   "sha256": "a19bf8879018cd4bac54a7e1ef08ae20ba2202f3222a74b8e2412522b6f15ffc",
+   "bytes": 1774
+  },
+  {
+   "path": "tools/pp1_all.sh",
+   "sha256": "55970e1ba33fd099d6e3e262cc34a31c8c02aac985de816e712fd3343b351575",
+   "bytes": 4262
+  },
+  {
+   "path": "tools/v2_cpu.sh",
+   "sha256": "832d0df38c230fe803efb83429e7bffeac0f48a7e6ce4c44defc105fad658dfa",
+   "bytes": 811
+  },
+  {
+   "path": "tools/rerun_np2.sh",
+   "sha256": "26dd5e7f15b6303fb562fa64edd203fbf05edb4c4b0c5c65fc4a75f43d03521a",
+   "bytes": 2268
+  },
+  {
+   "path": "tools/eval_gaze_no_plane.patch",
+   "sha256": "4dfb54bf30c16e17b71b691137dec2b6118b9be865093c6e2a9013821c669e86",
+   "bytes": 304
   }
  ]
 }

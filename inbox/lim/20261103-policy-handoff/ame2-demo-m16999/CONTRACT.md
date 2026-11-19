@@ -1,5 +1,5 @@
 > 분류: 가이드
-> 작성: 임석헌 · 2026-11-19 12:40
+> 작성: 임석헌 · 2026-11-19 13:45
 > 근거: run 폴더 `params/env.yaml`(sha256 `48088f33…`) · `params/agent.yaml`(sha256 `855b1b57…`) · 저장본 `model_16999.pt`(두 학습 끝 저장본의 가중치 평균, `sync_record.txt`) · 코드 사본 `ame2_pp1`(code id 101da9dd0386, 두 원본 학습 끝 · 11-19 의 코드 manifest 가 같음) · Isaac Lab 2.3.2 원본(팟 `/workspace/isaaclab`, 0.54.2)
 > 요지: 앱이 ame2-demo-m16999 를 원본과 같게 돌리는 데 필요한 값을 모았다. ONNX 는 원본 `AME2GazeModel.forward` 를 그대로 감싸 내보냈고(층 재구성 없음), 학습 env 에서 기록한 실제 입력 400 스텝에서 PyTorch 와의 action 최대 차이는 **2.9e-06**(기준 1e-4, 통과)
 > 상태: v0.1 (AME-2 에이전트 세션) · 팀장 검증 대기 · 지시문 [HANDOFF-AME2-WORKER.md](https://github.com/foothold-project/foothold-lab/blob/main/inbox/jay/20261103-policy-handoff/HANDOFF-AME2-WORKER.md) §1
@@ -19,11 +19,11 @@
 | **행동 식** | 목표각 = **기본 관절각 + 0.25 × a** (a 는 ONNX `action` 그대로, runner 자르기 없음) | env 의 목표각 자르기 ±100 rad 는 실제로 걸리지 않음 | `env.yaml:1696~1705` · `agent.yaml:13` · `isaaclab/envs/mdp/actions/joint_actions.py:169~178 · 194~195` | 설정 · 코드 |
 | **기본 관절각** | `[0.1, -0.1, 0.1, -0.1, 0.8, 0.8, 1.0, 1.0, -1.5, -1.5, -1.5, -1.5]` (관절 순서 §0b) | 위 식의 기준, 관측 `joint_pos_rel` 도 여기서 뺌 | `env.yaml:154~159` · 기록 env 의 `default_joint_pos` | 설정 · 실측 |
 | **행동 지연** | **물리 스텝 0~4**(0~20 ms), 에피소드마다 로봇별로 뽑음 | 학습은 이 범위의 지연에 견디게 됨. 앱이 넣지 않아도 됨(지연 0 도 학습 범위 안) | `env.yaml:1706~1708` · `actions.py:45~50 · 62~72` · `isaaclab/envs/manager_based_rl_env.py:182~185` | 설정 · 코드 |
-| **입력 · 출력** | 입력 `prop` [1,49] · `mapping` [1,29,13,3], 출력 `action` [1,12] · `gaze_r` [1,2] (진단). 모두 float32 · batch 1 · 상태 없음 | 매 스텝 독립, 되먹일 상태는 직전 action 하나(prop 안) | ONNX · `AME2_models.py:24 · 581~634` | 실측 · 코드 |
+| **입력 · 출력** | 입력 `prop` [1,49] · `mapping` [1,29,13,3], 출력 `action` [1,12] 과 진단 `gaze_r` · `gaze_logits` · `gaze_offset` 각 [1,2]. 모두 float32 · batch 1 · 상태 없음 | 매 스텝 독립, 되먹일 상태는 직전 action 하나(prop 안) | ONNX · `AME2_models.py:24 · 581~634` | 실측 · 코드 |
 | **명령** | 목표 위치 `[x, y, sin e, cos e]` · 몸 yaw 틀 · **2 m 넘으면 2 m 로 줄이고 e 를 무작위로 바꿈** | 속도 명령이 아님 | `env.yaml:1508~1518` · `observations.py:296~340` | 설정 · 코드 |
 | **지도** | 29 × 13 × 3(x, y, z) · 6 cm · x -0.42~1.26 · y ±0.36 · **x 가 바깥 축** · z = 바닥 - 몸 + 0.27, ±1.5 자름 | 정답 지도(시뮬 광선). START 의 32 × 16 높이 1 채널과 뜻이 다름 | `env.yaml:692~726 · 1391~1421` · `observations.py:160~224` | 설정 · 코드 |
-| **이름** | format `ame2-demo-onnx/1`(m14999 묶음과 입출력이 같아 그대로) · 이름 `ame2-demo-m16999` · 파일 `ame2-demo-m16999.onnx` · 최종 `ame2-oh2l2`. m14999 묶음(`ame2-demo/`, PR #574)과 따로 둔다 | 저장본이 바뀌면 이름의 m<ITER> 만 바꾼다 | HANDOFF-AME2-WORKER.md §0a · 사용자 11-19 「새 폴더, 새 pr」 | 결정 |
-| **ONNX** | `ame2-demo-m16999.onnx` 5,038,171 B · sha256 `56a492c6bf5684ef3bde2c1df0b545a0324e87060ecfeea37b4022b5b017ea0b` | 앱은 이 sha 가 contract.json · SHA256SUMS 와 같을 때만 씀 | `sha256sum` | 실측 |
+| **이름** | format `ame2-demo-onnx/2`(m14999 묶음 `/1` 에 진단 출력 `gaze_logits` · `gaze_offset` 이 늘어 끝 숫자를 올림; 입력과 `action` · `gaze_r` 는 같음) · 이름 `ame2-demo-m16999` · 파일 `ame2-demo-m16999.onnx` · 최종 `ame2-oh2l2`. m14999 묶음(`ame2-demo/`, PR #574)과 따로 둔다 | 저장본이 바뀌면 이름의 m<ITER> 만, 입출력이 바뀌면 format 끝 숫자를 바꾼다 | HANDOFF-AME2-WORKER.md §0a · lab README 이름 규칙 · 사용자 11-19 「새 폴더, 새 pr」 | 설정(팀 이름 규칙 문서) |
+| **ONNX** | `ame2-demo-m16999.onnx` 5,038,652 B · sha256 `2f7a8b18e8a3cc89ab5975836fff4870165df5c5bb8102ac823b56fe75b472ce` | 앱은 이 sha 가 contract.json · SHA256SUMS 와 같을 때만 씀 | `sha256sum` | 실측 |
 
 ## 0b. ⚠ 경고 칸: 관절 순서
 
@@ -57,7 +57,7 @@
 | critic | MoE 16 전문가, critic 관측(time_left · height_scanner_critic 등) | | **제외** |
 | 학습 잡음 · 지도 드리프트 | prop 균등 잡음 · 지도 xy ±0.001 / z ±0.05 · 센서 드리프트 ±0.04 m | | **제외**(배포 입력에 넣지 않음) |
 
-- 내보내기: 원본 `AME2GazeModel` 을 학습과 같은 방식(`algorithms/ppo.py:629~645`)으로 agent.yaml actor 설정에서 만들고 `actor_state_dict` 를 strict 로 불러(모든 키 일치) `forward` 를 그대로 감쌌다. 진단 출력 `gaze_r` 는 원본 get_latent 가 저장하는 `_last_gaze_r`(`AME2_models.py:602~603`). torch 2.7.0+cu128 · onnx 1.21.0 · `torch.onnx.export(dynamo=False)` · opset 17 · IR 8 · 노드 236 · `onnx.checker` full_check 통과.
+- 내보내기: 원본 `AME2GazeModel` 을 학습과 같은 방식(`algorithms/ppo.py:629~645`)으로 agent.yaml actor 설정에서 만들고 `actor_state_dict` 를 strict 로 불러(모든 키 일치) `forward` 를 그대로 감쌌다. 진단 출력은 다시 계산하지 않고 원본 계산에서 꺼냈다: `gaze_r` = 원본 get_latent 가 저장하는 `_last_gaze_r`(`AME2_models.py:602~603`), `gaze_logits` = 원본 `gaze_head` 의 출력(forward hook, `AME2_models.py:602`), `gaze_offset` = 원본 `_crop_window` 가 `_ste_crop` 안에서 돌려준 (ox, oy)(`AME2_models.py:530~536 · 555`) 를 float32 로. 붙잡은 logits 는 원본 as_jit 쌍둥이 `forward_with_gaze` 의 logits(`AME2_models.py:1285~1338`) 와 같고(기록 400 스텝 차이 0.0e+00), sigmoid(logits) 는 gaze_r 와 같다(합성 입력 차이 0.0e+00). torch 2.7.0+cu128 · onnx 1.21.0 · `torch.onnx.export(dynamo=False)` · opset 17 · IR 8 · 노드 242 · `onnx.checker` full_check 통과.
 - 학습 forward 의 STE crop 은 `hard + (soft - soft.detach())` 라 앞방향 값이 hard crop 과 같다(`AME2_models.py:577~579`). ONNX 안에 GridSample 경로가 남지만 결과에 더해지는 값은 0 이다. 원본 `as_jit` 쌍둥이(`AME2_models.py:1255~1338`) 와의 차이는 합성 입력 0.0, 기록 입력 0.0e+00.
 - 원본에는 `as_onnx` 가 없다(`AME2_models.py:225~227` NotImplementedError). 지도 크기 29 · 13 은 그래프 안에서 상수다(`AME2_models.py:605~606`).
 
@@ -66,7 +66,9 @@
 | 입력 | `prop` | [1, 49] float32 | §3.4 순서의 몸감각 |
 | 입력 | `mapping` | [1, 29, 13, 3] float32 | §3.6 지도 |
 | 출력 | `action` | [1, 12] float32 | a (Isaac 순서, 배율 · 기본각 더하기 전) |
-| 출력(진단) | `gaze_r` | [1, 2] float32 | 시선 위치 r ∈ (0,1)². crop 모서리 ox = clamp(round(17 r0), 0, 17), oy = clamp(round(3 r1), 0, 3), 12 × 10 창(`AME2_models.py:530~536 · 605~606`) |
+| 출력(진단) | `gaze_r` | [1, 2] float32 | 시선 위치 r = sigmoid(gaze_logits) ∈ (0,1)² |
+| 출력(진단) | `gaze_logits` | [1, 2] float32 | 시선 head 출력(sigmoid 전) |
+| 출력(진단) | `gaze_offset` | [1, 2] float32 | crop 모서리 (ox, oy), 정수값. ox = clamp(round(17 r0), 0, 17), oy = clamp(round(3 r1), 0, 3), 12 × 10 창 = mapping[ox:ox+12, oy:oy+10](`AME2_models.py:530~536 · 605~606`) |
 
 **같은 출력 확인(3단계, parity.json).** 학습 env(task `Ame2-Go2-Gaze-N9P12`, env.yaml 설정 그대로에서 관측 잡음만 끔 · 로봇 2 대) 에서 평지 칸 1 · 계단(stair_up 단계 5) 칸 1 을 각 200 스텝 기록했다. 같은 입력을 원본 PyTorch(CPU float32, 한 스텝씩) 와 ONNX(onnxruntime 1.26.0 CPU) 에 넣은 action 최대 차이: 평지 1.9e-06 · 계단 2.9e-06 (기준 1e-4, **통과**). 참고로 env 안 GPU 출력과 CPU PyTorch 의 차이는 평지 2.2e-04 · 계단 2.1e-04 (GPU 커널 차이, 기준 대상 아님). 평지 칸은 학습 지형 rough 의 기울기 · 거칠기를 0 으로 둔 칸이다(기록용 변경, `env_record.yaml` 에 기록).
 
@@ -166,7 +168,7 @@
 2. 명령: 목표 위치를 몸 yaw 틀로 바꿔 (x, y), e = wrap(목표 heading - 몸 heading). ‖(x, y)‖ > 2 m 면 2 m 로 줄인다(학습은 이때 e 를 무작위로 줬으므로 2 m 밖 목표의 방향은 뜻이 없다). 앱의 조이스틱 → 1 m 안쪽 목표 변환은 이 범위 안이다.
 3. `prop` = [lin_vel 3, ang_vel 3, gravity 3, q - q0 12, dq 12, clip(직전 a, ±50) 12, x, y, sin e, cos e].
 4. `mapping`: §3.6 대로 29 × 13 칸에 (x_i, y_j, z_ij). z = 바닥 높이 - 몸 높이 + 0.27 → [-1.5, 1.5]. 광선은 몸 위 20 m 에서 수직으로. 맞은 것이 없는 칸은 (같은 스캔의 가장 낮은 유효 높이) - 0.4~1.0 m(앱의 0.7 m 고정값은 이 범위의 가운데).
-5. ONNX 실행 → `action`(그리고 시선 표시가 필요하면 `gaze_r`).
+5. ONNX 실행 → `action`(시선 표시가 필요하면 `gaze_offset` 의 12 × 10 창, 또는 `gaze_r` · `gaze_logits`).
 6. 목표각 = 기본 관절각 + 0.25 × action, 목표 속도 0, 앞먹임 토크 0, Kp 25 · Kd 0.5. 시뮬은 물리 스텝마다 §3.2 의 Go2HV 곡선으로 토크를 자른다.
 7. 다음 스텝의 직전 a 로 action(자르기 전 raw) 을 저장한다. 리셋 직후 직전 a 는 0.
 
@@ -202,11 +204,11 @@ m14999 묶음 때 지시문 HANDOFF §4 와 v0.1 의 빈칸으로 잰 것을 이
 
 - run: `/network-volume/limseokheon/ame2_pp1/logs/rsl_rl/go2_gaze_teacher/tp424_in_p1_s5_from17000/`(params/env.yaml 2,615 행 · params/agent.yaml 65 행 · model_16999.pt · sync_record.txt)
 - 코드 사본: `/network-volume/limseokheon/ame2_pp1/`(rsl_rl/rsl_rl · go2/ame2_go2 · go2/scripts) · Isaac Lab 원본 `/workspace/isaaclab/source/isaaclab/isaaclab/`
-- 내보내기 · 기록 도구(이 폴더에 올리지 않음, 석헌 PC 와 팟 1 `/root/onnx_pp1/`): `export_ame2_onnx.py` · `rec_onnx_vectors.py` · `parity_ref.py` · `parity_ort.py`
+- 내보내기 · 기록 · 비교 도구: 이 폴더 `tools/`(실행한 파일 그대로, 설명과 사용 허가는 `tools/README.md`). 실행 위치는 석헌 PC 와 팟 1 `/root/onnx_pp1/`
 
 ## 9. 기계 블록 (contract.json 의 요약)
 
 ```json
-{"format": "ame2-demo-onnx/1", "checkpoint_sha256": "f4eaadb495f590e02c42103f524d0841616a58d33e73b2646ddeb34dc2fb1a41", "command_type": "goal_pose_xy_sincos", "state": "stateless", "joint_names": ["FL_hip_joint", "FR_hip_joint", "RL_hip_joint", "RR_hip_joint", "FL_thigh_joint", "FR_thigh_joint", "RL_thigh_joint", "RR_thigh_joint", "FL_calf_joint", "FR_calf_joint", "RL_calf_joint", "RR_calf_joint"], "default_joint_pos": [0.1, -0.1, 0.1, -0.1, 0.8, 0.8, 1.0, 1.0, -1.5, -1.5, -1.5, -1.5], "kp": [25.0, 25.0, 25.0, 25.0, 25.0, 25.0, 25.0, 25.0, 25.0, 25.0, 25.0, 25.0], "kd": [0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5], "control_hz": 50, "sim_dt": 0.005, "decimation": 4, "action_delay": {"unit": "physics_step", "range_inclusive": [0, 4], "physics_dt_s": 0.005, "seconds": [0.0, 0.02], "sampled": "once per episode at reset, per robot", "applied": "FIFO over physics steps (4 per control step)"}}
-{"inputs": [["prop", [1, 49]], ["mapping", [1, 29, 13, 3]]], "outputs": [["action", [1, 12]], ["gaze_r", [1, 2]]], "action": "target_q = default_joint_pos + 0.25 * action (Isaac order); target velocity 0; feed-forward torque 0", "map": {"shape": [29, 13, 3], "resolution_m": 0.06, "x_range_m": [-0.42, 1.26], "y_range_m": [-0.36, 0.36], "z_offset": 0.27, "z_clip": [-1.5, 1.5], "sensor_offset_m": [0.42, 0.0, 20.0]}, "onnx_sha256": "56a492c6bf5684ef3bde2c1df0b545a0324e87060ecfeea37b4022b5b017ea0b", "parity_max_abs": 2.86102294921875e-06}
+{"format": "ame2-demo-onnx/2", "checkpoint_sha256": "f4eaadb495f590e02c42103f524d0841616a58d33e73b2646ddeb34dc2fb1a41", "command_type": "goal_pose_xy_sincos", "state": "stateless", "joint_names": ["FL_hip_joint", "FR_hip_joint", "RL_hip_joint", "RR_hip_joint", "FL_thigh_joint", "FR_thigh_joint", "RL_thigh_joint", "RR_thigh_joint", "FL_calf_joint", "FR_calf_joint", "RL_calf_joint", "RR_calf_joint"], "default_joint_pos": [0.1, -0.1, 0.1, -0.1, 0.8, 0.8, 1.0, 1.0, -1.5, -1.5, -1.5, -1.5], "kp": [25.0, 25.0, 25.0, 25.0, 25.0, 25.0, 25.0, 25.0, 25.0, 25.0, 25.0, 25.0], "kd": [0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5], "control_hz": 50, "sim_dt": 0.005, "decimation": 4, "action_delay": {"unit": "physics_step", "range_inclusive": [0, 4], "physics_dt_s": 0.005, "seconds": [0.0, 0.02], "sampled": "once per episode at reset, per robot", "applied": "FIFO over physics steps (4 per control step)"}}
+{"inputs": [["prop", [1, 49]], ["mapping", [1, 29, 13, 3]]], "outputs": [["action", [1, 12]], ["gaze_r", [1, 2]], ["gaze_logits", [1, 2]], ["gaze_offset", [1, 2]]], "action": "target_q = default_joint_pos + 0.25 * action (Isaac order); target velocity 0; feed-forward torque 0", "map": {"shape": [29, 13, 3], "resolution_m": 0.06, "x_range_m": [-0.42, 1.26], "y_range_m": [-0.36, 0.36], "z_offset": 0.27, "z_clip": [-1.5, 1.5], "sensor_offset_m": [0.42, 0.0, 20.0]}, "onnx_sha256": "2f7a8b18e8a3cc89ab5975836fff4870165df5c5bb8102ac823b56fe75b472ce", "parity_max_abs": 2.86102294921875e-06}
 ```
