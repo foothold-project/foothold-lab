@@ -1222,10 +1222,16 @@ def make_ex42_stage_zero_plan_view(source_plan: Any, stage: Any,
                 floor_value = float(stone_floor)
             except ValueError:
                 floor_value = float("nan")
-            if not math.isfinite(floor_value) or not 0.1 <= floor_value <= 0.6:
-                raise ValueError("EX42_STONE_FWD_FLOOR invalid (a speed in [0.1, 0.6] m/s)")
+            floor_kinds = tuple(k.strip() for k in os.environ.get("EX42_STONE_FWD_FLOOR_KINDS", "").split(",") if k.strip())   # e.g. A/gaps,B/gap,C/gap
+            if any(re.fullmatch(r"[A-F]/[a-z_0-9]+", k) is None for k in floor_kinds) or len(set(floor_kinds)) != len(floor_kinds):
+                raise ValueError("EX42_STONE_FWD_FLOOR_KINDS invalid (comma list of family/kind such as A/gaps,B/gap,C/gap)")
+            top = 0.9 if floor_kinds else 0.6                                 # the stones-only cell keeps its old limit
+            if not math.isfinite(floor_value) or not 0.1 <= floor_value <= top:
+                raise ValueError("EX42_STONE_FWD_FLOOR invalid (a speed in [0.1, %g] m/s)" % top)
             from dataclasses import replace
-            stage = replace(stage, stone_forward_floor=floor_value)
+            stage = replace(stage, stone_forward_floor=floor_value, stone_forward_floor_kinds=floor_kinds)
+        elif os.environ.get("EX42_STONE_FWD_FLOOR_KINDS", "").strip():
+            raise ValueError("EX42_STONE_FWD_FLOOR_KINDS needs EX42_STONE_FWD_FLOOR")
         turn_first = row.get("flag_turn_first_rad")
         if turn_first is not None:
             if type(turn_first) not in (int, float) or isinstance(turn_first, bool) or not math.isfinite(turn_first) or not 0.1 <= turn_first <= 3.0:

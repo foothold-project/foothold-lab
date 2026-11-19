@@ -301,7 +301,14 @@ class MixedVelocityCommand(CommandTerm):
         table = getattr(getattr(self._env, "unwrapped", self._env), "_ex42_column_table", None)
         if table is None:
             raise ValueError("EX-42 stone_forward_floor needs the column table (raw._ex42_column_table) on the environment")
-        kinds = torch.tensor([str(row["kind"]).startswith("stepping_stones") for row in table], dtype=torch.bool, device=self.device)
+        runtime = getattr(self, "stage_runtime", None)
+        stages = getattr(getattr(runtime, "plan", None), "stages", None)
+        extra = set(getattr(stages[0], "stone_forward_floor_kinds", ()) or ()) if stages else set()
+        names = {"%s/%s" % (row["family"], row["kind"]) for row in table}
+        if extra - names:
+            raise ValueError("EX-42 stone_forward_floor kinds not in the column table: %s" % sorted(extra - names))
+        kinds = torch.tensor([("%s/%s" % (row["family"], row["kind"]) in extra) if extra else str(row["kind"]).startswith("stepping_stones") for row in table],
+                             dtype=torch.bool, device=self.device)
         columns = self._env.scene.terrain.terrain_types.long().to(self.device)
         if bool(((columns < 0) | (columns >= len(kinds))).any()):
             raise ValueError("EX-42 stone_forward_floor: a terrain column is outside the column table")
