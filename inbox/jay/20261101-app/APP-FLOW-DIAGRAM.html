@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>앱 · 실기 연결 흐름</title>
-<meta name="description" content="foothold-app 의 웹 · Android 앱 · 앱 서버 · Jetson agent · Go2 X 가 어떻게 이어지는지, 지금 코드에 있는 것과 앞으로 만들 것을 나눠 그린 문서 (2026-11-19 갱신)">
+<meta name="description" content="foothold-app 의 웹 · Android 앱 · 앱 서버 · Jetson agent · Go2 X 가 어떻게 이어지는지, 지금 코드에 있는 것과 앞으로 만들 것을 나눠 그린 문서 (2026-11-19 갱신 · v0.5 음성 명령 · 음성 알림)">
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500;600&family=Noto+Sans+KR:wght@400;500;600&family=Noto+Serif+KR:wght@400&display=swap" rel="stylesheet">
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -59,9 +59,9 @@ footer p { max-width: none; font-size: 0.72rem; }
 <dl class="head">
 <dt>분류</dt><dd>설명 그림 · foothold-app 과 실기 Go2 X 의 연결 구조 (팀원 전달용)</dd>
 <dt>작성</dt><dd>처음 그림 planner · 2026-11-02 05:26 · 고침 Claude 세션 (오흥재 지시, lead-lx) · 2026-11-19</dd>
-<dt>근거</dt><dd>결정 기록 <a href="APP-ROBOT-DIRECTION-1119.md">APP-ROBOT-DIRECTION-1119.md</a> (같은 폴더 · v1.1) · 이슈 <a href="https://github.com/foothold-project/foothold-lab/issues/861">#861</a> 댓글 「foothold-app 코드 지도」 (<code>origin/dev</code> <code>89d2a221</code>) · <code>inbox/jay/20261118-repo-roles-and-go2-handoff.md</code> v1.2 · 읽기 전용 거울 <code>app-dev-view</code> 에서 몇 줄 다시 확인 (아래 표)</dd>
+<dt>근거</dt><dd>결정 기록 <a href="APP-ROBOT-DIRECTION-1119.md">APP-ROBOT-DIRECTION-1119.md</a> (같은 폴더 · v1.1) · 이슈 <a href="https://github.com/foothold-project/foothold-lab/issues/861">#861</a> 댓글 「foothold-app 코드 지도」 (<code>origin/dev</code> <code>89d2a221</code>) · <code>inbox/jay/20261118-repo-roles-and-go2-handoff.md</code> v1.2 · 읽기 전용 거울 <code>app-dev-view</code> 에서 몇 줄 다시 확인 (아래 표) · 음성 절은 팀장 11/19 15:4x 지시와 거울 <code>130b6f06</code></dd>
 <dt>요지</dt><dd>지금 실기는 agent 의 Sport 경로 (<code>SportClient.Move</code>) 하나로 Unitree 순정 보행을 움직이고, 우리 정책은 사용자 브라우저의 앱 시뮬 안에서만 돈다. 실기에서 우리 정책을 돌리는 저수준 실행기 · 모드 관리자 · 안전 정지 · 조이스틱 읽기는 foothold-app <code>apps/agent</code> 안에 새로 만든다.</dd>
-<dt>상태</dt><dd>v0.4 (11/19 14:12 · 조이스틱 · 멈춤 말 · 서버 · 이름 절 추가. 앞 판 v0.3 11:0x 숙소 측정 반영) · 코드 읽기 기준 (실기 연결 · 지연은 이번에 재지 않음) · 「계획」 칸은 팀장 승인 결정이나 제안이며, 어느 쪽인지 근거 표에 적었다</dd>
+<dt>상태</dt><dd>v0.5 (11/19 17:5x · 음성 명령 · 음성 알림 절 추가. 앞 판 v0.4 14:12 조이스틱 · 멈춤 말 · 서버 · 이름 · v0.3 11:0x 숙소 측정) · 코드 읽기 기준 (실기 연결 · 지연은 이번에 재지 않음) · 「계획」 칸은 팀장 승인 결정이나 제안이며, 어느 쪽인지 근거 표에 적었다</dd>
 </dl>
 
 <div class="key" role="note" aria-label="그림 읽는 법">
@@ -83,8 +83,9 @@ footer p { max-width: none; font-size: 0.72rem; }
 <li><b>서버.</b> 「서버 (FastAPI)」 한 칸이 Caddy · uvicorn API · PostgreSQL 16 으로 나뉘고, 주소 <code>foothold-project.dev</code> 계획이 붙었다.</li>
 <li><b>관절 온도 · 배터리 경고.</b> 새 절. 팀장 11/19 03:14 에 정한 값 (50 · 60 · 70 °C · 이상 체크 · 배터리 20 % · 10 % 알림, 막지 않음) 과 agent · 서버 · 화면에서 만들 것.</li>
 <li><b>Jetson 설치 · 숙소 측정.</b> 새 절. 11/19 CycloneDDS · Tailscale · 표시 화면 (L2 점구름). 숙소에서 방 지도 1 차 (odom 그대로 쌓음 · SLAM 아님) · D435i 색 · 깊이 영상 330 초 · 카메라 높이 · 각을 얻었다 (<a href="ROOM-MAP-1119.html">숙소 방 지도 페이지</a>). Go2 자체 SLAM 은 아직. 다시 확인하는 명령은 <a href="GO2X-JETSON-SETUP-1119.md"><code>GO2X-JETSON-SETUP-1119.md</code></a>.</li>
-<li><b>망.</b> 랜선 노트북 하나에서 직결 <code>192.168.50.x</code> · Jetson Wi-Fi + Tailscale · 학원 Wi-Fi · 폰 핫스팟 네 가지로 늘었다.</li>
+<li><b>망.</b> 랜선 노트북 하나에서 직결 <code>&lt;GO2X_DIRECT_SUBNET&gt;</code> (실제 값은 팀 공유 .env · 저장소에 없음) · Jetson Wi-Fi + Tailscale · 학원 Wi-Fi · 폰 핫스팟 네 가지로 늘었다.</li>
 <li><b>조이스틱 · 멈춤 말 · 서버 · 이름.</b> 새 절 (<a href="#joystick">조이스틱 키 표</a>). 결정 기록 v1.1 의 조이스틱 키 표 (순정 L2+B Damping · 우리 모드 핫키 후보로 AME-2 · START 고르기) · 멈춤 / 안전 정지 / 조이스틱 E-stop 의 차이 · 앱 서버 Docker · Cloudflare (DNS · Tunnel) 와 NaverCloud VM 의 역할 · 프로젝트 이름 후보 A / B / C (팀장 선택 대기) 를 옮겼다. 숫자와 문구는 결정 기록에서 가져왔고 새로 짓지 않았다.</li>
+<li><b>음성 명령 · 음성 알림 (v0.5).</b> 새 절 (<a href="#voice">음성</a>). 팀장 15:4x 지시: 깨우는 말 「Hey, X」 → 「I am here」 · 「Sit Down」 → 앉기부터 (오늘 이민우가 순정 「Hey, BenBen」 · 순정 대답을 시험), 알림 문구 넷 (배터리 · 다리 온도 · 멈춤 · Damping). 그림 둘과 표. 정하지 않은 문턱 · 자리 · 문구는 「미정 (팀장 결정)」 으로 두었다. 거울 <code>130b6f06</code> 에는 관절 12 온도 읽기가 들어와 있다 (아래 온도 절의 「배터리 잔량만」 은 <code>89d2a221</code> 기준).</li>
 <li><b>뺀 것.</b> 11/02 의 키 값 (1.5 m/s 등) · PD 값 · ROS 2 설명은 이번에 다시 재지 않아 이 판에서 뺐다. 11/02 판은 git 기록에 남아 있다. 「실시간 제어는 로봇 쪽에서만」 이라는 11/02 결론은 그대로다.</li>
 </ul>
 </section>
@@ -586,12 +587,406 @@ footer p { max-width: none; font-size: 0.72rem; }
 </ul>
 </section>
 
+<section class="fig" id="voice">
+<p class="eyebrow">음성 명령 · 음성 알림 (v0.5)</p>
+<h2>말로 부르고 앉히는 길, 그리고 위험할 때 로봇이 먼저 말하는 길</h2>
+<p>팀장 11/19 15:4x 지시를 그림으로 옮겼다. 두 길로 나눈다. 사람이 말하면 로봇이 알아듣고 대답하는 <b>음성 명령</b>, 배터리 · 온도 · 멈춤 · 통신이 문제일 때 로봇 (또는 앱) 이 먼저 말하는 <b>음성 알림</b>. 지금 앱 코드에는 음성 기능이 없다 (아래 근거 표). 담당: 음성 기본 제어 시험 이민우 · 총괄 오흥재 · 앱 작업자 오현민 · 이민우.</p>
+
+<h3>음성 명령: 깨우는 말 → 알아들은 명령 → 로봇 명령 → 말 대답 → 앱 화면</h3>
+<p>윗줄은 오늘 시험한 것 (Unitree 순정 음성 비서), 아랫줄은 목표다. 로봇 이름이 X 라서 깨우는 말을 「Hey, X」 로 바꾸고, 대답 「I am here」 와 기본 명령 「Sit Down」 부터 시작한다.</p>
+<div class="diagram-container"><svg viewBox="0 0 1280 624" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="vc-title vc-desc">
+<title id="vc-title">음성 명령 길: 깨우는 말에서 앱 화면까지 (11/19)</title>
+<desc id="vc-desc">윗줄은 오늘 이민우가 시험한 Unitree 순정 음성 비서 (Hey, BenBen 과 순정 대답). 아랫줄은 목표인 Hey, X 와 Sit Down. Hey, X 는 대답만 하고 움직이지 않으며, Sit Down 은 팀장 안전 관문을 지나 agent 의 Sit 동작으로 가고, 확인 말과 앱 화면 칩으로 끝난다.</desc>
+<defs><marker id="vc-arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#4f5d75"/></marker><marker id="vc-accent" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#bf4520"/></marker></defs>
+<rect width="100%" height="100%" fill="#f5f5f5"/>
+<text x="40" y="72" fill="#5a6580" font-size="12" font-weight="500" font-family="'Geist', 'Noto Sans KR', 'Malgun Gothic', sans-serif">구분</text>
+<text x="192" y="72" fill="#5a6580" font-size="12" font-weight="500" font-family="'Geist', 'Noto Sans KR', 'Malgun Gothic', sans-serif">깨우는 말</text>
+<text x="404" y="72" fill="#5a6580" font-size="12" font-weight="500" font-family="'Geist', 'Noto Sans KR', 'Malgun Gothic', sans-serif">알아들은 명령</text>
+<text x="616" y="72" fill="#5a6580" font-size="12" font-weight="500" font-family="'Geist', 'Noto Sans KR', 'Malgun Gothic', sans-serif">로봇에 가는 명령</text>
+<text x="828" y="72" fill="#5a6580" font-size="12" font-weight="500" font-family="'Geist', 'Noto Sans KR', 'Malgun Gothic', sans-serif">말 대답</text>
+<text x="1040" y="72" fill="#5a6580" font-size="12" font-weight="500" font-family="'Geist', 'Noto Sans KR', 'Malgun Gothic', sans-serif">앱 화면</text>
+<line x1="40" y1="80" x2="1240" y2="80" stroke="rgba(45,49,66,0.08)" stroke-width="0.8"/>
+<path d="M 376,136 H 404" fill="none" stroke="#4f5d75" stroke-width="1" marker-end="url(#vc-arrow)"/>
+<path d="M 588,136 H 616" fill="none" stroke="#4f5d75" stroke-width="1" marker-end="url(#vc-arrow)"/>
+<path d="M 800,136 H 828" fill="none" stroke="#4f5d75" stroke-width="1" marker-end="url(#vc-arrow)"/>
+<path d="M 1012,136 H 1040" fill="none" stroke="#4f5d75" stroke-width="1" marker-end="url(#vc-arrow)"/>
+<path d="M 376,244 H 404" fill="none" stroke="#bf4520" stroke-width="1.4" stroke-dasharray="6,4" marker-end="url(#vc-accent)"/>
+<path d="M 1012,244 H 1040" fill="none" stroke="#bf4520" stroke-width="1.4" stroke-dasharray="6,4" marker-end="url(#vc-accent)"/>
+<path d="M 376,344 H 404" fill="none" stroke="#bf4520" stroke-width="1.4" stroke-dasharray="6,4" marker-end="url(#vc-accent)"/>
+<path d="M 588,344 H 616" fill="none" stroke="#bf4520" stroke-width="1.4" stroke-dasharray="6,4" marker-end="url(#vc-accent)"/>
+<path d="M 800,344 H 828" fill="none" stroke="#bf4520" stroke-width="1.4" stroke-dasharray="6,4" marker-end="url(#vc-accent)"/>
+<path d="M 1012,344 H 1040" fill="none" stroke="#bf4520" stroke-width="1.4" stroke-dasharray="6,4" marker-end="url(#vc-accent)"/>
+<path d="M 588,244 H 828" fill="none" stroke="#bf4520" stroke-width="1.4" stroke-dasharray="6,4" marker-end="url(#vc-accent)"/>
+<rect x="588" y="322" width="28" height="14" rx="2" fill="#bf4520"/><text x="602" y="332.5" fill="#ffffff" font-size="9" font-weight="600" font-family="'Geist', 'Noto Sans KR', 'Malgun Gothic', sans-serif" text-anchor="middle">관문</text>
+<text x="40" y="124" fill="#2d3142" font-size="14" font-weight="600" font-family="'Geist', 'Noto Sans KR', 'Malgun Gothic', sans-serif">오늘 시험</text>
+<text x="40" y="144" fill="#4f5d75" font-size="11" font-family="'Geist', 'Noto Sans KR', 'Malgun Gothic', sans-serif">순정 음성 비서</text>
+<text x="40" y="160" fill="#4f5d75" font-size="11" font-family="'Geist', 'Noto Sans KR', 'Malgun Gothic', sans-serif">이민우 · 11/19</text>
+<text x="40" y="270" fill="#2d3142" font-size="14" font-weight="600" font-family="'Geist', 'Noto Sans KR', 'Malgun Gothic', sans-serif">목표 · X</text>
+<text x="40" y="290" fill="#4f5d75" font-size="11" font-family="'Geist', 'Noto Sans KR', 'Malgun Gothic', sans-serif">FOOTHOLD Go2 X</text>
+<text x="40" y="306" fill="#4f5d75" font-size="11" font-family="'Geist', 'Noto Sans KR', 'Malgun Gothic', sans-serif">기본 명령부터</text>
+<text x="40" y="322" fill="#4f5d75" font-size="11" font-family="'Geist', 'Noto Sans KR', 'Malgun Gothic', sans-serif">하나씩 더함</text>
+<rect x="192" y="96" width="184" height="80" rx="6" fill="#f5f5f5"/>
+<rect x="192" y="96" width="184" height="80" rx="6" fill="rgba(45,49,66,0.03)" stroke="rgba(45,49,66,0.40)" stroke-width="1"/>
+<rect x="198" y="101" width="66" height="12" rx="2" fill="#ffffff" stroke="#5a6580" stroke-opacity="0.6" stroke-width="0.8"/>
+<text x="231" y="110" fill="#5a6580" font-size="8.5" font-weight="600" font-family="'Geist', 'Noto Sans KR', 'Malgun Gothic', sans-serif" text-anchor="middle">순정 · 시험함</text>
+<text x="284" y="143" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', 'Noto Sans KR', 'Malgun Gothic', sans-serif" text-anchor="middle">Hey, BenBen</text>
+<text x="284" y="157" fill="#4f5d75" font-size="9.5" font-weight="400" font-family="'Geist Mono', ui-monospace, Consolas, monospace" text-anchor="middle">Unitree 순정 깨우는 말</text>
+<rect x="404" y="96" width="184" height="80" rx="6" fill="#f5f5f5"/>
+<rect x="404" y="96" width="184" height="80" rx="6" fill="rgba(45,49,66,0.03)" stroke="rgba(45,49,66,0.40)" stroke-width="1"/>
+<rect x="410" y="101" width="25" height="12" rx="2" fill="#ffffff" stroke="#5a6580" stroke-opacity="0.6" stroke-width="0.8"/>
+<text x="422.5" y="110" fill="#5a6580" font-size="8.5" font-weight="600" font-family="'Geist', 'Noto Sans KR', 'Malgun Gothic', sans-serif" text-anchor="middle">순정</text>
+<text x="496" y="143" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', 'Noto Sans KR', 'Malgun Gothic', sans-serif" text-anchor="middle">순정 명령</text>
+<text x="496" y="157" fill="#4f5d75" font-size="9.5" font-weight="400" font-family="'Geist Mono', ui-monospace, Consolas, monospace" text-anchor="middle">로봇 안 순정 비서가 처리</text>
+<rect x="616" y="96" width="184" height="80" rx="6" fill="#f5f5f5"/>
+<rect x="616" y="96" width="184" height="80" rx="6" fill="rgba(45,49,66,0.03)" stroke="rgba(45,49,66,0.40)" stroke-width="1"/>
+<rect x="622" y="101" width="25" height="12" rx="2" fill="#ffffff" stroke="#5a6580" stroke-opacity="0.6" stroke-width="0.8"/>
+<text x="634.5" y="110" fill="#5a6580" font-size="8.5" font-weight="600" font-family="'Geist', 'Noto Sans KR', 'Malgun Gothic', sans-serif" text-anchor="middle">순정</text>
+<text x="708" y="136.5" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', 'Noto Sans KR', 'Malgun Gothic', sans-serif" text-anchor="middle">순정 동작</text>
+<text x="708" y="150.5" fill="#4f5d75" font-size="9.5" font-weight="400" font-family="'Geist Mono', ui-monospace, Consolas, monospace" text-anchor="middle">agent · lease 를</text>
+<text x="708" y="163.5" fill="#4f5d75" font-size="9.5" font-weight="400" font-family="'Geist Mono', ui-monospace, Consolas, monospace" text-anchor="middle">거치는지 미확인</text>
+<rect x="828" y="96" width="184" height="80" rx="6" fill="#f5f5f5"/>
+<rect x="828" y="96" width="184" height="80" rx="6" fill="rgba(45,49,66,0.03)" stroke="rgba(45,49,66,0.40)" stroke-width="1"/>
+<rect x="834" y="101" width="66" height="12" rx="2" fill="#ffffff" stroke="#5a6580" stroke-opacity="0.6" stroke-width="0.8"/>
+<text x="867" y="110" fill="#5a6580" font-size="8.5" font-weight="600" font-family="'Geist', 'Noto Sans KR', 'Malgun Gothic', sans-serif" text-anchor="middle">순정 · 시험함</text>
+<text x="920" y="143" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', 'Noto Sans KR', 'Malgun Gothic', sans-serif" text-anchor="middle">"I am here"</text>
+<text x="920" y="157" fill="#4f5d75" font-size="9.5" font-weight="400" font-family="'Geist Mono', ui-monospace, Consolas, monospace" text-anchor="middle">그 밖 순정 대답도 있음</text>
+<rect x="1040" y="96" width="184" height="80" rx="6" fill="#f5f5f5"/>
+<rect x="1040" y="96" width="184" height="80" rx="6" fill="rgba(45,49,66,0.03)" stroke="rgba(45,49,66,0.40)" stroke-width="1"/>
+<rect x="1046" y="101" width="34" height="12" rx="2" fill="#ffffff" stroke="#5a6580" stroke-opacity="0.6" stroke-width="0.8"/>
+<text x="1063" y="110" fill="#5a6580" font-size="8.5" font-weight="600" font-family="'Geist', 'Noto Sans KR', 'Malgun Gothic', sans-serif" text-anchor="middle">미확인</text>
+<text x="1132" y="136.5" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', 'Noto Sans KR', 'Malgun Gothic', sans-serif" text-anchor="middle">앱에 안 뜸</text>
+<text x="1132" y="150.5" fill="#4f5d75" font-size="9.5" font-weight="400" font-family="'Geist Mono', ui-monospace, Consolas, monospace" text-anchor="middle">앱 코드에 음성 없음</text>
+<text x="1132" y="163.5" fill="#4f5d75" font-size="9.5" font-weight="400" font-family="'Geist Mono', ui-monospace, Consolas, monospace" text-anchor="middle">(거울 130b6f06)</text>
+<rect x="192" y="208" width="184" height="176" rx="6" fill="#f5f5f5"/>
+<rect x="192" y="208" width="184" height="176" rx="6" fill="rgba(191,69,32,0.04)" stroke="#bf4520" stroke-width="1.3" stroke-dasharray="6,4"/>
+<rect x="198" y="213" width="25" height="12" rx="2" fill="#ffffff" stroke="#bf4520" stroke-opacity="0.6" stroke-width="0.8" stroke-dasharray="6,4"/>
+<text x="210.5" y="222" fill="#bf4520" font-size="8.5" font-weight="600" font-family="'Geist', 'Noto Sans KR', 'Malgun Gothic', sans-serif" text-anchor="middle">계획</text>
+<text x="284" y="290" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', 'Noto Sans KR', 'Malgun Gothic', sans-serif" text-anchor="middle">Hey, X</text>
+<text x="284" y="304" fill="#4f5d75" font-size="9.5" font-weight="400" font-family="'Geist Mono', ui-monospace, Consolas, monospace" text-anchor="middle">로봇 이름 X</text>
+<text x="284" y="317" fill="#4f5d75" font-size="9.5" font-weight="400" font-family="'Geist Mono', ui-monospace, Consolas, monospace" text-anchor="middle">듣는 자리 미정</text>
+<text x="284" y="330" fill="#4f5d75" font-size="9.5" font-weight="400" font-family="'Geist Mono', ui-monospace, Consolas, monospace" text-anchor="middle">(팀장 결정)</text>
+<rect x="404" y="208" width="184" height="72" rx="6" fill="#f5f5f5"/>
+<rect x="404" y="208" width="184" height="72" rx="6" fill="rgba(191,69,32,0.04)" stroke="#bf4520" stroke-width="1.3" stroke-dasharray="6,4"/>
+<rect x="410" y="213" width="25" height="12" rx="2" fill="#ffffff" stroke="#bf4520" stroke-opacity="0.6" stroke-width="0.8" stroke-dasharray="6,4"/>
+<text x="422.5" y="222" fill="#bf4520" font-size="8.5" font-weight="600" font-family="'Geist', 'Noto Sans KR', 'Malgun Gothic', sans-serif" text-anchor="middle">계획</text>
+<text x="496" y="251" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', 'Noto Sans KR', 'Malgun Gothic', sans-serif" text-anchor="middle">부름만</text>
+<text x="496" y="265" fill="#4f5d75" font-size="9.5" font-weight="400" font-family="'Geist Mono', ui-monospace, Consolas, monospace" text-anchor="middle">명령 없음 · 대답만</text>
+<text x="708" y="232" fill="#5a6580" font-size="11" font-family="'Geist', 'Noto Sans KR', 'Malgun Gothic', sans-serif" text-anchor="middle">움직임 없음 · 관문 없음</text>
+<rect x="828" y="208" width="184" height="72" rx="6" fill="#f5f5f5"/>
+<rect x="828" y="208" width="184" height="72" rx="6" fill="rgba(191,69,32,0.04)" stroke="#bf4520" stroke-width="1.3" stroke-dasharray="6,4"/>
+<rect x="834" y="213" width="25" height="12" rx="2" fill="#ffffff" stroke="#bf4520" stroke-opacity="0.6" stroke-width="0.8" stroke-dasharray="6,4"/>
+<text x="846.5" y="222" fill="#bf4520" font-size="8.5" font-weight="600" font-family="'Geist', 'Noto Sans KR', 'Malgun Gothic', sans-serif" text-anchor="middle">계획</text>
+<text x="920" y="251" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', 'Noto Sans KR', 'Malgun Gothic', sans-serif" text-anchor="middle">"I am here"</text>
+<text x="920" y="265" fill="#4f5d75" font-size="9.5" font-weight="400" font-family="'Geist Mono', ui-monospace, Consolas, monospace" text-anchor="middle">말할 자리 미정 (팀장 결정)</text>
+<rect x="1040" y="208" width="184" height="72" rx="6" fill="#f5f5f5"/>
+<rect x="1040" y="208" width="184" height="72" rx="6" fill="rgba(191,69,32,0.04)" stroke="#bf4520" stroke-width="1.3" stroke-dasharray="6,4"/>
+<rect x="1046" y="213" width="25" height="12" rx="2" fill="#ffffff" stroke="#bf4520" stroke-opacity="0.6" stroke-width="0.8" stroke-dasharray="6,4"/>
+<text x="1058.5" y="222" fill="#bf4520" font-size="8.5" font-weight="600" font-family="'Geist', 'Noto Sans KR', 'Malgun Gothic', sans-serif" text-anchor="middle">계획</text>
+<text x="1132" y="251" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', 'Noto Sans KR', 'Malgun Gothic', sans-serif" text-anchor="middle">듣는 중 표시</text>
+<text x="1132" y="265" fill="#4f5d75" font-size="9.5" font-weight="400" font-family="'Geist Mono', ui-monospace, Consolas, monospace" text-anchor="middle">마이크 칩 · 들은 말을 글로</text>
+<rect x="404" y="304" width="184" height="80" rx="6" fill="#f5f5f5"/>
+<rect x="404" y="304" width="184" height="80" rx="6" fill="rgba(191,69,32,0.04)" stroke="#bf4520" stroke-width="1.3" stroke-dasharray="6,4"/>
+<rect x="410" y="309" width="25" height="12" rx="2" fill="#ffffff" stroke="#bf4520" stroke-opacity="0.6" stroke-width="0.8" stroke-dasharray="6,4"/>
+<text x="422.5" y="318" fill="#bf4520" font-size="8.5" font-weight="600" font-family="'Geist', 'Noto Sans KR', 'Malgun Gothic', sans-serif" text-anchor="middle">계획</text>
+<text x="496" y="351" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', 'Noto Sans KR', 'Malgun Gothic', sans-serif" text-anchor="middle">"Sit Down"</text>
+<text x="496" y="365" fill="#4f5d75" font-size="9.5" font-weight="400" font-family="'Geist Mono', ui-monospace, Consolas, monospace" text-anchor="middle">앉기 · 첫 움직이는 명령</text>
+<rect x="616" y="304" width="184" height="80" rx="6" fill="#f5f5f5"/>
+<rect x="616" y="304" width="184" height="80" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+<rect x="622" y="309" width="25" height="12" rx="2" fill="#ffffff" stroke="#2d3142" stroke-opacity="0.6" stroke-width="0.8"/>
+<text x="634.5" y="318" fill="#2d3142" font-size="8.5" font-weight="600" font-family="'Geist', 'Noto Sans KR', 'Malgun Gothic', sans-serif" text-anchor="middle">있음</text>
+<text x="708" y="344.5" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', 'Noto Sans KR', 'Malgun Gothic', sans-serif" text-anchor="middle">Sit (Sport 동작)</text>
+<text x="708" y="358.5" fill="#4f5d75" font-size="9.5" font-weight="400" font-family="'Geist Mono', ui-monospace, Consolas, monospace" text-anchor="middle">go2_direct/actions.py</text>
+<text x="708" y="371.5" fill="#4f5d75" font-size="9.5" font-weight="400" font-family="'Geist Mono', ui-monospace, Consolas, monospace" text-anchor="middle">lease · 멈춰 있을 때만</text>
+<rect x="828" y="304" width="184" height="80" rx="6" fill="#f5f5f5"/>
+<rect x="828" y="304" width="184" height="80" rx="6" fill="rgba(191,69,32,0.04)" stroke="#bf4520" stroke-width="1.3" stroke-dasharray="6,4"/>
+<rect x="834" y="309" width="25" height="12" rx="2" fill="#ffffff" stroke="#bf4520" stroke-opacity="0.6" stroke-width="0.8" stroke-dasharray="6,4"/>
+<text x="846.5" y="318" fill="#bf4520" font-size="8.5" font-weight="600" font-family="'Geist', 'Noto Sans KR', 'Malgun Gothic', sans-serif" text-anchor="middle">계획</text>
+<text x="920" y="351" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', 'Noto Sans KR', 'Malgun Gothic', sans-serif" text-anchor="middle">확인 말</text>
+<text x="920" y="365" fill="#4f5d75" font-size="9.5" font-weight="400" font-family="'Geist Mono', ui-monospace, Consolas, monospace" text-anchor="middle">문구 미정 (팀장 결정)</text>
+<rect x="1040" y="304" width="184" height="80" rx="6" fill="#f5f5f5"/>
+<rect x="1040" y="304" width="184" height="80" rx="6" fill="rgba(191,69,32,0.04)" stroke="#bf4520" stroke-width="1.3" stroke-dasharray="6,4"/>
+<rect x="1046" y="309" width="25" height="12" rx="2" fill="#ffffff" stroke="#bf4520" stroke-opacity="0.6" stroke-width="0.8" stroke-dasharray="6,4"/>
+<text x="1058.5" y="318" fill="#bf4520" font-size="8.5" font-weight="600" font-family="'Geist', 'Noto Sans KR', 'Malgun Gothic', sans-serif" text-anchor="middle">계획</text>
+<text x="1132" y="344.5" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', 'Noto Sans KR', 'Malgun Gothic', sans-serif" text-anchor="middle">명령 · 결과 칩</text>
+<text x="1132" y="358.5" fill="#4f5d75" font-size="9.5" font-weight="400" font-family="'Geist Mono', ui-monospace, Consolas, monospace" text-anchor="middle">받아들임 ≠ 앉음</text>
+<text x="1132" y="371.5" fill="#4f5d75" font-size="9.5" font-weight="400" font-family="'Geist Mono', ui-monospace, Consolas, monospace" text-anchor="middle">자세 값으로 확인</text>
+<rect x="192" y="408" width="1032" height="60" rx="6" fill="rgba(191,69,32,0.04)" stroke="#bf4520" stroke-width="1.2"/>
+<rect x="200" y="418" width="28" height="14" rx="2" fill="#bf4520"/><text x="214" y="428.5" fill="#ffffff" font-size="9" font-weight="600" font-family="'Geist', 'Noto Sans KR', 'Malgun Gothic', sans-serif" text-anchor="middle">관문</text>
+<text x="238" y="430" fill="#bf4520" font-size="12" font-weight="600" font-family="'Geist', 'Noto Sans KR', 'Malgun Gothic', sans-serif">로봇이 움직이는 말 (Sit Down 과 앞으로 더할 것) 은 팀장 안전 관문 뒤에만 시험한다</text>
+<text x="238" y="452" fill="#2d3142" font-size="11" font-family="'Geist', 'Noto Sans KR', 'Malgun Gothic', sans-serif">팀장 동의 · 조이스틱 E-stop (L2+B) 든 사람이 곁에 · 두 사람 확인 · lease 가진 한 사람만 · STOP 이 음성보다 먼저 · 이상하면 Damp</text>
+<text x="40" y="432" fill="#2d3142" font-size="14" font-weight="600" font-family="'Geist', 'Noto Sans KR', 'Malgun Gothic', sans-serif">안전</text>
+<text x="40" y="452" fill="#4f5d75" font-size="11" font-family="'Geist', 'Noto Sans KR', 'Malgun Gothic', sans-serif">움직이는 명령</text>
+<line x1="40" y1="504" x2="56" y2="504" stroke="#bf4520" stroke-width="1"/><text x="64" y="508" fill="#4f5d75" font-size="14" font-family="'Instrument Serif', 'Noto Serif KR', serif">깨우는 말과 대답은 로봇을 움직이지 않는다. 움직이는 말은 Sit Down 하나부터, 관문을 지난 뒤에 하나씩 더한다.</text>
+<line x1="40" y1="528" x2="56" y2="528" stroke="#bf4520" stroke-width="1"/><text x="64" y="532" fill="#4f5d75" font-size="14" font-family="'Instrument Serif', 'Noto Serif KR', serif">음성 명령도 agent 의 「명령 출처 하나 · lease」 아래로 넣고 STOP 을 넘지 못하게 한다 (제안). 말은 멈춤 수단이 아니다.</text>
+<line x1="40" y1="556" x2="1240" y2="556" stroke="rgba(45,49,66,0.10)" stroke-width="0.8"/>
+<text x="40" y="572" fill="#4f5d75" font-size="9" font-family="'Geist Mono', ui-monospace, Consolas, monospace" letter-spacing="0.14em">범례</text>
+<rect x="40" y="584" width="22" height="12" rx="2" fill="#ffffff" stroke="#2d3142" stroke-width="1.2"/>
+<text x="70" y="594" fill="#4f5d75" font-size="12" font-weight="500" font-family="'Geist', 'Noto Sans KR', 'Malgun Gothic', sans-serif">있음 (코드)</text>
+<rect x="165.8" y="584" width="22" height="12" rx="2" fill="rgba(191,69,32,0.04)" stroke="#bf4520" stroke-width="1.2" stroke-dasharray="4,3"/>
+<text x="195.8" y="594" fill="#4f5d75" font-size="12" font-weight="500" font-family="'Geist', 'Noto Sans KR', 'Malgun Gothic', sans-serif">계획 · 만들 것</text>
+<rect x="310.20000000000005" y="584" width="22" height="12" rx="2" fill="rgba(45,49,66,0.03)" stroke="rgba(45,49,66,0.40)" stroke-width="1.2"/>
+<text x="340.20000000000005" y="594" fill="#4f5d75" font-size="12" font-weight="500" font-family="'Geist', 'Noto Sans KR', 'Malgun Gothic', sans-serif">Unitree 순정 · 오늘 시험</text>
+<rect x="519.4000000000001" y="583" width="28" height="14" rx="2" fill="#bf4520"/><text x="533.4000000000001" y="593.5" fill="#ffffff" font-size="9" font-weight="600" font-family="'Geist', 'Noto Sans KR', 'Malgun Gothic', sans-serif" text-anchor="middle">관문</text>
+<text x="555.4000000000001" y="594" fill="#4f5d75" font-size="12" font-weight="500" font-family="'Geist', 'Noto Sans KR', 'Malgun Gothic', sans-serif">팀장 안전 관문을 지나야 함</text>
+</svg></div>
+<div class="table-wrap"><table><thead><tr><th>말</th><th>로봇이 하는 일 · 가는 명령</th><th>대답</th><th>움직임 · 관문</th><th>상태</th></tr></thead><tbody>
+<tr><td><code>Hey, BenBen</code> (순정)</td><td>순정 음성 비서가 깨어남. 그 밖 순정 음성 명령 · 대답도 있다</td><td>「I am here」 (순정 대답)</td><td>순정 비서가 움직이는 명령을 받을 때 agent 의 lease · STOP 을 거치는지 미확인</td><td>순정 · 오늘 시험함 (이민우)</td></tr>
+<tr><td><code>Hey, X</code></td><td>깨우기만. 로봇 명령 없음</td><td>「I am here」</td><td>움직이지 않음 · 관문 없음</td><td><span class="tag plan">계획</span></td></tr>
+<tr><td><code>Hey, X</code> 뒤 <code>Sit Down</code></td><td>agent 동작 <code>Sit</code> (Sport 경로). 동작 목록에 이미 있음 · lease 가 없거나 움직이는 중이면 거절</td><td>미정 (팀장 결정)</td><td><b>움직임 · 팀장 안전 관문 뒤에만</b> (조이스틱 E-stop 든 사람 · 두 사람 확인)</td><td><span class="tag plan">계획</span> 음성 · <span class="tag code">있음</span> <code>Sit</code> 동작 코드</td></tr>
+<tr><td>그다음 기본 명령</td><td>하나씩 더한다. agent 동작 목록에 <code>StandUp</code> · <code>StandDown</code> · <code>Hello</code> 등이 있어 같은 길로 붙일 수 있다</td><td>미정 (팀장 결정)</td><td>움직이는 것은 모두 관문 뒤</td><td>목록 미정 (팀장 결정)</td></tr>
+</tbody></table></div>
+<ul>
+<li><b>음성 명령도 명령 출처 하나.</b> 음성은 agent 의 출처 (phone · nav2 · server) 옆 새 출처로 들어가 lease 한 사람 규칙과 STOP 우선을 그대로 따른다 <span class="tag wait">제안 · 팀장 결정 대기</span>. 음성은 멈춤 수단으로 쓰지 않는다. 멈춤은 앱 STOP · 조이스틱 L2+B 다.</li>
+<li><b>받아들임 ≠ 앉음.</b> agent 의 동작 코드는 SDK 가 받아들인 것을 「동작이 끝남」 으로 보지 않는다 (<code>actions.py</code> 머리말). 화면은 명령 칩을 먼저 띄우고, 앉았는지는 자세 값으로 확인해 바꾼다.</li>
+</ul>
+
+<h3>음성 알림: 신호 → 조건 → 하는 말 → 앱 화면 → 사람이 할 일</h3>
+<p>문구 넷은 팀장이 준 그대로다. 온도 · 배터리 값은 앞 「관절 온도 · 배터리 · 알림」 절 (팀장 11/19 03:14) 을 그대로 쓰고, 새 숫자는 짓지 않았다.</p>
+<div class="diagram-container"><svg viewBox="0 0 1280 752" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="va-title va-desc">
+<title id="va-title">음성 알림 길: 신호 · 조건 · 하는 말 · 앱 화면 · 사람이 할 일 (11/19)</title>
+<desc id="va-desc">배터리 · 다리 온도 · 멈춤 · 통신 끊김 · 안전 정지 권고 다섯 줄. 줄마다 어디서 신호를 읽는지, 언제 말하는지, 팀장이 준 영어 문구, 앱 화면이 어떻게 바뀌는지, 사람이 다음에 무엇을 하는지를 왼쪽에서 오른쪽으로 놓았다. 실선 상자는 지금 코드에 있음, 점선 상자는 만들 것, 회색 상자는 사람 손.</desc>
+<defs><marker id="va-arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#4f5d75"/></marker><marker id="va-accent" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#bf4520"/></marker></defs>
+<rect width="100%" height="100%" fill="#f5f5f5"/>
+<text x="40" y="72" fill="#5a6580" font-size="12" font-weight="500" font-family="'Geist', 'Noto Sans KR', 'Malgun Gothic', sans-serif">알림</text>
+<text x="192" y="72" fill="#5a6580" font-size="12" font-weight="500" font-family="'Geist', 'Noto Sans KR', 'Malgun Gothic', sans-serif">신호 (어디서 읽나)</text>
+<text x="404" y="72" fill="#5a6580" font-size="12" font-weight="500" font-family="'Geist', 'Noto Sans KR', 'Malgun Gothic', sans-serif">조건</text>
+<text x="616" y="72" fill="#5a6580" font-size="12" font-weight="500" font-family="'Geist', 'Noto Sans KR', 'Malgun Gothic', sans-serif">하는 말 (팀장 문구)</text>
+<text x="828" y="72" fill="#5a6580" font-size="12" font-weight="500" font-family="'Geist', 'Noto Sans KR', 'Malgun Gothic', sans-serif">앱 화면</text>
+<text x="1040" y="72" fill="#5a6580" font-size="12" font-weight="500" font-family="'Geist', 'Noto Sans KR', 'Malgun Gothic', sans-serif">사람이 할 일</text>
+<line x1="40" y1="80" x2="1240" y2="80" stroke="rgba(45,49,66,0.08)" stroke-width="0.8"/>
+<path d="M 376,140 H 404" fill="none" stroke="#bf4520" stroke-width="1.4" stroke-dasharray="6,4" marker-end="url(#va-accent)"/>
+<path d="M 588,140 H 616" fill="none" stroke="#bf4520" stroke-width="1.4" stroke-dasharray="6,4" marker-end="url(#va-accent)"/>
+<path d="M 800,140 H 828" fill="none" stroke="#bf4520" stroke-width="1.4" stroke-dasharray="6,4" marker-end="url(#va-accent)"/>
+<path d="M 1012,140 H 1040" fill="none" stroke="#bf4520" stroke-width="1.4" stroke-dasharray="6,4" marker-end="url(#va-accent)"/>
+<path d="M 376,244 H 404" fill="none" stroke="#bf4520" stroke-width="1.4" stroke-dasharray="6,4" marker-end="url(#va-accent)"/>
+<path d="M 588,244 H 616" fill="none" stroke="#bf4520" stroke-width="1.4" stroke-dasharray="6,4" marker-end="url(#va-accent)"/>
+<path d="M 800,244 H 828" fill="none" stroke="#bf4520" stroke-width="1.4" stroke-dasharray="6,4" marker-end="url(#va-accent)"/>
+<path d="M 1012,244 H 1040" fill="none" stroke="#bf4520" stroke-width="1.4" stroke-dasharray="6,4" marker-end="url(#va-accent)"/>
+<path d="M 376,348 H 404" fill="none" stroke="#bf4520" stroke-width="1.4" stroke-dasharray="6,4" marker-end="url(#va-accent)"/>
+<path d="M 588,348 H 616" fill="none" stroke="#bf4520" stroke-width="1.4" stroke-dasharray="6,4" marker-end="url(#va-accent)"/>
+<path d="M 800,348 H 828" fill="none" stroke="#bf4520" stroke-width="1.4" stroke-dasharray="6,4" marker-end="url(#va-accent)"/>
+<path d="M 1012,348 H 1040" fill="none" stroke="#bf4520" stroke-width="1.4" stroke-dasharray="6,4" marker-end="url(#va-accent)"/>
+<path d="M 376,452 H 404" fill="none" stroke="#bf4520" stroke-width="1.4" stroke-dasharray="6,4" marker-end="url(#va-accent)"/>
+<path d="M 588,452 H 616" fill="none" stroke="#bf4520" stroke-width="1.4" stroke-dasharray="6,4" marker-end="url(#va-accent)"/>
+<path d="M 800,452 H 828" fill="none" stroke="#bf4520" stroke-width="1.4" stroke-dasharray="6,4" marker-end="url(#va-accent)"/>
+<path d="M 1012,452 H 1040" fill="none" stroke="#bf4520" stroke-width="1.4" stroke-dasharray="6,4" marker-end="url(#va-accent)"/>
+<path d="M 376,556 H 404" fill="none" stroke="#bf4520" stroke-width="1.4" stroke-dasharray="6,4" marker-end="url(#va-accent)"/>
+<path d="M 588,556 H 616" fill="none" stroke="#bf4520" stroke-width="1.4" stroke-dasharray="6,4" marker-end="url(#va-accent)"/>
+<path d="M 800,556 H 828" fill="none" stroke="#bf4520" stroke-width="1.4" stroke-dasharray="6,4" marker-end="url(#va-accent)"/>
+<path d="M 1012,556 H 1040" fill="none" stroke="#bf4520" stroke-width="1.4" stroke-dasharray="6,4" marker-end="url(#va-accent)"/>
+<text x="40" y="130" fill="#2d3142" font-size="14" font-weight="600" font-family="'Geist', 'Noto Sans KR', 'Malgun Gothic', sans-serif">배터리</text>
+<text x="40" y="150" fill="#4f5d75" font-size="11" font-family="'Geist', 'Noto Sans KR', 'Malgun Gothic', sans-serif">11/19 03:14 값</text>
+<rect x="192" y="96" width="184" height="88" rx="6" fill="#f5f5f5"/>
+<rect x="192" y="96" width="184" height="88" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+<rect x="198" y="101" width="25" height="12" rx="2" fill="#ffffff" stroke="#2d3142" stroke-opacity="0.6" stroke-width="0.8"/>
+<text x="210.5" y="110" fill="#2d3142" font-size="8.5" font-weight="600" font-family="'Geist', 'Noto Sans KR', 'Malgun Gothic', sans-serif" text-anchor="middle">있음</text>
+<text x="284" y="140.5" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', 'Noto Sans KR', 'Malgun Gothic', sans-serif" text-anchor="middle">배터리 잔량</text>
+<text x="284" y="154.5" fill="#4f5d75" font-size="9.5" font-weight="400" font-family="'Geist Mono', ui-monospace, Consolas, monospace" text-anchor="middle">agent 상태 · 화면 표시</text>
+<text x="284" y="167.5" fill="#4f5d75" font-size="9.5" font-weight="400" font-family="'Geist Mono', ui-monospace, Consolas, monospace" text-anchor="middle">서버 BATTERY_LOW</text>
+<rect x="404" y="96" width="184" height="88" rx="6" fill="#f5f5f5"/>
+<rect x="404" y="96" width="184" height="88" rx="6" fill="rgba(191,69,32,0.04)" stroke="#bf4520" stroke-width="1.3" stroke-dasharray="6,4"/>
+<rect x="410" y="101" width="25" height="12" rx="2" fill="#ffffff" stroke="#bf4520" stroke-opacity="0.6" stroke-width="0.8" stroke-dasharray="6,4"/>
+<text x="422.5" y="110" fill="#bf4520" font-size="8.5" font-weight="600" font-family="'Geist', 'Noto Sans KR', 'Malgun Gothic', sans-serif" text-anchor="middle">계획</text>
+<text x="496" y="140.5" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', 'Noto Sans KR', 'Malgun Gothic', sans-serif" text-anchor="middle">20 % · 10 %</text>
+<text x="496" y="154.5" fill="#4f5d75" font-size="9.5" font-weight="400" font-family="'Geist Mono', ui-monospace, Consolas, monospace" text-anchor="middle">20 % 표시는 있음</text>
+<text x="496" y="167.5" fill="#4f5d75" font-size="9.5" font-weight="400" font-family="'Geist Mono', ui-monospace, Consolas, monospace" text-anchor="middle">되풀이 간격 미정 (팀장 결정)</text>
+<rect x="616" y="96" width="184" height="88" rx="6" fill="#f5f5f5"/>
+<rect x="616" y="96" width="184" height="88" rx="6" fill="rgba(191,69,32,0.04)" stroke="#bf4520" stroke-width="1.3" stroke-dasharray="6,4"/>
+<rect x="622" y="101" width="25" height="12" rx="2" fill="#ffffff" stroke="#bf4520" stroke-opacity="0.6" stroke-width="0.8" stroke-dasharray="6,4"/>
+<text x="634.5" y="110" fill="#bf4520" font-size="8.5" font-weight="600" font-family="'Geist', 'Noto Sans KR', 'Malgun Gothic', sans-serif" text-anchor="middle">계획</text>
+<text x="708" y="146" fill="#2d3142" font-size="12.5" font-weight="600" font-family="'Geist', 'Noto Sans KR', 'Malgun Gothic', sans-serif" text-anchor="middle">"Battery Low,</text>
+<text x="708" y="161.5" fill="#2d3142" font-size="12.5" font-weight="600" font-family="'Geist', 'Noto Sans KR', 'Malgun Gothic', sans-serif" text-anchor="middle">Go to Charge Right Now."</text>
+<rect x="828" y="96" width="184" height="88" rx="6" fill="#f5f5f5"/>
+<rect x="828" y="96" width="184" height="88" rx="6" fill="rgba(191,69,32,0.04)" stroke="#bf4520" stroke-width="1.3" stroke-dasharray="6,4"/>
+<rect x="834" y="101" width="25" height="12" rx="2" fill="#ffffff" stroke="#bf4520" stroke-opacity="0.6" stroke-width="0.8" stroke-dasharray="6,4"/>
+<text x="846.5" y="110" fill="#bf4520" font-size="8.5" font-weight="600" font-family="'Geist', 'Noto Sans KR', 'Malgun Gothic', sans-serif" text-anchor="middle">계획</text>
+<text x="920" y="140.5" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', 'Noto Sans KR', 'Malgun Gothic', sans-serif" text-anchor="middle">배터리 칸 주황 → 빨강</text>
+<text x="920" y="154.5" fill="#4f5d75" font-size="9.5" font-weight="400" font-family="'Geist Mono', ui-monospace, Consolas, monospace" text-anchor="middle">남은 시간 어림 (20 %)</text>
+<text x="920" y="167.5" fill="#4f5d75" font-size="9.5" font-weight="400" font-family="'Geist Mono', ui-monospace, Consolas, monospace" text-anchor="middle">걷기 약 23 분 · 서기 약 36 분</text>
+<rect x="1040" y="96" width="184" height="88" rx="6" fill="#f5f5f5"/>
+<rect x="1040" y="96" width="184" height="88" rx="6" fill="rgba(79,93,117,0.10)" stroke="#5a6580" stroke-width="1"/>
+<rect x="1046" y="101" width="39" height="12" rx="2" fill="#ffffff" stroke="#5a6580" stroke-opacity="0.6" stroke-width="0.8"/>
+<text x="1065.5" y="110" fill="#5a6580" font-size="8.5" font-weight="600" font-family="'Geist', 'Noto Sans KR', 'Malgun Gothic', sans-serif" text-anchor="middle">사람 손</text>
+<text x="1132" y="140.5" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', 'Noto Sans KR', 'Malgun Gothic', sans-serif" text-anchor="middle">충전 자리로 · 앉히고 끄기</text>
+<text x="1132" y="154.5" fill="#4f5d75" font-size="9.5" font-weight="400" font-family="'Geist Mono', ui-monospace, Consolas, monospace" text-anchor="middle">서기 · 걷기는 막지 않음</text>
+<text x="1132" y="167.5" fill="#4f5d75" font-size="9.5" font-weight="400" font-family="'Geist Mono', ui-monospace, Consolas, monospace" text-anchor="middle">(팀장 03:14)</text>
+<text x="40" y="234" fill="#2d3142" font-size="14" font-weight="600" font-family="'Geist', 'Noto Sans KR', 'Malgun Gothic', sans-serif">다리 온도</text>
+<text x="40" y="254" fill="#4f5d75" font-size="11" font-family="'Geist', 'Noto Sans KR', 'Malgun Gothic', sans-serif">관절 12 · 다리 4</text>
+<rect x="192" y="200" width="184" height="88" rx="6" fill="#f5f5f5"/>
+<rect x="192" y="200" width="184" height="88" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+<rect x="198" y="205" width="25" height="12" rx="2" fill="#ffffff" stroke="#2d3142" stroke-opacity="0.6" stroke-width="0.8"/>
+<text x="210.5" y="214" fill="#2d3142" font-size="8.5" font-weight="600" font-family="'Geist', 'Noto Sans KR', 'Malgun Gothic', sans-serif" text-anchor="middle">있음</text>
+<text x="284" y="244.5" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', 'Noto Sans KR', 'Malgun Gothic', sans-serif" text-anchor="middle">관절 12 온도</text>
+<text x="284" y="258.5" fill="#4f5d75" font-size="9.5" font-weight="400" font-family="'Geist Mono', ui-monospace, Consolas, monospace" text-anchor="middle">상태 읽기 (거울 130b6f06)</text>
+<text x="284" y="271.5" fill="#4f5d75" font-size="9.5" font-weight="400" font-family="'Geist Mono', ui-monospace, Consolas, monospace" text-anchor="middle">reserve · 판정은 계획</text>
+<rect x="404" y="200" width="184" height="88" rx="6" fill="#f5f5f5"/>
+<rect x="404" y="200" width="184" height="88" rx="6" fill="rgba(191,69,32,0.04)" stroke="#bf4520" stroke-width="1.3" stroke-dasharray="6,4"/>
+<rect x="410" y="205" width="25" height="12" rx="2" fill="#ffffff" stroke="#bf4520" stroke-opacity="0.6" stroke-width="0.8" stroke-dasharray="6,4"/>
+<text x="422.5" y="214" fill="#bf4520" font-size="8.5" font-weight="600" font-family="'Geist', 'Noto Sans KR', 'Malgun Gothic', sans-serif" text-anchor="middle">계획</text>
+<text x="496" y="244.5" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', 'Noto Sans KR', 'Malgun Gothic', sans-serif" text-anchor="middle">60 °C 경고 · 70 °C 위험</text>
+<text x="496" y="258.5" fill="#4f5d75" font-size="9.5" font-weight="400" font-family="'Geist Mono', ui-monospace, Consolas, monospace" text-anchor="middle">reserve ≠ 0 도 위험</text>
+<text x="496" y="271.5" fill="#4f5d75" font-size="9.5" font-weight="400" font-family="'Geist Mono', ui-monospace, Consolas, monospace" text-anchor="middle">말할 단계 미정 (팀장 결정)</text>
+<rect x="616" y="200" width="184" height="88" rx="6" fill="#f5f5f5"/>
+<rect x="616" y="200" width="184" height="88" rx="6" fill="rgba(191,69,32,0.04)" stroke="#bf4520" stroke-width="1.3" stroke-dasharray="6,4"/>
+<rect x="622" y="205" width="25" height="12" rx="2" fill="#ffffff" stroke="#bf4520" stroke-opacity="0.6" stroke-width="0.8" stroke-dasharray="6,4"/>
+<text x="634.5" y="214" fill="#bf4520" font-size="8.5" font-weight="600" font-family="'Geist', 'Noto Sans KR', 'Malgun Gothic', sans-serif" text-anchor="middle">계획</text>
+<text x="708" y="243.5" fill="#2d3142" font-size="12.5" font-weight="600" font-family="'Geist', 'Noto Sans KR', 'Malgun Gothic', sans-serif" text-anchor="middle">"Check Temperature</text>
+<text x="708" y="259" fill="#2d3142" font-size="12.5" font-weight="600" font-family="'Geist', 'Noto Sans KR', 'Malgun Gothic', sans-serif" text-anchor="middle">on RR Leg."</text>
+<text x="708" y="273" fill="#4f5d75" font-size="9.5" font-weight="400" font-family="'Geist Mono', ui-monospace, Consolas, monospace" text-anchor="middle">RR 자리에 FR · FL · RR · RL</text>
+<rect x="828" y="200" width="184" height="88" rx="6" fill="#f5f5f5"/>
+<rect x="828" y="200" width="184" height="88" rx="6" fill="rgba(191,69,32,0.04)" stroke="#bf4520" stroke-width="1.3" stroke-dasharray="6,4"/>
+<rect x="834" y="205" width="25" height="12" rx="2" fill="#ffffff" stroke="#bf4520" stroke-opacity="0.6" stroke-width="0.8" stroke-dasharray="6,4"/>
+<text x="846.5" y="214" fill="#bf4520" font-size="8.5" font-weight="600" font-family="'Geist', 'Noto Sans KR', 'Malgun Gothic', sans-serif" text-anchor="middle">계획</text>
+<text x="920" y="251" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', 'Noto Sans KR', 'Malgun Gothic', sans-serif" text-anchor="middle">몸 그림 그 다리 빨강</text>
+<text x="920" y="265" fill="#4f5d75" font-size="9.5" font-weight="400" font-family="'Geist Mono', ui-monospace, Consolas, monospace" text-anchor="middle">가장 뜨거운 관절 · °C</text>
+<rect x="1040" y="200" width="184" height="88" rx="6" fill="#f5f5f5"/>
+<rect x="1040" y="200" width="184" height="88" rx="6" fill="rgba(79,93,117,0.10)" stroke="#5a6580" stroke-width="1"/>
+<rect x="1046" y="205" width="39" height="12" rx="2" fill="#ffffff" stroke="#5a6580" stroke-opacity="0.6" stroke-width="0.8"/>
+<text x="1065.5" y="214" fill="#5a6580" font-size="8.5" font-weight="600" font-family="'Geist', 'Noto Sans KR', 'Malgun Gothic', sans-serif" text-anchor="middle">사람 손</text>
+<text x="1132" y="244.5" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', 'Noto Sans KR', 'Malgun Gothic', sans-serif" text-anchor="middle">앉혀서 식히기</text>
+<text x="1132" y="258.5" fill="#4f5d75" font-size="9.5" font-weight="400" font-family="'Geist Mono', ui-monospace, Consolas, monospace" text-anchor="middle">Sit · StandDown</text>
+<text x="1132" y="271.5" fill="#4f5d75" font-size="9.5" font-weight="400" font-family="'Geist Mono', ui-monospace, Consolas, monospace" text-anchor="middle">자동 멈춤 미정 (업체 답 뒤)</text>
+<text x="40" y="338" fill="#2d3142" font-size="14" font-weight="600" font-family="'Geist', 'Noto Sans KR', 'Malgun Gothic', sans-serif">멈춤 (Stop)</text>
+<text x="40" y="358" fill="#4f5d75" font-size="11" font-family="'Geist', 'Noto Sans KR', 'Malgun Gothic', sans-serif">앱 STOP · 입력 끊김</text>
+<rect x="192" y="304" width="184" height="88" rx="6" fill="#f5f5f5"/>
+<rect x="192" y="304" width="184" height="88" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+<rect x="198" y="309" width="25" height="12" rx="2" fill="#ffffff" stroke="#2d3142" stroke-opacity="0.6" stroke-width="0.8"/>
+<text x="210.5" y="318" fill="#2d3142" font-size="8.5" font-weight="600" font-family="'Geist', 'Noto Sans KR', 'Malgun Gothic', sans-serif" text-anchor="middle">있음</text>
+<text x="284" y="348.5" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', 'Noto Sans KR', 'Malgun Gothic', sans-serif" text-anchor="middle">앱 STOP · 입력 끊김</text>
+<text x="284" y="362.5" fill="#4f5d75" font-size="9.5" font-weight="400" font-family="'Geist Mono', ui-monospace, Consolas, monospace" text-anchor="middle">STOP_PRESSED</text>
+<text x="284" y="375.5" fill="#4f5d75" font-size="9.5" font-weight="400" font-family="'Geist Mono', ui-monospace, Consolas, monospace" text-anchor="middle">0.3 s 끊기면 hold + STOP</text>
+<rect x="404" y="304" width="184" height="88" rx="6" fill="#f5f5f5"/>
+<rect x="404" y="304" width="184" height="88" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+<rect x="410" y="309" width="25" height="12" rx="2" fill="#ffffff" stroke="#2d3142" stroke-opacity="0.6" stroke-width="0.8"/>
+<text x="422.5" y="318" fill="#2d3142" font-size="8.5" font-weight="600" font-family="'Geist', 'Noto Sans KR', 'Malgun Gothic', sans-serif" text-anchor="middle">있음</text>
+<text x="496" y="355" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', 'Noto Sans KR', 'Malgun Gothic', sans-serif" text-anchor="middle">STOP 이 걸린 순간</text>
+<text x="496" y="369" fill="#4f5d75" font-size="9.5" font-weight="400" font-family="'Geist Mono', ui-monospace, Consolas, monospace" text-anchor="middle">Move(0,0,0) → StopMove</text>
+<rect x="616" y="304" width="184" height="88" rx="6" fill="#f5f5f5"/>
+<rect x="616" y="304" width="184" height="88" rx="6" fill="rgba(191,69,32,0.04)" stroke="#bf4520" stroke-width="1.3" stroke-dasharray="6,4"/>
+<rect x="622" y="309" width="25" height="12" rx="2" fill="#ffffff" stroke="#bf4520" stroke-opacity="0.6" stroke-width="0.8" stroke-dasharray="6,4"/>
+<text x="634.5" y="318" fill="#bf4520" font-size="8.5" font-weight="600" font-family="'Geist', 'Noto Sans KR', 'Malgun Gothic', sans-serif" text-anchor="middle">계획</text>
+<text x="708" y="361.75" fill="#2d3142" font-size="12.5" font-weight="600" font-family="'Geist', 'Noto Sans KR', 'Malgun Gothic', sans-serif" text-anchor="middle">"Stop Move, X."</text>
+<rect x="828" y="304" width="184" height="88" rx="6" fill="#f5f5f5"/>
+<rect x="828" y="304" width="184" height="88" rx="6" fill="rgba(191,69,32,0.04)" stroke="#bf4520" stroke-width="1.3" stroke-dasharray="6,4"/>
+<rect x="834" y="309" width="25" height="12" rx="2" fill="#ffffff" stroke="#bf4520" stroke-opacity="0.6" stroke-width="0.8" stroke-dasharray="6,4"/>
+<text x="846.5" y="318" fill="#bf4520" font-size="8.5" font-weight="600" font-family="'Geist', 'Noto Sans KR', 'Malgun Gothic', sans-serif" text-anchor="middle">계획</text>
+<text x="920" y="355" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', 'Noto Sans KR', 'Malgun Gothic', sans-serif" text-anchor="middle">STOP 칩 · 누가 눌렀나</text>
+<text x="920" y="369" fill="#4f5d75" font-size="9.5" font-weight="400" font-family="'Geist Mono', ui-monospace, Consolas, monospace" text-anchor="middle">서 있음 · 명령 0</text>
+<rect x="1040" y="304" width="184" height="88" rx="6" fill="#f5f5f5"/>
+<rect x="1040" y="304" width="184" height="88" rx="6" fill="rgba(79,93,117,0.10)" stroke="#5a6580" stroke-width="1"/>
+<rect x="1046" y="309" width="39" height="12" rx="2" fill="#ffffff" stroke="#5a6580" stroke-opacity="0.6" stroke-width="0.8"/>
+<text x="1065.5" y="318" fill="#5a6580" font-size="8.5" font-weight="600" font-family="'Geist', 'Noto Sans KR', 'Malgun Gothic', sans-serif" text-anchor="middle">사람 손</text>
+<text x="1132" y="355" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', 'Noto Sans KR', 'Malgun Gothic', sans-serif" text-anchor="middle">까닭 확인 뒤 다시 조종</text>
+<text x="1132" y="369" fill="#4f5d75" font-size="9.5" font-weight="400" font-family="'Geist Mono', ui-monospace, Consolas, monospace" text-anchor="middle">lease 가진 한 사람</text>
+<text x="40" y="442" fill="#2d3142" font-size="14" font-weight="600" font-family="'Geist', 'Noto Sans KR', 'Malgun Gothic', sans-serif">통신 끊김</text>
+<text x="40" y="462" fill="#4f5d75" font-size="11" font-family="'Geist', 'Noto Sans KR', 'Malgun Gothic', sans-serif">앱 서버 ↔ agent</text>
+<rect x="192" y="408" width="184" height="88" rx="6" fill="#f5f5f5"/>
+<rect x="192" y="408" width="184" height="88" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+<rect x="198" y="413" width="25" height="12" rx="2" fill="#ffffff" stroke="#2d3142" stroke-opacity="0.6" stroke-width="0.8"/>
+<text x="210.5" y="422" fill="#2d3142" font-size="8.5" font-weight="600" font-family="'Geist', 'Noto Sans KR', 'Malgun Gothic', sans-serif" text-anchor="middle">있음</text>
+<text x="284" y="452.5" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', 'Noto Sans KR', 'Malgun Gothic', sans-serif" text-anchor="middle">서버 연결 끊김</text>
+<text x="284" y="466.5" fill="#4f5d75" font-size="9.5" font-weight="400" font-family="'Geist Mono', ui-monospace, Consolas, monospace" text-anchor="middle">SERVER_LINK_LOST</text>
+<text x="284" y="479.5" fill="#4f5d75" font-size="9.5" font-weight="400" font-family="'Geist Mono', ui-monospace, Consolas, monospace" text-anchor="middle">LINK_LOSS_TIMEOUT</text>
+<rect x="404" y="408" width="184" height="88" rx="6" fill="#f5f5f5"/>
+<rect x="404" y="408" width="184" height="88" rx="6" fill="rgba(191,69,32,0.04)" stroke="#bf4520" stroke-width="1.3" stroke-dasharray="6,4"/>
+<rect x="410" y="413" width="25" height="12" rx="2" fill="#ffffff" stroke="#bf4520" stroke-opacity="0.6" stroke-width="0.8" stroke-dasharray="6,4"/>
+<text x="422.5" y="422" fill="#bf4520" font-size="8.5" font-weight="600" font-family="'Geist', 'Noto Sans KR', 'Malgun Gothic', sans-serif" text-anchor="middle">계획</text>
+<text x="496" y="452.5" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', 'Noto Sans KR', 'Malgun Gothic', sans-serif" text-anchor="middle">끊긴 지 몇 초</text>
+<text x="496" y="466.5" fill="#4f5d75" font-size="9.5" font-weight="400" font-family="'Geist Mono', ui-monospace, Consolas, monospace" text-anchor="middle">0.3 s hold + STOP 은 있음</text>
+<text x="496" y="479.5" fill="#4f5d75" font-size="9.5" font-weight="400" font-family="'Geist Mono', ui-monospace, Consolas, monospace" text-anchor="middle">말할 시각 미정 (팀장 결정)</text>
+<rect x="616" y="408" width="184" height="88" rx="6" fill="#f5f5f5"/>
+<rect x="616" y="408" width="184" height="88" rx="6" fill="rgba(191,69,32,0.04)" stroke="#bf4520" stroke-width="1.3" stroke-dasharray="6,4"/>
+<rect x="622" y="413" width="25" height="12" rx="2" fill="#ffffff" stroke="#bf4520" stroke-opacity="0.6" stroke-width="0.8" stroke-dasharray="6,4"/>
+<text x="634.5" y="422" fill="#bf4520" font-size="8.5" font-weight="600" font-family="'Geist', 'Noto Sans KR', 'Malgun Gothic', sans-serif" text-anchor="middle">계획</text>
+<text x="708" y="459.25" fill="#2d3142" font-size="12.5" font-weight="600" font-family="'Geist', 'Noto Sans KR', 'Malgun Gothic', sans-serif" text-anchor="middle">"Stop Move, X."</text>
+<text x="708" y="473.25" fill="#4f5d75" font-size="9.5" font-weight="400" font-family="'Geist Mono', ui-monospace, Consolas, monospace" text-anchor="middle">로봇 쪽에서 (앱은 못 닿음)</text>
+<rect x="828" y="408" width="184" height="88" rx="6" fill="#f5f5f5"/>
+<rect x="828" y="408" width="184" height="88" rx="6" fill="rgba(191,69,32,0.04)" stroke="#bf4520" stroke-width="1.3" stroke-dasharray="6,4"/>
+<rect x="834" y="413" width="25" height="12" rx="2" fill="#ffffff" stroke="#bf4520" stroke-opacity="0.6" stroke-width="0.8" stroke-dasharray="6,4"/>
+<text x="846.5" y="422" fill="#bf4520" font-size="8.5" font-weight="600" font-family="'Geist', 'Noto Sans KR', 'Malgun Gothic', sans-serif" text-anchor="middle">계획</text>
+<text x="920" y="459" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', 'Noto Sans KR', 'Malgun Gothic', sans-serif" text-anchor="middle">연결 끊김 띠</text>
+<text x="920" y="473" fill="#4f5d75" font-size="9.5" font-weight="400" font-family="'Geist Mono', ui-monospace, Consolas, monospace" text-anchor="middle">마지막 상태는 회색 · 시각</text>
+<rect x="1040" y="408" width="184" height="88" rx="6" fill="#f5f5f5"/>
+<rect x="1040" y="408" width="184" height="88" rx="6" fill="rgba(79,93,117,0.10)" stroke="#5a6580" stroke-width="1"/>
+<rect x="1046" y="413" width="39" height="12" rx="2" fill="#ffffff" stroke="#5a6580" stroke-opacity="0.6" stroke-width="0.8"/>
+<text x="1065.5" y="422" fill="#5a6580" font-size="8.5" font-weight="600" font-family="'Geist', 'Noto Sans KR', 'Malgun Gothic', sans-serif" text-anchor="middle">사람 손</text>
+<text x="1132" y="459" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', 'Noto Sans KR', 'Malgun Gothic', sans-serif" text-anchor="middle">곁의 사람이 L2+B</text>
+<text x="1132" y="473" fill="#4f5d75" font-size="9.5" font-weight="400" font-family="'Geist Mono', ui-monospace, Consolas, monospace" text-anchor="middle">망을 다시 붙인 뒤 이어 감</text>
+<text x="40" y="546" fill="#2d3142" font-size="14" font-weight="600" font-family="'Geist', 'Noto Sans KR', 'Malgun Gothic', sans-serif">안전 정지 권고</text>
+<text x="40" y="566" fill="#4f5d75" font-size="11" font-family="'Geist', 'Noto Sans KR', 'Malgun Gothic', sans-serif">Damp 가 마지막 길</text>
+<rect x="192" y="512" width="184" height="88" rx="6" fill="#f5f5f5"/>
+<rect x="192" y="512" width="184" height="88" rx="6" fill="rgba(191,69,32,0.04)" stroke="#bf4520" stroke-width="1.3" stroke-dasharray="6,4"/>
+<rect x="198" y="517" width="25" height="12" rx="2" fill="#ffffff" stroke="#bf4520" stroke-opacity="0.6" stroke-width="0.8" stroke-dasharray="6,4"/>
+<text x="210.5" y="526" fill="#bf4520" font-size="8.5" font-weight="600" font-family="'Geist', 'Noto Sans KR', 'Malgun Gothic', sans-serif" text-anchor="middle">계획</text>
+<text x="284" y="556.5" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', 'Noto Sans KR', 'Malgun Gothic', sans-serif" text-anchor="middle">온도 위험 · 넘어짐</text>
+<text x="284" y="570.5" fill="#4f5d75" font-size="9.5" font-weight="400" font-family="'Geist Mono', ui-monospace, Consolas, monospace" text-anchor="middle">넘어짐 추정 칸은 표시만 있음</text>
+<text x="284" y="583.5" fill="#4f5d75" font-size="9.5" font-weight="400" font-family="'Geist Mono', ui-monospace, Consolas, monospace" text-anchor="middle">정책 이상 (저수준 모드)</text>
+<rect x="404" y="512" width="184" height="88" rx="6" fill="#f5f5f5"/>
+<rect x="404" y="512" width="184" height="88" rx="6" fill="rgba(191,69,32,0.04)" stroke="#bf4520" stroke-width="1.3" stroke-dasharray="6,4"/>
+<rect x="410" y="517" width="25" height="12" rx="2" fill="#ffffff" stroke="#bf4520" stroke-opacity="0.6" stroke-width="0.8" stroke-dasharray="6,4"/>
+<text x="422.5" y="526" fill="#bf4520" font-size="8.5" font-weight="600" font-family="'Geist', 'Noto Sans KR', 'Malgun Gothic', sans-serif" text-anchor="middle">계획</text>
+<text x="496" y="563" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', 'Noto Sans KR', 'Malgun Gothic', sans-serif" text-anchor="middle">70 °C 이상 · reserve ≠ 0</text>
+<text x="496" y="577" fill="#4f5d75" font-size="9.5" font-weight="400" font-family="'Geist Mono', ui-monospace, Consolas, monospace" text-anchor="middle">넘어짐 · 0.3 s 끊김 (저수준)</text>
+<rect x="616" y="512" width="184" height="88" rx="6" fill="#f5f5f5"/>
+<rect x="616" y="512" width="184" height="88" rx="6" fill="rgba(191,69,32,0.04)" stroke="#bf4520" stroke-width="1.3" stroke-dasharray="6,4"/>
+<rect x="622" y="517" width="25" height="12" rx="2" fill="#ffffff" stroke="#bf4520" stroke-opacity="0.6" stroke-width="0.8" stroke-dasharray="6,4"/>
+<text x="634.5" y="526" fill="#bf4520" font-size="8.5" font-weight="600" font-family="'Geist', 'Noto Sans KR', 'Malgun Gothic', sans-serif" text-anchor="middle">계획</text>
+<text x="708" y="562" fill="#2d3142" font-size="12.5" font-weight="600" font-family="'Geist', 'Noto Sans KR', 'Malgun Gothic', sans-serif" text-anchor="middle">"Go Damping Mode</text>
+<text x="708" y="577.5" fill="#2d3142" font-size="12.5" font-weight="600" font-family="'Geist', 'Noto Sans KR', 'Malgun Gothic', sans-serif" text-anchor="middle">Right Now."</text>
+<rect x="828" y="512" width="184" height="88" rx="6" fill="#f5f5f5"/>
+<rect x="828" y="512" width="184" height="88" rx="6" fill="rgba(191,69,32,0.04)" stroke="#bf4520" stroke-width="1.3" stroke-dasharray="6,4"/>
+<rect x="834" y="517" width="25" height="12" rx="2" fill="#ffffff" stroke="#bf4520" stroke-opacity="0.6" stroke-width="0.8" stroke-dasharray="6,4"/>
+<text x="846.5" y="526" fill="#bf4520" font-size="8.5" font-weight="600" font-family="'Geist', 'Noto Sans KR', 'Malgun Gothic', sans-serif" text-anchor="middle">계획</text>
+<text x="920" y="556.5" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', 'Noto Sans KR', 'Malgun Gothic', sans-serif" text-anchor="middle">빨간 띠 · Damp 버튼</text>
+<text x="920" y="570.5" fill="#4f5d75" font-size="9.5" font-weight="400" font-family="'Geist Mono', ui-monospace, Consolas, monospace" text-anchor="middle">확인 한 번 더 · 선 자세</text>
+<text x="920" y="583.5" fill="#4f5d75" font-size="9.5" font-weight="400" font-family="'Geist Mono', ui-monospace, Consolas, monospace" text-anchor="middle">(코드: Damp 는 DANGEROUS)</text>
+<rect x="1040" y="512" width="184" height="88" rx="6" fill="#f5f5f5"/>
+<rect x="1040" y="512" width="184" height="88" rx="6" fill="rgba(79,93,117,0.10)" stroke="#5a6580" stroke-width="1"/>
+<rect x="1046" y="517" width="39" height="12" rx="2" fill="#ffffff" stroke="#5a6580" stroke-opacity="0.6" stroke-width="0.8"/>
+<text x="1065.5" y="526" fill="#5a6580" font-size="8.5" font-weight="600" font-family="'Geist', 'Noto Sans KR', 'Malgun Gothic', sans-serif" text-anchor="middle">사람 손</text>
+<text x="1132" y="556.5" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', 'Noto Sans KR', 'Malgun Gothic', sans-serif" text-anchor="middle">L2+B · 조이스틱 E-stop</text>
+<text x="1132" y="570.5" fill="#4f5d75" font-size="9.5" font-weight="400" font-family="'Geist Mono', ui-monospace, Consolas, monospace" text-anchor="middle">또는 앱 Damp</text>
+<text x="1132" y="583.5" fill="#4f5d75" font-size="9.5" font-weight="400" font-family="'Geist Mono', ui-monospace, Consolas, monospace" text-anchor="middle">되돌리기는 사람 확인 뒤</text>
+<line x1="40" y1="628" x2="56" y2="628" stroke="#bf4520" stroke-width="1"/><text x="64" y="632" fill="#4f5d75" font-size="14" font-family="'Instrument Serif', 'Noto Serif KR', serif">말은 사람에게 알리는 길이다. 로봇을 세우는 일은 STOP · Damp 코드와 조이스틱 L2+B 가 한다. 말이 늦거나 안 들려도 멈춤은 그대로 걸린다.</text>
+<line x1="40" y1="652" x2="56" y2="652" stroke="#bf4520" stroke-width="1"/><text x="64" y="656" fill="#4f5d75" font-size="14" font-family="'Instrument Serif', 'Noto Serif KR', serif">말하는 자리 (로봇 스피커 · 폰 · 둘 다) 는 미정 (팀장 결정). 통신이 끊기면 앱이 로봇에 닿지 못하므로 그때 말은 로봇 쪽에서 나와야 한다.</text>
+<line x1="40" y1="680" x2="1240" y2="680" stroke="rgba(45,49,66,0.10)" stroke-width="0.8"/>
+<text x="40" y="696" fill="#4f5d75" font-size="9" font-family="'Geist Mono', ui-monospace, Consolas, monospace" letter-spacing="0.14em">범례</text>
+<rect x="40" y="708" width="22" height="12" rx="2" fill="#ffffff" stroke="#2d3142" stroke-width="1.2"/>
+<text x="70" y="718" fill="#4f5d75" font-size="12" font-weight="500" font-family="'Geist', 'Noto Sans KR', 'Malgun Gothic', sans-serif">있음 (코드)</text>
+<rect x="165.8" y="708" width="22" height="12" rx="2" fill="rgba(191,69,32,0.04)" stroke="#bf4520" stroke-width="1.2" stroke-dasharray="4,3"/>
+<text x="195.8" y="718" fill="#4f5d75" font-size="12" font-weight="500" font-family="'Geist', 'Noto Sans KR', 'Malgun Gothic', sans-serif">계획 · 만들 것</text>
+<rect x="310.20000000000005" y="708" width="22" height="12" rx="2" fill="rgba(79,93,117,0.10)" stroke="#5a6580" stroke-width="1.2"/>
+<text x="340.20000000000005" y="718" fill="#4f5d75" font-size="12" font-weight="500" font-family="'Geist', 'Noto Sans KR', 'Malgun Gothic', sans-serif">사람 손</text>
+</svg></div>
+<div class="table-wrap"><table><thead><tr><th>하는 말</th><th>언제</th><th>근거</th><th>상태</th></tr></thead><tbody>
+<tr><td>「Battery Low, Go to Charge Right Now.」</td><td>배터리 20 % · 10 % (되풀이 간격 미정 (팀장 결정))</td><td>문구 팀장 15:4x · 값 팀장 03:14</td><td><span class="tag code">있음</span> 20 % 표시 · <code>BATTERY_LOW</code> · <span class="tag plan">계획</span> 말 · 10 %</td></tr>
+<tr><td>「Check Temperature on RR Leg.」 (RR 자리에 FR · FL · RR · RL)</td><td>그 다리 관절이 경고 60 °C 또는 위험 70 °C · reserve ≠ 0. 어느 단계에서 말할지 미정 (팀장 결정)</td><td>문구 팀장 15:4x · 값 팀장 03:14</td><td><span class="tag code">있음</span> 관절 12 온도 읽기 (거울 <code>130b6f06</code>) · <span class="tag plan">계획</span> 말 · 문턱 판정 · reserve</td></tr>
+<tr><td>「Stop Move, X.」</td><td>멈춤 (Stop) 이 걸릴 때 · 앱 서버 연결이 끊길 때</td><td>문구 팀장 15:4x · 어느 사건에 붙일지는 lead 가 연결</td><td><span class="tag wait">제안 · 팀장 결정 대기</span></td></tr>
+<tr><td>「Go Damping Mode Right Now.」</td><td>온도 위험 · 넘어짐 · 정책 이상 (사람에게 L2+B 를 누르라는 말)</td><td>문구 팀장 15:4x · 어느 사건에 붙일지는 lead 가 연결</td><td><span class="tag wait">제안 · 팀장 결정 대기</span></td></tr>
+</tbody></table></div>
+<ul>
+<li><b>배터리 남은 시간 어림.</b> 11/19 새벽 한 번 잰 빠르기 (방을 걷는 동안 약 0.86 %/분 · 서 있기만 할 때 약 0.55 %/분, <a href="GO2X-JETSON-SETUP-1119.md"><code>GO2X-JETSON-SETUP-1119.md</code></a> 8 절) 로 나누면 20 % 에서 걷기 약 23 분 · 서기 약 36 분, 10 % 에서 약 12 분 · 18 분이다. 한 번 잰 값이고 낮은 잔량에서의 빠르기는 재지 않았다. 같은 문서는 05:20 녹화에서 본체 통신이 끊긴 까닭 후보로 낮은 배터리를 적어 두었다 (미확인).</li>
+<li><b>Damp 가 마지막 길.</b> 이상하면 안전 정지 (Damp) 로 간다 (팀장). 다만 Sport 경로의 <code>Damp</code> 는 서 있던 로봇을 주저앉히므로 agent 코드가 위험 동작 (DANGEROUS) 으로 두고 확인 한 번과 선 자세를 요구한다. 그래서 화면의 Damp 버튼은 확인을 한 번 더 받고, 곁의 사람은 확인 없이 L2+B 로 건다.</li>
+<li><b>통신 끊김.</b> agent 는 입력이 0.3 s 끊기면 이미 hold + STOP 을 건다 (있음). 앱이 로봇에 못 닿는 때라 그때 말은 로봇 쪽 (Jetson · 로봇 스피커) 에서 나와야 한다. 로봇 스피커로 우리 문구를 내는 길은 미확인.</li>
+</ul>
+
+<h3>정할 것 · 미정 (팀장 결정)</h3>
+<ul>
+<li>말하는 자리: 로봇 스피커 · 폰 · 둘 다.</li>
+<li>말 알아듣는 자리: 순정 비서의 깨우는 말을 「Hey, X」 로 바꿀 수 있는지 (이민우 시험) · 안 되면 Jetson 이나 폰에서 알아듣기.</li>
+<li>다리 온도를 60 °C (경고) 에서 말할지, 70 °C (위험) 에서만 말할지.</li>
+<li>배터리 · 온도 말의 되풀이 간격, 통신이 끊긴 뒤 몇 초에 말할지.</li>
+<li>「Sit Down」 확인 말 문구와, 다음에 더할 기본 명령의 순서.</li>
+<li>온도 위험에서 저절로 Damp 할지는 업체 답 뒤 (앞 절과 같음).</li>
+</ul>
+</section>
+
 <section class="fig">
 <p class="eyebrow">망 · 어떻게 이어 붙이나</p>
 <h2>제어는 Jetson 안에서 돌고, 망은 보기 · 기록 · 목표 · 시작과 정지만 나른다</h2>
 <div class="table-wrap"><table><thead><tr><th>방식</th><th>주소 · 장치</th><th>언제</th><th>상태</th></tr></thead><tbody>
-<tr><td>랜선 직결</td><td><code>ai-lx01</code> <code>eno1</code> = <code>go2-direct</code> <code>192.168.50.1/24</code> ↔ Jetson <code>.2</code> (ping 1.1 ms · SSH 22 · NoMachine 4000 열림)</td><td>처음 설정 · 받침대 시험. 랜선은 한 번에 한 컴퓨터만 꽂는다 (컴퓨터 쪽 주소가 <code>.1</code> 하나라서)</td><td><span class="tag code">있음</span> 팀장 설정 11/19 00:50</td></tr>
-<tr><td>Jetson Wi-Fi + Tailscale</td><td>Jetson 을 tailnet 에 넣음 (숙소 <code>ai-lx01</code> · 학원 <code>ai-lt01</code> 은 이미 같은 tailnet). Tailscale 은 인터넷이 있어야 붙는다</td><td>걷는 시험 · 숙소 ↔ 학원 원격 데이터</td><td><span class="tag code">있음</span> 11/19 04:3x 팀장 설치 · 인증 · 키 만료 끔 · tailnet 이름 <code>go2x-jetson</code> · ai-lx01 에서 tailnet 으로 SSH 확인</td></tr>
+<tr><td>랜선 직결</td><td>학습 PC <code>eno1</code> = <code>go2-direct</code> <code>&lt;PC_HOST&gt;</code> ↔ Jetson <code>&lt;GO2X_JETSON_HOST&gt;</code> (실제 값은 팀 공유 .env · 저장소에 없음 · ping 1.1 ms · SSH 22 · NoMachine 4000 열림)</td><td>처음 설정 · 받침대 시험. 랜선은 한 번에 한 컴퓨터만 꽂는다 (컴퓨터 쪽 주소 <code>&lt;PC_HOST&gt;</code> 가 하나라서)</td><td><span class="tag code">있음</span> 팀장 설정 11/19 00:50</td></tr>
+<tr><td>Jetson Wi-Fi + Tailscale</td><td>Jetson 을 tailnet 에 넣음 (숙소 학습 PC · 학원 노트북은 이미 같은 tailnet). Tailscale 은 인터넷이 있어야 붙는다</td><td>걷는 시험 · 숙소 ↔ 학원 원격 데이터</td><td><span class="tag code">있음</span> 11/19 04:3x 팀장 설치 · 인증 · 키 만료 끔 · tailnet 이름 Jetson (실제 이름은 팀 공유 .env) · 학습 PC 에서 tailnet 으로 SSH 확인</td></tr>
 <tr><td>같은 Wi-Fi (학원 망)</td><td>Tailscale 없이 같은 망</td><td>학원 안</td><td><span class="tag code">있음</span> 11/17~18 실제로 함</td></tr>
 <tr><td>폰 핫스팟 (또는 휴대용 공유기)</td><td>핫스팟 하나에 Jetson · 폰 · 노트북을 같이 붙인다. 핫스팟이 인터넷을 주면 앱 서버 · Tailscale 도 된다</td><td>발표장 · 바깥 (발표장 Wi-Fi 에 기대지 않는다)</td><td><span class="tag code">있음</span> 11/19 03:5x 팀장 아이폰 핫스팟에 Jetson 등록 · 연결 확인 (5 GHz)</td></tr>
 </tbody></table></div>
@@ -608,7 +1003,7 @@ footer p { max-width: none; font-size: 0.72rem; }
 <p>누가 무엇을 했고 어떻게 다시 확인하는지는 <code>inbox/jay/20261101-app/GO2X-JETSON-SETUP-1119.md</code> 에 명령까지 적었다. 이 표는 요약이다. 지도 · 영상 · 각을 어떻게 얻었는지는 <a href="ROOM-MAP-1119.html">숙소 방 지도 페이지</a> 에 그림과 함께 있다.</p>
 <div class="table-wrap"><table><thead><tr><th>항목</th><th>누가</th><th>확인한 값</th><th>상태</th></tr></thead><tbody>
 <tr><td>CycloneDDS (ROS 2 통신 플러그인)</td><td>팀장 sudo · lead 가 패키지 받음</td><td><code>/utlidar/cloud</code> 15.4 Hz (좌표틀 <code>utlidar_lidar</code>). 기본 통신으로는 안 보이던 L2 가 보인다</td><td><span class="tag code">있음</span></td></tr>
-<tr><td>Tailscale</td><td>팀장 (설치 · 인증 · 이름)</td><td>tailnet 이름 <code>go2x-jetson</code> · 랜선 없이 SSH</td><td><span class="tag code">있음</span></td></tr>
+<tr><td>Tailscale</td><td>팀장 (설치 · 인증 · 이름)</td><td>tailnet 이름 Jetson (실제 이름은 팀 공유 .env) · 랜선 없이 SSH</td><td><span class="tag code">있음</span></td></tr>
 <tr><td>표시 화면 (RViz)</td><td>lead</td><td>색 25 Hz · 색에 맞춘 깊이 24 Hz · L2 점구름 · 관절 온도 창. <code>view_start.sh</code> · <code>view_stop.sh</code></td><td><span class="tag code">있음</span></td></tr>
 <tr><td>방 지도 1 차 (위에서 본 그림)</td><td>팀장 조이스틱으로 걷기 · lead 녹화 · 계산</td><td>11/19 04:59 녹화 · <code>/utlidar/cloud_deskewed</code> (이미 <code>odom</code> 틀) 7016 장을 그대로 쌓음 · 12.4 × 14.1 m · 걸은 길 20.75 m. SLAM 아님 (odom 을 고치지 않음 · 고리 닫기 없음). <a href="ROOM-MAP-1119.html#map">만든 법 · 지도 보기</a></td><td><span class="tag code">있음</span> 11/19 05:19</td></tr>
 <tr><td>D435i 색 · 깊이 영상</td><td>팀장 걷기 · lead 녹화</td><td>11/19 05:20 녹화 330 초 · 앉음 → 섬 → 방 한 바퀴. <a href="../20261117-go2-x-sim-match-checklist-assets/20261119-0520-room-walk-full/color_full_web.mp4">색 영상</a> · <a href="../20261117-go2-x-sim-match-checklist-assets/20261119-0520-room-walk-full/depth_full_web.mp4">깊이 영상</a> · <a href="ROOM-MAP-1119.html#video">페이지에서 보기</a></td><td><span class="tag code">있음</span></td></tr>
@@ -645,6 +1040,12 @@ footer p { max-width: none; font-size: 0.72rem; }
 <tr><td>모바일</td><td>Capacitor Android 1.2.3-dev · iOS 빌드 없음</td><td><span class="grade">코드</span></td><td><code>mobile/android/app/build.gradle:11 · 29</code> · 코드 지도</td></tr>
 <tr><td>저수준 실행기 자리</td><td>foothold-app <code>apps/agent</code> 안 (ONNX 실행 + LowCmd + contract 어댑터)</td><td><span class="grade">결정 · 승인</span></td><td>결정 기록 1 절 (팀장 11/19 01:27) · 저장소 역할 v1.2 1 절</td></tr>
 <tr><td>모드 관리자 · 멈춤 말</td><td>Sport · 저수준 정책 · 안전 정지 · 바꾸는 순서 · 멈춤 / 안전 정지</td><td><span class="grade">제안</span></td><td>결정 기록 3 · 4 · 5 절</td></tr>
+<tr><td>음성 시험</td><td>순정 깨우는 말 <code>Hey, BenBen</code> → 「I am here」 · 그 밖 순정 대답 (이민우 · 11/19). 목표 <code>Hey, X</code> · <code>Sit Down</code></td><td><span class="grade">기록</span></td><td>팀장 11/19 15:4x 채팅 (lead 가 재지 않음)</td></tr>
+<tr><td>앱 음성 코드</td><td>없음 (<code>voice</code> · <code>audio</code> · <code>tts</code> · <code>speak</code> · <code>speech</code> 검색에 음성 기능 0)</td><td><span class="grade">코드</span></td><td>거울 <code>130b6f06</code> <code>apps</code> · <code>mobile</code> (.py · .ts · .tsx · .js)</td></tr>
+<tr><td>Go2 동작 목록</td><td><code>Sit</code> · <code>StandUp</code> · <code>StandDown</code> · <code>StopMove</code> · <code>Damp</code> · <code>Hello</code> 등. <code>Damp</code> 는 DANGEROUS (확인 · 선 자세 필요). lease 없음 · 움직이는 중이면 거절</td><td><span class="grade">코드</span></td><td><code>go2_direct/actions.py:10 · 12 · 72-76</code> (거울 <code>130b6f06</code> · 10 · 12 행은 <code>89d2a221</code> 도 같음)</td></tr>
+<tr><td>알림 코드</td><td><code>BATTERY_LOW</code> (잔량 &lt; <code>battery_low_pct</code>) · <code>STOP_PRESSED</code> · <code>SERVER_LINK_LOST</code> · <code>LINK_LOSS_TIMEOUT</code> 이 SAFETY 분류</td><td><span class="grade">코드</span></td><td><code>fh_server/robots.py:92-93</code> · <code>fh_server/event_messages.py:162</code> (거울 <code>130b6f06</code>)</td></tr>
+<tr><td>관절 온도 읽기</td><td>관절 12 · 배터리 4 · IMU · 몸 2 온도를 상태에 실음 (표시 전용 · STOP · lease 입력 아님). reserve 와 문턱 판정은 없음</td><td><span class="grade">코드</span></td><td><code>apps/contracts/models.py:345-365</code> · <code>go2_readonly/state.py:30-44</code> (거울 <code>130b6f06</code> · <code>89d2a221</code> 에는 없음)</td></tr>
+<tr><td>배터리 빠르기</td><td>걷기 약 0.86 %/분 · 서기 약 0.55 %/분 (11/19 새벽 한 번) · 20 % 에서 약 23 · 36 분은 이것으로 나눈 어림</td><td><span class="grade">기록</span></td><td><code>GO2X-JETSON-SETUP-1119.md</code> 8 절</td></tr>
 <tr><td>앱 네 모드 설계</td><td>① 순정 · ② AME-2 · ③ START + HiPAN · ④ 시뮬만</td><td><span class="grade">결정 · 승인</span></td><td>결정 기록 2 절 (팀장 11/19 00:21)</td></tr>
 </tbody></table></div>
 </section>
@@ -660,6 +1061,9 @@ footer p { max-width: none; font-size: 0.72rem; }
 <li>Jetson 위 agent 실행 (앱 문서가 미검증이라 적고, 11/19 에는 서비스가 failed).</li>
 <li>NaverCloud 서버 · DB 가 누구 계정인지 (팀 계정으로 옮기기를 권함).</li>
 <li>실기 연결의 왕복 지연 · 수신 주기 (이번에 재지 않음).</li>
+<li>순정 음성 비서가 움직이는 명령을 받을 때 agent 의 lease · STOP 을 거치는지 (거치지 않으면 앱 밖에서 로봇이 움직인다).</li>
+<li>순정 깨우는 말을 「Hey, X」 로 바꿀 수 있는지 · 로봇 스피커로 우리 문구를 내는 길 (이민우 시험).</li>
+<li>시끄러운 곳 (발표장 · 학원) 에서 알아듣는 비율 · 말이 나오기까지 걸리는 시간.</li>
 </ul>
 </section>
 

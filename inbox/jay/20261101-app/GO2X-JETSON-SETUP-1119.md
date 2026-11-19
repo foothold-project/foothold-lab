@@ -2,7 +2,7 @@
 작성: Claude 세션 (오흥재 지시, lead-lx)
 근거: 팀장 11/19 00:50~04:57 채팅 · Jetson 에서 lead 가 SSH 로 잰 값 · 원장 decisions.tsv 11/19 03:51 · 04:35 줄 · 이슈 #861
 요지: 11/19 새벽 Jetson 에 무엇을 누가 설치 · 설정했고, 무엇을 어떻게 확인했는지. 다음 사람 (사람 · agent) 이 같은 상태를 다시 확인하고 이어 가는 데 쓴다
-상태: 2026-11-19 06:2x 기준 · 설치 셋 확인 끝 · 녹화 셋 회수 끝 (sha 대조) · 카메라 각도 계산 중 · 다음 세션은 학원 ai-lt01 (8 절)
+상태: 2026-11-19 06:2x 기준 · 설치 셋 확인 끝 · 녹화 셋 회수 끝 (sha 대조) · 카메라 각도 계산 중 · 다음 세션은 학원 노트북 (8 절)
 
 # Go2 X Jetson 설치 · 확인 기록 (11/19)
 
@@ -12,13 +12,13 @@
 
 | 항목 | 누가 | 상태 | 확인 방법 |
 |---|---|---|---|
-| 직결 랜선 (ai-lx01 ↔ Jetson) | 팀장 (11/19 00:50) | 됨 | `ssh` 직결 주소 · ping |
+| 직결 랜선 (학습 PC ↔ Jetson) | 팀장 (11/19 00:50) | 됨 | `ssh` 직결 주소 · ping |
 | SSH 키 (기기마다 따로) | 팀장 · lead | 됨 | 공개키만 Jetson 에 더함 |
 | Wi-Fi (집 Trust_YourSelf · 아이폰 핫스팟 · 학원 둘) | 팀장 | 저장됨 · 집 Wi-Fi 에 붙음 | `nmcli -t -f NAME,TYPE con show` |
 | 시간대 Asia/Seoul | 팀장 (03:58) | 됨 | `timedatectl` |
 | Wi-Fi 무선 다시 켬 | 팀장 (04:2x) | 됨 | `nmcli radio` |
 | CycloneDDS (ROS 2 통신 플러그인) | 팀장 sudo · lead 가 패키지 받음 | 됨 | 2 절 |
-| Tailscale | 팀장 sudo · 인증 · 키 만료 끔 · 이름 바꿈 | 됨 · tailnet 이름 `go2x-jetson` | 3 절 |
+| Tailscale | 팀장 sudo · 인증 · 키 만료 끔 · 이름 바꿈 | 됨 · tailnet 이름 `<GO2X_JETSON_HOST>` (실제 값은 팀 공유 .env · 저장소에 없음) | 3 절 |
 | 표시 화면 (카메라 색 · 정렬 깊이 · L2 점구름 · RViz) | lead | 됨 | 4 절 |
 | 방 지도 녹화 (L2 + odom) | lead 가 기록만 켬 · 걷기는 팀장 조이스틱 | 녹화 중 (05:00~05:25) | 5 절 |
 
@@ -48,11 +48,11 @@
 
 ## 3. Tailscale (집 ↔ 학원 · 랜선 없이 접속)
 
-- 한 일 (팀장): 설치 스크립트로 저장소 등록 (마지막 apt 설치 단계는 1 절 까닭으로 실패) → `apt-get download tailscale` → `sudo dpkg -i tailscale_*.deb` → `sudo systemctl enable --now tailscaled` → `sudo tailscale up` 이 낸 링크를 ai-lx01 브라우저에서 열어 인증 → 관리 화면에서 키 만료 끔 → tailnet 이름만 `go2x-jetson` 으로 바꿈 (시스템 이름 `tegra-ubuntu` 는 그대로).
+- 한 일 (팀장): 설치 스크립트로 저장소 등록 (마지막 apt 설치 단계는 1 절 까닭으로 실패) → `apt-get download tailscale` → `sudo dpkg -i tailscale_*.deb` → `sudo systemctl enable --now tailscaled` → `sudo tailscale up` 이 낸 링크를 학습 PC 브라우저에서 열어 인증 → 관리 화면에서 키 만료 끔 → tailnet 이름만 `<GO2X_JETSON_HOST>` 로 바꿈 (시스템 이름 `tegra-ubuntu` 는 그대로).
 - Jetson 에 브라우저는 필요 없다 (인증 링크는 아무 기기에서 연다).
-- 확인 (lead 04:3x): `tailscale 1.104.7` · `tailscaled` enabled · active · tailnet 에 ai-lx01 · ai-lt01 · NAS 와 같이 보임 · ai-lx01 에서 tailnet 주소로 SSH 됨 (호스트 키가 직결 주소의 키와 같은 것을 확인한 뒤 등록).
+- 확인 (lead 04:3x): `tailscale 1.104.7` · `tailscaled` enabled · active · tailnet 에 학습 PC · 노트북 · NAS 와 같이 보임 · 학습 PC 에서 tailnet 주소로 SSH 됨 (호스트 키가 직결 주소의 키와 같은 것을 확인한 뒤 등록).
 
-다시 확인: Jetson 에서 `tailscale status` · 다른 기기에서 `ssh nvidia@go2x-jetson` (MagicDNS 를 켠 경우) 또는 tailnet 주소.
+다시 확인: Jetson 에서 `tailscale status` · 다른 기기에서 `ssh nvidia@<GO2X_JETSON_HOST>` (MagicDNS 를 켠 경우) 또는 tailnet 주소.
 
 ## 4. 표시 화면 (Jetson 모니터 · NoMachine)
 
@@ -68,7 +68,7 @@
 - Unitree 자체 SLAM (`/uslam/*` · `/api/slam_operate`) 도 있으나 켜는 것은 로봇 API 요청이라 팀장 동의 뒤. 지금은 안 켰다 (토픽 0 Hz).
 - 녹화 (lead · 읽기 전용 · 로봇에 명령 없음): `bash ~/go2_diag/viewer/walk_record.sh <초>` → `~/go2_diag/records/<시각>-room-walk/` 에 `monitor.csv` (온도 · 배터리) · `bag/` (cloud_deskewed · robot_odom · imu · tf). 약 4.7 MB/초.
 - 11/19 05:00 녹화 시작 시 배터리 27 % · 가장 뜨거운 관절 54 °C (RR calf · 서 있는 상태) · reserve 0.
-- 지도 만들기 (다음): 녹화를 ai-lx01 로 옮겨 점을 쌓고 높이로 잘라 위에서 본 그림 (바닥 · 벽 · 가구) 으로 그린다.
+- 지도 만들기 (다음): 녹화를 학습 PC 로 옮겨 점을 쌓고 높이로 잘라 위에서 본 그림 (바닥 · 벽 · 가구) 으로 그린다.
 
 ## 6. 망 바꾸기 (랜선 뺄 때)
 
@@ -77,9 +77,9 @@
 - `Go2_<번호>` Wi-Fi 는 Go2 본체가 내보내는 것 (휴대폰 Unitree 앱용). Jetson 은 붙이지 않는다.
 - 아이폰 핫스팟 이름의 따옴표는 굽은 따옴표 (’) 라 명령으로 치면 「없는 이름」 이 된다. 아이콘으로 고르거나 `nmcli dev wifi list` 에서 복사.
 
-## 7. 11/19 새벽 녹화 · 측정 (전부 ai-lx01 로 회수 · 체크섬 대조 0 차이)
+## 7. 11/19 새벽 녹화 · 측정 (전부 학습 PC 로 회수 · 체크섬 대조 0 차이)
 
-원본 (Jetson): `~/go2_diag/records/<폴더>` · 우리 저장 (ai-lx01): `/home/jay/data/go2x_raw/jetson_go2_diag/records/<폴더>` (Jetson `~/go2_diag` 전체 미러 9.7 GB · librealsense 소스만 뺌 · 06:0x `rsync --checksum` 다시 대조 0 차이). 녹화 bag 은 rosbag2 sqlite (`bag/bag_0.db3`) 라 그대로는 영상이 아니다. ROS 2 가 없는 컴퓨터는 `/home/jay/data/go2x_raw/.venv-rosbags` (rosbags · numpy · matplotlib) 로 읽는다.
+원본 (Jetson): `~/go2_diag/records/<폴더>` · 우리 저장 (학습 PC): `/home/jay/data/go2x_raw/jetson_go2_diag/records/<폴더>` (Jetson `~/go2_diag` 전체 미러 9.7 GB · librealsense 소스만 뺌 · 06:0x `rsync --checksum` 다시 대조 0 차이). 녹화 bag 은 rosbag2 sqlite (`bag/bag_0.db3`) 라 그대로는 영상이 아니다. ROS 2 가 없는 컴퓨터는 `/home/jay/data/go2x_raw/.venv-rosbags` (rosbags · numpy · matplotlib) 로 읽는다.
 
 | 폴더 | 언제 · 무엇 | 담긴 것 | 결과물 |
 |---|---|---|---|
@@ -94,7 +94,7 @@
 - `/sportmodestate` · `/tf` 는 녹화 목록에 넣었지만 bag 에 안 들어갔다 (토픽 표에 없음 · 까닭 미확인). 몸 높이는 monitor.csv 의 `body_height` 를 쓴다.
 - 방 지도 1 차는 SLAM 이 아니다: Go2 odom 을 그대로 믿고 점을 쌓았다 (고리 닫기 없음 · 벽 두 겹 일부).
 
-## 8. 아직 안 한 측정 · 다음 세션 (학원 ai-lt01) 순서
+## 8. 아직 안 한 측정 · 다음 세션 (학원 노트북) 순서
 
 전제: 로봇 충전 · 서기 전 장시간 감시 먼저 (`full_record.sh` 가 감시를 같이 켬) · 로봇 명령은 팀장 조이스틱 또는 팀장 동의.
 
