@@ -46,6 +46,17 @@ def _lv_key(level: int) -> str:
     return LV_KEYS[min(max(int(level), 1), 3) - 1]
 
 
+LVF_KEYS = ("l3", "l4", "l5", "l6p")  # 수준 3 이상을 한 칸으로 묶으면 「수준이 쌓인 것」 과 「같은 수준에서 떨어진 것」 을 못 가른다 (11/19 1000 회 판): 3 · 4 · 5 · 6 이상을 따로 더 적는다 (옛 칸 l1 · l2 · l3p 는 그대로)
+
+
+def _lv_arrays(st, level: int) -> list:
+    """이 수준의 통계 칸들: 옛 칸 (l1 · l2 · l3p) 하나 + 수준 3 이상이면 세분 칸 (l3 · l4 · l5 · l6p) 하나."""
+    out = [st["lv"][_lv_key(level)]]
+    if int(level) >= 3:
+        out.append(st["lvf"][LVF_KEYS[min(int(level), 6) - 3]])
+    return out
+
+
 SAME_START_M = 0.05                  # 리셋 뒤 몸이 과제 시작 자리에서 이만큼 안이면 같은 과제를 그대로 (길을 다시 내지 않음)
 EPISODE_SPEED_MPS, EPISODE_EXTRA_S = 0.3, 10.0   # 에피소드 길이 = 경로 길이 / 0.3 + 10 초 (planner 03:57 가정)
 
@@ -231,7 +242,7 @@ class NavTask:
             self._st = {"ticks": 0, "sub_reached": 0, "lvl": np.zeros(3), "r": {}, "vcmd": 0.0, "vbody": 0.0, "stand": 0.0,
                         "eps": 0, "cos": 0.0, "cos_n": 0, "cosd": 0.0, "cosd_n": 0, "cosa": np.zeros(3), "cosa_n": np.zeros(3, dtype=np.int64), "yerr": 0.0, "yok": 0, "yn": 0, "prog": 0.0, "dsub0": 0.0, "dsub1": 0.0, "plen": 0.0, "ep_ticks": 0.0,
                         "out": {"hold": 0, "level_up": 0, "final_success": 0, "new_task": 0},
-                        "lv": {k: np.zeros(7) for k in LV_KEYS}}     # 수준별 (l1 · l2 · l3p): [eps, prog, dend, succ, sub_reached, cos, cos_n]
+                        "lv": {k: np.zeros(7) for k in LV_KEYS}, "lvf": {k: np.zeros(7) for k in LVF_KEYS}}     # 수준별 (l1 · l2 · l3p): [eps, prog, dend, succ, sub_reached, cos, cos_n]
         if getattr(self, "_ep_n", None) is None:
             self._ep_n = np.zeros(self.n, dtype=np.int64)
             self._pos_prev = np.full((self.n, 2), np.nan)
@@ -247,11 +258,14 @@ class NavTask:
         self._dmin[i] = np.inf
         st["prog"] += p._i / len(p._sub)
         tgt = p._sub[min(p._i, len(p._sub) - 1)].point
-        lv = st["lv"][_lv_key(p.level)]
-        lv[0] += 1; lv[1] += p._i / len(p._sub); lv[3] += float(p.all_reached)
+        arrs = _lv_arrays(st, p.level)
+        for lv in arrs:
+            lv[0] += 1; lv[1] += p._i / len(p._sub); lv[3] += float(p.all_reached)
         if not np.isnan(self._pos_prev[i, 0]):
-            st["dsub1"] += float(np.linalg.norm(self._pos_prev[i] - np.asarray(tgt)))
-            lv[2] += float(np.linalg.norm(self._pos_prev[i] - np.asarray(tgt)))
+            dist = float(np.linalg.norm(self._pos_prev[i] - np.asarray(tgt)))
+            st["dsub1"] += dist
+            for lv in arrs:
+                lv[2] += dist
         st["ep_ticks"] += float(self._ep_n[i])
 
     def _note_outcome(self, name: str) -> None:
@@ -294,7 +308,7 @@ class NavTask:
         out["nv_yaw_err_deg"] = st["yerr"] / st["yn"] if st["yn"] else -1.0            # 해석 yaw 대 (위치 변화 방향 - 몸 속도 방향) 의 절대 차 평균 (도). 쿼터니언 순서가 맞으면 작다
         out["nv_yaw_ok_frac"] = st["yok"] / st["yn"] if st["yn"] else -1.0             # 그 차가 30 도 안인 비율
         out["nv_yaw_n"] = st["yn"]
-        for k, (n_e, prog, dend, succ, subr, cos, cos_n) in ((k, st["lv"][k]) for k in LV_KEYS):   # 수준별 (읽기만): 에피소드가 없으면 -1
+        for k, (n_e, prog, dend, succ, subr, cos, cos_n) in [(k, st["lv"][k]) for k in LV_KEYS] + [(k, st["lvf"][k]) for k in LVF_KEYS]:   # 수준별 (읽기만): 에피소드가 없으면 -1
             out[f"nv_eps_{k}"] = int(n_e); out[f"nv_sub_reached_{k}"] = int(subr); out[f"nv_cos_n_{k}"] = int(cos_n)
             out[f"nv_prog_{k}"] = prog / n_e if n_e else -1.0
             out[f"nv_dend_{k}"] = dend / n_e if n_e else -1.0
@@ -445,7 +459,8 @@ class NavTask:
         terms = dict(terms)
         terms["r1"] = rewards_hl.WEIGHTS["r1"] * passed.astype(np.float64)
         for i in np.nonzero(passed)[0]:
-            st["lv"][_lv_key(self.pgcl[i].level)][4] += int(passed[i])
+            for lv in _lv_arrays(st, self.pgcl[i].level):
+                lv[4] += int(passed[i])
         if self.shape_w:
             terms["r_shape"] = self._shape_reward(pos_room[:, :2], i_now=np.array([p._i for p in self.pgcl]))
         total = sum(terms.values())
@@ -503,8 +518,8 @@ class NavTask:
             st["cos"] += float(cc[ok].sum())
             st["cos_n"] += int(ok.sum())
             for i in np.nonzero(ok)[0]:
-                a = st["lv"][_lv_key(self.pgcl[i].level)]
-                a[5] += float(cc[i]); a[6] += 1
+                for a in _lv_arrays(st, self.pgcl[i].level):
+                    a[5] += float(cc[i]); a[6] += 1
 
     QUAT_CHECK_TICKS = 50          # 처음 이 틱 수 동안 env 0 의 쿼터니언 · yaw 점검 줄을 찍는다 (QUAT_CHECK)
     YAW_TOL_DEG = 30.0
