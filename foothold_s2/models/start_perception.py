@@ -453,6 +453,20 @@ class StartPerception(nn.Module):
         return torch.cat([z, out["v"], out["zf"], out["zb"]], -1)
 
     @torch.no_grad()
+    def step_pair(self, st: PerceptionState, inp: dict[str, torch.Tensor], gt_map: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
+        """EX42_ACTOR_MIRROR_ZMEAN: one advance, two estimates: (est as step() gives it, est with z at its mean). The hidden state does not depend on the sample,
+        so the first is bit-identical to step() (same single randn draw) and the second is what step(deterministic=True) would give from the same state."""
+        st.h_prop, st.h_terr, out = self._advance(
+            st.h_prop, st.h_terr, inp["hist"], inp["depth2"], inp["tick"], inp["first"], st.use_gt, gt_map, *self._off_args(st.map_off)
+        )
+        rest = torch.cat([out["v"], out["zf"], out["zb"]], -1)
+        if self.cfg.sample_latent_in_rollout:
+            z = out["mu"] + torch.randn_like(out["mu"]) * torch.exp(0.5 * out["logvar"])
+        else:
+            z = out["mu"]
+        return torch.cat([z, rest], -1), torch.cat([out["mu"], rest], -1)
+
+    @torch.no_grad()
     def est_sequence(self, batch: dict[str, torch.Tensor], eps: torch.Tensor) -> torch.Tensor:
         """저장된 rollout 시퀀스에서 est (T, B, 51) 를 다시 계산한다(gradient 없음). 고정된 eps 로 z 를 표집하므로 phi 전 · 후를 같은 잡음으로 견줄 수 있다.
         sequence_loss(loop) 와 같은 _advance 경로를 지난다 (X6 KL 기록용)."""
