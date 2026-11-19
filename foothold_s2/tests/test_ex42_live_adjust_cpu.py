@@ -24,6 +24,7 @@ class Manager:
             "ex41_zero_yaw": SimpleNamespace(weight=-1., params={}),
             "ex42_slow_track": SimpleNamespace(weight=0., params={"sigma": .5, "speed_min": .1, "speed_max": .3}),
             "ex42_slow_progress": SimpleNamespace(weight=0., params={}),
+            "ex42_slow_overspeed": SimpleNamespace(weight=0., params={}),
         }
 
     def get_term_cfg(self, name):
