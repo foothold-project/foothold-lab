@@ -1,5 +1,5 @@
 > 분류: B/앱 · ame2-m27001 앱용 묶음 (앱은 이 폴더 하나만 본다 · 앱 시뮬용 teacher · 실기 아님)
-> 작성: Claude 세션 (오흥재 지시, go2-lx) · 2026-11-19 17:0x v0.1
+> 작성: Claude 세션 (오흥재 지시, go2-lx) · 2026-11-19 16:4x v0.1
 > 근거: 원본 제출 `inbox/lim/20261103-policy-handoff/ame2-m27001/` (석헌 님 PR #878 · 가지 `inbox-lim-ame2-m16999` 머리 4f5db23a) · 팀장 11/19 15:34 「AME-2 27000 정책 정본 우선 채택」 · 16:35 「#878 규격 확인 · 빠진 것은 보완」 (lead-lx 전달) · 꼴은 `../ame2-demo-app/` (#574 뒤 lead 보완 판)
 > 요지: 석헌 님 묶음 여덟 파일을 바이트 그대로 복사해 앱용 폴더를 만들었다. 이번에는 앞 판에서 lead 가 더했던 두 파일 (`test_vectors_flat20.json` · `app_onnx.json`) 이 원본에 이미 있어 새로 만든 파일은 이 README 와 `SHA256SUMS` 뿐이다. ONNX · 계약 · 정답 값은 바꾸지 않았다
 > 상태: v0.1 · 원본 SHA256SUMS 로 대조 OK · 앱 적용 · 브라우저 ORT 는 미확인 (`CONTRACT.md` §7a)
@@ -33,6 +33,6 @@
 
 ## 확인
 
-- 원본 `SHA256SUMS` 로 이 폴더의 복사 여덟 파일 대조 OK (cmp 로 원본과 바이트 같음도 확인) (11/19 17:0x). 원본 PR 의 SHA256SUMS 는 원본 폴더의 다른 모든 파일 21 개를 담고 모두 OK.
+- 원본 `SHA256SUMS` 로 이 폴더의 복사 여덟 파일 대조 OK (cmp 로 원본과 바이트 같음도 확인) (11/19 16:4x). 원본 PR 의 SHA256SUMS 는 원본 폴더의 다른 모든 파일 21 개를 담고 모두 OK.
 - ONNX sha256 `2f7a8b18e8a3cc89ab5975836fff4870165df5c5bb8102ac823b56fe75b472ce` 가 `contract.json` · `app_onnx.json` · `SHA256SUMS` 셋에 같게 적혀 있음.
 - 미확인: 이 보완 세션이 onnxruntime 으로 시험 벡터를 다시 돌려 보지는 않았다 (이 기기에 onnxruntime 없음) · 정해질 때까지 원본 `parity.json` 과 PR #878 의 값 (CPU 2.9e-6 · WASM 3.1e-6 · 앱 방식 Node 1.5e-6) 을 쓴다.
