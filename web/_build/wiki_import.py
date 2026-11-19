@@ -233,6 +233,98 @@ def _kat_strip():
     return True
 
 
+# ★ 2026-11-19 팀장 20:44 「Go2 기본 내부망 한 줄 지워」. wiki 원문 (오현민) 은
+#   그대로 두고 우리 이식본에서만 사설 대역 주소가 든 «그 문장 하나» 를 지운다.
+#   그 문장이 목록 항목 · 문단 전부면 그 항목 하나를 지운다. 이웃 문장은 둔다.
+#   꼴: 192.168.*.* · 10.*.*.* · 172.16~31.*.* (자리마다 숫자 또는 x).
+PRIV_ADDR = re.compile(
+    r'(?<![\w.])(?:192\.168(?:\.(?:\d{1,3}|x)){2}'
+    r'|10(?:\.(?:\d{1,3}|x)){3}'
+    r'|172\.(?:1[6-9]|2\d|3[01])(?:\.(?:\d{1,3}|x)){2})(?![\w]|\.(?:\d|x))')
+_BLOCK = re.compile(r'<(li|p|td|th|dd|dt)\b[^>]*>', re.I)
+# 문장 끝: 태그 밖의 마침표 뒤 공백. 「24.04」 처럼 숫자 사이 점은 끝이 아니다.
+_SENT_END = re.compile(r'\.(?=\s)')
+
+
+def _sentence_spans(content):
+    """블록 안쪽 HTML 을 문장 구간 [(시작, 끝)] 으로. 태그 안의 점은 세지 않는다."""
+    ends, depth = [], 0
+    for i, ch in enumerate(content):
+        if ch == '<':
+            depth += 1
+        elif ch == '>':
+            depth = max(0, depth - 1)
+        elif ch == '.' and depth == 0 and _SENT_END.match(content, i):
+            ends.append(i + 1)
+    spans, s = [], 0
+    for e in ends:
+        spans.append((s, e))
+        s = e
+    if content[s:].strip():
+        spans.append((s, len(content)))
+    return spans
+
+
+def redact_private(body):
+    """사설 대역 주소가 든 문장을 지운다 -> (본문, 지운 문장 글자들, 못 지운 수)."""
+    removed = []
+    while True:
+        m = PRIV_ADDR.search(body)
+        if not m:
+            return body, removed, 0
+        opens = [b for b in _BLOCK.finditer(body, 0, m.start())]
+        if not opens:
+            return body, removed, len(PRIV_ADDR.findall(body))
+        bo = opens[-1]
+        close = re.compile(r'</%s\s*>' % bo.group(1), re.I).search(body, m.end())
+        if not close or re.search(r'<%s\b' % bo.group(1), body[bo.end():m.start()], re.I):
+            return body, removed, len(PRIV_ADDR.findall(body))
+        c0, c1 = bo.end(), close.start()
+        content = body[c0:c1]
+        at = m.start() - c0
+        s, e = next(((s, e) for s, e in _sentence_spans(content) if s <= at < e),
+                    (0, len(content)))
+        rest = (content[:s] + content[e:]).strip()
+        if not re.sub(r'<[^>]+>', '', rest).strip():
+            # 블록 전체가 그 문장 하나다 -> 그 항목 하나를 지운다 (뒤 줄바꿈까지)
+            tail = re.match(r'[ \t]*\n?', body[close.end():]).end()
+            removed.append(re.sub(r'\s+', ' ', re.sub(r'<[^>]+>', '', content)).strip())
+            body = body[:bo.start()] + body[close.end() + tail:]
+        else:
+            removed.append(re.sub(r'\s+', ' ',
+                                  re.sub(r'<[^>]+>', '', content[s:e])).strip())
+            lead = content[:s]
+            # 지운 문장은 앞 공백을 품고 있다. 뒤 문장의 앞 공백이 자리를 잇는다.
+            body = body[:c0] + (lead + content[e:] if lead.strip()
+                                else content[e:].lstrip()) + body[c1:]
+
+
+def _kat_redact():
+    """지워야 할 꼴 · 지우면 안 되는 꼴 둘 다로 먼저 시험한다."""
+    src = ('<ul>\n<li>배포판 Ubuntu 24.04 + Jazzy. 이더넷 직결 시 <code>192.168.123.x</code>, '
+           '<code>RMW=cyclonedds</code>. 커뮤니티 자료는 Humble 기준.</li>\n'
+           '<li>내부 망은 10.0.0.5 다.</li>\n<li>남는 항목ZZ.</li>\n</ul>\n'
+           '<p>앞 문장ZZ. 주소 172.20.1.x 로 붙는다.</p>\n')
+    out, rm, left = redact_private(src)
+    if left or len(rm) != 3 or PRIV_ADDR.search(out):
+        return False
+    for keep in ('배포판 Ubuntu 24.04 + Jazzy. 커뮤니티 자료는 Humble 기준.</li>',
+                 '<li>남는 항목ZZ.</li>', '<p>앞 문장ZZ.</p>'):
+        if keep not in out:
+            return False
+    if '10.0.0.5' in out or '<li>내부' in out or 'RMW=' in out:
+        return False
+    # 지우면 안 되는 꼴: 공인 주소 · 사설 밖 대역 · 버전 번호 · 세 자리 수
+    for safe in ('8.8.8.8', '192.169.1.1', '172.32.0.1', '172.15.0.1',
+                 'v1.10.0.1', 'Ubuntu 24.04', '10.2.1', '2.10.0.5'):
+        if PRIV_ADDR.search(safe):
+            return False
+        t = '<p>값은 %s 이다. 다음 문장.</p>' % safe
+        if redact_private(t) != (t, [], 0):
+            return False
+    return True
+
+
 def fetch(name):
     os.makedirs(CACHE, exist_ok=True)
     p = os.path.join(CACHE, name)
@@ -435,6 +527,10 @@ def main():
     if not _kat_strip():
         print('  [!] 자기시험 실패: wiki 띠·푸터 걷개가 알려진 꼴을 못 걷는다')
         return False
+    if not _kat_redact():
+        print('  [!] 자기시험 실패: 사설 대역 문장 지우개가 알려진 꼴에서 틀린다')
+        return False
+    n_priv = 0
     css, skipped = style()
     made = []
     for src, dst, title, lede in PAGES:
@@ -450,6 +546,17 @@ def main():
             print('  [!] %s: wiki 띠·푸터 %d개가 안 지워졌다. 이식 중단'
                   % (src, _left))
             continue
+        # 사설 대역 주소가 든 문장을 지운다 (팀장 11/19 20:44). 못 지우면 이식하지 않는다.
+        body, _gone, _priv = redact_private(body)
+        if _gone:
+            # 지운 글자는 로그에 내지 않는다 (주소를 다시 찍게 된다). 수와 글자 수만.
+            print('  %s: 사설 대역 주소가 든 문장 %d개 지움 (%s자)'
+                  % (src, len(_gone), ' · '.join(str(len(x)) for x in _gone)))
+        if _priv:
+            print('  [!] %s: 사설 대역 주소 %d개를 문장 단위로 못 지웠다. 이식 중단'
+                  % (src, _priv))
+            continue
+        n_priv += len(_gone)
 
         # 원문 링크는 wiki 내부 상호참조 -> 이식된 이름으로 바꾼다
         for s2, d2, _t2, _l2 in PAGES:
@@ -546,6 +653,7 @@ def main():
     print('  wiki 이식 %d쪽 (겉 규칙 %d개 제거): %s'
           % (len(made), skipped,
              ' · '.join('%s %d절' % (t, n) for _d, t, n in made)))
+    print('  사설 대역 주소가 든 문장 %d개 지움 (wiki 원문은 그대로)' % n_priv)
     return True
 
 
