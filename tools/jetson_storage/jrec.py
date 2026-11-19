@@ -14,6 +14,7 @@ import datetime as dt
 import hashlib
 import json
 import os
+import re
 import shutil
 import signal
 import subprocess
@@ -86,8 +87,12 @@ def main(argv=None):
         return 2
     print('free %.1f GB · about %d min of full-profile recording before the %d GB stop'
           % (free0, (free0 - STOP_MIN_GB) * 1000 / RATE_MB_S / 60, STOP_MIN_GB))
-    out = os.path.join(a.root, dt.datetime.now().strftime('%Y%m%d-%H%M') + '-' + a.name)
-    os.makedirs(out)
+    stamp = '' if re.match(r'^\d{8}-\d{4}-', a.name) else dt.datetime.now().strftime('%Y%m%d-%H%M') + '-'
+    out = os.path.join(a.root, stamp + a.name)   # a name that already starts with YYYYMMDD-HHMM- is used as is
+    os.makedirs(out, exist_ok=True)
+    if os.path.exists(os.path.join(out, 'bag')):
+        print('refused: %s/bag already exists' % out)
+        return 2
     args = ['-o', os.path.join(out, 'bag')]
     if a.zstd:
         args += ['--compression-mode', 'file', '--compression-format', 'zstd']

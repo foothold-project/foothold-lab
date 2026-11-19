@@ -41,7 +41,7 @@ SSH_N = SSH + ['-i', NAS_KEY, NAS]
 LIST = r'''
 import hashlib, json, os, subprocess, time
 root = os.path.expanduser('~/%s')
-procs = subprocess.run(['pgrep', '-af', 'ros2 bag record|jrec.py'], capture_output=True, text=True).stdout
+procs = subprocess.run(['pgrep', '-af', 'ros2 bag record|jrec.py|academy_1119'], capture_output=True, text=True).stdout
 st = os.statvfs(root)
 out = dict(free_gb=st.f_bavail * st.f_frsize / 1e9, folders=[])
 for name in sorted(os.listdir(root)):
@@ -174,6 +174,14 @@ def write_status(listing, log):
 
 
 def sync():
+    import fcntl
+    os.makedirs(STATE, exist_ok=True)
+    lock = open(os.path.join(STATE, 'sync.lock'), 'w')
+    try:
+        fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)   # the timer and a manual run never copy at once
+    except OSError:
+        print('another sync is running')
+        return 0
     listing, log = jetson_list(), []
     if listing:
         for f in listing['folders']:
