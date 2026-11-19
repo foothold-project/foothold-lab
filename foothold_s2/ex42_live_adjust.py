@@ -343,6 +343,10 @@ class LiveAdjustment:
             apply_values(self.runtime, self.expected["values"])
             if live_values(self.runtime, self.expected["values"]) != self.expected["values"]:
                 raise RuntimeError("EX-42 live adjustment resume readback differs")
+            # the segment readback line (EX42_SEGMENT_REWARDS_READBACK) shows the plan value, written before this restore;
+            # this line is the live state after it (2026-11-19: a resume was misread as losing slow_progress 0.6)
+            print("EX42_LIVE_RESTORE " + json.dumps({"rank": self.rank, "receipt_iteration": last["iteration"],
+                                                     "values": self.expected["values"]}, sort_keys=True), flush=True)
 
     def _validate_past(self, raw, iteration):
         doc = json.loads(raw.decode("utf-8"))
