@@ -1,10 +1,10 @@
 > 분류: 가이드
-> 작성: 임석헌 · 2026-11-19 13:40
-> 근거: 이 폴더의 파일은 묶음 `ame2-demo-m16999` 를 만들 때 실제로 실행한 파일 그대로다(팟 1 `/root/onnx_pp1/` 사본과 md5 대조, 아래 표). 저자 코드 [leggedrobotics/ame2_minimal](https://github.com/leggedrobotics/ame2_minimal) 커밋 8beb9a68
+> 작성: 임석헌 · 2026-11-19 14:40
+> 근거: 이 폴더의 파일은 묶음 `ame2-m27001` 를 만들 때 실제로 실행한 파일 그대로다(팟 1 `/root/onnx_pp1/` 사본과 md5 대조, 아래 표). 저자 코드 [leggedrobotics/ame2_minimal](https://github.com/leggedrobotics/ame2_minimal) 커밋 8beb9a68
 > 요지: ONNX 내보내기 · 학습 env 기록 · 원본 대 ONNX 비교 · 속도와 빈 칸 처리 측정에 쓴 도구. 같은 저장본이면 이 순서로 다시 만들 수 있다
 > 상태: v0.1 · 묶음과 함께 팀장 검증 대기
 
-# ame2-demo-m16999 를 만든 도구
+# ame2-m27001 를 만든 도구
 
 ## 사용 허가
 
@@ -23,7 +23,7 @@
 | `v2_cpu.sh` | 2판(진단 출력 gaze_logits · gaze_offset 추가) 내보내기와 기준값 계산 | 팟 1 CPU | b5cddc52a5c35f5d8d5e919cdb46e656 |
 | `export_ame2_onnx.py` | 원본 `AME2GazeModel.forward` 를 감싸 ONNX 로(2판) | 팟 1 CPU | e4e5a921c1b8f078a3bff7470faa05bc |
 | `parity_ref.py` | 기록 입력에 원본 PyTorch(CPU float32) 를 돌려 정답값 저장(2판) | 팟 1 CPU | cf721777af7cdf6f941b46b1b83cac66 |
-| `parity_ort.py` | onnxruntime CPU 로 같은 입력을 돌려 `parity.json` · `test_vectors_flat20.npz` 를 만듦 | PC | 5a5c90000d47358fe9ffaf7f563e7764 |
+| `parity_ort.py` | onnxruntime CPU 로 같은 입력을 돌려 `parity.json` · `test_vectors_flat20.npz` 를 만듦 | PC | 32e45dc5f0070add2c4f444d78f6fd28 |
 | `parity_web.mjs` | onnxruntime-web(WASM) 로 같은 비교(Node) | PC | (PC 에서만 실행) |
 
 - 1판(`pp1_all.sh` 안의 내보내기)은 진단 출력이 `gaze_r` 하나였고, 지금 묶음의 ONNX 는 `v2_cpu.sh` 로 다시 내보낸 2판이다. action 계산은 두 판이 같다(같은 기록 입력에서 action 최대 차이가 둘 다 2.9e-6).

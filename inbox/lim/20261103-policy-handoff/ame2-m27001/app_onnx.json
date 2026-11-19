@@ -1,7 +1,7 @@
 {
  "app_onnx": {
   "note": "foothold-app policy-adapters.js onnx 칸 꼴 그대로. 입력 순서 = ONNX session.inputNames 순서(실측). 출력 넷 가운데 앱이 쓰는 것은 action; gaze_r · gaze_logits · gaze_offset 은 진단. 앱 실행기는 계약의 출력 이름이 ONNX 에 있기만 하면 받는다(policy-onnx.js:70-72) 그래서 m14999 처럼 outputs 를 action · gaze_r 둘만 적어도 이 ONNX 로 돈다",
-  "file": "ame2-demo-m16999.onnx",
+  "file": "ame2-m27001.onnx",
   "sha256": "2f7a8b18e8a3cc89ab5975836fff4870165df5c5bb8102ac823b56fe75b472ce",
   "inputs": [
    {

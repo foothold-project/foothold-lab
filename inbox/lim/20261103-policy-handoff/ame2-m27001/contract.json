@@ -1,6 +1,7 @@
 {
- "format": "ame2-demo-m16999-onnx/2",
- "name": "ame2-demo-m16999",
+ "format": "ame2-m27001-onnx/2",
+ "name_rule": "in-training version named by cumulative updates like start-m13000 / start-m15500 (policy-handoff README v0.5): 10,001 of the start checkpoint (go2_env_state.start_from.source_completed_updates) + 17,000 of this run (completed_updates) = 27,001; format /2 because the outputs add gaze_logits and gaze_offset to the ame2-demo app contract",
+ "name": "ame2-m27001",
  "final_name": "ame2-oh2l2",
  "checkpoint": {
   "runpod_path": "/network-volume/limseokheon/ame2_pp1/logs/rsl_rl/go2_gaze_teacher/tp424_in_p1_s5_from17000/model_16999.pt",
@@ -431,7 +432,7 @@
  ],
  "app_onnx": {
   "note": "foothold-app policy-adapters.js onnx 칸 꼴 그대로. 입력 순서 = ONNX session.inputNames 순서(실측). 출력 넷 가운데 앱이 쓰는 것은 action; gaze_r · gaze_logits · gaze_offset 은 진단. 앱 실행기는 계약의 출력 이름이 ONNX 에 있기만 하면 받는다(policy-onnx.js:70-72) 그래서 m14999 처럼 outputs 를 action · gaze_r 둘만 적어도 이 ONNX 로 돈다",
-  "file": "ame2-demo-m16999.onnx",
+  "file": "ame2-m27001.onnx",
   "sha256": "2f7a8b18e8a3cc89ab5975836fff4870165df5c5bb8102ac823b56fe75b472ce",
   "inputs": [
    {
@@ -493,7 +494,7 @@
  "test_vectors": {
   "json": "test_vectors_flat20.json",
   "npz": "test_vectors_flat20.npz",
-  "format": "ame2-demo-m16999-test-vectors/1",
+  "format": "ame2-m27001-test-vectors/1",
   "map_mode": "gt",
   "state_feedback": false,
   "steps": 20,
@@ -530,34 +531,34 @@
  },
  "artifacts": [
   {
-   "path": "ame2-demo-m16999.onnx",
+   "path": "ame2-m27001.onnx",
    "sha256": "2f7a8b18e8a3cc89ab5975836fff4870165df5c5bb8102ac823b56fe75b472ce",
    "bytes": 5038652
   },
   {
    "path": "parity.json",
-   "sha256": "75786dc79ef4027bc743a7475986aa4aef42849b4e7ed336dd13000201754327",
-   "bytes": 12944
+   "sha256": "b129923019d1b7a9fd8537e5cbce36bb5c0cfc60c5e7dfa683e253c00f2a1af5",
+   "bytes": 12939
   },
   {
    "path": "test_vectors_flat20.npz",
-   "sha256": "c92c65adb69eb4bbccb070d0de5f6be0e3b5783fc26e738ef4dfd0c144820173",
-   "bytes": 105698
+   "sha256": "eeada241f39aa68b1a68348629cdd4c196124ef0d39cfd536c88a609058c9763",
+   "bytes": 105678
   },
   {
    "path": "test_vectors_flat20.json",
-   "sha256": "93e32f40fbcb0511dcada57ec843065bf9abfb5cb94ce8a248f5f7aa870473b2",
-   "bytes": 485951
+   "sha256": "421fc107c87aed00ac1335cef46825fdeb339ea4b3b4b2b1530424befc935df6",
+   "bytes": 485936
   },
   {
    "path": "app_onnx.json",
-   "sha256": "e4afe1c53be6bcb04b8ad725f5397113f48afbeda4c999582ba9cc1e7c7fa323",
-   "bytes": 1201
+   "sha256": "aea9d38a82d48a0178d18b6244ea705cfb354997fed25197fb46bfdfa2964c6d",
+   "bytes": 1196
   },
   {
    "path": "tools/README.md",
-   "sha256": "6ff27dce9ed0089d94325d81b5d740835c66c897c6a97a0b79878673ca07db8e",
-   "bytes": 3326
+   "sha256": "3b7f2e36da11d0c041eed91302485d29c78a7d9439eb8d5b5d8f19cbd272daf1",
+   "bytes": 3316
   },
   {
    "path": "tools/export_ame2_onnx.py",
@@ -576,8 +577,8 @@
   },
   {
    "path": "tools/parity_ort.py",
-   "sha256": "a0f7b8464c4e335118223acb0142adbd4a251c711e750787873c2380b785a522",
-   "bytes": 5275
+   "sha256": "ec4622915cdd425b98f3f79bc087d7d2b90ff7278c1fa86217c314b80280d799",
+   "bytes": 5270
   },
   {
    "path": "tools/parity_web.mjs",

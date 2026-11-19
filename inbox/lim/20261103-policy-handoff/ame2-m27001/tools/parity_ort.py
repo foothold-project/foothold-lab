@@ -66,7 +66,7 @@ for tag in ("flat", "stairs"):
                 "recorded from the training env (observation noise off). Inputs: prop [20,49], mapping [20,29,13,3] (float32), fed one step "
                 "at a time as [1,49] / [1,29,13,3]. Answer: action [20,12] = original PyTorch forward on CPU float32 (deterministic mean); "
                 "gaze_r [20,2] = sigmoid gaze location; gaze_logits [20,2] = gaze head output before the sigmoid; gaze_offset [20,2] = "
-                "integer crop corner (ox over x 0..17, oy over y 0..3) as float32. action_onnx_cpu = onnxruntime CPU output of ame2-demo-m16999.onnx; action_env_gpu = what "
+                "integer crop corner (ox over x 0..17, oy over y 0..3) as float32. action_onnx_cpu = onnxruntime CPU output of ame2-m27001.onnx; action_env_gpu = what "
                 "the policy produced inside the env on the GPU (TF32/kernel differences, not the parity reference). target_q = joint "
                 "targets after the env's action term (default + 0.25 * action). Joint order: FL_hip, FR_hip, RL_hip, RR_hip, FL_thigh, "
                 "FR_thigh, RL_thigh, RR_thigh, FL_calf, FR_calf, RL_calf, RR_calf. Compare your output to action with max abs diff <= 1e-4."
