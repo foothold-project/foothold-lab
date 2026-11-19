@@ -83,6 +83,18 @@ footer { border-top: 1px solid var(--rule); margin-top: 3rem; padding-top: 1rem;
 <p>설명 원문: <a href="../20261117-go2-x-sim-match-checklist-assets/20261119-0459-room-walk/README.md">20261119-0459-room-walk/README.md</a></p>
 </section>
 
+<section aria-labelledby="map2">
+<p class="eyebrow">녹화 2 · 05:20 · 같은 방법</p>
+<h2 id="map2">두 번째 녹화로 만든 지도는 걷기 앞부분만 담았다</h2>
+<p>05:20 녹화 (카메라까지 같이 남긴 것) 로도 같은 방법으로 지도를 만들었다. 다만 이 녹화의 L2 점구름과 odom 은 처음 141~147 초만 들어 있다. 앉음 60 초 · 섬 약 35 초 뒤라 걷기는 앞 45 초쯤, 걸은 길 5.12 m 뿐이다 (카메라는 330 초 끝까지 있음 · 끊긴 까닭 미확인).</p>
+<div class="pair">
+<figure><a href="../20261117-go2-x-sim-match-checklist-assets/20261119-0459-room-walk/room_topview.png"><img src="../20261117-go2-x-sim-match-checklist-assets/20261119-0459-room-walk/room_topview.png" alt="04:59 녹화로 만든 방 지도. 걸은 길 20.75 m 가 방 전체를 돈다"></a><figcaption>04:59 · 걸은 길 20.75 m · 점구름 7016 장</figcaption></figure>
+<figure><a href="../20261117-go2-x-sim-match-checklist-assets/20261119-0520-room-walk-full/map/room_topview.png"><img src="../20261117-go2-x-sim-match-checklist-assets/20261119-0520-room-walk-full/map/room_topview.png" alt="05:20 녹화로 만든 방 지도. 걸은 길이 5.12 m 로 짧아 방 한쪽만 채워졌다"></a><figcaption>05:20 · 걸은 길 5.12 m · 점구름 2035 장</figcaption></figure>
+</div>
+<p>스크립트는 04:59 의 <code>room_map.py</code> 를 ROS 2 없이 읽도록 옮긴 <a href="../20261117-go2-x-sim-match-checklist-assets/20261119-0520-room-walk-full/room_map_rosbags.py"><code>room_map_rosbags.py</code></a> 다. 옮긴 뒤 04:59 녹화에 다시 돌려 원래 지도와 수치가 같은 것을 먼저 확인했다 (<a href="../20261117-go2-x-sim-match-checklist-assets/20261119-0520-room-walk-full/map/README.md">README</a>).</p>
+<p><b><a href="ROOM-POINTS-3D-1119.html">두 녹화의 점을 3D 로 돌려 보기</a></b> · 5 cm 칸마다 한 점 · 높이 색 · 위를 잘라 방 안을 볼 수 있다.</p>
+</section>
+
 <section aria-labelledby="video">
 <p class="eyebrow">녹화 2 · 05:20~05:26</p>
 <h2 id="video">카메라 영상: 앉음 → 섬 → 방 한 바퀴 → 앉음 (330 초)</h2>
@@ -130,6 +142,7 @@ footer { border-top: 1px solid var(--rule); margin-top: 3rem; padding-top: 1rem;
 <h2 id="next">오늘 학원에서 할 것</h2>
 <div class="table-wrap"><table><thead><tr><th>할 것</th><th>상태</th></tr></thead><tbody>
 <tr><td>방 지도 1 차 (odom 그대로 쌓기)</td><td><span class="tag done">끝</span> 11/19 05:19</td></tr>
+<tr><td>05:20 녹화 지도 · 두 녹화 3D 점 페이지</td><td><span class="tag done">끝</span> 11/19 14:3x</td></tr>
 <tr><td>카메라 높이 · 각 (매트 위 · 앉음)</td><td><span class="tag done">끝</span> 11/19 06:33</td></tr>
 <tr><td>줄자로 잰 몸 · 카메라 높이 · 맨바닥 각</td><td><span class="tag todo">할 것</span> ai-lt01 Codex · 팀장 줄자</td></tr>
 <tr><td>Go2 자체 SLAM (<code>/uslam</code>) 지도 · 저장 · 다시 불러 위치 찾기</td><td><span class="tag todo">할 것</span> Unitree 앱으로 켜기 · <code>uslam_record.sh</code></td></tr>
