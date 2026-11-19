@@ -299,7 +299,18 @@ def prepare_e0_env_cfg(env_cfg: Any, plan: EX42Plan, mesh_dir: str | Path, stage
                                                                                     "inner_cells": int(edge["inner"].sum()), "outer_cells": int(edge["outer"].sum())}}
     if foot_edge_w != 0.0:
         edge_receipt["foot_edge_weight"] = foot_edge_w
-    return {**edge_receipt, "mesh_sha256": sha, "columns": len(table), "families": sorted(set(families)),
+    from foothold_s2 import ex42_gap_switches as gap_switches
+    switches = gap_switches.read_switches(table)                   # three optional gap / beam column candidates (env vars, default off; off = the receipt below is unchanged)
+    if gap_switches.any_on(switches):
+        if switches["edge_kinds"] and (edge is None or foot_edge_w == 0.0):
+            raise ValueError(f"{gap_switches.ENV_EDGE} needs a mesh with edge masks and a non-zero foot_edge_weight in the plan row (else the term stays 0)")
+        track_func = None
+        if switches["min_kinds"]:
+            from foothold_s2.rewards import start_rewards
+            track_func = start_rewards.track_lin_vel_min_on_columns
+        gap_switches.apply_cfg(env_cfg, switches, track_func)
+        print("EX42_GAP_SWITCHES " + json.dumps(gap_switches.receipt(switches)["gap_switches"], sort_keys=True), flush=True)
+    return {**edge_receipt, **gap_switches.receipt(switches), "mesh_sha256": sha, "columns": len(table), "families": sorted(set(families)),
             "exposure": exposure, "level_caps": level_caps, "shares": shares, "low_floor": floor, "flag_table": flag_table,
             "continuous_level_cap": continuous_cap,      # None: the stage keeps the stage-zero promotion cap
             "k_ladder": {"boundary_index": boundary_index, "moves": ladder_receipt,
@@ -341,6 +352,16 @@ def attach_edge_tables(raw: Any, contract: dict[str, Any]) -> dict[str, Any] | N
     tables, check = None, None
     if npz:
         tables = EdgeTables(load_edge_masks(npz), len(contract["column_table"]), raw.device)
+        extra_kinds = tuple((contract.get("gap_switches") or {}).get("edge_extra_kinds") or ())
+        if extra_kinds:                                            # EX42_EDGE_EXTRA_KINDS: masks of more columns, built from the mesh top surface at start (the mesh files and their sha stay as pinned)
+            import json as _json
+            import numpy as _np
+            from foothold_s2.terrains import ex42_edge_masks as _em
+            mesh_dir = Path(npz).parent
+            arrays = _np.load(npz, allow_pickle=False)
+            specs = _em.extra_specs(_json.loads((mesh_dir / "terrain_manifest.json").read_text(encoding="utf-8-sig")), extra_kinds,
+                                    int(tables.inner.shape[0]), covered={int(c) for c in (tables.col_to_k >= 0).nonzero().flatten().tolist()})
+            tables.add_extra(_em.build_extra_masks(arrays["vertices"], arrays["faces"], arrays["origins"], specs))
         check = tables.self_check()
         raw.ex42_edge_tables = tables
     try:

@@ -102,6 +102,58 @@ def build_edge_masks(vertices: np.ndarray, faces: np.ndarray, origins: np.ndarra
     return {"inner": inner, "outer": outer, "columns": np.array(cols, dtype=np.int64), "meta": meta}
 
 
+def extra_specs(terrain_manifest: dict[str, Any], kinds: tuple[str, ...], rows: int, covered: set[int] | None = None) -> list[dict[str, Any]]:
+    """EX42_EDGE_EXTRA_KINDS: 메시 자리표 (terrain_manifest.json 의 kind 별 geometry_selection 칸 범위) 로 칸 크기 · 모서리를 읽는다.
+    반환: 열마다 {kind, col, size_x, size_y, x_start, y0}. 이미 마스크가 있는 열 (A 가족) 이나 연속 지형 · 칸 범위가 안 맞는 kind 는 ValueError."""
+    out: list[dict[str, Any]] = []
+    for name in kinds:
+        family, kind = name.split("/")
+        hits = [k for k in terrain_manifest["kinds"] if k.get("family") == family and k.get("kind") == kind]
+        if len(hits) != 1:
+            raise ValueError(f"edge extra kind {name}: {len(hits)} entries in the terrain manifest (want 1)")
+        sel = hits[0]["geometry_selection"]
+        cols = [int(c) for c in sel["columns"]]
+        (x0, y0, _), (x1, y1, _) = sel["bounds_m"]
+        size_x, size_y = (x1 - x0) / rows, (y1 - y0) / len(cols)
+        if size_x <= 0 or size_y <= 0 or abs(size_x - size_y) > 1e-3 or sorted(sel["rows"]) != list(range(rows)):
+            raise ValueError(f"edge extra kind {name}: tile is not a square {rows}-row tile (size {size_x} x {size_y})")
+        if covered and set(cols) & covered:
+            raise ValueError(f"edge extra kind {name}: columns {sorted(set(cols) & covered)} already carry edge masks")
+        for i, c in enumerate(sorted(cols)):
+            out.append({"kind": name, "col": c, "size_x": size_x, "size_y": size_y, "x_start": x0, "y0": y0 + size_y * i})
+    if len({s["col"] for s in out}) != len(out):
+        raise ValueError("edge extra kinds share a column")
+    return out
+
+
+def build_extra_masks(vertices: np.ndarray, faces: np.ndarray, origins: np.ndarray, specs: list[dict[str, Any]],
+                      res: float = RES, drop: float = DROP_M) -> list[dict[str, Any]]:
+    """`extra_specs` 의 열마다 (줄 전부) inner · outer 마스크 (rows, H, W) bool. 식은 A 가족 마스크와 같다 (rasterize_top -> sparse_terrains.edge_masks)."""
+    from foothold_s2.terrains import sparse_terrains as st
+    rows = origins.shape[0]
+    tri_x, tri_y = vertices[faces][:, :, 0], vertices[faces][:, :, 1]
+    cx, cy = (tri_x.min(1) + tri_x.max(1)) / 2.0, (tri_y.min(1) + tri_y.max(1)) / 2.0
+    built = []
+    for sp in specs:
+        nx, ny = int(round(sp["size_x"] / res)), int(round(sp["size_y"] / res))
+        inner = np.zeros((rows, nx, ny), bool); outer = np.zeros_like(inner)
+        uncovered = 0
+        for r in range(rows):
+            x0 = sp["x_start"] + sp["size_x"] * r
+            o = origins[r, sp["col"]]
+            if not (x0 <= o[0] <= x0 + sp["size_x"] and sp["y0"] <= o[1] <= sp["y0"] + sp["size_y"]):
+                raise ValueError(f"origin of tile ({r},{sp['col']}) lies outside the tile read from the terrain manifest")
+            pick = (cx >= x0) & (cx < x0 + sp["size_x"]) & (cy >= sp["y0"]) & (cy < sp["y0"] + sp["size_y"])
+            grid = rasterize_top(vertices, faces[pick], x0, sp["y0"], nx, ny, res)
+            hole = grid <= FLOOR
+            uncovered += int(hole.sum())
+            if hole.any():
+                grid = np.where(hole, float(np.median(grid[~hole])) if (~hole).any() else 0.0, grid)
+            inner[r], outer[r] = st.edge_masks(grid, drop)
+        built.append({**sp, "inner": inner, "outer": outer, "uncovered_cells": uncovered})
+    return built
+
+
 def pack_masks(built: dict[str, Any]) -> dict[str, np.ndarray]:
     r, k = built["inner"].shape[:2]
     out = {"edge_inner_bits": np.packbits(built["inner"].reshape(r, k, -1), axis=-1), "edge_outer_bits": np.packbits(built["outer"].reshape(r, k, -1), axis=-1),
@@ -151,9 +203,40 @@ class EdgeTables:
         self.tile = tuple(meta["tile"]); self.res = float(meta["resolution_m"])
         self.shift = torch.tensor([self.tile[0] * meta["rows"] / 2.0, self.tile[1] * meta["family_columns"] / 2.0], device=device)
         self.meta = meta
+        self.extra: list[dict[str, Any]] = []
+
+    def add_extra(self, built: list[dict[str, Any]]) -> None:
+        """`build_extra_masks` 결과를 붙인다 (EX42_EDGE_EXTRA_KINDS). 이 열의 값은 기존 표가 0 이던 열이라 합치기만 하면 된다."""
+        import torch
+        dev = self.inner.device
+        for b in built:
+            self.extra.append({"kind": b["kind"], "col": int(b["col"]), "size_x": float(b["size_x"]), "size_y": float(b["size_y"]), "x_start": float(b["x_start"]),
+                               "y0": float(b["y0"]), "inner": torch.as_tensor(b["inner"], device=dev), "outer": torch.as_tensor(b["outer"], device=dev)})
+
+    def _extra_penalty(self, feet_xy, contact, levels, types):
+        import torch
+        from foothold_s2.rewards import core
+        total = torch.zeros(feet_xy.shape[0], dtype=feet_xy.dtype, device=feet_xy.device)
+        for ex in self.extra:
+            on = (types == ex["col"])[:, None]
+            h, w = ex["inner"].shape[-2:]
+            ix = torch.floor((feet_xy[..., 0] - (ex["x_start"] + levels.to(feet_xy.dtype) * ex["size_x"])[:, None]) / self.res).long()
+            iy = torch.floor((feet_xy[..., 1] - ex["y0"]) / self.res).long()
+            ok = on & (ix >= 0) & (ix < h) & (iy >= 0) & (iy < w)
+            ix, iy = ix.clamp(0, h - 1), iy.clamp(0, w - 1)
+            lv = levels[:, None].expand_as(ix)
+            inner, outer = ex["inner"][lv, ix, iy].float() * ok.float(), ex["outer"][lv, ix, iy].float() * ok.float()
+            total = total + torch.sum(contact.float() * (core.EDGE_OMEGA[0] * inner + core.EDGE_OMEGA[1] * outer), dim=-1)
+        return total
 
     def penalty(self, feet_xy, contact, levels, types):
-        """(N,) 발 가장자리 값 (부호는 가중치가). 마스크가 없는 열은 0."""
+        """(N,) 발 가장자리 값 (부호는 가중치가). 마스크가 없는 열은 0 (EX42_EDGE_EXTRA_KINDS 로 붙인 열은 그 마스크)."""
+        import torch
+        from foothold_s2.rewards import core
+        base = self._base_penalty(feet_xy, contact, levels, types)
+        return base + self._extra_penalty(feet_xy, contact, levels, types) if self.extra else base
+
+    def _base_penalty(self, feet_xy, contact, levels, types):
         import torch
         from foothold_s2.rewards import core
         k = self.col_to_k[types]
@@ -187,4 +270,26 @@ class EdgeTables:
         outside = self.penalty(feet + 1000.0, contact, torch.tensor([r], device=dev), torch.tensor([col], device=dev))
         if float(outside[0]) != 0.0:
             raise RuntimeError("EX-42 edge tables: a foot outside the tile reads non-zero")
-        return {"row": r, "column": col, "value_on_inner": float(v[0])}
+        out = {"row": r, "column": col, "value_on_inner": float(v[0])}
+        if self.extra:
+            out["extra"] = self._extra_self_check()
+        return out
+
+    def _extra_self_check(self) -> list[dict[str, Any]]:
+        """붙인 열마다: 첫 inner 칸 중앙에 발을 두면 항이 0 이 아니고, 칸 바깥은 0 이어야 한다. 아니면 오류."""
+        import torch
+        dev = self.inner.device
+        res = []
+        for ex in self.extra:
+            rr = int(torch.nonzero(ex["inner"].flatten(1).any(-1))[0])
+            cell = torch.nonzero(ex["inner"][rr])[0]
+            x = ex["x_start"] + ex["size_x"] * rr + (cell[0].item() + 0.5) * self.res
+            y = ex["y0"] + (cell[1].item() + 0.5) * self.res
+            feet = torch.tensor([[[x, y]]], device=dev, dtype=torch.float32); contact = torch.ones(1, 1, dtype=torch.bool, device=dev)
+            lv, ty = torch.tensor([rr], device=dev), torch.tensor([ex["col"]], device=dev)
+            v = float(self.penalty(feet, contact, lv, ty)[0])
+            out = float(self.penalty(feet + 1000.0, contact, lv, ty)[0])
+            if not v > 0.0 or out != 0.0:
+                raise RuntimeError(f"EX-42 extra edge masks {ex['kind']} (column {ex['col']}): value on an inner cell {v}, outside the tile {out}")
+            res.append({"kind": ex["kind"], "column": ex["col"], "row": int(rr), "value_on_inner": v})
+        return res

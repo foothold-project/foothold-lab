@@ -11,8 +11,9 @@ def foot_contact(env, sensor_cfg, threshold: float = 1.0):
     return (torch.linalg.norm(force, dim=-1) > threshold).float()
 
 
-def foot_below_ground(env, sensor_cfg, scanner_cfg, asset_cfg, margin: float = 0.2):
-    """어느 발이든 가장 가까운 높이 스캔 점의 지면보다 `margin` 아래면 종료 (17 §7). 스캔 격자 밖의 발은 판정에서 뺀다."""
+def foot_below_ground(env, sensor_cfg, scanner_cfg, asset_cfg, margin: float = 0.2, plane_columns=None):
+    """어느 발이든 가장 가까운 높이 스캔 점의 지면보다 `margin` 아래면 종료 (17 §7). 스캔 격자 밖의 발은 판정에서 뺀다.
+    `plane_columns` (EX-42 처방 후보 3, 기본 없음): 지형 열이 그 안인 env 만 출발 발판 평면 (타일 원점 z) 기준 - 틈 바닥이 가장 가까운 스캔 점이면 위 식은 틈에 빠져도 안 끝난다."""
     asset = env.scene[asset_cfg.name]
     scanner = env.scene.sensors[scanner_cfg.name]
     feet = asset.data.body_pos_w[:, asset_cfg.body_ids, :]
@@ -26,7 +27,16 @@ def foot_below_ground(env, sensor_cfg, scanner_cfg, asset_cfg, margin: float = 0
     ground_z = torch.gather(hits[..., 2], 1, nearest)
     inside = dmin < 0.15
 
-    return ((feet[..., 2] < ground_z - margin) & inside).any(dim=1)
+    below = ((feet[..., 2] < ground_z - margin) & inside).any(dim=1)
+    if plane_columns:
+        from foothold_s2.ex42_gap_switches import column_env_mask, feet_below_plane
+
+        terrain = env.scene.terrain
+        types, levels = terrain.terrain_types.long(), terrain.terrain_levels.long()
+        on = column_env_mask(types, tuple(plane_columns), int(terrain.terrain_origins.shape[1]))
+        below = torch.where(on, feet_below_plane(feet[..., 2], terrain.terrain_origins[levels, types, 2], margin), below)
+
+    return below
 
 
 def randomize_motor_strength(env, env_ids, asset_cfg, scale_range=(0.9, 1.1)):
