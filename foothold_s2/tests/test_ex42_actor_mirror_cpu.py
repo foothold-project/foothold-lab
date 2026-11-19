@@ -209,3 +209,21 @@ def test_weight_env_var_parsing():
     for bad in ("-1", "nan", "inf"):
         with pytest.raises(ValueError):
             am.actor_mirror_weight({am.ENV_WEIGHT: bad})
+
+
+def test_mirror_check_line_reads_the_two_streams_and_the_depth_axes(capsys):
+    stub = _runner_stub(1.0)
+    stub.disable_logs = False
+    stub._mirror_check_add = types.MethodType(StartRunner._mirror_check_add, stub)
+    stub._mirror_check_log = types.MethodType(StartRunner._mirror_check_log, stub)
+    est = torch.zeros(N, 51)
+    est_m = torch.zeros(N, 51)
+    est[:, 17], est_m[:, 17] = 0.3, -0.3                       # v_y opposite: sum 0
+    est[:, 16], est_m[:, 16] = 0.5, 0.5                        # v_x the same
+    flat = torch.linspace(0, 1, 60).reshape(1, 60, 1).expand(N, 60, 60).contiguous()    # a flat floor: it changes along the rows only
+    stub._mirror_check_add(est, est_m, flat)
+    stub._mirror_check_log(1)
+    line = capsys.readouterr().out
+    assert "EX42_ACTOR_MIRROR_CHECK it=1 vy_sum_abs=0.00000 vy_abs=0.30000 vx_diff_abs=0.00000 depth_flip_cols=0.00000" in line
+    rows = float(line.split("depth_flip_rows=")[1])
+    assert rows > 0.3                                           # a flip over the wrong axis would show a large difference

@@ -428,6 +428,31 @@ class StartRunner(OnPolicyRunner):
         module = self.perception_ema if self.perception_ema is not None else self.perception
         return module.step(self.pstate_m, inp_m, actor_mirror.mirror_map(gmap), deterministic=True)
 
+    @torch.no_grad()
+    def _mirror_check_add(self, est: torch.Tensor, est_m: torch.Tensor, depth: torch.Tensor) -> None:
+        """EX42_ACTOR_MIRROR record only: how mirror-like the two streams are (sums, printed and reset by _mirror_check_log).
+        v_y of the original and the mirror stream must have opposite signs (sum near 0, small against |v_y|), v_x the same; on flat ground the depth
+        image must equal itself flipped along the width axis (the flip over the last axis differs little, the flip over the rows differs a lot)."""
+        v = slice(sp.Z_DIM, sp.Z_DIM + sp.V_DIM)
+        a, b = est[:, v], est_m[:, v]
+        acc = getattr(self, "_mirror_check", None)
+        if acc is None:
+            acc = self._mirror_check = torch.zeros(6, device=est.device)
+        acc += torch.stack([torch.tensor(float(est.shape[0]), device=est.device), (a[:, 1] + b[:, 1]).abs().sum(), a[:, 1].abs().sum(),
+                            (a[:, 0] - b[:, 0]).abs().sum(), (depth - depth.flip(-1)).abs().mean() * est.shape[0],
+                            (depth - depth.flip(-2)).abs().mean() * est.shape[0]])
+
+    def _mirror_check_log(self, it: int) -> None:
+        acc = getattr(self, "_mirror_check", None)
+        if acc is None or self.disable_logs:
+            return
+        self._mirror_check = None
+        if it > 3 and it % 50 != 0:
+            return
+        n, vy_sum, vy_abs, vx_diff, d_cols, d_rows = (float(x) for x in acc)
+        print("EX42_ACTOR_MIRROR_CHECK it=%d vy_sum_abs=%.5f vy_abs=%.5f vx_diff_abs=%.5f depth_flip_cols=%.5f depth_flip_rows=%.5f" % (
+            it, vy_sum / n, vy_abs / n, vx_diff / n, d_cols / n, d_rows / n), flush=True)
+
     def _construct_algorithm(self, obs: TensorDict) -> PPO:
         self.policy_cfg.pop("class_name", None)
         policy = StartActorCritic(obs, self.cfg["obs_groups"], self.env.num_actions,
@@ -925,6 +950,8 @@ class StartRunner(OnPolicyRunner):
                     else:
                         est = self.perception.step(self.pstate, inp, gmap)
                     est_m = self._mirror_stream(o, depth, gmap) if self.pstate_m is not None else None
+                    if est_m is not None:
+                        self._mirror_check_add(est, est_m, depth)
                     ppo_obs = self._ppo_obs(raw, est, est_m)
                     self._vxcorr_collect(o, est, ppo_obs, vel)
                     self._vflag_collect(est, vel)
@@ -1031,6 +1058,7 @@ class StartRunner(OnPolicyRunner):
                 self.alg.compute_returns(self._ppo_obs(raw, torch.zeros(n, 51, device=self.device)))
                 self._vbias_finish(it)
                 noise_row = self._small_noise_finish(it)
+                self._mirror_check_log(it)
                 self._slow_hold_log(it)
                 self._command_cells_log(it)
                 self._flag_turn_log(it)
