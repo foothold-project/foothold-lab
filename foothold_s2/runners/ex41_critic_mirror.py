@@ -158,6 +158,7 @@ class CriticMirrorPPO(PPO):
     mean_action_mask = None      # [num_envs] bool set by the runner: these envs act with the mean action and are not PPO samples
     # EX42_ACTOR_MIRROR (ex42_actor_mirror.py): weight of the actor left-right symmetry loss. 0 = off (nothing stored, nothing computed, no number changes).
     actor_mirror_weight = 0.0
+    actor_mirror_zmean = False     # EX42_ACTOR_MIRROR_ZMEAN: the original side of the symmetry loss reads the stored mean-z actor input (am.ORIG_KEY)
 
     def act(self, obs):
         if self.kl_audit is not None:
@@ -372,7 +373,14 @@ class CriticMirrorPPO(PPO):
                 obs_m = obs.clone()
                 obs_m[ACTOR_KEY] = obs[am.MIRROR_KEY]
                 mu_m = self.policy.act_inference(obs_m)             # the mean on the mirrored world, with gradient (actor MLP only)
-                sym = am.symmetry_loss(mu, mu_m)
+                mu_sym = mu
+                if self.actor_mirror_zmean:                         # like with like: the original side also sees z at its mean (the PPO surrogate above keeps the sampled input)
+                    if am.ORIG_KEY not in obs.keys():
+                        raise ValueError("EX42_ACTOR_MIRROR_ZMEAN is on but the rollout stored no mean-z actor input")
+                    obs_o = obs.clone()
+                    obs_o[ACTOR_KEY] = obs[am.ORIG_KEY]
+                    mu_sym = self.policy.act_inference(obs_o)
+                sym = am.symmetry_loss(mu_sym, mu_m)
                 if ratio_batches == 0:                              # gradient size of the two terms on the actor, once per update (the 10 to 20 % rule)
                     actor_params = tuple(p for p in self.policy.actor.parameters() if p.requires_grad)
                     g_s = torch.autograd.grad(surrogate, actor_params, retain_graph=True, allow_unused=True)

@@ -7,6 +7,9 @@ The update then punishes the distance between the actor mean on the mirrored inp
 (and the same the other way round, each side taking half). Perception is outside the optimizer of the actor (PPO sees detached inputs), so only the
 actor MLP moves.
 
+Optional EX42_ACTOR_MIRROR_ZMEAN=1 (needs the weight on): the original side of the loss uses the latent at its mean too (key actor_in_o, one more actor input stored),
+so the loss compares like with like; the sampled input still feeds the PPO surrogate.
+
 Off by default: weight 0 (env var EX42_ACTOR_MIRROR_W unset or 0) builds no second stream, stores no second input and changes no number.
 
 Mirror definitions (all shared with, or checked against, the critic mirror):
@@ -30,6 +33,8 @@ import torch
 from foothold_s2.runners.ex41_critic_mirror import JOINT_IDS, JOINT_SIGNS, mirror_o45_into
 
 ENV_WEIGHT = "EX42_ACTOR_MIRROR_W"
+ENV_ZMEAN = "EX42_ACTOR_MIRROR_ZMEAN"
+ORIG_KEY = "actor_in_o"         # the original-world actor input with the perception latent z at its mean, stored only while ZMEAN is on
 MIRROR_KEY = "actor_in_m"       # the second actor input, stored next to ACTOR_KEY only while the loss is on
 MAP_SHAPE = (32, 16)
 
@@ -44,6 +49,18 @@ def actor_mirror_weight(environ=None) -> float:
     if not math.isfinite(w) or w < 0.0:
         raise ValueError(f"{ENV_WEIGHT} must be finite and >= 0, got {raw!r}")
     return w
+
+
+def actor_mirror_zmean(environ=None) -> bool:
+    """EX42_ACTOR_MIRROR_ZMEAN=1: the original side of the symmetry loss also sees the latent z at its mean (as the mirror side always does), so both
+    sides of the loss are in the same condition. The PPO surrogate input stays the sampled one. Unset, empty or 0 = off (today's loss). Anything else raises."""
+    environ = os.environ if environ is None else environ
+    raw = str(environ.get(ENV_ZMEAN, "")).strip()
+    if raw in ("", "0"):
+        return False
+    if raw == "1":
+        return True
+    raise ValueError(f"{ENV_ZMEAN} must be unset, 0 or 1, got {raw!r}")
 
 
 def mirror_proprio(o: torch.Tensor) -> torch.Tensor:

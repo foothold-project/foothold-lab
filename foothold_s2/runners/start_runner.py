@@ -297,6 +297,10 @@ class StartRunner(OnPolicyRunner):
         # EX42_ACTOR_MIRROR_W > 0: a second perception stream on the mirrored world and a left-right symmetry loss on the actor mean (ex42_actor_mirror.py). 0 = off.
         self.actor_mirror_w = actor_mirror.actor_mirror_weight()
         self.pstate_m = None                   # the mirror stream's own perception state (built in learn())
+        # EX42_ACTOR_MIRROR_ZMEAN=1: the original side of the symmetry loss sees z at its mean too (a second stored actor input, no extra perception pass)
+        self.actor_mirror_zmean = actor_mirror.actor_mirror_zmean()
+        if self.actor_mirror_zmean and self.actor_mirror_w <= 0.0:
+            raise ValueError("EX42_ACTOR_MIRROR_ZMEAN needs EX42_ACTOR_MIRROR_W > 0")
         # the critic mirror is switched on after construction (set_ex41_critic_mirror); the update itself refuses the loss while it is off
         if self.actor_mirror_w > 0.0 and not (self.ex41_pose_commands and pcfg["est_mode"] == "learned"):
             raise ValueError("EX42_ACTOR_MIRROR needs ex41_pose_commands and est_mode=learned")
@@ -304,7 +308,8 @@ class StartRunner(OnPolicyRunner):
         raw = self.env.get_observations().to(device)
         self._check_raw(raw)
         template = self._ppo_obs(raw, torch.zeros(raw.batch_size[0], 51, device=device),
-                                 torch.zeros(raw.batch_size[0], 51, device=device) if self.actor_mirror_w > 0.0 else None)
+                                 torch.zeros(raw.batch_size[0], 51, device=device) if self.actor_mirror_w > 0.0 else None,
+                                 torch.zeros(raw.batch_size[0], 51, device=device) if self.actor_mirror_zmean else None)
         self.cfg["obs_groups"] = resolve_obs_groups(template, dict(OBS_GROUPS), ["critic"])
         self.alg = self._construct_algorithm(template)
         self.replay = (None if pcfg["fast_gt_only"] else PerceptionReplay(
@@ -396,7 +401,7 @@ class StartRunner(OnPolicyRunner):
 
         return correct_est_vx(est)              # v29-14: off returns est itself; the one place every actor input passes
 
-    def _ppo_obs(self, raw: TensorDict, est: torch.Tensor, est_m: torch.Tensor | None = None) -> TensorDict:
+    def _ppo_obs(self, raw: TensorDict, est: torch.Tensor, est_m: torch.Tensor | None = None, est_o: torch.Tensor | None = None) -> TensorDict:
         """actor 입력 = o45 + est51 (est_mode=zero 면 est 칸이 0, oracle_vel 이면 앞 3 칸만 실제 선속도), critic 입력 664. 수집 · 부트스트랩 · 평가 adapter 가 모두 이 함수를 지난다."""
         o, _, gmap, gfeet, vel, con = self._split(raw)
         n = o.shape[0]
@@ -414,6 +419,8 @@ class StartRunner(OnPolicyRunner):
         if est_m is not None:       # EX42_ACTOR_MIRROR: the actor input of the mirrored world (o45 mirrored, the est of the mirror stream, pose mirrored)
             fields[actor_mirror.MIRROR_KEY] = torch.cat(
                 [actor_mirror.mirror_proprio(o), self._est_in(est_m, vel), actor_mirror.mirror_pose(self._pose_command(raw))], -1)
+        if est_o is not None:       # EX42_ACTOR_MIRROR_ZMEAN: the same actor input with the latent at its mean (the original side of the symmetry loss)
+            fields[actor_mirror.ORIG_KEY] = torch.cat([o, self._est_in(est_o, vel)] + ([self._pose_command(raw)] if self.ex41_pose_commands else []), -1)
         return TensorDict(
             fields,
             batch_size=[n],
@@ -467,6 +474,7 @@ class StartRunner(OnPolicyRunner):
             alg = CriticMirrorPPO(policy, device=self.device, **alg_cfg, multi_gpu_cfg=self.multi_gpu_cfg)
             alg.mirror_enabled = self.ex41_critic_mirror
             alg.actor_mirror_weight = self.actor_mirror_w
+            alg.actor_mirror_zmean = self.actor_mirror_zmean
             clip = self.cfg.get("clip_actions")      # the env clip: a mean past it only moves the log-prob (bounds loss)
             alg.bounds_loss_limit = float(clip) if clip else None
         else:
@@ -816,7 +824,9 @@ class StartRunner(OnPolicyRunner):
         if self.actor_mirror_w > 0.0:
             self.pstate_m = self.perception.init_state(n, self.device)
             actor_mirror.sync_flags(self.pstate_m, self.pstate)
-            print("EX42_ACTOR_MIRROR on w=%g envs=%d" % (self.actor_mirror_w, n), flush=True)      # nothing is printed while it is off (today's log)
+            print("EX42_ACTOR_MIRROR on w=%g envs=%d" % (self.actor_mirror_w, n), flush=True)
+            if self.actor_mirror_zmean:
+                print("EX42_ACTOR_MIRROR_ZMEAN on (original side of the symmetry loss sees z at its mean)", flush=True)      # nothing is printed while it is off (today's log)
         print("EX33_MAP_SWITCH p_off=%s realized=%.4f envs=%d seed=%s" % (self.p_map_off, float(self.pstate.map_off.float().mean()), n, self.pcfg["map_switch_seed"]), flush=True)
         self._report_first_sources()
         ms_levels, ms_track = self._map_switch_probes() if self.map_switch is not None else (None, None)
@@ -945,15 +955,22 @@ class StartRunner(OnPolicyRunner):
                 for step_k in range(self.num_steps_per_env):
                     o, depth, gmap, gfeet, vel, _ = self._split(raw)
                     inp = self.perception.ingest(self.pstate, o, depth)
+                    est_o = None
                     if self.perception_ema is not None:                  # v28u: the actor gets est from the averaged perception weights
                         self.pstate_ema.use_gt, self.pstate_ema.map_off = self.pstate.use_gt, self.pstate.map_off
-                        est = self.perception_ema.step(self.pstate_ema, inp, gmap)
+                        if self.actor_mirror_zmean:
+                            est, est_o = self.perception_ema.step_pair(self.pstate_ema, inp, gmap)
+                        else:
+                            est = self.perception_ema.step(self.pstate_ema, inp, gmap)
                     else:
-                        est = self.perception.step(self.pstate, inp, gmap)
+                        if self.actor_mirror_zmean:
+                            est, est_o = self.perception.step_pair(self.pstate, inp, gmap)
+                        else:
+                            est = self.perception.step(self.pstate, inp, gmap)
                     est_m = self._mirror_stream(o, depth, gmap) if self.pstate_m is not None else None
                     if est_m is not None:
                         self._mirror_check_add(est, est_m, depth)
-                    ppo_obs = self._ppo_obs(raw, est, est_m)
+                    ppo_obs = self._ppo_obs(raw, est, est_m, est_o)
                     self._vxcorr_collect(o, est, ppo_obs, vel)
                     self._vflag_collect(est, vel)
                     self._vbias_collect(o, ppo_obs, vel)
