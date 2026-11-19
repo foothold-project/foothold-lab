@@ -226,7 +226,10 @@ def assemble_saved_mesh(plan, mesh_dir, declarations, declaration_paths):
             and sha_file(mesh_dir/'terrain_mesh.npz') != receipt['mesh_file_sha256']):
         raise ValueError('saved mesh file SHA differs from measurement receipt')
     annotation = None
-    if 'ladder_splice' in receipt:
+    if 'beam_splice' in receipt:       # B/beam splice on top of a ladder-splice source: verifies the source chain too
+        from foothold_s2.scripts.ex42_beam_splice_mesh import verify_beam_splice
+        annotation = verify_beam_splice(mesh_dir)
+    elif 'ladder_splice' in receipt:
         from foothold_s2.tools.ex42_ladder_splice import verify_ladder_splice
         annotation = verify_ladder_splice(mesh_dir)
     elif 'flag_annotation_source' in receipt:

@@ -771,6 +771,24 @@ class EX41DRReadback:
             b.env._ex40_dr_motor_baselines={k:{n:torch.as_tensor(v).to(device).clone() for n,v in vs.items()} for k,vs in state['motor_baselines'].items()}
 
 
+PROMOTION_CELL_KEYS=frozenset(('x_progress_kinds','x_progress_fraction','forward_only'))
+
+
+def terrain_promotion_cell(plan):
+    """plan.document['terrain_promotion'] (absent = off, today's rule): {x_progress_kinds: ['B/beam', ...], x_progress_fraction: 0.5, forward_only: false}.
+    For the listed family/kind columns the level-up test is `x progress from the start > tile length x fraction` instead of `max_dist > tile length / 2`
+    (rules.judge_free progress_x); forward_only also leaves the episodes whose command sum is not forward out of the judgement of those columns."""
+    cell=(getattr(plan,'document',None) or {}).get('terrain_promotion')
+    if cell is None: return None
+    if not isinstance(cell,dict): raise ValueError('EX-41 terrain_promotion cell must be a mapping')
+    kinds,fraction,fwd=cell.get('x_progress_kinds'),cell.get('x_progress_fraction',0.5),cell.get('forward_only',False)
+    if (set(cell)-PROMOTION_CELL_KEYS or not isinstance(kinds,list) or not kinds
+            or any(not isinstance(k,str) or k.count('/')!=1 for k in kinds) or len(set(kinds))!=len(kinds)
+            or isinstance(fraction,bool) or not isinstance(fraction,(int,float)) or not 0.<fraction<=1. or type(fwd) is not bool):
+        raise ValueError('EX-41 terrain_promotion cell invalid: x_progress_kinds (family/kind list), x_progress_fraction in (0, 1], forward_only bool')
+    return {'x_progress_kinds':tuple(kinds),'x_progress_fraction':float(fraction),'forward_only':fwd}
+
+
 def prepare_terrain_cfg(env_cfg,plan,*,initial_policy=None,initial_level_cap=None):
     """Register at n0; fixed5000 enables performance at S2d, by runtime policy."""
     from isaaclab.managers import CurriculumTermCfg
@@ -780,12 +798,38 @@ def prepare_terrain_cfg(env_cfg,plan,*,initial_policy=None,initial_level_cap=Non
         if initial_policy!='performance' or type(initial_level_cap) is not int or initial_level_cap!=5:
             raise ValueError('EX-41 initial terrain override is reserved for approved EX-42 stage zero L5')
         params.update(initial_policy=initial_policy,initial_level_cap=initial_level_cap)
+    promotion=terrain_promotion_cell(plan)
+    if promotion is not None:
+        params.update(x_progress_kinds=promotion['x_progress_kinds'],x_progress_fraction=promotion['x_progress_fraction'],
+                      x_progress_forward_only=promotion['forward_only'])
+        env_cfg.commands.base_velocity.track_x_progress=True
+        print(f"EX42_X_PROMOTION where=start kinds={len(promotion['x_progress_kinds'])} fraction={promotion['x_progress_fraction']} "
+              f"forward_only={promotion['forward_only']}",flush=True)       # the first-update check reads this line (only a plan with the cell prints it)
     env_cfg.curriculum.terrain_levels=CurriculumTermCfg(func=ex41_terrain_levels,params=params)
     return {'policy':initial_policy or 'fixed_l02','max_init_terrain_level':2,
             'promotion_enabled':initial_policy=='performance',
             'registered_performance_term':'ex41_terrain_levels','world_frame':True,
             'initial_policy':initial_policy or 'fixed_l02',
-            'initial_level_cap':initial_level_cap if initial_policy else 2}
+            'initial_level_cap':initial_level_cap if initial_policy else 2,
+            **({'x_progress_promotion':promotion} if promotion is not None else {})}
+
+
+def x_progress_rule(env,terrain,term,ids,kinds,fraction,forward_only):
+    """judge_free keyword arguments for the plan's x-progress columns. Before the column table is installed (the first reset) no episode has run: no mask."""
+    table=getattr(env,'_ex42_column_table',None)
+    if table is None:
+        if bool((term.ep_steps[ids]>0).any()): raise ValueError('EX-41 terrain_promotion needs the EX-42 column table before the first judged episode')
+        return {}
+    names=[f"{row['family']}/{row['kind']}" for row in table]
+    unknown=sorted(set(kinds)-set(names))
+    if unknown or getattr(term,'max_x',None) is None:
+        raise ValueError(f'EX-41 terrain_promotion kinds not in the mesh {unknown} or the command term does not track x progress')
+    member=torch.as_tensor([name in kinds for name in names],dtype=torch.bool,device=terrain.terrain_types.device)
+    if not getattr(x_progress_rule,'_announced',False):
+        x_progress_rule._announced=True
+        print(f"EX42_X_PROMOTION where=first_judged columns={int(member.sum())}/{len(names)} kinds={len(kinds)}",flush=True)
+    return {'progress_x':term.max_x[ids],'x_mask':member[terrain.terrain_types[ids].long()].to(term.max_x.device),
+            'x_fraction':fraction,'forward_only':forward_only}
 
 
 def capped_moves(levels,moves,cap):
@@ -794,7 +838,8 @@ def capped_moves(levels,moves,cap):
 
 
 def ex41_terrain_levels(env,env_ids,command_name='base_velocity',resample_s=4.,world_frame=True,
-                        initial_policy=None,initial_level_cap=None):
+                        initial_policy=None,initial_level_cap=None,
+                        x_progress_kinds=(),x_progress_fraction=0.5,x_progress_forward_only=False):
     """Existing judge_free world displacement, with explicit upper cap.
 
     Term runs before reset events/command reset. Pure spin/stand have zero
@@ -821,7 +866,10 @@ def ex41_terrain_levels(env,env_ids,command_name='base_velocity',resample_s=4.,w
     if flags.any() and getattr(getattr(term,'cfg',None),'dynamic_flags',False) is not True:
         raise ValueError('EX41 has no flag slots; new terrain contract required')
     summed=term.cmd_sum_w[ids]*env.step_dt/resample_s
-    moves=rules.judge_free(term.max_dist[ids],summed,size_x=rules.promotion_size_x(terrain,ids),resample_s=resample_s)
+    x_rule={}
+    if x_progress_kinds:       # plan terrain_promotion: the listed family/kind columns level up by x progress (default: absent, the line below is the old call)
+        x_rule=x_progress_rule(env,terrain,term,ids,x_progress_kinds,x_progress_fraction,x_progress_forward_only)
+    moves=rules.judge_free(term.max_dist[ids],summed,size_x=rules.promotion_size_x(terrain,ids),resample_s=resample_s,**x_rule)
     if flags.any():
         # CG E.3 env level promotion: a flag env is judged by the flags it reached (rules.judge_flag: all of the
         # walked share up, under half down), as terrain_levels_mixed does. An episode with no step (the resets at

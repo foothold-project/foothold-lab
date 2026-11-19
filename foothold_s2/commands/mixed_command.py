@@ -67,6 +67,7 @@ class MixedVelocityCommand(CommandTerm):
 
         self.start_xy = torch.zeros(n, 2, device=dev)
         self.max_dist = torch.zeros(n, device=dev)
+        self.max_x = torch.zeros(n, device=dev) if getattr(cfg, "track_x_progress", False) else None    # 진행 축 x 최대 이동 (듬성 종류 승급 규칙용 · 기본 꺼짐: None)
         self.cmd_sum_xy = torch.zeros(n, 2, device=dev)
         self.cmd_sum_w = torch.zeros(n, 2, device=dev)       # J-T10: 세계 좌표 기대 변위 합 R(yaw_t) · 명령 (매 스텝 실제 yaw). 기본은 판정에 안 쓰고 병행 기록만
         self.frame_stats = curriculum_rules.FrameCompareStats()
@@ -137,6 +138,8 @@ class MixedVelocityCommand(CommandTerm):
         pos = self.robot.data.root_pos_w[env_ids, :2]
         self.start_xy[env_ids] = pos
         self.max_dist[env_ids] = 0.0
+        if self.max_x is not None:
+            self.max_x[env_ids] = 0.0
         self.cmd_sum_xy[env_ids] = 0.0
         self.cmd_sum_w[env_ids] = 0.0
         self.goals[env_ids] = 0
@@ -440,6 +443,8 @@ class MixedVelocityCommand(CommandTerm):
         self.ep_steps += 1.0
 
         self.max_dist = torch.maximum(self.max_dist, torch.linalg.norm(pos - self.start_xy, dim=1))
+        if self.max_x is not None:
+            self.max_x = torch.maximum(self.max_x, pos[:, 0] - self.start_xy[:, 0])
         self.cmd_sum_xy += self.vel_command_b[:, :2]
         self.cmd_sum_w += mc.world_cmd_step(yaw, self.vel_command_b[:, :2])
         self.exposure.add(self.mode_ids, self.vel_command_b, dt)
@@ -468,6 +473,8 @@ class MixedVelocityCommandCfg(CommandTermCfg):
     """`(terrain, env_ids) -> bool (m,)` 이 칸에서는 반드시 깃발 방식. dynamic_flags 일 때만 쓴다."""
     fixed_cmd: tuple = None
     """평가용: 모든 자유 속도 env 에 이 (vx, vy, wz) 만 낸다. flag_stride 0 이면 깃발 env 없음."""
+    track_x_progress: bool = False
+    """듬성 종류 올림 규칙 (plan terrain_promotion): 켜면 에피소드마다 진행 축 x 최대 이동 max_x 를 같이 센다. 꺼짐이면 max_x 는 None 이고 아무것도 더 계산하지 않는다."""
     clock_scatter: bool = False
     """EX-35: 새 프로세스의 첫 reset 직후 env 마다 다음 교체 시점을 U(0, resampling 주기) 로 흩는다."""
     params: dict = {}

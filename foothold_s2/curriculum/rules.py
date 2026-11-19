@@ -36,15 +36,32 @@ def promotion_size_x(terrain, env_ids):
     return check_size_x(table[terrain.terrain_types[ids].long()])
 
 
-def judge_free(max_dist_m, cmd_sum_xy, size_x=8.0, resample_s=4.0, factor=0.9, eps=1.0e-9):
-    """자유 속도 env 들의 판정. `cmd_sum_xy` (n, 2) = 에피소드 동안 뽑힌 (vx, vy) 의 합(움직임 명령 재추출만)."""
+def judge_free(max_dist_m, cmd_sum_xy, size_x=8.0, resample_s=4.0, factor=0.9, eps=1.0e-9, *,
+               progress_x=None, x_mask=None, x_fraction=0.5, forward_only=False):
+    """자유 속도 env 들의 판정. `cmd_sum_xy` (n, 2) = 에피소드 동안 뽑힌 (vx, vy) 의 합(움직임 명령 재추출만).
+
+    기본 (progress_x 없음) 은 위의 식 그대로다. progress_x (n,) + x_mask (n,) 를 주면 x_mask 가 참인 env (듬성 종류 열) 의 승급 조건만
+    `max_dist > size_x / 2` 대신 `진행 축 x 이동 > size_x * x_fraction` 이다 (출발점에서 에피소드 중 가장 멀리 간 x 이동 · 옆으로 휘돌아 얻은 거리는 뺀다).
+    forward_only 이면 x_mask env 중 명령 합이 앞쪽 (x 합 > 0 이고 x 합 >= |y 합|) 이 아닌 에피소드는 승급 · 강등 판정에서 뺀다 (0).
+    """
     check_size_x(size_x)
     max_dist_m = torch.as_tensor(max_dist_m, dtype=torch.float32)
     cmd_sum_xy = torch.as_tensor(cmd_sum_xy, dtype=torch.float32)
     norm = torch.linalg.norm(cmd_sum_xy, dim=1)
     out = torch.zeros(len(max_dist_m), dtype=torch.long, device=max_dist_m.device)
     active = norm > eps
-    up = active & (max_dist_m > torch.as_tensor(size_x, dtype=max_dist_m.dtype, device=max_dist_m.device) / 2.0)
+    if progress_x is None:
+        up = active & (max_dist_m > torch.as_tensor(size_x, dtype=max_dist_m.dtype, device=max_dist_m.device) / 2.0)
+    else:
+        if x_mask is None or not 0.0 < float(x_fraction) <= 1.0:
+            raise ValueError("progress_x needs x_mask and an x_fraction in (0, 1]")
+        mask = torch.as_tensor(x_mask, dtype=torch.bool, device=max_dist_m.device)
+        size = torch.as_tensor(size_x, dtype=max_dist_m.dtype, device=max_dist_m.device)
+        px = torch.as_tensor(progress_x, dtype=max_dist_m.dtype, device=max_dist_m.device)
+        up = active & torch.where(mask, px > size * float(x_fraction), max_dist_m > size / 2.0)
+        if forward_only:
+            active = active & ~(mask & ~((cmd_sum_xy[:, 0] > 0) & (cmd_sum_xy[:, 0] >= cmd_sum_xy[:, 1].abs())))
+            up = up & active
     down = active & (max_dist_m < 0.5 * norm * resample_s * factor) & ~up
     out[up] = 1
     out[down] = -1
