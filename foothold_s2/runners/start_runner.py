@@ -441,6 +441,7 @@ class StartRunner(OnPolicyRunner):
         print("EX42_PERCEPTION_LR where=%s lr=%s override=%s" % (
             where, ",".join("%g" % g["lr"] for g in self.perception_optimizer.param_groups), PERCEPTION_LR_OVERRIDE), flush=True)
         print("EX42_PERCEPTION_V_LOSS_COEF where=%s value=%g" % (where, sp.PERCEPTION_V_LOSS_COEF), flush=True)
+        print("EX42_PERCEPTION_EDGE where=%s weight=%g step_m=%g" % (where, sp.PERCEPTION_EDGE_WEIGHT, sp.PERCEPTION_EDGE_STEP_M), flush=True)
         _on, _b, _band = vx_corr_params()
         print("EX42_PERCEPTION_VX_CORR where=%s on=%d b=%.3f ramp=%g band=%g" % (where, int(_on), _b, VX_CORR_RAMP, _band), flush=True)
 

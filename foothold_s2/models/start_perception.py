@@ -186,9 +186,35 @@ def kl_standard_normal(mu: torch.Tensor, logvar: torch.Tensor) -> torch.Tensor:
     return (-0.5 * (1 + logvar - mu.pow(2) - logvar.exp()).sum(-1)).mean()
 
 
+# EX-42 복원 지도 가장자리 손실 (lead 11/19 14:35 · 목표 4 처방 후보): 식 4 (L_TR) 의 칸별 오차에만 곱하는 가중. 1.0 = 꺼짐 (이전 동작과 비트 동일, 가중 계산을 하지 않고
+# 식 4 를 그대로 부른다). 켜려면 PERCEPTION_EDGE_WEIGHT 를 3.0 (예) 으로. 가장자리 칸 = 정답 지도 H^b 에서 위 · 아래 · 왼 · 오른쪽 이웃과의 높이차가 PERCEPTION_EDGE_STEP_M (0.2 m)
+# 이상인 칸 (높이차의 양쪽 칸 모두 · 지도 가장자리 밖은 이웃 없음). H^b 는 z_hit - z_base 를 ±1 m 로 자른 값 (runners/map_stats.py) 이라 단위가 m 이고, 못 맞힌 광선 -1 칸도
+# 이웃과 0.2 m 넘게 다르면 가장자리다 (틈의 바닥 · 모서리). 가중 = 1 + (EDGE_WEIGHT - 1) * 가장자리 칸. 정규화하지 않는다 (가장자리가 있는 만큼 L_TR 이 커진다 · v 저속 가중과 같은 방식).
+# L_TR 은 TR-Net 만 움직인다 (gradient 경계) 이므로 I-E · PPO 경로는 이 가중으로 직접 안 바뀐다 (TR-Net 지도가 나중에 AdaSmpl 로 I-E 에 들어가는 간접 영향만).
+PERCEPTION_EDGE_WEIGHT = 1.0
+PERCEPTION_EDGE_STEP_M = 0.2
+
+
+def edge_cell_mask(hb: torch.Tensor, step_m: float | None = None) -> torch.Tensor:
+    """(..., 32, 16) 정답 지도 -> 같은 모양의 bool. 4 이웃 중 하나와 높이차가 step_m 이상이면 True (차이가 나는 두 칸 모두). 512 칸으로 펴진 입력도 받는다."""
+    step = PERCEPTION_EDGE_STEP_M if step_m is None else step_m
+    h = hb.reshape(*hb.shape[:-1], MAP_X, MAP_Y) if hb.shape[-1] == MAP_CELLS else hb
+    m = torch.zeros_like(h, dtype=torch.bool)
+    dx = (h[..., 1:, :] - h[..., :-1, :]).abs() >= step
+    dy = (h[..., :, 1:] - h[..., :, :-1]).abs() >= step
+    m[..., 1:, :] |= dx
+    m[..., :-1, :] |= dx
+    m[..., :, 1:] |= dy
+    m[..., :, :-1] |= dy
+    return m.reshape(hb.shape)
+
+
 def loss_tr(rough: torch.Tensor, refined: torch.Tensor, hb: torch.Tensor) -> torch.Tensor:
-    """식 4: MSE(H_rough, H^b) + L1(H_refined, H^b). 칸 평균."""
-    return F.mse_loss(rough, hb) + F.l1_loss(refined, hb)
+    """식 4: MSE(H_rough, H^b) + L1(H_refined, H^b). 칸 평균. PERCEPTION_EDGE_WEIGHT != 1.0 이면 가장자리 칸의 오차에 그 가중을 곱한 칸 평균 (위 주석)."""
+    if PERCEPTION_EDGE_WEIGHT == 1.0:
+        return F.mse_loss(rough, hb) + F.l1_loss(refined, hb)
+    w = 1.0 + (float(PERCEPTION_EDGE_WEIGHT) - 1.0) * edge_cell_mask(hb).to(rough.dtype)
+    return (w * (rough - hb) ** 2).mean() + (w * (refined - hb).abs()).mean()
 
 
 # EX-42 v28g 후보: 속도 추정 손실의 저속 가중. 1.0 = 꺼짐 (이전 동작과 비트 동일, F.mse_loss 를 그대로 부른다).
