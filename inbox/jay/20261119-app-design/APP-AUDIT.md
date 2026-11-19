@@ -1,8 +1,8 @@
 > 분류: 실사 기록 · FOOTHOLD 앱 (웹 + 폰) 지금 상태
 > 작성: Claude 세션 app-design-lx (오흥재 지시) · 2026-11-19 22:5x
-> 근거: foothold-app `origin/dev` `2b19f592` (11/19 21:35) 코드 읽기 · 같은 커밋을 로컬에 띄워 찍은 화면 18 장 (`shots/`) · 앱 흐름 그림 v0.6 (`../20261101-app/APP-FLOW-DIAGRAM.html`) · 결정 기록 `../20261101-app/APP-ROBOT-DIRECTION-1119.md` v1.1
+> 근거: foothold-app `origin/dev` `2b19f592` (11/19 21:35) 코드 읽기 · 같은 커밋을 로컬에 띄워 찍은 화면 19 장 (`shots/`) · app-reviewer 반박 8 줄 반영 (`REVIEW-APP-AUDIT.md` · 23:0x) · 앱 흐름 그림 v0.6 (`../20261101-app/APP-FLOW-DIAGRAM.html`) · 결정 기록 `../20261101-app/APP-ROBOT-DIRECTION-1119.md` v1.1
 > 요지: 지금 앱은 「PC 관제 웹 (로봇 · 지도 · 시뮬 · 기록 · 설정)」 과 「폰 조종 (로봇 연결 → 조종)」 두 틀이고, 실기와 시뮬이 다른 화면 · 다른 길로 나뉘어 있다. 팀장 원칙 일곱 가운데 「늘 보이는 STOP」 과 「값의 나이」 는 꽤 있고, 「모드 이름 · 무드 구분 · 웹과 앱 하나 · 3D 고급감 · 음성 · Jetson 저장」 은 없거나 일부다
-> 상태: 초안 · 팀장 확인 전. 고칠 안은 쓰지 않는다 (사실만)
+> 상태: 초안 v1.1 (검토 반영) · 팀장 확인 전. 고칠 안은 쓰지 않는다 (사실만)
 
 # 앱 실사 (2026-11-19 · dev `2b19f592`)
 
@@ -12,10 +12,11 @@
 - **띄운 법.** 저장소에 있는 개발 도구 `apps/web/tools/dev_stack.py` 로 내 기기 안에서만 띄웠다: 임시 PostgreSQL · 관제 서버 (uvicorn) · 가짜 로봇 (받은 명령을 메모리에만 두는 가짜 agent · 실제 로봇 명령 0) · 웹 개발 서버 (Vite). 계정 셋 (총괄 1 · 운영 관리자 2) · 로봇 1 대 (`Go2-7`) 가 자동으로 만들어진다. 이 도구는 Docker 를 쓰지 않는다.
 - **찍은 법.** 헤드리스 Chrome 으로 PC 폭 1440 x 900 · 폰 세로 390 x 844 · 폰 가로 844 x 390 에서 찍었다. 실기 「조종 시작」 은 누르지 않았다.
 - **못 띄운 것 (아래 그림 없음 · 코드로만 적음).**
-  - 브라우저 MuJoCo 시뮬 (`/sim/`): 정책 · MuJoCo wasm · onnxruntime 묶음이 저장소 밖 비공개 자산 (`deploy/README.md` 「브라우저 MuJoCo 묶음」) 이라 이 기기에 없다. 그래서 「시뮬 열기」 는 「시뮬을 열지 못했습니다」 로 끝났다 (`shots/07`).
+  - 브라우저 MuJoCo 시뮬 (`/sim/`): 정책 · MuJoCo wasm · onnxruntime 묶음이 저장소 밖 비공개 자산 (`deploy/README.md` 「브라우저 MuJoCo 묶음」 · `mobile/README.md` 1.2.0 「커밋 안 하는 것」: 빌드 때 `FH_SIM_SRC=<RS-6 시뮬 폴더>` 에서 복사) 이다. 이 기기에서 `policy_v2.f32` · `node_modules/@mujoco/mujoco` (`/home/jay` 아래 6 단계 깊이) · `mujoco.wasm` (`~/mai` · `~/data` 아래 7 단계 깊이) 를 찾았으나 없었다. 그래서 「시뮬 열기」 는 「시뮬을 열지 못했습니다」 로 끝났다 (`shots/07`).
   - PC 세 칸 조종 화면 (`pcdrive.tsx` · Go2 3D 포함): 서버 설정 · 기체번호 · 현장 승인 (agent 쪽) 세 조건이 맞아야 열린다 (`apps/server/fh_server/robots.py:111`). 가짜 로봇으로는 현장 승인이 없어 못 열었다.
   - 실기 영상 · 라이다 · 뎁스 · 배터리 · 관절 값: 가짜 로봇이 이 값을 보내지 않아 빈칸으로 찍혔다. 「빈칸일 때 화면이 무엇을 말하는가」 만 사실이다.
-- 그림 파일 이름 앞 번호는 이 문서의 읽는 순서다.
+- **이 두 화면을 찍는 길 (팀장 동의 필요 · 아직 안 함):** 운영 서버 웹을 찍기 · 시뮬 자산이 있는 팀원 기기에서 찍기 · RS-6 시뮬 폴더 자리를 받아 이 기기에서 띄우기.
+- 그림 파일 이름 앞 번호는 이 문서의 읽는 순서다. 그림에 내부 주소 · 기기 이름이 없는지 19 장을 모두 직접 봤다 (계정 이름은 개발 도구가 만든 가짜 이름).
 
 ## 1. 화면 지도
 
@@ -28,7 +29,9 @@
 
 - PC 메뉴 (보이는 것): **로봇 · 지도 · 시뮬 · 기록** + 아래 **어두움/밝음 · 설정**. 숨은 탭 (주소로만 열림): 결재 · 지형 만들기 · 휴지통 (`menu.tsx:24-33`).
 - 폰에는 탭이 없다. 「로봇 연결」 → 「조종」 → 「끝내기」 한 줄이고, 기록 · 전체화면 · 로그아웃 · 테마는 `⋯` 안에 있다 (`shots/12`).
-- 같은 웹 코드 (`apps/web`) 가 폭에 따라 두 틀을 고른다. 폰 앱 (Capacitor Android 1.2.3) 은 서버 주소를 열어 이 웹을 보여 주는 껍데기 + 앱 안 오프라인 시뮬이다 (`mobile/package.json` description).
+- 같은 웹 코드 (`apps/web`) 가 폭에 따라 두 틀을 고른다. 폰 앱 (Capacitor Android 1.2.3) 은 서버 주소를 열어 이 웹을 보여 주는 껍데기 + 앱 안 오프라인 시뮬이다 (`mobile/package.json` description). 그래서 이 문서의 폰 그림 (`shots/11` ~ `18`) 은 서버 웹을 폭 390 · 844 로 찍은 것이고, 앱이 처음 여는 화면은 `shots/00` 하나다.
+- **iOS 빌드는 없다.** Mac 이 없어 iOS 프로젝트만 만들었고 IPA 0 (`mobile/README.md:85` · `:145`).
+- **폰 앱의 주변 로봇 찾기:** Wi-Fi (mDNS) · 블루투스로 찾아 보여 주기만 하고 BLE 연결 · 쓰기 · 로봇 설정 변경은 0 (`mobile/README.md:5`). 찾은 것 가운데 인증된 agent 는 「연결」 로 폰 직결 조종에 들어간다 (10-30 · `nearby.tsx:4`). 실기에서 이 길은 「미검증」 이다 (`realdrive.tsx:3`).
 
 ### 1.2 PC 관제 웹
 
@@ -49,9 +52,10 @@
 
 | 그림 | 화면 | 보이는 것 (찍힌 사실) | 코드 |
 |---|---|---|---|
+| `shots/00-ph-app-start.jpg` | 폰 앱이 처음 여는 화면 | 「시뮬 열기 (서버 없이)」 · 「서버 주소」 입력 (https 주소) · [붙여넣기 · 열기]. 앱 안에는 이 한 장만 들어 있고, 주소를 넣으면 같은 WebView 가 서버의 웹 (`apps/web` `#/drive`) 을 연다 · 주소는 매번 넣는다 (최근 5 개만 기억) (`mobile/README.md` 1.1.0 · 1.2.1). **찍은 법이 다르다:** 앱이 아니라 `mobile/` 을 로컬 정적 서버로 열어 찍어서 로고 그림 · 글꼴이 안 읽혔다. 앱 안 모양은 미확인 | `mobile/start/index.html` · `start.js` · `origin.js` |
 | `shots/11-ph-connect.jpg` | 로봇 연결 | 「내 로봇」 카드 (이름 · 정지 잠금 · 조종하는 사람 · [연결] · [관리]) · 「+ 로봇 연결하기」 · 아래 「시뮬」 지도 카드 7 장 (창고 · AME-2 학습 지형 · 큰 공장 · 큰 공장 심화 · 2층 공장 · 요소 코스 · 붕괴 주택, 창고 말고는 「초안」) | `drive.tsx` · `simstart.tsx:1-2` · 지도 목록 `mobile/sim/maps.json` |
 | `shots/12-ph-more-menu.jpg` | `⋯` 메뉴 | 전체화면 · 기록 · 로그아웃 · 테마 | `App.tsx` |
-| `shots/13-ph-add-robot.jpg` | 새 로봇 추가 | 노트북 (Ubuntu · Windows) 에 연결 프로그램 설치 → 랜선 → QR 스캔 또는 6 자리 코드. **로봇 쪽 컴퓨터가 「노트북」 으로 적혀 있다** (Jetson 은 다른 설치 묶음 `apps/agent/installer/install_jetson_bundle.py`) | `pairing.tsx:1-3` |
+| `shots/13-ph-add-robot.jpg` | 새 로봇 추가 | 「노트북에 연결 프로그램이 없나요?」 · Ubuntu 노트북 · 윈도우 노트북 (둘 다 「만드는 중… 잠시 뒤 다시」) → 받은 파일 설치 → 랜선을 로봇에 꽂기 → 노트북 화면의 코드 넣기 · [QR 스캔] 또는 6 자리 코드 (10 분 안 한 번). **로봇 쪽 컴퓨터가 「노트북」 으로 적혀 있다** (Jetson 은 다른 설치 묶음 `apps/agent/installer/install_jetson_bundle.py`) | `pairing.tsx:1-3` |
 | `shots/14-ph-drive.jpg` | 조종 (세로) | 로봇 이름 · 조종하는 사람 · **지연 0.8 ms** · 정지 잠금 · [조종 시작] · [RGB · 뎁스 · 지도] · 영상 자리 「실기 영상 준비 중 (미연결)」 · 작은 지도 「지도 없음」 · 아래 [자세 · 시나리오 · 지도·목표 · 정책] | `realdrive.tsx:1-4` · `drive.tsx` |
 | `shots/15-ph-drive-pose.jpg` | 조종 · 자세 시트 | [서기 · 앉기 · 일으키기] 모두 꺼짐 · 「다음 단계에서 열립니다」 | `drive.tsx` |
 | `shots/16-ph-drive-map-scenario.jpg` | 조종 · 지도 보기 + 시나리오 시트 | 「지도 · 라이다 자료 없음 · 기능 준비 중」 · 시나리오 고르기 · 「실행 (준비 중) · 실기 시나리오 실행은 준비 중입니다」 | `drive.tsx` · `screens/missions.tsx:3` |
@@ -88,7 +92,8 @@
 - **`docker compose` 파일은 `origin/dev` 에 없다.** 예시 환경 파일은 `deploy/server.env.example` · `deploy/foothold-sim-manager.env.example` · `deploy/rootfs-manager.env.example` 셋이 있다.
 - **운영**: NaverCloud 서버 하나에 Caddy 443 → 정적 웹 + uvicorn + PostgreSQL 16 (`deploy/README.md` · 결정 기록 6 절). 웹 빌드는 PC 에서 해서 보낸다. 지금 앱 흐름은 「서버에 로그인 → 서버 경유 또는 폰 직결로 로봇」 이 기본이다 (서버 먼저).
 - **로봇 연결 패널**: 새 로봇은 로봇 쪽 컴퓨터에 연결 프로그램을 깔고 화면의 QR · 6 자리 코드로 서버에 등록한다 (`pairing.tsx:1-3` · `shots/13`). 연결 키는 화면에 오지 않는다.
-- **Jetson 자동 시작**: 설치 묶음이 `enable-autostart.sh` · `disable-autostart.sh` 를 만들고 `foothold-robot.service` (systemd user) 를 켜고 끈다 (`apps/agent/installer/install_jetson_bundle.py:210-215` · `jetson_autostart.py:9`). 11/19 22:16 이 서비스가 부팅 때 떠서 로봇 명령 (SportClient) 을 낼 수 있었던 것이 확인됐고 팀장이 껐다 (시작 프롬프트 3 절).
+- **Jetson 자동 시작**: 설치 묶음이 `enable-autostart.sh` · `disable-autostart.sh` 를 만들고 `foothold-robot.service` (systemd user) 를 켜고 끈다 (`apps/agent/installer/install_jetson_bundle.py:210-215` · `jetson_autostart.py:9`). 설치 안내는 「자동 시작은 아래 스크립트로 켠다」 고 적고, 켜기는 `enable --now` · 실패하면 `Restart=on-failure` (20 초 · 600 초에 5 번) 로 다시 띄운다 (`apps/agent/JETSON-ONBOARD.md:155` · `:177` · `:181`). 즉 스크립트가 「있다」 에 더해 안내 문서가 「켜라」 고 한다.
+- 11/19 22:16 이 서비스가 부팅 때 떠서 로봇 명령 (SportClient) 을 낼 수 있었고 팀장이 껐다는 것은 **기록 (lead-lx 시작 프롬프트 3 절 전달) · 이 실사에서 재지 않음** 이다.
 
 ## 4. 팀장 원칙 대비 모자란 점 (사실만 · 고칠 안 없음)
 
@@ -98,15 +103,16 @@
 | 2. 늘 보이는 안전 띠 | 머리줄 STOP (운영 관리자 · 폰) · 「정지 잠금」 알약 · 끊김 문구 (`App.tsx:33-50`) | 총괄 화면에는 STOP 이 없다 (`shots/02`). 배터리 · 관절 온도 · 통신 · 모드를 한 줄로 늘 보이는 띠는 없다 (PC 「상태 띠」 는 끊김 · 알림 한 줄용 · `App.tsx:104`) |
 | 3. 한눈에 · 필요할 때 깊이 | 총괄 숫자 줄 → 표 → 서랍 · 운영 관리자 상태 한 줄 → 관측 → 상세 · 접힌 「최근 사건」 「장치·위치」 | 폰 조종 화면의 자세 · 정책 · 실기 시나리오가 「다음 단계」 로 비어 있다 (`shots/15` · `shots/16` · `drive.tsx:143`) |
 | 4. 값이 얼마나 오래됐는지 | 「마지막 보고 0초 전」 · 「마지막 수신 22:44:33」 · 지연 ms · 온도 오래되면 빈 줄표 (`seenAt` 등 37 곳) | 화면마다 모양이 다름 (초 전 · 시각 · ms). 영상 · 지도 칸마다 나이 표시는 이번에 확인 못 함 (자료 없음) |
-| 5. 로봇 연결 → 시뮬 탭에서 Map → 임무 시뮬 → 「실기도 똑같이」 알림 · 조이스틱 또는 키보드 하나 직결 · 웹 · 앱 하나로 | 같은 웹 코드가 PC · 폰을 다 그림 · 시뮬은 브라우저 안 · 시나리오를 시뮬에서 실행 (`run.tsx:1-3`) | (가) 실기 시나리오 실행 없음 (「준비 중」 · `shots/16`). (나) 「시뮬에서 한 것이 실기에도 똑같이」 를 알리는 화면 없음. (다) **ADR-003: 실기 조종은 폰만 · 키보드는 시뮬 화면에만** (`screens/sim.tsx:3`) 인데 서버 경유 시험 조종은 PC 키보드가 있다 (`serverdrive.tsx:268`) · 팀장 원칙 「조이스틱 또는 키보드 하나 직결」 과 부딪침 (요구 원장에 「갈림」 으로). (라) 시뮬 페이지 (`mobile/sim/index.html`) 는 `apps/web` 과 다른 별도 화면이다. (마) 조이스틱 (`wireless_remote`) 읽기 없음 |
+| 5. 로봇 연결 → 시뮬 탭에서 Map → 임무 시뮬 → 「실기도 똑같이」 알림 · 조이스틱 또는 키보드 하나 직결 · 웹 · 앱 하나로 | 같은 웹 코드가 PC · 폰을 다 그림 · 시뮬은 브라우저 안 · 시나리오를 시뮬에서 실행 (`run.tsx:1-3`) | (가) 실기 시나리오 실행 없음 (「준비 중」 · `shots/16`). (나) 「시뮬에서 한 것이 실기에도 똑같이」 를 알리는 화면 없음. (다) 지금 규칙 ADR-003 은 「실기 조종은 폰만 · 키보드는 시뮬 직결 화면에만 · 실기 로봇 화면에는 없다」 (`screens/sim.tsx:3`). 실제로 키보드가 붙는 화면은 **둘** 이다: PC 시뮬 탭 (`screens/sim.tsx:2`) · PC 서버 경유 실기 시험 조종 (`serverdrive.tsx:268` · ADR-002 예외). 팀장 결정 (lead-lx 22:5x 전달 · 원장에서 팀장 원문 확인): 「조이스틱 또는 키보드 하나, 폰을 직결해 시뮬과 실기를 같이 조종」 · ADR-003 은 이 결정으로 바뀐다. (라) 시뮬 페이지 (`mobile/sim/index.html`) 는 `apps/web` 과 다른 별도 화면이다. (마) 조이스틱 (`wireless_remote`) 읽기 없음 |
 | 6. 모드 표시 「AME-2 Mode」 · 「START Mode」 · 무드톤 · 시뮬과 실기를 단번에 구분 | 시뮬 페이지 안 정책 고르기 (`nvidia-demo` · `start(시연)` · `AME-2(시연)` · `Go2 실기 보기`) · 실기 알약 「실기 · 미검증」 (`realdrive.tsx:74`) · 표의 「실기」 글자 | 「AME-2 Mode: 목표 기반 험지 주행 특화」 「START Mode: 기본 명령 수행 특화」 같은 모드 이름 · 설명 없음. 기본 정책이 네 모드 설계에 없는 `nvidia-demo`. 앱 화면 (`apps/web`) 의 정책 시트는 비어 있음. 모드 · 시뮬 · 실기에 따라 바뀌는 무드 (주사선 · 색 · 바탕) 를 찾지 못함 (`scanline` · `mood` 검색 0). 실기 공간의 Depth · RGB · LiDAR 창은 있으나 시뮬과 같은 틀 |
+| 6 · 7 을 지금 막고 있는 규칙 (사실) | (1) 운영 화면 금지어 (`docs/spec/03-UX-SPEC.md:42` U5 · `:49`): 관문 · Gazebo · GT · SLAM (지도 만들기 화면 보조 설명 제외) · Nav2 등. 원칙 6 의 「LiDAR · Depth 창」 · 3D 지도 표기와 걸릴 수 있다. (2) 프로젝트 규칙 「디자인은 기존 토큰 · CSS 를 옮겨 쓴다 (`ui/public/brand/**` 값 수정 금지)」 (foothold-app `CLAUDE.md`). 원칙 7 의 「컬러 무게 · 고급 3D」 와 걸릴 수 있다 | 푸는 길은 요구 원장의 갈림으로 (이 문서는 사실만) |
 | 7. 고급스러운 3D · AI Slop 금지 | three.js 3D: Go2 공개 메시 · 라이다 점 · 지형 3D · 지도 칸 3D | 지형 3D 는 청록 단색 상자 · 평평한 그림자 (`shots/07`). 화면 대부분은 평면 카드 · 표 · 테두리 단추 (`shots/02` ~ `shots/10`). 브랜드 토큰은 foothold-brand 1.1.0 과 같은 바이트 (`apps/web/public/brand/SOURCE.md` · 비교 `cmp` 같음) |
 | 음성 (명령 · 경고) | 없음 | 앱 · 시뮬 · agent 코드에 음성 기능 0 (`voice · speech · tts · wake` 검색은 agent 의 다른 뜻 3 곳뿐) |
 | 관절 온도 · 배터리 경고 (팀장 03:14 값) | 관절 12 온도 색 (범위 표시용 · 위험 기준 아님) · 배터리 잔량 · 20 % 아래 「배터리 낮음」 · 설정의 배터리 부족 기준 | 50 · 60 · 70 °C 문턱 · 이상 체크 · 10 % 단계 · 되풀이 알림 없음 (`go2model.tsx:21`). 같은 일을 하던 PR #389 는 팀장이 폐기 |
 | Jetson 저장 남은 GB + [지금 백업] | 없음 (`GB · 백업 · disk` 검색 0) | |
 | 실행 구조: 로컬 먼저 · `docker compose` 한 번 · `.env` | Docker 없이 뜨는 개발 도구 (`dev_stack.py`) · 예시 env 셋 | compose 파일 없음 · 실기 기록 재생 길 없음 · 시뮬 자산은 비공개 따로 · 서버 먼저 구조 |
 | Jetson agent 자동 시작 금지 · 명시적으로 켤 때만 | 자동 시작 켜기 · 끄기 스크립트 | 설치 묶음이 자동 시작을 켤 수 있는 구조 (`install_jetson_bundle.py:210-215`) · 앱 화면에서 「실기 연결 켜기」 같은 명시적 단추는 찾지 못함 |
-| 실시간 3D 지도 (react-three-fiber · 지연 p50 · p95) | three.js 직접 (`three` 0.186) · react-three-fiber 없음 (`apps/web/package.json`) | 지연을 숫자로 재는 장치 없음 (폰 조종의 「지연 ms」 는 링크 왕복 값 · 무엇을 재는지 이번에 확인 안 함) |
+| 실시간 3D 지도 (react-three-fiber · 지연 p50 · p95 · SLAM Point-LIO 와 GLIM) | three.js 직접 (`three` 0.186) · react-three-fiber 없음 (`apps/web/package.json`). 라이다 점은 받은 틀 그대로: `odom` 틀이면 로봇이 처음 켜진 곳 기준으로 쌓고, `lidar_link` 면 한 장씩 (`drivemedia.ts:3` · `:74`) · 「처음부터 다시」 로 비움 (`lidarmap.tsx:26`) | **SLAM 없음 · odom 그대로**: Point-LIO · GLIM 은 앱 · agent 어디에도 없다. 11/19 방 지도도 odom 을 쌓은 그림이지 SLAM 이 아니다 (그림 v0.6 SLAM 절). 지연을 숫자로 재는 장치 없음 (폰 조종의 「지연 ms」 는 링크 왕복 값 · 무엇을 재는지 이번에 확인 안 함) |
 
 ## 5. 확인하지 못한 것
 
