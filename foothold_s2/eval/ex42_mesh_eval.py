@@ -83,15 +83,35 @@ def preflight(mesh_dir):
             "eval_columns": [row["kind"] for row in table[:EVAL_COLS]]}
 
 
-def attach(env_cfg, mesh_dir):
-    """Before gym.make: mount exact mesh and its declared per-column reset."""
+def crop_cells_for(record, *, level, family=None, kind=None):
+    """(row, column) cells a fixed evaluation visits: the named kind's columns, or the A calibration columns, at `level`."""
+    if level is None:
+        raise ValueError("a cropped mesh needs a fixed level")
+    if kind is None:
+        return [(int(level), c) for c in range(record["eval_cols"])]
+    ids = [i for i, (f, k) in enumerate(zip(record["column_family"], record["columns"])) if f == family and k == kind]
+    if not ids:
+        raise ValueError(f"crop cells: no column for {family}/{kind}")
+    return [(int(level), i) for i in ids]
+
+
+def attach(env_cfg, mesh_dir, *, crop_margin=None, crop_level=None, crop_family=None, crop_kind=None):
+    """Before gym.make: mount exact mesh and its declared per-column reset.
+
+    `crop_margin` (CPU evaluation only, default None = the whole mesh as always) keeps just the triangles around the cells the
+    fixed evaluation visits."""
     from foothold_s2.terrains.ex42_mesh_mount import mesh_file_generator_cfg
     from foothold_s2.terrains.ex42_column_reset import apply_column_reset
 
     record = preflight(mesh_dir)
     env_cfg.scene.terrain.terrain_type = "generator"
-    env_cfg.scene.terrain.terrain_generator = mesh_file_generator_cfg(
-        record["mesh_npz"], record["mesh_sha256"])
+    if crop_margin is None:
+        env_cfg.scene.terrain.terrain_generator = mesh_file_generator_cfg(
+            record["mesh_npz"], record["mesh_sha256"])
+    else:
+        env_cfg.scene.terrain.terrain_generator = mesh_file_generator_cfg(
+            record["mesh_npz"], record["mesh_sha256"], crop_margin=crop_margin,
+            crop_cells=crop_cells_for(record, level=crop_level, family=crop_family, kind=crop_kind))
     env_cfg.scene.terrain.max_init_terrain_level = 2
     apply_column_reset(env_cfg, build_column_table(record["column_family"]))
     return record

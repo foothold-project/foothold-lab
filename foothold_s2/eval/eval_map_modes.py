@@ -39,6 +39,7 @@ parser.add_argument("--fixed-terrain", action="store_true", help="reset 뒤 terr
 parser.add_argument("--fixed-level", type=int, default=None, help="--fixed-terrain 의 레벨을 이 값 하나로(종류 열 배열은 그대로). 생략 = 기존(레벨 0~2 를 번갈아, 칸 해시 c3884d68). 바꾸면 해시도 바뀐다")
 parser.add_argument("--terrain-set", choices=["default", "sparse50", "n21-continuous", "n21-flat"], default="default", help="sparse50: 듬성 지형 선택. N21: 연속 7종 또는 flat 단독의 고정 L2 selector")
 parser.add_argument("--mesh-dir", default=None, help="EX-42 calibration: pinned full ABCDE combined mesh directory")
+parser.add_argument("--crop-margin", type=float, default=None, help="CPU 평가 전용: 평가 칸 둘레 이 거리 (m) 안의 삼각형만 남긴 메시를 올린다 (권장 8). 기본 없음 = 합친 메시 전체")
 parser.add_argument("--ex42-kind-family", choices=("A", "B", "C", "D", "E"))
 parser.add_argument("--ex42-kind-name")
 parser.add_argument("--n21-record-only", action="store_true", help="N21 stage-end/parent E0 DR-on 측정, 별도 record-only receipt")
@@ -79,6 +80,8 @@ if kind_cell and (not args.ex42_kind_family or not args.ex42_kind_name or not ar
 if args.mesh_dir and (args.terrain_set != "default" or args.push_ladder or args.terrain_skill
                       or args.terrain_skill_v2 or not args.fixed_terrain):
     parser.error("--mesh-dir needs fixed default terrain without other terrain suites")
+if args.crop_margin is not None and (args.device != "cpu" or not args.mesh_dir or args.fixed_level is None or args.crop_margin < 0):
+    parser.error("--crop-margin is a CPU evaluation aid: it needs --device cpu, --mesh-dir, a fixed level and a margin >= 0")
 parser_sparse = args.terrain_set == "sparse50"
 parser_n21 = bool(args.n21_record_only)
 parser_gait = bool(args.gait_contact_sweep)
@@ -241,7 +244,11 @@ if parser_sparse:                                                               
 args.ex42_mesh = None
 if args.mesh_dir:
     from foothold_s2.eval.ex42_mesh_eval import attach as _attach_ex42_mesh
-    args.ex42_mesh = _attach_ex42_mesh(env_cfg, args.mesh_dir)
+    if args.crop_margin is None:
+        args.ex42_mesh = _attach_ex42_mesh(env_cfg, args.mesh_dir)
+    else:
+        args.ex42_mesh = _attach_ex42_mesh(env_cfg, args.mesh_dir, crop_margin=args.crop_margin, crop_level=args.fixed_level,
+                                           crop_family=args.ex42_kind_family, crop_kind=args.ex42_kind_name)
 if args.push_ladder:
     from foothold_s2.eval.ex41_push_ladder import configure_single_terrain
 
@@ -373,6 +380,11 @@ def _save_env_arrays(mode, cname, vx, fw, al, dn, dt, start_xy, row, map_err=Non
 
 
 res = {"evaluation_friction": friction_receipt, "source_sha256": SOURCE_SHA256, "task": args.task, "checkpoint": args.checkpoint, "checkpoint_sha256": sha, "ex41_checkpoint_preparation": checkpoint_preparation, "envs": args.envs, "steps": S, "command_suite": args.command_suite, "commands": CMDS, "dr_off": dr_off, "curriculum_off": curriculum_off, "fixed_terrain": None, "terrain_set": args.terrain_set, "eval_seed": args.eval_seed, "ex42_mesh": args.ex42_mesh, "terrain_hash": {}, "modes": {}, "run_identity": _run_identity()}
+if args.crop_margin is not None:                                                                      # CPU 평가 전용 잘라 낸 메시: 영수증에 남긴다 (판정용 GPU 평가와 섞지 않는다)
+    from foothold_s2.terrains import ex42_mesh_mount as _mm
+    if not _mm.LAST_CROP_RECORD:
+        raise RuntimeError("--crop-margin was given but the cropped mesh generator did not run")
+    res["mesh_crop"] = dict(_mm.LAST_CROP_RECORD, cpu_camera_evaluation_only=True)
 r5_contact_sources = []
 if args.dr_mode == "on":
     res["dr_mode"] = {"mode": "on", "scale": float(args.dr_scale), "table_path": dr_mode.table["path"],
