@@ -74,6 +74,7 @@
    "연재 제목": "앱과 로봇이 어떻게 이어지나",
    "연재 설명": "명령 길 하나 · 만들 것 셋",
    "연재 앵커": "rx-go2x",
+   "입구": "tooling",
    "메모": [
     "원자료: foothold-lab inbox/jay/20261101-app · inbox/jay/20261117-go2-x-sim-match-checklist-assets (11/19).",
     "그림 · 3D 점 자료는 web/assets/visual/go2x-1119/ 에 있고, 영상은 저장소 LFS 주소에서 부른다 (사이트에 mp4 를 두지 않는다).",
@@ -92,6 +93,7 @@
    "연재 제목": "Jetson 을 세우다",
    "연재 설명": "CycloneDDS · Tailscale · 녹화 다섯 벌",
    "연재 앵커": "rx-go2x",
+   "입구": "tooling",
    "메모": [
     "원자료: foothold-lab inbox/jay/20261101-app · inbox/jay/20261117-go2-x-sim-match-checklist-assets (11/19).",
     "그림 · 3D 점 자료는 web/assets/visual/go2x-1119/ 에 있고, 영상은 저장소 LFS 주소에서 부른다 (사이트에 mp4 를 두지 않는다).",
@@ -110,6 +112,7 @@
    "연재 제목": "숙소 방을 걸어 보다",
    "연재 설명": "방 지도 · 카메라 각 · 3D 점",
    "연재 앵커": "rx-go2x",
+   "입구": "result",
    "메모": [
     "원자료: foothold-lab inbox/jay/20261101-app · inbox/jay/20261117-go2-x-sim-match-checklist-assets (11/19).",
     "그림 · 3D 점 자료는 web/assets/visual/go2x-1119/ 에 있고, 영상은 저장소 LFS 주소에서 부른다 (사이트에 mp4 를 두지 않는다).",
@@ -128,6 +131,7 @@
    "연재 제목": "다음에 잴 것",
    "연재 설명": "141 초 끊김 · 절차 넷",
    "연재 앵커": "rx-go2x",
+   "입구": "plan",
    "메모": [
     "원자료: foothold-lab inbox/jay/20261101-app · inbox/jay/20261117-go2-x-sim-match-checklist-assets (11/19).",
     "그림 · 3D 점 자료는 web/assets/visual/go2x-1119/ 에 있고, 영상은 저장소 LFS 주소에서 부른다 (사이트에 mp4 를 두지 않는다).",
