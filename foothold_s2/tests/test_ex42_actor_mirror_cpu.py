@@ -64,6 +64,10 @@ def test_symmetry_loss_is_zero_for_a_symmetric_hand_policy_and_positive_for_an_a
     loss_asym = am.symmetry_loss(raw(o), raw(am.mirror_proprio(o)))
     assert float(loss_sym) < 1e-10
     assert float(loss_asym) > 1e-2
+    # both sides move: the original mean and the mirrored mean each get a gradient (each target is detached)
+    x, y = raw(o).requires_grad_(), raw(am.mirror_proprio(o)).requires_grad_()
+    am.symmetry_loss(x, y).backward()
+    assert float(x.grad.abs().max()) > 0 and float(y.grad.abs().max()) > 0
     # both directions each take half: swapping the two arguments gives the same value
     assert float(am.symmetry_loss(raw(am.mirror_proprio(o)), raw(o))) == pytest.approx(float(loss_asym), rel=1e-5)
 
