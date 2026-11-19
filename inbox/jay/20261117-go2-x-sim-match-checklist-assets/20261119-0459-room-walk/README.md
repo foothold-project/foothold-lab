@@ -12,4 +12,6 @@
 - 안 담긴 것: D435i 색 · 깊이 영상 (이번 녹화에 안 넣음) · 카메라 각도 · 높이 측정 · 배터리 · 온도는 같은 폴더 Jetson `monitor.csv` (05:00 27 % → 05:07 21 % · 가장 뜨거운 관절 54 °C · reserve 0).
 - 한계: Go2 odom 을 그대로 써서 오래 걸으면 어긋남이 쌓인다 (고리 닫기 없음). 이번은 5 분 · 20 m 라 벽이 두 겹으로 보이는 곳이 일부 있다 (눈으로 본 것 · 잰 값 아님).
 
+- 3D 점 (11/19 14:3x 덧붙임): `room_points_5cm.npy` = 5 cm 칸마다 점 평균 하나 (125,389 점 · float32 · odom 틀). rosbags 판 스크립트 `../20261119-0520-room-walk-full/room_map_rosbags.py` 로 이 bag 을 다시 돌려 만들었다 (지도 수치는 원래와 같음 · 확인 방법은 `../20261119-0520-room-walk-full/map/README.md`). 돌려 보기: `../../20261101-app/ROOM-POINTS-3D-1119.html`.
+
 ![방 위에서 본 지도](room_topview.png)

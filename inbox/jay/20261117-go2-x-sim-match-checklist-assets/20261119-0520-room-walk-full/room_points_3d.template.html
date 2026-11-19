@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>방 점구름 3D 11/19</title>
+<meta name="description" content="11/19 새벽 숙소 방 걷기 두 번 (04:59 · 05:20) 의 L2 점을 5 cm 로 줄여 높이 색으로 돌려 보는 페이지">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+:root { --paper:#f5f5f5; --ink:#2d3142; --muted:#4f5d75; --soft:#5a6580; --accent:#bf4520; --link:#2e5aa8; --rule:rgba(45,49,66,0.12); --card:#ffffff; --stage:#1d2030; }
+html { background: var(--paper); }
+body { font-family: 'Geist', 'Noto Sans KR', 'Malgun Gothic', sans-serif; background: var(--paper); color: var(--ink); line-height: 1.6; padding: 2.5rem 16px 4rem; }
+.wrap { max-width: 1100px; margin: 0 auto; }
+h1 { font-family: 'Instrument Serif', 'Noto Serif KR', serif; font-weight: 400; font-size: 2rem; line-height: 1.25; margin-bottom: 0.6rem; text-wrap: balance; }
+.eyebrow { font-family: 'Geist Mono', ui-monospace, Consolas, monospace; font-size: 0.66rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); margin-bottom: 0.4rem; }
+p, li { max-width: 72ch; }
+p + p { margin-top: 0.6rem; }
+ul { padding-left: 1.3rem; display: grid; gap: 0.35rem; margin: 0.6rem 0; }
+a { color: var(--link); }
+.lede { font-size: 1.05rem; color: var(--muted); margin-bottom: 1.25rem; }
+.head { border-top: 1px solid var(--rule); border-bottom: 1px solid var(--rule); padding: 0.75rem 0; margin-bottom: 1.5rem; display: grid; grid-template-columns: 5rem 1fr; gap: 0.2rem 0.75rem; font-size: 0.85rem; }
+.head dt { color: var(--soft); font-family: 'Geist Mono', ui-monospace, Consolas, monospace; font-size: 0.72rem; letter-spacing: 0.1em; padding-top: 0.15rem; }
+.controls { display: flex; flex-wrap: wrap; gap: 0.6rem 1.4rem; align-items: center; font-size: 0.86rem; margin: 1rem 0 0.6rem; }
+.controls fieldset { border: 0; display: flex; gap: 0.3rem; }
+.controls legend { float: left; margin-right: 0.5rem; color: var(--soft); font-family: 'Geist Mono', ui-monospace, Consolas, monospace; font-size: 0.72rem; letter-spacing: 0.1em; padding-top: 0.2rem; }
+.seg input { position: absolute; opacity: 0; }
+.seg label { border: 1px solid var(--rule); background: var(--card); padding: 0.15rem 0.7rem; border-radius: 4px; cursor: pointer; }
+.seg input:checked + label { border-color: var(--ink); background: var(--ink); color: var(--paper); }
+.seg input:focus-visible + label { outline: 2px solid var(--link); outline-offset: 2px; }
+.controls .range { display: flex; gap: 0.4rem; align-items: center; }
+.controls .range span { color: var(--soft); font-family: 'Geist Mono', ui-monospace, Consolas, monospace; font-size: 0.72rem; }
+.controls output { font-variant-numeric: tabular-nums; min-width: 3.6em; }
+#stage { position: relative; width: 100%; height: min(72vh, 680px); background: var(--stage); border-radius: 6px; overflow: hidden; touch-action: none; }
+#stage canvas { display: block; }
+#legend { position: absolute; left: 12px; bottom: 12px; color: #e8e8ee; font-size: 0.72rem; font-family: 'Geist Mono', ui-monospace, Consolas, monospace; }
+#legend .bar { width: 180px; height: 8px; border-radius: 2px; margin: 0.2rem 0; }
+#legend .ticks { display: flex; justify-content: space-between; width: 180px; }
+#info { position: absolute; right: 12px; top: 10px; color: #e8e8ee; font-size: 0.72rem; font-family: 'Geist Mono', ui-monospace, Consolas, monospace; text-align: right; }
+#err { display: none; position: absolute; inset: 0; color: #e8e8ee; padding: 2rem; }
+.note { background: var(--card); border: 1px solid var(--rule); border-left: 3px solid var(--accent); border-radius: 6px; padding: 0.9rem 1.1rem; margin: 1rem 0; }
+footer { border-top: 1px solid var(--rule); margin-top: 3rem; padding-top: 1rem; font-family: 'Geist Mono', ui-monospace, Consolas, monospace; font-size: 0.72rem; color: var(--muted); }
+code { font-family: 'Geist Mono', ui-monospace, Consolas, monospace; font-size: 0.82em; background: var(--card); border: 1px solid var(--rule); border-radius: 3px; padding: 0 0.3em; overflow-wrap: anywhere; }
+@media (max-width: 720px) { .head { grid-template-columns: 4rem 1fr; } h1 { font-size: 1.6rem; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+<p class="eyebrow">Go2 X 실기 · 숙소 · 2026-11-19 새벽</p>
+<h1>방을 걸으며 쌓은 라이다 점을 3D 로 돌려 본다</h1>
+<p class="lede">두 녹화 (04:59 · 05:20) 각각의 L2 점을 5 cm 칸 하나에 한 점으로 줄였다. 색은 바닥에서 잰 높이, 빨간 선은 로봇이 걸은 길이다.</p>
+
+<dl class="head">
+<dt>분류</dt><dd>실기 원자료에서 뽑은 그림 (방 걷기 L2 점 · 3D 보기)</dd>
+<dt>작성</dt><dd>Claude 세션 (오흥재 지시, go2-lx) · 2026-11-19</dd>
+<dt>근거</dt><dd>04:59 · 05:20 녹화 bag (ai-lx01 거울) → <code>room_map_rosbags.py</code> → <code>room_points_5cm.npy</code> · 이슈 <a href="https://github.com/foothold-project/foothold-lab/issues/861">#861</a> · <a href="../20261117-go2-x-sim-match-checklist-assets/20261119-0520-room-walk-full/map/README.md">지도 README</a></dd>
+<dt>요지</dt><dd>04:59 녹화 122,750 점 · 05:20 녹화 42,617 점 (5 cm 칸 · 바닥 위 -0.2~2.5 m) 을 높이 색으로 돌려 본다. 05:20 은 141 초에 본체 통신이 끊겨 걷기 앞부분만</dd>
+<dt>상태</dt><dd>1 차 · SLAM 아님 (Go2 odom 그대로) · 헤드리스 Chrome 으로 그려짐 확인 · 손 조작 미확인</dd>
+<dt>돌아가기</dt><dd><a href="ROOM-MAP-1119.html">방 지도 페이지</a></dd>
+</dl>
+
+<div class="controls">
+<fieldset class="seg" id="pick"><legend>녹화</legend></fieldset>
+<div class="range"><span>위를 자름</span><input type="range" id="cut" min="0.3" max="2.5" step="0.05" value="2.5" aria-label="이 높이 위의 점을 숨김 (m)"><output id="cutv">2.50 m</output></div>
+<div class="range"><span>점 크기</span><input type="range" id="size" min="1" max="6" step="0.5" value="3" aria-label="점 크기 (화소)"><output id="sizev">3</output></div>
+<div class="range"><label><input type="checkbox" id="showpath" checked> 걸은 길</label></div>
+<button type="button" id="top">위에서 보기</button>
+<button type="button" id="persp">비스듬히 보기</button>
+</div>
+
+<div id="stage">
+<div id="info"></div>
+<div id="legend"><div>바닥 위 높이 (m)</div><div class="bar" id="bar"></div><div class="ticks"><span>0</span><span>0.5</span><span>1.0</span><span>1.5</span><span>2.0+</span></div></div>
+<div id="err">3D 보기를 띄우지 못했다 (three.js 를 불러오는 데 인터넷이 필요하다).</div>
+</div>
+<p style="font-size:0.82rem;color:var(--muted);margin-top:0.4rem">끌기 = 돌리기 · 휠 또는 두 손가락 = 가까이 · 오른쪽 끌기 또는 Shift 끌기 = 옮기기.</p>
+
+<div class="note">
+<p><b>SLAM 이 아니다.</b> 점은 Go2 가 스스로 추정한 위치 (<code>odom</code>) 를 고치지 않고 그대로 쌓았다. 그래서 벽이 두 겹으로 보이는 곳이 있다. 두 녹화는 출발점이 달라 좌표가 맞지 않으므로 겹치지 않고 하나씩 본다 (가운데 = 걸은 길 평균 위치).</p>
+<p>만든 법: 지도 스크립트 (<code>room_map.py</code> · <code>room_map_rosbags.py</code>) 가 걸은 길 둘레 5 m · 몸 둘레 0.6 m 밖 점을 5 cm 칸마다 평균 한 점으로 남긴 <code>room_points_5cm.npy</code> 에서, 바닥 기준 -0.2~2.5 m 만 골라 <code>room_points_html.py</code> 가 이 페이지에 넣었다 (mm 정수).</p>
+</div>
+<p><a href="ROOM-MAP-1119.html">방 지도 페이지로 돌아가기</a></p>
+<footer><p>작성 Claude 세션 (오흥재 지시, go2-lx) · 2026-11-19.</p></footer>
+</div>
+
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}</script>
+<script>window.CLOUDS = /*__CLOUDS__*/[];</script>
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+const VIR = [[68,1,84],[72,40,120],[62,74,137],[49,104,142],[38,130,142],[31,158,137],[53,183,121],[109,205,89],[180,222,44],[253,231,37]];
+function vir(t) { t = Math.min(1, Math.max(0, t)) * (VIR.length - 1); const i = Math.min(VIR.length - 2, Math.floor(t)), f = t - i;
+  return VIR[i].map((a, k) => (a + (VIR[i + 1][k] - a) * f) / 255); }
+document.getElementById('bar').style.background = 'linear-gradient(90deg,' + VIR.map(c => `rgb(${c})`).join(',') + ')';
+
+function i16(b64) { const s = atob(b64), u = new Uint8Array(s.length); for (let i = 0; i < s.length; i++) u[i] = s.charCodeAt(i); return new Int16Array(u.buffer); }
+
+const stage = document.getElementById('stage');
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setPixelRatio(Math.min(2, window.devicePixelRatio));
+stage.appendChild(renderer.domElement);
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x1d2030);
+const camera = new THREE.PerspectiveCamera(50, 1, 0.05, 200);
+camera.up.set(0, 0, 1);
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+scene.add(new THREE.AxesHelper(1));
+
+const mat = new THREE.ShaderMaterial({
+  uniforms: { size: { value: 3 }, cut: { value: 2.5 }, dpr: { value: renderer.getPixelRatio() } },
+  vertexShader: `uniform float size; uniform float cut; uniform float dpr; attribute vec3 color; varying vec3 vC; varying float vH;
+    void main(){ vC = color; vH = position.z; gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0); gl_PointSize = size * dpr; }`,
+  fragmentShader: `uniform float cut; varying vec3 vC; varying float vH; void main(){ if (vH > cut) discard; gl_FragColor = vec4(vC,1.0); }`,
+});
+
+const sets = window.CLOUDS.map(c => {
+  const q = i16(c.pts), n = q.length / 3, pos = new Float32Array(q.length), col = new Float32Array(q.length);
+  for (let i = 0; i < n; i++) { const z = q[3*i+2] / 1000; pos[3*i] = q[3*i] / 1000; pos[3*i+1] = q[3*i+1] / 1000; pos[3*i+2] = z;
+    const c3 = vir(z / 2.0); col[3*i] = c3[0]; col[3*i+1] = c3[1]; col[3*i+2] = c3[2]; }
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.BufferAttribute(pos, 3)); g.setAttribute('color', new THREE.BufferAttribute(col, 3));
+  const pts = new THREE.Points(g, mat);
+  const p = i16(c.path), pp = new Float32Array(p.length); for (let i = 0; i < p.length; i++) pp[i] = p[i] / 1000;
+  for (let i = 2; i < pp.length; i += 3) pp[i] = 0.12;
+  const pg = new THREE.BufferGeometry(); pg.setAttribute('position', new THREE.BufferAttribute(pp, 3));
+  const line = new THREE.Line(pg, new THREE.LineBasicMaterial({ color: 0xff4a3d }));
+  pg.computeBoundingBox(); const box = pg.boundingBox.clone().expandByScalar(2.0);
+  return { c, pts, line, box };
+});
+
+const pick = document.getElementById('pick'), info = document.getElementById('info');
+let cur = null;
+function show(i) {
+  if (cur) { scene.remove(cur.pts); scene.remove(cur.line); }
+  cur = sets[i]; scene.add(cur.pts); if (document.getElementById('showpath').checked) scene.add(cur.line);
+  info.textContent = `${cur.c.name} · 점 ${cur.c.n.toLocaleString()} 개 (5 cm 칸)`;
+  view('persp');
+}
+function view(kind) {
+  const b = cur.box, sx = b.max.x - b.min.x, sy = b.max.y - b.min.y, r = Math.max(sx, sy);
+  controls.target.set((b.min.x + b.max.x) / 2, (b.min.y + b.max.y) / 2, 0.3);
+  if (kind === 'top') camera.position.set(controls.target.x, controls.target.y - 0.001, r * 1.25);
+  else camera.position.set(controls.target.x - r * 0.45, controls.target.y - r * 0.6, r * 0.55);
+  controls.update();
+}
+sets.forEach((s, i) => {
+  const id = 'rec' + i;
+  pick.insertAdjacentHTML('beforeend', `<input type="radio" name="rec" id="${id}" ${i ? '' : 'checked'}><label for="${id}">${s.c.name}</label>`);
+  document.getElementById(id).addEventListener('change', () => show(i));
+});
+const cut = document.getElementById('cut'), size = document.getElementById('size');
+cut.addEventListener('input', () => { mat.uniforms.cut.value = +cut.value; document.getElementById('cutv').textContent = (+cut.value).toFixed(2) + ' m'; });
+size.addEventListener('input', () => { mat.uniforms.size.value = +size.value; document.getElementById('sizev').textContent = size.value; });
+document.getElementById('showpath').addEventListener('change', e => { if (e.target.checked) scene.add(cur.line); else scene.remove(cur.line); });
+document.getElementById('top').addEventListener('click', () => view('top'));
+document.getElementById('persp').addEventListener('click', () => view('persp'));
+
+function resize() { const w = stage.clientWidth, h = stage.clientHeight; renderer.setSize(w, h); camera.aspect = w / h; camera.updateProjectionMatrix(); }
+new ResizeObserver(resize).observe(stage); resize();
+const start = Math.min(sets.length - 1, Math.max(0, parseInt(location.hash.slice(1)) || 0));
+if (sets.length) { show(start); document.getElementById('rec' + start).checked = true; }
+renderer.setAnimationLoop(() => { controls.update(); renderer.render(scene, camera); });
+</script>
+<script>setTimeout(() => { if (!document.querySelector('#stage canvas')) document.getElementById('err').style.display = 'block'; }, 6000);</script>
+</body>
+</html>
