@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>숙소 방 지도 11/19</title>
+<meta name="description" content="11/19 새벽 숙소에서 Go2 X 로 방을 걸으며 만든 L2 지도와 D435i 영상 · 카메라 높이 · 각을 어떻게 얻었는지 한 장에 모은 기록">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+:root { --paper:#f5f5f5; --ink:#2d3142; --muted:#4f5d75; --soft:#5a6580; --accent:#bf4520; --link:#2e5aa8; --rule:rgba(45,49,66,0.12); --card:#ffffff; }
+html { background: var(--paper); }
+body { font-family: 'Geist', 'Noto Sans KR', 'Malgun Gothic', sans-serif; background: var(--paper); color: var(--ink); line-height: 1.6; padding: 2.5rem 16px 4rem; }
+.wrap { max-width: 1100px; margin: 0 auto; }
+h1 { font-family: 'Instrument Serif', 'Noto Serif KR', serif; font-weight: 400; font-size: 2rem; line-height: 1.25; margin-bottom: 0.6rem; text-wrap: balance; }
+h2 { font-family: 'Instrument Serif', 'Noto Serif KR', serif; font-weight: 400; font-size: 1.4rem; margin-bottom: 0.6rem; text-wrap: balance; }
+.eyebrow { font-family: 'Geist Mono', ui-monospace, Consolas, monospace; font-size: 0.66rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); margin-bottom: 0.4rem; }
+p, li { max-width: 72ch; }
+p + p { margin-top: 0.6rem; }
+ul, ol { padding-left: 1.3rem; display: grid; gap: 0.35rem; margin: 0.6rem 0; }
+a { color: var(--link); }
+.lede { font-size: 1.05rem; color: var(--muted); margin-bottom: 1.25rem; }
+.head { border-top: 1px solid var(--rule); border-bottom: 1px solid var(--rule); padding: 0.75rem 0; margin-bottom: 1.5rem; display: grid; grid-template-columns: 5rem 1fr; gap: 0.2rem 0.75rem; font-size: 0.85rem; }
+.head dt { color: var(--soft); font-family: 'Geist Mono', ui-monospace, Consolas, monospace; font-size: 0.72rem; letter-spacing: 0.1em; padding-top: 0.15rem; }
+section { margin: 2.5rem 0 3rem; }
+.note { background: var(--card); border: 1px solid var(--rule); border-left: 3px solid var(--accent); border-radius: 6px; padding: 0.9rem 1.1rem; margin: 1rem 0; }
+figure { margin: 1rem 0; }
+figure img, figure video { width: 100%; height: auto; display: block; border: 1px solid var(--rule); border-radius: 4px; background: #000; }
+figure img { background: var(--card); }
+figcaption { font-size: 0.82rem; color: var(--muted); margin-top: 0.4rem; }
+.pair { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1rem; }
+.table-wrap { overflow-x: auto; margin: 0.8rem 0; }
+table { border-collapse: collapse; width: 100%; font-size: 0.86rem; background: var(--card); }
+th, td { text-align: left; vertical-align: top; padding: 0.4rem 0.6rem; border-bottom: 1px solid var(--rule); overflow-wrap: anywhere; }
+th { font-family: 'Geist Mono', ui-monospace, Consolas, monospace; font-size: 0.7rem; letter-spacing: 0.1em; color: var(--soft); font-weight: 500; }
+td.num { font-variant-numeric: tabular-nums; white-space: nowrap; }
+code { font-family: 'Geist Mono', ui-monospace, Consolas, monospace; font-size: 0.82em; background: var(--card); border: 1px solid var(--rule); border-radius: 3px; padding: 0 0.3em; overflow-wrap: anywhere; }
+.tag { display: inline-block; font-size: 0.72rem; padding: 0 0.4rem; border-radius: 3px; }
+.tag.done { border: 1px solid var(--ink); }
+.tag.todo { border: 1px dashed var(--accent); color: var(--accent); }
+footer { border-top: 1px solid var(--rule); margin-top: 3rem; padding-top: 1rem; font-family: 'Geist Mono', ui-monospace, Consolas, monospace; font-size: 0.72rem; color: var(--muted); }
+:focus-visible { outline: 2px solid var(--link); outline-offset: 2px; }
+@media (max-width: 720px) { .head { grid-template-columns: 4rem 1fr; } h1 { font-size: 1.6rem; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+<p class="eyebrow">Go2 X 실기 · 숙소 · 2026-11-19 새벽</p>
+<h1>숙소 방을 두 번 걸어 L2 지도와 카메라 영상 · 각을 얻었다</h1>
+<p class="lede">팀장이 조이스틱으로 방을 걸었고, Jetson 은 라이다 · 카메라 · 로봇 상태를 녹화만 했다. 이 페이지는 그 녹화로 무엇을 만들었고 어떻게 만들었는지를 보인다.</p>
+<dl class="head">
+<dt>작성</dt><dd>Claude 세션 (오흥재 지시, lead-lx) · 2026-11-19</dd>
+<dt>근거</dt><dd>Jetson <code>~/go2_diag/records/</code> 두 녹화 (ai-lx01 에 체크섬 대조로 거울) · 이슈 <a href="https://github.com/foothold-project/foothold-lab/issues/861">#861</a> · <a href="GO2X-JETSON-SETUP-1119.md">GO2X-JETSON-SETUP-1119.md</a> 5 · 7 절</dd>
+<dt>요지</dt><dd>방 지도 1 장 (12.4 × 14.1 m · 걸은 길 20.75 m) · D435i 색 · 깊이 영상 330 초 · 선 자세 카메라 높이 0.372 m · 아래로 38.6°</dd>
+<dt>상태</dt><dd>지도 · 각 계산 끝. SLAM 은 아직 안 돌렸다 (아래 「SLAM 이 아니다」)</dd>
+<dt>돌아가기</dt><dd><a href="APP-FLOW-DIAGRAM.html">앱 흐름 그림</a></dd>
+</dl>
+
+<section aria-labelledby="map">
+<p class="eyebrow">녹화 1 · 04:59~05:07</p>
+<h2 id="map">방 지도: 라이다 점을 로봇이 아는 자기 위치 위에 쌓았다</h2>
+<figure>
+<a href="../20261117-go2-x-sim-match-checklist-assets/20261119-0459-room-walk/room_topview.png"><img src="../20261117-go2-x-sim-match-checklist-assets/20261119-0459-room-walk/room_topview.png" alt="방을 위에서 본 지도 두 장. 왼쪽은 5 cm 칸마다 가장 높은 점의 높이를 색으로, 오른쪽은 흰 바닥 · 검정 장애물 · 회색 모름으로 칠했고 빨간 선이 로봇이 걸은 길이다"></a>
+<figcaption>왼쪽: 5 cm 칸마다 가장 높은 점 (바닥 기준 m). 오른쪽: 흰색 바닥 · 검정 장애물 (0.15~1.8 m) · 회색 모름. 빨간 선 = 걸은 길 · 초록 점 = 출발. 누르면 원본 크기.</figcaption>
+</figure>
+<p><b>만든 순서</b> (스크립트 <a href="../20261117-go2-x-sim-match-checklist-assets/20261119-0459-room-walk/room_map.py"><code>room_map.py</code></a>, Jetson 의 ROS 2 환경에서 실행)</p>
+<ol>
+<li><b>녹화.</b> Go2 가 내보내는 <code>/utlidar/cloud_deskewed</code> (L2 점구름, 13.6 Hz) 와 <code>/utlidar/robot_odom</code> (로봇이 다리 · IMU 로 추정한 자기 위치) 를 8 분 녹화. 점구름 7016 장.</li>
+<li><b>틀 맞추기는 필요 없었다.</b> <code>cloud_deskewed</code> 는 Go2 가 이미 <code>odom</code> 틀 (출발점 기준 바닥 좌표) 로 옮겨 내보낸다. 그래서 장마다 점을 그대로 쌓으면 지도가 된다.</li>
+<li><b>로봇 몸에 맞은 점 빼기.</b> 그 순간 몸 중심에서 수평 0.6 m 안의 점은 다리 · 몸이라 버렸다.</li>
+<li><b>범위 자르기.</b> 창 밖 · 반사로 튄 점을 빼려고 걸은 길 둘레 5 m 만 남겼다.</li>
+<li><b>5 cm 칸.</b> 바닥 높이는 점 높이의 아래 2 % 로 잡고, 칸마다 가장 높은 점 · 바닥 점 수 · 장애물 점 수를 셌다. 장애물 칸 = 그 칸 점의 30 % 넘게가 바닥에서 0.15~1.8 m.</li>
+</ol>
+<div class="table-wrap"><table><thead><tr><th>값</th><th>숫자</th><th>출처</th></tr></thead><tbody>
+<tr><td>걸은 길</td><td class="num">20.75 m · 493.6 초</td><td rowspan="4"><a href="../20261117-go2-x-sim-match-checklist-assets/20261119-0459-room-walk/room_map_info.json"><code>room_map_info.json</code></a></td></tr>
+<tr><td>그림 범위</td><td class="num">12.4 × 14.1 m</td></tr>
+<tr><td>바닥 칸 · 장애물 칸</td><td class="num">9546 · 4492</td></tr>
+<tr><td>쌓은 점</td><td class="num">37,567,767</td></tr>
+</tbody></table></div>
+<div class="note">
+<p><b>SLAM 이 아니다.</b> SLAM 은 걸으면서 지도를 만들고, 같은 곳에 돌아오면 어긋난 위치를 고친다 (고리 닫기). 이 지도는 Go2 의 자기 위치 추정 (<code>odom</code>) 을 고치지 않고 그대로 믿었다. 그래서 오래 걸을수록 어긋남이 쌓이고, 이번에도 벽이 두 겹으로 보이는 곳이 있다 (눈으로 본 것 · 잰 값 아님).</p>
+<p>Go2 자체 SLAM (<code>/uslam</code>) 은 토픽은 있었지만 켜는 API 번호를 Jetson 에서 찾지 못해 켜지 않았다. 11/19 낮 학원 (ai-lt01) 에서 Unitree 앱 지도 메뉴로 켜 보는 것이 다음 할 일이다.</p>
+</div>
+<p>설명 원문: <a href="../20261117-go2-x-sim-match-checklist-assets/20261119-0459-room-walk/README.md">20261119-0459-room-walk/README.md</a></p>
+</section>
+
+<section aria-labelledby="video">
+<p class="eyebrow">녹화 2 · 05:20~05:26</p>
+<h2 id="video">카메라 영상: 앉음 → 섬 → 방 한 바퀴 → 앉음 (330 초)</h2>
+<p>두 번째 걷기에는 D435i 색 · 깊이를 같이 넣었다. 깊이는 0~4 m 를 무지개색으로, 검정은 값이 없는 곳이다. 왼쪽 검은 띠는 D435i 구조상 늘 생긴다 (왼쪽 렌즈만 보는 영역).</p>
+<div class="pair">
+<figure><video controls preload="metadata" src="../20261117-go2-x-sim-match-checklist-assets/20261119-0520-room-walk-full/color_full_web.mp4" poster="../20261117-go2-x-sim-match-checklist-assets/20261119-0520-room-walk-full/still_color_t080s.png"></video><figcaption><a href="../20261117-go2-x-sim-match-checklist-assets/20261119-0520-room-walk-full/color_full_web.mp4">색 영상 열기</a> · 640×480 · 30 fps · 11 MB</figcaption></figure>
+<figure><video controls preload="metadata" src="../20261117-go2-x-sim-match-checklist-assets/20261119-0520-room-walk-full/depth_full_web.mp4" poster="../20261117-go2-x-sim-match-checklist-assets/20261119-0520-room-walk-full/still_depth_t080s.png"></video><figcaption><a href="../20261117-go2-x-sim-match-checklist-assets/20261119-0520-room-walk-full/depth_full_web.mp4">깊이 영상 열기</a> · 0~4 m · 32 MB</figcaption></figure>
+</div>
+<p>302.9 초에 녹화가 4 초쯤 끊겼다. 그 구간은 마지막 화면이 멈춰 있고 빨간 「stale」 글자가 뜬다.</p>
+</section>
+
+<section aria-labelledby="angle">
+<p class="eyebrow">녹화 2 에서 계산</p>
+<h2 id="angle">카메라 높이 · 각: 깊이 영상에서 바닥 평면을 찾아 쟀다</h2>
+<p>깊이 영상의 점을 3 차원으로 펴고, 위를 향한 가장 큰 평면 (바닥) 을 매 프레임 찾았다. 카메라에서 그 평면까지 거리가 높이, 평면이 기운 정도가 각이다. 로봇이 가만히 서 있던 30 초와 앉아 있던 45 초의 모든 깊이 프레임을 썼다.</p>
+<div class="table-wrap"><table><thead><tr><th>자세</th><th>카메라 높이</th><th>아래로 숙인 각</th><th>옆 기울기</th><th>맞춘 프레임</th><th>SDK 몸 높이</th></tr></thead><tbody>
+<tr><td>선 자세 (매트 위)</td><td class="num">0.3716 m</td><td class="num">38.59°</td><td class="num">+1.89°</td><td class="num">816 / 816</td><td class="num">0.322 m</td></tr>
+<tr><td>앉음</td><td class="num">0.1431 m</td><td class="num">33.35°</td><td class="num">−1.94°</td><td class="num">1229 / 1229</td><td class="num">0.069 m</td></tr>
+</tbody></table></div>
+<div class="pair">
+<figure><a href="../20261117-go2-x-sim-match-checklist-assets/20261119-0520-room-walk-full/floor_overlay_standing_t083.00s.png"><img src="../20261117-go2-x-sim-match-checklist-assets/20261119-0520-room-walk-full/floor_overlay_standing_t083.00s.png" alt="선 자세 83 초 프레임. 색 영상, 깊이 영상, 바닥으로 잡힌 점을 초록으로 칠한 깊이 영상이 나란히 있다"></a><figcaption>선 자세 83 초: 색 · 깊이 · 바닥으로 잡힌 점 (초록)</figcaption></figure>
+<figure><a href="../20261117-go2-x-sim-match-checklist-assets/20261119-0520-room-walk-full/floor_overlay_sitting_t032.49s.png"><img src="../20261117-go2-x-sim-match-checklist-assets/20261119-0520-room-walk-full/floor_overlay_sitting_t032.49s.png" alt="앉은 자세 32.5 초 프레임. 색, 깊이, 바닥으로 잡힌 점을 초록으로 칠한 그림"></a><figcaption>앉음 32.5 초: 가까운 바닥은 D435i 최소 거리보다 가까워 비어 있다</figcaption></figure>
+</div>
+<ul>
+<li><b>시뮬과 견주면.</b> 시뮬 카메라는 몸 기준 (0.25, 0, 0.12) m · 35° 이고, 11/18 실측 장착은 (0.35, 0, 0.07) m 였다. 시뮬에서 실측 장착을 넣어 32 대로 걸려 본 결과 (planner 11/19 10:39) 턱 · 계단 성공은 같고 지도 평균 오차만 약 1 cm 늘었다.</li>
+<li><b>아직 모르는 것.</b> 매트 두께 (바닥이 아니라 매트 윗면을 잰 것) · 줄자로 잰 값 · 맨바닥에서의 각. 11/19 낮 학원에서 잰다.</li>
+<li>흔들림 (p10~p90) 0.3 mm · 0.05° 는 같은 자리를 다시 재는 정도이지 절대 정확도가 아니다.</li>
+</ul>
+<p>파일 전부와 체크섬: <a href="../20261117-go2-x-sim-match-checklist-assets/20261119-0520-room-walk-full/README.md">20261119-0520-room-walk-full/README.md</a> · 계산 스크립트 <a href="../20261117-go2-x-sim-match-checklist-assets/20261119-0520-room-walk-full/go2x_cam_derive.py"><code>go2x_cam_derive.py</code></a> · 값 <a href="../20261117-go2-x-sim-match-checklist-assets/20261119-0520-room-walk-full/floor_summary.json"><code>floor_summary.json</code></a></p>
+</section>
+
+<section aria-labelledby="where">
+<p class="eyebrow">원본 자리</p>
+<h2 id="where">저장소에는 줄인 사본, 원본은 ai-lx01 과 Jetson 에</h2>
+<div class="table-wrap"><table><thead><tr><th>무엇</th><th>자리</th></tr></thead><tbody>
+<tr><td>Jetson 원본 (bag · monitor)</td><td><code>~/go2_diag/records/20261119-0459-room-walk/</code> · <code>~/go2_diag/records/20261119-0520-room-walk-full/</code></td></tr>
+<tr><td>ai-lx01 거울 (9.7 GB · 체크섬 0 차이)</td><td><code>/home/jay/data/go2x_raw/jetson_go2_diag/records/</code></td></tr>
+<tr><td>ai-lx01 원본 영상 (26 MB · 85 MB)</td><td><code>/home/jay/data/go2x_raw/jetson_go2_diag/records/20261119-0520-room-walk-full/derived/</code></td></tr>
+<tr><td>저장소 (이 페이지가 쓰는 것)</td><td><code>inbox/jay/20261117-go2-x-sim-match-checklist-assets/20261119-0459-room-walk/</code> · <code>…/20261119-0520-room-walk-full/</code></td></tr>
+</tbody></table></div>
+</section>
+
+<section aria-labelledby="next">
+<p class="eyebrow">다음</p>
+<h2 id="next">오늘 학원에서 할 것</h2>
+<div class="table-wrap"><table><thead><tr><th>할 것</th><th>상태</th></tr></thead><tbody>
+<tr><td>방 지도 1 차 (odom 그대로 쌓기)</td><td><span class="tag done">끝</span> 11/19 05:19</td></tr>
+<tr><td>카메라 높이 · 각 (매트 위 · 앉음)</td><td><span class="tag done">끝</span> 11/19 06:33</td></tr>
+<tr><td>줄자로 잰 몸 · 카메라 높이 · 맨바닥 각</td><td><span class="tag todo">할 것</span> ai-lt01 Codex · 팀장 줄자</td></tr>
+<tr><td>Go2 자체 SLAM (<code>/uslam</code>) 지도 · 저장 · 다시 불러 위치 찾기</td><td><span class="tag todo">할 것</span> Unitree 앱으로 켜기 · <code>uslam_record.sh</code></td></tr>
+<tr><td>녹화로 오프라인 SLAM (고리 닫기)</td><td><span class="tag todo">할 것</span> /uslam 이 안 되면</td></tr>
+</tbody></table></div>
+</section>
+
+<footer>
+<p>작성 Claude 세션 (오흥재 지시, lead-lx) · 2026-11-19. 지도 · 각 계산은 lead 와 lead 가 보낸 하위 세션이 했다. 숫자는 각 폴더의 json · README 에서 옮겼다.</p>
+</footer>
+</div>
+</body>
+</html>

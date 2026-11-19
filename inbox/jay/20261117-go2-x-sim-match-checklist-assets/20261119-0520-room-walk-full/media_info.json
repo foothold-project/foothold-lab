@@ -1,0 +1,28 @@
+{
+ "still_80": {
+  "color_t_s": 80.015,
+  "depth_t_s": 79.985
+ },
+ "still_150": {
+  "color_t_s": 149.999,
+  "depth_t_s": 150.001
+ },
+ "still_250": {
+  "color_t_s": 250.005,
+  "depth_t_s": 249.974
+ },
+ "color_mp4": {
+  "slots": 9909,
+  "fps": 30,
+  "input_frames": 9772,
+  "max_input_gap_s": 4.342,
+  "duration_s": 330.3
+ },
+ "depth_mp4": {
+  "slots": 9909,
+  "fps": 30,
+  "input_frames": 9149,
+  "max_input_gap_s": 3.884,
+  "duration_s": 330.3
+ }
+}

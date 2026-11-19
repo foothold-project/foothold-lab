@@ -60,7 +60,7 @@ footer p { max-width: none; font-size: 0.72rem; }
 <dt>작성</dt><dd>처음 그림 planner · 2026-11-02 05:26 · 고침 Claude 세션 (오흥재 지시, lead-lx) · 2026-11-19</dd>
 <dt>근거</dt><dd>결정 기록 <a href="APP-ROBOT-DIRECTION-1119.md">APP-ROBOT-DIRECTION-1119.md</a> (같은 폴더 · v1.0) · 이슈 <a href="https://github.com/foothold-project/foothold-lab/issues/861">#861</a> 댓글 「foothold-app 코드 지도」 (<code>origin/dev</code> <code>89d2a221</code>) · <code>inbox/jay/20261118-repo-roles-and-go2-handoff.md</code> v1.2 · 읽기 전용 거울 <code>app-dev-view</code> 에서 몇 줄 다시 확인 (아래 표)</dd>
 <dt>요지</dt><dd>지금 실기는 agent 의 Sport 경로 (<code>SportClient.Move</code>) 하나로 Unitree 순정 보행을 움직이고, 우리 정책은 사용자 브라우저의 앱 시뮬 안에서만 돈다. 실기에서 우리 정책을 돌리는 저수준 실행기 · 모드 관리자 · 안전 정지 · 조이스틱 읽기는 foothold-app <code>apps/agent</code> 안에 새로 만든다.</dd>
-<dt>상태</dt><dd>v0.2 · 코드 읽기 기준 (실기 연결 · 지연은 이번에 재지 않음) · 「계획」 칸은 팀장 승인 결정이나 제안이며, 어느 쪽인지 근거 표에 적었다</dd>
+<dt>상태</dt><dd>v0.3 (11/19 11:0x · 숙소 측정 반영) · 코드 읽기 기준 (실기 연결 · 지연은 이번에 재지 않음) · 「계획」 칸은 팀장 승인 결정이나 제안이며, 어느 쪽인지 근거 표에 적었다</dd>
 </dl>
 
 <div class="key" role="note" aria-label="그림 읽는 법">
@@ -80,7 +80,7 @@ footer p { max-width: none; font-size: 0.72rem; }
 <li><b>멈추는 말.</b> STOP 하나였던 것을 「멈춤 (Stop)」 과 「안전 정지 (Damp)」 로 나눴다 (제안). 조이스틱 L2+B 와 <code>wireless_remote</code> 읽기를 더했다.</li>
 <li><b>서버.</b> 「서버 (FastAPI)」 한 칸이 Caddy · uvicorn API · PostgreSQL 16 으로 나뉘고, 주소 <code>foothold-project.dev</code> 계획이 붙었다.</li>
 <li><b>관절 온도 · 배터리 경고.</b> 새 절. 팀장 11/19 03:14 에 정한 값 (50 · 60 · 70 °C · 이상 체크 · 배터리 20 % · 10 % 알림, 막지 않음) 과 agent · 서버 · 화면에서 만들 것.</li>
-<li><b>Jetson 설치.</b> 새 절. 11/19 CycloneDDS · Tailscale · 표시 화면 (L2 점구름) · 방 지도 녹화. 누가 무엇을 했는지와 다시 확인하는 명령은 <code>GO2X-JETSON-SETUP-1119.md</code>.</li>
+<li><b>Jetson 설치 · 숙소 측정.</b> 새 절. 11/19 CycloneDDS · Tailscale · 표시 화면 (L2 점구름). 숙소에서 방 지도 1 차 (odom 그대로 쌓음 · SLAM 아님) · D435i 색 · 깊이 영상 330 초 · 카메라 높이 · 각을 얻었다 (<a href="ROOM-MAP-1119.html">숙소 방 지도 페이지</a>). Go2 자체 SLAM 은 아직. 다시 확인하는 명령은 <a href="GO2X-JETSON-SETUP-1119.md"><code>GO2X-JETSON-SETUP-1119.md</code></a>.</li>
 <li><b>망.</b> 랜선 노트북 하나에서 직결 <code>192.168.50.x</code> · Jetson Wi-Fi + Tailscale · 학원 Wi-Fi · 폰 핫스팟 네 가지로 늘었다.</li>
 <li><b>뺀 것.</b> 11/02 의 키 값 (1.5 m/s 등) · PD 값 · ROS 2 설명은 이번에 다시 재지 않아 이 판에서 뺐다. 11/02 판은 git 기록에 남아 있다. 「실시간 제어는 로봇 쪽에서만」 이라는 11/02 결론은 그대로다.</li>
 </ul>
@@ -553,15 +553,17 @@ footer p { max-width: none; font-size: 0.72rem; }
 </section>
 
 <section class="fig">
-<p class="eyebrow">Jetson · 11/19 설치한 것</p>
-<h2>Jetson 에 통신 플러그인 · Tailscale · 표시 화면을 올렸고, L2 점구름이 들어온다</h2>
-<p>누가 무엇을 했고 어떻게 다시 확인하는지는 <code>inbox/jay/20261101-app/GO2X-JETSON-SETUP-1119.md</code> 에 명령까지 적었다. 이 표는 요약이다.</p>
+<p class="eyebrow">Jetson · 11/19 설치 · 숙소 측정</p>
+<h2>Jetson 에 통신 플러그인 · Tailscale · 표시 화면을 올렸고, 숙소 방 지도와 카메라 영상 · 각을 얻었다</h2>
+<p>누가 무엇을 했고 어떻게 다시 확인하는지는 <code>inbox/jay/20261101-app/GO2X-JETSON-SETUP-1119.md</code> 에 명령까지 적었다. 이 표는 요약이다. 지도 · 영상 · 각을 어떻게 얻었는지는 <a href="ROOM-MAP-1119.html">숙소 방 지도 페이지</a> 에 그림과 함께 있다.</p>
 <div class="table-wrap"><table><thead><tr><th>항목</th><th>누가</th><th>확인한 값</th><th>상태</th></tr></thead><tbody>
 <tr><td>CycloneDDS (ROS 2 통신 플러그인)</td><td>팀장 sudo · lead 가 패키지 받음</td><td><code>/utlidar/cloud</code> 15.4 Hz (좌표틀 <code>utlidar_lidar</code>). 기본 통신으로는 안 보이던 L2 가 보인다</td><td><span class="tag code">있음</span></td></tr>
 <tr><td>Tailscale</td><td>팀장 (설치 · 인증 · 이름)</td><td>tailnet 이름 <code>go2x-jetson</code> · 랜선 없이 SSH</td><td><span class="tag code">있음</span></td></tr>
 <tr><td>표시 화면 (RViz)</td><td>lead</td><td>색 25 Hz · 색에 맞춘 깊이 24 Hz · L2 점구름 · 관절 온도 창. <code>view_start.sh</code> · <code>view_stop.sh</code></td><td><span class="tag code">있음</span></td></tr>
-<tr><td>방 지도 1 차 (위에서 본 그림)</td><td>lead 가 녹화만 · 걷기는 팀장 조이스틱</td><td>Go2 가 <code>/utlidar/cloud_deskewed</code> 를 이미 바닥 기준 (<code>odom</code>) 으로 13.6 Hz 내보냄 → 녹화를 쌓으면 지도. <code>walk_record.sh</code></td><td><span class="tag plan">계획</span> 11/19 05:00 녹화 중</td></tr>
-<tr><td>Unitree 자체 SLAM (<code>/uslam/*</code>)</td><td>-</td><td>토픽은 있으나 꺼져 있음. 켜는 것은 로봇 API 요청이라 팀장 동의 뒤</td><td><span class="tag plan">계획</span></td></tr>
+<tr><td>방 지도 1 차 (위에서 본 그림)</td><td>팀장 조이스틱으로 걷기 · lead 녹화 · 계산</td><td>11/19 04:59 녹화 · <code>/utlidar/cloud_deskewed</code> (이미 <code>odom</code> 틀) 7016 장을 그대로 쌓음 · 12.4 × 14.1 m · 걸은 길 20.75 m. SLAM 아님 (odom 을 고치지 않음 · 고리 닫기 없음). <a href="ROOM-MAP-1119.html#map">만든 법 · 지도 보기</a></td><td><span class="tag code">있음</span> 11/19 05:19</td></tr>
+<tr><td>D435i 색 · 깊이 영상</td><td>팀장 걷기 · lead 녹화</td><td>11/19 05:20 녹화 330 초 · 앉음 → 섬 → 방 한 바퀴. <a href="../20261117-go2-x-sim-match-checklist-assets/20261119-0520-room-walk-full/color_full_web.mp4">색 영상</a> · <a href="../20261117-go2-x-sim-match-checklist-assets/20261119-0520-room-walk-full/depth_full_web.mp4">깊이 영상</a> · <a href="ROOM-MAP-1119.html#video">페이지에서 보기</a></td><td><span class="tag code">있음</span></td></tr>
+<tr><td>카메라 높이 · 각 (깊이 바닥 평면)</td><td>lead (하위 세션 계산)</td><td>선 자세 (매트 위) 0.3716 m · 아래로 38.59° · 옆 +1.89° · 앉음 0.1431 m · 33.35°. 매트 두께 · 줄자 · 맨바닥은 미측. <a href="ROOM-MAP-1119.html#angle">계산 방법 · 확인 그림</a></td><td><span class="tag code">있음</span> 11/19 06:33</td></tr>
+<tr><td>Unitree 자체 SLAM (<code>/uslam/*</code>)</td><td>-</td><td>토픽은 있으나 꺼져 있음. 켜는 API 번호를 Jetson 에서 못 찾아 11/19 새벽에는 안 켬. 11/19 낮 학원에서 Unitree 앱 지도 메뉴로 켜고 <code>uslam_record.sh</code> 로 녹화 (팀장 동의 뒤)</td><td><span class="tag plan">계획</span> 11/19 낮</td></tr>
 </tbody></table></div>
 <ul>
 <li><b>하지 말 것:</b> <code>apt --fix-broken install</code> · <code>apt upgrade</code>. L4T 커널 · 부트로더가 고정돼 있어 apt 가 모든 설치를 거부하는데, fix-broken 은 그 묶음을 건드릴 수 있다. 새 패키지는 <code>apt-get download</code> 뒤 <code>sudo dpkg -i</code> 로 넣는다.</li>
