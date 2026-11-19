@@ -1,0 +1,597 @@
+{
+ "tags": {
+  "flat": {
+   "steps": 200,
+   "resets_in_recording": 0,
+   "max_abs_action_onnx_vs_torch": 1.9073486328125e-06,
+   "mean_abs_action_onnx_vs_torch": 4.2673977418417053e-07,
+   "step_of_max": 24,
+   "max_abs_gaze_r_onnx_vs_torch": 1.7881393432617188e-07,
+   "max_abs_action_onnx_vs_env_gpu": 0.00021886825561523438,
+   "max_abs_action_torch_cpu_vs_env_gpu": 0.00021839141845703125,
+   "max_abs_action_torch_vs_jit_twin": 0.0,
+   "max_abs_action": 3.149531602859497
+  },
+  "stairs": {
+   "steps": 200,
+   "resets_in_recording": 0,
+   "max_abs_action_onnx_vs_torch": 2.86102294921875e-06,
+   "mean_abs_action_onnx_vs_torch": 4.330285321429983e-07,
+   "step_of_max": 8,
+   "max_abs_gaze_r_onnx_vs_torch": 2.384185791015625e-07,
+   "max_abs_action_onnx_vs_env_gpu": 0.0002104640007019043,
+   "max_abs_action_torch_cpu_vs_env_gpu": 0.000209808349609375,
+   "max_abs_action_torch_vs_jit_twin": 0.0,
+   "max_abs_action": 3.6967666149139404
+  }
+ },
+ "max_abs_action_onnx_vs_torch": 2.86102294921875e-06,
+ "threshold": 0.0001,
+ "pass": true,
+ "onnx": {
+  "file": "ame2-demo-m16999.onnx",
+  "sha256": "56a492c6bf5684ef3bde2c1df0b545a0324e87060ecfeea37b4022b5b017ea0b",
+  "bytes": 5038171
+ },
+ "runtime": {
+  "onnxruntime": "1.26.0",
+  "provider": "CPUExecutionProvider",
+  "torch_reference": "2.7.0+cu128"
+ },
+ "checkpoint_sha256": "f4eaadb495f590e02c42103f524d0841616a58d33e73b2646ddeb34dc2fb1a41",
+ "recording": {
+  "task": "Ame2-Go2-Gaze-N9P12",
+  "steps": 200,
+  "step_dt": 0.02,
+  "physics_dt": 0.005,
+  "decimation": 4,
+  "terrain_columns": {
+   "flat": 0,
+   "stairs": 7
+  },
+  "terrain_levels": {
+   "flat": 0,
+   "stairs": 5
+  },
+  "changes_from_training_cfg": [
+   "scene.num_envs=2",
+   "rough sub-terrain max_slope_deg=0 max_roughness_m=0 (flat tile)",
+   "curriculum.terrain_levels=None",
+   "curriculum.teacher_mapping_noise=None",
+   "teacher_mapping custom_noise=[0,0,0]",
+   "teacher_prop.enable_corruption=False",
+   "height_scanner.drift_range=(0,0)"
+  ],
+  "checks": {
+   "prop_lin_vel_vs_state": 0.0,
+   "prop_ang_vel_vs_state": 0.0,
+   "prop_gravity_vs_state": 0.0,
+   "prop_joint_pos_rel_vs_state": 0.0,
+   "prop_last_action_vs_clip50_prev_action": 0.0,
+   "target_q_vs_q0_plus_0p25a": 0.0,
+   "map_x_const_over_y": 0.0,
+   "map_y_const_over_x": 0.0
+  },
+  "resets_in_recording": {
+   "flat": 0,
+   "stairs": 0
+  },
+  "code_id": "101da9dd0386"
+ },
+ "default_pose_test": {
+  "joint_pos_rel_max_abs": 0.0,
+  "prop_joint_pos_rel_max_abs": 0.0,
+  "pass_joint_pos_rel_lt_0p05": true,
+  "action0_target_minus_default_max_abs": 0.0,
+  "default_joint_pos": [
+   0.10000000149011612,
+   -0.10000000149011612,
+   0.10000000149011612,
+   -0.10000000149011612,
+   0.800000011920929,
+   0.800000011920929,
+   1.0,
+   1.0,
+   -1.5,
+   -1.5,
+   -1.5,
+   -1.5
+  ],
+  "action_scale": 0.25,
+  "use_default_offset": true
+ },
+ "ort_web": {
+  "onnxruntime_web": "1.31.1",
+  "backend": "wasm (numThreads 1)",
+  "node": "v24.15.0",
+  "tags": {
+   "flat": {
+    "steps": 200,
+    "max_abs_action_web_vs_torch": 1.7881393432617188e-06,
+    "step_of_max": 67
+   },
+   "stairs": {
+    "steps": 200,
+    "max_abs_action_web_vs_torch": 3.0994415283203125e-06,
+    "step_of_max": 71
+   }
+  },
+  "max_abs_action_web_vs_torch": 3.0994415283203125e-06,
+  "pass": true
+ },
+ "void_depth": {
+  "tool": "ame2_ev12 go2/_runs/evalgz_tpevf24_b1/eval_gaze.py, task Ame2-Go2-Gaze-N9P12-Eval5, seed 1001, 2400 robots, 5 episodes",
+  "reference_file": "/network-volume/limseokheon/ame2_pp1/logs/rsl_rl/go2_gaze_teacher/tp424_in_p1_s5_from17000/model_16999.pt",
+  "rerun_same_settings": {
+   "meta": {
+    "task": "Ame2-Go2-Gaze-N9P12-Eval5",
+    "seed": 1001,
+    "episodes": 5,
+    "num_envs": 2400,
+    "checkpoint": "/network-volume/limseokheon/ame2_pp1/logs/rsl_rl/go2_gaze_teacher/tp424_in_p1_s5_from17000/model_16999.pt",
+    "completed_updates": 17000,
+    "actor_sha": "21f909c9939874bd74b1228c4af5efbad82c3cbd588491b0461773aece6950a2",
+    "code": "6397e20bb6dc"
+   },
+   "reference_depth_U0.4_1.0": {
+    "rough": {
+     "episodes": 1000,
+     "success": 0.993
+    },
+    "stair_down": {
+     "episodes": 1000,
+     "success": 0.992
+    },
+    "stair_up": {
+     "episodes": 1000,
+     "success": 0.987
+    },
+    "boxes_j": {
+     "episodes": 1000,
+     "success": 0.953
+    },
+    "discrete_j": {
+     "episodes": 1000,
+     "success": 0.972
+    },
+    "climb_up": {
+     "episodes": 1000,
+     "success": 0.967
+    },
+    "climb_down": {
+     "episodes": 1000,
+     "success": 0.981
+    },
+    "steps_j": {
+     "episodes": 1000,
+     "success": 0.967
+    },
+    "stones": {
+     "episodes": 1000,
+     "success": 0.555
+    },
+    "gap": {
+     "episodes": 1000,
+     "success": 0.618
+    },
+    "pallets": {
+     "episodes": 1000,
+     "success": 0.856
+    },
+    "beam": {
+     "episodes": 1000,
+     "success": 0.895
+    },
+    "_all": {
+     "episodes": 12000,
+     "success": 0.8946666666666667
+    }
+   },
+   "depth_fixed_0.7": {
+    "rough": {
+     "episodes": 1000,
+     "success": 0.993
+    },
+    "stair_down": {
+     "episodes": 1000,
+     "success": 0.992
+    },
+    "stair_up": {
+     "episodes": 1000,
+     "success": 0.987
+    },
+    "boxes_j": {
+     "episodes": 1000,
+     "success": 0.953
+    },
+    "discrete_j": {
+     "episodes": 1000,
+     "success": 0.972
+    },
+    "climb_up": {
+     "episodes": 1000,
+     "success": 0.967
+    },
+    "climb_down": {
+     "episodes": 1000,
+     "success": 0.981
+    },
+    "steps_j": {
+     "episodes": 1000,
+     "success": 0.967
+    },
+    "stones": {
+     "episodes": 1000,
+     "success": 0.555
+    },
+    "gap": {
+     "episodes": 1000,
+     "success": 0.618
+    },
+    "pallets": {
+     "episodes": 1000,
+     "success": 0.856
+    },
+    "beam": {
+     "episodes": 1000,
+     "success": 0.895
+    },
+    "_all": {
+     "episodes": 12000,
+     "success": 0.8946666666666667
+    }
+   },
+   "diff_points": {
+    "rough": 0.0,
+    "stair_down": 0.0,
+    "stair_up": 0.0,
+    "boxes_j": 0.0,
+    "discrete_j": 0.0,
+    "climb_up": 0.0,
+    "climb_down": 0.0,
+    "steps_j": 0.0,
+    "stones": 0.0,
+    "gap": 0.0,
+    "pallets": 0.0,
+    "beam": 0.0,
+    "_all": 0.0
+   }
+  },
+  "depth_fixed_0.7": {
+   "meta": {
+    "task": "Ame2-Go2-Gaze-N9P12-Eval5",
+    "seed": 1001,
+    "episodes": 5,
+    "num_envs": 2400,
+    "checkpoint": "/network-volume/limseokheon/ame2_pp1/logs/rsl_rl/go2_gaze_teacher/tp424_in_p1_s5_from17000/model_16999.pt",
+    "completed_updates": 17000,
+    "actor_sha": "21f909c9939874bd74b1228c4af5efbad82c3cbd588491b0461773aece6950a2",
+    "code": "6397e20bb6dc"
+   },
+   "reference_depth_U0.4_1.0": {
+    "rough": {
+     "episodes": 1000,
+     "success": 0.993
+    },
+    "stair_down": {
+     "episodes": 1000,
+     "success": 0.992
+    },
+    "stair_up": {
+     "episodes": 1000,
+     "success": 0.987
+    },
+    "boxes_j": {
+     "episodes": 1000,
+     "success": 0.953
+    },
+    "discrete_j": {
+     "episodes": 1000,
+     "success": 0.972
+    },
+    "climb_up": {
+     "episodes": 1000,
+     "success": 0.967
+    },
+    "climb_down": {
+     "episodes": 1000,
+     "success": 0.981
+    },
+    "steps_j": {
+     "episodes": 1000,
+     "success": 0.967
+    },
+    "stones": {
+     "episodes": 1000,
+     "success": 0.555
+    },
+    "gap": {
+     "episodes": 1000,
+     "success": 0.618
+    },
+    "pallets": {
+     "episodes": 1000,
+     "success": 0.856
+    },
+    "beam": {
+     "episodes": 1000,
+     "success": 0.895
+    },
+    "_all": {
+     "episodes": 12000,
+     "success": 0.8946666666666667
+    }
+   },
+   "depth_fixed_0.7": {
+    "rough": {
+     "episodes": 1000,
+     "success": 0.992
+    },
+    "stair_down": {
+     "episodes": 1000,
+     "success": 0.999
+    },
+    "stair_up": {
+     "episodes": 1000,
+     "success": 0.983
+    },
+    "boxes_j": {
+     "episodes": 1000,
+     "success": 0.958
+    },
+    "discrete_j": {
+     "episodes": 1000,
+     "success": 0.971
+    },
+    "climb_up": {
+     "episodes": 1000,
+     "success": 0.966
+    },
+    "climb_down": {
+     "episodes": 1000,
+     "success": 0.973
+    },
+    "steps_j": {
+     "episodes": 1000,
+     "success": 0.975
+    },
+    "stones": {
+     "episodes": 1000,
+     "success": 0.567
+    },
+    "gap": {
+     "episodes": 1000,
+     "success": 0.629
+    },
+    "pallets": {
+     "episodes": 1000,
+     "success": 0.874
+    },
+    "beam": {
+     "episodes": 1000,
+     "success": 0.881
+    },
+    "_all": {
+     "episodes": 12000,
+     "success": 0.8973333333333333
+    }
+   },
+   "diff_points": {
+    "rough": -0.1,
+    "stair_down": 0.7,
+    "stair_up": -0.4,
+    "boxes_j": 0.5,
+    "discrete_j": -0.1,
+    "climb_up": -0.1,
+    "climb_down": -0.8,
+    "steps_j": 0.8,
+    "stones": 1.2,
+    "gap": 1.1,
+    "pallets": 1.8,
+    "beam": -1.4,
+    "_all": 0.27
+   }
+  },
+  "depth_fixed_0.7_no_virtual_plane": {
+   "meta": {
+    "task": "Ame2-Go2-Gaze-N9P12-Eval5",
+    "seed": 1001,
+    "episodes": 5,
+    "num_envs": 2400,
+    "checkpoint": "/network-volume/limseokheon/ame2_pp1/logs/rsl_rl/go2_gaze_teacher/tp424_in_p1_s5_from17000/model_16999.pt",
+    "completed_updates": 17000,
+    "actor_sha": "21f909c9939874bd74b1228c4af5efbad82c3cbd588491b0461773aece6950a2",
+    "code": "6397e20bb6dc"
+   },
+   "reference_depth_U0.4_1.0": {
+    "rough": {
+     "episodes": 1000,
+     "success": 0.993
+    },
+    "stair_down": {
+     "episodes": 1000,
+     "success": 0.992
+    },
+    "stair_up": {
+     "episodes": 1000,
+     "success": 0.987
+    },
+    "boxes_j": {
+     "episodes": 1000,
+     "success": 0.953
+    },
+    "discrete_j": {
+     "episodes": 1000,
+     "success": 0.972
+    },
+    "climb_up": {
+     "episodes": 1000,
+     "success": 0.967
+    },
+    "climb_down": {
+     "episodes": 1000,
+     "success": 0.981
+    },
+    "steps_j": {
+     "episodes": 1000,
+     "success": 0.967
+    },
+    "stones": {
+     "episodes": 1000,
+     "success": 0.555
+    },
+    "gap": {
+     "episodes": 1000,
+     "success": 0.618
+    },
+    "pallets": {
+     "episodes": 1000,
+     "success": 0.856
+    },
+    "beam": {
+     "episodes": 1000,
+     "success": 0.895
+    },
+    "_all": {
+     "episodes": 12000,
+     "success": 0.8946666666666667
+    }
+   },
+   "depth_fixed_0.7": {
+    "rough": {
+     "episodes": 1000,
+     "success": 0.997
+    },
+    "stair_down": {
+     "episodes": 1000,
+     "success": 0.994
+    },
+    "stair_up": {
+     "episodes": 1000,
+     "success": 0.982
+    },
+    "boxes_j": {
+     "episodes": 1000,
+     "success": 0.962
+    },
+    "discrete_j": {
+     "episodes": 1000,
+     "success": 0.974
+    },
+    "climb_up": {
+     "episodes": 1000,
+     "success": 0.966
+    },
+    "climb_down": {
+     "episodes": 1000,
+     "success": 0.975
+    },
+    "steps_j": {
+     "episodes": 1000,
+     "success": 0.979
+    },
+    "stones": {
+     "episodes": 1000,
+     "success": 0.534
+    },
+    "gap": {
+     "episodes": 1000,
+     "success": 0.622
+    },
+    "pallets": {
+     "episodes": 1000,
+     "success": 0.846
+    },
+    "beam": {
+     "episodes": 1000,
+     "success": 0.901
+    },
+    "_all": {
+     "episodes": 12000,
+     "success": 0.8943333333333333
+    }
+   },
+   "diff_points": {
+    "rough": 0.4,
+    "stair_down": 0.2,
+    "stair_up": -0.5,
+    "boxes_j": 0.9,
+    "discrete_j": 0.2,
+    "climb_up": -0.1,
+    "climb_down": -0.6,
+    "steps_j": 1.2,
+    "stones": -2.1,
+    "gap": 0.4,
+    "pallets": -1.0,
+    "beam": 0.6,
+    "_all": -0.03
+   }
+  }
+ },
+ "speed_goal_resent": {
+  "step_dt": 0.02,
+  "steps": 600,
+  "window_s": [
+   4.0,
+   12.0
+  ],
+  "resets": [
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0
+  ],
+  "goal_1m": {
+   "vx_mean": 1.1016416549682617,
+   "vx_per_robot": [
+    1.1200000047683716,
+    1.1019999980926514,
+    1.093999981880188,
+    1.0889999866485596
+   ],
+   "vx_p95": 1.1648522198200226,
+   "vx_max": 1.2015537023544312,
+   "vy_abs_mean": 0.06554720550775528,
+   "wz_abs_mean": 0.200495645403862,
+   "distance_m": [
+    13.529999732971191,
+    12.859999656677246,
+    13.430000305175781,
+    11.869999885559082
+   ],
+   "time_s": 12.0
+  },
+  "goal_2m": {
+   "vx_mean": 1.0593323707580566,
+   "vx_per_robot": [
+    1.0429999828338623,
+    1.0809999704360962,
+    1.0529999732971191,
+    1.0609999895095825
+   ],
+   "vx_p95": 1.124013215303421,
+   "vx_max": 1.1452751159667969,
+   "vy_abs_mean": 0.056412678211927414,
+   "wz_abs_mean": 0.17233288288116455,
+   "distance_m": [
+    12.40999984741211,
+    12.859999656677246,
+    12.630000114440918,
+    12.4399995803833
+   ],
+   "time_s": 12.0
+  }
+ },
+ "gaze_round_margin": {
+  "min_x_cells": 0.0026317834854125977,
+  "min_y_cells": 8.562207221984863e-05,
+  "min_x_r": 0.00015481079325956458,
+  "min_y_r": 2.8540690739949543e-05,
+  "max_gaze_r_diff": 2.384185791015625e-07,
+  "ratio": 119.70833333333333
+ }
+}
