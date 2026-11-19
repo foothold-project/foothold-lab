@@ -1331,6 +1331,20 @@ def _lineage(docs):
     return out
 
 
+def _hand_series():
+    """page_overrides.json 손 관리 페이지 가운데 「연재」 칸이 있는 것 -> [(연재, [(번호, 페이지, 칸)])].
+
+    연재 이름 순 · 안에서는 번호 순. 표가 정본이고 여기서는 읽기만 한다.
+    """
+    import handpages
+    by = {}
+    for page, spec in (handpages.load().get('페이지') or {}).items():
+        name = (spec.get('연재') or '').strip()
+        if name:
+            by.setdefault(name, []).append((int(spec.get('연재 번호') or 0), page, spec))
+    return [(k, sorted(v)) for k, v in sorted(by.items())]
+
+
 def _rx_rows(rows):
     """표처럼 읽히는 목록. 행 높이 고정 · 머리 열 112 px (「어떻게 재나」 · 「열린 문제」)."""
     return '<div class="rxtb3">%s</div>' % ''.join(
@@ -1414,6 +1428,26 @@ def research_top(docs, skip=()):
                    'aria-label="실험 계보 · 옆으로 넘김">%s</div></section>%s'
                    % (_rx_head('실험 계보', btns, 'rx-lin'), ''.join(items),
                       RX_LIN_JS))
+
+    # 손으로 쓴 연재 (예: 실기 Go2 X). md 가 아니라 page_overrides.json 의 손 관리
+    #   페이지라 [계보 N] 제목 규칙에 안 걸린다. 그 표의 「연재 *」 칸을 읽어 같은 모양의
+    #   띠를 하나씩 낸다. 넘김 단추는 달지 않는다 (RX_LIN_JS 가 [data-rxgo] 를 계보 줄에 묶는다).
+    for name, rows in _hand_series():
+        hid = rows[0][2].get('연재 앵커') or 'rx-ser'
+        items = ''.join(
+            '<a class="rxa3" href="%s"><span class="rxi3"><span>[%s %d]</span>%s</span>'
+            '<b class="rxat3">%s</b><span class="rxag3" title="%s">%s</span></a>'
+            % (esc(page), esc(name), n,
+               ('<span>%s</span>' % esc(sp['연재 칸'])) if sp.get('연재 칸') else '',
+               esc(sp.get('연재 제목') or page), esc(sp.get('연재 설명') or ''),
+               esc(sp.get('연재 설명') or ''))
+            for n, page, sp in rows)
+        meta = ('<span class="rxmw3">왼쪽이 처음 · 오른쪽으로 쌓임</span>'
+                '<span class="rxmn3">옆으로 밀어 넘김</span>')
+        out.append('<section class="rxs3" aria-labelledby="%s">%s'
+                   '<div class="rxr3" id="%s-row" tabindex="0" role="region" '
+                   'aria-label="%s · 옆으로 넘김">%s</div></section>'
+                   % (hid, _rx_head(name, meta, hid), hid, esc(name), items))
 
     # 재는 법 · 열린 문제. «평가 기준 N 편» 은 원장 입구 protocol 을 센 값이다.
     # 누르면 같은 페이지 아래 자료실 목록이 그 입구로 걸러진다 (_doors 의 ?fn=).

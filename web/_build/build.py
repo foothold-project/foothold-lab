@@ -344,6 +344,11 @@ if __name__ == '__main__':
     if not handpages.main(VAULT):
         print('  [!] 손 관리 페이지를 못 만들었습니다. 배포를 중단합니다.')
         sys.exit(1)
+    # ★ 2026-11-19. page_overrides.json 에 새로 단 손 관리 페이지 (실기 Go2 X 연재 넷) 는
+    #   위 기본 PAGES 에 없다. 여기서 더하지 않으면 생성은 되고 배포에서는 «내림» 으로 지워진다.
+    for _hp in sorted(handpages.load().get('페이지') or {}):
+        if _hp not in PAGES:
+            PAGES.insert(PAGES.index('vercel.json'), _hp)
 
     print('[0] 슬라이드 병합 (팀소개 + 킥오프)')
     r = subprocess.run([sys.executable, os.path.join(HERE, 'merge_deck.py')],

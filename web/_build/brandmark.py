@@ -19,7 +19,8 @@ import hashlib, io, os, re, shutil
 
 MARK = '<!--brand:v1-->'
 
-CANDIDATES = [
+# ★ 2026-11-19. 리눅스 기기에서는 아래 윈도 경로가 하나도 안 맞는다. FOOTHOLD_BRAND 로 클론 위치를 준다.
+CANDIDATES = ([os.environ['FOOTHOLD_BRAND']] if os.environ.get('FOOTHOLD_BRAND') else []) + [
     r"C:\Users\AI-WS01\Desktop\jay\인공지능사관학교\foothold-brand",
     os.path.expanduser(r"~\Desktop\jay\인공지능사관학교\foothold-brand"),
     os.path.expanduser(r"~\OneDrive\Desktop\인공지능사관학교\foothold-brand"),
