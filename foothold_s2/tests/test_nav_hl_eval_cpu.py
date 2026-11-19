@@ -163,3 +163,62 @@ def test_fine_level_columns_are_added_next_to_the_old_ones_and_agree_with_them(r
     assert stats["nv_sub_reached_l3p"] == sum(stats[f"nv_sub_reached_{k}"] for k in ("l3", "l4", "l5", "l6p"))
     assert stats["nv_cos_n_l3p"] == sum(stats[f"nv_cos_n_{k}"] for k in ("l3", "l4", "l5", "l6p"))
     assert [hl_eval.stat_key(k) for k in (1, 2, 3, 4, 5, 6, 9)] == ["l1", "l2", "l3", "l4", "l5", "l6p", "l6p"]
+
+
+def test_final_alias_groups_and_pooling():
+    assert hl_eval.parse_levels(["3", "4", "final"]) == (3, 4, hl_eval.FINAL_LEVEL) and hl_eval.label(hl_eval.FINAL_LEVEL) == "final"
+    for bad in ([], ["0"], ["3", "3"], ["final", "99"]):
+        with pytest.raises(ValueError):
+            hl_eval.parse_levels(bad)
+    assert hl_eval.split_groups((3, 4, 5, 6, hl_eval.FINAL_LEVEL)) == [(3, 4, 5, 6), (hl_eval.FINAL_LEVEL,)]
+    rows = [{"iteration": 1, "mode": "mean", "fresh": False, "level": 3, "eps": 10, "succ": 0.9, "prog": 0.9, "cos": 0.5},
+            {"iteration": 1, "mode": "mean", "fresh": False, "level": hl_eval.FINAL_LEVEL, "eps": 10, "succ": 0.3, "prog": 0.5, "cos": 0.2},
+            {"iteration": 1, "mode": "mean", "fresh": False, "level": 4, "eps": 0, "succ": -1.0, "prog": -1.0, "cos": -1.0}]
+    out = hl_eval.pooled(rows, {3: 0.17, hl_eval.FINAL_LEVEL: 0.83, 4: 0.0})
+    assert len(out) == 1 and out[0]["succ"] == pytest.approx(0.17 * 0.9 + 0.83 * 0.3)      # 학습 식: 에피소드 비율 가중 (에피소드 0 칸은 뺌)
+
+
+def test_a_final_level_cell_has_no_subgoals_but_the_goal_and_cannot_share_a_cell_with_level_6(rig):
+    env, task = rig
+    with pytest.raises(ValueError, match="share a statistics column"):
+        hl_eval.run_cell(env, task, torch.nn.Identity(), levels=(6, hl_eval.FINAL_LEVEL), ticks=1, mode="mean", seed=1)
+
+    class Zero(torch.nn.Module):
+        def forward(self, x):
+            return torch.zeros(x.shape[0], 3)
+
+    out = hl_eval.run_cell(env, task, Zero(), levels=(hl_eval.FINAL_LEVEL,), ticks=hl_eval.horizon_ticks(task), mode="mean", seed=1)
+    assert set(out) == {hl_eval.FINAL_LEVEL} and out[hl_eval.FINAL_LEVEL]["eps"] > 0
+    assert all(p.is_final and len(p._sub) == 1 and p._sub[0].kind == "goal" for p in task.pgcl)      # 목표만
+
+
+def test_fresh_tasks_redraw_after_a_success_while_the_default_repeats_the_same_task(rig):
+    env, task = rig
+    hl_eval.fix_levels(task, [3] * N, fresh=False)
+    assert task.redraw_on_fall is False
+    p = task.pgcl[0]
+    p.start_episode(np.array([[0.0, 0.0], [5.0, 0.0], [9.0, 0.0]]))
+    p._i = len(p._sub)
+    p.end_episode()
+    assert p.needs_new_task is False                                      # 기본: 같은 과제를 그 수준에서 되풀이
+    hl_eval.fix_levels(task, [3] * N, fresh=True)
+    assert task.redraw_on_fall is True
+    q = task.pgcl[0]
+    q.start_episode(np.array([[0.0, 0.0], [5.0, 0.0], [9.0, 0.0]]))
+    q._i = len(q._sub)
+    assert q.end_episode() == "level_up" and q.needs_new_task is True and q.level == 3
+    q.start_episode(np.array([[0.0, 0.0], [5.0, 0.0], [9.0, 0.0]]))
+    assert q.end_episode() == "hold" and q.needs_new_task is False         # 실패는 새 과제 요청 아님 (넘어진 뒤 새 과제는 redraw_on_fall 이 담당)
+    out = hl_eval.evaluate(env, task, [], levels=(3, 4), modes=("mean",), seed=1, ticks=3, fresh_modes=(False, True), log=lambda s: None)
+    assert out == []
+
+
+def test_evaluate_runs_fresh_and_final_cells_for_a_real_checkpoint(rig, tmp_path):
+    env, task = rig
+    ck = _checkpoint(tmp_path, 1000, 3)
+    lines = []
+    rows = hl_eval.evaluate(env, task, [ck], levels=(3, 6, hl_eval.FINAL_LEVEL), modes=("mean",), seed=2, ticks=hl_eval.horizon_ticks(task), fresh_modes=(False, True), log=lines.append)
+    assert {(r["fresh"], r["level"]) for r in rows} == {(f, lv) for f in (False, True) for lv in (3, 6, hl_eval.FINAL_LEVEL)}
+    assert len(lines) == 4 and all("fresh=" in s for s in lines)         # 묶음 둘 (3 6 / final) x fresh 둘
+    t = hl_eval.table(rows)
+    assert "수준 final" in t and "mean+fresh" in t
