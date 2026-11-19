@@ -1,0 +1,7 @@
+[Unit]
+Description=Go2 X Jetson recordings: copy to ai-lx01 and NAS, verify, mark (foothold-lab tools/jetson_storage)
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/python3 %h/mai/wt/foothold-lab/jetson-storage-1119/tools/jetson_storage/jetson_sync.py sync
+Nice=10
