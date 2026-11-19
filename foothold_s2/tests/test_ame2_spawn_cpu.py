@@ -111,9 +111,9 @@ def test_adapter_returns_safe_anchor_and_other_kinds_keep_old_origin():
 
 def test_reset_table_uses_actual_B_columns_and_only_target_kinds():
     table = p.reset_ranges_by_column({50 + i: kind for i, kind in enumerate(p.KINDS)})
-    for col in (50, 51, 52, 53, 57, 58, 59, 60, 61):
+    for col in (50, 51, 52, 53, 56, 57, 58, 59, 60, 61):
         assert table[col] == {'x': (0., 0.), 'y': (0., 0.), 'yaw': (0., 0.)}
-    for col in set(range(50, 62)) - {50, 51, 52, 53, 57, 58, 59, 60, 61}:
+    for col in set(range(50, 62)) - {50, 51, 52, 53, 56, 57, 58, 59, 60, 61}:
         assert table[col] == {'x': (-.5, .5), 'y': (-.5, .5), 'yaw': (-3.14, 3.14)}
     table[50]['x'] = (-.5, .5)
     assert p.RESET_RANGES['stair_up']['x'] == (0., 0.)
