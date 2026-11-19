@@ -31,6 +31,7 @@ a { color: var(--link); }
 .tag { font-size: 0.72rem; font-weight: 600; border-radius: 3px; padding: 0 0.35em; margin-right: 0.2rem; }
 .tag.code { border: 1px solid var(--ink); color: var(--ink); background: #ffffff; }
 .tag.plan { border: 1px dashed var(--accent); color: var(--accent); background: #ffffff; }
+.tag.wait { border: 1px solid var(--accent); color: #ffffff; background: var(--accent); }
 section.fig { margin: 2.5rem 0 3rem; }
 .diagram-container { width: 100%; overflow-x: auto; margin: 1rem 0 1.25rem; }
 .diagram-container svg { width: 100%; min-width: 1280px; display: block; }
@@ -58,15 +59,16 @@ footer p { max-width: none; font-size: 0.72rem; }
 <dl class="head">
 <dt>분류</dt><dd>설명 그림 · foothold-app 과 실기 Go2 X 의 연결 구조 (팀원 전달용)</dd>
 <dt>작성</dt><dd>처음 그림 planner · 2026-11-02 05:26 · 고침 Claude 세션 (오흥재 지시, lead-lx) · 2026-11-19</dd>
-<dt>근거</dt><dd>결정 기록 <a href="APP-ROBOT-DIRECTION-1119.md">APP-ROBOT-DIRECTION-1119.md</a> (같은 폴더 · v1.0) · 이슈 <a href="https://github.com/foothold-project/foothold-lab/issues/861">#861</a> 댓글 「foothold-app 코드 지도」 (<code>origin/dev</code> <code>89d2a221</code>) · <code>inbox/jay/20261118-repo-roles-and-go2-handoff.md</code> v1.2 · 읽기 전용 거울 <code>app-dev-view</code> 에서 몇 줄 다시 확인 (아래 표)</dd>
+<dt>근거</dt><dd>결정 기록 <a href="APP-ROBOT-DIRECTION-1119.md">APP-ROBOT-DIRECTION-1119.md</a> (같은 폴더 · v1.1) · 이슈 <a href="https://github.com/foothold-project/foothold-lab/issues/861">#861</a> 댓글 「foothold-app 코드 지도」 (<code>origin/dev</code> <code>89d2a221</code>) · <code>inbox/jay/20261118-repo-roles-and-go2-handoff.md</code> v1.2 · 읽기 전용 거울 <code>app-dev-view</code> 에서 몇 줄 다시 확인 (아래 표)</dd>
 <dt>요지</dt><dd>지금 실기는 agent 의 Sport 경로 (<code>SportClient.Move</code>) 하나로 Unitree 순정 보행을 움직이고, 우리 정책은 사용자 브라우저의 앱 시뮬 안에서만 돈다. 실기에서 우리 정책을 돌리는 저수준 실행기 · 모드 관리자 · 안전 정지 · 조이스틱 읽기는 foothold-app <code>apps/agent</code> 안에 새로 만든다.</dd>
-<dt>상태</dt><dd>v0.3 (11/19 11:0x · 숙소 측정 반영) · 코드 읽기 기준 (실기 연결 · 지연은 이번에 재지 않음) · 「계획」 칸은 팀장 승인 결정이나 제안이며, 어느 쪽인지 근거 표에 적었다</dd>
+<dt>상태</dt><dd>v0.4 (11/19 14:12 · 조이스틱 · 멈춤 말 · 서버 · 이름 절 추가. 앞 판 v0.3 11:0x 숙소 측정 반영) · 코드 읽기 기준 (실기 연결 · 지연은 이번에 재지 않음) · 「계획」 칸은 팀장 승인 결정이나 제안이며, 어느 쪽인지 근거 표에 적었다</dd>
 </dl>
 
 <div class="key" role="note" aria-label="그림 읽는 법">
 <span><span class="sw code"></span><b>실선 상자 · 「있음」 표</b> = 지금 코드 (<code>89d2a221</code>) 에 있음</span>
 <span><span class="sw plan"></span><b>점선 상자 · 「계획」 표</b> = 앞으로 만들 것</span>
 <span><span class="sw unitree"></span><b>흐린 실선 · 「Unitree」 「센서」 표</b> = 산 제품 (안을 바꾸지 않음)</span>
+<span><span class="tag wait">제안 · 팀장 결정 대기</span> = 결정 기록의 제안, 아직 팀장 승인 아님 (표 칸에만 씀)</span>
 <span>선도 같다. 실선은 지금 오가는 길, 점선은 만들 길이다.</span>
 </div>
 
@@ -82,6 +84,7 @@ footer p { max-width: none; font-size: 0.72rem; }
 <li><b>관절 온도 · 배터리 경고.</b> 새 절. 팀장 11/19 03:14 에 정한 값 (50 · 60 · 70 °C · 이상 체크 · 배터리 20 % · 10 % 알림, 막지 않음) 과 agent · 서버 · 화면에서 만들 것.</li>
 <li><b>Jetson 설치 · 숙소 측정.</b> 새 절. 11/19 CycloneDDS · Tailscale · 표시 화면 (L2 점구름). 숙소에서 방 지도 1 차 (odom 그대로 쌓음 · SLAM 아님) · D435i 색 · 깊이 영상 330 초 · 카메라 높이 · 각을 얻었다 (<a href="ROOM-MAP-1119.html">숙소 방 지도 페이지</a>). Go2 자체 SLAM 은 아직. 다시 확인하는 명령은 <a href="GO2X-JETSON-SETUP-1119.md"><code>GO2X-JETSON-SETUP-1119.md</code></a>.</li>
 <li><b>망.</b> 랜선 노트북 하나에서 직결 <code>192.168.50.x</code> · Jetson Wi-Fi + Tailscale · 학원 Wi-Fi · 폰 핫스팟 네 가지로 늘었다.</li>
+<li><b>조이스틱 · 멈춤 말 · 서버 · 이름.</b> 새 절 (<a href="#joystick">조이스틱 키 표</a>). 결정 기록 v1.1 의 조이스틱 키 표 (순정 L2+B Damping · 우리 모드 핫키 후보로 AME-2 · START 고르기) · 멈춤 / 안전 정지 / 조이스틱 E-stop 의 차이 · 앱 서버 Docker · Cloudflare (DNS · Tunnel) 와 NaverCloud VM 의 역할 · 프로젝트 이름 후보 A / B / C (팀장 선택 대기) 를 옮겼다. 숫자와 문구는 결정 기록에서 가져왔고 새로 짓지 않았다.</li>
 <li><b>뺀 것.</b> 11/02 의 키 값 (1.5 m/s 등) · PD 값 · ROS 2 설명은 이번에 다시 재지 않아 이 판에서 뺐다. 11/02 판은 git 기록에 남아 있다. 「실시간 제어는 로봇 쪽에서만」 이라는 11/02 결론은 그대로다.</li>
 </ul>
 </section>
@@ -512,7 +515,54 @@ footer p { max-width: none; font-size: 0.72rem; }
 <tr><td>조이스틱 L2+B</td><td>순정 Damping (조이스틱 E-stop). 저수준 모드에서는 Sport 서비스 해제로 순정 L2+B 가 안 들을 수 있어 (미확인) 실행기가 <code>wireless_remote</code> 를 읽어 L2+B 면 안전 정지로 간다</td><td>언제나</td><td><span class="tag code">있음</span> 순정 · <span class="tag plan">계획</span> 직접 읽기</td></tr>
 <tr><td>되돌리기</td><td>안전 정지 → Sport 서비스 켜기 → 일어서기</td><td>사람 확인 뒤</td><td><span class="tag plan">계획</span></td></tr>
 </tbody></table></div>
-<p>지금 agent 의 STOP 은 Damp 가 아니다. 서 있으면 <code>Move(0,0,0)</code> 뒤 <code>StopMove()</code> 를 보내고, 입력이 0.3 s 끊기면 hold + STOP 이다 (<code>go2_direct/sink.py</code>). 조이스틱으로 AME-2 · START 모드를 고르고 막대를 속도 명령 (START) 이나 앞 1 m 목표 (AME-2) 로 쓰는 것도 제안이며, 순정 핫키와 겹치지 않는 조합 표는 아직 정할 것이다.</p>
+<p>지금 agent 의 STOP 은 Damp 가 아니다. 서 있으면 <code>Move(0,0,0)</code> 뒤 <code>StopMove()</code> 를 보내고, 입력이 0.3 s 끊기면 hold + STOP 이다 (<code>go2_direct/sink.py</code>). 조이스틱으로 모드를 고르고 막대를 쓰는 것은 아래 <a href="#joystick">조이스틱 · 멈춤 말 · 서버 · 이름</a> 절에 모았다.</p>
+</section>
+
+<section class="fig" id="joystick">
+<p class="eyebrow">조이스틱 · 멈춤 말 · 서버 · 이름</p>
+<h2>조이스틱으로 모드를 다루고, 멈추는 말을 셋으로 가르고, 서버와 이름을 정한다</h2>
+<p>이 절은 결정 기록 <a href="APP-ROBOT-DIRECTION-1119.md">APP-ROBOT-DIRECTION-1119.md</a> 의 4 · 5 · 6 · 8b 절 (v1.1 · 팀장 11/19 01:27 · 02:54) 을 옮긴 것이다. 「제안 · 팀장 결정 대기」 칸은 아직 승인이 아니다.</p>
+
+<h3>조이스틱 키 표</h3>
+<p>Go2 조이스틱의 막대 · 버튼 값은 로봇 상태 신호 (LowState) 의 <code>wireless_remote</code> 칸으로 Jetson 에 들어온다. 저수준 실행기가 이 칸을 직접 읽으면 Sport 서비스를 해제한 저수준 모드에서도 조이스틱을 쓸 수 있다.</p>
+<div class="table-wrap"><table><thead><tr><th>모드</th><th>왼쪽 막대</th><th>오른쪽 막대</th><th>버튼</th><th>상태</th></tr></thead><tbody>
+<tr><td>START (기본 명령)</td><td>앞뒤 · 옆 속도 명령 (vx · vy)</td><td>회전 (wz)</td><td>우리 핫키로 모드 들어가기 · 나오기</td><td><span class="tag wait">제안 · 팀장 결정 대기</span></td></tr>
+<tr><td>AME-2 (지형 극복)</td><td>몸 기준 「앞 1 m 목표」 (앱의 <code>ame2Joystick</code> 과 같은 해석)</td><td>목표 방향 (±60° 안)</td><td>같음</td><td><span class="tag wait">제안 · 팀장 결정 대기</span></td></tr>
+<tr><td>어느 모드든</td><td></td><td></td><td><code>L2</code> + <code>B</code> = 안전 정지 (Damp) · 실행기가 직접 처리</td><td><span class="tag code">있음</span> 순정 L2+B · <span class="tag plan">계획</span> 직접 읽기</td></tr>
+</tbody></table></div>
+<ul>
+<li><b>순정 키.</b> 순정 핫키 (예: <code>←</code> + <code>start</code> · <code>→</code> + <code>start</code> 로 Free Walk · Classic 같은 순정 모드 전환) 는 Sport 서비스가 처리한다. 순정 <code>L2</code>+<code>B</code> 는 Damping 이다.</li>
+<li><b>모드 바꾸기 키 후보 (AME-2 · START 고르기).</b> 우리 모드 핫키는 순정 조합과 겹치지 않는 조합으로 고른다. 예: <code>L1</code> + 방향키. 아직 정하지 않았고 겹침 검사가 먼저다.</li>
+<li><b>같은 입력 해석.</b> 앱 키보드 · 앱 시뮬 · 실기 조이스틱이 같은 입력 해석을 쓰면 「같은 입력에 시뮬과 실기가 같은 행동」 인지 바로 견줄 수 있다 (sim to real 확인 도구 · 발표 시연 장면).</li>
+<li><b>모드를 바꿀 때</b> 는 멈춤 → 정지 측정 → Sport 해제 (거꾸로는 Sport 다시 켜기 → 일어서기) 순서를 따른다.</li>
+<li><b>정할 것.</b> 핫키 조합 표 · 모드 바뀜을 사람에게 알리는 방법 (앱 화면 · 로봇 LED · 소리).</li>
+</ul>
+
+<h3>멈춤 · 안전 정지 · 조이스틱 E-stop 의 차이</h3>
+<div class="table-wrap"><table><thead><tr><th>이름</th><th>누가 · 어디서</th><th>관절은</th><th>언제</th><th>상태</th></tr></thead><tbody>
+<tr><td>멈춤 (Stop)</td><td>앱 · agent. Sport 모드는 <code>Move(0,0,0)</code> → <code>StopMove</code>, 저수준 모드는 정책이 계속 돌고 명령만 0</td><td>서 있음 (Sport 는 Unitree 보행 제어기가 균형을 잡고, 저수준은 학습한 동작. 계단 위는 미확인)</td><td>평소</td><td><span class="tag code">있음</span> Sport 쪽 · <span class="tag plan">계획</span> 저수준 쪽</td></tr>
+<tr><td>안전 정지 (Damp)</td><td>agent 의 모드 관리자. 정책 송신을 끊음</td><td>Kp 0 · Kd 만으로 무르게 → 천천히 앉음</td><td>정책 이상 · 넘어짐 · 통신 끊김 (저수준 모드에서 0.3 초 끊기면 저절로)</td><td><span class="tag plan">계획</span></td></tr>
+<tr><td>조이스틱 E-stop (L2+B)</td><td>사람이 조이스틱에서. 팀장이 말한 것 = 순정 Damping</td><td>안전 정지와 같이 무름</td><td>언제나. 저수준 모드에서는 Sport 서비스 해제로 순정 L2+B 가 안 들을 수 있어 (미확인) 실행기가 <code>wireless_remote</code> 를 읽어 L2+B 면 안전 정지로 간다</td><td><span class="tag code">있음</span> 순정 · <span class="tag plan">계획</span> 직접 읽기</td></tr>
+</tbody></table></div>
+<p>되돌리기 (안전 정지 → Sport 서비스 켜기 → 일어서기) 는 위 「멈추는 방법」 표에 있다. 정리: 「멈춤」 은 서 있는 채 명령만 0 이고, 「안전 정지」 는 관절을 풀어 앉히며, 「조이스틱 E-stop」 은 사람이 그 안전 정지를 조이스틱으로 거는 길이다. 용어 바꿈은 제안이다.</p>
+
+<h3>앱 서버: Docker · Cloudflare · NaverCloud VM</h3>
+<div class="table-wrap"><table><thead><tr><th>자리</th><th>하는 일</th><th>상태</th></tr></thead><tbody>
+<tr><td>NaverCloud VM</td><td>Ubuntu 24.04 · Caddy 443 → 정적 웹 + uvicorn (API) + PostgreSQL 16 · 주소 <code>&lt;IP&gt;.sslip.io</code>. GPU 는 쓰지 않는다 (시뮬은 사용자 브라우저). 계정은 학원이 준 것 (팀장 02:54)</td><td><span class="tag code">있음</span></td></tr>
+<tr><td>Cloudflare · DNS</td><td><code>foothold-project.dev</code> (팀장 구매): <code>app.</code> · <code>api.</code> 는 A 레코드 (이름 → 서버 IP), <code>site.</code> 는 CNAME (이름 → 다른 이름, 예 Vercel). Caddy 주소를 새 이름으로 바꾸면 Caddy 가 HTTPS 인증서를 받는다</td><td><span class="tag plan">계획</span></td></tr>
+<tr><td>Cloudflare · Tunnel · 보호</td><td>Cloudflare 만으로 서버를 대신하기는 어렵다 (Python 서버 · PostgreSQL · 계속 붙는 로봇 연결). Cloudflare 는 DNS · 보호 · Tunnel 을 맡는다. Workers 로 서버를 다시 짜는 일은 하지 않는다</td><td><span class="tag wait">제안 · 팀장 결정 대기</span></td></tr>
+<tr><td>Docker</td><td>앱 설계 문서 (<code>docs/spec/04-ARCHITECTURE.md:232</code>) 의 「현장 서버는 Docker Compose 로 묶는다 (제안)」 를 따라 서버 (Caddy · API · PostgreSQL) 는 Compose 로 묶기를 권한다 (어디서든 한 줄로 다시 세움). Jetson agent 는 ARM 이미지 · 카메라 USB · DDS 를 컨테이너로 넘기는 일이 커서 당분간 직접 실행. 느려서가 아니다</td><td><span class="tag wait">제안 · 팀장 결정 대기</span></td></tr>
+</tbody></table></div>
+<p>확인할 것 (미확인): DB 접속 비밀번호를 누가 아는지 · DB 백업 여부 (배포 설명에 안 보임) · 학원 계정이 끝날 때 옮길 계획.</p>
+
+<h3>프로젝트 이름 후보 <span class="tag wait">팀장 선택 대기</span></h3>
+<p>처음은 「Unitree Go2 사족보행 로봇 미경험 험지 정책 강화학습 프로젝트」 (연구만) 였고, 피드백으로 사용자에게 무엇을 주는가를 먼저 두는 기업 연계형으로 바꿨다. 주는 것: 앱에서 임무 설정 (시설 점검 · 감시) → 시뮬로 미리 확인 → 실제 험지에 사람보다 먼저 투입. 이것을 받치는 연구가 「제대로 걷기 · 무너지지 않는 보행」 (START · AME-2 · A* · HiPAN · JEPLO 논문 탐색과 시뮬 실험) 이다.</p>
+<div class="table-wrap"><table><thead><tr><th>후보</th><th>이름</th><th>비고</th></tr></thead><tbody>
+<tr><td>A</td><td>FOOTHOLD · 처음 가는 땅을 먼저 걷는 로봇 임무 플랫폼</td><td>lead 권고</td></tr>
+<tr><td>B</td><td>FOOTHOLD · 미경험 험지 대응 사족보행 로봇 임무 서비스</td><td></td></tr>
+<tr><td>C</td><td>FOOTHOLD · 시뮬에서 먼저 걷고 현장에 먼저 들어가는 로봇</td><td></td></tr>
+</tbody></table></div>
+<p>디자인 컨셉 (제안): 「현장 임무 관제」 · 상태 (배터리 · 관절 온도 · 통신) 를 늘 먼저 · 시뮬과 실기를 한 화면에서 견줌 · 안전 정지는 늘 손 닿는 곳. 이름이 정해지면 UI/UX 정비의 기준으로 쓴다.</p>
 </section>
 
 <section class="fig">
