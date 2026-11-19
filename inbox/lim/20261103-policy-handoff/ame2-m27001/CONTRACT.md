@@ -1,12 +1,12 @@
 > 분류: 가이드
-> 작성: 임석헌 · 2026-11-19 14:40
+> 작성: 임석헌 · 2026-11-19 15:10
 > 근거: run 폴더 `params/env.yaml`(sha256 `48088f33…`) · `params/agent.yaml`(sha256 `855b1b57…`) · 저장본 `model_16999.pt`(두 학습 끝 저장본의 가중치 평균, `sync_record.txt`) · 코드 사본 `ame2_pp1`(code id 101da9dd0386, 두 원본 학습 끝 · 11-19 의 코드 manifest 가 같음) · Isaac Lab 2.3.2 원본(팟 `/workspace/isaaclab`, 0.54.2)
 > 요지: 앱이 ame2-m27001 를 원본과 같게 돌리는 데 필요한 값을 모았다. ONNX 는 원본 `AME2GazeModel.forward` 를 그대로 감싸 내보냈고(층 재구성 없음), 학습 env 에서 기록한 실제 입력 400 스텝에서 PyTorch 와의 action 최대 차이는 **2.9e-06**(기준 1e-4, 통과)
-> 상태: v0.1 (AME-2 에이전트 세션) · 팀장 검증 대기 · 지시문 [HANDOFF-AME2-WORKER.md](https://github.com/foothold-project/foothold-lab/blob/main/inbox/jay/20261103-policy-handoff/HANDOFF-AME2-WORKER.md) §1
+> 상태: v0.1 (AME-2 에이전트 세션) · 묶음 만듦 · CPU · WASM(Node) 같은 출력 확인 끝(parity.json) · 앱 적용 · 브라우저 ORT · 실기는 미확인(§7a) · 지시문 [HANDOFF-AME2-WORKER.md](https://github.com/foothold-project/foothold-lab/blob/main/inbox/jay/20261103-policy-handoff/HANDOFF-AME2-WORKER.md) §1
 
 # AME-2 teacher model_16999(두 학습 평균) 를 앱에 넘길 때 맞출 조건표 (ame2-m27001, 저장본 model_16999)
 
-등급: **설정**(env.yaml · agent.yaml 줄) · **코드**(학습 코드 사본 · Isaac Lab 원본 줄, `코드확인`) · **실측**(이번에 잰 해시 · 기록, `실측`) · **가정**. §7 에 추가 확인 결과와 남은 `미측정` 항목을 적었다. 같은 출력 확인은 `확인됨`(§2). 코드 경로 약칭: `AME2_models.py` = `rsl_rl/rsl_rl/models/AME2_models.py`, `observations.py` = `go2/ame2_go2/tasks/mdp/observations.py`, `actions.py` · `commands.py` · `curriculums.py` · `events.py` = `go2/ame2_go2/tasks/mdp/` 아래, `go2_actuator.py` · `go2_curve.py` = `go2/ame2_go2/assets/` 아래, `virtual_floor.py` = `go2/ame2_go2/sensors/` 아래, `isaaclab/…` = 팟 `/workspace/isaaclab/source/isaaclab/isaaclab/…`.
+등급: **설정**(env.yaml · agent.yaml 줄) · **코드**(학습 코드 사본 · Isaac Lab 원본 줄, `코드확인`) · **실측**(이번에 잰 해시 · 기록, `실측`) · **가정**. §7 에 추가 확인 결과, §7a 에 미확인 항목(미확인: 무엇 · 정해질 때까지 지금 동작) 을 적었다. 같은 출력 확인은 `확인됨`(§2). 코드 경로 약칭: `AME2_models.py` = `rsl_rl/rsl_rl/models/AME2_models.py`, `observations.py` = `go2/ame2_go2/tasks/mdp/observations.py`, `actions.py` · `commands.py` · `curriculums.py` · `events.py` = `go2/ame2_go2/tasks/mdp/` 아래, `go2_actuator.py` · `go2_curve.py` = `go2/ame2_go2/assets/` 아래, `virtual_floor.py` = `go2/ame2_go2/sensors/` 아래, `isaaclab/…` = 팟 `/workspace/isaaclab/source/isaaclab/isaaclab/…`.
 
 ## 0a. 앱 개발자가 맨 먼저 볼 값
 
@@ -182,7 +182,7 @@
 
 **4) 하지 말 것.** START(m6000) 의 지도 함수(32 × 16 · 높이 1 채널) 를 쓰지 않는다. 속도 명령을 그대로 넣지 않는다. 학습 잡음을 배포 입력에 넣지 않는다.
 
-## 7. 추가 확인 (11-19) · 남은 한계
+## 7. 추가 확인 (11-19)
 
 m14999 묶음 때 지시문 HANDOFF §4 와 v0.1 의 빈칸으로 잰 것을 이 모델로 다시 재거나 기록으로 확인했다.
 
@@ -192,14 +192,22 @@ m14999 묶음 때 지시문 HANDOFF §4 와 v0.1 의 빈칸으로 잰 것을 이
 | 시선 창 반올림이 실행기마다 뒤집히나 | 기록 400 스텝에서 반올림 경계(.5)까지 가장 가까운 거리: x 0.0026 칸(r0 로 1.5e-04) · y 0.00009 칸(r1 로 2.9e-05). ONNX CPU 와 PyTorch 의 gaze_r 차이는 최대 2.4e-07 라 여유가 약 120 배. 이 400 스텝에서는 뒤집힘 없음. 다른 입력에서 경계에 더 가까우면 생길 수 있음 | 기록 `gaze_r` | `실측` |
 | 1 m 목표에서 실제 속도 | 앱 조이스틱처럼 매 스텝 몸 틀 (1.0, 0) m · e = 0 목표를 다시 넣으면 평지에서 4~12 s 평균 전진 **1.10 m/s**(로봇 4 대 1.12, 1.10, 1.09, 1.09, 95 백분위 1.16). 같은 방식 2 m 목표는 1.06 m/s. 리셋 0 회 | `speed_goal.py`(학습 task N9P12, 관측 잡음 끔, 8 대) | `실측` |
 | 앱의 빈 칸 0.7 m 고정값 | 앱 규칙(빈 칸 = 같은 스캔의 가장 낮은 유효 높이 - 0.7 m, 가상 평면 없음; 앱 `mobile/sim/ame2-adapter.js:94~125` @20f3d066) 은 학습 규칙(같은 식에 U(0.4, 1.0) m, sparse 칸은 가상 평면) 의 가운데 값이다. 이 모델을 평가한 도구 그대로(`ame2_ev12` 의 `evalgz_tpevf24_b1/eval_gaze.py`, task N9P12-Eval5, 평가 seed 1001, 로봇 2,400 대, 5 에피소드, 지형마다 1,000 에피소드) 전체 성공률: 기준(11-18 평가) **89.47 %** · 같은 조건 다시 돌림 89.47 %(지형별 최대 차이 +0.00 %p) · 깊이만 0.7 고정 89.73 %(지형별 최대 +1.80 %p, pallets) · **앱 조건(0.7 고정 + 가상 평면 끔) 89.43 %**(지형별 최대 -2.10 %p, stones). 가상 평면은 hydra 인자로 끌 수 없어(Isaac Lab `utils/dict.py:167` 이 새 키를 거부) 평가 도구 사본에 `env_cfg.events.virtual_floor.params["sparse_terrains"] = ()` 한 줄만 더해 돌렸다(그 밖은 원본 도구 md5 4ed5c4a6 와 같음). 같은 설정 다시 돌림이 지형별 0.00 %p 로 완전히 같으므로, 위 차이는 이 도구에서 실행마다 흔들리는 폭이 아니라 빈 칸 처리 변경으로 바뀐 에피소드 진행에서 나온 것이다(지형별 차이의 원인은 따로 가르지 않음). 지형별 표는 `parity.json` `void_depth` | `cmp_depth07.py` | `실측` |
-| 이 모델의 계단 영상 | 이번에 확인하지 않았다 | | `미확인` |
 | 학습 코드 출처 · 커밋 | rsl_rl = `leggedrobotics/ame2_minimal` 커밋 `8beb9a688d67882828019583f7d5a78e3517f233`(2026-10-06, rsl_rl 5.0.0) 의 `rsl_rl/rsl_rl` .py 33 개와 바이트 단위로 같음(수정 없음). go2 코드 84 개는 저장소 밖 우리 코드라 커밋이 없고 code id 101da9dd0386 · manifest sha256 `1cbd6128…` 로 식별 | 팟 원본 트리 git 과 대조 | `실측` |
-| 학습 호스트의 Isaac Sim 판 | 원본 tp424_p1_s4 를 학습한 호스트 fb6eecdaf880 에서 `5.1.0-rc.19` 를 직접 읽음. 원본 tp424_p2_s4 의 호스트(5c99a0a805c7) 는 읽지 않음. Isaac Lab 원본 15 개 파일(조건표가 인용하는 것) 은 m14999 때 팟과 바이트 단위로 같음 | `/isaac-sim/VERSION` · 파일 sha256 대조 | `실측` |
+| 학습 호스트의 Isaac Sim 판 | 원본 tp424_p1_s4 를 학습한 호스트 fb6eecdaf880 에서 `5.1.0-rc.19` 를 직접 읽음. p2 원본 호스트는 §7a. Isaac Lab 원본 15 개 파일(조건표가 인용하는 것) 은 m14999 때 팟과 바이트 단위로 같음 | `/isaac-sim/VERSION` · 파일 sha256 대조 | `실측` |
 
-남은 한계:
+## 7a. 미확인 (한 형식: 미확인: 무엇 · 정해질 때까지 지금 동작)
+
+- 미확인: 이 저장본(m27001)이 계단을 걷는 영상 · 정해질 때까지 계단은 §7 벤치마크 수치(계단 오르기 98.7 % · 내려가기 99.2 %, 평가 seed 1001)로만 본다.
+- 미확인: 원본 tp424_p2_s4 를 학습한 호스트(5c99a0a805c7)의 Isaac Sim 판 · 정해질 때까지 p1 호스트에서 직접 읽은 5.1.0-rc.19 로 적는다(두 학습의 pip 설정 · 코드 manifest 는 같음).
+- 미확인: 16,500 회 이전 학습에 쓴 코드 사본 · 정해질 때까지 코드 판은 마지막 500 회를 학습한 사본 `ame2_pp1`(code id 101da9dd0386)로 적는다.
+- 미확인: 브라우저(Chrome 등) 의 onnxruntime-web 에서의 최대 차이와 추론 시간 · 정해질 때까지 Node 의 같은 WASM 실행기 값(action 3.1e-6)을 쓴다.
+- 미확인: 옆 · 뒤 목표와 계단 위에서의 속도, 앱 MuJoCo 에서의 같은 값 · 정해질 때까지 앱 상한 표시는 1.2 m/s(학습 v_max).
+- 미확인: student 일정 · 입력 · 정해질 때까지 이 teacher 는 시뮬 전용으로 쓴다(lin_vel 이 특권 입력, 팀장 11/03 16:0x).
+
+## 7b. 정해진 한계
+
 - 기록 조건: 관측 잡음 · 지도 잡음 · 센서 드리프트를 끄고, 평지 칸은 rough 칸의 기울기 · 거칠기를 0 으로 바꾼 칸이다(학습 지형 그대로가 아님). 나머지(도메인 무작위화 · 지연 · 가상 바닥) 는 env.yaml 그대로. 기록 설정(`env_record.yaml`) 과 env.yaml 을 비교하면 그 밖에 세 곳이 다르다: seed(기록 42, 학습 1001; 관측 · 행동 식과 무관), 보상 매개변수 `ame2_move2goal.v_max 1.2`(학습은 train.py 인자로 넣음, 보상에만 쓰여 관측 · 행동과 무관) 와 시작 yaw · 목표 원뿔 커리큘럼의 `max_steps`(학습 기록 24, 기록 env 는 task 기본값 48000 이라 기록 중 시작 yaw 와 목표 원뿔이 좁았다; 리셋 분포만 바뀜). 지형 칸 크기 · prim 경로 · env_spacing 차이는 학습이 env 를 만든 뒤 덤프해서 생긴 표기 차이다(`go2/scripts/rsl_rl/train.py:303`).
-- 1 m 목표 속도는 평지 · 앞쪽 목표만 쟀다(옆 · 뒤 목표, 계단 위 속도는 재지 않음, `미측정`).
-- 실기(SDK 순서 · IMU · 안전 제어) 는 이 문서 범위 밖이다. lin_vel 이 특권이라 실기에는 이 teacher 를 쓰지 않는다(팀장 11/03 16:0x: student 는 따로).
+- 실기(SDK 순서 · IMU · 안전 제어) 는 이 문서 범위 밖이다(팀장 11/03 16:0x: 실기는 student, teacher 는 시뮬).
 
 ## 8. 근거 경로
 
