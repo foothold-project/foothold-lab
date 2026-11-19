@@ -174,6 +174,7 @@ def main(argv=None):
     p.add_argument("--keep-mesh", action="store_true", help="do not change the mesh pin (rollback draft: same weights, old mesh)")
     p.add_argument("--no-promotion", action="store_true", help="leave the level-up rule as it is (no terrain_promotion cell)")
     p.add_argument("--x-fraction", type=float, default=0.5)
+    p.add_argument("--x-fall-down", action="store_true", help="terrain_promotion x_fall_down: a fall short of the x fraction steps the env down (needs a copy with that rule)")
     p.add_argument("--adjust-from", type=Path, help="an e2 ex42-update-adjust/1 file to copy with the new plan sha256")
     p.add_argument("--kinds", nargs="*", default=DEFAULT_KINDS)
     p.add_argument("--bake-caps-run", type=Path, help="a run whose kind level caps after --bake-boundaries boundaries become the new plan's start caps")
@@ -181,7 +182,7 @@ def main(argv=None):
     p.add_argument("--kind-cap", action="append", default=[], metavar="FAMILY/KIND=N", help="lower one kind's level cap (repeatable)")
     a = p.parse_args(argv)
     caps = {k: int(v) for k, v in (item.split("=", 1) for item in a.kind_cap)}
-    cell = None if a.no_promotion else {"x_progress_kinds": a.kinds, "x_progress_fraction": a.x_fraction, "forward_only": True}
+    cell = None if a.no_promotion else {"x_progress_kinds": a.kinds, "x_progress_fraction": a.x_fraction, "forward_only": True, **({"x_fall_down": True} if a.x_fall_down else {})}
     print(json.dumps(draft(a.source_dir, a.run_dir, a.iteration, a.mesh_dir, a.out, profile=a.profile, promotion=cell,
                                           adjust_from=a.adjust_from, keep_mesh=a.keep_mesh,
                                           bake_caps_run=a.bake_caps_run, bake_boundaries=a.bake_boundaries, kind_caps=caps or None), indent=1))

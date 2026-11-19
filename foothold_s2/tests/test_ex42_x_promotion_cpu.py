@@ -65,7 +65,7 @@ def test_the_plan_cell_is_absent_by_default_and_validated_when_present():
     none = types.SimpleNamespace(document={})
     assert ex41.terrain_promotion_cell(none) is None
     good = types.SimpleNamespace(document={"terrain_promotion": {"x_progress_kinds": ["B/beam", "B/gap"]}})
-    assert ex41.terrain_promotion_cell(good) == {"x_progress_kinds": ("B/beam", "B/gap"), "x_progress_fraction": 0.5, "forward_only": False}
+    assert ex41.terrain_promotion_cell(good) == {"x_progress_kinds": ("B/beam", "B/gap"), "x_progress_fraction": 0.5, "forward_only": False, "x_fall_down": False}
     for cell in ({}, {"x_progress_kinds": []}, {"x_progress_kinds": ["beam"]}, {"x_progress_kinds": ["B/beam", "B/beam"]},
                  {"x_progress_kinds": ["B/beam"], "x_progress_fraction": 0}, {"x_progress_kinds": ["B/beam"], "forward_only": 1},
                  {"x_progress_kinds": ["B/beam"], "extra": 1}, ["B/beam"]):
@@ -147,3 +147,41 @@ def test_the_real_plan_loader_accepts_the_cell_and_the_plan_sha_moves(tmp_path):
         f.write("\nterrain_promotion:\n  x_progress_kinds: [B/beam, B/gap]\n  x_progress_fraction: 0.5\n  forward_only: false\n")
     changed = EX42Plan.load(tmp_path / table.name)
     assert ex41.terrain_promotion_cell(changed)["x_progress_kinds"] == ("B/beam", "B/gap") and changed.sha256 != base.sha256
+
+
+def test_a_fall_short_of_the_x_fraction_steps_a_masked_env_down_and_nothing_else_changes():
+    d = torch.tensor([7.0, 7.0, 7.0, 7.0, 7.0, 7.0])               # 12 m tile: the up line is 6 m of x progress, the old down line (command 3 m/s) is 5.4 m of distance
+    x = torch.tensor([2.0, 2.0, 2.0, 7.0, 2.0, 2.0])               # env 0..2 wandered sideways (7 m of distance, 2 m of x); env 3 got 7 m of x
+    m = torch.tensor([True, True, False, True, True, True])
+    fell = torch.tensor([True, False, True, True, True, True])
+    c = torch.tensor([[1.0, 0.0]] * 5 + [[0.0, 1.0]]) * 3.0        # env 5: a sideways command episode
+    out = rules.judge_free(d, c, size_x=12.0, progress_x=x, x_mask=m, fell=fell, forward_only=True)
+    assert out.tolist() == [-1, 0, 1, 1, -1, 0]                    # fell short -> down · did not fall -> stays · unmasked: old rule (up by distance) · cleared the line -> up even though it fell · sideways: not judged
+    same = rules.judge_free(d, c, size_x=12.0, progress_x=x, x_mask=m, forward_only=True)
+    assert same.tolist() == [0, 0, 1, 1, 0, 0]                     # without fell the function is the one before this change
+    assert torch.equal(rules.judge_free(d, c, size_x=12.0, fell=fell), rules.judge_free(d, c, size_x=12.0))      # fell is ignored without progress_x (no mask)
+
+
+def test_the_plan_cell_takes_x_fall_down_only_as_a_bool_and_defaults_to_off():
+    base = {"x_progress_kinds": ["B/beam"], "x_progress_fraction": 0.5, "forward_only": True}
+    off = ex41.terrain_promotion_cell(types.SimpleNamespace(document={"terrain_promotion": base}))
+    on = ex41.terrain_promotion_cell(types.SimpleNamespace(document={"terrain_promotion": {**base, "x_fall_down": True}}))
+    assert off["x_fall_down"] is False and on["x_fall_down"] is True
+    with pytest.raises(ValueError, match="x_fall_down"):
+        ex41.terrain_promotion_cell(types.SimpleNamespace(document={"terrain_promotion": {**base, "x_fall_down": 1}}))
+
+
+def test_the_runtime_rule_carries_the_termination_flags_only_when_asked_and_registration_announces_it(fake_isaac):
+    table = [{"family": "A", "kind": "stones"}, {"family": "B", "kind": "beam"}]
+    manager = types.SimpleNamespace(terminated=torch.tensor([True, False, True, False]))
+    env = types.SimpleNamespace(_ex42_column_table=table, termination_manager=manager)
+    terrain = types.SimpleNamespace(terrain_types=torch.tensor([0, 1, 1, 1]))
+    ids = torch.arange(4)
+    assert "fell" not in ex41.x_progress_rule(env, terrain, _term(torch.arange(4.0)), ids, ("B/beam",), 0.5, True)
+    assert ex41.x_progress_rule(env, terrain, _term(torch.arange(4.0)), ids, ("B/beam",), 0.5, True, True)["fell"].tolist() == [True, False, True, False]
+    with pytest.raises(ValueError, match="termination manager"):
+        ex41.x_progress_rule(types.SimpleNamespace(_ex42_column_table=table), terrain, _term(torch.arange(4.0)), ids, ("B/beam",), 0.5, True, True)
+    cfg = _env_cfg()
+    plan = types.SimpleNamespace(document={"terrain_promotion": {"x_progress_kinds": ["B/beam"], "x_progress_fraction": 0.5, "forward_only": True, "x_fall_down": True}})
+    ex41.prepare_terrain_cfg(cfg, plan, initial_policy="performance", initial_level_cap=5)
+    assert cfg.curriculum.terrain_levels.params["x_progress_fall_down"] is True

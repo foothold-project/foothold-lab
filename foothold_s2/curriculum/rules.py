@@ -37,11 +37,13 @@ def promotion_size_x(terrain, env_ids):
 
 
 def judge_free(max_dist_m, cmd_sum_xy, size_x=8.0, resample_s=4.0, factor=0.9, eps=1.0e-9, *,
-               progress_x=None, x_mask=None, x_fraction=0.5, forward_only=False):
+               progress_x=None, x_mask=None, x_fraction=0.5, forward_only=False, fell=None):
     """자유 속도 env 들의 판정. `cmd_sum_xy` (n, 2) = 에피소드 동안 뽑힌 (vx, vy) 의 합(움직임 명령 재추출만).
 
     기본 (progress_x 없음) 은 위의 식 그대로다. progress_x (n,) + x_mask (n,) 를 주면 x_mask 가 참인 env (듬성 종류 열) 의 승급 조건만
     `max_dist > size_x / 2` 대신 `진행 축 x 이동 > size_x * x_fraction` 이다 (출발점에서 에피소드 중 가장 멀리 간 x 이동 · 옆으로 휘돌아 얻은 거리는 뺀다).
+    fell (n,) bool 을 주면 (plan 의 x_fall_down) x_mask env 중 `진행 축 x 이동 <= size_x * x_fraction` 인데 넘어져 (time-out 이 아닌 종료) 끝난 에피소드도 내림 (-1) 이다:
+    듬성 종류 열에서 타일 반도 못 가고 넘어지는 env 는 옆 이동이 큰 옛 내림 식 (명령 합 대비 이동 거리) 에 안 걸려 L2 에 얼어 있었다 (11/19 13:17). fell 없음 = 옛 식 그대로.
     forward_only 이면 x_mask env 중 명령 합이 앞쪽 (x 합 > 0 이고 x 합 >= |y 합|) 이 아닌 에피소드는 승급 · 강등 판정에서 뺀다 (0).
     """
     check_size_x(size_x)
@@ -63,6 +65,9 @@ def judge_free(max_dist_m, cmd_sum_xy, size_x=8.0, resample_s=4.0, factor=0.9, e
             active = active & ~(mask & ~((cmd_sum_xy[:, 0] > 0) & (cmd_sum_xy[:, 0] >= cmd_sum_xy[:, 1].abs())))
             up = up & active
     down = active & (max_dist_m < 0.5 * norm * resample_s * factor) & ~up
+    if progress_x is not None and fell is not None:
+        fell_t = torch.as_tensor(fell, dtype=torch.bool, device=max_dist_m.device)
+        down = down | (active & mask & fell_t & ~up)       # up is False wherever px <= size * x_fraction, so ~up is the x-progress shortfall
     out[up] = 1
     out[down] = -1
 
