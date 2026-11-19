@@ -35,6 +35,7 @@ REWARD_TERMS = {
     "slow_track_speed_min": ("ex42_slow_track", "speed_min"),
     "slow_track_speed_max": ("ex42_slow_track", "speed_max"),
     "slow_progress": ("ex42_slow_progress", "weight"),
+    "slow_overspeed": ("ex42_slow_overspeed", "weight"),
 }
 
 
@@ -64,7 +65,7 @@ def limits_from_plan(config, *, segment_path=REWARD_LIMITS):
     repeated = {"zero_yaw", "feet_air_time_threshold", "slow_track", "slow_track_sigma",
                 "slow_track_speed_min", "slow_track_speed_max"}
     if (set(segment["cells"]) != set(REWARD_TERMS) or not isinstance(extra, dict)
-            or not (set(extra) == repeated or set(extra) == repeated | {"slow_progress"})
+            or not (repeated <= set(extra) <= repeated | {"slow_progress", "slow_overspeed"})
             or not isinstance(commands, dict)
             or set(commands) not in ({"low_forward_fraction"}, {"low_forward_fraction", "low_side_fraction"})):
         raise ValueError("EX-42 live adjustment plan and segment fence name different cells")
