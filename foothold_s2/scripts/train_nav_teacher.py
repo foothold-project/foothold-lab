@@ -34,7 +34,7 @@ def identity_text(receipt: dict) -> str:
     return json.dumps({k: v for k, v in receipt.items() if k != "resume"}, ensure_ascii=False, indent=2, sort_keys=True)
 
 
-def build_receipt(*, lower_checkpoint, lower_sha256, room_manifests, plan, vx_corr_b, resume=None, num_envs=None, save_interval=None) -> dict:
+def build_receipt(*, lower_checkpoint, lower_sha256, room_manifests, plan, vx_corr_b, resume=None, num_envs=None, save_interval=None, resume_levels=None) -> dict:
     from foothold_s2.nav import hl_ppo_cfg as cfg
     from foothold_s2.nav.teacher_obs import TeacherObsLayout
 
@@ -61,7 +61,7 @@ def build_receipt(*, lower_checkpoint, lower_sha256, room_manifests, plan, vx_co
     resume_row = None
     if resume:
         resume_path = Path(resume).resolve(strict=True)
-        resume_row = {"path": str(resume_path), "sha256": _sha(resume_path)}
+        resume_row = {"path": str(resume_path), "sha256": _sha(resume_path), **({"levels": str(resume_levels)} if resume_levels else {})}     # 칸 levels 는 켰을 때만 (끄면 옛 영수증과 같다)
     return {"format": FORMAT, "lower": {"checkpoint": str(ckpt), "sha256": digest},
             "rooms": rooms, "plan": {"path": str(plan_path), "sha256": _sha(plan_path)}, "lower_vx_corr_b": float(vx_corr_b),
             "observation": {"total": layout.total, "sizes": layout.sizes, "latent": ppo.latent},
@@ -97,15 +97,19 @@ def main(argv=None) -> int:
     p.add_argument("--iterations", type=int, default=None)
     p.add_argument("--seed", type=int, default=0)
     p.add_argument("--noise-std-min", type=float, default=None, help="policy std floor (default off; env HIPAN_NOISE_STD_MIN when the flag is absent). Not part of the PPO identity: a resume may change it")
+    p.add_argument("--resume-levels", default=None, help="with --resume: carry the PGCL level distribution over (default off = every env restarts at level 1; env HIPAN_RESUME_LEVELS when the flag is absent). 'checkpoint' = the state saved in the checkpoint, or 1:0.4,2:0.1,3:0.5 = level:fraction")
     p.add_argument("--receipt-out", default=None, help="also write the receipt here (never overwritten)")
     a = p.parse_args(argv)
+    a.resume_levels = a.resume_levels or os.environ.get("HIPAN_RESUME_LEVELS") or None
+    if a.resume_levels and not a.resume:
+        raise SystemExit("refused: --resume-levels (or HIPAN_RESUME_LEVELS) needs --resume")
     if not a.dry:
         _register_stack_dump()
     if not a.dry and not (a.env_factory and a.out_dir and a.iterations):
         print("refused: training needs --env-factory, --out-dir and --iterations (or use --print)", file=sys.stderr)
         return 2
     receipt = build_receipt(lower_checkpoint=a.lower_checkpoint, lower_sha256=a.lower_sha256, room_manifests=a.room_manifest, plan=a.plan,
-                            vx_corr_b=a.vx_corr_b, resume=a.resume, num_envs=a.num_envs, save_interval=a.save_interval)
+                            vx_corr_b=a.vx_corr_b, resume=a.resume, num_envs=a.num_envs, save_interval=a.save_interval, resume_levels=a.resume_levels)
     text = json.dumps(receipt, ensure_ascii=False, indent=2, sort_keys=True)
     if a.receipt_out:
         with open(a.receipt_out, "x", encoding="utf-8") as stream:
@@ -138,7 +142,7 @@ def main(argv=None) -> int:
         env.heading_selfcheck()                          # 쿼터니언 순서 · 몸 틀 속도 해석이 틀리면 여기서 멈춘다 (Pod 돈 아낌)
         floor = a.noise_std_min if a.noise_std_min is not None else (float(os.environ["HIPAN_NOISE_STD_MIN"]) if os.environ.get("HIPAN_NOISE_STD_MIN") else None)
         last, saved = hl_train.train(env, ppo, out_dir=out, iterations=a.iterations, receipt=receipt, resume=a.resume, seed=a.seed,
-                                     device=env.device, noise_std_min=floor)
+                                     device=env.device, noise_std_min=floor, resume_levels=a.resume_levels)
         print(json.dumps({"last_iteration": last, "saved": saved}), flush=True)
     except BaseException:
         import traceback

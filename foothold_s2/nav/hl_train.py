@@ -105,7 +105,49 @@ def _policy_parts(ppo):
     return actor, critic, log_std
 
 
-def train(env, ppo, *, out_dir, iterations, receipt: dict, resume=None, device="cpu", seed=0, log=print, noise_std_min=None):
+RESUME_LEVELS_CKPT = "checkpoint"
+
+
+def parse_resume_levels(spec, n: int, seed: int = 0):
+    """`--resume-levels` 글 -> env 마다 PGCL 수준 목록 (길이 n) 또는 "checkpoint" (저장본 안의 상태를 씀).
+    분포 글: "1:0.4,2:0.1,3:0.5" (수준:비율, 비율 합 1, 수준 >= 1, 중복 없음). env 수 n 에 비율대로 나눠 (큰 나머지 순) 섞는다 (같은 seed 면 같은 배치)."""
+    text = str(spec).strip()
+    if text == RESUME_LEVELS_CKPT:
+        return RESUME_LEVELS_CKPT
+    pairs = []
+    for part in text.split(","):
+        lv, sep, frac = part.partition(":")
+        if not sep:
+            raise ValueError(f"resume-levels must be '{RESUME_LEVELS_CKPT}' or level:fraction pairs such as 1:0.4,3:0.6, got {spec!r}")
+        pairs.append((int(lv), float(frac)))
+    levels = [lv for lv, _ in pairs]
+    if any(lv < 1 for lv in levels) or len(set(levels)) != len(levels) or any(not 0.0 <= f <= 1.0 for _, f in pairs) or abs(sum(f for _, f in pairs) - 1.0) > 1e-6:
+        raise ValueError(f"resume-levels needs distinct levels >= 1 and fractions in [0, 1] that sum to 1, got {spec!r}")
+    quota = [int(np.floor(n * f)) for _, f in pairs]
+    for k in sorted(range(len(pairs)), key=lambda k: (-(n * pairs[k][1] - quota[k]), k))[: n - sum(quota)]:
+        quota[k] += 1
+    out = np.array([lv for (lv, _), q in zip(pairs, quota) for _ in range(q)], dtype=int)
+    return [int(v) for v in np.random.default_rng(seed).permutation(out)]
+
+
+def pgcl_state(task) -> dict:
+    """체크포인트에 덧붙이는 PGCL 상태: env 마다 수준 · 마지막 수준 연속 성공 횟수."""
+    return {"level": [int(p.level) for p in task.pgcl], "streak": [int(p.streak) for p in task.pgcl]}
+
+
+def apply_resume_levels(task, levels, streak=None) -> dict:
+    """task.pgcl 의 수준 (과 연속 성공 횟수) 을 정한다. env.reset 이 새 과제를 이 수준으로 뽑는다. 돌려주는 값: 수준 -> env 수."""
+    if len(levels) != len(task.pgcl):
+        raise ValueError(f"resume levels has {len(levels)} envs, task has {len(task.pgcl)}")
+    for i, p in enumerate(task.pgcl):
+        p.level, p.streak = int(levels[i]), int(streak[i]) if streak is not None else 0
+    hist: dict = {}
+    for lv in levels:
+        hist[int(lv)] = hist.get(int(lv), 0) + 1
+    return dict(sorted(hist.items()))
+
+
+def train(env, ppo, *, out_dir, iterations, receipt: dict, resume=None, device="cpu", seed=0, log=print, noise_std_min=None, resume_levels=None):
     """`iterations` = 이 호출에서 돌 회 수. 돌려주는 값: 마지막 회 번호 · 저장 경로 목록."""
     import torch
 
@@ -125,6 +167,10 @@ def train(env, ppo, *, out_dir, iterations, receipt: dict, resume=None, device="
     params = list(actor.parameters()) + list(critic.parameters()) + [log_std]
     opt = torch.optim.Adam(params, lr=ppo.learning_rate)
     it0, lr = 0, ppo.learning_rate
+    if resume_levels is not None and not resume:
+        raise ValueError("resume_levels needs a resume checkpoint")
+    if resume_levels is not None and getattr(getattr(env, "task", None), "pgcl", None) is None:
+        raise ValueError("resume_levels needs a NavTask with PGCL on env.task")
     if resume:
         ck = torch.load(resume, map_location=device, weights_only=False)
         if ck.get("format") != CKPT_FORMAT:
@@ -135,6 +181,15 @@ def train(env, ppo, *, out_dir, iterations, receipt: dict, resume=None, device="
             raise ValueError("resume checkpoint belongs to a different start receipt (lower policy, rooms or plan differ)")
         actor.load_state_dict(ck["actor"]); critic.load_state_dict(ck["critic"]); log_std.data.copy_(ck["log_std"]); opt.load_state_dict(ck["optimizer"])
         it0, lr = int(ck["iteration"]), float(ck["lr"])
+        if resume_levels is not None:        # 기본 꺼짐: 켜면 PGCL 수준 분포 (저장본 안의 것 또는 글로 준 분포) 를 이어 받는다. 끄면 옛 동작 (수준 1 부터)
+            levels = parse_resume_levels(resume_levels, env.n, seed)
+            streak = None
+            if levels == RESUME_LEVELS_CKPT:
+                if "pgcl" not in ck:
+                    raise ValueError("resume checkpoint has no pgcl state (saved before this knob): give a level:fraction distribution instead of 'checkpoint'")
+                levels, streak = ck["pgcl"]["level"], ck["pgcl"]["streak"]
+            hist = apply_resume_levels(env.task, levels, streak)
+            log(f"RESUME_LEVELS mode={'checkpoint' if streak is not None else 'distribution'} spec={resume_levels} envs_by_level={json.dumps(hist)}")
     n, T = env.n, ppo.num_steps_per_env
     obs = env.reset()
     saved = []
@@ -205,6 +260,7 @@ def train(env, ppo, *, out_dir, iterations, receipt: dict, resume=None, device="
             if path.exists():
                 raise FileExistsError(f"{path} exists (never overwritten)")
             torch.save({"format": CKPT_FORMAT, "iteration": it, "ppo": ppo.as_dict(), "receipt_sha256": receipt["receipt_sha256"], "lr": lr,
-                        "actor": actor.state_dict(), "critic": critic.state_dict(), "log_std": log_std.data, "optimizer": opt.state_dict()}, path)
+                        "actor": actor.state_dict(), "critic": critic.state_dict(), "log_std": log_std.data, "optimizer": opt.state_dict(),
+                        **({"pgcl": pgcl_state(env.task)} if getattr(getattr(env, "task", None), "pgcl", None) is not None else {})}, path)
             saved.append(str(path))
     return it0 + iterations, saved
