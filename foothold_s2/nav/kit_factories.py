@@ -18,6 +18,15 @@ REQUIRED = ("lower_checkpoint", "lower_sha256", "num_envs", "device", "seed", "r
 _APP = None                                      # Kit 앱 (한 프로세스에 하나). isaaclab 모듈은 앱이 뜬 뒤에만 import 할 수 있다 (11/17 첫 로컬 실행: 앱 없이 isaaclab_tasks import 에서 죽음)
 
 
+def new_task_after_fails(cfg: dict, environ=None) -> int:
+    """처방 A 스위치 (planner HIPAN-STICKY-TASK-1120 · 논문 밖): factory 설정 task_new_after_fails 또는 환경 변수 HIPAN_NEW_TASK_AFTER_FAILS (Pod 은 --remote-env). 0 (기본) = 끔 = 옛 동작. N >= 1 = 같은 과제 연속 N 번 실패하면 표에서 새 과제."""
+    env = os.environ if environ is None else environ
+    nf = int(cfg.get("task_new_after_fails", env.get("HIPAN_NEW_TASK_AFTER_FAILS", 0)) or 0)
+    if nf < 0:
+        raise ValueError(f"task_new_after_fails must be >= 0, got {nf}")
+    return nf
+
+
 def launch_app(cfg: dict, with_camera: bool):
     """Kit 을 헤드리스로 한 번 띄운다 (n1_kit_check 와 같은 AppLauncher 호출). 이미 떴으면 그대로."""
     global _APP
@@ -139,6 +148,9 @@ def _build(cfg: dict, with_camera: bool):
     print(f"SHAPE_LEVELS={sl}" + ("" if sl == "1" else " ALL_LEVELS (논문 밖: 수준 2 이상 env 에도 r_shape)"), flush=True)
     task.redraw_on_fall = bool(cfg.get("task_redraw_on_fall", False))           # False (기본) = 같은 과제 유지 (논문) · True = 넘어지면 표에서 새 과제 (02:2x 판)
     print(f"TASK_RESET_ON_FALL {'new_task_from_table' if task.redraw_on_fall else 'same_task_kept'} table_tol_m {task.table_tol_m}", flush=True)
+    nf = new_task_after_fails(cfg)
+    task.new_task_after_fails = nf
+    print("TASK_CUT_AFTER_FAILS " + ("off (same task kept until 5 final successes)" if not nf else f"n={nf} (논문 밖: 같은 과제 연속 {nf} 번 실패하면 표에서 새 과제 · 수준 그대로)"), flush=True)
     depth_fn = (lambda: th(raw.scene["depth_camera"].data.output["distance_to_image_plane"])) if with_camera else None
     return nav, task, depth_fn
 
