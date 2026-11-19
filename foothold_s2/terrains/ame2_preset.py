@@ -22,8 +22,12 @@ SAFE_ENTRY_KINDS = frozenset(("stair_up", "stair_down", "rough", "boxes",
 # The actual column number is supplied by the combined mesh, never inferred
 # from an env ID. These nine kinds use a checked entry anchor without XY
 # or yaw jitter; the three remaining B kinds retain the existing reset range.
+# gap starts at Tile.origin (x 2, y 6): a flat level-zero platform 3.6 m before the gap edge (ray-checked on
+# the beam mesh, every level), so it only needs the fixed start, not an anchor search. Before this it kept the
+# +-0.5 m / +-pi default and about 40 of 64 evaluation envs started facing backwards. climb_up and climb_down still keep the default.
+FIXED_START_KINDS = frozenset(("gap",))
 RESET_RANGES = {kind: {axis: (0., 0.) for axis in ("x", "y", "yaw")}
-                for kind in sorted(SAFE_ENTRY_KINDS)}
+                for kind in sorted(SAFE_ENTRY_KINDS | FIXED_START_KINDS)}
 PROPORTIONS = {kind: (.20 if kind == "climb_up" else .30 if kind == "stones" else .05)
                for kind in KINDS}
 SIZE = 12.0
