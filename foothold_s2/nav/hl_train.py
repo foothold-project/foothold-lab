@@ -7,6 +7,7 @@
 from __future__ import annotations
 
 import json
+import os
 import time
 from pathlib import Path
 
@@ -147,6 +148,23 @@ def apply_resume_levels(task, levels, streak=None) -> dict:
     return dict(sorted(hist.items()))
 
 
+def dump_tasks(env, out, it: int, log=print) -> None:
+    """저장 때 (그리고 학습 끝에) env 별 과제 jsonl (tasks_<회>.jsonl) 과 처방 A 가 자른 과제 목록 (task_cuts.jsonl 에 이어 씀). 학습에 영향 없음 · 기본 켜짐 (환경 변수 HIPAN_TASK_DUMP=0 이면 끔) · 실패해도 학습은 계속."""
+    task = getattr(env, "task", None)
+    if task is None or not hasattr(task, "task_rows") or os.environ.get("HIPAN_TASK_DUMP", "1") == "0":
+        return
+    try:
+        path = Path(out) / f"tasks_{it}.jsonl"
+        if not path.exists():
+            path.write_text("".join(json.dumps({"iteration": it, **r}, ensure_ascii=False) + "\n" for r in task.task_rows()), encoding="utf-8")
+        cuts = task.take_cut_log()
+        if cuts:
+            with (Path(out) / "task_cuts.jsonl").open("a", encoding="utf-8") as f:
+                f.write("".join(json.dumps({"iteration": it, **r}, ensure_ascii=False) + "\n" for r in cuts))
+    except Exception as exc:                          # noqa: BLE001 (기록 실패로 학습을 죽이지 않는다)
+        log(f"TASK_DUMP_FAILED it={it} {type(exc).__name__}: {exc}")
+
+
 def train(env, ppo, *, out_dir, iterations, receipt: dict, resume=None, device="cpu", seed=0, log=print, noise_std_min=None, resume_levels=None):
     """`iterations` = 이 호출에서 돌 회 수. 돌려주는 값: 마지막 회 번호 · 저장 경로 목록."""
     import torch
@@ -263,4 +281,7 @@ def train(env, ppo, *, out_dir, iterations, receipt: dict, resume=None, device="
                         "actor": actor.state_dict(), "critic": critic.state_dict(), "log_std": log_std.data, "optimizer": opt.state_dict(),
                         **({"pgcl": pgcl_state(env.task)} if getattr(getattr(env, "task", None), "pgcl", None) is not None else {})}, path)
             saved.append(str(path))
+            dump_tasks(env, out, it, log)
+    if iterations and it % ppo.save_interval != 0:        # 학습 끝이 저장 회차가 아니면 끝에서도 한 번
+        dump_tasks(env, out, it, log)
     return it0 + iterations, saved

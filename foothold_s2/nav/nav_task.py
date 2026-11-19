@@ -49,6 +49,14 @@ def _lv_key(level: int) -> str:
 LVF_KEYS = ("l3", "l4", "l5", "l6p")  # 수준 3 이상을 한 칸으로 묶으면 「수준이 쌓인 것」 과 「같은 수준에서 떨어진 것」 을 못 가른다 (11/19 1000 회 판): 3 · 4 · 5 · 6 이상을 따로 더 적는다 (옛 칸 l1 · l2 · l3p 는 그대로)
 
 
+def _lv_keys(level: int) -> list:
+    """이 수준의 통계 칸 이름들 (옛 칸 하나 + 수준 3 이상이면 세분 칸 하나)."""
+    out = [_lv_key(level)]
+    if int(level) >= 3:
+        out.append(LVF_KEYS[min(int(level), 6) - 3])
+    return out
+
+
 def _lv_arrays(st, level: int) -> list:
     """이 수준의 통계 칸들: 옛 칸 (l1 · l2 · l3p) 하나 + 수준 3 이상이면 세분 칸 (l3 · l4 · l5 · l6p) 하나."""
     out = [st["lv"][_lv_key(level)]]
@@ -57,6 +65,7 @@ def _lv_arrays(st, level: int) -> list:
     return out
 
 
+STUCK_FAILS = 3                      # 「붙은 env」 기준: 같은 과제 연속 실패 수 (통계용 · 처방 N 과 별개)
 SAME_START_M = 0.05                  # 리셋 뒤 몸이 과제 시작 자리에서 이만큼 안이면 같은 과제를 그대로 (길을 다시 내지 않음)
 EPISODE_SPEED_MPS, EPISODE_EXTRA_S = 0.3, 10.0   # 에피소드 길이 = 경로 길이 / 0.3 + 10 초 (planner 03:57 가정)
 
@@ -99,6 +108,13 @@ class NavTask:
         self.shape_all_levels = False      # True (--shape-levels all) = 수준 2 이상 env 에도 r_shape (기본 False = 수준 1 만, 지금과 같음)
         self.shape_decay = True            # False (--shape-decay off) = 배율 1.0 고정 (감쇠 안 함 · 기본 True = 지금과 같음)
         self.redraw_on_fall = False       # True = 넘어진 뒤 (과제를 못 끝냄) 에도 표에서 새 과제 · False (기본, 논문 IV-C2) = 같은 과제 유지: 새 과제는 PGCL 이 요청할 때만
+        self.new_task_after_fails = 0     # N >= 1 이면 같은 과제를 연속 N 번 (넘어짐 · 시간 초과) 못 끝낸 env 는 표에서 새 과제 (planner HIPAN-STICKY-TASK-1120 처방 A · 논문 밖 가정). 0 (기본) = 끔 = 옛 동작 그대로. 수준은 그대로 둔다
+        self._fail_run = np.zeros(self.n, dtype=np.int64)   # env 별 같은 과제 연속 실패 수 (읽기용 통계 · 항상 센다. 성공 또는 새 과제가 뽑히면 0)
+        self._first_try: set = set()      # 새 과제가 뽑힌 뒤 아직 첫 에피소드가 안 끝난 env (_fresh_task 표식을 reset 끝에 옮겨 둔다) = 「새 과제의 첫 시도」 통계용
+        self.task_cut_fails = 0           # 연속 실패로 새 과제를 뽑은 수 (누적)
+        self._cut_n = np.zeros(self.n, dtype=np.int64)    # env 별 잘린 횟수 (누적)
+        self._cut_log: list = []          # 처방 A 가 자른 과제 기록 (hl_train 이 저장 때 읽고 비움)
+        self._clear_cache: dict = {}      # 방 (asset) 별 막힌 칸까지 거리 (m)
         self.tick_s = None                # 상위 틱 한 번의 초 (hold x step_dt). 호출한 쪽이 넣는다. None = 에피소드 길이는 틱 수로만
         self._st = None                   # 회차 통계 합 (take_stats 가 읽고 비운다)
         self.task_fallbacks = 0           # 실제 시작에서 길을 못 찾아 새 쌍으로 대신한 횟수 (누적)
@@ -242,7 +258,8 @@ class NavTask:
             self._st = {"ticks": 0, "sub_reached": 0, "lvl": np.zeros(3), "r": {}, "vcmd": 0.0, "vbody": 0.0, "stand": 0.0,
                         "eps": 0, "cos": 0.0, "cos_n": 0, "cosd": 0.0, "cosd_n": 0, "cosa": np.zeros(3), "cosa_n": np.zeros(3, dtype=np.int64), "yerr": 0.0, "yok": 0, "yn": 0, "prog": 0.0, "dsub0": 0.0, "dsub1": 0.0, "plen": 0.0, "ep_ticks": 0.0,
                         "out": {"hold": 0, "level_up": 0, "final_success": 0, "new_task": 0},
-                        "lv": {k: np.zeros(7) for k in LV_KEYS}, "lvf": {k: np.zeros(7) for k in LVF_KEYS}}     # 수준별 (l1 · l2 · l3p): [eps, prog, dend, succ, sub_reached, cos, cos_n]
+                        "lv": {k: np.zeros(7) for k in LV_KEYS}, "lvf": {k: np.zeros(7) for k in LVF_KEYS},
+                        "ft": {k: np.zeros(2) for k in LV_KEYS + LVF_KEYS}, "cut": 0}     # ft: 새 과제의 첫 시도 수준별 [에피소드, 성공]     # 수준별 (l1 · l2 · l3p): [eps, prog, dend, succ, sub_reached, cos, cos_n]
         if getattr(self, "_ep_n", None) is None:
             self._ep_n = np.zeros(self.n, dtype=np.int64)
             self._pos_prev = np.full((self.n, 2), np.nan)
@@ -261,6 +278,10 @@ class NavTask:
         arrs = _lv_arrays(st, p.level)
         for lv in arrs:
             lv[0] += 1; lv[1] += p._i / len(p._sub); lv[3] += float(p.all_reached)
+        if int(i) in self._first_try:                                   # 새 과제의 첫 에피소드: 수준별 첫 시도 성공 (되풀이 · 수준 올림 뒤 재도전은 안 셈)
+            self._first_try.discard(int(i))
+            for k in _lv_keys(p.level):
+                st["ft"][k] += (1.0, float(p.all_reached))
         if not np.isnan(self._pos_prev[i, 0]):
             dist = float(np.linalg.norm(self._pos_prev[i] - np.asarray(tgt)))
             st["dsub1"] += dist
@@ -314,6 +335,16 @@ class NavTask:
             out[f"nv_dend_{k}"] = dend / n_e if n_e else -1.0
             out[f"nv_succ_{k}"] = succ / n_e if n_e else -1.0
             out[f"nv_cos_{k}"] = cos / cos_n if cos_n else -1.0
+        for k in LV_KEYS + LVF_KEYS:                                       # 새 과제의 첫 시도 (수준별): 정책 실력을 되풀이 · 해제 규칙과 떼어 본다. 에피소드가 없으면 -1
+            n_ft, s_ft = st["ft"][k]
+            out[f"nv_ft_eps_{k}"] = int(n_ft)
+            out[f"nv_ft_succ_{k}"] = s_ft / n_ft if n_ft else -1.0
+        stuck = self._fail_run >= STUCK_FAILS                              # 같은 과제 연속 실패 3 회 이상 env (지금 시점) · 수준별 · 전체
+        lv_now = np.array([min(max(int(p.level), 1), 3) for p in self.pgcl])
+        out["nv_stuck3"] = int(stuck.sum())
+        for j, k in enumerate(LV_KEYS):
+            out[f"nv_stuck3_{k}"] = int((stuck & (lv_now == j + 1)).sum())
+        out["nv_task_cut"] = int(st["cut"])
         out["nv_dsub_min"] = float(np.median(st["dmin"])) if st.get("dmin") else -1.0      # 에피소드마다 (끝까지 못 닿은 것) 지금 부목표까지 최소 거리의 중앙값 · -1 = 해당 에피소드 없음
         if self.shape_w:
             out["nv_shape_scale"] = self.shape_scale
@@ -326,12 +357,45 @@ class NavTask:
         self._st = None
         return out
 
+    # ---- env 별 과제 남기기 (읽기 전용 · 학습에 쓰이지 않음): 저장본마다 env 별 과제 jsonl · 처방 A 가 자른 과제 목록
+    def _path_facts(self, i: int) -> dict:
+        """지금 과제 경로: 길이 · 막힌 칸까지 최소 여유 (m · 0.1 m 격자 기준) · 지나는 등급 (경로를 격자 반 칸 간격으로 찍은 점의 몫)."""
+        from scipy import ndimage
+        pts = self.path[i]
+        if pts is None:
+            return {"path_len_m": None, "min_clear_m": None, "grades": {}}
+        a = self.assets[self.room_id[i]]
+        g = a.grade
+        if id(a) not in self._clear_cache:
+            self._clear_cache[id(a)] = ndimage.distance_transform_edt(g.grade != gm.BLOCKED) * g.res
+        P = np.asarray(pts, float)
+        arc = np.concatenate([[0.0], np.cumsum(np.linalg.norm(np.diff(P, axis=0), axis=1))])
+        pts_s = np.stack([np.interp(np.arange(0.0, arc[-1] + 1e-9, g.res / 2), arc, P[:, k]) for k in (0, 1)], axis=1)
+        cells = np.clip((pts_s / g.res).astype(int), 0, np.array(g.grade.shape) - 1)
+        grades = g.grade[cells[:, 0], cells[:, 1]]
+        share = {name: round(float((grades == k).mean()), 4) for k, name in enumerate(gm.GRADE_NAMES) if (grades == k).any()}
+        return {"path_len_m": round(float(arc[-1]), 3), "min_clear_m": round(float(self._clear_cache[id(a)][cells[:, 0], cells[:, 1]].min()), 3), "grades": share}
+
+    def _task_record(self, i: int) -> dict:
+        p = self.pgcl[i]
+        return {"env": int(i), "room": int(self.room_id[i]), "level": int(p.level), "streak": int(p.streak), "fail_run": int(self._fail_run[i]), "cut_n": int(self._cut_n[i]),
+                "start": [round(float(x), 3) for x in self.start[i]], "goal": [round(float(x), 3) for x in self.goal[i]], **self._path_facts(i)}
+
+    def task_rows(self) -> list:
+        """env 마다 지금 과제 기록 (시작 · 목표 · 수준 · 연속 실패 · 잘린 횟수 · 경로 길이 · 최소 여유 · 등급 몫)."""
+        return [self._task_record(i) for i in range(self.n)]
+
+    def take_cut_log(self) -> list:
+        out, self._cut_log = self._cut_log, []
+        return out
+
     def _note_task(self, i: int) -> None:
         s, t, pts = self.start[i], self.goal[i], self.path[i]
         straight = float(np.linalg.norm(s - t))
         r = self._length(pts) / max(straight, 1e-6)
         self.task_new += 1
         self._fresh_task.add(int(i))
+        self._fail_run[int(i)] = 0
         self.task_winding += int(r >= self.winding_min)
         self.ratio_hist[int(np.searchsorted(self.ratio_edges, r, side="right"))] += 1
 
@@ -393,8 +457,19 @@ class NavTask:
             self._note_episode_end(i, p)
             outcome.append("fresh" if not p._sub else p.end_episode())
             self._note_outcome(outcome[-1])
+            cut = False
+            if outcome[-1] == "hold":
+                self._fail_run[i] += 1
+                if self.new_task_after_fails and self._fail_run[i] >= self.new_task_after_fails:
+                    cut = True                                              # 처방 A: 연속 실패 N 번이면 표에서 새 과제 (수준은 그대로)
+                    self._cut_n[i] += 1
+                    self._cut_log.append(self._task_record(i))               # 새 과제를 뽑기 전 (지금 과제) 의 기록
+                    self.task_cut_fails += 1
+                    self._stat()["cut"] += 1
+            elif outcome[-1] != "fresh":
+                self._fail_run[i] = 0
             s = None if start_xy is None else start_xy[j]
-            if self.path[i] is None or p.needs_new_task:
+            if self.path[i] is None or p.needs_new_task or cut:
                 self._new_task(i, s)
                 p.needs_new_task = False
             elif s is not None and self.table is not None and self.redraw_on_fall:
@@ -420,6 +495,7 @@ class NavTask:
             self.visit.reset([int(i) for i in np.atleast_1d(ids) if int(i) in self._fresh_task])
         else:
             self.visit.reset(ids)
+        self._first_try.update(int(i) for i in np.atleast_1d(ids) if int(i) in self._fresh_task)
         self._fresh_task.difference_update(int(i) for i in np.atleast_1d(ids))
         self.cmd_prev[ids] = 0.0; self.cmd_prev2[ids] = 0.0
         yaw = self.rng.uniform(-np.pi, np.pi, len(ids))
