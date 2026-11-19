@@ -3,7 +3,7 @@
 
 Runs on ai-lx01. For each finished folder in the Jetson records directory:
   1. make SHA256SUMS on the Jetson if the recorder did not (folder idle 10 min, no ros2 bag on it)
-  2. rsync Jetson -> ai-lx01 /home/jay/data/go2x_raw/jetson_go2_diag/records/<name>, sha256sum -c there
+  2. rsync Jetson -> ai-lx01 D drive /mnt/win-d/mai/data/go2x_raw/jetson_go2_diag/records/<name>, sha256sum -c there
   3. rsync ai-lx01 -> NAS /volume1/foothold/go2x-raw/jetson_go2_diag/records/<name> over ssh, sha256sum -c there
   4. only when both pass, write .backup.json on the Jetson folder
 Deleting on the Jetson is never automatic: `delete <name> --yes` re-checks all three copies first.
@@ -25,7 +25,7 @@ import sys
 
 JET = 'nvidia@100.107.113.1'   # go2x-jetson; only the tailnet IP is in known_hosts
 JROOT = 'go2_diag/records'      # relative to the Jetson home
-LOCAL = '/home/jay/data/go2x_raw/jetson_go2_diag/records'
+LOCAL = '/mnt/win-d/mai/data/go2x_raw/jetson_go2_diag/records'   # D drive (owner 11/19 17:12)
 NAS = 'VFXPEDIA@100.80.160.84'
 NAS_KEY = os.path.expanduser('~/.ssh/ai-nas01-backup-admin-20260912')
 NROOT = '/volume1/foothold/go2x-raw/jetson_go2_diag/records'
@@ -82,7 +82,9 @@ def classify(f):
     if f['sums'] is None:
         return 'make_sums' if f['idle_s'] >= IDLE_S else 'young'
     m = f['mark']
-    if m and m.get('sums') == f['sums'] and m.get('ailx01', {}).get('ok') and m.get('nas', {}).get('ok'):
+    a, n = m.get('ailx01', {}) if m else {}, m.get('nas', {}) if m else {}
+    if m and m.get('sums') == f['sums'] and a.get('ok') and a.get('path', '').startswith(LOCAL) \
+            and n.get('ok') and n.get('path', '').startswith(NROOT):
         return 'backed_up'
     return 'copy'
 
@@ -129,16 +131,18 @@ def back_up(f, log):
     if not ok_local:
         log.append((n, 'ailx01_verify_failed', 0))
         return False
-    # UGREEN wraps rsync over ssh and refuses plain paths ("invalid path"), so ssh + tar like the RL backup
-    tar = subprocess.Popen(['tar', '-C', LOCAL, '--exclude', MARK, '-cf', '-', n], stdout=subprocess.PIPE)
-    r = run(SSH_N + ['mkdir -p %s && tar -C %s -xf -' % (NROOT, NROOT)], stdin=tar.stdout, timeout=14400)
-    tar.stdout.close()
-    if tar.wait() or r.returncode:
-        log.append((n, 'rsync_nas_failed', r.returncode))
-        return False
+    # Skip sending when the NAS copy already verifies (e.g. only the ai-lx01 path moved to D on 11/19).
+    # UGREEN wraps rsync over ssh and refuses plain paths ("invalid path"), so ssh + tar like the RL backup.
     if not check_nas(n):
-        log.append((n, 'nas_verify_failed', 0))
-        return False
+        tar = subprocess.Popen(['tar', '-C', LOCAL, '--exclude', MARK, '-cf', '-', n], stdout=subprocess.PIPE)
+        r = run(SSH_N + ['mkdir -p %s && tar -C %s -xf -' % (NROOT, NROOT)], stdin=tar.stdout, timeout=14400)
+        tar.stdout.close()
+        if tar.wait() or r.returncode:
+            log.append((n, 'nas_copy_failed', r.returncode))
+            return False
+        if not check_nas(n):
+            log.append((n, 'nas_verify_failed', 0))
+            return False
     mark = dict(sums=f['sums'], ailx01=dict(ok=True, path=os.path.join(LOCAL, n), at=now()),
                 nas=dict(ok=True, path='%s/%s' % (NROOT, n), at=now()))
     r = run(SSH_J + ["cat > ~/%s/%s/%s.tmp && mv ~/%s/%s/%s.tmp ~/%s/%s/%s" % ((JROOT, n, MARK) * 3)],

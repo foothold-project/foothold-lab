@@ -15,7 +15,7 @@ def folder(**kw):
     return f
 
 
-GOOD = dict(sums='a' * 64, ailx01=dict(ok=True), nas=dict(ok=True))
+GOOD = dict(sums='a' * 64, ailx01=dict(ok=True, path=js.LOCAL + '/x'), nas=dict(ok=True, path=js.NROOT + '/x'))
 
 
 class ClassifyTests(unittest.TestCase):
@@ -24,6 +24,11 @@ class ClassifyTests(unittest.TestCase):
         self.assertEqual(js.classify(folder(mark=dict(GOOD, nas=dict(ok=False)))), 'copy')
         self.assertEqual(js.classify(folder(mark=dict(GOOD, nas={}))), 'copy')
         self.assertEqual(js.classify(folder(mark=None)), 'copy')
+
+    def test_mark_with_old_ailx01_path_is_redone(self):
+        # 11/19 17:12 the ai-lx01 copy moved from /home/jay/data to the D drive
+        old = dict(GOOD, ailx01=dict(ok=True, path='/home/jay/data/go2x_raw/jetson_go2_diag/records/x'))
+        self.assertEqual(js.classify(folder(mark=old)), 'copy')
 
     def test_changed_sums_after_mark_is_copied_again(self):
         self.assertEqual(js.classify(folder(mark=GOOD, sums='b' * 64)), 'copy')
