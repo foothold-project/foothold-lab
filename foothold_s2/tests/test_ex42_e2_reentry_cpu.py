@@ -103,3 +103,34 @@ def test_the_rollback_draft_keeps_the_plans_own_mesh_and_rule(tmp_path):
     assert record["mesh_stages"] == [] and new["training_mesh_profiles"] == old["training_mesh_profiles"] and "terrain_promotion" not in new
     assert [r.get("training_mesh_profile") for r in new["stages"]] == [r.get("training_mesh_profile") for r in old["stages"]]
     assert next(r for r in new["stages"] if r["id"] == "E2")["parent"]["sha256"] == sha
+
+
+def _terrain():
+    caps = {"A/gaps": 2, "B/gap": 2, "C/gap": 2, "B/beam": 2, "A/balance_beams": 2}
+    rules = [{"family": "A", "kinds_of": "continuous", "exposure": 1.0, "level_cap": 5}]
+    rules += [{"family": k.split("/")[0], "kind": k.split("/")[1], "share": 0.088, "level_cap": c} for k, c in caps.items()]
+    return {"exposure_at_E2": {"default": {"exposure": 0.0, "level_cap": 0}, "positive": rules}, "kind_level_cap": {"end": 5, "step_per_boundary": 1}}
+
+
+def test_kind_caps_bake_the_runs_moves_and_lower_only_the_named_kinds(tmp_path):
+    run = tmp_path / "run" / "eval" / "scores" / "m500"
+    run.mkdir(parents=True)
+    (run / "ladder_outcomes_list.json").write_text(json.dumps([{"B/beam": {"first_window_pass": True}}, {"B/beam": {"first_window_pass": True}, "A/gaps": {"first_window_pass": False}}]))
+    terrain, report = rd.set_kind_caps(_terrain(), tmp_path / "run", 2, {"A/gaps": 1, "B/gap": 1, "C/gap": 1, "A/balance_beams": 1})
+    assert report["baked"]["B/beam"] == 4 and report["start"]["B/beam"] == 2        # two passes: +1 +1
+    assert rd.rule_caps(terrain) == {"A/gaps": 1, "B/gap": 1, "C/gap": 1, "B/beam": 4, "A/balance_beams": 1}
+    assert terrain["exposure_at_E2"]["positive"][0]["level_cap"] == 5 and terrain["kind_level_cap"] == {"end": 5, "step_per_boundary": 1}
+    assert report["lowered"]["A/gaps"] == {"from": 2, "to": 1}
+
+
+def test_kind_caps_refuse_raising_unknown_kinds_and_missing_evidence(tmp_path):
+    with pytest.raises(ValueError, match="lowering only"):
+        rd.set_kind_caps(_terrain(), None, 0, {"A/gaps": 3})
+    with pytest.raises(ValueError, match="no such single-kind"):
+        rd.set_kind_caps(_terrain(), None, 0, {"A/nothing": 1})
+    (tmp_path / "eval" / "scores" / "m500").mkdir(parents=True)
+    (tmp_path / "eval" / "scores" / "m500" / "ladder_outcomes_list.json").write_text("[{}]")
+    with pytest.raises(ValueError, match="need 2"):
+        rd.set_kind_caps(_terrain(), tmp_path, 2, None)
+    unchanged, report = rd.set_kind_caps(_terrain(), None, 0, None)
+    assert unchanged == _terrain() and report["lowered"] == {}
