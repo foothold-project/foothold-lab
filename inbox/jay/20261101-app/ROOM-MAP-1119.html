@@ -78,7 +78,7 @@ footer { border-top: 1px solid var(--rule); margin-top: 3rem; padding-top: 1rem;
 </tbody></table></div>
 <div class="note">
 <p><b>SLAM 이 아니다.</b> SLAM 은 걸으면서 지도를 만들고, 같은 곳에 돌아오면 어긋난 위치를 고친다 (고리 닫기). 이 지도는 Go2 의 자기 위치 추정 (<code>odom</code>) 을 고치지 않고 그대로 믿었다. 그래서 오래 걸을수록 어긋남이 쌓이고, 이번에도 벽이 두 겹으로 보이는 곳이 있다 (눈으로 본 것 · 잰 값 아님).</p>
-<p>Go2 자체 SLAM (<code>/uslam</code>) 은 토픽은 있었지만 켜는 API 번호를 Jetson 에서 찾지 못해 켜지 않았다. 05:39 에 <code>uslam_record.sh</code> 로 녹화를 시도했지만 27 초에 메시지 2 개 (고정 좌표 1 · 카메라 외부 매개변수 1) 뿐이었다. L2 · <code>/uslam</code> · 카메라 영상은 0 개이고 감시는 「5 초 안에 로봇 상태 없음」 을 남겼다 (배터리 6 % 무렵). 그래서 Go2 자체 SLAM 자료는 없다. 11/19 낮 학원 (ai-lt01) 에서 Unitree 앱 지도 메뉴로 켜 보는 것이 다음 할 일이다.</p>
+<p>Go2 자체 SLAM (<code>/uslam</code>) 은 토픽은 있었지만 켜는 API 번호를 Jetson 에서 찾지 못해 켜지 않았다. 05:39 에 <code>uslam_record.sh</code> 로 녹화를 시도했지만 27 초에 메시지 2 개 (고정 좌표 1 · 카메라 외부 매개변수 1) 뿐이었다. L2 · <code>/uslam</code> · 카메라 영상은 0 개이고 감시는 「5 초 안에 로봇 상태 없음」 을 남겼다 (05:20 녹화도 141 초에 본체 토픽이 모두 끊겼고 로봇은 계속 걸었다 · Jetson 이 본체 통신을 잃은 것으로 보임 · 까닭 미확인). 그래서 Go2 자체 SLAM 자료는 없다. 11/19 낮 학원 (ai-lt01) 에서 Unitree 앱 지도 메뉴로 켜 보는 것이 다음 할 일이다.</p>
 </div>
 <p>설명 원문: <a href="../20261117-go2-x-sim-match-checklist-assets/20261119-0459-room-walk/README.md">20261119-0459-room-walk/README.md</a></p>
 </section>
