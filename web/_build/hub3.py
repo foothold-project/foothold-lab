@@ -1294,6 +1294,12 @@ def research_head():
     """
     return ('<div class="rxh3">'
             '<div class="rxe3">RESEARCH · Go2 미경험 험지 보행</div>'
+            # ★ 2026-11-19 팀장 승인 프로젝트 이름 (17:59). 표지 머리와 같은 세 줄.
+            #   Isaac 판은 이 기기 설치본에서 잼 (isaaclab 2.3.2 · isaacsim 5.1.0).
+            '<div class="rxpn3"><b lang="en">FOOTHOLD: Sim-to-Field, '
+            'Terrain-Adaptive Mission Platform for Legged Robots</b>'
+            '<span>FOOTHOLD 시뮬에서 현장까지, 미경험 험지 사족보행 로봇 임무 플랫폼</span>'
+            '<small lang="en">on Unitree Go2 · Isaac Lab 2.3.2 · Isaac Sim 5.1</small></div>'
             '<h1 class="rxt3">처음 보는 험지에서도 무너지지 않고 명령대로 걷는 '
             'Go2 정책</h1>'
             '<p class="rxp3">Isaac Lab 에서 PPO 로 학습한 Unitree Go2 보행 '
@@ -2582,6 +2588,10 @@ CSS = '''<style id="hub3-css">
 .rxh3{display:flex;flex-direction:column;gap:16px}
 .rxe3{font-size:12px;line-height:16px;letter-spacing:.12em;font-weight:700;
  color:var(--dim)}
+.rxpn3{display:flex;flex-direction:column;gap:2px;word-break:keep-all}
+.rxpn3 b{font-size:15px;line-height:22px;font-weight:700}
+.rxpn3 span{font-size:14px;line-height:21px;color:var(--ink-2)}
+.rxpn3 small{font-size:12px;line-height:18px;color:var(--ink-2)}
 .rxt3{margin:0;font-size:36px;line-height:1.3;font-weight:700;letter-spacing:-.01em;
  word-break:keep-all}
 .rxp3{margin:0;font-size:16px;line-height:1.75;color:var(--ink-2);word-break:keep-all}

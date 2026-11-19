@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>FOOTHOLD · 4족 보행 로봇용 강화학습 기반 험지 적응 정책</title>
+<title>FOOTHOLD · 시뮬에서 현장까지, 미경험 험지 사족보행 로봇 임무 플랫폼</title>
 <meta name="description" content="인공지능사관학교 7기 AI 도약과정 실증 프로젝트 · 팀 FOOTHOLD">
 <style>
 :root{
@@ -49,7 +49,10 @@ header{border-bottom:2px solid var(--ink);padding-bottom:clamp(24px,3.5vh,38px)}
 .vision .state{flex:0 0 auto;margin-top:.18em;display:inline-block;padding:.06rem .38rem;border-radius:3px;
   font-size:.6rem;font-weight:800;letter-spacing:.14em;text-transform:uppercase;
   color:var(--note);background:var(--note-soft);border:1px solid var(--note);vertical-align:.1em}
-.pname{font-size:clamp(.9rem,1.15vw,1.02rem);font-weight:800;letter-spacing:-.02em;margin-bottom:8px}
+.pname{font-size:clamp(.9rem,1.15vw,1.02rem);font-weight:800;letter-spacing:-.02em;margin-bottom:4px;word-break:keep-all}
+/* 2026-11-19 팀장 승인 프로젝트 이름 (17:59). 영문 정식 이름 · 한글 이름 · 작은 정보 한 줄 */
+.pname-ko{font-size:clamp(.82rem,1vw,.92rem);font-weight:700;color:var(--ink-2);margin-bottom:4px;word-break:keep-all}
+.pinfo{font-size:clamp(.68rem,.85vw,.76rem);color:var(--ink-2);letter-spacing:.02em;margin-bottom:10px}
 .pdesc{font-size:clamp(.78rem,.95vw,.87rem);color:var(--ink-2);line-height:1.7;
   max-width:min(46em,100%);word-break:keep-all}
 .pdesc b{color:var(--ink)}
@@ -181,7 +184,9 @@ footer b{color:var(--ink-2);font-family:inherit}
   <div class="slogan">불확실한 지형에서도, 다음 걸음을 이어갑니다.</div>
   <div class="vision"><span class="state">Target Vision</span>
     시뮬레이터에서 천 번 넘어지고, 현장에서는 넘어지지 않는다.</div>
-  <div class="pname">4족 보행 로봇을 위한 강화학습 기반 험지 적응 보행 정책</div>
+  <div class="pname" lang="en">FOOTHOLD: Sim-to-Field, Terrain-Adaptive Mission Platform for Legged Robots</div>
+  <div class="pname-ko">FOOTHOLD 시뮬에서 현장까지, 미경험 험지 사족보행 로봇 임무 플랫폼</div>
+  <div class="pinfo" lang="en">on Unitree Go2 · Isaac Lab 2.3.2 · Isaac Sim 5.1</div>
   <p class="pdesc">사족보행 로봇이 모래·자갈·계단처럼 <b>겪어보지 않은 지형</b>에서도 넘어지지 않고 이동하도록,
     시뮬레이션에서 보행 정책을 학습시키고 그 결과가 <b>실제 환경 조건에서도 통하는지</b>를 검증한다.</p>
 </header>
