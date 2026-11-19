@@ -89,3 +89,33 @@ def test_factory_switch_reads_config_then_environment():
     assert kf.new_task_after_fails({}, environ={"HIPAN_NEW_TASK_AFTER_FAILS": "5"}) == 5
     with pytest.raises(ValueError):
         kf.new_task_after_fails({"task_new_after_fails": -1}, environ={})
+
+
+def test_task_rows_and_cut_log_record_the_task_with_clearance_and_grades(assets):
+    t = _task(assets, n_after=2)
+    rows = t.task_rows()
+    assert len(rows) == 2 and {"env", "room", "level", "streak", "fail_run", "cut_n", "start", "goal", "path_len_m", "min_clear_m", "grades"} <= set(rows[0])
+    assert rows[0]["path_len_m"] > 0 and rows[0]["min_clear_m"] >= 0 and sum(rows[0]["grades"].values()) == pytest.approx(1.0, abs=1e-3)
+    goal = [round(float(x), 3) for x in t.goal[0]]
+    _fail(t, 0); _fail(t, 0)                                                                     # 두 번 연속 실패 -> 자름
+    cuts = t.take_cut_log()
+    assert len(cuts) == 1 and cuts[0]["env"] == 0 and cuts[0]["goal"] == goal and cuts[0]["fail_run"] == 2 and cuts[0]["cut_n"] == 1   # 자르기 전 과제의 기록
+    assert cuts[0]["min_clear_m"] is not None and t.take_cut_log() == []
+    assert t.task_rows()[0]["cut_n"] == 1 and t.task_rows()[0]["goal"] != goal
+
+
+def test_dump_tasks_writes_jsonl_per_save_and_can_be_switched_off(assets, tmp_path, monkeypatch):
+    import json
+    from types import SimpleNamespace
+    from foothold_s2.nav import hl_train
+    t = _task(assets, n_after=2)
+    _fail(t, 0); _fail(t, 0)
+    env = SimpleNamespace(task=t)
+    hl_train.dump_tasks(env, tmp_path, 50)
+    rows = [json.loads(x) for x in (tmp_path / "tasks_50.jsonl").read_text(encoding="utf-8").splitlines()]
+    assert len(rows) == 2 and rows[0]["iteration"] == 50 and rows[0]["cut_n"] == 1
+    cuts = [json.loads(x) for x in (tmp_path / "task_cuts.jsonl").read_text(encoding="utf-8").splitlines()]
+    assert len(cuts) == 1 and cuts[0]["iteration"] == 50 and cuts[0]["env"] == 0
+    monkeypatch.setenv("HIPAN_TASK_DUMP", "0")
+    hl_train.dump_tasks(env, tmp_path, 100)
+    assert not (tmp_path / "tasks_100.jsonl").exists()                                           # 끔

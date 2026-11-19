@@ -112,6 +112,9 @@ class NavTask:
         self._fail_run = np.zeros(self.n, dtype=np.int64)   # env 별 같은 과제 연속 실패 수 (읽기용 통계 · 항상 센다. 성공 또는 새 과제가 뽑히면 0)
         self._first_try: set = set()      # 새 과제가 뽑힌 뒤 아직 첫 에피소드가 안 끝난 env (_fresh_task 표식을 reset 끝에 옮겨 둔다) = 「새 과제의 첫 시도」 통계용
         self.task_cut_fails = 0           # 연속 실패로 새 과제를 뽑은 수 (누적)
+        self._cut_n = np.zeros(self.n, dtype=np.int64)    # env 별 잘린 횟수 (누적)
+        self._cut_log: list = []          # 처방 A 가 자른 과제 기록 (hl_train 이 저장 때 읽고 비움)
+        self._clear_cache: dict = {}      # 방 (asset) 별 막힌 칸까지 거리 (m)
         self.tick_s = None                # 상위 틱 한 번의 초 (hold x step_dt). 호출한 쪽이 넣는다. None = 에피소드 길이는 틱 수로만
         self._st = None                   # 회차 통계 합 (take_stats 가 읽고 비운다)
         self.task_fallbacks = 0           # 실제 시작에서 길을 못 찾아 새 쌍으로 대신한 횟수 (누적)
@@ -354,6 +357,38 @@ class NavTask:
         self._st = None
         return out
 
+    # ---- env 별 과제 남기기 (읽기 전용 · 학습에 쓰이지 않음): 저장본마다 env 별 과제 jsonl · 처방 A 가 자른 과제 목록
+    def _path_facts(self, i: int) -> dict:
+        """지금 과제 경로: 길이 · 막힌 칸까지 최소 여유 (m · 0.1 m 격자 기준) · 지나는 등급 (경로를 격자 반 칸 간격으로 찍은 점의 몫)."""
+        from scipy import ndimage
+        pts = self.path[i]
+        if pts is None:
+            return {"path_len_m": None, "min_clear_m": None, "grades": {}}
+        a = self.assets[self.room_id[i]]
+        g = a.grade
+        if id(a) not in self._clear_cache:
+            self._clear_cache[id(a)] = ndimage.distance_transform_edt(g.grade != gm.BLOCKED) * g.res
+        P = np.asarray(pts, float)
+        arc = np.concatenate([[0.0], np.cumsum(np.linalg.norm(np.diff(P, axis=0), axis=1))])
+        pts_s = np.stack([np.interp(np.arange(0.0, arc[-1] + 1e-9, g.res / 2), arc, P[:, k]) for k in (0, 1)], axis=1)
+        cells = np.clip((pts_s / g.res).astype(int), 0, np.array(g.grade.shape) - 1)
+        grades = g.grade[cells[:, 0], cells[:, 1]]
+        share = {name: round(float((grades == k).mean()), 4) for k, name in enumerate(gm.GRADE_NAMES) if (grades == k).any()}
+        return {"path_len_m": round(float(arc[-1]), 3), "min_clear_m": round(float(self._clear_cache[id(a)][cells[:, 0], cells[:, 1]].min()), 3), "grades": share}
+
+    def _task_record(self, i: int) -> dict:
+        p = self.pgcl[i]
+        return {"env": int(i), "room": int(self.room_id[i]), "level": int(p.level), "streak": int(p.streak), "fail_run": int(self._fail_run[i]), "cut_n": int(self._cut_n[i]),
+                "start": [round(float(x), 3) for x in self.start[i]], "goal": [round(float(x), 3) for x in self.goal[i]], **self._path_facts(i)}
+
+    def task_rows(self) -> list:
+        """env 마다 지금 과제 기록 (시작 · 목표 · 수준 · 연속 실패 · 잘린 횟수 · 경로 길이 · 최소 여유 · 등급 몫)."""
+        return [self._task_record(i) for i in range(self.n)]
+
+    def take_cut_log(self) -> list:
+        out, self._cut_log = self._cut_log, []
+        return out
+
     def _note_task(self, i: int) -> None:
         s, t, pts = self.start[i], self.goal[i], self.path[i]
         straight = float(np.linalg.norm(s - t))
@@ -427,6 +462,8 @@ class NavTask:
                 self._fail_run[i] += 1
                 if self.new_task_after_fails and self._fail_run[i] >= self.new_task_after_fails:
                     cut = True                                              # 처방 A: 연속 실패 N 번이면 표에서 새 과제 (수준은 그대로)
+                    self._cut_n[i] += 1
+                    self._cut_log.append(self._task_record(i))               # 새 과제를 뽑기 전 (지금 과제) 의 기록
                     self.task_cut_fails += 1
                     self._stat()["cut"] += 1
             elif outcome[-1] != "fresh":
