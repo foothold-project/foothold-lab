@@ -197,11 +197,40 @@ def strip_wiki_chrome(body):
       우리 사이트에는 전역바와 우리 푸터가 있다. 남의 사이트 목차 띠가
       그 위에 겹칠 이유가 없다.
     """
+    # ★ 2026-11-19. wiki 가 띠를 `<div class="pagerow">` 에서
+    #   `<nav class="pagerow" aria-label="…">…</nav><!-- /nav:pagerow -->` 로
+    #   바꿨다. div 만 찾던 식이 못 맞혀 남은 개수 1 로 넷 다 이식이 섰다.
+    #   태그 이름을 짝으로 받고 (div · nav), 뒤따르는 닫음 주석도 같이 걷는다.
     n0 = body.count('class="pagerow"') + body.count('<footer')
-    body = re.sub(r'<div class="pagerow">[\s\S]*?</div>\s*', '', body)
+    body = re.sub(r'<(div|nav) class="pagerow"[^>]*>[\s\S]*?</\1>\s*'
+                  r'(?:<!-- /nav:pagerow -->\s*)?', '', body)
     body = re.sub(r'<footer[^>]*>[\s\S]*?</footer>\s*', '', body)
     left = body.count('class="pagerow"') + body.count('<footer')
     return body, n0 - left, left
+
+
+# wiki 안쪽 상대 링크. ★ 2026-11-19. wiki 가 새 쪽을 `w/` 밑에 두고 본문 끝
+#   「연결된 쪽」 에서 `w/cv.html` 처럼 가리킨다. 슬래시를 안 받던 식이 그것을
+#   놓쳐 우리 사이트에 없는 주소가 그대로 남았다 ([3.6] 죽은 링크 2개).
+WIKI_HREF = re.compile(r'href="([a-z0-9][a-z0-9._/-]*\.html(?:#[^"]*)?)"')
+
+
+def _kat_strip():
+    """답을 아는 입력으로 띠 걷개를 먼저 시험한다 (옛 div 꼴 · 11/19 nav 꼴)."""
+    for href, want in (('cv.html', True), ('w/cv.html', True),
+                       ('rl.html#s2', True), ('https://x.io/a.html', False),
+                       ('/assets/a.html', False)):
+        if bool(WIKI_HREF.fullmatch('href="%s"' % href)) != want:
+            return False
+    for band in ('<div class="pagerow"><a href="a.html">이전</a></div>\n',
+                 '<nav class="pagerow" aria-label="이전·다음 문서">'
+                 '<a href="a.html">이전</a></nav>\n<!-- /nav:pagerow -->\n'):
+        src = ('<p>본문ZZ</p>\n' + band +
+               '<footer><span>FOOTHOLD 팀 위키</span></footer>\n')
+        out, n, left = strip_wiki_chrome(src)
+        if left or n != 2 or 'pagerow' in out or '본문ZZ' not in out:
+            return False
+    return True
 
 
 def fetch(name):
@@ -403,6 +432,9 @@ def style():
 
 
 def main():
+    if not _kat_strip():
+        print('  [!] 자기시험 실패: wiki 띠·푸터 걷개가 알려진 꼴을 못 걷는다')
+        return False
     css, skipped = style()
     made = []
     for src, dst, title, lede in PAGES:
@@ -437,7 +469,7 @@ def main():
             #   이식되면 위 화이트리스트에 들어와 자동으로 링크가 산다 (#72).
             return 'data-unported="%s"' % href
 
-        body = re.sub(r'href="([a-z0-9][a-z0-9._-]*\.html(?:#[^"]*)?)"', _ext, body)
+        body = WIKI_HREF.sub(_ext, body)
         # 링크 껍데기를 벗긴다 (글자는 남긴다)
         body = re.sub(r'<a[^>]*data-unported="[^"]*"[^>]*>([\s\S]*?)</a>',
                       r'\1', body)
