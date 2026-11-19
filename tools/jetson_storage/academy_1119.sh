@@ -30,6 +30,14 @@ low start
   echo "## L2 points per message"; timeout 6 ros2 topic echo --once /utlidar/cloud 2>&1 | grep -E '^(width|height|point_step|row_step):'
 } > $R/topics.txt 2>&1
 echo "probe done $(date +%T)"
+# the 540 s record starts only when the owner stands the robot and lead says go (touch $R/GO); 60 min cap
+for i in $(seq 1 720); do [ -e $R/GO ] && break; sleep 5; done
+if [ ! -e $R/GO ]; then
+  echo "no GO in 60 min, camera down $(date +%T)"
+  [ -n "$STARTED_CAM" ] && { pkill -INT -f realsense2_camera_node; sleep 3; pkill -f rs_launch.py; }
+  python3 -c "import jrec; jrec.write_sums('$R')"; echo "end $(date +%T)"; exit 0
+fi
+echo "GO $(date +%T)"
 vmstat 5 > $R/vmstat-main.txt & V=$!
 python3 jrec.py full $N --seconds 540
 kill $V
