@@ -86,7 +86,7 @@ footer { border-top: 1px solid var(--rule); margin-top: 3rem; padding-top: 1rem;
 <section aria-labelledby="map2">
 <p class="eyebrow">녹화 2 · 05:20 · 같은 방법</p>
 <h2 id="map2">두 번째 녹화로 만든 지도는 걷기 앞부분만 담았다</h2>
-<p>05:20 녹화 (카메라까지 같이 남긴 것) 로도 같은 방법으로 지도를 만들었다. 다만 이 녹화의 L2 점구름과 odom 은 처음 141~147 초만 들어 있다. 앉음 60 초 · 섬 약 35 초 뒤라 걷기는 앞 45 초쯤, 걸은 길 5.12 m 뿐이다 (카메라는 330 초 끝까지 있음 · 끊긴 까닭 미확인).</p>
+<p>05:20 녹화 (카메라까지 같이 남긴 것) 로도 같은 방법으로 지도를 만들었다. 다만 이 녹화의 L2 점구름과 odom 은 처음 141~147 초만 들어 있다. odom 으로 잰 순서는 앉음 0~63 초 · 일어섬 63 초 · 가만히 섬 ~99 초 · 걷기 99 초부터라, 지도에는 걷기 앞 약 42 초 (그중 움직인 시간 약 21 초) · 걸은 길 5.12 m 만 들어갔다. 141 초에 Go2 본체에서 오는 것 (L2 · odom · IMU · 관절 상태) 이 한꺼번에 끊겼고, 카메라 영상으로는 로봇이 그 뒤에도 290 초 무렵까지 걸었다. 그래서 로봇이 멈춘 것이 아니라 Jetson 이 본체 쪽 통신을 잃은 것으로 보인다 (까닭 미확인 · <a href="../20261117-go2-x-sim-match-checklist-assets/20261119-0520-room-walk-full/map/README.md">README</a>).</p>
 <div class="pair">
 <figure><a href="../20261117-go2-x-sim-match-checklist-assets/20261119-0459-room-walk/room_topview.png"><img src="../20261117-go2-x-sim-match-checklist-assets/20261119-0459-room-walk/room_topview.png" alt="04:59 녹화로 만든 방 지도. 걸은 길 20.75 m 가 방 전체를 돈다"></a><figcaption>04:59 · 걸은 길 20.75 m · 점구름 7016 장</figcaption></figure>
 <figure><a href="../20261117-go2-x-sim-match-checklist-assets/20261119-0520-room-walk-full/map/room_topview.png"><img src="../20261117-go2-x-sim-match-checklist-assets/20261119-0520-room-walk-full/map/room_topview.png" alt="05:20 녹화로 만든 방 지도. 걸은 길이 5.12 m 로 짧아 방 한쪽만 채워졌다"></a><figcaption>05:20 · 걸은 길 5.12 m · 점구름 2035 장</figcaption></figure>

@@ -18,6 +18,8 @@ p + p { margin-top: 0.6rem; }
 ul { padding-left: 1.3rem; display: grid; gap: 0.35rem; margin: 0.6rem 0; }
 a { color: var(--link); }
 .lede { font-size: 1.05rem; color: var(--muted); margin-bottom: 1.25rem; }
+.head { border-top: 1px solid var(--rule); border-bottom: 1px solid var(--rule); padding: 0.75rem 0; margin-bottom: 1.5rem; display: grid; grid-template-columns: 5rem 1fr; gap: 0.2rem 0.75rem; font-size: 0.85rem; }
+.head dt { color: var(--soft); font-family: 'Geist Mono', ui-monospace, Consolas, monospace; font-size: 0.72rem; letter-spacing: 0.1em; padding-top: 0.15rem; }
 .controls { display: flex; flex-wrap: wrap; gap: 0.6rem 1.4rem; align-items: center; font-size: 0.86rem; margin: 1rem 0 0.6rem; }
 .controls fieldset { border: 0; display: flex; gap: 0.3rem; }
 .controls legend { float: left; margin-right: 0.5rem; color: var(--soft); font-family: 'Geist Mono', ui-monospace, Consolas, monospace; font-size: 0.72rem; letter-spacing: 0.1em; padding-top: 0.2rem; }
@@ -38,7 +40,7 @@ a { color: var(--link); }
 .note { background: var(--card); border: 1px solid var(--rule); border-left: 3px solid var(--accent); border-radius: 6px; padding: 0.9rem 1.1rem; margin: 1rem 0; }
 footer { border-top: 1px solid var(--rule); margin-top: 3rem; padding-top: 1rem; font-family: 'Geist Mono', ui-monospace, Consolas, monospace; font-size: 0.72rem; color: var(--muted); }
 code { font-family: 'Geist Mono', ui-monospace, Consolas, monospace; font-size: 0.82em; background: var(--card); border: 1px solid var(--rule); border-radius: 3px; padding: 0 0.3em; overflow-wrap: anywhere; }
-@media (max-width: 720px) { h1 { font-size: 1.6rem; } }
+@media (max-width: 720px) { .head { grid-template-columns: 4rem 1fr; } h1 { font-size: 1.6rem; } }
 </style>
 </head>
 <body>
@@ -46,6 +48,15 @@ code { font-family: 'Geist Mono', ui-monospace, Consolas, monospace; font-size: 
 <p class="eyebrow">Go2 X 실기 · 숙소 · 2026-11-19 새벽</p>
 <h1>방을 걸으며 쌓은 라이다 점을 3D 로 돌려 본다</h1>
 <p class="lede">두 녹화 (04:59 · 05:20) 각각의 L2 점을 5 cm 칸 하나에 한 점으로 줄였다. 색은 바닥에서 잰 높이, 빨간 선은 로봇이 걸은 길이다.</p>
+
+<dl class="head">
+<dt>분류</dt><dd>실기 원자료에서 뽑은 그림 (방 걷기 L2 점 · 3D 보기)</dd>
+<dt>작성</dt><dd>Claude 세션 (오흥재 지시, go2-lx) · 2026-11-19</dd>
+<dt>근거</dt><dd>04:59 · 05:20 녹화 bag (ai-lx01 거울) → <code>room_map_rosbags.py</code> → <code>room_points_5cm.npy</code> · 이슈 <a href="https://github.com/foothold-project/foothold-lab/issues/861">#861</a> · <a href="../20261117-go2-x-sim-match-checklist-assets/20261119-0520-room-walk-full/map/README.md">지도 README</a></dd>
+<dt>요지</dt><dd>04:59 녹화 122,750 점 · 05:20 녹화 42,617 점 (5 cm 칸 · 바닥 위 -0.2~2.5 m) 을 높이 색으로 돌려 본다. 05:20 은 141 초에 본체 통신이 끊겨 걷기 앞부분만</dd>
+<dt>상태</dt><dd>1 차 · SLAM 아님 (Go2 odom 그대로) · 헤드리스 Chrome 으로 그려짐 확인 · 손 조작 미확인</dd>
+<dt>돌아가기</dt><dd><a href="ROOM-MAP-1119.html">방 지도 페이지</a></dd>
+</dl>
 
 <div class="controls">
 <fieldset class="seg" id="pick"><legend>녹화</legend></fieldset>
