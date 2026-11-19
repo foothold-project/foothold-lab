@@ -68,6 +68,7 @@ footer p { max-width: none; font-size: 0.72rem; }
 <span><span class="sw code"></span><b>실선 상자 · 「있음」 표</b> = 지금 코드 (<code>89d2a221</code>) 에 있음</span>
 <span><span class="sw plan"></span><b>점선 상자 · 「계획」 표</b> = 앞으로 만들 것</span>
 <span><span class="sw unitree"></span><b>흐린 실선 · 「Unitree」 「센서」 표</b> = 산 제품 (안을 바꾸지 않음)</span>
+<span><span class="tag wait">제안 · 팀장 결정 대기</span> = 결정 기록의 제안, 아직 팀장 승인 아님 (표 칸에만 씀)</span>
 <span>선도 같다. 실선은 지금 오가는 길, 점선은 만들 길이다.</span>
 </div>
 
@@ -514,7 +515,7 @@ footer p { max-width: none; font-size: 0.72rem; }
 <tr><td>조이스틱 L2+B</td><td>순정 Damping (조이스틱 E-stop). 저수준 모드에서는 Sport 서비스 해제로 순정 L2+B 가 안 들을 수 있어 (미확인) 실행기가 <code>wireless_remote</code> 를 읽어 L2+B 면 안전 정지로 간다</td><td>언제나</td><td><span class="tag code">있음</span> 순정 · <span class="tag plan">계획</span> 직접 읽기</td></tr>
 <tr><td>되돌리기</td><td>안전 정지 → Sport 서비스 켜기 → 일어서기</td><td>사람 확인 뒤</td><td><span class="tag plan">계획</span></td></tr>
 </tbody></table></div>
-<p>지금 agent 의 STOP 은 Damp 가 아니다. 서 있으면 <code>Move(0,0,0)</code> 뒤 <code>StopMove()</code> 를 보내고, 입력이 0.3 s 끊기면 hold + STOP 이다 (<code>go2_direct/sink.py</code>). 조이스틱으로 AME-2 · START 모드를 고르고 막대를 속도 명령 (START) 이나 앞 1 m 목표 (AME-2) 로 쓰는 것도 제안이며, 순정 핫키와 겹치지 않는 조합 표는 아직 정할 것이다.</p>
+<p>지금 agent 의 STOP 은 Damp 가 아니다. 서 있으면 <code>Move(0,0,0)</code> 뒤 <code>StopMove()</code> 를 보내고, 입력이 0.3 s 끊기면 hold + STOP 이다 (<code>go2_direct/sink.py</code>). 조이스틱으로 모드를 고르고 막대를 쓰는 것은 아래 <a href="#joystick">조이스틱 · 멈춤 말 · 서버 · 이름</a> 절에 모았다.</p>
 </section>
 
 <section class="fig" id="joystick">
@@ -542,9 +543,8 @@ footer p { max-width: none; font-size: 0.72rem; }
 <tr><td>멈춤 (Stop)</td><td>앱 · agent. Sport 모드는 <code>Move(0,0,0)</code> → <code>StopMove</code>, 저수준 모드는 정책이 계속 돌고 명령만 0</td><td>서 있음 (Sport 는 Unitree 보행 제어기가 균형을 잡고, 저수준은 학습한 동작. 계단 위는 미확인)</td><td>평소</td><td><span class="tag code">있음</span> Sport 쪽 · <span class="tag plan">계획</span> 저수준 쪽</td></tr>
 <tr><td>안전 정지 (Damp)</td><td>agent 의 모드 관리자. 정책 송신을 끊음</td><td>Kp 0 · Kd 만으로 무르게 → 천천히 앉음</td><td>정책 이상 · 넘어짐 · 통신 끊김 (저수준 모드에서 0.3 초 끊기면 저절로)</td><td><span class="tag plan">계획</span></td></tr>
 <tr><td>조이스틱 E-stop (L2+B)</td><td>사람이 조이스틱에서. 팀장이 말한 것 = 순정 Damping</td><td>안전 정지와 같이 무름</td><td>언제나. 저수준 모드에서는 Sport 서비스 해제로 순정 L2+B 가 안 들을 수 있어 (미확인) 실행기가 <code>wireless_remote</code> 를 읽어 L2+B 면 안전 정지로 간다</td><td><span class="tag code">있음</span> 순정 · <span class="tag plan">계획</span> 직접 읽기</td></tr>
-<tr><td>되돌리기</td><td>사람 확인 뒤</td><td>안전 정지 → Sport 서비스 켜기 → 일어서기</td><td>안전 정지 뒤</td><td><span class="tag plan">계획</span></td></tr>
 </tbody></table></div>
-<p>정리: 「멈춤」 은 서 있는 채 명령만 0 이고, 「안전 정지」 는 관절을 풀어 앉히며, 「조이스틱 E-stop」 은 사람이 그 안전 정지를 조이스틱으로 거는 길이다. 용어 바꿈은 제안이다.</p>
+<p>되돌리기 (안전 정지 → Sport 서비스 켜기 → 일어서기) 는 위 「멈추는 방법」 표에 있다. 정리: 「멈춤」 은 서 있는 채 명령만 0 이고, 「안전 정지」 는 관절을 풀어 앉히며, 「조이스틱 E-stop」 은 사람이 그 안전 정지를 조이스틱으로 거는 길이다. 용어 바꿈은 제안이다.</p>
 
 <h3>앱 서버: Docker · Cloudflare · NaverCloud VM</h3>
 <div class="table-wrap"><table><thead><tr><th>자리</th><th>하는 일</th><th>상태</th></tr></thead><tbody>
