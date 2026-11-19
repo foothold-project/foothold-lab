@@ -45,6 +45,20 @@ sys.path.insert(0, HERE)
 NOT_PERSON = {'자동 수집', '자동수집', '자동 생성', '자동생성',
               '봇', 'github-actions'}
 
+# ★ 2026-11-19. 세션이 쓴 문서의 작성 칸 표준 「Claude 세션 (오흥재 지시, lead-lx)」.
+#   lab PR 관문 (.github/scripts/authorcheck.py) 은 Claude · Codex 토큰을 9/19 부터
+#   통과시켰는데 이 관문은 명부 이름만 받아, 그 꼴로 승격한 계보 문서 셋이 막혔다.
+#   토큰만 보면 지어낸 이름이 괄호 안에 숨어도 통과하므로 여기서는 더 좁게 본다.
+#   괄호 안 «지시한 사람» 이 명부에 있어야만 통과한다. 명부는 늘리지 않는다.
+SESSION = re.compile(r'^(?:Claude|Codex) 세션 \(([가-힣]{2,4}) 지시(?:, [A-Za-z0-9_-]+)?\)$')
+
+
+def session_ok(who, people):
+    """「Claude 세션 (명부 이름 지시, 세션)」 꼴이고 지시한 사람이 명부에 있나."""
+    m = SESSION.match(who or '')
+    return bool(m) and m.group(1) in people
+
+
 WROTE = re.compile(r'^>\s*작성:\s*([^·\n]+?)\s*(?:·|$)', re.M)
 FENCE = re.compile(r'^```', re.M)
 NAME_HEAD = re.compile(r'^###\s+([가-힣]{2,4})\s*$', re.M)
@@ -97,6 +111,16 @@ def _kat():
     if author_of(ex) != '오흥재':
         return False, '코드블록 예시를 작성자로 읽음: %r' % author_of(ex)
 
+    # 세션 작성 꼴. 명부에 있는 사람이 지시했을 때만 통과, 지어낸 이름은 그대로 막힌다.
+    ppl = {'오흥재', '맹라현'}
+    for who, want in (('Claude 세션 (오흥재 지시, lead-lx)', True),
+                      ('Claude 세션 (오흥재 지시)', True),
+                      ('Codex 세션 (오흥재 지시, verifier-lx)', True),
+                      ('Claude 세션 (방재혁 지시, lead-lx)', False),
+                      ('lead-lx', False), ('Claude 세션', False)):
+        if session_ok(who, ppl) != want:
+            return False, '세션 작성 꼴 판정이 틀림: %r' % who
+
     if author_of('# 제목' + n + '본문뿐') is not None:
         return False, '없는 작성자를 있다고 함'
 
@@ -134,7 +158,8 @@ def _scan(lab, bases, people):
                 seen += 1
                 if not who:
                     blank.append(rel)
-                elif who not in people and who not in NOT_PERSON:
+                elif (who not in people and who not in NOT_PERSON
+                      and not session_ok(who, people)):
                     bad.append('%s -> %s' % (rel, who))
     return seen, bad, blank
 
