@@ -297,8 +297,9 @@ class StartRunner(OnPolicyRunner):
         # EX42_ACTOR_MIRROR_W > 0: a second perception stream on the mirrored world and a left-right symmetry loss on the actor mean (ex42_actor_mirror.py). 0 = off.
         self.actor_mirror_w = actor_mirror.actor_mirror_weight()
         self.pstate_m = None                   # the mirror stream's own perception state (built in learn())
-        if self.actor_mirror_w > 0.0 and not (self.ex41_pose_commands and self.ex41_critic_mirror and pcfg["est_mode"] == "learned"):
-            raise ValueError("EX42_ACTOR_MIRROR needs ex41_pose_commands, ex41_critic_mirror and est_mode=learned")
+        # the critic mirror is switched on after construction (set_ex41_critic_mirror); the update itself refuses the loss while it is off
+        if self.actor_mirror_w > 0.0 and not (self.ex41_pose_commands and pcfg["est_mode"] == "learned"):
+            raise ValueError("EX42_ACTOR_MIRROR needs ex41_pose_commands and est_mode=learned")
 
         raw = self.env.get_observations().to(device)
         self._check_raw(raw)
