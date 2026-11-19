@@ -1043,6 +1043,9 @@ def _doors(docs, skip=()):
         key = _fn_of(rel)
         if key:
             here[key] = here.get(key, 0) + 1
+    # 손 관리 연재 카드도 목록에 나오므로 같이 센다 (안 세면 눌렀을 때 건수가 어긋난다)
+    for key, _sk, _card in _hand_cards():
+        here[key] = here.get(key, 0) + 1
 
     out = []
     for g in groups:
@@ -1345,6 +1348,54 @@ def _hand_series():
     return [(k, sorted(v)) for k, v in sorted(by.items())]
 
 
+def _hand_cards():
+    """손 관리 연재 페이지를 여섯 입구 목록의 카드로 -> [(입구, 정렬 열쇠, 카드 틀)].
+
+    ★ 2026-11-19 팀장 17:25 「실기 Go2 X 네 장이 연구 허브에서 눈에 안 띈다 ·
+      카테고리에 맞춰 배치」. 연재 띠(research_top)에만 서고 아래 입구 목록에는
+      없었다. 목록은 md 문서(_research_docs)만 돌기 때문이다.
+      입구는 page_overrides.json 의 「입구」 칸이 정한다 (표가 정본 · 원장 groups 키).
+      작성 · 날짜는 그 페이지 머리 칸에서 읽는다. 지어내지 않는다.
+      정렬: [계보 N] 덩이 바로 뒤 · 날짜순 문서 앞 · 번호 작은 것부터 ((1, -N) ·
+      계보는 (1, 1000-N) 이라 섞이지 않는다).
+    """
+    import hubgen
+    groups = {g['key'] for g in (catalog().get('groups') or [])}
+    out = []
+    for name, rows in _hand_series():
+        for n, page, sp in rows:
+            key = (sp.get('입구') or '').strip()
+            if not key:
+                continue
+            if groups and key not in groups:
+                print('  [!] %s 의 입구 「%s」 가 원장 groups 에 없습니다 (%s)'
+                      % (page, key, ' · '.join(sorted(groups))))
+                sys.exit(1)
+            p = os.path.join(hubgen.VAULT, page)
+            t = io.open(p, encoding='utf-8', errors='replace').read() \
+                if os.path.isfile(p) else ''
+
+            # 연재 페이지 머리 칸 (.k 이름 · .v 값) 을 «읽기만» 한다. 허브가 그리는
+            #   클래스가 아니라서 csscheck ③ 이 보는 렌더러 문자열에 넣지 않는다.
+            def kv(k):
+                m = re.search(r'<span class="%s">%s</span><span class="%s">([^<]*)</span>'
+                              % ('k', k, 'v'), t)
+                return m.group(1).strip() if m else ''
+            who, when = kv('작성'), kv('날짜')
+            title = '[%s %d] %s' % (name, n, sp.get('연재 제목') or page)
+            out.append((key, (1, -n),
+                        ('<a class="ev3" data-fn="%s" href="%s">'
+                         '<span class="ex3">\x00N\x00</span>'
+                         '<span class="en3 src s-실기">실기</span>'
+                         '<span class="eb3"><b>%s</b><span>%s</span>'
+                         '<span class="em3">%s</span></span>%s</a>')
+                        % (esc(key), esc(page), esc(title),
+                           esc(sp.get('연재 설명') or ''),
+                           esc('%s · %s' % (who, when) if who else when),
+                           _thumb(page))))
+    return out
+
+
 def _rx_rows(rows):
     """표처럼 읽히는 목록. 행 높이 고정 · 머리 열 112 px (「어떻게 재나」 · 「열린 문제」)."""
     return '<div class="rxtb3">%s</div>' % ''.join(
@@ -1631,6 +1682,9 @@ def research_html(site):
                esc(m.get('제목', '')), esc(_gist(m, 78)),
                esc('%s · %s' % (who, when) if who else when),
                _thumb(page))))
+    # 손 관리 연재 (실기 Go2 X 등) 도 같은 묶음 통에 넣는다 (_hand_cards)
+    for key, sk, card in _hand_cards():
+        cards.setdefault(key, []).append((sk, card))
     known = dict(PO)
     for key, label in PO + [(k, '입구가 안 정해진 것')
                             for k in sorted(cards) if k not in known]:
