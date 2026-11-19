@@ -49,7 +49,7 @@ footer { border-top: 1px solid var(--rule); margin-top: 3rem; padding-top: 1rem;
 <p class="lede">팀장이 조이스틱으로 방을 걸었고, Jetson 은 라이다 · 카메라 · 로봇 상태를 녹화만 했다. 이 페이지는 그 녹화로 무엇을 만들었고 어떻게 만들었는지를 보인다.</p>
 <dl class="head">
 <dt>작성</dt><dd>Claude 세션 (오흥재 지시, lead-lx) · 2026-11-19</dd>
-<dt>근거</dt><dd>Jetson <code>~/go2_diag/records/</code> 두 녹화 (ai-lx01 에 체크섬 대조로 거울) · 이슈 <a href="https://github.com/foothold-project/foothold-lab/issues/861">#861</a> · <a href="GO2X-JETSON-SETUP-1119.md">GO2X-JETSON-SETUP-1119.md</a> 5 · 7 절</dd>
+<dt>근거</dt><dd>Jetson <code>~/go2_diag/records/</code> 두 녹화 (학습 PC 에 체크섬 대조로 거울) · 이슈 <a href="https://github.com/foothold-project/foothold-lab/issues/861">#861</a> · <a href="GO2X-JETSON-SETUP-1119.md">GO2X-JETSON-SETUP-1119.md</a> 5 · 7 절</dd>
 <dt>요지</dt><dd>방 지도 1 장 (12.4 × 14.1 m · 걸은 길 20.75 m) · D435i 색 · 깊이 영상 330 초 · 선 자세 카메라 높이 0.372 m · 아래로 38.6°</dd>
 <dt>상태</dt><dd>지도 · 각 계산 끝. SLAM 은 아직 안 돌렸다 (아래 「SLAM 이 아니다」)</dd>
 <dt>돌아가기</dt><dd><a href="APP-FLOW-DIAGRAM.html">앱 흐름 그림</a></dd>
@@ -78,7 +78,7 @@ footer { border-top: 1px solid var(--rule); margin-top: 3rem; padding-top: 1rem;
 </tbody></table></div>
 <div class="note">
 <p><b>SLAM 이 아니다.</b> SLAM 은 걸으면서 지도를 만들고, 같은 곳에 돌아오면 어긋난 위치를 고친다 (고리 닫기). 이 지도는 Go2 의 자기 위치 추정 (<code>odom</code>) 을 고치지 않고 그대로 믿었다. 그래서 오래 걸을수록 어긋남이 쌓이고, 이번에도 벽이 두 겹으로 보이는 곳이 있다 (눈으로 본 것 · 잰 값 아님).</p>
-<p>Go2 자체 SLAM (<code>/uslam</code>) 은 토픽은 있었지만 켜는 API 번호를 Jetson 에서 찾지 못해 켜지 않았다. 05:39 에 <code>uslam_record.sh</code> 로 녹화를 시도했지만 27 초에 메시지 2 개 (고정 좌표 1 · 카메라 외부 매개변수 1) 뿐이었다. L2 · <code>/uslam</code> · 카메라 영상은 0 개이고 감시는 「5 초 안에 로봇 상태 없음」 을 남겼다 (05:20 녹화도 141 초에 본체 토픽이 모두 끊겼고 로봇은 계속 걸었다 · Jetson 이 본체 통신을 잃은 것으로 보임 · 까닭 미확인). 그래서 Go2 자체 SLAM 자료는 없다. 11/19 낮 학원 (ai-lt01) 에서 Unitree 앱 지도 메뉴로 켜 보는 것이 다음 할 일이다.</p>
+<p>Go2 자체 SLAM (<code>/uslam</code>) 은 토픽은 있었지만 켜는 API 번호를 Jetson 에서 찾지 못해 켜지 않았다. 05:39 에 <code>uslam_record.sh</code> 로 녹화를 시도했지만 27 초에 메시지 2 개 (고정 좌표 1 · 카메라 외부 매개변수 1) 뿐이었다. L2 · <code>/uslam</code> · 카메라 영상은 0 개이고 감시는 「5 초 안에 로봇 상태 없음」 을 남겼다 (05:20 녹화도 141 초에 본체 토픽이 모두 끊겼고 로봇은 계속 걸었다 · Jetson 이 본체 통신을 잃은 것으로 보임 · 까닭 미확인). 그래서 Go2 자체 SLAM 자료는 없다. 11/19 낮 학원 (노트북) 에서 Unitree 앱 지도 메뉴로 켜 보는 것이 다음 할 일이다.</p>
 </div>
 <p>설명 원문: <a href="../20261117-go2-x-sim-match-checklist-assets/20261119-0459-room-walk/README.md">20261119-0459-room-walk/README.md</a></p>
 </section>
@@ -128,11 +128,11 @@ footer { border-top: 1px solid var(--rule); margin-top: 3rem; padding-top: 1rem;
 
 <section aria-labelledby="where">
 <p class="eyebrow">원본 자리</p>
-<h2 id="where">저장소에는 줄인 사본, 원본은 ai-lx01 과 Jetson 에</h2>
+<h2 id="where">저장소에는 줄인 사본, 원본은 학습 PC 와 Jetson 에</h2>
 <div class="table-wrap"><table><thead><tr><th>무엇</th><th>자리</th></tr></thead><tbody>
 <tr><td>Jetson 원본 (bag · monitor)</td><td><code>~/go2_diag/records/20261119-0459-room-walk/</code> · <code>~/go2_diag/records/20261119-0520-room-walk-full/</code></td></tr>
-<tr><td>ai-lx01 거울 (9.7 GB · 체크섬 0 차이)</td><td><code>/home/jay/data/go2x_raw/jetson_go2_diag/records/</code></td></tr>
-<tr><td>ai-lx01 원본 영상 (26 MB · 85 MB)</td><td><code>/home/jay/data/go2x_raw/jetson_go2_diag/records/20261119-0520-room-walk-full/derived/</code></td></tr>
+<tr><td>학습 PC 거울 (9.7 GB · 체크섬 0 차이)</td><td><code>/home/jay/data/go2x_raw/jetson_go2_diag/records/</code></td></tr>
+<tr><td>학습 PC 원본 영상 (26 MB · 85 MB)</td><td><code>/home/jay/data/go2x_raw/jetson_go2_diag/records/20261119-0520-room-walk-full/derived/</code></td></tr>
 <tr><td>저장소 (이 페이지가 쓰는 것)</td><td><code>inbox/jay/20261117-go2-x-sim-match-checklist-assets/20261119-0459-room-walk/</code> · <code>…/20261119-0520-room-walk-full/</code></td></tr>
 </tbody></table></div>
 </section>
@@ -144,7 +144,7 @@ footer { border-top: 1px solid var(--rule); margin-top: 3rem; padding-top: 1rem;
 <tr><td>방 지도 1 차 (odom 그대로 쌓기)</td><td><span class="tag done">끝</span> 11/19 05:19</td></tr>
 <tr><td>05:20 녹화 지도 · 두 녹화 3D 점 페이지</td><td><span class="tag done">끝</span> 11/19 14:3x</td></tr>
 <tr><td>카메라 높이 · 각 (매트 위 · 앉음)</td><td><span class="tag done">끝</span> 11/19 06:33</td></tr>
-<tr><td>줄자로 잰 몸 · 카메라 높이 · 맨바닥 각</td><td><span class="tag todo">할 것</span> ai-lt01 Codex · 팀장 줄자</td></tr>
+<tr><td>줄자로 잰 몸 · 카메라 높이 · 맨바닥 각</td><td><span class="tag todo">할 것</span> 노트북 Codex · 팀장 줄자</td></tr>
 <tr><td>Go2 자체 SLAM (<code>/uslam</code>) 지도 · 저장 · 다시 불러 위치 찾기</td><td><span class="tag todo">할 것</span> Unitree 앱으로 켜기 · <code>uslam_record.sh</code></td></tr>
 <tr><td>녹화로 오프라인 SLAM (고리 닫기)</td><td><span class="tag todo">할 것</span> /uslam 이 안 되면</td></tr>
 </tbody></table></div>

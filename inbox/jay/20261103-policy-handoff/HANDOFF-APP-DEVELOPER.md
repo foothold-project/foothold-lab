@@ -58,7 +58,8 @@ start 모드의 정책을 m13000 에서 m15500 (`start-m15500`, EX-42 E1F `model
 | | | 앱 계약 꼴: `contract.json` 의 `app_onnx` 칸 (m6000 과 같음) | contract.json `c7587240…` |
 | **start 지금 판 (v0.5 · 정본 3)** | `inbox/jay/20261103-policy-handoff/start-m15500-app/` | `start-m15500_map_on.onnx`(정답 · 복원) · `start-m15500_map_off.onnx`(끔) | `df91c2d772c7d054e33c74fca479e79550cfd228d7682402f7eef4a0865e279f` · `be6c8b103d3b39503447ee71076ec199e5ed0688c3540ccfe449a96d6e2a9a41` (시험 벡터 · 계약은 폴더 `SHA256SUMS`) |
 | start 앞 판 (비교용) | `inbox/jay/20261103-policy-handoff/start-demo-app/` | `start-demo_map_on.onnx` · `start-demo_map_off.onnx` | `81c7e079…` · `5d1b7bf3…` |
-| ame2 | `inbox/jay/20261103-policy-handoff/ame2-demo-app/` | `ame2-demo.onnx` | `830595df1e78072c0606b5193d1ba787720ff6777edc7cabe496b8c1a9d25de6` |
+| **ame2 지금 판 (11/19 · m27001 · 앱 시뮬용 teacher · 실기 아님)** | `inbox/jay/20261103-policy-handoff/ame2-m27001-app/` | `ame2-m27001.onnx` | `2f7a8b18e8a3cc89ab5975836fff4870165df5c5bb8102ac823b56fe75b472ce` (시험 벡터 · 계약 · `app_onnx.json` 은 폴더 `SHA256SUMS` · 앞 판에서 바뀐 것은 폴더 `README.md`) |
+| ame2 앞 판 (비교용) | `inbox/jay/20261103-policy-handoff/ame2-demo-app/` | `ame2-demo.onnx` | `830595df1e78072c0606b5193d1ba787720ff6777edc7cabe496b8c1a9d25de6` |
 | | | 시험 벡터 `test_vectors_flat20.json` (같은 내용 `.npz`) | `95bb7ab1be2d7414b495a4e79df8a3a311b703123c4588355621397fb74c7077` |
 | | | 앱 계약 꼴: `app_onnx.json` · 조건표 `CONTRACT.md` · `contract.json` · `parity.json` | 폴더 `SHA256SUMS` |
 
