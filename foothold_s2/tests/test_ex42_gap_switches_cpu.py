@@ -232,3 +232,21 @@ def test_prepare_refuses_extra_edge_kinds_without_a_foot_edge_weight():
     src = (Path(__file__).resolve().parents[1] / "scripts" / "ex42_training_entry.py").read_text(encoding="utf-8")
     assert "non-zero foot_edge_weight in the plan row" in src and "gap_switches.apply_cfg(env_cfg, switches, track_func)" in src
     assert src.count("gap_switches.read_switches(table)") == 1
+
+
+def test_extra_mask_sees_a_floorless_pit_as_a_real_drop_not_a_filled_hole():
+    """11/19 E2 C 판: 바닥이 없는 구덩이는 덮이지 않은 칸이라 중앙값으로 채워져 마스크가 통째로 비었다. 큰 빈 곳은 낮게 채워 가장자리가 찍혀야 하고, 작은 구멍은 옛 대로."""
+    import numpy as np
+    from foothold_s2.terrains import ex42_edge_masks as em
+
+    def slab(x0, x1, y0, y1, z=0.0):
+        v = np.array([[x0, y0, z], [x1, y0, z], [x1, y1, z], [x0, y1, z]], float)
+        return v, np.array([[0, 1, 2], [0, 2, 3]])
+
+    parts = [slab(0.0, 2.0, 0.0, 4.0), slab(3.0, 5.0, 0.0, 4.0)]                       # 두 발판, 사이 1 m 는 메시 없음 (빈 구덩이)
+    V = np.concatenate([p[0] for p in parts]); F = np.concatenate([p[1] + 4 * i for i, p in enumerate(parts)])
+    spec = [{"kind": "B/gap", "col": 0, "size_x": 5.0, "size_y": 4.0, "x_start": 0.0, "y0": 0.0}]
+    origins = np.zeros((1, 1, 3)); origins[0, 0] = (2.5, 2.0, 0.0)
+    built = em.build_extra_masks(V, F, origins, spec)[0]
+    assert built["inner"].sum() > 100 and built["outer"].sum() > 100                      # 구덩이 양쪽 모서리가 찍힌다
+    assert em.VOID_MIN_CELLS > 0 and em.VOID_DEPTH_M >= 0.4                                # 구덩이 깊이는 낙하 문턱 (0.2 m) 보다 깊게

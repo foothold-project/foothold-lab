@@ -22,6 +22,8 @@ RES = 0.025
 TILE = (8.0, 8.0)
 DROP_M = 0.2
 FLOOR = -10.0
+VOID_MIN_CELLS = 400                  # 이 칸 수 (= 25 cm^2 x 16 = 0.25 m^2) 이상 덮이지 않은 곳은 구덩이로 본다 (extra 마스크만)
+VOID_DEPTH_M = 1.0
 EDGE_KEYS = ("edge_inner_bits", "edge_outer_bits", "edge_columns", "edge_meta")
 
 
@@ -148,7 +150,11 @@ def build_extra_masks(vertices: np.ndarray, faces: np.ndarray, origins: np.ndarr
             hole = grid <= FLOOR
             uncovered += int(hole.sum())
             if hole.any():
-                grid = np.where(hole, float(np.median(grid[~hole])) if (~hole).any() else 0.0, grid)
+                # 메시에 바닥이 없는 구덩이 (빈 공간) 는 가짜 모서리가 아니라 진짜 낙하다: 덮이지 않은 칸이 충분히 크면 (VOID_MIN_CELLS) 윗면보다 낮게 채워 가장자리가 찍히게 한다.
+                # (11/19 E2 C 판: 바닥 없는 구덩이 줄 (B/gap 0 · 6, B/beam 2 · 4 · 8) 은 중앙값으로 채워져 마스크가 통째로 비었다.) 작은 구멍은 옛 대로 중앙값.
+                top = float(grid[~hole].max()) if (~hole).any() else 0.0
+                fill = top - VOID_DEPTH_M if int(hole.sum()) >= VOID_MIN_CELLS else (float(np.median(grid[~hole])) if (~hole).any() else 0.0)
+                grid = np.where(hole, fill, grid)
             inner[r], outer[r] = st.edge_masks(grid, drop)
         built.append({**sp, "inner": inner, "outer": outer, "uncovered_cells": uncovered})
     return built
