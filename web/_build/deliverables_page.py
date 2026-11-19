@@ -60,10 +60,15 @@ GATES = [
     ('NAV · 실기 항법', datetime.date(2026, 11, 30), '순정 보행 + 자율주행 SLAM · Nav2 완성', [
         ('deliverables/final/nav-report.md', '실기 항법 검증 리포트'),
     ]),
-    ('FINAL · 최종발표', datetime.date(2026, 12, 7),
-     '완성 마감. 실제 발표는 12/9 또는 12/10 (학교 공유 대기) · 12/11 수료식', [
+    # ★ 2026-11-20 팀장 확정 일정 (00:19 지시로 갱신). 산출물 제출 12/1 (화) 13:00 ·
+    #   발표자료 12/8 (화) 13:00 · 최종 발표 12/10 (목) 오후 2 부. 옛 「완성 마감 12/7 ·
+    #   실제 발표 12/9 또는 12/10」 을 대신한다. 보고서는 12/1 에 내므로 그 관문에 둔다.
+    ('SUBMIT · 산출물 제출', datetime.date(2026, 12, 1),
+     '최종 산출물 제출 12/1 (화) 13:00', [
         ('deliverables/final/final-report.md', '최종 실증결과 보고서'),
     ]),
+    ('FINAL · 최종발표', datetime.date(2026, 12, 10),
+     '발표자료 제출 12/8 (화) 13:00 · 최종 발표 12/10 (목) 오후 2 부 · 12/11 수료식', []),
 ]
 
 CLS = {'대기': ('wait', '대기'), '초안': ('go', '진행중'),
@@ -139,7 +144,8 @@ def band_html(rows):
     live = [r for r in rows if r[3] >= 0]
     if not live:
         return ''
-    pick = [r for r in live if r[0].startswith('MVP') or r[0].startswith('FINAL')]
+    # ★ 2026-11-20. 산출물 제출 (12/1) 이 발표 (12/10) 와 갈라졌다. 제출 마감도 고정으로 싣는다.
+    pick = [r for r in live if r[0].startswith(('MVP', 'SUBMIT', 'FINAL'))]
     nearest = live[0]
     if nearest not in pick:
         pick = [nearest] + pick
@@ -149,6 +155,10 @@ def band_html(rows):
         names = ' · '.join(l for l, _, _, _ in items[:3])
         if len(items) > 3:
             names += ' 외 %d' % (len(items) - 3)
+        # 문서가 걸리지 않은 관문 (FINAL 발표) 은 «제출 0/0» 대신 관문 설명을 싣는다
+        sub = (' · 제출 %d/%d' % (done, len(items))) if items else ''
+        if not items:
+            names = note
         # ★ 2026-08-28 팀장 지적: 「디데이 제대로 카운팅 되는지」.
         #   전에는 FINAL 만 살아 있고 나머지는 빌드 순간의 숫자를 구워 넣었다.
         #   하루만 안 굽면 표지가 틀린 날짜를 말한다. 전부 살린다.
@@ -163,10 +173,10 @@ def band_html(rows):
             '<a class="dd-cell" href="deliverables.html">'
             '<span class="dd-name">%s</span>'
             '<span class="dd-num">%s</span>'
-            '<span class="dd-sub">%s · 제출 %d/%d</span>'
+            '<span class="dd-sub">%s%s</span>'
             '<span class="dd-list">%s</span></a>'
             % (H.escape(name), big, due.strftime('%m월 %d일'),
-               done, len(items), H.escape(names)))
+               sub, H.escape(names)))
     return ('<div class="dday" aria-label="다음 관문까지 남은 기간과 제출물">%s</div>'
             % ''.join(cells))
 
