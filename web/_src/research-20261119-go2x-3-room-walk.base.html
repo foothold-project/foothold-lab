@@ -1,0 +1,705 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>[실기 Go2 X 3] 숙소 방을 걸어 보다 · FOOTHOLD</title>
+<meta name="description" content="숙소 방을 두 번 걸어 odom 으로 쌓은 방 지도 (SLAM 아님), D435i 카메라 높이 0.3716 m · 아래로 38.59°, 색 · 깊이 영상 330 초, 3D 점을 얻었다.">
+<style>
+:root{
+  --paper:#f6f5f1;--paper-2:#eeece6;--card:#fff;
+  --ink:#161c26;--ink-2:#4a5566;--ink-3:#7c8798;
+  --rule:#d9d6cd;--dim:#0e7a6e;--dim-soft:#e0f0ed;
+  --note:#a86a08;--note-soft:#fbf0dc;
+  --stop:#a3342a;--stop-soft:#fbe9e7;
+  --grid:rgba(22,28,38,.04);
+  --measure:760px;
+  /* ★ --dim / --note 를 연한 배경(--*-soft) 위 글자로 쓰면 대비가 모자란다.
+     실측 --dim on --dim-soft = 4.43 · --note on --note-soft = 3.93 (둘 다 4.5 미달).
+     그런 자리에는 아래 진한 짝을 쓴다. DESIGN.md §2 참조. */
+  --dim-ink:#0b6459;
+  --note-ink:#8a5600;
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --paper:#12161d;--paper-2:#191e27;--card:#181d26;
+    --ink:#e9e7e1;--ink-2:#adb5c1;--ink-3:#7d8693;
+    --rule:#2b323d;--dim:#3ec7b4;--dim-soft:#11302c;
+    --note:#dc9a30;--note-soft:#332710;
+    --stop:#e56d5e;--stop-soft:#331c19;
+    --grid:rgba(233,231,225,.035);
+    /* 어두운 모드에서는 soft 배경이 어두우므로 원래 토큰이 이미 충분히 밝다 */
+    --dim-ink:#3ec7b4;
+    --note-ink:#dc9a30;
+  }
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:64px}
+body{font-family:'Pretendard','Malgun Gothic','Segoe UI',system-ui,sans-serif;
+  background:var(--paper);color:var(--ink);line-height:1.75;font-size:15px;
+  -webkit-font-smoothing:antialiased;
+  background-image:linear-gradient(var(--grid) 1px,transparent 1px),
+                   linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+  background-size:32px 32px}
+
+.top{position:sticky;top:0;z-index:60;background:var(--paper);border-bottom:1px solid var(--rule)}
+.top .row{max-width:calc(var(--measure) + 4rem);margin:0 auto;padding:.55rem 1.5rem;
+  display:flex;align-items:center;gap:.8rem;flex-wrap:wrap}
+.top .home{font-size:.72rem;font-weight:700;color:var(--ink-2);text-decoration:none;
+  border:1px solid var(--rule);background:var(--card);padding:.26rem .6rem;border-radius:4px}
+.top .home:hover{border-color:var(--dim);color:var(--dim)}
+.top .doc{font-size:.72rem;color:var(--ink-3);letter-spacing:.02em}
+.top .sp{flex:1}
+.pdfbtn{background:var(--card);border:1px solid var(--rule);color:var(--ink-2);
+  padding:.26rem .6rem;font-family:inherit;font-size:.66rem;font-weight:800;letter-spacing:.1em;
+  text-transform:uppercase;cursor:pointer;border-radius:4px;transition:.15s;line-height:1.3}
+.pdfbtn:hover{border-color:var(--dim);color:var(--dim);background:var(--dim-soft)}
+#prog{position:absolute;left:0;bottom:-1px;height:2px;background:var(--dim);width:0;transition:width .12s}
+
+.wrap{max-width:calc(var(--measure) + 4rem);margin:0 auto;padding:2.2rem 1.5rem 5rem}
+
+.hero{padding-bottom:1.6rem;border-bottom:2px solid var(--ink);margin-bottom:1.8rem}
+.eyebrow{font-size:.62rem;font-weight:800;letter-spacing:.22em;text-transform:uppercase;
+  color:var(--dim);margin-bottom:.5rem}
+h1{font-size:2rem;font-weight:800;letter-spacing:-.02em;line-height:1.25;margin-bottom:.7rem}
+.lede{font-size:1rem;color:var(--ink-2);max-width:min(42em,100%);word-break:keep-all}
+.meta{display:flex;flex-wrap:wrap;gap:.35rem 1.6rem;margin-top:1rem;font-size:.72rem}
+.meta .k{color:var(--ink-3);margin-right:.4rem}
+.meta .v{color:var(--ink-2);font-weight:700}
+
+section{margin-top:2.6rem}
+h2{font-size:1.28rem;font-weight:800;letter-spacing:-.01em;padding-bottom:.45rem;
+  border-bottom:1px solid var(--rule);margin-bottom:1rem}
+h3{font-size:1rem;font-weight:800;margin:1.5rem 0 .55rem;color:var(--ink)}
+h4{font-size:.88rem;font-weight:800;margin:1.1rem 0 .4rem;color:var(--ink-2)}
+/* ★ 2026-09-14. `mdpage` 가 `#{1,4}` 만 받아 h5·h6 가 본문 문단으로
+   떨어졌고 화면에 `#####` 가 글자로 떴다 (팀장 지적). 받게 고치면
+   스타일이 없어 브라우저 기본값(작고 굵은 글씨)이 나온다. h4 아래로
+   한 단계씩 가벼지게 둔다. 구조가 보이되 본문을 안 가린다. */
+h5{font-size:.82rem;font-weight:700;margin:1rem 0 .35rem;color:var(--ink-2);
+  letter-spacing:.01em}
+h6{font-size:.78rem;font-weight:700;margin:.9rem 0 .3rem;color:var(--ink-3);
+  letter-spacing:.02em;text-transform:none}
+/* ★ 2026-09-08 감사 F-04. 모바일에서 페이지가 가로로 늘어났다.
+   원인은 keep-all 의 «짝» 이 빠진 것이다. word-break:keep-all 은 한국어를
+   낱말 중간에서 안 끊으려고 쓰는데, 그것만 두면 긴 URL 처럼 끊을 자리가
+   없는 토큰이 상자 밖으로 삐져나가 페이지 자체를 넓힌다.
+   p 에는 overflow-wrap 이 있었는데 li·td 에는 없었다. 실측에서 넘친 것이
+   정확히 li 였다 (research-cloud-gpu-options: li 안쪽 폭 729px · 화면 345px).
+   anywhere 는 «끊을 데가 없을 때만» 끊는다. 한국어 문장은 그대로 keep-all 이다.
+   표와 pre 는 자기 컨테이너(.tw)에서 스크롤하므로 여기서 건드리지 않는다. */
+p{margin:.6rem 0;overflow-wrap:anywhere;word-break:keep-all}
+ul,ol{margin:.6rem 0 .6rem 1.2rem}
+li{margin:.24rem 0;word-break:keep-all;overflow-wrap:anywhere}
+dd,dt,figcaption,blockquote{overflow-wrap:anywhere}
+b{font-weight:800}
+a{color:var(--dim)}
+code{font-family:'Consolas','D2Coding',monospace;font-size:.9em;background:var(--paper-2);
+  border:1px solid var(--rule);padding:.05rem .28rem;border-radius:3px;word-break:break-all}
+.vlink{font-size:.82em;color:var(--ink-3);background:var(--paper-2);border:1px solid var(--rule);
+  padding:.02rem .32rem;border-radius:3px}
+.vlink i{font-style:normal;opacity:.75}
+blockquote{border-left:3px solid var(--dim);background:var(--dim-soft);padding:.7rem .95rem;
+  margin:1rem 0;font-size:.88rem;color:var(--ink-2)}
+blockquote p{margin:.25rem 0}
+blockquote b{color:var(--ink)}
+
+/* 표: 모바일에서 가로 스크롤 (DESIGN.md §5) */
+.tw{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:1rem 0;border:1px solid var(--rule)}
+/* 좁은 화면에서 칸이 짜부라지지 않게. 까닭은 이 파일 «표 규칙» 주석에. */
+table{border-collapse:collapse;width:100%;min-width:max-content;font-size:.82rem;background:var(--card)}
+th,td{border-bottom:1px solid var(--rule);padding:.5rem .7rem;text-align:left;vertical-align:top;
+  word-break:keep-all;overflow-wrap:break-word}
+th,td{max-width:26ch}/* 폭허용: 문단이 아니라 표 «열» 상한. 없으면 긴 산문 칸이 표를 1542 px 로 편다. 1280 px 에서는 무변화 (실측) */
+td code,th code{white-space:normal;word-break:keep-all;overflow-wrap:break-word;max-width:none}
+td .n,td .o{white-space:nowrap;overflow-wrap:normal}
+th{background:var(--ink);color:var(--paper);font-weight:800;font-size:.72rem;
+  letter-spacing:.04em;border-bottom:none}
+/* 표 머리행 «안» 의 code. th 는 어두운 배경에 밝은 글씨인데 code 가 밝은
+   배경(--paper-2)을 덮어써서 «밝은 글씨 + 밝은 배경» 이 되어 안 보였다.
+   2026-09-28 팀장이 화면으로 잡았다. 문서를 하나씩 고치지 않고 규칙을 고친다.
+   159 행의 td code,th code 는 줄바꿈 규칙이라 색과 무관하다. */
+th code{background:transparent;border-color:rgba(255,255,255,.38);color:inherit}
+tbody tr:last-child td{border-bottom:none}
+tbody tr:nth-child(even){background:var(--paper-2)}
+
+/* 코드 블록 + 복사 버튼 */
+.cb{margin:1rem 0;border:1px solid var(--rule);background:#0f141b}
+.cb-h{display:flex;align-items:center;gap:.5rem;padding:.3rem .6rem;background:#1a212b;
+  border-bottom:1px solid #2b323d;font-size:.62rem;font-weight:800;letter-spacing:.1em;
+  text-transform:uppercase;color:#7d8693}
+.cb-h .copy{margin-left:auto;background:#232b36;border:1px solid #39424f;color:#c8cfd8;
+  font-family:inherit;font-size:.62rem;font-weight:800;letter-spacing:.06em;padding:.16rem .5rem;
+  border-radius:3px;cursor:pointer;transition:.14s}
+.cb-h .copy:hover{background:var(--dim);border-color:var(--dim);color:#fff}
+.cb-h .copy.done{background:#1b6b4a;border-color:#1b6b4a;color:#fff}
+.cb pre{margin:0;padding:.75rem .85rem;overflow-x:auto;color:#dfe4ea;
+  font-family:'Consolas','D2Coding',monospace;font-size:.76rem;line-height:1.7}
+.cb pre .c{color:#6f7a88}
+
+/* ── 표지 아래 요약 카드 ── */
+.pin{display:grid;grid-template-columns:1fr 1fr;gap:.9rem;margin:1.6rem 0 .4rem}
+@media (max-width:640px){.pin{grid-template-columns:1fr}}
+.pin>div{border:1px solid var(--rule);background:var(--card);padding:.85rem .95rem}
+.pin .lab{font-size:.6rem;font-weight:800;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--ink-3);margin-bottom:.4rem}
+.pin.hot>div{border-color:var(--note);background:var(--note-soft)}
+.big{font-family:'Consolas','D2Coding',monospace;font-size:1.05rem;font-weight:800;
+  color:var(--dim-ink);word-break:break-all}
+/* 본문(§3)에 나오는 접속 주소는 페이지에서 가장 자주 쓰는 값이다. 눈에 띄게 */
+section .addr{border:2px solid var(--dim);background:var(--dim-soft);padding:.7rem .9rem}
+section .addr .big{font-size:1.2rem}
+.addr{display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;margin-top:.2rem}
+.addr .copy{background:var(--card);border:1px solid var(--dim);color:var(--dim);
+  font-family:inherit;font-size:.64rem;font-weight:800;letter-spacing:.06em;
+  padding:.16rem .5rem;border-radius:3px;cursor:pointer;transition:.14s}
+.addr .copy:hover{background:var(--dim);color:#fff}
+.addr .copy.done{background:#1b6b4a;border-color:#1b6b4a;color:#fff}
+
+/* ── 도구 4종 역할 구분 (팀원이 가장 헷갈리는 것) ── */
+.tools{display:grid;grid-template-columns:repeat(4,1fr);gap:.75rem;margin:1.2rem 0}
+@media (max-width:820px){.tools{grid-template-columns:repeat(2,1fr)}}
+@media (max-width:460px){.tools{grid-template-columns:1fr}}
+.tool{border:1px solid var(--rule);background:var(--card);padding:.85rem .8rem;display:flex;
+  flex-direction:column;gap:.35rem}
+.tool.pick{border:2px solid var(--dim);background:var(--dim-soft)}
+.tool .n{font-size:.6rem;font-weight:800;letter-spacing:.14em;color:var(--ink-3)}
+.tool .t{font-size:.95rem;font-weight:800;line-height:1.3}
+.tool.pick .t{color:var(--dim-ink)}
+.tool .q{font-size:.76rem;color:var(--ink-2);flex:1}
+.tool .f{font-size:.68rem;color:var(--ink-3);border-top:1px solid var(--rule);padding-top:.35rem;
+  margin-top:.2rem;line-height:1.6}
+.tool .f b{color:var(--ink-2)}
+.tool .badge{display:inline-block;font-size:.6rem;font-weight:800;padding:.08rem .35rem;
+  border-radius:2px;background:var(--dim);color:#fff;letter-spacing:.04em}
+.tool .badge.warn{background:var(--note)}
+.tool .badge.off{background:var(--ink-3)}
+
+/* ── 경고 박스 (프로세스 정리) ── */
+.warnbox{border:2px solid var(--note);background:var(--note-soft);padding:1rem 1.1rem;margin:1.2rem 0}
+.warnbox .wh{font-size:.95rem;font-weight:800;color:var(--note-ink);margin-bottom:.5rem}
+.warnbox .line{font-size:.92rem;font-weight:800;color:var(--ink);margin:.4rem 0}
+.warnbox p{font-size:.84rem;color:var(--ink-2)}
+
+/* 공개 페이지에서 가려진 값 안내 */
+.redacted-note{display:block;font-size:.72rem;color:var(--ink-3);margin-top:.35rem;
+  font-family:'Pretendard','Malgun Gothic',system-ui,sans-serif;font-weight:400}
+.redacted-note b{color:var(--note-ink)}
+
+/* 미확인 표시: 확정처럼 읽히면 안 된다 */
+.unk{display:inline-block;font-size:.62rem;font-weight:800;letter-spacing:.06em;
+  background:var(--stop);color:#fff;padding:.08rem .38rem;border-radius:2px;
+  vertical-align:.08em;margin-right:.3rem}
+
+@media print{
+  @page{size:A4 portrait;margin:14mm 12mm}
+  html{font-size:10.5px}
+  body{background:#fff!important;background-image:none!important}
+  .top,.pdfbtn,.copy{display:none!important}
+  .wrap{max-width:none;padding:0}
+  section{break-inside:auto;margin-top:1.4rem}
+  h2,h3{break-after:avoid}
+  .tw,.cb,blockquote,.tool,.warnbox,.pin>div{break-inside:avoid;page-break-inside:avoid}
+  .tools,.pin{display:block}
+  .tool,.pin>div{margin-bottom:.5rem}
+  .cb{background:#f4f5f7!important;border:1px solid #ccc!important}
+  .cb-h{background:#e9ecef!important;color:#555!important;border-color:#ccc!important}
+  .cb pre{color:#161c26!important;white-space:pre-wrap!important;word-break:break-all}
+  .cb pre .c{color:#666!important}
+  a[href^="http"]::after{content:' (' attr(href) ')';font-size:.85em;color:#666;word-break:break-all}
+  *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .mdimg{break-inside:avoid;page-break-inside:avoid}
+}
+
+/* 마크다운 그림·영상: mdpage 가 만드는 <figure class="mdimg"> */
+.mdimg{margin:1.5rem 0;padding:0}
+.mdimg a.mdzoom{display:block;cursor:zoom-in}
+.mdimg img{display:block;width:100%;height:auto;border:1px solid var(--rule);
+  border-radius:4px;background:var(--card)}
+.mdvid video{display:block;width:100%;height:auto;border:1px solid var(--rule);
+  border-radius:4px;background:#0f141b}
+.mdimg figcaption{font-size:.74rem;color:var(--ink-3);margin:.8rem 0 .2rem;line-height:1.6}
+
+/* 나란히 놓는 영상: mdpage 의 ```compare 가 만드는 <div class="vcmp">.
+   갤러리 비교 화면과 «같은 조작» 을 문서에서도 쓴다 (팀장 지시 2026-09-29). */
+.vcmp{margin:1.5rem 0}
+.vcmp-bar{display:flex;flex-wrap:wrap;align-items:center;gap:.35rem;margin-bottom:.5rem}
+.vcmp-btn{font:inherit;font-size:.72rem;padding:.22rem .6rem;border:1px solid var(--rule);
+  border-radius:999px;background:var(--card);color:var(--ink-2);cursor:pointer}
+.vcmp-btn:hover{border-color:var(--dim);color:var(--dim)}
+.vcmp-btn[aria-pressed="true"]{background:var(--dim);color:var(--card);border-color:var(--dim)}
+.vcmp-lab{font-size:.68rem;color:var(--ink-3);margin-left:.35rem;letter-spacing:.04em}
+.vcmp-grid{display:grid;gap:.6rem;
+  grid-template-columns:repeat(var(--vcmp-n,3),minmax(0,1fr))}
+.vcmp-cell{margin:0;min-width:0}
+.vcmp-name{display:block;font-size:.72rem;color:var(--ink-2);margin-bottom:.22rem;
+  font-weight:600}
+.vcmp-cell video{display:block;width:100%;height:auto;border:1px solid var(--rule);
+  border-radius:4px;background:#0f141b}
+.vcmp-cell figcaption{font-size:.68rem;color:var(--ink-3);margin-top:.28rem;
+  line-height:1.5}
+/* 폰에서는 한 줄에 하나. 3 열로 두면 로봇이 손톱만 해진다. */
+@media (max-width:760px){.vcmp-grid{grid-template-columns:1fr}}
+
+/* ── 코드 문법 강조 ──
+   실제 PowerShell / Python 창의 색감에 맞췄다. 화면과 문서를 오갈 때 같은 것이 같게 보이게. */
+.cb pre .c{color:#6f7a88;font-style:italic}   /* 주석 */
+.cb pre .k{color:#5eb0ef;font-weight:700}     /* 키워드 */
+.cb pre .f{color:#f0c674}                     /* 명령 · 함수 */
+.cb pre .b{color:#c39ac9}                     /* 파이썬 내장 */
+.cb pre .s{color:#9ece6a}                     /* 문자열 */
+.cb pre .n{color:#e59f6a}                     /* 숫자 */
+.cb pre .v{color:#7ee0d0}                     /* 변수 */
+.cb pre .o{color:#a9b4c2}                     /* 플래그 · 옵션 */
+@media print{
+  /* 종이에서는 색이 안 나올 수 있다. 굵기·기울기로도 구분되게 */
+  .cb pre .c{color:#777!important;font-style:italic}
+  .cb pre .k,.cb pre .f{color:#000!important;font-weight:700}
+  .cb pre .s{color:#2a6b2a!important}
+  .cb pre .n,.cb pre .v,.cb pre .o,.cb pre .b{color:#333!important}
+}
+
+/* ★ 2026-09-13. 여기에 그림용 토큰(--accent --bad --ok …)을 정의했다가
+ * **걷어냈다.** `:root[data-theme="dark"]` 블록이 하나뿐인데 그것을 새 팔레트로
+ * 덮어써서, 원래 있던 --paper · --card · --ink 정의가 사라졌다.
+ * 실측: 완비 관문이 「테마 오버라이드가 반쪽이다 (light)」로 **53장**을 잡았다.
+ * 그대로 나갔으면 어두운 테마에서 53장이 배경을 잃었다.
+ *
+ * 애초에 필요 없다. 그림을 본문에 넣는 길을 물렸으므로(위 mdpage 주석 참조)
+ * 토큰은 **SVG 파일 안**에 있어야 한다. `tools/svg_selfcontained.py` 가
+ * `docs/assets/visual/` 의 원본에 넣는다. 거기가 빌드가 읽는 자리다.
+ */
+.mdsvg{margin:20px 0;padding:0;overflow-x:auto}
+.mdsvg svg{display:block;max-width:100%;height:auto}
+.ev{display:inline-block;padding:.05rem .4rem;border-radius:3px;font-size:.68rem;
+  font-weight:800;letter-spacing:.04em;vertical-align:.06em;white-space:nowrap;
+  border:1px solid transparent}
+.ev-ok{background:var(--dim-soft);color:var(--dim);border-color:var(--dim)}
+.ev-guess{background:var(--note-soft);color:var(--note);border-color:var(--note)}
+.ev-todo{background:var(--paper-2);color:var(--ink-3);border-color:var(--rule)}
+.evlegend{display:flex;gap:14px;flex-wrap:wrap;margin:10px 0 0;font-size:.72rem;color:var(--ink-3)}
+.rcards{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));margin:18px 0}
+.rcard{display:block;text-decoration:none;color:inherit;background:var(--card);
+  border:1px solid var(--rule);border-radius:6px;padding:14px 16px;transition:border-color .15s}
+.rcard:hover{border-color:var(--dim)}
+.rcard .rt{font-weight:800;font-size:1rem;margin:.2rem 0 .35rem}
+.rcard .rd{font-size:.8rem;color:var(--ink-2);line-height:1.55}
+.rcard .rm{font-size:.7rem;color:var(--ink-3);margin-top:.5rem;letter-spacing:.04em}
+.rcard .rno{display:inline-block;min-width:1.7em;text-align:center;background:var(--paper-2);border:1px solid var(--rule);border-radius:3px;font-size:.72rem;color:var(--ink-3);margin-right:.15rem;vertical-align:.06em}
+/* 대표 그림. 카드가 «무엇에 관한 글인지»를 제목보다 빨리 말해준다 */
+.rcard.has-thumb{padding:0;overflow:hidden;display:flex;flex-direction:column}
+.rcard .rthumb{background:var(--paper-2);border-bottom:1px solid var(--rule);
+  aspect-ratio:16/7;overflow:hidden}
+.rcard .rthumb img{width:100%;height:100%;object-fit:cover;display:block;transition:.2s}
+.rcard.has-thumb .rbody{padding:14px 16px}
+.rcard:hover .rthumb img{transform:scale(1.03)}
+/* 목록 상단 배너: 최신 다이제스트만. (질문 지도는 표지로 승격: 팀장 컨펌 2026-08-12)
+   이모지 없이 브랜드 토큰만 쓴다. */
+.dgbar{margin:16px 0 4px}
+.dgbar a{display:flex;align-items:baseline;gap:.55rem;flex-wrap:wrap;text-decoration:none;
+  color:inherit;border:1px solid var(--rule);background:var(--note-soft);border-radius:6px;
+  padding:.6rem .9rem;font-size:.85rem;transition:border-color .15s}
+.dgbar a .k{font-size:.62rem;font-weight:800;letter-spacing:.16em;color:var(--note);
+  text-transform:uppercase}
+.dgbar a span{color:var(--ink-3);font-size:.72rem}
+.dgbar a:hover{border-color:var(--note)}
+
+.stand{border:1px solid var(--rule);border-radius:6px;
+  background:var(--paper-2);padding:.7rem .9rem;margin:0 0 1.3rem;font-size:.8rem}
+.stand .sh{font-size:.6rem;font-weight:800;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--dim);margin-bottom:.4rem}
+.stand .sr{display:flex;gap:.5rem;align-items:baseline;margin:.22rem 0;flex-wrap:wrap}
+.stand .sk{flex:none;font-size:.68rem;font-weight:800;color:var(--ink-3);min-width:5.6em}
+.stand .sv a{color:inherit;text-decoration:none;border-bottom:1px solid var(--rule)}
+.stand .sv a:hover{border-color:var(--dim);color:var(--dim)}
+.stand .sv i{font-style:normal;color:var(--ink-3)}
+</style>
+<style>
+/* 실기 Go2 X 연재 · 이 네 장에만 쓰는 모양 (2026-11-19) */
+.gx-series{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:0;margin:0 0 1.6rem;
+  border:1px solid var(--rule);background:var(--card);border-radius:4px;overflow:hidden}
+.gx-series a{display:block;padding:.55rem .7rem;text-decoration:none;color:var(--ink-2);
+  border-right:1px solid var(--rule);font-size:.78rem;line-height:1.35;word-break:keep-all}
+.gx-series a:last-child{border-right:0}
+.gx-series a i{display:block;font-style:normal;font-size:.62rem;font-weight:800;letter-spacing:.12em;
+  color:var(--ink-3);margin-bottom:.15rem}
+.gx-series a.on{background:var(--dim-soft);color:var(--dim-ink);font-weight:800;box-shadow:inset 0 -3px 0 var(--dim)}
+.gx-series a.on i{color:var(--dim-ink)}
+.gx-series a:hover{color:var(--dim)}
+@media (max-width:640px){
+  .gx-series{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .gx-series a:nth-child(2){border-right:0}
+  .gx-series a:nth-child(-n+2){border-bottom:1px solid var(--rule)}
+}
+.gx-doc{display:grid;grid-template-columns:3.4rem minmax(0,1fr);gap:.2rem .8rem;font-size:.78rem;
+  border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);padding:.6rem 0;margin:1rem 0 0;color:var(--ink-2)}
+.gx-doc dt{color:var(--ink-3);font-weight:800;letter-spacing:.06em}
+.gx-doc dd{overflow-wrap:anywhere;word-break:keep-all}
+.chip{display:inline-block;padding:.04rem .45rem;border-radius:99px;font-size:.68rem;font-weight:800;
+  letter-spacing:.02em;white-space:nowrap;border:1px solid transparent;vertical-align:.08em;line-height:1.5}
+.chip::before{content:"";display:inline-block;width:.5em;height:.5em;border-radius:50%;margin-right:.32em;
+  vertical-align:.06em;background:currentColor}
+.c-done{background:var(--dim-soft);color:var(--dim-ink);border-color:var(--dim)}
+.c-wait{background:var(--note-soft);color:var(--note-ink);border-color:var(--note)}
+.c-unk{background:var(--stop-soft);color:var(--stop);border-color:var(--stop)}
+.gx-key{display:flex;flex-wrap:wrap;gap:.4rem 1.1rem;font-size:.76rem;color:var(--ink-2);margin:.4rem 0 1rem}
+.gx-figs{display:flex;flex-wrap:wrap;border:1px solid var(--rule);background:var(--card);margin:1.2rem 0}
+.gx-figs div{flex:1 1 160px;padding:.7rem .9rem;border-right:1px solid var(--rule);min-width:0}
+.gx-figs div:last-child{border-right:0}
+.gx-figs b{display:block;font-size:1.35rem;font-weight:800;letter-spacing:-.01em;font-variant-numeric:tabular-nums;line-height:1.2}
+.gx-figs span{display:block;font-size:.72rem;color:var(--ink-3);margin-top:.15rem;word-break:keep-all}
+@media (max-width:640px){.gx-figs div{flex-basis:45%;border-bottom:1px solid var(--rule)}}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+td.st{white-space:nowrap}
+.gx-wide{width:min(1280px,calc(100vw - 32px));position:relative;left:50%;transform:translateX(-50%);margin:1.2rem 0}
+.gx-plate{overflow-x:auto;-webkit-overflow-scrolling:touch;background:#f5f5f5;border:1px solid var(--rule);border-radius:4px}
+.gx-plate svg{display:block;width:100%;min-width:880px;height:auto}
+.gx-wide figcaption,.gx-cap{font-size:.76rem;color:var(--ink-3);margin-top:.45rem;word-break:keep-all;overflow-wrap:anywhere}
+.gx-img{margin:1.2rem 0}
+.gx-img img{display:block;width:100%;height:auto;border:1px solid var(--rule);border-radius:4px;background:#fff}
+.gx-pair{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.8rem;margin:1.2rem 0}
+.gx-tri{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.5rem;margin:1rem 0}
+.gx-pair figure,.gx-tri figure{margin:0;min-width:0}
+.gx-pair img,.gx-tri img{display:block;width:100%;height:auto;border:1px solid var(--rule);border-radius:4px;background:#fff}
+.gx-pair video{display:block;width:100%;height:auto;border:1px solid var(--rule);border-radius:4px;background:#0f141b}
+.gx-pair figcaption,.gx-tri figcaption{font-size:.72rem;color:var(--ink-3);margin-top:.3rem;word-break:keep-all}
+@media (max-width:640px){.gx-pair{grid-template-columns:1fr}}
+.gx-note{border:1px solid var(--rule);border-left:3px solid var(--note);background:var(--card);padding:.7rem 1rem;margin:1rem 0;font-size:.9rem}
+.gx-note.stop{border-left-color:var(--stop)}
+.gx-note.ok{border-left-color:var(--dim)}
+.gx-note p{margin:.3rem 0}
+.gx-pager{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.6rem;margin:3rem 0 0;padding-top:1rem;border-top:2px solid var(--ink)}
+.gx-pager a,.gx-pager span{display:block;padding:.7rem .9rem;border:1px solid var(--rule);background:var(--card);
+  text-decoration:none;color:var(--ink);border-radius:4px;font-size:.86rem;font-weight:800;word-break:keep-all}
+.gx-pager i{display:block;font-style:normal;font-size:.66rem;letter-spacing:.12em;color:var(--ink-3);font-weight:800;margin-bottom:.2rem}
+.gx-pager .next{text-align:right}
+.gx-pager span{color:var(--ink-3);font-weight:600}
+.gx-pager a:hover{border-color:var(--dim);color:var(--dim)}
+.gx-bars{margin:1rem 0}
+.gx-bars svg{display:block;width:100%;height:auto}
+.gx-stage{position:relative;width:100%;height:min(70vh,560px);background:#1d2030;border-radius:4px;overflow:hidden;touch-action:none}
+.gx-stage canvas{display:block}
+#gx-legend{position:absolute;left:10px;bottom:10px;color:#e8e8ee;font-size:.7rem}
+#gx-legend .bar{width:160px;height:8px;border-radius:2px;margin:.2rem 0}
+#gx-legend .ticks{display:flex;justify-content:space-between;width:160px}
+#gx-info{position:absolute;right:10px;top:8px;color:#e8e8ee;font-size:.7rem;text-align:right}
+#gx-err{display:none;position:absolute;inset:0;color:#e8e8ee;padding:1.5rem}
+.gx-ctl{display:flex;flex-wrap:wrap;gap:.5rem 1.1rem;align-items:center;font-size:.8rem;margin:.8rem 0 .5rem}
+.gx-ctl label{cursor:pointer}
+.gx-ctl button{font:inherit;font-size:.76rem;padding:.2rem .6rem;border:1px solid var(--rule);background:var(--card);color:var(--ink);border-radius:4px;cursor:pointer}
+.gx-ctl .seg{display:flex;gap:.3rem}
+.gx-ctl .seg input{position:absolute;opacity:0}
+.gx-ctl .seg label{border:1px solid var(--rule);background:var(--card);padding:.1rem .6rem;border-radius:4px}
+.gx-ctl .seg input:checked+label{border-color:var(--ink);background:var(--ink);color:var(--paper)}
+.gx-ctl .seg input:focus-visible+label{outline:2px solid var(--dim);outline-offset:2px}
+.gx-ctl output{font-variant-numeric:tabular-nums;min-width:3.4em;display:inline-block}
+@media (max-width:640px){
+  .tw table{font-size:.76rem}
+  .tw th,.tw td{padding-left:.45rem;padding-right:.45rem}
+  td.st{white-space:normal}
+  td.st .chip{margin:.1rem 0}
+}
+.gx-hbars{margin:1rem 0;display:grid;gap:.7rem}
+.gx-hbars .row{display:grid;grid-template-columns:8.5rem minmax(0,1fr) 7.5rem;gap:.7rem;align-items:center;font-size:.82rem}
+.gx-hbars .lab{color:var(--ink-2)}
+.gx-hbars .track{display:block;height:18px;border-left:1px solid var(--rule)}
+.gx-hbars .fill{display:block;height:100%;border-radius:0 2px 2px 0}
+.gx-hbars .val b{display:block;font-variant-numeric:tabular-nums}
+.gx-hbars .val i{display:block;font-style:normal;font-size:.7rem;color:var(--ink-3)}
+@media (max-width:640px){.gx-hbars .row{grid-template-columns:minmax(0,1fr) 6.5rem}.gx-hbars .lab{grid-column:1/-1;margin-bottom:-.4rem}}
+.gx-bars{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.gx-bars svg{min-width:600px;max-width:760px}
+.gx-pair video{aspect-ratio:4/3;object-fit:contain}
+</style>
+</head>
+<body>
+
+<div class="top"><div class="row"><a class="home" href="research.html">← 연구 기록으로</a><span class="doc">FOOTHOLD · 연구 기록</span><span class="sp"></span><button class="pdfbtn" id="pdfBtn" type="button">PDF 저장</button></div><div id="prog"></div></div>
+
+<div class="wrap">
+
+<div class="hero">
+  <div class="eyebrow">Research · 연재 실기 Go2 X · 3 / 4</div>
+  <h1>[실기 Go2 X 3] 숙소 방을 걸어 보다</h1>
+  <p class="lede">팀장이 조이스틱으로 숙소 방을 두 번 걸었고, Jetson 은 녹화만 했다. 그 녹화로 위에서 본 방 지도 (odom 으로 쌓음 · SLAM 아님), D435i 카메라의 높이와 각, 색 · 깊이 영상 330 초, 3D 점을 얻었다.</p>
+  <div class="meta"><div><span class="k">연재</span><span class="v">실기 Go2 X · 3 / 4</span></div><div><span class="k">작성</span><span class="v">Claude 세션 (오흥재 지시, lead-lx)</span></div><div><span class="k">날짜</span><span class="v">2026-11-19</span></div><div><span class="k">원본</span><span class="v">foothold-lab / inbox / jay / 20261101-app / ROOM-MAP-1119.html · ROOM-POINTS-3D-1119.html · 20261117-go2-x-sim-match-checklist-assets / 20261119-0459-room-walk · 20261119-0520-room-walk-full</span></div></div>
+  <dl class="gx-doc">
+    <dt>분류</dt><dd>연재 글 · 실기 원자료에서 뽑은 지도 · 카메라 값 · 영상</dd>
+    <dt>작성</dt><dd>Claude 세션 (오흥재 지시, lead-lx)</dd>
+    <dt>근거</dt><dd><code>room_map_info.json</code> 두 벌 · <code>floor_summary.json</code> · <code>media_info.json</code> · 두 폴더 README · 지도 · 각 계산은 lead 와 하위 세션, 05:20 지도와 3D 점은 go2-lx</dd>
+    <dt>요지</dt><dd>걸은 길 20.75 m · 지도 12.4 × 14.1 m · 선 자세 카메라 0.3716 m · 아래로 38.59°</dd>
+    <dt>상태</dt><dd>지도 · 각 계산 끝. SLAM · 줄자 확인 · 매트 두께는 아직 (4 편)</dd>
+  </dl>
+</div>
+
+<div role="navigation" class="gx-series" aria-label="연재 실기 Go2 X 순서"><a href="research-20261119-go2x-1-app-flow.html"><i>실기 Go2 X 1</i>앱과 로봇이 어떻게 이어지나</a><a href="research-20261119-go2x-2-jetson-setup.html"><i>실기 Go2 X 2</i>Jetson 을 세우다</a><a class="on" aria-current="page" href="research-20261119-go2x-3-room-walk.html"><i>실기 Go2 X 3</i>숙소 방을 걸어 보다</a><a href="research-20261119-go2x-4-next-measurements.html"><i>실기 Go2 X 4</i>다음에 잴 것</a></div>
+
+<figure class="gx-img"><a href="assets/visual/go2x-1119/room-topview-0459.webp?v=eff8322f" target="_blank" rel="noopener"><img src="assets/visual/go2x-1119/room-topview-0459.webp?v=eff8322f" alt="숙소 방을 위에서 본 지도 두 장. 왼쪽은 5 cm 칸마다 가장 높은 점의 높이를 색으로, 오른쪽은 흰 바닥 · 검정 장애물 · 회색 모름으로 칠했고 빨간 선이 로봇이 걸은 길, 초록 점이 출발점이다" width="1400" height="700"></a><figcaption class="gx-cap">04:59 녹화로 만든 방 지도. 왼쪽 = 5 cm 칸마다 가장 높은 점 (바닥 기준 m). 오른쪽 = 흰색 바닥 · 검정 장애물 (그 칸 점의 30 % 넘게가 0.15~1.8 m) · 회색 모름. 빨간 선 = 걸은 길 · 초록 점 = 출발. 누르면 크게.</figcaption></figure>
+
+<div class="gx-figs">
+<div><b>20.75 m</b><span>걸은 길 · 493.6 초</span></div>
+<div><b>12.4 × 14.1 m</b><span>지도 범위</span></div>
+<div><b>0.3716 m</b><span>선 자세 카메라 높이 (매트 위)</span></div>
+<div><b>38.59°</b><span>선 자세 카메라 아래로 숙인 각</span></div>
+</div>
+
+<section id="map"><h2>방 지도: 라이다 점을 로봇이 아는 자기 위치 위에 쌓았다</h2>
+<div class="gx-note"><p><span class="chip c-wait">SLAM 아님</span> SLAM 은 같은 곳에 돌아오면 어긋난 위치를 고친다 (고리 닫기). 이 지도는 Go2 가 다리 · IMU 로 추정한 자기 위치 (<code>odom</code>) 를 고치지 않고 그대로 믿었다. 오래 걸을수록 어긋남이 쌓이고, 이번에도 벽이 두 겹으로 보이는 곳이 있다 (눈으로 본 것 · 잰 값 아님).</p></div>
+<ol>
+<li><b>녹화.</b> Go2 가 내보내는 <code>/utlidar/cloud_deskewed</code> (L2 점구름 13.6 Hz · 이미 <code>odom</code> 틀) 와 <code>/utlidar/robot_odom</code>. 그래서 장마다 점을 그대로 쌓으면 지도가 된다.</li>
+<li><b>몸에 맞은 점 빼기.</b> 몸 중심에서 수평 0.6 m 안 점은 다리 · 몸이라 버림.</li>
+<li><b>범위 자르기.</b> 걸은 길 둘레 5 m 만.</li>
+<li><b>5 cm 칸.</b> 바닥 높이는 점 높이의 아래 2 %. 칸마다 가장 높은 점과 장애물 점 비율을 셈.</li>
+</ol>
+<h3>두 녹화 견주기</h3>
+<div class="tw"><table><thead><tr><th>값</th><th class="num">04:59 녹화</th><th class="num">05:20 녹화</th></tr></thead><tbody>
+<tr><td>L2 점구름 장</td><td class="num">7016</td><td class="num">2035</td></tr>
+<tr><td>걸은 길</td><td class="num">20.75 m</td><td class="num">5.12 m</td></tr>
+<tr><td>걸은 시간</td><td class="num">493.6 초</td><td class="num">140.9 초</td></tr>
+<tr><td>그림 범위</td><td class="num">12.4 × 14.1 m</td><td class="num">12.2 × 10.6 m</td></tr>
+<tr><td>바닥 칸 (5 cm)</td><td class="num">9546</td><td class="num">4257</td></tr>
+<tr><td>장애물 칸 (5 cm)</td><td class="num">4492</td><td class="num">1588</td></tr>
+<tr><td>쌓은 점</td><td class="num">37,567,767</td><td class="num">10,792,881</td></tr>
+<tr><td>5 cm 3D 칸</td><td class="num">125,389</td><td class="num">44,229</td></tr>
+</tbody></table></div>
+<div class="gx-pair">
+<figure><a href="assets/visual/go2x-1119/room-topview-0459.webp?v=eff8322f" target="_blank" rel="noopener"><img src="assets/visual/go2x-1119/room-topview-0459.webp?v=eff8322f" alt="04:59 녹화 지도. 걸은 길이 방 전체를 돈다" loading="lazy" width="1400" height="700"></a><figcaption>04:59 · 걸은 길 20.75 m</figcaption></figure>
+<figure><a href="assets/visual/go2x-1119/room-topview-0520.webp?v=8920bb41" target="_blank" rel="noopener"><img src="assets/visual/go2x-1119/room-topview-0520.webp?v=8920bb41" alt="05:20 녹화 지도. 걸은 길이 5.12 m 로 짧아 방 한쪽만 채워졌다" loading="lazy" width="1400" height="700"></a><figcaption>05:20 · 걸은 길 5.12 m (141 초에 본체 통신이 끊겨 걷기 앞부분만)</figcaption></figure>
+</div>
+<p>05:20 지도가 짧은 까닭은 녹화의 L2 · odom 이 앞 141 초뿐이어서다. 앉음 0~63 초 · 일어섬 63.1 초 · 가만히 섬 ~99 초 · 걷기 99 초부터라, 지도에는 걷기 앞 약 42 초만 들어갔다. 끊김은 4 편에서 다룬다. 05:20 지도 스크립트는 04:59 스크립트를 ROS 2 없이 읽도록 옮긴 것이고, 옮긴 뒤 04:59 녹화에 다시 돌려 지도 수치가 원래와 같은 것을 먼저 확인했다.</p>
+</section>
+
+<section id="angle"><h2>카메라 높이 · 각: 깊이 영상에서 바닥 평면을 찾았다</h2>
+<p>깊이 영상의 점을 3 차원으로 펴고, 위를 향한 가장 큰 평면 (바닥) 을 매 프레임 찾았다. 카메라에서 그 평면까지 거리가 높이, 평면이 기운 정도가 각이다. 가만히 선 30 초와 앉은 45 초의 깊이 프레임을 모두 썼다.</p>
+<div class="tw"><table><thead><tr><th>자세 (녹화 기준 초)</th><th class="num">카메라 높이</th><th class="num">아래로 숙인 각</th><th class="num">옆 기울기</th><th class="num">맞춘 프레임</th><th class="num">잔차</th><th class="num">SDK 몸 높이</th></tr></thead><tbody>
+<tr><td>선 자세 (68~98 s · 매트 위)</td><td class="num">0.3716 m</td><td class="num">38.59°</td><td class="num">+1.89°</td><td class="num">816 / 816</td><td class="num">3.5 mm</td><td class="num">0.322 m</td></tr>
+<tr><td>앉음 (10~55 s)</td><td class="num">0.1431 m</td><td class="num">33.35°</td><td class="num">-1.94°</td><td class="num">1229 / 1229</td><td class="num">3.0 mm</td><td class="num">0.069 m</td></tr>
+</tbody></table></div>
+<figure class="gx-img"><a href="assets/visual/go2x-1119/floor-overlay-standing-t083.webp?v=34cdfa89" target="_blank" rel="noopener"><img src="assets/visual/go2x-1119/floor-overlay-standing-t083.webp?v=34cdfa89" alt="선 자세 83 초 프레임. 왼쪽 색 영상 (매트와 가방), 가운데 깊이 영상, 오른쪽 바닥으로 잡힌 점을 초록으로 칠한 깊이 영상" loading="lazy" width="1400" height="420"></a><figcaption class="gx-cap">선 자세 83 초: 색 · 깊이 (0~4 m) · 바닥으로 잡힌 점 (초록, 평면에서 2 cm 안).</figcaption></figure>
+<figure class="gx-img"><a href="assets/visual/go2x-1119/floor-overlay-sitting-t032.webp?v=6dc7d8af" target="_blank" rel="noopener"><img src="assets/visual/go2x-1119/floor-overlay-sitting-t032.webp?v=6dc7d8af" alt="앉은 자세 32.5 초 프레임. 색, 깊이, 바닥으로 잡힌 점을 초록으로 칠한 그림" loading="lazy" width="1400" height="420"></a><figcaption class="gx-cap">앉음 32.5 초: 가까운 바닥은 D435i 최소 거리보다 가까워 비어 있다.</figcaption></figure>
+<div class="tw"><table><thead><tr><th>시뮬과 견주기</th><th>값</th><th>상태</th></tr></thead><tbody>
+<tr><td>시뮬 카메라 (학습 정본)</td><td>몸 기준 (0.25, 0, 0.12) m · 아래 35°</td><td class="st"><span class="chip c-done">설정</span></td></tr>
+<tr><td>11/18 실측 장착 (근사)</td><td>몸 기준 (0.35, 0, 0.07) m · IMU 상대각 35.0°</td><td class="st"><span class="chip c-done">실측</span></td></tr>
+<tr><td>시뮬에 실측 장착을 넣어 32 대로 걸림 (planner 11/19 10:39)</td><td>턱 · 계단 성공은 같고 지도 평균 오차만 약 1 cm 늘었다</td><td class="st"><span class="chip c-done">시뮬</span></td></tr>
+<tr><td>매트 두께 · 줄자 값 · 맨바닥 각</td><td>바닥이 아니라 매트 윗면을 잰 값이다</td><td class="st"><span class="chip c-unk">미확인</span></td></tr>
+</tbody></table></div>
+<p>프레임 사이 흔들림 (p10~p90) 0.3 mm · 0.05° 아래는 같은 자리를 다시 재는 정도이지 절대 정확도가 아니다 (D435i 공장 보정에 기댐). 각은 바닥 평면 기준이라 바닥이 수평일 때만 중력 기준 각과 같다.</p>
+</section>
+
+<section id="video"><h2>카메라 영상: 앉음 → 섬 → 방 한 바퀴 (330 초)</h2>
+<p>깊이는 0~4 m 를 turbo 색으로, 검정은 값이 없는 곳이다. 왼쪽 검은 띠는 D435i 구조상 늘 생긴다 (왼쪽 렌즈만 보는 영역). 영상은 foothold-lab 저장소 (GitHub LFS) 에서 바로 불러온다.</p>
+<div class="gx-pair">
+<figure><video controls muted playsinline preload="metadata" poster="assets/visual/go2x-1119/still-color-t080.webp" src="https://media.githubusercontent.com/media/foothold-project/foothold-lab/main/inbox/jay/20261117-go2-x-sim-match-checklist-assets/20261119-0520-room-walk-full/color_full_web.mp4"></video><figcaption>색 · 640×480 · 30 fps · 9909 프레임 · 10.8 MB · <a href="https://media.githubusercontent.com/media/foothold-project/foothold-lab/main/inbox/jay/20261117-go2-x-sim-match-checklist-assets/20261119-0520-room-walk-full/color_full_web.mp4">파일 열기</a></figcaption></figure>
+<figure><video controls muted playsinline preload="metadata" poster="assets/visual/go2x-1119/still-depth-t080.webp" src="https://media.githubusercontent.com/media/foothold-project/foothold-lab/main/inbox/jay/20261117-go2-x-sim-match-checklist-assets/20261119-0520-room-walk-full/depth_full_web.mp4"></video><figcaption>깊이 · 0~4 m · 9909 프레임 · 31.8 MB · <a href="https://media.githubusercontent.com/media/foothold-project/foothold-lab/main/inbox/jay/20261117-go2-x-sim-match-checklist-assets/20261119-0520-room-walk-full/depth_full_web.mp4">파일 열기</a></figcaption></figure>
+</div>
+<div class="tw"><table><thead><tr><th>영상</th><th class="num">길이</th><th class="num">들어온 프레임</th><th class="num">가장 긴 끊김</th></tr></thead><tbody>
+<tr><td>색</td><td class="num">330.3 초</td><td class="num">9772</td><td class="num">4.342 초</td></tr>
+<tr><td>깊이</td><td class="num">330.3 초</td><td class="num">9149</td><td class="num">3.884 초</td></tr>
+</tbody></table></div>
+<p>가장 긴 끊김은 302.88 초에 한 번이다. 그 구간은 마지막 화면이 멈춰 있고 빨간 「stale」 글자가 뜬다. 0.2 초 아래 짧은 끊김은 녹화 내내 흩어져 있다.</p>
+<div class="gx-tri">
+<figure><img src="assets/visual/go2x-1119/still-color-t080.webp?v=fb787cd4" alt="80 초 색 화면. 매트 위 가방" loading="lazy" width="640" height="480"><figcaption>80 초 · 매트 위 섬</figcaption></figure>
+<figure><img src="assets/visual/go2x-1119/still-color-t150.webp?v=3e3f90c8" alt="150 초 색 화면. 과자 상자와 의자 다리" loading="lazy" width="640" height="480"><figcaption>150 초 · 걷는 중</figcaption></figure>
+<figure><img src="assets/visual/go2x-1119/still-color-t250.webp?v=0470cc25" alt="250 초 색 화면. 매트 옆 맨바닥과 문턱" loading="lazy" width="640" height="480"><figcaption>250 초 · 매트 옆 맨바닥</figcaption></figure>
+<figure><img src="assets/visual/go2x-1119/still-depth-t080.webp?v=d072c4f5" alt="80 초 깊이 화면, 유효 93 %" loading="lazy" width="800" height="640"><figcaption>깊이 80 초 · 유효 93 %</figcaption></figure>
+<figure><img src="assets/visual/go2x-1119/still-depth-t150.webp?v=c6af2134" alt="150 초 깊이 화면, 유효 86 %" loading="lazy" width="800" height="640"><figcaption>깊이 150 초 · 유효 86 %</figcaption></figure>
+<figure><img src="assets/visual/go2x-1119/still-depth-t250.webp?v=65bdfe25" alt="250 초 깊이 화면, 유효 90 %" loading="lazy" width="800" height="640"><figcaption>깊이 250 초 · 유효 90 %</figcaption></figure>
+</div>
+<p class="gx-cap">150 · 170 · 200 · 230 · 260 · 290 초 화면이 모두 다른 곳이라 (05:20 지도 README) 로봇은 141 초 뒤에도 290 초 무렵까지 걸었다. 250 초에는 매트 옆 맨바닥이 보여 매트 두께를 나중에 잴 수 있다 (아직 안 함).</p>
+</section>
+
+<section id="points"><h2>3D 점: 돌려 보기</h2>
+<p>두 녹화 각각의 L2 점을 5 cm 칸 하나에 한 점으로 줄였다. 색은 바닥 위 높이, 빨간 선은 걸은 길이다. 두 녹화는 출발점이 달라 좌표가 맞지 않으므로 하나씩 본다.</p>
+<div class="gx-ctl">
+<div class="seg" id="gx-pick" role="radiogroup" aria-label="녹화"></div>
+<label>위를 자름 <input type="range" id="gx-cut" min="0.3" max="2.5" step="0.05" value="2.5" aria-label="이 높이 위의 점을 숨김 (m)"> <output id="gx-cutv">2.50 m</output></label>
+<label>점 크기 <input type="range" id="gx-size" min="1" max="6" step="0.5" value="3" aria-label="점 크기"> <output id="gx-sizev">3</output></label>
+<label><input type="checkbox" id="gx-path" checked> 걸은 길</label>
+<button type="button" id="gx-top">위에서</button>
+<button type="button" id="gx-persp">비스듬히</button>
+</div>
+<div class="gx-stage" id="gx-stage">
+<div id="gx-info"></div>
+<div id="gx-legend"><div>바닥 위 높이 (m)</div><div class="bar" id="gx-bar"></div><div class="ticks"><span>0</span><span>1.0</span><span>2.0+</span></div></div>
+<div id="gx-err">3D 보기를 띄우지 못했다 (three.js 를 불러오는 데 인터넷이 필요하다).</div>
+</div>
+<p class="gx-cap">끌기 = 돌리기 · 휠 또는 두 손가락 = 가까이 · 오른쪽 끌기 = 옮기기. 04:59 녹화 122,750 점 · 05:20 녹화 42,617 점 (5 cm 칸 · 바닥 위 -0.2~2.5 m 만 · mm 정수).</p>
+<p>다음 편은 이 녹화들이 남긴 빈칸 (줄자 · SLAM · 깊이 입력 · 깊이 안정성) 과 141 초 끊김을 어떻게 잴지다.</p>
+</section>
+
+<div role="navigation" class="gx-pager" aria-label="이전 · 다음 편"><a class="prev" href="research-20261119-go2x-2-jetson-setup.html"><i>← 이전 편 · 2</i>Jetson 을 세우다</a><a class="next" href="research-20261119-go2x-4-next-measurements.html"><i>다음 편 · 4 →</i>다음에 잴 것</a></div>
+<script src="assets/visual/go2x-1119/room-points-5cm.js?v=08eeb830"></script>
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}</script>
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+/* 원본: foothold-lab inbox/jay/20261101-app/ROOM-POINTS-3D-1119.html (go2-lx). 요소 id 에 gx- 를 붙인 것 말고는 같은 그리기 */
+const VIR = [[68,1,84],[72,40,120],[62,74,137],[49,104,142],[38,130,142],[31,158,137],[53,183,121],[109,205,89],[180,222,44],[253,231,37]];
+function vir(t) { t = Math.min(1, Math.max(0, t)) * (VIR.length - 1); const i = Math.min(VIR.length - 2, Math.floor(t)), f = t - i;
+  return VIR[i].map((a, k) => (a + (VIR[i + 1][k] - a) * f) / 255); }
+document.getElementById('gx-bar').style.background = 'linear-gradient(90deg,' + VIR.map(c => `rgb(${c})`).join(',') + ')';
+function i16(b64) { const s = atob(b64), u = new Uint8Array(s.length); for (let i = 0; i < s.length; i++) u[i] = s.charCodeAt(i); return new Int16Array(u.buffer); }
+const stage = document.getElementById('gx-stage');
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setPixelRatio(Math.min(2, window.devicePixelRatio));
+stage.appendChild(renderer.domElement);
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x1d2030);
+const camera = new THREE.PerspectiveCamera(50, 1, 0.05, 200);
+camera.up.set(0, 0, 1);
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+scene.add(new THREE.AxesHelper(1));
+const mat = new THREE.ShaderMaterial({
+  uniforms: { size: { value: 3 }, cut: { value: 2.5 }, dpr: { value: renderer.getPixelRatio() } },
+  vertexShader: `uniform float size; uniform float cut; uniform float dpr; attribute vec3 color; varying vec3 vC; varying float vH;
+    void main(){ vC = color; vH = position.z; gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0); gl_PointSize = size * dpr; }`,
+  fragmentShader: `uniform float cut; varying vec3 vC; varying float vH; void main(){ if (vH > cut) discard; gl_FragColor = vec4(vC,1.0); }`,
+});
+const sets = (window.CLOUDS || []).map(c => {
+  const q = i16(c.pts), n = q.length / 3, pos = new Float32Array(q.length), col = new Float32Array(q.length);
+  for (let i = 0; i < n; i++) { const z = q[3*i+2] / 1000; pos[3*i] = q[3*i] / 1000; pos[3*i+1] = q[3*i+1] / 1000; pos[3*i+2] = z;
+    const c3 = vir(z / 2.0); col[3*i] = c3[0]; col[3*i+1] = c3[1]; col[3*i+2] = c3[2]; }
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.BufferAttribute(pos, 3)); g.setAttribute('color', new THREE.BufferAttribute(col, 3));
+  const pts = new THREE.Points(g, mat);
+  const p = i16(c.path), pp = new Float32Array(p.length); for (let i = 0; i < p.length; i++) pp[i] = p[i] / 1000;
+  for (let i = 2; i < pp.length; i += 3) pp[i] = 0.12;
+  const pg = new THREE.BufferGeometry(); pg.setAttribute('position', new THREE.BufferAttribute(pp, 3));
+  const line = new THREE.Line(pg, new THREE.LineBasicMaterial({ color: 0xff4a3d }));
+  pg.computeBoundingBox(); const box = pg.boundingBox.clone().expandByScalar(2.0);
+  return { c, pts, line, box };
+});
+const pick = document.getElementById('gx-pick'), info = document.getElementById('gx-info');
+let cur = null;
+function view(kind) {
+  const b = cur.box, sx = b.max.x - b.min.x, sy = b.max.y - b.min.y, r = Math.max(sx, sy);
+  controls.target.set((b.min.x + b.max.x) / 2, (b.min.y + b.max.y) / 2, 0.3);
+  if (kind === 'top') camera.position.set(controls.target.x, controls.target.y - 0.001, r * 1.25);
+  else camera.position.set(controls.target.x - r * 0.45, controls.target.y - r * 0.6, r * 0.55);
+  controls.update();
+}
+function show(i) {
+  if (cur) { scene.remove(cur.pts); scene.remove(cur.line); }
+  cur = sets[i]; scene.add(cur.pts); if (document.getElementById('gx-path').checked) scene.add(cur.line);
+  info.textContent = `${cur.c.name} · 점 ${cur.c.n.toLocaleString()} 개 (5 cm 칸)`;
+  view('persp');
+}
+sets.forEach((s, i) => {
+  const id = 'gx-rec' + i;
+  pick.insertAdjacentHTML('beforeend', `<input type="radio" name="gx-rec" id="${id}" ${i ? '' : 'checked'}><label for="${id}">${s.c.name}</label>`);
+  document.getElementById(id).addEventListener('change', () => show(i));
+});
+const cut = document.getElementById('gx-cut'), size = document.getElementById('gx-size');
+cut.addEventListener('input', () => { mat.uniforms.cut.value = +cut.value; document.getElementById('gx-cutv').textContent = (+cut.value).toFixed(2) + ' m'; });
+size.addEventListener('input', () => { mat.uniforms.size.value = +size.value; document.getElementById('gx-sizev').textContent = size.value; });
+document.getElementById('gx-path').addEventListener('change', e => { if (!cur) return; if (e.target.checked) scene.add(cur.line); else scene.remove(cur.line); });
+document.getElementById('gx-top').addEventListener('click', () => cur && view('top'));
+document.getElementById('gx-persp').addEventListener('click', () => cur && view('persp'));
+function resize() { const w = stage.clientWidth, h = stage.clientHeight; renderer.setSize(w, h); camera.aspect = w / h; camera.updateProjectionMatrix(); }
+new ResizeObserver(resize).observe(stage); resize();
+if (sets.length) show(0);
+renderer.setAnimationLoop(() => { controls.update(); renderer.render(scene, camera); });
+</script>
+<script>setTimeout(function(){ if (!document.querySelector('#gx-stage canvas')) document.getElementById('gx-err').style.display = 'block'; }, 6000);</script>
+
+
+</div>
+<script>
+/* ★ 2026-09-08 감사 F-05. 이 블록은 98장에 실리는데 그 안의 두 요소는
+   페이지마다 있기도 없기도 하다. 없는 요소에 그냥 붙여서 예외가 났다.
+     pdfBtn  무방비 리스너 108장 · 버튼 8장 -> 100장에서 «로드 즉시» 예외
+     prog    참조 99장 · 요소 1장          -> 98장에서 «스크롤할 때» 예외
+   pdfBtn 쪽은 로드 순간 죽어 뒤따르는 스크립트가 통째로 멈춘다.
+   prog 쪽은 잠복이라 스크롤하기 전까지 멀쩡해 보였고, 그래서 감사가
+   런타임 예외를 1건만 관측했다. 정적으로는 98장이 안고 있었다.
+   둘 다 «있을 때만» 붙인다. */
+(function(){
+  var pdf = document.getElementById('pdfBtn');
+  if (pdf) pdf.addEventListener('click', function(){ window.print(); });
+})();
+(function(){
+  var bar = document.getElementById('prog');
+  if (!bar) return;
+  addEventListener('scroll', function(){
+    var h = document.documentElement;
+    var p = h.scrollTop / Math.max(1, h.scrollHeight - h.clientHeight);
+    bar.style.width = (p * 100) + '%';
+  }, {passive:true});
+})();
+/* 복사 버튼: 코드 블록과 접속 주소 공용 */
+document.addEventListener('click', function(e){
+  var b = e.target.closest && e.target.closest('.copy');
+  if (!b) return;
+  var t = b.dataset.copy || (b.closest('.cb') && b.closest('.cb').querySelector('pre').innerText);
+  if (!t) return;
+  navigator.clipboard.writeText(t).then(function(){
+    var old = b.textContent;
+    b.textContent = '복사됨'; b.classList.add('done');
+    setTimeout(function(){ b.textContent = old; b.classList.remove('done'); }, 1400);
+  });
+});
+/* ★ 2026-09-29. 나란히 놓는 영상: 함께 재생 · 처음으로 · 배속.
+   갤러리 비교 화면(gallery/compare)과 같은 조작이다. 그쪽은 인라인이라
+   부품으로 못 가져온다.
+
+   **있을 때만 붙인다.** 이 파일 머리말에 적힌 F-05 와 같은 종류의 실수를
+   반복하지 않는다 (없는 요소에 리스너를 붙여 98 장이 죽었다). */
+document.querySelectorAll('[data-vcmp]').forEach(function (box) {
+  var vids = Array.prototype.slice.call(box.querySelectorAll('video'));
+  if (!vids.length) { return; }
+
+  var play = box.querySelector('[data-vcmp-play]');
+  var rew = box.querySelector('[data-vcmp-rewind]');
+  var rateBtns = Array.prototype.slice.call(
+    box.querySelectorAll('[data-vcmp-rate]'));
+  var rate = 1;
+
+  function label() {
+    if (!play) { return; }
+    var playing = vids.some(function (v) { return !v.paused && !v.ended; });
+    play.textContent = playing ? '함께 멈춤' : '함께 재생';
+  }
+
+  /* `load()` 가 playbackRate 를 1 로 되돌린다. 갤러리에서 겪은 것과 같다
+     (gallery.js 105행). 그래서 metadata 가 올 때마다 다시 박는다. */
+  vids.forEach(function (v) {
+    v.addEventListener('loadedmetadata', function () { v.playbackRate = rate; });
+    v.addEventListener('play', label);
+    v.addEventListener('pause', label);
+    v.addEventListener('ended', label);
+  });
+
+  if (play) {
+    play.addEventListener('click', function () {
+      var playing = vids.some(function (v) { return !v.paused && !v.ended; });
+      vids.forEach(function (v) {
+        v.playbackRate = rate;
+        if (playing) { v.pause(); } else { v.play().catch(function () {}); }
+      });
+      label();
+    });
+  }
+
+  if (rew) {
+    rew.addEventListener('click', function () {
+      vids.forEach(function (v) { v.currentTime = 0; v.playbackRate = rate; });
+      label();
+    });
+  }
+
+  rateBtns.forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      rate = parseFloat(btn.getAttribute('data-vcmp-rate')) || 1;
+      rateBtns.forEach(function (b) {
+        b.setAttribute('aria-pressed', b === btn ? 'true' : 'false');
+      });
+      vids.forEach(function (v) { v.playbackRate = rate; });
+    });
+  });
+
+  label();
+});
+</script>
+</body>
+</html>

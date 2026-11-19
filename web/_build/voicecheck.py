@@ -16,7 +16,8 @@
 """
 import io, os, re
 
-CANDIDATES = [
+# ★ 2026-11-19. 리눅스 기기용: FOOTHOLD_BRAND (brandmark 와 같은 변수).
+CANDIDATES = ([os.path.join(os.environ['FOOTHOLD_BRAND'], 'VOICE_AND_MESSAGE.md')] if os.environ.get('FOOTHOLD_BRAND') else []) + [
     r"C:\Users\AI-WS01\Desktop\jay\인공지능사관학교\foothold-brand\VOICE_AND_MESSAGE.md",
     os.path.expanduser(r"~\Desktop\jay\인공지능사관학교\foothold-brand\VOICE_AND_MESSAGE.md"),
     os.path.expanduser(r"~\OneDrive\Desktop\인공지능사관학교\foothold-brand\VOICE_AND_MESSAGE.md"),

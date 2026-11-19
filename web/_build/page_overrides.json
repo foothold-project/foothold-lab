@@ -61,6 +61,78 @@
     "이관 전 실측: 88,406자 · 빈 CSS 껍데기 77개 · 옛 테마 부트 스크립트 28개 ·",
     "손 코드에 박힌 강조 span 191개. 걷어낸 소스는 52,408자."
    ]
+  },
+  "research-20261119-go2x-1-app-flow.html": {
+   "소스": "_src/research-20261119-go2x-1-app-flow.base.html",
+   "목적": "손으로 쓴 연재 페이지 (그림 · 영상 · 3D 보기가 있어 md 로 못 쓴다) 를 소스에서 생성한다",
+   "이슈": "foothold-project/foothold-lab#861",
+   "이관일": "2026-11-19",
+   "허용": {},
+   "연재": "실기 Go2 X",
+   "연재 번호": 1,
+   "연재 칸": "11/19",
+   "연재 제목": "앱과 로봇이 어떻게 이어지나",
+   "연재 설명": "명령 길 하나 · 만들 것 셋",
+   "연재 앵커": "rx-go2x",
+   "메모": [
+    "원자료: foothold-lab inbox/jay/20261101-app · inbox/jay/20261117-go2-x-sim-match-checklist-assets (11/19).",
+    "그림 · 3D 점 자료는 web/assets/visual/go2x-1119/ 에 있고, 영상은 저장소 LFS 주소에서 부른다 (사이트에 mp4 를 두지 않는다).",
+    "「연재 *」 칸은 hub3 이 연구 허브의 연재 띠를 그릴 때 읽는다."
+   ]
+  },
+  "research-20261119-go2x-2-jetson-setup.html": {
+   "소스": "_src/research-20261119-go2x-2-jetson-setup.base.html",
+   "목적": "손으로 쓴 연재 페이지 (그림 · 영상 · 3D 보기가 있어 md 로 못 쓴다) 를 소스에서 생성한다",
+   "이슈": "foothold-project/foothold-lab#861",
+   "이관일": "2026-11-19",
+   "허용": {},
+   "연재": "실기 Go2 X",
+   "연재 번호": 2,
+   "연재 칸": "11/19 새벽",
+   "연재 제목": "Jetson 을 세우다",
+   "연재 설명": "CycloneDDS · Tailscale · 녹화 다섯 벌",
+   "연재 앵커": "rx-go2x",
+   "메모": [
+    "원자료: foothold-lab inbox/jay/20261101-app · inbox/jay/20261117-go2-x-sim-match-checklist-assets (11/19).",
+    "그림 · 3D 점 자료는 web/assets/visual/go2x-1119/ 에 있고, 영상은 저장소 LFS 주소에서 부른다 (사이트에 mp4 를 두지 않는다).",
+    "「연재 *」 칸은 hub3 이 연구 허브의 연재 띠를 그릴 때 읽는다."
+   ]
+  },
+  "research-20261119-go2x-3-room-walk.html": {
+   "소스": "_src/research-20261119-go2x-3-room-walk.base.html",
+   "목적": "손으로 쓴 연재 페이지 (그림 · 영상 · 3D 보기가 있어 md 로 못 쓴다) 를 소스에서 생성한다",
+   "이슈": "foothold-project/foothold-lab#861",
+   "이관일": "2026-11-19",
+   "허용": {},
+   "연재": "실기 Go2 X",
+   "연재 번호": 3,
+   "연재 칸": "04:59 · 05:20",
+   "연재 제목": "숙소 방을 걸어 보다",
+   "연재 설명": "방 지도 · 카메라 각 · 3D 점",
+   "연재 앵커": "rx-go2x",
+   "메모": [
+    "원자료: foothold-lab inbox/jay/20261101-app · inbox/jay/20261117-go2-x-sim-match-checklist-assets (11/19).",
+    "그림 · 3D 점 자료는 web/assets/visual/go2x-1119/ 에 있고, 영상은 저장소 LFS 주소에서 부른다 (사이트에 mp4 를 두지 않는다).",
+    "「연재 *」 칸은 hub3 이 연구 허브의 연재 띠를 그릴 때 읽는다."
+   ]
+  },
+  "research-20261119-go2x-4-next-measurements.html": {
+   "소스": "_src/research-20261119-go2x-4-next-measurements.base.html",
+   "목적": "손으로 쓴 연재 페이지 (그림 · 영상 · 3D 보기가 있어 md 로 못 쓴다) 를 소스에서 생성한다",
+   "이슈": "foothold-project/foothold-lab#861",
+   "이관일": "2026-11-19",
+   "허용": {},
+   "연재": "실기 Go2 X",
+   "연재 번호": 4,
+   "연재 칸": "측정 계획",
+   "연재 제목": "다음에 잴 것",
+   "연재 설명": "141 초 끊김 · 절차 넷",
+   "연재 앵커": "rx-go2x",
+   "메모": [
+    "원자료: foothold-lab inbox/jay/20261101-app · inbox/jay/20261117-go2-x-sim-match-checklist-assets (11/19).",
+    "그림 · 3D 점 자료는 web/assets/visual/go2x-1119/ 에 있고, 영상은 저장소 LFS 주소에서 부른다 (사이트에 mp4 를 두지 않는다).",
+    "「연재 *」 칸은 hub3 이 연구 허브의 연재 띠를 그릴 때 읽는다."
+   ]
   }
  }
 }

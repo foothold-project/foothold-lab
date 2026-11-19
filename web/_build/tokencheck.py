@@ -30,7 +30,8 @@ MAP = {
     '--stop-soft': P + 'red-soft',
 }
 
-CANDIDATES = [
+# ★ 2026-11-19. 리눅스 기기용: FOOTHOLD_BRAND (brandmark 와 같은 변수).
+CANDIDATES = ([os.path.join(os.environ['FOOTHOLD_BRAND'], 'tokens', 'foothold.tokens.json')] if os.environ.get('FOOTHOLD_BRAND') else []) + [
     r"C:\Users\AI-WS01\Desktop\jay\인공지능사관학교\foothold-brand\tokens\foothold.tokens.json",
     os.path.expanduser(r"~\Desktop\jay\인공지능사관학교\foothold-brand\tokens\foothold.tokens.json"),
     os.path.expanduser(r"~\OneDrive\Desktop\인공지능사관학교\foothold-brand\tokens\foothold.tokens.json"),

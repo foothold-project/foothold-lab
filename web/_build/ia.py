@@ -116,6 +116,16 @@ VAULT_PAGE = {
     #   `docs/research/20260928-v2-mvp-report.md` 다.
     'report-v2.html': ('research', 'v2 종합보고서',
                        '미경험 험지 일반화 · 배포본 v2g2-feetair01 iter3000'),
+    # ★ 2026-11-19. 손으로 쓴 연재 실기 Go2 X 넷 (page_overrides.json · md 원본이 없다).
+    #   research- 로 시작해도 docs/research 에 md 가 없어 아래 규칙으로는 못 찾는다.
+    'research-20261119-go2x-1-app-flow.html': ('research', '[실기 Go2 X 1] 앱과 로봇이 어떻게 이어지나',
+                                               '명령 길 하나 · 만들 것 셋'),
+    'research-20261119-go2x-2-jetson-setup.html': ('research', '[실기 Go2 X 2] Jetson 을 세우다',
+                                                   'CycloneDDS · Tailscale · 녹화 다섯 벌'),
+    'research-20261119-go2x-3-room-walk.html': ('research', '[실기 Go2 X 3] 숙소 방을 걸어 보다',
+                                                '방 지도 · 카메라 각 · 3D 점'),
+    'research-20261119-go2x-4-next-measurements.html': ('research', '[실기 Go2 X 4] 다음에 잴 것',
+                                                        '141 초 끊김 · 절차 넷'),
     'deliverables.html': ('schedule', '산출물 현황', '무엇을 언제까지 내는가'),
     'workflow.html': ('pipeline', '작업 흐름', '이슈부터 머지까지 한 장. 흐름의 정본'),
     'personal-plans.html': ('schedule', '개인 계획', '팀원이 스스로 세운 계획의 원본'),
