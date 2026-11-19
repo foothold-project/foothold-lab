@@ -1,0 +1,21 @@
+{
+ "slam_samples": 7011,
+ "slam_duration_s": 140.7,
+ "slam_start": [
+  -0.007,
+  0.003,
+  0.015
+ ],
+ "slam_end": [
+  1.397,
+  2.038,
+  -0.811
+ ],
+ "slam_start_end_xy_m": 2.473,
+ "slam_start_end_z_m": -0.827,
+ "slam_path_len_m": 30.46,
+ "go2odom_start_end_xy_m": 1.145,
+ "go2odom_start_end_z_m": 0.267,
+ "go2odom_path_len_m": 5.22,
+ "map_points": 528337
+}
