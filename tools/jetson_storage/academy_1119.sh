@@ -8,6 +8,12 @@ mkdir -p $R
 exec > $R/run.log 2>&1
 source /opt/ros/humble/setup.bash
 export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
+# Pin CycloneDDS to the Go2 body LAN (lead 11/20 00:2x). On 11/19 22:29 the USB LAN to ai-lx01 (enx · 192.168.50.x)
+# came up at 22:14 and the L2 · odom · imu topics never showed; Cyclone 0.10 picks one interface by itself.
+# Not tried on the robot yet. Override with CYCLONEDDS_URI in the environment; GO2_IFACE changes the name.
+GO2_IFACE=${GO2_IFACE:-enP8p1s0}
+export CYCLONEDDS_URI=${CYCLONEDDS_URI:-"<CycloneDDS><Domain><General><Interfaces><NetworkInterface name=\"$GO2_IFACE\" priority=\"default\" multicast=\"default\"/></Interfaces></General></Domain></CycloneDDS>"}
+echo "cyclonedds iface $GO2_IFACE"
 cd ~/go2_diag/jetson_storage
 echo "start $(date +%T)"
 if ! pgrep -f realsense2_camera_node >/dev/null; then
