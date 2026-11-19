@@ -21,6 +21,6 @@ target_link_libraries(relative_pitch_abs PRIVATE
   "${RSUSB_ROOT}/build-rsusb/Release/librealsense2.so"
   ${OpenCV_LIBS})
 CM
-cmake --build $M/build_imu --target relative_pitch_abs -j4
+cmake -S $M -B $M/build_imu >/dev/null && cmake --build $M/build_imu --target relative_pitch_abs -j4
 echo "창: Jetson 화면 · 숫자 파일: /tmp/go2-relative-pitch-abs.txt · 끝내기: 창에서 q"
 DISPLAY=${DISPLAY:-:0} $M/build_imu/relative_pitch_abs "$IFACE"

@@ -2,7 +2,7 @@
 > 작성: Claude 세션 (오흥재 지시, go2-lx) · 2026-11-20 08:5x
 > 근거: lead-lx 08:49 의뢰 (팀장 지시) · 11/19 기록 셋의 빠짐 (22:29 에 L2 · IMU · odom 0 개 · 05:20 은 141 초에 본체 토픽 끊김 · `/sportmodestate` 는 bag 에 못 들어감) · lab 가지 `feat/jetson-storage-1119` 의 `academy_1119.sh` · `go2_session.sh` (0 Hz 관문) · SLAM PoC (`../slam-poc-1119/README.md`)
 > 요지: 학원에서 1) 서 있는 자세로 카메라 각도를 큰 창에 띄워 브라켓을 35° 로 맞추고 2) 모든 토픽이 Hz 를 내는지 관문을 통과한 뒤에만 고리 녹화를 한다
-> 상태: 초안 · 각도 창 (`tools/pitch/`) 은 이 기기에서 문법 검사 · 각 계산 시험만 통과 · Jetson 빌드 · 실행 미확인
+> 상태: 11/20 08:5x Jetson 에 놓음 · 각도 창 Jetson 빌드 통과 (`~/go2_diag/sim_match_measure/build_imu/relative_pitch_abs` · 각 계산 시험 Jetson 에서도 통과) · 창 띄우기 · 기록 실행은 미확인 (카메라 노드 · 로봇 명령 안 냄)
 
 # 11/20 학원 측정 한 장
 
@@ -12,7 +12,7 @@
 
 | 순서 | 누가 | 무엇 | 명령 |
 |---|---|---|---|
-| 1 | 학원 세션 | `tools/pitch/` 폴더를 Jetson `~/go2_diag/pitch/` 로 복사 | `scp -r tools/pitch <jetson>:go2_diag/` |
+| 1 | (끝남 08:54) | `tools/pitch/` 를 Jetson `~/go2_diag/pitch/` 에 놓고 빌드 | |
 | 2 | 팀장 조이스틱 | 평평한 맨바닥에서 서기 · 가만히 | |
 | 3 | 학원 세션 (Jetson) | **한 줄**: 카메라 노드를 끄고 창을 빌드 · 띄움 | `bash ~/go2_diag/pitch/pitch_abs.sh enP8p1s0` |
 | 4 | 팀장 | 창의 큰 숫자 (상대각) 가 35.00 ± 0.15 가 되도록 브라켓 조임. 초록 = 맞음 | 창에서 `q` 로 끝 |
@@ -45,7 +45,7 @@
 | `/sportmodestate` | 몸 상태 (상태 번호 · 몸 높이) | 약 300 | **ros2 bag 은 못 담음** (Jetson ROS 에 `unitree_go` 메시지 정의 없음 · 05:20 `bag.log` 경고 1520 줄). SDK 감시 `go2_readonly_monitor` 의 `sport_callbacks` 가 늘어야 | 녹화 목록에는 있으나 실제로는 0 |
 | `/lowstate` (SDK) | 관절 온도 · 배터리 · reserve | 500 | SDK 감시 `state_callbacks` 가 늘어야 | 녹화 시작 · 끝에 한 번씩 |
 
-관문 통과 기준: 위 9 줄 모두. 하나라도 0 이면 녹화하지 않고 run 받은편지함에 토픽 이름을 보낸다 (`go2_session.sh` 꼴). 녹화가 도는 동안에는 `tools/watch_record.sh` 로 10 초마다 같은 것을 다시 본다 (05:20 처럼 중간에 끊기면 알림).
+관문 통과 기준: 위 9 줄 모두. **Jetson 에 놓은 사본: `~/go2_diag/jetson_storage/academy_1120.sh`** (`academy_1119.sh` 0cbf6b810 사본 + 세 토픽 · SDK 감시 관문 · DDS enP8p1s0 고정 · 팀장이 직접 치고 관문 뒤 Enter). 08:55 읽기만 시험: L2 원래 점 15.5 Hz · IMU 251 Hz · odom 146 Hz · SDK sport 3 초 892 · lowstate 1511 (카메라는 안 켜서 깊이 · RGB · tf_static 은 안 잼). SDK 감시 프로그램은 끝날 때 `free(): invalid next size` 로 죽지만 CSV 는 다 쓴 뒤라 관문 · 기록에 지장 없음 (11/18 부터 있던 것 · 고치지 않음). 하나라도 0 이면 녹화하지 않고 run 받은편지함에 토픽 이름을 보낸다 (`go2_session.sh` 꼴). 녹화가 도는 동안에는 `tools/watch_record.sh` 로 10 초마다 같은 것을 다시 본다 (05:20 처럼 중간에 끊기면 알림).
 
 ## 3. 녹화 순서 (한 번 · 약 9 분)
 
