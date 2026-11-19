@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>앱 · 실기 연결 흐름</title>
-<meta name="description" content="foothold-app 의 웹 · Android 앱 · 앱 서버 · Jetson agent · Go2 X 가 어떻게 이어지는지, 지금 코드에 있는 것과 앞으로 만들 것을 나눠 그린 문서 (2026-11-19 갱신 · v0.5 음성 명령 · 음성 알림)">
+<meta name="description" content="foothold-app 의 웹 · Android 앱 · 앱 서버 · Jetson agent · Go2 X 가 어떻게 이어지는지, 지금 코드에 있는 것과 앞으로 만들 것을 나눠 그린 문서 (2026-11-19 갱신 · v0.6 SLAM 두 갈래 · 측정 표)">
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500;600&family=Noto+Sans+KR:wght@400;500;600&family=Noto+Serif+KR:wght@400&display=swap" rel="stylesheet">
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -59,9 +59,9 @@ footer p { max-width: none; font-size: 0.72rem; }
 <dl class="head">
 <dt>분류</dt><dd>설명 그림 · foothold-app 과 실기 Go2 X 의 연결 구조 (팀원 전달용)</dd>
 <dt>작성</dt><dd>처음 그림 planner · 2026-11-02 05:26 · 고침 Claude 세션 (오흥재 지시, lead-lx) · 2026-11-19</dd>
-<dt>근거</dt><dd>결정 기록 <a href="APP-ROBOT-DIRECTION-1119.md">APP-ROBOT-DIRECTION-1119.md</a> (같은 폴더 · v1.1) · 이슈 <a href="https://github.com/foothold-project/foothold-lab/issues/861">#861</a> 댓글 「foothold-app 코드 지도」 (<code>origin/dev</code> <code>89d2a221</code>) · <code>inbox/jay/20261118-repo-roles-and-go2-handoff.md</code> v1.2 · 읽기 전용 거울 <code>app-dev-view</code> 에서 몇 줄 다시 확인 (아래 표) · 음성 절은 팀장 11/19 15:4x 지시와 거울 <code>130b6f06</code></dd>
+<dt>근거</dt><dd>결정 기록 <a href="APP-ROBOT-DIRECTION-1119.md">APP-ROBOT-DIRECTION-1119.md</a> (같은 폴더 · v1.1) · 이슈 <a href="https://github.com/foothold-project/foothold-lab/issues/861">#861</a> 댓글 「foothold-app 코드 지도」 (<code>origin/dev</code> <code>89d2a221</code>) · <code>inbox/jay/20261118-repo-roles-and-go2-handoff.md</code> v1.2 · 읽기 전용 거울 <code>app-dev-view</code> 에서 몇 줄 다시 확인 (아래 표) · 음성 절은 팀장 11/19 15:4x 지시와 거울 <code>130b6f06</code> · SLAM 절은 팀장 11/19 17:59 확정</dd>
 <dt>요지</dt><dd>지금 실기는 agent 의 Sport 경로 (<code>SportClient.Move</code>) 하나로 Unitree 순정 보행을 움직이고, 우리 정책은 사용자 브라우저의 앱 시뮬 안에서만 돈다. 실기에서 우리 정책을 돌리는 저수준 실행기 · 모드 관리자 · 안전 정지 · 조이스틱 읽기는 foothold-app <code>apps/agent</code> 안에 새로 만든다.</dd>
-<dt>상태</dt><dd>v0.5 (11/19 17:5x · 음성 명령 · 음성 알림 절 추가. 앞 판 v0.4 14:12 조이스틱 · 멈춤 말 · 서버 · 이름 · v0.3 11:0x 숙소 측정) · 코드 읽기 기준 (실기 연결 · 지연은 이번에 재지 않음) · 「계획」 칸은 팀장 승인 결정이나 제안이며, 어느 쪽인지 근거 표에 적었다</dd>
+<dt>상태</dt><dd>v0.6 (11/19 18:02 · SLAM 절 · 다음 측정할 것 표 추가. 앞 판 v0.5 17:5x 음성 명령 · 음성 알림 · v0.4 14:12 조이스틱 · 멈춤 말 · 서버 · 이름 · v0.3 11:0x 숙소 측정) · 코드 읽기 기준 (실기 연결 · 지연은 이번에 재지 않음) · 「계획」 칸은 팀장 승인 결정이나 제안이며, 어느 쪽인지 근거 표에 적었다</dd>
 </dl>
 
 <div class="key" role="note" aria-label="그림 읽는 법">
@@ -86,6 +86,7 @@ footer p { max-width: none; font-size: 0.72rem; }
 <li><b>망.</b> 랜선 노트북 하나에서 직결 <code>&lt;GO2X_DIRECT_SUBNET&gt;</code> (실제 값은 팀 공유 .env · 저장소에 없음) · Jetson Wi-Fi + Tailscale · 학원 Wi-Fi · 폰 핫스팟 네 가지로 늘었다.</li>
 <li><b>조이스틱 · 멈춤 말 · 서버 · 이름.</b> 새 절 (<a href="#joystick">조이스틱 키 표</a>). 결정 기록 v1.1 의 조이스틱 키 표 (순정 L2+B Damping · 우리 모드 핫키 후보로 AME-2 · START 고르기) · 멈춤 / 안전 정지 / 조이스틱 E-stop 의 차이 · 앱 서버 Docker · Cloudflare (DNS · Tunnel) 와 NaverCloud VM 의 역할 · 프로젝트 이름 후보 A / B / C (팀장 선택 대기) 를 옮겼다. 숫자와 문구는 결정 기록에서 가져왔고 새로 짓지 않았다.</li>
 <li><b>음성 명령 · 음성 알림 (v0.5).</b> 새 절 (<a href="#voice">음성</a>). 팀장 15:4x 지시: 깨우는 말 「Hey, X」 → 「I am here」 · 「Sit Down」 → 앉기부터 (오늘 이민우가 순정 「Hey, BenBen」 · 순정 대답을 시험), 알림 문구 넷 (배터리 · 다리 온도 · 멈춤 · Damping). 그림 둘과 표. 정하지 않은 문턱 · 자리 · 문구는 「미정 (팀장 결정)」 으로 두었다. 거울 <code>130b6f06</code> 에는 관절 12 온도 읽기가 들어와 있다 (아래 온도 절의 「배터리 잔량만」 은 <code>89d2a221</code> 기준).</li>
+<li><b>SLAM 두 갈래 · 측정 표 (v0.6).</b> 새 절 (<a href="#slam">SLAM</a>). 팀장 17:59 확정: 걷는 중 Point-LIO (Jetson · CPU · 실시간 위치 · 국소 지도) · 임무 뒤 GLIM (학습 PC 또는 서버 · GPU · 루프 닫기 · 전역 지도). 「다음 측정할 것 · 제원 부담」 표를 미확인 목록 뒤에 이어 붙였다 (숫자는 안 재고 합격 기준은 미정).</li>
 <li><b>뺀 것.</b> 11/02 의 키 값 (1.5 m/s 등) · PD 값 · ROS 2 설명은 이번에 다시 재지 않아 이 판에서 뺐다. 11/02 판은 git 기록에 남아 있다. 「실시간 제어는 로봇 쪽에서만」 이라는 11/02 결론은 그대로다.</li>
 </ul>
 </section>
@@ -1016,6 +1017,134 @@ footer p { max-width: none; font-size: 0.72rem; }
 </ul>
 </section>
 
+<section class="fig" id="slam">
+<p class="eyebrow">SLAM · Point-LIO 와 GLIM (v0.6)</p>
+<h2>걷는 동안은 Point-LIO 로 실시간 지도를, 임무 뒤에는 GLIM 으로 한 장 지도를 만든다</h2>
+<p>팀장 11/19 17:59 확정: 「SLAM: Point-LIO 와 GLIM 을 역할을 나눠 둘 다 쓰기」. 같은 L2 라이다 + IMU 자료를 두 길로 보낸다. 위 「Jetson · 11/19 설치 · 숙소 측정」 절의 방 지도는 odom 을 그대로 쌓은 1 차 그림이고 SLAM 이 아니다. 무엇을 재서 고르는지는 맨 아래 <a href="#measure-slam">다음 측정할 것 · 제원 부담</a> 표에 있다.</p>
+<div class="diagram-container"><svg viewBox="0 0 1280 664" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="sl-title sl-desc">
+<title id="sl-title">SLAM 두 갈래: 걷는 중 Point-LIO, 임무 뒤 GLIM (팀장 11/19 17:59 확정)</title>
+<desc id="sl-desc">L2 라이다와 IMU 가 두 길로 간다. 걷는 중에는 Jetson Orin NX 의 CPU 에서 Point-LIO 가 실시간 위치와 국소 지도를 만들어 발밑 높이 지도와 앱 실시간 3D 로 보낸다. 임무 뒤에는 녹화를 학습 PC 또는 서버의 GPU 에서 GLIM 으로 돌려 루프를 닫고 일관된 전역 지도를 만들어 임무 기록과 다음 임무 계획에 쓴다. GLIM 은 GPU 를 써 정책과 다투므로 걷는 중에는 돌리지 않는다. 지금은 odom 을 그대로 쌓은 1 차 지도만 있고 SLAM 은 아니다.</desc>
+<defs><marker id="sl-arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#4f5d75"/></marker><marker id="sl-accent" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#bf4520"/></marker></defs>
+<rect width="100%" height="100%" fill="#f5f5f5"/>
+<rect x="232" y="56" width="1008" height="192" rx="8" fill="rgba(45,49,66,0.02)" stroke="rgba(45,49,66,0.12)" stroke-width="0.8"/><rect x="244" y="60" width="262" height="16" rx="2" fill="#f5f5f5"/><text x="248" y="72" fill="#5a6580" font-size="12" font-weight="500" font-family="'Geist', 'Noto Sans KR', 'Malgun Gothic', sans-serif">걷는 중 · Jetson Orin NX 16GB · CPU · 실시간</text>
+<rect x="232" y="280" width="1008" height="176" rx="8" fill="rgba(45,49,66,0.02)" stroke="rgba(45,49,66,0.12)" stroke-width="0.8"/><rect x="244" y="284" width="262" height="16" rx="2" fill="#f5f5f5"/><text x="248" y="296" fill="#5a6580" font-size="12" font-weight="500" font-family="'Geist', 'Noto Sans KR', 'Malgun Gothic', sans-serif">임무 뒤 · 학습 PC 또는 서버 · GPU · 오프라인</text>
+<path d="M 208,240 H 220 V 160 H 256" fill="none" stroke="#bf4520" stroke-width="1.4" stroke-dasharray="6,4" marker-end="url(#sl-accent)"/>
+<path d="M 208,296 H 220 V 376 H 256" fill="none" stroke="#4f5d75" stroke-width="1" marker-end="url(#sl-arrow)"/>
+<path d="M 456,160 H 496" fill="none" stroke="#bf4520" stroke-width="1.4" stroke-dasharray="6,4" marker-end="url(#sl-accent)"/>
+<path d="M 696,160 H 716 V 122 H 736" fill="none" stroke="#bf4520" stroke-width="1.4" stroke-dasharray="6,4" marker-end="url(#sl-accent)"/>
+<path d="M 716,160 V 198 H 736" fill="none" stroke="#bf4520" stroke-width="1.4" stroke-dasharray="6,4" marker-end="url(#sl-accent)"/>
+<path d="M 456,376 H 496" fill="none" stroke="#bf4520" stroke-width="1.4" stroke-dasharray="6,4" marker-end="url(#sl-accent)"/>
+<path d="M 696,376 H 736" fill="none" stroke="#bf4520" stroke-width="1.4" stroke-dasharray="6,4" marker-end="url(#sl-accent)"/>
+<path d="M 956,376 H 996" fill="none" stroke="#bf4520" stroke-width="1.4" stroke-dasharray="6,4" marker-end="url(#sl-accent)"/>
+<path d="M 956,122 H 976 V 160 H 996" fill="none" stroke="#bf4520" stroke-width="1.4" stroke-dasharray="6,4" marker-end="url(#sl-accent)"/>
+<path d="M 956,198 H 976 V 160" fill="none" stroke="#bf4520" stroke-width="1.4" stroke-dasharray="6,4"/>
+<rect x="512" y="258" width="168" height="16" rx="2" fill="#bf4520"/><text x="596" y="270" fill="#ffffff" font-size="9.5" font-weight="600" font-family="'Geist', 'Noto Sans KR', 'Malgun Gothic', sans-serif" text-anchor="middle">GPU 를 정책과 다툼 · 걷는 중 안 돌림</text>
+<rect x="40" y="200" width="168" height="136" rx="6" fill="#f5f5f5"/>
+<rect x="40" y="200" width="168" height="136" rx="6" fill="rgba(45,49,66,0.03)" stroke="rgba(45,49,66,0.40)" stroke-width="1"/>
+<rect x="46" y="205" width="25" height="12" rx="2" fill="#ffffff" stroke="#5a6580" stroke-opacity="0.6" stroke-width="0.8"/>
+<text x="58.5" y="214" fill="#5a6580" font-size="8.5" font-weight="600" font-family="'Geist', 'Noto Sans KR', 'Malgun Gothic', sans-serif" text-anchor="middle">센서</text>
+<text x="124" y="262" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', 'Noto Sans KR', 'Malgun Gothic', sans-serif" text-anchor="middle">L2 라이다 + IMU</text>
+<text x="124" y="276" fill="#4f5d75" font-size="9.5" font-weight="400" font-family="'Geist Mono', ui-monospace, Consolas, monospace" text-anchor="middle">/utlidar/cloud 15.4 Hz</text>
+<text x="124" y="289" fill="#4f5d75" font-size="9.5" font-weight="400" font-family="'Geist Mono', ui-monospace, Consolas, monospace" text-anchor="middle">IMU Hz 는 안 잼</text>
+<text x="124" y="302" fill="#4f5d75" font-size="9.5" font-weight="400" font-family="'Geist Mono', ui-monospace, Consolas, monospace" text-anchor="middle">(Go2 X 본체)</text>
+<rect x="256" y="96" width="200" height="128" rx="6" fill="#f5f5f5"/>
+<rect x="256" y="96" width="200" height="128" rx="6" fill="rgba(191,69,32,0.04)" stroke="#bf4520" stroke-width="1.3" stroke-dasharray="6,4"/>
+<rect x="262" y="101" width="25" height="12" rx="2" fill="#ffffff" stroke="#bf4520" stroke-opacity="0.6" stroke-width="0.8" stroke-dasharray="6,4"/>
+<text x="274.5" y="110" fill="#bf4520" font-size="8.5" font-weight="600" font-family="'Geist', 'Noto Sans KR', 'Malgun Gothic', sans-serif" text-anchor="middle">계획</text>
+<text x="356" y="147.5" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', 'Noto Sans KR', 'Malgun Gothic', sans-serif" text-anchor="middle">Point-LIO</text>
+<text x="356" y="161.5" fill="#4f5d75" font-size="9.5" font-weight="400" font-family="'Geist Mono', ui-monospace, Consolas, monospace" text-anchor="middle">점 하나씩 IMU 와 맞춤</text>
+<text x="356" y="174.5" fill="#4f5d75" font-size="9.5" font-weight="400" font-family="'Geist Mono', ui-monospace, Consolas, monospace" text-anchor="middle">CPU · 실시간</text>
+<text x="356" y="187.5" fill="#4f5d75" font-size="9.5" font-weight="400" font-family="'Geist Mono', ui-monospace, Consolas, monospace" text-anchor="middle">L2 공식 예시는 ROS1</text>
+<text x="356" y="200.5" fill="#4f5d75" font-size="9.5" font-weight="400" font-family="'Geist Mono', ui-monospace, Consolas, monospace" text-anchor="middle">ROS2 길은 미확인</text>
+<rect x="496" y="96" width="200" height="128" rx="6" fill="#f5f5f5"/>
+<rect x="496" y="96" width="200" height="128" rx="6" fill="rgba(191,69,32,0.04)" stroke="#bf4520" stroke-width="1.3" stroke-dasharray="6,4"/>
+<rect x="502" y="101" width="25" height="12" rx="2" fill="#ffffff" stroke="#bf4520" stroke-opacity="0.6" stroke-width="0.8" stroke-dasharray="6,4"/>
+<text x="514.5" y="110" fill="#bf4520" font-size="8.5" font-weight="600" font-family="'Geist', 'Noto Sans KR', 'Malgun Gothic', sans-serif" text-anchor="middle">계획</text>
+<text x="596" y="160.5" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', 'Noto Sans KR', 'Malgun Gothic', sans-serif" text-anchor="middle">실시간 위치 · 국소 지도</text>
+<text x="596" y="174.5" fill="#4f5d75" font-size="9.5" font-weight="400" font-family="'Geist Mono', ui-monospace, Consolas, monospace" text-anchor="middle">걸음 충격에도 덜 흐름</text>
+<text x="596" y="187.5" fill="#4f5d75" font-size="9.5" font-weight="400" font-family="'Geist Mono', ui-monospace, Consolas, monospace" text-anchor="middle">(흐름은 같은 녹화로 잼)</text>
+<rect x="736" y="92" width="220" height="60" rx="6" fill="#f5f5f5"/>
+<rect x="736" y="92" width="220" height="60" rx="6" fill="rgba(191,69,32,0.04)" stroke="#bf4520" stroke-width="1.3" stroke-dasharray="6,4"/>
+<rect x="742" y="97" width="25" height="12" rx="2" fill="#ffffff" stroke="#bf4520" stroke-opacity="0.6" stroke-width="0.8" stroke-dasharray="6,4"/>
+<text x="754.5" y="106" fill="#bf4520" font-size="8.5" font-weight="600" font-family="'Geist', 'Noto Sans KR', 'Malgun Gothic', sans-serif" text-anchor="middle">계획</text>
+<text x="846" y="129" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', 'Noto Sans KR', 'Malgun Gothic', sans-serif" text-anchor="middle">발밑 높이 지도</text>
+<text x="846" y="143" fill="#4f5d75" font-size="9.5" font-weight="400" font-family="'Geist Mono', ui-monospace, Consolas, monospace" text-anchor="middle">정책 입력의 바탕</text>
+<rect x="736" y="168" width="220" height="60" rx="6" fill="#f5f5f5"/>
+<rect x="736" y="168" width="220" height="60" rx="6" fill="rgba(191,69,32,0.04)" stroke="#bf4520" stroke-width="1.3" stroke-dasharray="6,4"/>
+<rect x="742" y="173" width="25" height="12" rx="2" fill="#ffffff" stroke="#bf4520" stroke-opacity="0.6" stroke-width="0.8" stroke-dasharray="6,4"/>
+<text x="754.5" y="182" fill="#bf4520" font-size="8.5" font-weight="600" font-family="'Geist', 'Noto Sans KR', 'Malgun Gothic', sans-serif" text-anchor="middle">계획</text>
+<text x="846" y="205" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', 'Noto Sans KR', 'Malgun Gothic', sans-serif" text-anchor="middle">앱 실시간 3D</text>
+<text x="846" y="219" fill="#4f5d75" font-size="9.5" font-weight="400" font-family="'Geist Mono', ui-monospace, Consolas, monospace" text-anchor="middle">지도 델타를 앱으로</text>
+<rect x="996" y="96" width="228" height="128" rx="6" fill="#ffffff" stroke="rgba(45,49,66,0.18)" stroke-width="0.8"/>
+<text x="1008" y="116" fill="#bf4520" font-size="11" font-weight="600" font-family="'Geist', 'Noto Sans KR', 'Malgun Gothic', sans-serif">왜 · 서비스 가치</text>
+<text x="1008" y="134" fill="#2d3142" font-size="11" font-family="'Geist', 'Noto Sans KR', 'Malgun Gothic', sans-serif">화면의 지도가 실제와 같다는 신뢰</text>
+<text x="1008" y="149" fill="#2d3142" font-size="11" font-family="'Geist', 'Noto Sans KR', 'Malgun Gothic', sans-serif">발 놓을 자리를 정책이 믿고 씀</text>
+<text x="1008" y="164" fill="#2d3142" font-size="11" font-family="'Geist', 'Noto Sans KR', 'Malgun Gothic', sans-serif">사람이 화면만 보고 조종해도</text>
+<text x="1008" y="179" fill="#2d3142" font-size="11" font-family="'Geist', 'Noto Sans KR', 'Malgun Gothic', sans-serif">로봇 자리가 맞음</text>
+<rect x="256" y="316" width="200" height="120" rx="6" fill="#f5f5f5"/>
+<rect x="256" y="316" width="200" height="120" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+<rect x="262" y="321" width="25" height="12" rx="2" fill="#ffffff" stroke="#2d3142" stroke-opacity="0.6" stroke-width="0.8"/>
+<text x="274.5" y="330" fill="#2d3142" font-size="8.5" font-weight="600" font-family="'Geist', 'Noto Sans KR', 'Malgun Gothic', sans-serif" text-anchor="middle">있음</text>
+<text x="356" y="370" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', 'Noto Sans KR', 'Malgun Gothic', sans-serif" text-anchor="middle">녹화 (bag)</text>
+<text x="356" y="384" fill="#4f5d75" font-size="9.5" font-weight="400" font-family="'Geist Mono', ui-monospace, Consolas, monospace" text-anchor="middle">L2 · IMU · odom</text>
+<text x="356" y="397" fill="#4f5d75" font-size="9.5" font-weight="400" font-family="'Geist Mono', ui-monospace, Consolas, monospace" text-anchor="middle">walk_record.sh</text>
+<text x="356" y="410" fill="#4f5d75" font-size="9.5" font-weight="400" font-family="'Geist Mono', ui-monospace, Consolas, monospace" text-anchor="middle">(Jetson → 학습 PC)</text>
+<rect x="496" y="316" width="200" height="120" rx="6" fill="#f5f5f5"/>
+<rect x="496" y="316" width="200" height="120" rx="6" fill="rgba(191,69,32,0.04)" stroke="#bf4520" stroke-width="1.3" stroke-dasharray="6,4"/>
+<rect x="502" y="321" width="25" height="12" rx="2" fill="#ffffff" stroke="#bf4520" stroke-opacity="0.6" stroke-width="0.8" stroke-dasharray="6,4"/>
+<text x="514.5" y="330" fill="#bf4520" font-size="8.5" font-weight="600" font-family="'Geist', 'Noto Sans KR', 'Malgun Gothic', sans-serif" text-anchor="middle">계획</text>
+<text x="596" y="370" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', 'Noto Sans KR', 'Malgun Gothic', sans-serif" text-anchor="middle">GLIM</text>
+<text x="596" y="384" fill="#4f5d75" font-size="9.5" font-weight="400" font-family="'Geist Mono', ui-monospace, Consolas, monospace" text-anchor="middle">GPU · 루프 닫기</text>
+<text x="596" y="397" fill="#4f5d75" font-size="9.5" font-weight="400" font-family="'Geist Mono', ui-monospace, Consolas, monospace" text-anchor="middle">여러 번 지난 곳을 맞춤</text>
+<text x="596" y="410" fill="#4f5d75" font-size="9.5" font-weight="400" font-family="'Geist Mono', ui-monospace, Consolas, monospace" text-anchor="middle">걷는 중에는 안 돌림</text>
+<rect x="736" y="316" width="220" height="120" rx="6" fill="#f5f5f5"/>
+<rect x="736" y="316" width="220" height="120" rx="6" fill="rgba(191,69,32,0.04)" stroke="#bf4520" stroke-width="1.3" stroke-dasharray="6,4"/>
+<rect x="742" y="321" width="25" height="12" rx="2" fill="#ffffff" stroke="#bf4520" stroke-opacity="0.6" stroke-width="0.8" stroke-dasharray="6,4"/>
+<text x="754.5" y="330" fill="#bf4520" font-size="8.5" font-weight="600" font-family="'Geist', 'Noto Sans KR', 'Malgun Gothic', sans-serif" text-anchor="middle">계획</text>
+<text x="846" y="376.5" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', 'Noto Sans KR', 'Malgun Gothic', sans-serif" text-anchor="middle">일관된 한 장 전역 지도</text>
+<text x="846" y="390.5" fill="#4f5d75" font-size="9.5" font-weight="400" font-family="'Geist Mono', ui-monospace, Consolas, monospace" text-anchor="middle">어긋남을 고리로 보정</text>
+<text x="846" y="403.5" fill="#4f5d75" font-size="9.5" font-weight="400" font-family="'Geist Mono', ui-monospace, Consolas, monospace" text-anchor="middle">임무 전체를 한 좌표로</text>
+<rect x="996" y="316" width="228" height="120" rx="6" fill="#ffffff" stroke="rgba(45,49,66,0.18)" stroke-width="0.8"/>
+<text x="1008" y="336" fill="#bf4520" font-size="11" font-weight="600" font-family="'Geist', 'Noto Sans KR', 'Malgun Gothic', sans-serif">왜 · 서비스 가치</text>
+<text x="1008" y="354" fill="#2d3142" font-size="11" font-family="'Geist', 'Noto Sans KR', 'Malgun Gothic', sans-serif">임무 기록 · 보고에 쓰는 한 장 지도</text>
+<text x="1008" y="369" fill="#2d3142" font-size="11" font-family="'Geist', 'Noto Sans KR', 'Malgun Gothic', sans-serif">다음 임무 계획 (경로 · 지점)</text>
+<text x="1008" y="384" fill="#2d3142" font-size="11" font-family="'Geist', 'Noto Sans KR', 'Malgun Gothic', sans-serif">같은 곳 재방문 · 바뀐 곳 찾기</text>
+<rect x="40" y="480" width="584" height="64" rx="6" fill="#f5f5f5"/>
+<rect x="40" y="480" width="584" height="64" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+<rect x="46" y="485" width="25" height="12" rx="2" fill="#ffffff" stroke="#2d3142" stroke-opacity="0.6" stroke-width="0.8"/>
+<text x="58.5" y="494" fill="#2d3142" font-size="8.5" font-weight="600" font-family="'Geist', 'Noto Sans KR', 'Malgun Gothic', sans-serif" text-anchor="middle">있음</text>
+<text x="332" y="519" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', 'Noto Sans KR', 'Malgun Gothic', sans-serif" text-anchor="middle">지금 (11/19): odom 그대로 쌓은 방 지도 1 차</text>
+<text x="332" y="533" fill="#4f5d75" font-size="9.5" font-weight="400" font-family="'Geist Mono', ui-monospace, Consolas, monospace" text-anchor="middle">cloud_deskewed 7016 장 · SLAM 아님 · 고리 닫기 없음</text>
+<rect x="656" y="480" width="568" height="64" rx="6" fill="#f5f5f5"/>
+<rect x="656" y="480" width="568" height="64" rx="6" fill="rgba(191,69,32,0.04)" stroke="#bf4520" stroke-width="1.3" stroke-dasharray="6,4"/>
+<rect x="662" y="485" width="25" height="12" rx="2" fill="#ffffff" stroke="#bf4520" stroke-opacity="0.6" stroke-width="0.8" stroke-dasharray="6,4"/>
+<text x="674.5" y="494" fill="#bf4520" font-size="8.5" font-weight="600" font-family="'Geist', 'Noto Sans KR', 'Malgun Gothic', sans-serif" text-anchor="middle">계획</text>
+<text x="940" y="519" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', 'Noto Sans KR', 'Malgun Gothic', sans-serif" text-anchor="middle">견줄 후보 FAST-LIO2 · DLIO</text>
+<text x="940" y="533" fill="#4f5d75" font-size="9.5" font-weight="400" font-family="'Geist Mono', ui-monospace, Consolas, monospace" text-anchor="middle">Point-LIO · GLIM 과 같은 녹화로 재서 고름 (아래 측정 표)</text>
+<line x1="40" y1="572" x2="56" y2="572" stroke="#bf4520" stroke-width="1"/><text x="64" y="576" fill="#4f5d75" font-size="14" font-family="'Instrument Serif', 'Noto Serif KR', serif">L2 와 IMU 는 하나지만 길은 둘이다. 걷는 동안은 가볍고 빠른 쪽 (Point-LIO · CPU), 임무가 끝나면 무겁고 정확한 쪽 (GLIM · GPU).</text>
+<line x1="40" y1="596" x2="56" y2="596" stroke="#bf4520" stroke-width="1"/><text x="64" y="600" fill="#4f5d75" font-size="14" font-family="'Instrument Serif', 'Noto Serif KR', serif">GLIM 은 GPU 를 써서 Jetson 에서 함께 도는 정책과 다투므로 걷는 중에는 돌리지 않는다 (팀장 17:59 확정).</text>
+<line x1="40" y1="616" x2="1240" y2="616" stroke="rgba(45,49,66,0.10)" stroke-width="0.8"/>
+<text x="40" y="632" fill="#4f5d75" font-size="9" font-family="'Geist Mono', ui-monospace, Consolas, monospace" letter-spacing="0.14em">범례</text>
+<rect x="40" y="644" width="22" height="12" rx="2" fill="#ffffff" stroke="#2d3142" stroke-width="1.2"/>
+<text x="70" y="654" fill="#4f5d75" font-size="12" font-weight="500" font-family="'Geist', 'Noto Sans KR', 'Malgun Gothic', sans-serif">있음 (코드 · 녹화)</text>
+<rect x="209.6" y="644" width="22" height="12" rx="2" fill="rgba(191,69,32,0.04)" stroke="#bf4520" stroke-width="1.2" stroke-dasharray="4,3"/>
+<text x="239.6" y="654" fill="#4f5d75" font-size="12" font-weight="500" font-family="'Geist', 'Noto Sans KR', 'Malgun Gothic', sans-serif">계획 · 만들 것</text>
+<rect x="354.0" y="644" width="22" height="12" rx="2" fill="rgba(45,49,66,0.03)" stroke="rgba(45,49,66,0.40)" stroke-width="1.2"/>
+<text x="384.0" y="654" fill="#4f5d75" font-size="12" font-weight="500" font-family="'Geist', 'Noto Sans KR', 'Malgun Gothic', sans-serif">센서 (Unitree)</text>
+</svg></div>
+<div class="table-wrap"><table><thead><tr><th>갈래</th><th>어디서 · 언제</th><th>내는 것</th><th>서비스 가치</th><th>상태</th></tr></thead><tbody>
+<tr><td>Point-LIO</td><td>Jetson Orin NX 16GB · CPU · 걷는 동안</td><td>실시간 위치 · 국소 지도 → 발밑 높이 지도 · 앱 실시간 3D</td><td>사족보행 걸음 충격에도 덜 흐르는 실시간 지도 = 화면 지도가 실제와 같다는 신뢰 · 정책 입력의 바탕</td><td><span class="tag plan">계획</span> 팀장 확정</td></tr>
+<tr><td>GLIM</td><td>학습 PC 또는 서버 · GPU · 임무 뒤 (걷는 중 안 돌림)</td><td>루프 닫기 · 일관된 전역 지도</td><td>일관된 한 장 지도 = 임무 기록 · 보고 · 다음 임무 계획 · 재방문</td><td><span class="tag plan">계획</span> 팀장 확정</td></tr>
+<tr><td>FAST-LIO2 · DLIO</td><td>견줄 후보</td><td>같은 녹화로 재서 Point-LIO 와 견줌</td><td>재 본 뒤 팀장 결정</td><td>후보</td></tr>
+<tr><td>지금 방 지도</td><td>학습 PC (녹화 뒤 계산)</td><td><code>cloud_deskewed</code> 를 <code>odom</code> 그대로 쌓은 위에서 본 그림</td><td>1 차 확인용</td><td><span class="tag code">있음</span> SLAM 아님</td></tr>
+</tbody></table></div>
+<ul>
+<li><b>GLIM 을 걷는 중에 안 돌리는 까닭.</b> GLIM 은 GPU 를 쓰므로 Jetson 에서 걷는 중에 돌리면 정책과 GPU 를 다툰다 (팀장 17:59). 그래서 임무 뒤에 학습 PC 또는 서버에서 돌린다.</li>
+<li><b>ROS2 길.</b> L2 공식 Point-LIO 예시는 ROS1 이다. Jetson 은 ROS 2 (Humble) 라서 ROS2 로 돌리는 길은 미확인이고 먼저 확인한다.</li>
+<li><b>앱으로 가는 것.</b> 앱에는 전체 점구름이 아니라 지도 델타 (새로 바뀐 칸) 를 보낸다. 얼마나 되는지는 아래 표에서 잰다.</li>
+</ul>
+</section>
+
 <section class="fig">
 <p class="eyebrow">숫자와 근거</p>
 <h2>그림에 쓴 값과 그 출처</h2>
@@ -1046,6 +1175,8 @@ footer p { max-width: none; font-size: 0.72rem; }
 <tr><td>알림 코드</td><td><code>BATTERY_LOW</code> (잔량 &lt; <code>battery_low_pct</code>) · <code>STOP_PRESSED</code> · <code>SERVER_LINK_LOST</code> · <code>LINK_LOSS_TIMEOUT</code> 이 SAFETY 분류</td><td><span class="grade">코드</span></td><td><code>fh_server/robots.py:92-93</code> · <code>fh_server/event_messages.py:162</code> (거울 <code>130b6f06</code>)</td></tr>
 <tr><td>관절 온도 읽기</td><td>관절 12 · 배터리 4 · IMU · 몸 2 온도를 상태에 실음 (표시 전용 · STOP · lease 입력 아님). reserve 와 문턱 판정은 없음</td><td><span class="grade">코드</span></td><td><code>apps/contracts/models.py:345-365</code> · <code>go2_readonly/state.py:30-44</code> (거울 <code>130b6f06</code> · <code>89d2a221</code> 에는 없음)</td></tr>
 <tr><td>배터리 빠르기</td><td>걷기 약 0.86 %/분 · 서기 약 0.55 %/분 (11/19 새벽 한 번) · 20 % 에서 약 23 · 36 분은 이것으로 나눈 어림</td><td><span class="grade">기록</span></td><td><code>GO2X-JETSON-SETUP-1119.md</code> 8 절</td></tr>
+<tr><td>SLAM 두 갈래</td><td>걷는 중 Point-LIO (Jetson · CPU) · 임무 뒤 GLIM (학습 PC 또는 서버 · GPU) · 견줄 후보 FAST-LIO2 · DLIO</td><td><span class="grade">결정 · 승인</span></td><td>팀장 11/19 17:59 (lead 전달)</td></tr>
+<tr><td>Jetson 보드</td><td>NVIDIA Jetson Orin NX 16GB (AVerMedia NX215B)</td><td><span class="grade">기록</span></td><td><code>inbox/jay/20261117-go2-x-jetson-field-intake.md</code> (device tree model)</td></tr>
 <tr><td>앱 네 모드 설계</td><td>① 순정 · ② AME-2 · ③ START + HiPAN · ④ 시뮬만</td><td><span class="grade">결정 · 승인</span></td><td>결정 기록 2 절 (팀장 11/19 00:21)</td></tr>
 </tbody></table></div>
 </section>
@@ -1065,6 +1196,18 @@ footer p { max-width: none; font-size: 0.72rem; }
 <li>순정 깨우는 말을 「Hey, X」 로 바꿀 수 있는지 · 로봇 스피커로 우리 문구를 내는 길 (이민우 시험).</li>
 <li>시끄러운 곳 (발표장 · 학원) 에서 알아듣는 비율 · 말이 나오기까지 걸리는 시간.</li>
 </ul>
+<h3 id="measure-slam">다음 측정할 것 · 제원 부담 (SLAM · 지도 · 앱 지연)</h3>
+<p>팀장 17:59 「제원 부담 및 측정할 것」. 숫자는 아직 재지 않았다. 합격 기준은 모두 미정 (팀장 결정) 이고, 담당 칸은 비워 둔다.</p>
+<div class="table-wrap"><table><thead><tr><th>무엇</th><th>어떻게</th><th>어디서</th><th>합격 기준</th><th style="min-width:4.5rem">담당</th></tr></thead><tbody>
+<tr><td>알고리즘별 흐름 (시작 · 끝 자리 차, m)</td><td>방 걷기 녹화 (11/19 05:20) 를 Point-LIO · GLIM · FAST-LIO2 · DLIO 에 같은 입력으로 넣고 시작 · 끝 자리 차를 잼. 05:20 녹화는 141 초에 본체 토픽이 모두 끊겼으므로 (GO2X 문서 8 절) 쓸 수 있는 구간부터 확인</td><td>학습 PC</td><td>미정 (팀장 결정)</td><td></td></tr>
+<tr><td>Point-LIO 부담: CPU 코어 몫 · 메모리 · 스캔당 처리 시간 (ms)</td><td>정책이 같이 도는 상태에서 잼. 관절 · 보드 온도를 같이 기록</td><td>Jetson Orin NX</td><td>미정 (팀장 결정)</td><td></td></tr>
+<tr><td>걷기 대 서기의 흐름 차 (걸음 충격)</td><td>같은 녹화에서 서 있는 구간과 걷는 구간의 흐름을 나눠 잼</td><td>학습 PC</td><td>미정 (팀장 결정)</td><td></td></tr>
+<tr><td>L2 점 속도 · IMU 속도 (토픽 Hz)</td><td>토픽 Hz 실측. 이미 잰 것: <code>/utlidar/cloud</code> 15.4 Hz · <code>cloud_deskewed</code> 13.6 Hz · <code>robot_odom</code> 146 Hz (GO2X 문서 2 · 5 절). IMU 토픽 Hz 는 안 잼</td><td>Jetson</td><td>미정 (팀장 결정)</td><td></td></tr>
+<tr><td>Jetson 이 찍은 시각에서 브라우저 화면까지 지연 p50 · p95 (ms)</td><td>시계 맞춤 포함. 현민 화면에서 눈으로 본 10~30 ms (lead 전달 · 잰 값 아님) 를 숫자로</td><td>Jetson → 앱 서버 → 브라우저</td><td>미정 (팀장 결정)</td><td></td></tr>
+<tr><td>지도 델타 전송량 (bytes/s)</td><td>앱으로 보내는 지도 델타를 걷는 동안 셈</td><td>Jetson → 앱 서버</td><td>미정 (팀장 결정)</td><td></td></tr>
+<tr><td>지도 기록 1 시간당 GB</td><td>보관 일 수 계산용. 녹화 크기 참고: 깊이 원본 포함 녹화는 약 18 MB/초 (GO2X 문서 7 절), 지도 기록만의 크기는 안 잼</td><td>학습 PC 또는 서버</td><td>미정 (팀장 결정)</td><td></td></tr>
+<tr><td>GLIM 10 분 임무 처리 시간 · GPU 메모리</td><td>10 분 녹화 하나를 GLIM 에 넣고 걸린 시간과 GPU 메모리 최대값</td><td>학습 PC</td><td>미정 (팀장 결정)</td><td></td></tr>
+</tbody></table></div>
 </section>
 
 <footer>
