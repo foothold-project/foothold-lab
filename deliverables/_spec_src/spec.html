@@ -28,6 +28,8 @@
   --perf-axis-col: 32mm;     /* 축 */
   --perf-result-col: 54mm;   /* 결과 */
   /* 간격 */
+  --cover-gap: 2.6mm;        /* 제목 묶음과 목차 사이 */
+  --toc-gap: 3.4mm;          /* 목차와 1. 팀 소개 사이 */
   --section-gap: 5.3mm;      /* 절 사이 */
   --table-gap: 2.6mm;        /* 표와 표 사이 */
   --h3-gap: 4.5mm;           /* 소제목 위 간격 */
@@ -49,7 +51,8 @@ a { color: var(--accent); text-decoration: none; border-bottom: 0.4pt solid var(
 .page:last-child { break-after: auto; }
 h1 { font-size: var(--font-h1); font-weight: 760; margin: 0 0 1.2mm; letter-spacing: -0.01em; line-height: 1.28; }
 .kicker { font-size: 8pt; color: var(--accent); font-weight: 680; letter-spacing: 0.08em; margin-bottom: 1mm; }
-.cover { border-top: 2.4pt solid var(--accent); padding-top: 3.2mm; margin-bottom: 2.6mm; }
+.cover { border-top: 2.4pt solid var(--accent); padding-top: 3.2mm; margin-bottom: var(--cover-gap); }
+.toc-title { font-size: var(--font-h2); font-weight: 730; margin: 0 0 1.2mm; padding-bottom: 1.1mm; border-bottom: 0.7pt solid var(--accent); }
 .lede { color: var(--sub); font-size: var(--font-body); margin: 0; }
 h2 { font-size: var(--font-h2); font-weight: 730; margin: 0 0 2mm; padding-bottom: 1.1mm; border-bottom: 0.7pt solid var(--accent); }
 h2 .no { color: var(--accent); margin-right: 2mm; }
@@ -120,6 +123,7 @@ ul.tight li { margin: 0; }
     <p class="lede">물리 시뮬레이터에서 강화학습으로 만든 Go2 보행 정책 두 개 (START 기반 · AME-2 기반) 의 가중치와 학습 설정을 제출합니다.</p>
   </div>
 
+  <div class="toc-title">목차</div>
   <table class="toc">
     <tr><td class="n">1</td><td class="t">팀 소개</td><td class="d">두 축으로 나눈 팀 구성 · 팀원별 포지션과 역할 및 업무</td><td class="p">1 쪽</td></tr>
     <tr><td class="n">2</td><td class="t">산출물 개요</td><td class="d">강화학습 데이터 산출물의 성격 · ZIP 안 파일 7 개와 두 정책 요약</td><td class="p">1 쪽</td></tr>
@@ -129,7 +133,7 @@ ul.tight li { margin: 0; }
     <tr><td class="n">6</td><td class="t">파일 검증 및 활용 방법</td><td class="d">받기 · 무결성 확인 · PyTorch 로드 · 설정 읽기 · 시뮬레이터 재현</td><td class="p">4 쪽</td></tr>
   </table>
 
-  <div class="sec" style="margin-top:3.4mm">
+  <div class="sec" style="margin-top:var(--toc-gap)">
     <h2><span class="no">1.</span>팀 소개</h2>
     <table>
       <tr><td class="k">과정명</td><td>인공지능사관학교 7기 AI 도약과정</td><td class="k" style="width:20mm">팀명</td><td style="width:40mm">FOOTHOLD (실증-02)</td></tr>
@@ -367,6 +371,8 @@ state = ame2["go2_env_state"]              # 완료 회차 · 출발 저장본 �
     ["--perf-axis-col", "축 열 폭", 20, 45, 0.5, "mm"],
     ["--perf-result-col", "결과 열 폭", 40, 95, 0.5, "mm"],
     ["간격", null],
+    ["--cover-gap", "제목 ↔ 목차", 0, 12, 0.1, "mm"],
+    ["--toc-gap", "목차 ↔ 1. 팀 소개", 0, 12, 0.1, "mm"],
     ["--section-gap", "절 사이", 0, 10, 0.1, "mm"],
     ["--h3-gap", "소제목 위", 0, 6, 0.1, "mm"]
   ];
