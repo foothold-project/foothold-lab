@@ -267,7 +267,7 @@ def resample_ex39(gen, n, arm, yaw):
             "heading": heading, "psi_star": psi_star, "slot": slot}
 
 
-def resample_stage(gen, n, stage, yaw, stone_mask=None):
+def resample_stage(gen, n, stage, yaw, stone_mask=None, gap_mask=None):
     """W55: sample one immutable episode-stage profile from curriculum.yaml.
 
     The generator is the existing command generator. No new RNG stream or
@@ -334,6 +334,23 @@ def resample_stage(gen, n, stage, yaw, stone_mask=None):
             raise ValueError("stone_forward_floor must be below the top of the forward range")
         again = _u(gen, (n,), floor, r["forward_vx"][1])
         vx = torch.where(forward & stone_mask & (vx < floor), again, vx)
+    if getattr(stage, "gap_forward_kinds", ()) and gap_mask is not None:
+        # E2 gap candidate 2 (EX42_GAP_FWD_CMD_KINDS): an env on the listed columns takes the START command instead of its slot (S:225~233):
+        # vx ~ U[0, top of the forward range], vy = 0; vx < 0.3 becomes a turn in place (vx 0, wz ~ U[-1.2, 1.2]). START draws to 1.5 m/s; the top of
+        # our stage's forward range is our port (it keeps the plan's speed cap). Two extra draws, only while the cell is on, after every other draw:
+        # a stage without it is bit for bit the old sampler. Envs off the listed columns keep their slot command untouched.
+        g_vx = _u(gen, (n,), 0.0, r["forward_vx"][1])
+        g_wz = _u(gen, (n,), -1.2, 1.2)
+        turn = gap_mask & (g_vx < 0.3)
+        go = gap_mask & ~turn
+        vx = torch.where(go, g_vx, torch.where(turn, zeros, vx))
+        vy = torch.where(gap_mask, zeros, vy)
+        wz = torch.where(turn, g_wz, torch.where(go, zeros, wz))
+        slot = torch.where(go, torch.zeros_like(slot), torch.where(turn, torch.where(g_wz >= 0, torch.full_like(slot, 3), torch.full_like(slot, 4)), slot))
+        stand = stand & ~gap_mask
+        spin = (spin & ~gap_mask) | turn
+        heading = heading & ~gap_mask
+        psi_star = torch.where(gap_mask, zeros, psi_star)
     return {"cmd": torch.stack([vx, vy, wz], dim=1), "stand": stand, "spin": spin,
             "heading": heading, "psi_star": psi_star, "slot": slot}
 

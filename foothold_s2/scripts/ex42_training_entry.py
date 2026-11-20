@@ -308,6 +308,9 @@ def prepare_e0_env_cfg(env_cfg: Any, plan: EX42Plan, mesh_dir: str | Path, stage
         if switches["min_kinds"]:
             from foothold_s2.rewards import start_rewards
             track_func = start_rewards.track_lin_vel_min_on_columns
+        elif switches["min_fwd_kinds"]:
+            from foothold_s2.rewards import start_rewards
+            track_func = start_rewards.track_lin_vel_min_fwd_on_columns
         gap_switches.apply_cfg(env_cfg, switches, track_func)
         print("EX42_GAP_SWITCHES " + json.dumps(gap_switches.receipt(switches)["gap_switches"], sort_keys=True), flush=True)
     return {**edge_receipt, **gap_switches.receipt(switches), "mesh_sha256": sha, "columns": len(table), "families": sorted(set(families)),
@@ -1253,6 +1256,12 @@ def make_ex42_stage_zero_plan_view(source_plan: Any, stage: Any,
             stage = replace(stage, stone_forward_floor=floor_value, stone_forward_floor_kinds=floor_kinds)
         elif os.environ.get("EX42_STONE_FWD_FLOOR_KINDS", "").strip():
             raise ValueError("EX42_STONE_FWD_FLOOR_KINDS needs EX42_STONE_FWD_FLOOR")
+        gap_fwd = tuple(k.strip() for k in os.environ.get("EX42_GAP_FWD_CMD_KINDS", "").split(",") if k.strip())   # E2 gap candidate 2: START command on these columns; unset = off
+        if gap_fwd:
+            if any(re.fullmatch(r"[A-F]/[a-z_0-9]+", k) is None for k in gap_fwd) or len(set(gap_fwd)) != len(gap_fwd):
+                raise ValueError("EX42_GAP_FWD_CMD_KINDS invalid (comma list of family/kind such as A/gaps, no duplicates)")
+            from dataclasses import replace
+            stage = replace(stage, gap_forward_kinds=gap_fwd)
         turn_first = row.get("flag_turn_first_rad")
         if turn_first is not None:
             if type(turn_first) not in (int, float) or isinstance(turn_first, bool) or not math.isfinite(turn_first) or not 0.1 <= turn_first <= 3.0:
