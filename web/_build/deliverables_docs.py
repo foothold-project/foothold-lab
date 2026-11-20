@@ -46,6 +46,7 @@ DOCS = [
     ('deliverables/midterm/twin-render.md', 'twin-render', 'MVP 중간발표 · 9월 30일'),
     ('deliverables/final/nav-report.md', 'nav-report', 'NAV 실기항법 · 11월 30일'),
     ('deliverables/final/final-report.md', 'final-report', '산출물 제출 · 12월 1일 13:00'),
+    ('deliverables/final/team-roles.md', 'team-roles', '산출물 제출 · 12월 1일 13:00'),
     ('deliverables/logs/progress-log.md', 'progress-log', '진행 기록'),
     ('deliverables/logs/mentoring-log.md', 'mentoring-log', '진행 기록'),
 ]
