@@ -14,6 +14,7 @@
 FOOTHOLD_UnitreeGo2_RL_Data_Deliverable/
 ├── README.md                 # 이 문서 (개요 · 재현 설명)
 ├── model_manifest.json       # 모델 버전 · 하이퍼파라미터 표준 명세
+├── FOOTHOLD_RL_Data_Deliverable_Spec.pdf  # 이 문서를 제출 양식으로 옮긴 PDF
 ├── 01_START_Baseline/
 │   ├── model_15500.pt        # START 기반 학습 체크포인트 (누적 15,500 iter)
 │   └── config_start.yaml     # 학습 환경 · 보상 함수 설정
