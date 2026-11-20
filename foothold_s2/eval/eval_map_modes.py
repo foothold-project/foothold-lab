@@ -387,6 +387,8 @@ def _save_env_arrays(mode, cname, vx, fw, al, dn, dt, start_xy, row, map_err=Non
 
 
 res = {"evaluation_friction": friction_receipt, "source_sha256": SOURCE_SHA256, "task": args.task, "checkpoint": args.checkpoint, "checkpoint_sha256": sha, "ex41_checkpoint_preparation": checkpoint_preparation, "envs": args.envs, "steps": S, "command_suite": args.command_suite, "commands": CMDS, "dr_off": dr_off, "curriculum_off": curriculum_off, "fixed_terrain": None, "terrain_set": args.terrain_set, "eval_seed": args.eval_seed, "ex42_mesh": args.ex42_mesh, "terrain_hash": {}, "modes": {}, "run_identity": _run_identity()}
+if args.ex42_mesh and 'beam_start_y' in args.ex42_mesh:
+    res['beam_start_y'] = dict(args.ex42_mesh['beam_start_y'], eval_seed=args.eval_seed)
 if args.crop_margin is not None:                                                                      # CPU 평가 전용 잘라 낸 메시: 영수증에 남긴다 (판정용 GPU 평가와 섞지 않는다)
     from foothold_s2.terrains import ex42_mesh_mount as _mm
     if not _mm.LAST_CROP_RECORD:
@@ -556,6 +558,8 @@ for mode in args.modes.split(","):
             if yaw0.abs().max().item() > 1.0e-3:
                 raise RuntimeError("넓힌 칸 평가: 시작 yaw 를 0 으로 맞추지 못했다(최대 %.4f rad)" % yaw0.abs().max().item())
             res["start_yaw_override"] = 0.0
+        from foothold_s2 import ex42_beam_start as beam_start
+        beam_start.record_start(res, raw, rollout_key)
         offset = (robot.data.root_pos_w[:, :2] - raw.scene.env_origins[:, :2]).abs().max().item()      # 로봇이 (고정한) 새 원점 근처에서 시작했는지: B 의 reset 은 원점 기준 x · y ±0.5 m
 
         if offset > START_OFFSET_MAX_M + 1.0e-3:

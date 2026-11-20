@@ -293,7 +293,7 @@ def prepare_e0_env_cfg(env_cfg: Any, plan: EX42Plan, mesh_dir: str | Path, stage
     env_cfg.scene.terrain.terrain_generator = mesh_file_generator_cfg(npz, sha)
     from foothold_s2.terrains.ex42_flags import attach_mesh_flags
     flag_table = attach_mesh_flags(env_cfg, npz, env_cfg.scene.terrain.terrain_generator.num_rows, len(table))
-    apply_column_reset(env_cfg, table)
+    reset_receipt = apply_column_reset(env_cfg, table) or {}
     wrapped = apply_column_push_gate(env_cfg, mask)
     edge_receipt = {} if edge is None else {"edge_masks_npz": str(npz), "edge_masks": {"columns": [int(c) for c in edge["columns"]], "kinds": edge["meta"]["kinds"],
                                                                                     "inner_cells": int(edge["inner"].sum()), "outer_cells": int(edge["outer"].sum())}}
@@ -310,7 +310,7 @@ def prepare_e0_env_cfg(env_cfg: Any, plan: EX42Plan, mesh_dir: str | Path, stage
             track_func = start_rewards.track_lin_vel_min_on_columns
         gap_switches.apply_cfg(env_cfg, switches, track_func)
         print("EX42_GAP_SWITCHES " + json.dumps(gap_switches.receipt(switches)["gap_switches"], sort_keys=True), flush=True)
-    return {**edge_receipt, **gap_switches.receipt(switches), "mesh_sha256": sha, "columns": len(table), "families": sorted(set(families)),
+    return {**reset_receipt, **edge_receipt, **gap_switches.receipt(switches), "mesh_sha256": sha, "columns": len(table), "families": sorted(set(families)),
             "exposure": exposure, "level_caps": level_caps, "shares": shares, "low_floor": floor, "flag_table": flag_table,
             "continuous_level_cap": continuous_cap,      # None: the stage keeps the stage-zero promotion cap
             "k_ladder": {"boundary_index": boundary_index, "moves": ladder_receipt,
