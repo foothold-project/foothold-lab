@@ -140,7 +140,10 @@ def set_kind_shares(terrain: dict, shares: dict | None, add: dict | None, drop: 
             raise ValueError(f"--drop-kind {kind}: cannot also be added or given a share")
         report["dropped"][kind] = before[kind]
     rules = [r for r in rules if not ("kind" in r and "share" in r and f"{r['family']}/{r['kind']}" in report["dropped"])]
-    allowed_total = BUNDLE_TOTAL - sum(report["dropped"].values())
+    # A source plan that already had rows dropped (a re-entry from a re-entry: sparse total 0.28, not 0.44) and gets more rows dropped keeps its own total as the base;
+    # without a drop, or from a full 0.44 source, nothing changes (the bundle must still be 0.44).
+    base_total = sum(before.values()) if report["dropped"] and abs(sum(before.values()) - BUNDLE_TOTAL) > 1e-6 else BUNDLE_TOTAL
+    allowed_total = base_total - sum(report["dropped"].values())
     for kind, cap in (add or {}).items():
         family, _, name = kind.partition("/")
         if not family or not name or kind in before:

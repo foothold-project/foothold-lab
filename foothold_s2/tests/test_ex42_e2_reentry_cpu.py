@@ -232,3 +232,16 @@ def test_drop_kind_refuses_a_kind_that_is_not_a_row_or_is_also_given_a_share_and
         rd.set_kind_shares(_v1_terrain(), {"B/gap": 0.05}, None, ["B/gap"])
     with pytest.raises(ValueError, match="name the receiving kind"):
         rd.set_kind_shares(_v1_terrain(), {"A/gaps": 0.20}, None, ["B/gap"])          # one dropped, the rest not summing to 0.44 - 0.0533
+
+
+def test_drop_kind_from_a_source_that_already_dropped_rows_keeps_its_own_total_as_the_base():
+    """First-door split (lead 11/20 23:04): the new OUT's plan holds only A/gaps + A/balance_beams (0.28). Dropping one of them takes the sparse total to its own
+    share, the freed share goes to the continuous columns. The old strict 0.44 bundle rule still holds without a drop."""
+    base, _ = rd.set_kind_shares(_v1_terrain(), None, None, ["B/gap", "C/gap", "B/beam"])
+    out, report = rd.set_kind_shares(base, None, None, ["A/balance_beams"])
+    assert sorted(rd.rule_shares(out)) == ["A/gaps"] and report["total"] == pytest.approx(rd.rule_shares(base)["A/gaps"], abs=1e-9)
+    assert rd.rule_caps(out) == {"A/gaps": 1} and [r for r in out["exposure_at_E2"]["positive"] if "kinds_of" in r]
+    with pytest.raises(ValueError, match="bundle is 0.440000"):
+        rd.set_kind_shares(base, {"A/gaps": 0.14}, None)                                      # no drop: still the strict 0.44 rule on a 0.28 source
+    with pytest.raises(ValueError, match="no such single-kind share row"):
+        rd.set_kind_shares(out, None, None, ["A/balance_beams"])                              # already gone
