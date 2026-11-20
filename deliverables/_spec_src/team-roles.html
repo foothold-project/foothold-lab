@@ -1,0 +1,224 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>FOOTHOLD 팀 구성 정의서</title>
+<style>
+/* =====================================================================
+   조정 칸 · 여기 숫자만 바꾸고 render.sh 를 다시 돌리면 PDF 가 바뀐다
+   ===================================================================== */
+:root {
+  /* 글씨 */
+  --font-body: 8.5pt;        /* 본문 */
+  --font-table: 7.9pt;       /* 표 안 */
+  --font-small: 7.9pt;       /* 주석 · 부제 */
+  --font-h1: 16.5pt;         /* 제목 */
+  --font-h2: 11.2pt;         /* 절 제목 */
+  --font-h3: 9.4pt;          /* 소제목 */
+  --line-height: 1.38;       /* 줄 간격 */
+  /* 표 */
+  --table-line: 0.5pt;       /* 표 선 굵기 */
+  --cell-pad-y: 0.85mm;      /* 칸 안 위아래 여백 */
+  --cell-pad-x: 1mm;       /* 칸 안 좌우 여백 */
+  --key-col: 22mm;           /* 표 왼쪽 이름 칸 폭 */
+  /* 팀 표 열 폭 */
+  --team-name-col: 16mm;     /* 이름 */
+  --team-pos-col: 50mm;      /* 포지션 */
+  /* 산출물 1 성능 표 열 폭 */
+  --perf-axis-col: 32mm;     /* 축 */
+  --perf-result-col: 68mm;   /* 결과 */
+  /* 간격 */
+  --cover-gap: 5.5mm;        /* 제목 묶음과 목차 사이 */
+  --toc-gap: 5.5mm;          /* 목차와 1. 팀 소개 사이 */
+  --section-gap: 4.9mm;      /* 절 사이 */
+  --table-gap: 3.2mm;        /* 표와 표 사이 */
+  --h3-gap: 6mm;           /* 소제목 위 간격 */
+  --page-margin: 11mm 12mm 12mm 12mm;  /* 쪽 여백 (위 오른쪽 아래 왼쪽) · @page 줄도 같이 고칠 것 */
+  /* 색 */
+  --ink: #1c2329; --sub: #56616b; --line: #c9d0d6; --soft: #eef2f4; --key: #f6f8f9; --accent: #1f5a6e; --warn: #a3412c;
+}
+@page { size: A4; margin: 11mm 12mm 12mm 12mm;
+  @bottom-left { content: "FOOTHOLD · 팀 구성 · 역할 및 업무"; font-family: Pretendard; font-size: 7.2pt; color: #56616b; }
+  @bottom-right { content: counter(page) " / " counter(pages); font-family: Pretendard; font-size: 7.2pt; color: #56616b; } }
+/* ===================================================================== */
+
+@font-face { font-family: "Pretendard"; src: url("PretendardVariable.woff2") format("woff2"); font-weight: 100 900; }
+* { box-sizing: border-box; }
+html { background: #fff; }
+body { margin: 0; font-family: "Pretendard", "Noto Sans CJK KR", sans-serif; color: var(--ink); font-size: var(--font-body); line-height: var(--line-height); font-variant-numeric: tabular-nums; }
+a { color: var(--accent); text-decoration: none; border-bottom: 0.4pt solid var(--accent); }
+.page { break-after: page; }
+.page:last-child { break-after: auto; }
+h1 { font-size: var(--font-h1); font-weight: 760; margin: 0 0 1.2mm; letter-spacing: -0.01em; line-height: 1.28; }
+.kicker { font-size: 8pt; color: var(--accent); font-weight: 680; letter-spacing: 0.08em; margin-bottom: 1mm; }
+.cover { border-top: 2.4pt solid var(--accent); padding-top: 3.2mm; margin-bottom: var(--cover-gap); }
+.toc-title { font-size: var(--font-h2); font-weight: 730; margin: 0 0 1.2mm; padding-bottom: 1.1mm; border-bottom: 0.7pt solid var(--accent); }
+.lede { color: var(--sub); font-size: var(--font-body); margin: 0; }
+h2 { font-size: var(--font-h2); font-weight: 730; margin: 0 0 2mm; padding-bottom: 1.1mm; border-bottom: 0.7pt solid var(--accent); }
+h2 .no { color: var(--accent); margin-right: 2mm; }
+.sec { break-inside: avoid; }
+.sec + .sec { margin-top: var(--section-gap); }
+h3 { font-size: var(--font-h3); font-weight: 690; margin: var(--h3-gap) 0 1.2mm; }
+p { margin: 0 0 1.5mm; }
+table { width: 100%; border-collapse: collapse; margin: 0 0 var(--table-gap); font-size: var(--font-table); }
+
+/* ---------- 화면 미리보기 (인쇄 · PDF 에는 안 나옴) ---------- */
+@media screen {
+  html { background: #8f979e; }
+  body { padding: 8mm 360px 8mm 8mm; }
+  .page { width: 210mm; height: 297mm; padding: 11mm 12mm 12mm 12mm; margin: 0 auto 8mm; background: #fff; box-shadow: 0 2px 10px rgba(0,0,0,.35); position: relative; overflow: hidden; }
+  .page::after { content: attr(data-label); position: absolute; right: 12mm; bottom: 5mm; font-size: 7.2pt; color: #56616b; }
+  .page.over { outline: 2.5pt solid #d1342f; }
+  .page.over::before { content: "이 쪽 넘침 · 아래가 다음 쪽으로 밀림"; position: absolute; left: 12mm; bottom: 4.5mm; color: #fff; background: #d1342f; font-size: 8pt; padding: 0.6mm 2mm; z-index: 2; }
+  .fill { position: absolute; left: 0; top: 0; width: 4px; background: #1f5a6e; opacity: .55; }
+  #panel { position: fixed; top: 10px; right: 10px; width: 330px; max-height: calc(100vh - 20px); overflow: auto; background: #fff; border: 1px solid #c9d0d6; border-radius: 6px; padding: 10px 12px; font: 12px/1.4 Pretendard, sans-serif; box-shadow: 0 2px 12px rgba(0,0,0,.3); z-index: 10; }
+  #panel h4 { margin: 8px 0 4px; font-size: 12px; color: #1f5a6e; }
+  #panel label { display: grid; grid-template-columns: 112px 1fr 58px; gap: 6px; align-items: center; margin: 2px 0; }
+  #panel input[type=range] { width: 100%; }
+  #panel .v { text-align: right; font-variant-numeric: tabular-nums; color: #1c2329; }
+  #panel button { margin: 6px 4px 0 0; padding: 4px 8px; font: inherit; border: 1px solid #1f5a6e; background: #1f5a6e; color: #fff; border-radius: 4px; cursor: pointer; }
+  #panel button.alt { background: #fff; color: #1f5a6e; }
+  #panel .hint { color: #56616b; font-size: 11px; margin-top: 6px; }
+  #pages { font-weight: 700; }
+}
+@media print { #panel { display: none; } .fill { display: none; } }
+th, td { border: var(--table-line) solid var(--line); padding: var(--cell-pad-y) var(--cell-pad-x); vertical-align: top; text-align: left; }
+thead th { background: var(--soft); font-weight: 660; }
+td.k { width: var(--key-col); background: var(--key); color: var(--sub); font-weight: 620; }
+code, .mono { font-family: "DejaVu Sans Mono", "Pretendard", monospace; font-size: 7.6pt; }
+.hash { font-family: "DejaVu Sans Mono", monospace; font-size: 7.3pt; word-break: break-all; }
+pre { background: var(--soft); border: var(--table-line) solid var(--line); padding: 1.8mm 2.6mm; font-family: "DejaVu Sans Mono", "Pretendard", monospace; font-size: 7.2pt; line-height: 1.35; margin: 1mm 0 1.4mm; white-space: pre-wrap; }
+.note { color: var(--sub); font-size: var(--font-small); margin-bottom: 0; }
+ol.steps { padding-left: 4.5mm; margin: 0; }
+ol.steps > li { margin-bottom: 1.2mm; }
+ul.tight { margin: 0; padding-left: 3.6mm; }
+ul.tight li { margin: 0; }
+.toc { width: 100%; border-collapse: collapse; margin-bottom: 0; }
+.toc td { border: none; border-bottom: var(--table-line) solid var(--line); padding: 0.55mm 1mm; }
+.toc td.n { width: 7mm; color: var(--accent); font-weight: 720; font-size: 10pt; }
+.toc td.t { width: 48mm; font-weight: 680; }
+.toc td.d { color: var(--sub); }
+.toc td.p { width: 11mm; text-align: right; color: var(--sub); }
+.team th, .team td { vertical-align: middle; }
+.team .nm { width: var(--team-name-col); font-weight: 700; white-space: nowrap; }
+.team .pos { width: var(--team-pos-col); }
+.team .pos b { display: block; }
+.team .pos span { color: var(--sub); font-size: var(--font-small); white-space: nowrap; }
+.perf td.k { width: var(--perf-axis-col); }
+.axis td { background: var(--soft); padding-top: 1.1mm; padding-bottom: 1.1mm; }
+.axis .tag { display: inline-block; min-width: 26mm; font-weight: 740; color: var(--accent); }
+.axis .desc { color: var(--ink); }
+.terr th, .terr td { text-align: center; padding: 1mm 0.6mm; }
+.terr th { font-size: 7.2pt; }
+.low { color: var(--warn); font-weight: 680; }
+</style>
+</head>
+<body>
+
+<section class="page">
+  <div class="cover">
+    <div class="kicker">팀 공식 산출물 · 팀 구성 정의서</div>
+    <h1>[FOOTHOLD] 팀 구성 · 역할 및 업무</h1>
+    <p class="lede">FOOTHOLD 팀의 두 축 구성과 팀원별 포지션 · 역할 및 업무를 정의합니다. 2026년 11월 20일 팀장 확정본이며, 정본은 프로젝트 저장소 <a href="https://github.com/foothold-project/foothold-lab/blob/main/docs/ROLES.md">docs/ROLES.md</a> 0 절입니다.</p>
+  </div>
+
+  <div class="sec" style="margin-top:var(--toc-gap)">
+    <h2><span class="no">1.</span>팀 구성</h2>
+    <p>팀은 두 축으로 일합니다. <b>RL 축</b>은 시뮬레이션에서 지형에 적응하는 사족보행 정책을 학습하고, <b>운용 · 항법 축</b>은 학습한 로봇을 관제하고 스스로 경로를 찾아 이동하게 합니다. 2026년 11월 3일부터 네 명입니다.</p>
+    <table>
+      <tr><td class="k">과정명</td><td>인공지능사관학교 7기 AI 도약과정</td><td class="k" style="width:20mm">팀명</td><td style="width:40mm">FOOTHOLD (실증-02)</td></tr>
+      <tr><td class="k">프로젝트명</td><td colspan="3"><b>FOOTHOLD: Sim-to-Field, Terrain-Adaptive Mission Platform for Legged Robots</b><br>시뮬에서 현장까지, 미경험 험지 사족보행 로봇 임무 플랫폼</td></tr>
+    </table>
+    <table class="team">
+      <thead><tr><th class="nm">이름</th><th class="pos">포지션</th><th>역할 및 업무</th></tr></thead>
+      <tbody>
+        <tr class="axis"><td colspan="3"><span class="tag">RL 축</span><span class="desc">시뮬레이션에서 지형에 적응하는 사족보행 정책 학습</span></td></tr>
+        <tr><td class="nm">오흥재<br><span class="note">팀장</span></td><td class="pos"><b>Physical AI Robotics Lead</b><span>팀 총괄 · 보행 정책 학습 · 실기 Go2 통합</span></td><td><ul class="tight"><li><b>정책 학습</b>: START 기반 Go2 지형 적응 보행 (누적 15,500 회 = 산출물 1) · HiPAN 상위 경로 정책</li><li><b>성능</b>: 평지 13 명령 생존 63~64/64 · 느린 전진 0.1 m/s 57/64 · 깃발 64/64</li><li><b>전달</b>: 실기 · 앱용 ONNX 정책 (지도 켬 · 끔 · 원본과 행동 차 1.1e-5)</li><li><b>실기 통합</b>: Go2 X Jetson 센서 · 통신 환경 구축 · 카메라 위치와 지도 정합 검증</li></ul></td></tr>
+        <tr><td class="nm">임석헌</td><td class="pos"><b>Robot Learning Engineer</b><span>AME-2 사족보행 이식 · 험지 정책 학습</span></td><td><ul class="tight"><li><b>정책 학습</b>: 이족보행용 AME-2 를 사족보행 Go2 로 이식한 teacher (누적 27,001 회 = 산출물 2)</li><li><b>성능</b>: 12 지형 목표 도달 89.39 % (계단 · 상자 · 징검돌 · 틈 등)</li><li><b>전달</b>: 앱 시뮬용 ONNX 정책 (원본과 행동 차 2.9e-6)</li><li><b>진행 중</b>: 실기용 student 정책과 지도 추정기 (Mapper) 학습</li></ul></td></tr>
+        <tr class="axis"><td colspan="3"><span class="tag">운용 · 항법 축</span><span class="desc">학습한 로봇을 관제하고 스스로 경로를 찾아 이동하게 함</span></td></tr>
+        <tr><td class="nm">오현민</td><td class="pos"><b>Robot Operations Engineer</b><span>로봇 관제 · 연결 · 시뮬 통합 시스템 개발</span></td><td><ul class="tight"><li><b>관제</b>: 웹 · 모바일 실시간 관제 (휴대폰 직결 조종 · 이동 중 2D 지도 작성)</li><li><b>로봇 연결</b>: Jetson 에이전트로 Go2 SDK · 라이다 · 카메라 · 위치 실시간 전송</li><li><b>앱 내 시뮬레이터</b>: MuJoCo 와 학습 정책 (START · AME-2) 으로 목표 지점 · 임무 실행</li><li><b>안전 · 배포</b>: 안전 감시 · Jetson 과 노트북 설치 프로그램 · 서버 자동 배포</li></ul></td></tr>
+        <tr><td class="nm">이민우</td><td class="pos"><b>Autonomous Navigation Engineer</b><span>라이다 기반 자율 주행 시스템 개발</span></td><td><ul class="tight"><li><b>위치 추정 · 지도</b>: L2 라이다 시뮬에서 Point-LIO 위치 추정 · SLAM 지도 작성</li><li><b>경로 계획</b>: Nav2 와 A* 경로 계획을 보행 정책과 시뮬에서 연결</li><li><b>시뮬 주행 검증</b>: 복도 · ㄱ자 맵 목표 도착 · 계단 · 구덩이 장애물 시험</li><li><b>실기 시험</b>: 실기 Go2 의 L2 라이다로 SLAM 시험 · 품질 점검 (QC)</li></ul></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p class="note">같은 내용이 데이터 산출물 명세서 (FOOTHOLD_RL_Data_Deliverable_Spec.pdf) 1 절 팀 소개에도 있습니다. 바뀌면 정본 (docs/ROLES.md) 을 먼저 고치고 두 문서를 함께 고칩니다.</p>
+</section>
+
+<div id="panel">
+  <b>조정 칸</b> · 쪽 <span id="pages"></span>
+  <div id="ctl"></div>
+  <button id="bPrint">PDF 로 저장 (인쇄)</button><button class="alt" id="bCopy">지금 값 복사</button><button class="alt" id="bReset">처음 값</button>
+  <div class="hint">슬라이더를 움직이면 바로 바뀝니다. 왼쪽 파란 막대는 쪽이 얼마나 찼는지, 빨간 테두리는 그 쪽이 넘쳐 다음 쪽으로 밀린다는 뜻입니다.<br>
+  저장: 「PDF 로 저장」 → 대상 PDF · 여백 기본 · 「배경 그래픽」 켬. 또는 「지금 값 복사」 로 복사한 줄을 이 파일 맨 위 <code>:root { … }</code> 에 덮어쓰고 <code>bash render.sh</code>.</div>
+</div>
+<script>
+(function () {
+  if (window.matchMedia && window.matchMedia("print").matches) return;
+  var V = [
+    ["글씨", null],
+    ["--font-body", "본문", 7, 10.5, 0.1, "pt"],
+    ["--font-table", "표 안", 7, 10, 0.1, "pt"],
+    ["--font-small", "주석 · 부제", 6.5, 9.5, 0.1, "pt"],
+    ["--font-h1", "제목", 12, 22, 0.5, "pt"],
+    ["--font-h2", "절 제목", 9, 14, 0.2, "pt"],
+    ["--font-h3", "소제목", 8, 12, 0.2, "pt"],
+    ["--line-height", "줄 간격", 1.1, 1.8, 0.02, ""],
+    ["표", null],
+    ["--table-line", "표 선 굵기", 0.2, 1.5, 0.05, "pt"],
+    ["--cell-pad-y", "칸 위아래 여백", 0.3, 2.5, 0.05, "mm"],
+    ["--cell-pad-x", "칸 좌우 여백", 0.5, 3.5, 0.1, "mm"],
+    ["--key-col", "왼쪽 이름 칸 폭", 18, 40, 0.5, "mm"],
+    ["--table-gap", "표와 표 사이", 0, 6, 0.1, "mm"],
+    ["팀 표", null],
+    ["--team-name-col", "이름 열 폭", 12, 30, 0.5, "mm"],
+    ["--team-pos-col", "포지션 열 폭", 35, 75, 0.5, "mm"],
+    ["산출물 1 성능 표", null],
+    ["--perf-axis-col", "축 열 폭", 20, 45, 0.5, "mm"],
+    ["--perf-result-col", "결과 열 폭", 40, 95, 0.5, "mm"],
+    ["간격", null],
+    ["--cover-gap", "제목 ↔ 목차", 0, 12, 0.1, "mm"],
+    ["--toc-gap", "목차 ↔ 1. 팀 소개", 0, 12, 0.1, "mm"],
+    ["--section-gap", "절 사이", 0, 10, 0.1, "mm"],
+    ["--h3-gap", "소제목 위", 0, 10, 0.1, "mm"]
+  ];
+  var root = document.documentElement, cs = getComputedStyle(root), init = {}, ctl = document.getElementById("ctl");
+  V.forEach(function (d) {
+    if (!d[1]) { var h = document.createElement("h4"); h.textContent = d[0]; ctl.appendChild(h); return; }
+    var name = d[0], cur = parseFloat(cs.getPropertyValue(name)); init[name] = cur;
+    var lab = document.createElement("label"), t = document.createElement("span"), r = document.createElement("input"), v = document.createElement("span");
+    t.textContent = d[1]; r.type = "range"; r.min = d[2]; r.max = d[3]; r.step = d[4]; r.value = cur; v.className = "v";
+    var show = function () { v.textContent = (+r.value).toFixed(d[4] < 0.1 ? 2 : 1) + d[5]; };
+    r.oninput = function () { root.style.setProperty(name, r.value + d[5]); show(); check(); };
+    r.dataset.name = name; r.dataset.unit = d[5]; show();
+    lab.appendChild(t); lab.appendChild(r); lab.appendChild(v); ctl.appendChild(lab);
+  });
+  function check() {
+    var pages = document.querySelectorAll(".page"), over = 0;
+    pages.forEach(function (p, i) {
+      p.dataset.label = (i + 1) + " / " + pages.length;
+      var last = p.lastElementChild; while (last && (last.className === "fill")) last = last.previousElementSibling;
+      var used = last ? (last.offsetTop + last.offsetHeight) : 0;
+      var cap = p.clientHeight - parseFloat(getComputedStyle(p).paddingBottom);
+      var f = p.querySelector(".fill"); if (!f) { f = document.createElement("div"); f.className = "fill"; p.appendChild(f); }
+      f.style.height = Math.min(100, used / cap * 100) + "%";
+      var isOver = used > cap + 1; p.classList.toggle("over", isOver); if (isOver) over++;
+    });
+    document.getElementById("pages").textContent = pages.length + " 쪽" + (over ? " · 넘침 " + over + " 쪽" : " · 넘침 없음");
+  }
+  document.getElementById("bPrint").onclick = function () { window.print(); };
+  document.getElementById("bReset").onclick = function () {
+    ctl.querySelectorAll("input").forEach(function (r) { r.value = init[r.dataset.name]; root.style.setProperty(r.dataset.name, init[r.dataset.name] + r.dataset.unit); r.oninput(); });
+  };
+  document.getElementById("bCopy").onclick = function () {
+    var lines = [];
+    ctl.querySelectorAll("input").forEach(function (r) { lines.push("  " + r.dataset.name + ": " + r.value + r.dataset.unit + ";"); });
+    var txt = lines.join("\n");
+    (navigator.clipboard ? navigator.clipboard.writeText(txt) : Promise.reject()).then(function () { alert("복사했습니다. spec.html 맨 위 :root 안 같은 이름 줄을 이 값으로 바꾸세요.\n\n" + txt); }, function () { prompt("아래를 복사하세요", txt); });
+  };
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(check); else check();
+  window.addEventListener("load", check);
+})();
+</script>
+</body>
+</html>

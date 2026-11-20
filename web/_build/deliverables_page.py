@@ -66,6 +66,8 @@ GATES = [
     ('SUBMIT · 산출물 제출', datetime.date(2026, 12, 1),
      '최종 산출물 제출 12/1 (화) 13:00', [
         ('deliverables/final/final-report.md', '최종 실증결과 보고서'),
+        # ★ 2026-11-20 팀장 승인 팀 구성 (docs/ROLES.md 0 절 · 두 축 네 명). 9/4 「역할과 책임」 은 그때 제출본으로 둔다.
+        ('deliverables/final/team-roles.md', '팀 구성 · 역할 및 업무'),
     ]),
     ('FINAL · 최종발표', datetime.date(2026, 12, 10),
      '발표자료 제출 12/8 (화) 13:00 · 최종 발표 12/10 (목) 오후 2 부 · 12/11 수료식', []),
