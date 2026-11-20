@@ -109,6 +109,7 @@ class NavTask:
         self.shape_decay = True            # False (--shape-decay off) = 배율 1.0 고정 (감쇠 안 함 · 기본 True = 지금과 같음)
         self.redraw_on_fall = False       # True = 넘어진 뒤 (과제를 못 끝냄) 에도 표에서 새 과제 · False (기본, 논문 IV-C2) = 같은 과제 유지: 새 과제는 PGCL 이 요청할 때만
         self.new_task_after_fails = 0     # N >= 1 이면 같은 과제를 연속 N 번 (넘어짐 · 시간 초과) 못 끝낸 env 는 표에서 새 과제 (planner HIPAN-STICKY-TASK-1120 처방 A · 논문 밖 가정). 0 (기본) = 끔 = 옛 동작 그대로. 수준은 그대로 둔다
+        self.level_reset_on_new_task = False   # True 이면 reset_envs 가 새 과제를 뽑을 때 (첫 과제 · PGCL 5 연속 성공 · 처방 A 자름) 그 env 의 PGCL 수준 1 · 연속 성공 0 으로 (논문의 K 는 과제마다 경로 길이). False (기본) = 옛 동작 그대로 (수준은 오르기만)
         self._fail_run = np.zeros(self.n, dtype=np.int64)   # env 별 같은 과제 연속 실패 수 (읽기용 통계 · 항상 센다. 성공 또는 새 과제가 뽑히면 0)
         self._first_try: set = set()      # 새 과제가 뽑힌 뒤 아직 첫 에피소드가 안 끝난 env (_fresh_task 표식을 reset 끝에 옮겨 둔다) = 「새 과제의 첫 시도」 통계용
         self.task_cut_fails = 0           # 연속 실패로 새 과제를 뽑은 수 (누적)
@@ -344,6 +345,7 @@ class NavTask:
         out["nv_stuck3"] = int(stuck.sum())
         for j, k in enumerate(LV_KEYS):
             out[f"nv_stuck3_{k}"] = int((stuck & (lv_now == j + 1)).sum())
+            out[f"nv_lvl_n_{k}"] = int((lv_now == j + 1).sum())            # 지금 시점 그 수준 (l3p = 3 이상) 의 env 수
         out["nv_task_cut"] = int(st["cut"])
         out["nv_dsub_min"] = float(np.median(st["dmin"])) if st.get("dmin") else -1.0      # 에피소드마다 (끝까지 못 닿은 것) 지금 부목표까지 최소 거리의 중앙값 · -1 = 해당 에피소드 없음
         if self.shape_w:
@@ -470,6 +472,8 @@ class NavTask:
                 self._fail_run[i] = 0
             s = None if start_xy is None else start_xy[j]
             if self.path[i] is None or p.needs_new_task or cut:
+                if self.level_reset_on_new_task:
+                    p.level, p.streak = 1, 0                                # 수준은 과제마다: 새 과제는 수준 1 부터
                 self._new_task(i, s)
                 p.needs_new_task = False
             elif s is not None and self.table is not None and self.redraw_on_fall:

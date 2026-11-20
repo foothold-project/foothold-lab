@@ -27,6 +27,18 @@ def new_task_after_fails(cfg: dict, environ=None) -> int:
     return nf
 
 
+def task_level_reset_on_new_task(cfg: dict, environ=None) -> bool:
+    """수준 되돌림 스위치 (HiPAN 논문의 마지막 수준 K 는 그 과제의 경로 길이라 수준은 과제마다): factory 설정 task_level_reset_on_new_task 또는 환경 변수 HIPAN_LEVEL_RESET_ON_NEW_TASK (Pod 은 --remote-env). 0 (기본) = 끔 = 옛 동작 (수준은 오르기만). 1 = 새 과제를 뽑을 때 그 env 의 수준 1 · 연속 성공 0."""
+    env = os.environ if environ is None else environ
+    v = cfg.get("task_level_reset_on_new_task", env.get("HIPAN_LEVEL_RESET_ON_NEW_TASK", 0))
+    key = str(v).strip().lower()
+    if key in ("0", "", "false", "off", "no", "none"):
+        return False
+    if key in ("1", "true", "on", "yes"):
+        return True
+    raise ValueError(f"task_level_reset_on_new_task must be 0/1 (or on/off), got {v!r}")
+
+
 def launch_app(cfg: dict, with_camera: bool):
     """Kit 을 헤드리스로 한 번 띄운다 (n1_kit_check 와 같은 AppLauncher 호출). 이미 떴으면 그대로."""
     global _APP
@@ -151,6 +163,8 @@ def _build(cfg: dict, with_camera: bool):
     nf = new_task_after_fails(cfg)
     task.new_task_after_fails = nf
     print("TASK_CUT_AFTER_FAILS " + ("off (same task kept until 5 final successes)" if not nf else f"n={nf} (논문 밖: 같은 과제 연속 {nf} 번 실패하면 표에서 새 과제 · 수준 그대로)"), flush=True)
+    task.level_reset_on_new_task = task_level_reset_on_new_task(cfg)
+    print("TASK_LEVEL_RESET_ON_NEW_TASK " + ("on (새 과제를 뽑을 때 그 env 의 PGCL 수준 1 · 연속 성공 0 · --resume-levels 로 넣은 수준도 첫 과제에서 1 로)" if task.level_reset_on_new_task else "off (수준은 오르기만 · 옛 동작)"), flush=True)
     depth_fn = (lambda: th(raw.scene["depth_camera"].data.output["distance_to_image_plane"])) if with_camera else None
     return nav, task, depth_fn
 
