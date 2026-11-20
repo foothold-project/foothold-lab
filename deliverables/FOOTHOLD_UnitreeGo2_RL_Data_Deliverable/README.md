@@ -55,10 +55,12 @@ FOOTHOLD_UnitreeGo2_RL_Data_Deliverable/
 | 저장본 안의 `iter` 값 | 16,999 (마지막 갱신 번호). `go2_env_state.completed_updates` = 17,000 (출발 저장본 뒤 회차), `go2_env_state.start_from.source_completed_updates` = 10,001 |
 | 설정 | `config_ame2.yaml` = 이 저장본 폴더의 `params/agent.yaml` · `params/env.yaml` 원본 그대로. 평균 도구가 팟 1 원본 실행 `2026-11-18_00-29-16_tp424_p1_s4_adam_fp32_4x3_from16500_to17000` 의 params 를 복사하고 그 자리에서 sha256 을 대조했다 (`sync424.py` 234 ~ 237 행). 2026-11-19 학습 볼륨에서 잰 sha256 도 두 곳이 같다 (env.yaml `48088f33…` · agent.yaml `855b1b57…`). 팟 2 원본의 params 는 seed 42 · run_name · log_dir 만 다르다 |
 | 학습 환경 (3 절과 다른 점) | 병렬 환경 4,096 개 · 에피소드 최대 16 초 · 명령은 속도가 아니라 목표 지점 (몸 기준 x · y · 방향 차의 sin · cos, 2 m 로 자름) · 관측은 고유감각 49 (몸 선속도 포함) + 정답 높이 지도 29 × 13 × 3 · 보상 20 항 (모두 가중치 0 아님) · 강화학습 라이브러리는 AME-2 공개 코드에 든 rsl_rl 5.0.0 · Isaac Lab 2.3.2 (isaaclab 0.54.2) · Isaac Sim 5.1.0 · PyTorch 2.7.0 |
-| 같은 정책의 ONNX (앱용) | `inbox/lim/20261103-policy-handoff/ame2-m27001/` (PR #878, `ame2-m27001.onnx` · 계약 · 시험 벡터. 원본 PyTorch 와 action 최대 차 2.9e-6) |
+| 같은 정책의 ONNX (앱 시뮬용) | `inbox/jay/20261103-policy-handoff/ame2-m27001-app/` (앱이 보는 lead 사본) · 제출 원본 `inbox/lim/20261103-policy-handoff/ame2-m27001/` (PR #878): `ame2-m27001.onnx` · 계약 · 시험 벡터, 원본 PyTorch 와 action 최대 차 2.9e-6. 실기용 ONNX 는 없음 (특권 입력을 쓰는 teacher) |
 | 시뮬 성능 요약 (100 에피소드 벤치마크 · 12 지형 × 10 단계 · 평가 seed 42 · 1001 · 2002 · 3003, 단계 칸마다 seed 당 100 에피소드 = 4 seed 400 에피소드) | 목표 도달 성공률 12 지형 전체 **89.39 %** (42,906 / 48,000). seed 별 89.28 · 89.47 · 89.23 · 89.57 %. 지형별 % (성공 / 4,000, 학습 설정의 지형 이름): rough 99.38 (3,975) · stair_down 99.35 (3,974) · stair_up 97.97 (3,919) · boxes_j 95.88 (3,835) · discrete_j 97.50 (3,900) · climb_up 96.85 (3,874) · climb_down 97.75 (3,910) · steps_j 96.42 (3,857) · stones 55.73 (2,229) · gap 62.75 (2,510) · pallets 85.28 (3,411) · beam 87.80 (3,512) |
 | 성능 출처 | 다시 계산하지 않고 기존 평가 기록에서 옮김: FOOTHOLD AME-2 작업 저장소의 원자료 `docs/stage1_logs/req424/ev/results/evalx_raw_tpevf24_b1.txt` 와 정리 표 `docs/MODEL_27K_AVG_LEVEL_TABLE.md` (도구 `docs/stage1_logs/req424/x3/m27k_levels.py`), 평가 묶음 tpevf24 (2026-11-18, 과제 `Ame2-Go2-Gaze-N9P12-Eval5`). 이 저장본과의 연결: 같은 폴더 `meta_raw_tpevf24.txt` 의 네 seed 모두 checkpoint 가 `tp424_in_p1_s5_from17000/model_16999.pt` 이고 `ck_sha256_inputs_start` 가 `f4eaadb4…1a41` (= `model_27000.pt` 의 sha256). 성공은 각 로봇의 첫 에피소드를 빼고 센다. 표의 boxes · discrete 는 학습 설정의 boxes_j · discrete_j |
 | 못 하는 것 | 징검돌 (stones 55.73 %) · 틈 (gap 62.75 %) 은 아직 낮다. 특권 입력을 쓰는 teacher 라 실기 Go2 에 그대로 올릴 수 없다 (실기용 student 는 미확인 · 정해질 때까지 시뮬 트윈 전용). 이 저장본이 걷는 영상은 미확인 |
+
+산출물 2 성능 숫자의 출처와 측정 조건은 FOOTHOLD AME-2 작업 저장소의 `docs/MODEL_27K_AVG_LEVEL_TABLE.md` (지형 · 단계별 표) 와 `docs/stage1_logs/req424/ev/results/` 에 있다.
 
 ## 3. 데이터 생성 환경 (Simulation Environment)
 

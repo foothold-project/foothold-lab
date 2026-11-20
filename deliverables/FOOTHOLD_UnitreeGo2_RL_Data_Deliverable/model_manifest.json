@@ -117,6 +117,10 @@
       },
       "network": {
         "actor_class": "AME2GazeModel",
+        "actor_hidden_dims": [512, 512],
+        "actor_hidden_dims_note": "hidden sizes of the actor output MLP (288 -> 512 -> 512 -> 12); the actor also has a prop encoder 49 -> 512 -> 512 -> 128, a query MLP 192 -> 512 -> 512 -> 96, map encoders and 32-head attention (fields below)",
+        "critic_hidden_dims": [512, 512],
+        "critic_hidden_dims_note": "hidden sizes of each of the 16 MoE critic experts (446 -> 512 -> 512 -> 20)",
         "actor_inputs": {
           "prop": [49],
           "mapping": [29, 13, 3]
@@ -129,6 +133,9 @@
         "output_mlp_dims": [512, 512],
         "activation": "elu",
         "recurrent": false,
+        "perception_module": "none: the teacher reads the ground-truth ray-cast height map directly (no reconstruction module)",
+        "policy_params_model_state_dict": 9780202,
+        "policy_params_model_state_dict_note": "actor_state_dict + critic_state_dict (this checkpoint stores them as two keys instead of one model_state_dict)",
         "policy_params_actor_state_dict": 1251994,
         "critic": "MoE 16 experts, input 446, hidden [512, 512], 20 outputs (one value per reward term)",
         "critic_params_critic_state_dict": 8528208
@@ -216,7 +223,9 @@
       "checkpoint_keys": ["actor_state_dict", "critic_state_dict", "optimizer_state_dict", "iter", "infos", "go2_env_state"],
       "load": "torch.load(path, map_location='cpu', weights_only=False)",
       "related": {
-        "onnx_for_app": "inbox/lim/20261103-policy-handoff/ame2-m27001/ (ame2-m27001.onnx, contract, test vectors; PR #878)",
+        "onnx_for_robot": "none: a teacher with privileged inputs is not run on the robot (a student is not trained yet)",
+        "onnx_for_app": "inbox/jay/20261103-policy-handoff/ame2-m27001-app/ (app copy by the lead) from the submission inbox/lim/20261103-policy-handoff/ame2-m27001/ (PR #878): ame2-m27001.onnx, contract, test vectors",
+        "lineage_doc": "inbox/jay/20261103-policy-handoff/ame2-m27001-app/CONTRACT.md section 1 (checkpoint, run, code); per-level evaluation table docs/MODEL_27K_AVG_LEVEL_TABLE.md in the FOOTHOLD AME-2 work repository",
         "averaged_from_sha256": ["4ef7ec6551898661346fa856bcdee31e9b4b934a464f955b56eb801ba5548103", "216e227642e6c85e9b8edb49f4205504627dc8630402156c1e2cbfe7140bbf40"]
       }
     }
