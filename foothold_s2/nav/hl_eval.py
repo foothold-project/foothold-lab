@@ -100,6 +100,7 @@ def fix_levels(task, levels_by_env, fresh: bool = False) -> None:
                 self.needs_new_task = True
             return out
 
+    task.level_reset_on_new_task = False              # 고정 수준 평가: 학습용 수준 되돌림 스위치가 켜져 있어도 끈다 (켜 두면 새 과제 때 고정 수준이 1 로 덮인다 · reviewer PR #902)
     task.redraw_on_fall = bool(fresh)                 # fresh: 넘어진 뒤에도 표에서 새 과제 (기본은 같은 과제 유지: 막힌 과제의 실패가 여러 번 세어진다)
     task.pgcl = [FixedPGCL(lv, fresh, d0=p.d0, step=p.step, reach_m=p.reach_m, final_successes=p.final_successes) for p, lv in zip(task.pgcl, levels_by_env)]
 
