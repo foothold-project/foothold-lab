@@ -45,7 +45,7 @@
 | 자리 | 두 학습 `tp424_p1_s4`(seed 1001) · `tp424_p2_s4`(seed 42) 의 끝 저장본 model_16999(둘 다 16,500 → 17,000, 완료 17,000 회) 를 가중치 평균한 것. 원본 sha256 `4ef7ec65…` · `216e2276…`, actor 차이 \|A-B\|/\|A\| 0.038. 계보로 세면 27k(사용자 설명). task `Ame2-Go2-Gaze-N9P12`(12지형), v_max 1.2, Adam · fp32 · 에폭 4 × 미니배치 3 · 기울기 4조각 누적 | `sync_record.txt` · `run/queue_tp.sh:51~55` · `agent.yaml:40~45` · `ppo_accum.txt` | 실측 · 설정 |
 | 설정 sha256 | env.yaml `48088f337081…` · agent.yaml `855b1b578ead…` = 원본 tp424_p1_s4 의 params 와 같음. tp424_p2_s4 의 params 는 seed · run_name · log_dir 만 다름 | `sha256sum` · `diff` | 실측 |
 | 학습 코드 | 사본 폴더 `ame2_pp1`(git 저장소 아님) = ame2_p12 고정 사본(2026-11-15T15:40:47Z) + `run/patch_pp.py`(train.py · go2_runner.py · 새 ppo_accum.py), code id 101da9dd0386. go2/ame2_go2 · go2/scripts · rsl_rl/rsl_rl 의 manifest sha256 `1cbd6128…` 가 두 원본 학습 끝(`out/q_tp_p1_s4` · `out/q_tp_p2_s4`) · 11-19 모두 같음. 16,500 회 이전 학습은 다른 사본에서 했고 추적하지 않음. 조건표가 인용하는 코드 파일은 m14999 묶음 때 사본과 바이트 단위로 같음(custom_terrains.py · go2_env_cfg.py · train.py 만 다름) | `out/q_tp_p*_s4/manifest_now.txt` · 11-19 재계산 | 실측 |
-| 판 | Isaac Lab 2.3.2(isaaclab 0.54.2 · isaaclab_rl 0.4.7, 버전 관리 없는 설치) · torch 2.7.0+cu128 · rsl_rl = `leggedrobotics/ame2_minimal@8beb9a68` 의 rsl_rl 5.0.0 그대로(§7) · Isaac Sim 5.1.0-rc.19(원본 tp424_p1_s4 를 학습한 호스트 fb6eecdaf880 에서 읽음) | 팟 `VERSION` · `out/q_tp_p1_s4/env_record.txt` | 실측 |
+| 판 | Isaac Lab 2.3.2(isaaclab 0.54.2 · isaaclab_rl 0.4.7, 버전 관리 없는 설치) · torch 2.7.0+cu128 · rsl_rl = `leggedrobotics/ame2_minimal@8beb9a68` 의 rsl_rl 5.0.0 그대로(§7) · Isaac Sim 5.1.0-rc.19(원본 tp424_p1_s4 를 학습한 팟 1 컨테이너에서 읽음) | 팟 `VERSION` · `out/q_tp_p1_s4/env_record.txt` | 실측 |
 | 저장본 안의 것 | `actor_state_dict`(41 텐서, log_std 포함) · `critic_state_dict` · optimizer · `go2_env_state`(critic_contract · 지형 단계 등) | 저장본을 열어 확인 | 실측 |
 
 ## 2. ONNX 에 든 것
@@ -193,12 +193,12 @@ m14999 묶음 때 지시문 HANDOFF §4 와 v0.1 의 빈칸으로 잰 것을 이
 | 1 m 목표에서 실제 속도 | 앱 조이스틱처럼 매 스텝 몸 틀 (1.0, 0) m · e = 0 목표를 다시 넣으면 평지에서 4~12 s 평균 전진 **1.10 m/s**(로봇 4 대 1.12, 1.10, 1.09, 1.09, 95 백분위 1.16). 같은 방식 2 m 목표는 1.06 m/s. 리셋 0 회 | `speed_goal.py`(학습 task N9P12, 관측 잡음 끔, 8 대) | `실측` |
 | 앱의 빈 칸 0.7 m 고정값 | 앱 규칙(빈 칸 = 같은 스캔의 가장 낮은 유효 높이 - 0.7 m, 가상 평면 없음; 앱 `mobile/sim/ame2-adapter.js:94~125` @20f3d066) 은 학습 규칙(같은 식에 U(0.4, 1.0) m, sparse 칸은 가상 평면) 의 가운데 값이다. 이 모델을 평가한 도구 그대로(`ame2_ev12` 의 `evalgz_tpevf24_b1/eval_gaze.py`, task N9P12-Eval5, 평가 seed 1001, 로봇 2,400 대, 5 에피소드, 지형마다 1,000 에피소드) 전체 성공률: 기준(11-18 평가) **89.47 %** · 같은 조건 다시 돌림 89.47 %(지형별 최대 차이 +0.00 %p) · 깊이만 0.7 고정 89.73 %(지형별 최대 +1.80 %p, pallets) · **앱 조건(0.7 고정 + 가상 평면 끔) 89.43 %**(지형별 최대 -2.10 %p, stones). 가상 평면은 hydra 인자로 끌 수 없어(Isaac Lab `utils/dict.py:167` 이 새 키를 거부) 평가 도구 사본에 `env_cfg.events.virtual_floor.params["sparse_terrains"] = ()` 한 줄만 더해 돌렸다(그 밖은 원본 도구 md5 4ed5c4a6 와 같음). 같은 설정 다시 돌림이 지형별 0.00 %p 로 완전히 같으므로, 위 차이는 이 도구에서 실행마다 흔들리는 폭이 아니라 빈 칸 처리 변경으로 바뀐 에피소드 진행에서 나온 것이다(지형별 차이의 원인은 따로 가르지 않음). 지형별 표는 `parity.json` `void_depth` | `cmp_depth07.py` | `실측` |
 | 학습 코드 출처 · 커밋 | rsl_rl = `leggedrobotics/ame2_minimal` 커밋 `8beb9a688d67882828019583f7d5a78e3517f233`(2026-10-06, rsl_rl 5.0.0) 의 `rsl_rl/rsl_rl` .py 33 개와 바이트 단위로 같음(수정 없음). go2 코드 84 개는 저장소 밖 우리 코드라 커밋이 없고 code id 101da9dd0386 · manifest sha256 `1cbd6128…` 로 식별 | 팟 원본 트리 git 과 대조 | `실측` |
-| 학습 호스트의 Isaac Sim 판 | 원본 tp424_p1_s4 를 학습한 호스트 fb6eecdaf880 에서 `5.1.0-rc.19` 를 직접 읽음. p2 원본 호스트는 §7a. Isaac Lab 원본 15 개 파일(조건표가 인용하는 것) 은 m14999 때 팟과 바이트 단위로 같음 | `/isaac-sim/VERSION` · 파일 sha256 대조 | `실측` |
+| 학습 호스트의 Isaac Sim 판 | 원본 tp424_p1_s4 를 학습한 팟 1 컨테이너에서 `5.1.0-rc.19` 를 직접 읽음. p2 원본 호스트는 §7a. Isaac Lab 원본 15 개 파일(조건표가 인용하는 것) 은 m14999 때 팟과 바이트 단위로 같음 | `/isaac-sim/VERSION` · 파일 sha256 대조 | `실측` |
 
 ## 7a. 미확인 (한 형식: 미확인: 무엇 · 정해질 때까지 지금 동작)
 
 - 미확인: 이 저장본(m27001)이 계단을 걷는 영상 · 정해질 때까지 계단은 §7 벤치마크 수치(계단 오르기 98.7 % · 내려가기 99.2 %, 평가 seed 1001)로만 본다.
-- 미확인: 원본 tp424_p2_s4 를 학습한 호스트(5c99a0a805c7)의 Isaac Sim 판 · 정해질 때까지 p1 호스트에서 직접 읽은 5.1.0-rc.19 로 적는다(두 학습의 pip 설정 · 코드 manifest 는 같음).
+- 미확인: 원본 tp424_p2_s4 를 학습한 팟 2 컨테이너의 Isaac Sim 판 · 정해질 때까지 p1 호스트에서 직접 읽은 5.1.0-rc.19 로 적는다(두 학습의 pip 설정 · 코드 manifest 는 같음).
 - 미확인: 16,500 회 이전 학습에 쓴 코드 사본 · 정해질 때까지 코드 판은 마지막 500 회를 학습한 사본 `ame2_pp1`(code id 101da9dd0386)로 적는다.
 - 미확인: 브라우저(Chrome 등) 의 onnxruntime-web 에서의 최대 차이와 추론 시간 · 정해질 때까지 Node 의 같은 WASM 실행기 값(action 3.1e-6)을 쓴다.
 - 미확인: 옆 · 뒤 목표와 계단 위에서의 속도, 앱 MuJoCo 에서의 같은 값 · 정해질 때까지 앱 상한 표시는 1.2 m/s(학습 v_max).
