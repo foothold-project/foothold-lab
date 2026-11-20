@@ -2,8 +2,8 @@
 > 작성: 오흥재 · 2026-11-18
 > 근거: 20261117 현장 인수 기록 · 20261117 sim-match checklist · 정본 3 contract · foothold-app main README
 > 목표: 현재 개체의 하드웨어·센서·통신·안전 상태를 증거로 확정하고, Depth/LiDAR/SLAM을 눈과 데이터로 검증한 뒤 정본 3 ONNX 저수준 정책과 `foothold-app` 실기 연결까지 단계적으로 진행한다.
-> 상태: 냉각·재부팅 뒤 read-only monitor와 Classic 좌·우 주행에서 열 사건 미재발 · 카메라 35° 유지성 통과 · HDMI 없는 1080p 정상 전원 사이클 2회 통과 · 업체 공식 열 판정과 D435i 1초 reset 원인은 대기
-> 판: v1.4
+> 상태: 냉각·재부팅 뒤 read-only monitor와 Classic 좌·우 주행에서 열 사건 미재발 · 카메라 35° 유지성 통과 · HDMI 없는 1080p 정상 전원 사이클 2회 통과 · 업체 공식 열 판정과 D435i 1초 reset 원인은 대기 · 11/21 D435i USB 3 끊김은 Jetson 쪽 젠더 자리 흔들림으로 재현, USB 2 로는 23 분 끊김 0 (인수 기록 8.7)
+> 판: v1.5
 
 # Go2 X 실기 commissioning 작업목록
 
@@ -77,6 +77,15 @@
   - 각 후보를 5회 재연결하고 매회 `lsusb -t`의 `5000M`과 동일 device identity를 확인한다.
   - 후보당 5분 depth+color+IMU를 수신하면서 kernel USB disconnect/reset, librealsense notification, frame reset을 센다.
   - 한 번이라도 `480M`, disconnect 또는 reset이 재현되면 운영 젠더에서 제외한다. 브라켓 나사는 건드리지 않는다.
+  - [x] 2026-11-21 새 젠더 (모비큐 EM-ATCP2P) · Jetson 쪽 흔들기 두 번 모두 `-71` · 45 ~ 55 초 끊김 · `480M` 재현 → USB 3 운영에서 제외. 카메라 쪽 흔들기는 0 회. [인수 기록 8.7](20261117-go2-x-jetson-field-intake.md)
+- [ ] 2026-11-21 학원 · 업체 USB 2 젠더로 바꿔 다시 잰다 (팀장 02:12 승인).
+  - 흔들기 시험: Jetson 쪽 젠더 30 초 · 카메라 쪽 30 초 · 커널 `-71` · disconnect · 0 장 구간을 센다.
+  - `rs.log` 에 `Device USB type: 2.1` 과 깊이 · 색 `640x480 · 30` 이 열렸는지 확인한다.
+  - 걷기 녹화 (ros2 bag) 로 깊이 · 색 실제 Hz · 0.2 초 넘는 빈틈을 센다. 비교 기준은 11/20 USB 2 구간 깊이 29.1 Hz · 색 30.0 Hz.
+  - 지연: 카메라 하드웨어 시각과 Jetson 받은 시각의 차이를 USB 2 · USB 3 각각 잰다.
+  - 카메라 IMU 를 깊이 · 색과 함께 켜서 gyro · accel Hz 와 깊이 Hz 가 함께 버티는지 본다 (격리 RSUSB 경로).
+  - 정책 입력 명세 (해상도 · 주기 · 허용 지연 · 끊김 견딤 · IMU 사용 여부) 를 lead 답과 대조한다 (11/21 02:16 질문).
+  - USB 2 가 모자라면 소프트웨어로 USB 3 만 막는 길을 sudo 로 시험한다 (이 커널은 포트별 `disable` 없음 · 같은 허브에 외부 LAN).
 - [ ] 격리 RSUSB build를 재현 가능한 wrapper/service 후보로 정리한다. 시스템 `/opt/ros/humble` librealsense와 firmware는 업체 승인 없이 교체하지 않는다.
 - [ ] GUI에서 동시에 눈으로 확인한다.
   - RGB 영상 방향/좌우, depth colormap, aligned depth overlay.
@@ -234,6 +243,7 @@
 
 | 판 | 날짜 | 내용 |
 |---|---|---|
+| v1.5 | 2026-11-21 | app-lx: P2 에 새 젠더 흔들기 시험 결과 (USB 3 운영 제외) 와 11/21 학원 USB 2 젠더 재측정 항목 (흔들기 · 걷기 녹화 · 지연 · 카메라 IMU · 정책 입력 대조) 추가 |
 | v1.4 | 2026-11-18 | Jetson은 임시 수집·복구 사본으로만 사용하고 매 측정 뒤 ai-lt01 Git assets로 회수·SHA-256/비밀정보 검사·main 병합하는 원시자료 보존 규칙 추가 |
 | v1.3 | 2026-11-18 | 짧은 Stand 기하 측정 뒤 젠더 A/B/C 운영 경로를 먼저 선별하고, 30분 timestamp·무효 히트맵·평지/턱/계단 정본 원시자료는 선택 젠더로 수집하도록 현장 순서 수정 |
 | v1.2 | 2026-11-18 | 팀원 APP 자동실행의 현재/잠재 영향 분리 · `5000M` 순간 협상과 젠더 안정성 통과 구분 · 시뮬 lead 실측, timestamp/무효 depth/정적 장면, A/B/C, LiDAR/SLAM/APP/정책을 우선순위 0~4로 재정렬 · 정책용 60×60 전처리를 APP 필수 후속으로 명시 |
