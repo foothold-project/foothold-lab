@@ -1,0 +1,31 @@
+{
+  "rea": {
+    "version": "6.10.1",
+    "entry": "/home/jay/.local/share/rea-mcp/node_modules/rea-agents/scripts/rea.mjs",
+    "transport": "stdio MCP, initialize and real tool calls verified",
+    "catalog_tools": 263,
+    "client_config": "/home/jay/.codex/config.toml",
+    "unrelated_config_equal": true
+  },
+  "craft": {
+    "version": "craft-anything-cli 0.6.1",
+    "repository": "https://github.com/storytold/craft-anything",
+    "commit": "73771bfacf520a159764ea9f8dd85d9bdf09c86b",
+    "command": "/home/jay/.local/bin/craft-anything",
+    "binary": "/home/jay/data/go2-app-study-20261120/craft-target/release/craft-anything-cli",
+    "binary_sha256": "ad557b58bc0bc5036f1cbaff160a721989412db3541ad9fa3f1983be1bf490f3",
+    "cargo": "cargo 1.97.0 (c980f4866 2026-06-30)",
+    "rustc": "rustc 1.97.0 (2d8144b78 2026-07-07)",
+    "build_command": "CARGO_TARGET_DIR=/home/jay/data/go2-app-study-20261120/craft-target CARGO_BUILD_JOBS=4 /home/jay/.cargo/bin/cargo build --locked --release -p craft-anything-cli --manifest-path /home/jay/mai/projects/craft-anything/Cargo.toml",
+    "build_log": "/home/jay/data/go2-app-study-20261120/logs/craft-build.log",
+    "build_exit_code": 0
+  },
+  "node": "v24.22.2",
+  "jadx_jar_sha256": "6e5eacf500b64292bfb73c49797c1958f6ee44646e43e868039ae7feb573ff75",
+  "known_input_tests": {
+    "rea_ipc_echo": true,
+    "rea_context_bridge": true,
+    "craft_zip_count_and_hash": true,
+    "rea_evidence": "ev_45238db73ad6eaecb929b7d483b9868f16fa274f6ba7111b43a02e32a6fdb9a9"
+  }
+}

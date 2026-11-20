@@ -1,0 +1,871 @@
+[
+  {
+    "mode": "points",
+    "sha256": "df28d833bc3045e58e110926dd87c312538a2e5b60a964a4fc5e99ff06d39b9c",
+    "assertions_passed": true,
+    "memory_bytes": 100663296,
+    "cases": [
+      {
+        "name": "known-origin-single",
+        "input_u16": [
+          [
+            1000,
+            2000,
+            3000
+          ]
+        ],
+        "bounds": [
+          10,
+          11,
+          20,
+          21,
+          30,
+          31
+        ],
+        "direct": [
+          11,
+          22,
+          33
+        ],
+        "output": [
+          11,
+          22,
+          33
+        ],
+        "added": 1,
+        "count": 1,
+        "stored_keys": [
+          431602231,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "name": "max-bounds-a",
+        "input_u16": [
+          [
+            1000,
+            2000,
+            3000
+          ]
+        ],
+        "bounds": [
+          10,
+          11,
+          20,
+          21,
+          30,
+          31
+        ],
+        "direct": [
+          11,
+          22,
+          33
+        ],
+        "output": [
+          11,
+          22,
+          33
+        ],
+        "added": 1,
+        "count": 1,
+        "stored_keys": [
+          431602231,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "name": "max-bounds-b",
+        "input_u16": [
+          [
+            1000,
+            2000,
+            3000
+          ]
+        ],
+        "bounds": [
+          10,
+          -500,
+          20,
+          800,
+          30,
+          -900
+        ],
+        "direct": [
+          11,
+          22,
+          33
+        ],
+        "output": [
+          11,
+          22,
+          33
+        ],
+        "added": 1,
+        "count": 1,
+        "stored_keys": [
+          431602231,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "name": "duplicate-in-frame",
+        "input_u16": [
+          [
+            1000,
+            2000,
+            3000
+          ],
+          [
+            1000,
+            2000,
+            3000
+          ]
+        ],
+        "bounds": [
+          0,
+          1,
+          0,
+          1,
+          0,
+          1
+        ],
+        "direct": [
+          1,
+          2,
+          3,
+          1,
+          2,
+          3
+        ],
+        "output": [
+          1,
+          2,
+          3
+        ],
+        "added": 1,
+        "count": 1,
+        "stored_keys": [
+          274213381,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "name": "duplicate-next-frame",
+        "input_u16": [
+          [
+            1000,
+            2000,
+            3000
+          ]
+        ],
+        "bounds": [
+          0,
+          1,
+          0,
+          1,
+          0,
+          1
+        ],
+        "direct": [
+          1,
+          2,
+          3
+        ],
+        "output": [
+          1,
+          2,
+          3
+        ],
+        "added": 0,
+        "count": 1,
+        "stored_keys": [
+          274213381,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "name": "z-only-change",
+        "input_u16": [
+          [
+            1000,
+            2000,
+            0
+          ],
+          [
+            1000,
+            2000,
+            4000
+          ]
+        ],
+        "bounds": [
+          0,
+          1,
+          0,
+          1,
+          0,
+          1
+        ],
+        "direct": [
+          1,
+          2,
+          0,
+          1,
+          2,
+          4
+        ],
+        "output": [
+          1,
+          2,
+          0
+        ],
+        "added": 1,
+        "count": 1,
+        "stored_keys": [
+          274213381,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "name": "y-separation-200mm",
+        "input_u16": [
+          [
+            1000,
+            2000,
+            0
+          ],
+          [
+            1000,
+            2200,
+            0
+          ]
+        ],
+        "bounds": [
+          0,
+          1,
+          0,
+          1,
+          0,
+          1
+        ],
+        "direct": [
+          1,
+          2,
+          0,
+          1,
+          2.200000047683716,
+          0
+        ],
+        "output": [
+          1,
+          2,
+          0,
+          1,
+          2.200000047683716,
+          0
+        ],
+        "added": 2,
+        "count": 2,
+        "stored_keys": [
+          274213381,
+          274214405,
+          0,
+          0
+        ]
+      },
+      {
+        "name": "x-separation-200mm",
+        "input_u16": [
+          [
+            1000,
+            2000,
+            0
+          ],
+          [
+            1200,
+            2000,
+            0
+          ]
+        ],
+        "bounds": [
+          0,
+          1,
+          0,
+          1,
+          0,
+          1
+        ],
+        "direct": [
+          1,
+          2,
+          0,
+          1.2000000476837158,
+          2,
+          0
+        ],
+        "output": [
+          1,
+          2,
+          0,
+          1.2000000476837158,
+          2,
+          0
+        ],
+        "added": 2,
+        "count": 2,
+        "stored_keys": [
+          274213381,
+          275261958,
+          0,
+          0
+        ]
+      },
+      {
+        "name": "dense-nearby-points",
+        "input_u16": [
+          [
+            1000,
+            2000,
+            0
+          ],
+          [
+            1010,
+            2010,
+            100
+          ],
+          [
+            1020,
+            2020,
+            200
+          ]
+        ],
+        "bounds": [
+          0,
+          1,
+          0,
+          1,
+          0,
+          1
+        ],
+        "direct": [
+          1,
+          2,
+          0,
+          1.0099999904632568,
+          2.009999990463257,
+          0.10000000149011612,
+          1.0199999809265137,
+          2.0199999809265137,
+          0.20000000298023224
+        ],
+        "output": [
+          1,
+          2,
+          0
+        ],
+        "added": 1,
+        "count": 1,
+        "stored_keys": [
+          274213381,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "name": "isolated-point",
+        "input_u16": [
+          [
+            1000,
+            2000,
+            0
+          ]
+        ],
+        "bounds": [
+          0,
+          1,
+          0,
+          1,
+          0,
+          1
+        ],
+        "direct": [
+          1,
+          2,
+          0
+        ],
+        "output": [
+          1,
+          2,
+          0
+        ],
+        "added": 1,
+        "count": 1,
+        "stored_keys": [
+          274213381,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "name": "reset-function-only",
+        "input_u16": [
+          [
+            1000,
+            2000,
+            0
+          ]
+        ],
+        "bounds": [
+          0,
+          1,
+          0,
+          1,
+          0,
+          1
+        ],
+        "direct": [
+          1,
+          2,
+          0
+        ],
+        "output": [],
+        "added": 0,
+        "count": 0,
+        "stored_keys": [
+          274213381,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "name": "reset-plus-clear",
+        "input_u16": [
+          [
+            1000,
+            2000,
+            0
+          ]
+        ],
+        "bounds": [
+          0,
+          1,
+          0,
+          1,
+          0,
+          1
+        ],
+        "direct": [
+          1,
+          2,
+          0
+        ],
+        "output": [
+          1,
+          2,
+          0
+        ],
+        "added": 1,
+        "count": 1,
+        "stored_keys": [
+          274213381,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "name": "ring-capacity-four",
+        "input_u16": [
+          [
+            0,
+            0,
+            0
+          ],
+          [
+            200,
+            0,
+            0
+          ],
+          [
+            400,
+            0,
+            0
+          ],
+          [
+            600,
+            0,
+            0
+          ],
+          [
+            800,
+            0,
+            0
+          ]
+        ],
+        "bounds": [
+          0,
+          1,
+          0,
+          1,
+          0,
+          1
+        ],
+        "direct": [
+          0,
+          0,
+          0,
+          0.20000000298023224,
+          0,
+          0,
+          0.4000000059604645,
+          0,
+          0,
+          0.6000000238418579,
+          0,
+          0,
+          0.800000011920929,
+          0,
+          0
+        ],
+        "output": [
+          0.800000011920929,
+          0,
+          0,
+          0.20000000298023224,
+          0,
+          0,
+          0.4000000059604645,
+          0,
+          0,
+          0.6000000238418579,
+          0,
+          0
+        ],
+        "added": 5,
+        "count": 4,
+        "stored_keys": [
+          273154564,
+          270008833,
+          271057410,
+          272105987
+        ]
+      },
+      {
+        "name": "ring-reaccept-evicted",
+        "input_u16": [
+          [
+            0,
+            0,
+            0
+          ]
+        ],
+        "bounds": [
+          0,
+          1,
+          0,
+          1,
+          0,
+          1
+        ],
+        "direct": [
+          0,
+          0,
+          0
+        ],
+        "output": [
+          0.800000011920929,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0.4000000059604645,
+          0,
+          0,
+          0.6000000238418579,
+          0,
+          0
+        ],
+        "added": 1,
+        "count": 4,
+        "stored_keys": [
+          273154564,
+          268960256,
+          271057410,
+          272105987
+        ]
+      },
+      {
+        "name": "empty-input",
+        "input_u16": [],
+        "bounds": [
+          0,
+          1,
+          0,
+          1,
+          0,
+          1
+        ],
+        "direct": [],
+        "output": [
+          0.800000011920929,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0.4000000059604645,
+          0,
+          0,
+          0.6000000238418579,
+          0,
+          0
+        ],
+        "added": 0,
+        "count": 4,
+        "stored_keys": [
+          273154564,
+          268960256,
+          271057410,
+          272105987
+        ]
+      }
+    ]
+  },
+  {
+    "mode": "mesh",
+    "sha256": "1ba27f065199954dc562b233aa38ea775ac687118cce77b5c71bc14e17e05542",
+    "assertions_passed": true,
+    "memory_bytes": 65536000,
+    "cases": [
+      {
+        "name": "empty-volume",
+        "points": 0,
+        "faces": 0,
+        "decompressed_size": 61440,
+        "decoded_matches_expected": true,
+        "bbox": null
+      },
+      {
+        "name": "known-lz4-offset-match",
+        "points": 0,
+        "faces": 0,
+        "decompressed_size": 61440,
+        "decoded_matches_expected": true,
+        "bbox": null
+      },
+      {
+        "name": "isolated-interior",
+        "points": 1,
+        "faces": 6,
+        "decompressed_size": 61440,
+        "decoded_matches_expected": true,
+        "bbox": [
+          [
+            3,
+            4,
+            5
+          ],
+          [
+            4,
+            5,
+            6
+          ]
+        ]
+      },
+      {
+        "name": "same-point-color-shift",
+        "points": 1,
+        "faces": 6,
+        "decompressed_size": 61440,
+        "decoded_matches_expected": true,
+        "bbox": [
+          [
+            3,
+            4,
+            5
+          ],
+          [
+            4,
+            5,
+            6
+          ]
+        ]
+      },
+      {
+        "name": "adjacent-x",
+        "points": 2,
+        "faces": 10,
+        "decompressed_size": 61440,
+        "decoded_matches_expected": true,
+        "bbox": [
+          [
+            3,
+            4,
+            5
+          ],
+          [
+            5,
+            5,
+            6
+          ]
+        ]
+      },
+      {
+        "name": "adjacent-y",
+        "points": 2,
+        "faces": 10,
+        "decompressed_size": 61440,
+        "decoded_matches_expected": true,
+        "bbox": [
+          [
+            3,
+            4,
+            5
+          ],
+          [
+            4,
+            6,
+            6
+          ]
+        ]
+      },
+      {
+        "name": "adjacent-z",
+        "points": 2,
+        "faces": 10,
+        "decompressed_size": 61440,
+        "decoded_matches_expected": true,
+        "bbox": [
+          [
+            3,
+            4,
+            5
+          ],
+          [
+            4,
+            5,
+            7
+          ]
+        ]
+      },
+      {
+        "name": "separated",
+        "points": 2,
+        "faces": 12,
+        "decompressed_size": 61440,
+        "decoded_matches_expected": true,
+        "bbox": [
+          [
+            3,
+            4,
+            5
+          ],
+          [
+            6,
+            5,
+            6
+          ]
+        ]
+      },
+      {
+        "name": "bit-order-extremes",
+        "points": 2,
+        "faces": 12,
+        "decompressed_size": 61440,
+        "decoded_matches_expected": true,
+        "bbox": [
+          [
+            0,
+            0,
+            0
+          ],
+          [
+            8,
+            1,
+            1
+          ]
+        ]
+      },
+      {
+        "name": "volume-upper-corner",
+        "points": 1,
+        "faces": 6,
+        "decompressed_size": 61440,
+        "decoded_matches_expected": true,
+        "bbox": [
+          [
+            127,
+            127,
+            29
+          ],
+          [
+            128,
+            128,
+            30
+          ]
+        ]
+      },
+      {
+        "name": "solid-cube-2",
+        "points": 8,
+        "faces": 24,
+        "decompressed_size": 61440,
+        "decoded_matches_expected": true,
+        "bbox": [
+          [
+            3,
+            4,
+            5
+          ],
+          [
+            5,
+            6,
+            7
+          ]
+        ]
+      },
+      {
+        "name": "solid-cube-3",
+        "points": 27,
+        "faces": 54,
+        "decompressed_size": 61440,
+        "decoded_matches_expected": true,
+        "bbox": [
+          [
+            3,
+            4,
+            5
+          ],
+          [
+            6,
+            7,
+            8
+          ]
+        ]
+      },
+      {
+        "name": "independent-frame-empty",
+        "points": 0,
+        "faces": 0,
+        "decompressed_size": 61440,
+        "decoded_matches_expected": true,
+        "bbox": null
+      }
+    ]
+  }
+]
