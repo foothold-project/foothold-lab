@@ -1,6 +1,7 @@
 # [FOOTHOLD] Unitree Go2 사족보행 강화학습 데이터 산출물 명세서
 
-> 분류: 제출 산출물
+> 분류: 제출 산출물 (팀 공식)
+> 팀: FOOTHOLD (실증-02) · 오흥재 (팀장) · 임석헌 · 오현민 · 이민우
 > 작성: Claude 세션 (오흥재 지시, lead-lx) · 산출물 2 칸 임석헌 · 2026-11-20
 > 근거: 팀장 11/20 11:02 지시 양식 · 학습 실행 EX-42-B-E1F 원본 설정 (`params/agent.yaml` · `params/env.yaml`) · 저장본 sha256 실측 · 계보 문서 `docs/research/20261119-lineage-6-canon3-m15500.md` · 산출물 2: 저장본 `tp424_in_p1_s5_from17000/model_16999.pt` (sha256 실측) · 같은 폴더 `params/agent.yaml` · `params/env.yaml` · `sync_record.txt` · 평가 기록 `docs/stage1_logs/req424/ev/results/evalx_raw_tpevf24_b1.txt` · 정리 표 `docs/MODEL_27K_AVG_LEVEL_TABLE.md` (FOOTHOLD AME-2 작업 저장소)
 > 요지: 정책 가중치 (.pt) 와 학습 설정 (.yaml) 을 데이터 산출물로 낸다. 산출물 1 (START 기반 m15500) 은 채움 · 산출물 2 (AME-2 재현 teacher · 누적 27,001 iter) 도 채움
