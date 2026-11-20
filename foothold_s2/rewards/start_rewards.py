@@ -112,6 +112,18 @@ def track_lin_vel_min_on_columns(env, command_name, std, min_columns, asset_cfg=
     return track_lin_mixed(asset.data.root_lin_vel_b[:, :2], env.command_manager.get_command(command_name)[:, :2], std, on)
 
 
+def track_lin_vel_min_fwd_on_columns(env, command_name, std, min_fwd_columns, asset_cfg=SceneEntityCfg("robot")):
+    """선속도 추종 (틈 후보 1 · verifier START-GAP 1121): 지형 열이 `min_fwd_columns` 이고 전진 명령 (cmd_x > 0) 인 env 만 x 성분 START 포화식, 나머지는 정확 추종.
+    항 이름 · std 칸은 그대로라 실시간 조정 (track_lin_vel_std) 이 그대로 먹는다. `EX42_TRACK_LIN_MIN_FWD_KINDS` 로 켠다 (ex42_gap_switches)."""
+    from foothold_s2.ex42_gap_switches import column_env_mask, track_lin_fwd_saturated
+
+    asset = env.scene[asset_cfg.name]
+    terrain = env.scene.terrain
+    on = column_env_mask(terrain.terrain_types, tuple(min_fwd_columns), int(terrain.terrain_origins.shape[1]))
+
+    return track_lin_fwd_saturated(asset.data.root_lin_vel_b[:, :2], env.command_manager.get_command(command_name)[:, :2], std, on)
+
+
 def calf_ext_limit_band(env, asset_cfg=SceneEntityCfg("robot", joint_names=".*_calf_joint"), margin=core.CALF_BAND_MARGIN):
     """종아리 펴짐 한계 띠 (창 3 처방 후보 1축): 네 calf 의 sum max(0, q - (hard 상한 - margin)). hard 상한은 시뮬레이터(data.joint_pos_limits)에서 읽고 상수로 박지 않는다.
     부호는 가중치가 정한다(음수 가중치 = 벌점). `calf_ext_limit_band_term` 으로 붙이면 기본 가중치 0(꺼짐)이다."""

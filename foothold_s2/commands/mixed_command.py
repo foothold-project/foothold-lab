@@ -226,7 +226,9 @@ class MixedVelocityCommand(CommandTerm):
                     continue
                 was_stand = self.stand[group].clone() if runtime is not None else None
                 stone = (self._stone_mask(group) if runtime is not None and getattr(runtime.plan.stages[index], "stone_forward_floor", None) else None)
-                out = (mc.resample_stage(self.gen, len(group), runtime.plan.stages[index], self._yaw(group), stone)
+                gkinds = tuple(getattr(runtime.plan.stages[index], "gap_forward_kinds", ()) or ()) if runtime is not None else ()
+                gap = self._kinds_env_all(gkinds)[group] if gkinds else None
+                out = (mc.resample_stage(self.gen, len(group), runtime.plan.stages[index], self._yaw(group), stone, gap)
                        if runtime is not None else
                        mc.resample_free_modes(self.gen, len(group), self.params, self.iteration,
                                               self.range_curriculum.vmax_x, self.range_curriculum.vmax_y,
@@ -246,6 +248,8 @@ class MixedVelocityCommand(CommandTerm):
                 self.new_task.on_resample(group, out["cmd"].to(self.device), self.params)
                 if stone is not None:
                     self._stone_note(out, stone, float(runtime.plan.stages[index].stone_forward_floor))
+                if gap is not None:
+                    self._gap_note(out, gap)
                 if "slot" in out:
                     self.slot_counts += torch.bincount(out["slot"].to(self.device), minlength=len(self.slot_names))
                     self.slot_current[group] = out["slot"].to(self.device)
@@ -313,6 +317,44 @@ class MixedVelocityCommand(CommandTerm):
         if bool(((columns < 0) | (columns >= len(kinds))).any()):
             raise ValueError("EX-42 stone_forward_floor: a terrain column is outside the column table")
         return kinds[columns]
+
+    def _kinds_env_all(self, kinds):
+        """(num_envs,) bool: the env's terrain column is one of `kinds` ("family/kind"). Unknown names or a missing table are errors (never a silent off)."""
+        table = getattr(getattr(self._env, "unwrapped", self._env), "_ex42_column_table", None)
+        if table is None:
+            raise ValueError("EX-42 gap_forward_kinds needs the column table (raw._ex42_column_table) on the environment")
+        names = {"%s/%s" % (row["family"], row["kind"]) for row in table}
+        if set(kinds) - names:
+            raise ValueError("EX-42 gap_forward_kinds not in the column table: %s" % sorted(set(kinds) - names))
+        lut = torch.tensor(["%s/%s" % (row["family"], row["kind"]) in set(kinds) for row in table], dtype=torch.bool, device=self.device)
+        columns = self._env.scene.terrain.terrain_types.long().to(self.device)
+        if bool(((columns < 0) | (columns >= len(lut))).any()):
+            raise ValueError("EX-42 gap_forward_kinds: a terrain column is outside the column table")
+        return lut[columns]
+
+    def _gap_note(self, out, gap):
+        """Record only: commands drawn on the listed columns (forward, turn in place, smallest forward vx) and forward draws elsewhere."""
+        if not hasattr(self, "_gap_acc"):
+            self._gap_acc = torch.zeros(4, device=self.device)
+            self._gap_min = torch.full((), 9.0, device=self.device)
+        slot = out["slot"].to(self.device)
+        vx = out["cmd"][:, 0].to(self.device)
+        g = gap.to(self.device)
+        go, turn = g & (slot == 0), g & ((slot == 3) | (slot == 4))
+        self._gap_acc += torch.stack([go.sum(), turn.sum(), (g & ~go & ~turn).sum(), (~g & (slot == 0)).sum()]).float()
+        if bool(go.any()):
+            self._gap_min = torch.minimum(self._gap_min, vx[go].min())
+
+    def gap_forward_summary(self):
+        """(kinds, envs on them, envs, forward draws there, turn draws there, other draws there (must be 0), forward draws elsewhere, smallest forward vx there) or None."""
+        runtime = getattr(self, "stage_runtime", None)
+        stages = getattr(getattr(runtime, "plan", None), "stages", None)
+        kinds = tuple(getattr(stages[0], "gap_forward_kinds", ()) or ()) if stages else ()
+        if not kinds:
+            return None
+        acc = getattr(self, "_gap_acc", torch.zeros(4, device=self.device)).tolist()
+        low = float(getattr(self, "_gap_min", torch.full((), 9.0)))
+        return (kinds, int(self._kinds_env_all(kinds).sum()), int(self.num_envs), int(acc[0]), int(acc[1]), int(acc[2]), int(acc[3]), None if low > 8 else low)
 
     def _stone_mask(self, group):
         return self._stone_env_all()[group]

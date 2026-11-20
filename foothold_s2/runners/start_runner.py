@@ -535,6 +535,11 @@ class StartRunner(OnPolicyRunner):
         else:
             print("EX42_STONE_FWD_FLOOR it=%d floor=%g stone_envs=%d of=%d stone_fwd_draws=%d stone_below_floor=%d other_fwd_draws=%d other_below_floor=%d stone_fwd_min=%s" % (
                 it, got[0], got[1], got[2], got[3], got[4], got[5], got[6], "none" if got[7] is None else "%.3f" % got[7]) + (" kinds=%s" % ",".join(stage.stone_forward_floor_kinds) if getattr(stage, "stone_forward_floor_kinds", ()) else ""), flush=True)
+        gsum = getattr(self._command_term(), "gap_forward_summary", None)
+        gg = gsum() if gsum is not None else None
+        if gg is not None:     # only when EX42_GAP_FWD_CMD_KINDS is set: off prints nothing (the old log stays line for line)
+            print("EX42_GAP_FWD_CMD it=%d kinds=%s gap_envs=%d of=%d gap_fwd_draws=%d gap_turn_draws=%d gap_other_draws=%d other_fwd_draws=%d gap_fwd_min=%s" % (
+                it, ",".join(gg[0]), gg[1], gg[2], gg[3], gg[4], gg[5], gg[6], "none" if gg[7] is None else "%.3f" % gg[7]), flush=True)
         hold = getattr(stage, "slow_hold_range_s", None)
         print("EX42_COMMAND_CELLS it=%d low_side_fraction=%g low_forward_fraction=%g slow_hold_range_s=%s" % (
             it, float(getattr(stage, "low_side_fraction", 0.0)), float(stage.low_forward_fraction),

@@ -3,6 +3,9 @@
   EX42_EDGE_EXTRA_KINDS      발 가장자리 항 (foot_edge) 의 마스크를 더 넓은 열까지 (예: B/gap,B/beam,C/gap). 마스크는 메시 윗면에서 시작할 때 만든다
                              (메시 파일 · 메시 sha · 계획 sha 는 안 바뀐다). 가중치는 계획 행의 foot_edge_weight 그대로 (0 이면 오류).
   EX42_TRACK_LIN_MIN_KINDS   그 열 env 의 선속도 추종만 START 원문 식 exp(-|min(v, cmd) - cmd|^2 / std^2) (과속 무벌점). 나머지 열은 지금 식 (정확 추종).
+  EX42_TRACK_LIN_MIN_FWD_KINDS  틈 후보 1 (verifier START-GAP 1121): 그 열 env 중 전진 명령 (cmd_x > 0) 인 env 만 x 성분을 START 포화식 min(v_x, cmd_x) 로 (전진 과속 무벌점),
+                             y 성분은 정확 추종 그대로. 뒤 · 옆 · 정지 명령과 다른 열은 지금 식. EX42_TRACK_LIN_MIN_KINDS 와 같이 켜면 오류 (같은 항을 둘이 바꿈).
+                             성분별 min 을 y 에도 쓰면 vy 명령 0 에서 왼쪽 쏠림이 무벌점이 되므로 x 만 포화시키는 것은 우리 이식 설계다 (원문 식 그대로가 아님).
   EX42_FALL_PLANE_KINDS      그 열 env 의 발 빠짐 종료를 출발 발판 평면 기준으로 (발 z < 타일 원점 z - 0.25). 나머지 열은 지금 식 (가장 가까운 스캔 점 기준).
 
 값은 family/kind 목록 (A/gaps,B/gap,C/gap 처럼). 열 표에 없는 이름 · 중복 · 모양이 틀린 값은 오류 (조용히 꺼지지 않게).
@@ -16,6 +19,7 @@ from typing import Any
 ENV_EDGE = "EX42_EDGE_EXTRA_KINDS"
 ENV_MIN = "EX42_TRACK_LIN_MIN_KINDS"
 ENV_PLANE = "EX42_FALL_PLANE_KINDS"
+ENV_MIN_FWD = "EX42_TRACK_LIN_MIN_FWD_KINDS"
 PLANE_MARGIN_M = 0.25                       # go2_params.TERMINATION["foot_below_ground_m"] 와 같은 값 (START 원문 221 행의 여유)
 _NAME = re.compile(r"[A-F]/[a-z_0-9]+")
 
@@ -43,13 +47,16 @@ def columns_of(kinds: tuple[str, ...], table: list[dict[str, Any]]) -> tuple[int
 
 def read_switches(table: list[dict[str, Any]], environ=None) -> dict[str, Any]:
     """{edge_kinds, min_kinds, plane_kinds (각 family/kind 튜플), edge_columns, min_columns, plane_columns}. 셋 다 꺼져 있으면 모두 빈 값."""
-    edge, mn, plane = (parse_kinds(n, table, environ) for n in (ENV_EDGE, ENV_MIN, ENV_PLANE))
-    return {"edge_kinds": edge, "min_kinds": mn, "plane_kinds": plane,
-            "edge_columns": columns_of(edge, table), "min_columns": columns_of(mn, table), "plane_columns": columns_of(plane, table)}
+    edge, mn, plane, fwd = (parse_kinds(n, table, environ) for n in (ENV_EDGE, ENV_MIN, ENV_PLANE, ENV_MIN_FWD))
+    if mn and fwd:
+        raise ValueError("%s and %s both change the linear tracking term: set one" % (ENV_MIN, ENV_MIN_FWD))
+    return {"edge_kinds": edge, "min_kinds": mn, "plane_kinds": plane, "min_fwd_kinds": fwd,
+            "edge_columns": columns_of(edge, table), "min_columns": columns_of(mn, table), "plane_columns": columns_of(plane, table),
+            "min_fwd_columns": columns_of(fwd, table)}
 
 
 def any_on(sw: dict[str, Any]) -> bool:
-    return bool(sw["edge_kinds"] or sw["min_kinds"] or sw["plane_kinds"])
+    return bool(sw["edge_kinds"] or sw["min_kinds"] or sw["plane_kinds"] or sw.get("min_fwd_kinds"))
 
 
 def receipt(sw: dict[str, Any]) -> dict[str, Any]:
@@ -61,6 +68,8 @@ def receipt(sw: dict[str, Any]) -> dict[str, Any]:
         out["track_lin_min_kinds"] = list(sw["min_kinds"])
     if sw["plane_kinds"]:
         out["fall_plane_kinds"] = list(sw["plane_kinds"])
+    if sw.get("min_fwd_kinds"):
+        out["track_lin_min_fwd_kinds"] = list(sw["min_fwd_kinds"])
     return {"gap_switches": out} if out else {}
 
 
@@ -73,6 +82,11 @@ def apply_cfg(env_cfg, sw: dict[str, Any], track_func=None) -> None:
         env_cfg.rewards.track_lin_vel.params["min_columns"] = list(sw["min_columns"])
     if sw["plane_kinds"]:
         env_cfg.terminations.foot_below_ground.params["plane_columns"] = list(sw["plane_columns"])
+    if sw.get("min_fwd_kinds"):
+        if track_func is None:
+            raise ValueError("track_func is required when %s is set" % ENV_MIN_FWD)
+        env_cfg.rewards.track_lin_vel.func = track_func
+        env_cfg.rewards.track_lin_vel.params["min_fwd_columns"] = list(sw["min_fwd_columns"])
 
 
 # ---- 순수 torch 식 (Isaac 없이 시험) ------------------------------------------------------------------------------------------------------
@@ -83,6 +97,16 @@ def track_lin_mixed(vel_xy, cmd_xy, std: float, min_env):
     exact = torch.exp(-torch.sum((cmd_xy - vel_xy) ** 2, dim=-1) / std ** 2)
     low = torch.exp(-torch.sum((torch.minimum(vel_xy, cmd_xy) - cmd_xy) ** 2, dim=-1) / std ** 2)
     return torch.where(min_env, low, exact)
+
+
+def track_lin_fwd_saturated(vel_xy, cmd_xy, std: float, col_env):
+    """(N,) 선속도 추종 (틈 후보 1). col_env (N,) bool 이고 cmd_x > 0 인 env 는 exp(-((min(v_x, c_x) - c_x)^2 + (v_y - c_y)^2) / std^2) (전진 과속 무벌점 ·
+    옆은 정확), 나머지 env 는 정확 추종 exp(-|cmd - v|^2 / std^2) (track_lin_vel_xy_exp 와 같은 식)."""
+    import torch
+    exact = torch.exp(-torch.sum((cmd_xy - vel_xy) ** 2, dim=-1) / std ** 2)
+    ex = torch.minimum(vel_xy[:, 0], cmd_xy[:, 0]) - cmd_xy[:, 0]
+    sat = torch.exp(-(ex ** 2 + (vel_xy[:, 1] - cmd_xy[:, 1]) ** 2) / std ** 2)
+    return torch.where(col_env & (cmd_xy[:, 0] > 0), sat, exact)
 
 
 def column_env_mask(types, columns: tuple[int, ...], n_columns: int):
