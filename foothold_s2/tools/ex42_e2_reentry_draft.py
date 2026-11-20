@@ -124,13 +124,23 @@ def rule_shares(terrain: dict) -> dict:
     return {f"{r['family']}/{r['kind']}": float(r["share"]) for r in rules if "kind" in r and "share" in r}
 
 
-def set_kind_shares(terrain: dict, shares: dict | None, add: dict | None) -> tuple[dict, dict]:
+def set_kind_shares(terrain: dict, shares: dict | None, add: dict | None, drop: list | None = None) -> tuple[dict, dict]:
     """(terrain, report). `add` {family/kind: level_cap} appends single-kind rows at share 0; `shares` {family/kind: value} sets shares.
+    `drop` [family/kind] takes the rows out of the plan (a share-0 row is refused, so a kind that is to get no envs has no row; the freed share goes to the
+    weight rules, the continuous columns, by the exposure rule: they take 1 - sum(share)). The sum must then equal the bundle total minus the dropped shares.
     The sum of the single-kind shares must equal the sum before (the bundle total), to 1e-6. Raises before anything is written."""
     block = terrain[f"exposure_at_{STAGE}"]
     rules = [dict(r) for r in block["positive"]]
     before = rule_shares(terrain)
-    report = {"before": dict(before), "added": {}, "set": {}}
+    report = {"before": dict(before), "added": {}, "set": {}, "dropped": {}}
+    for kind in (drop or []):
+        if kind not in before:
+            raise ValueError(f"--drop-kind {kind}: no such single-kind share row (have {sorted(before)})")
+        if kind in (add or {}) or kind in (shares or {}):
+            raise ValueError(f"--drop-kind {kind}: cannot also be added or given a share")
+        report["dropped"][kind] = before[kind]
+    rules = [r for r in rules if not ("kind" in r and "share" in r and f"{r['family']}/{r['kind']}" in report["dropped"])]
+    allowed_total = BUNDLE_TOTAL - sum(report["dropped"].values())
     for kind, cap in (add or {}).items():
         family, _, name = kind.partition("/")
         if not family or not name or kind in before:
@@ -154,8 +164,8 @@ def set_kind_shares(terrain: dict, shares: dict | None, add: dict | None) -> tup
     zero = sorted(k for k, v in after.items() if v <= 0)
     if zero:
         raise ValueError(f"single-kind rows at share 0: {zero} (give them a share with --kind-share or do not add them)")
-    if abs(BUNDLE_TOTAL - total_after) > 1e-6:
-        raise ValueError(f"the single-kind shares add up to {total_after:.6f}, the bundle is {BUNDLE_TOTAL:.6f}: name the receiving kind in the same call "
+    if abs(allowed_total - total_after) > 1e-6:
+        raise ValueError(f"the single-kind shares add up to {total_after:.6f}, the bundle is {allowed_total:.6f}: name the receiving kind in the same call "
                          f"(before {before}, after {after})")
     report.update(after=after, total=total_after)
     return terrain, report
@@ -199,7 +209,7 @@ def check_ledger_pin(pin: dict, repo, adapter: str) -> dict:
 def draft(source_dir: Path, run_dir: Path, iteration: int, mesh_dir: Path, out: Path, *, profile: str = "e2_easy10_beam_edge",
           promotion: dict | None = None, adjust_from: Path | None = None, keep_mesh: bool = False,
           bake_caps_run: Path | None = None, bake_boundaries: int = 0, kind_caps: dict | None = None,
-          kind_shares: dict | None = None, add_kinds: dict | None = None, exit_judge: str | None = None, ledger_pin: dict | None = None, ledger_repo=None) -> dict:
+          kind_shares: dict | None = None, add_kinds: dict | None = None, drop_kinds: list | None = None, exit_judge: str | None = None, ledger_pin: dict | None = None, ledger_repo=None) -> dict:
     source_dir, out = Path(source_dir).resolve(strict=True), Path(out).absolute()
     if out.exists():
         raise FileExistsError(f"{out} exists (a draft folder is never reused)")
@@ -224,8 +234,8 @@ def draft(source_dir: Path, run_dir: Path, iteration: int, mesh_dir: Path, out: 
     if bake_caps_run is not None or kind_caps:
         row["terrain"], caps_report = set_kind_caps(row["terrain"], bake_caps_run, bake_boundaries, kind_caps)
     shares_report = None
-    if kind_shares or add_kinds:
-        row["terrain"], shares_report = set_kind_shares(row["terrain"], kind_shares, add_kinds)
+    if kind_shares or add_kinds or drop_kinds:
+        row["terrain"], shares_report = set_kind_shares(row["terrain"], kind_shares, add_kinds, drop_kinds)
     if promotion is not None:
         plan["terrain_promotion"] = promotion
     plan.pop("materialization", None)
@@ -290,6 +300,7 @@ def main(argv=None):
     p.add_argument("--kind-cap", action="append", default=[], metavar="FAMILY/KIND=N", help="lower one kind's level cap (repeatable)")
     p.add_argument("--kind-share", action="append", default=[], metavar="FAMILY/KIND=VALUE", help="set one single kind's share (repeatable); the sum must stay the bundle total")
     p.add_argument("--add-kind", action="append", default=[], metavar="FAMILY/KIND=CAP", help="add a single-kind row at share 0 with this level cap (the second door C/box=4); give it a share with --kind-share")
+    p.add_argument("--drop-kind", action="append", default=[], metavar="FAMILY/KIND", help="take a single-kind row out of the plan (repeatable); its share goes to the continuous columns and the bundle total falls by it")
     p.add_argument("--exit-judge", default=None, help="E2 stage exit adapter for the new OUT (and the E3 entry gate that names it), e.g. mapgain_two_boundary_e2")
     p.add_argument("--ledger-pin", type=Path, help="json file with the ledger line that approves the --exit-judge swap (required with it)")
     p.add_argument("--ledger-repo", type=Path, help="the ledger checkout (default: EX42_LEDGER_REPO)")
@@ -301,7 +312,7 @@ def main(argv=None):
     print(json.dumps(draft(a.source_dir, a.run_dir, a.iteration, a.mesh_dir, a.out, profile=a.profile, promotion=cell,
                                           adjust_from=a.adjust_from, keep_mesh=a.keep_mesh,
                                           bake_caps_run=a.bake_caps_run, bake_boundaries=a.bake_boundaries, kind_caps=caps or None,
-                                          kind_shares=shares or None, add_kinds=adds or None, exit_judge=a.exit_judge,
+                                          kind_shares=shares or None, add_kinds=adds or None, drop_kinds=a.drop_kind or None, exit_judge=a.exit_judge,
                                           ledger_pin=json.loads(a.ledger_pin.read_text(encoding="utf-8")) if a.ledger_pin else None, ledger_repo=a.ledger_repo), indent=1))
 
 

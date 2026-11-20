@@ -208,3 +208,27 @@ def test_the_sum_is_held_to_the_bundle_0_44_itself_and_a_zero_share_row_is_refus
     bad["exposure_at_E2"]["positive"][1]["share"] = 0.10                                      # a source that is already off the bundle (0.40)
     with pytest.raises(ValueError, match="bundle is 0.440000"):
         rd.set_kind_shares(bad, {"B/gap": 0.0533}, None)                                      # keeping the wrong sum is not enough
+
+
+def test_drop_kind_takes_the_row_out_and_the_bundle_falls_by_its_share_and_the_exposure_builder_still_builds():
+    """E2 r2 m250 (lead 11/20 21:1x): B/gap, C/gap, B/beam out of the plan (a share-0 row is refused), first doors untouched: 0.44 -> 0.28."""
+    terrain = _v1_terrain()
+    out, report = rd.set_kind_shares(terrain, None, None, ["B/gap", "C/gap", "B/beam"])
+    after = rd.rule_shares(out)
+    assert sorted(after) == ["A/balance_beams", "A/gaps"] and after["A/gaps"] == before_first_door(terrain, "A/gaps")
+    assert report["dropped"] == {"B/gap": 0.0533, "C/gap": 0.0533, "B/beam": 0.0534} and report["total"] == pytest.approx(0.28, abs=1e-9)
+    assert rd.rule_caps(out) == {"A/gaps": 1, "A/balance_beams": 1}                       # the caps of the kept rows are unchanged
+    assert [r for r in out["exposure_at_E2"]["positive"] if "kinds_of" in r]                # the continuous weight rule stays: it takes 1 - 0.28
+
+
+def before_first_door(terrain, kind):
+    return rd.rule_shares(terrain)[kind]
+
+
+def test_drop_kind_refuses_a_kind_that_is_not_a_row_or_is_also_given_a_share_and_keeps_the_sum_honest():
+    with pytest.raises(ValueError, match="no such single-kind share row"):
+        rd.set_kind_shares(_v1_terrain(), None, None, ["C/box"])
+    with pytest.raises(ValueError, match="cannot also be added or given a share"):
+        rd.set_kind_shares(_v1_terrain(), {"B/gap": 0.05}, None, ["B/gap"])
+    with pytest.raises(ValueError, match="name the receiving kind"):
+        rd.set_kind_shares(_v1_terrain(), {"A/gaps": 0.20}, None, ["B/gap"])          # one dropped, the rest not summing to 0.44 - 0.0533
