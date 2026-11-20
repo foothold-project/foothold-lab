@@ -199,3 +199,12 @@ def test_the_e2_v1_reentry_with_c_box_reads_through_the_launch_side_readers(tmp_
     with pytest.raises(ValueError, match="name the receiving kind"):
         rd.draft(SOURCE_V1, run, 250, MESH, tmp_path / "bad", keep_mesh=True, kind_shares={"A/gaps": 0.03})
     assert not (tmp_path / "bad").exists()
+
+
+def test_the_sum_is_held_to_the_bundle_0_44_itself_and_a_zero_share_row_is_refused():
+    with pytest.raises(ValueError, match="share 0"):
+        rd.set_kind_shares(_v1_terrain(), None, {"C/box": 4})                                 # --add-kind alone leaves a zero row
+    bad = _v1_terrain()
+    bad["exposure_at_E2"]["positive"][1]["share"] = 0.10                                      # a source that is already off the bundle (0.40)
+    with pytest.raises(ValueError, match="bundle is 0.440000"):
+        rd.set_kind_shares(bad, {"B/gap": 0.0533}, None)                                      # keeping the wrong sum is not enough

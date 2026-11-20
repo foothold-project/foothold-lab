@@ -17,9 +17,13 @@ materialized plan folder and changes only:
   * kind shares (optional, lead 11/20 18:08): --add-kind <family/kind>=<cap> opens a new single-kind row at share 0 (the second door, C/box) and
                           --kind-share <family/kind>=<value> (repeatable) sets the share of single kinds. The sum of the single-kind shares must
                           stay what the source plan had (the 0.44 bundle), so a share freed by one kind (a graduated kind goes to 0.03) has to be
-                          named on another in the same call; otherwise the draft is refused and nothing is written;
-  * the E2 exit judge (optional, lead 11/20 18:08 (B)): --exit-judge <adapter> sets stages[E2].exit_judge, the E3 entry_gate_adapter that names the same judge and the
-                          approvals file's later_stage_entry_gate_adapter of the E2 cell (mapgain_two_boundary_e2 = graduation by map gain in two consecutive boundaries);
+                          named on another in the same call; otherwise the draft is refused and nothing is written. The sum is checked against the bundle total 0.44
+                          itself (not only against the source), and a single-kind row at share 0 is refused;
+  * the E2 exit judge (optional, lead 11/20 18:08 (B), reviewer 18:25): --exit-judge <adapter> sets stages[E2].exit_judge, the E3 row's entry_gate_adapter (the gate that
+                          leaves E2) and the approvals file's stage_e3_authorization.later_stage_entry_gate_adapter, which the repo keeps equal to it (stage_e2's cell is the
+                          gate INTO E2 and is not touched). A gate swap needs a ledger line: --ledger-pin <json> {commit, path, line, line_text, line_sha256, decision_id}
+                          is checked like the cap handoff approval (commit is an ancestor of the published ledger ref, the line is in the ledger at that commit, its sha
+                          matches) and the line has to carry EXIT_JUDGE_LINE_TAG, the decision id and the adapter name. mapgain_two_boundary_e2 = graduation by map gain in two boundaries;
   * the approval cell's scope.parent_sha256 and the plan's stage_zero.approval_sha256 (the approvals file bytes changed).
 The `materialization` declaration and transition.json are NOT carried over: they describe E1F -> E2 with a gate receipt, and a plan
 that still carried them would be re-derived from that gate (validate_materialized_transition) and refused. The draft writes its own
@@ -41,6 +45,8 @@ STAGE = "E2"
 DEFAULT_KINDS = ["A/gaps", "B/gap", "C/gap", "B/beam", "A/balance_beams", "B/pallets", "A/stepping_beams",
                  "A/stepping_stones_low", "A/stepping_stones_high", "B/stones"]
 REENTRY_FORMAT = "foothold-ex42-e2-reentry/1"
+BUNDLE_TOTAL = 0.44      # the sparse bundle share of every E2..E4 start (test_ex42_stage_exposure_cpu SPARSE)
+EXIT_JUDGE_LINE_TAG = "[E2 졸업 관문 교체 승인 줄 · exit_judge]"
 
 
 def _sha(path):
@@ -143,18 +149,47 @@ def set_kind_shares(terrain: dict, shares: dict | None, add: dict | None) -> tup
              for r in rules]
     terrain = {**terrain, f"exposure_at_{STAGE}": {**block, "positive": rules}}
     after = rule_shares(terrain)
-    total_before, total_after = sum(before.values()), sum(after.values())
-    if abs(total_before - total_after) > 1e-6:
-        raise ValueError(f"the single-kind shares add up to {total_after:.6f}, the bundle is {total_before:.6f}: name the receiving kind in the same call "
+    total_after = sum(after.values())
+    zero = sorted(k for k, v in after.items() if v <= 0)
+    if zero:
+        raise ValueError(f"single-kind rows at share 0: {zero} (give them a share with --kind-share or do not add them)")
+    if abs(BUNDLE_TOTAL - total_after) > 1e-6:
+        raise ValueError(f"the single-kind shares add up to {total_after:.6f}, the bundle is {BUNDLE_TOTAL:.6f}: name the receiving kind in the same call "
                          f"(before {before}, after {after})")
     report.update(after=after, total=total_after)
     return terrain, report
 
 
+def check_ledger_pin(pin: dict, repo, adapter: str) -> dict:
+    """The ledger line that approves swapping the E2 exit gate to `adapter` (same pin shape and rules as ex42_e1_cap_handoff._check_approval):
+    the commit is an ancestor of the published ledger ref, the line text hashes to line_sha256 and is a line of the ledger at that commit, and it
+    carries the tag, the decision id and the adapter name. Returns the pin."""
+    import os
+    import subprocess
+    from foothold_s2.ex42_e1_cap_handoff import LEDGER_PATH, LEDGER_REMOTE_REF, LEDGER_REPO_ENV, _ledger_lines
+    if not isinstance(pin, dict) or set(pin) != {"commit", "path", "line", "line_text", "line_sha256", "decision_id"}:
+        raise ValueError("--ledger-pin needs exactly commit, path, line, line_text, line_sha256, decision_id")
+    repo = repo or os.environ.get(LEDGER_REPO_ENV)
+    if not repo:
+        raise ValueError(f"--exit-judge needs the ledger repository ({LEDGER_REPO_ENV} or --ledger-repo)")
+    if pin["path"] != LEDGER_PATH:
+        raise ValueError("ledger path is not the registered decisions file")
+    if subprocess.run(["git", "-C", str(repo), "merge-base", "--is-ancestor", str(pin["commit"]), LEDGER_REMOTE_REF], capture_output=True, check=False).returncode != 0:
+        raise ValueError(f"the ledger commit is not on {LEDGER_REMOTE_REF} (a local commit is not an approval)")
+    text = pin["line_text"]
+    if not isinstance(text, str) or hashlib.sha256(text.encode("utf-8")).hexdigest() != pin["line_sha256"]:
+        raise ValueError("ledger line text differs from its sha256")
+    if text.encode("utf-8") not in _ledger_lines(repo, pin["commit"], pin["path"]):
+        raise ValueError("the ledger line is not in the ledger at that commit")
+    if not pin["decision_id"] or any(n not in text for n in (EXIT_JUDGE_LINE_TAG, pin["decision_id"], adapter)):
+        raise ValueError(f"the ledger line must carry {EXIT_JUDGE_LINE_TAG}, the decision id and {adapter}")
+    return pin
+
+
 def draft(source_dir: Path, run_dir: Path, iteration: int, mesh_dir: Path, out: Path, *, profile: str = "e2_easy10_beam_edge",
           promotion: dict | None = None, adjust_from: Path | None = None, keep_mesh: bool = False,
           bake_caps_run: Path | None = None, bake_boundaries: int = 0, kind_caps: dict | None = None,
-          kind_shares: dict | None = None, add_kinds: dict | None = None, exit_judge: str | None = None) -> dict:
+          kind_shares: dict | None = None, add_kinds: dict | None = None, exit_judge: str | None = None, ledger_pin: dict | None = None, ledger_repo=None) -> dict:
     source_dir, out = Path(source_dir).resolve(strict=True), Path(out).absolute()
     if out.exists():
         raise FileExistsError(f"{out} exists (a draft folder is never reused)")
@@ -190,11 +225,14 @@ def draft(source_dir: Path, run_dir: Path, iteration: int, mesh_dir: Path, out: 
         from foothold_s2.ex42_stage_judges import ADAPTERS
         if exit_judge not in ADAPTERS:
             raise ValueError(f"--exit-judge {exit_judge}: not a registered adapter (have {sorted(ADAPTERS)})")
+        check_ledger_pin(ledger_pin, ledger_repo, exit_judge)
         nxt = next(r for r in plan["stages"] if r["id"] == "E3")
+        gate_cell = approvals["stage_e3_authorization"]          # the gate that leaves E2 is the E3 row's entry gate and E3's approval cell, kept equal by the repo tests
         judge_report = {"E2.exit_judge": [row.get("exit_judge"), exit_judge],
                         "E3.entry_gate_adapter": [nxt["authorization_contract"]["entry_gate_adapter"], exit_judge],
-                        "approvals.later_stage_entry_gate_adapter": [cell.get("later_stage_entry_gate_adapter"), exit_judge]}
-        row["exit_judge"] = nxt["authorization_contract"]["entry_gate_adapter"] = cell["later_stage_entry_gate_adapter"] = exit_judge
+                        "approvals.stage_e3.later_stage_entry_gate_adapter": [gate_cell.get("later_stage_entry_gate_adapter"), exit_judge],
+                        "ledger_pin": ledger_pin}
+        row["exit_judge"] = nxt["authorization_contract"]["entry_gate_adapter"] = gate_cell["later_stage_entry_gate_adapter"] = exit_judge
     cell["scope"]["parent_sha256"] = pin["sha256"]
     approval_bytes = _dump(approvals)
     plan["stage_zero"]["approval_sha256"] = hashlib.sha256(approval_bytes).hexdigest()
@@ -243,6 +281,8 @@ def main(argv=None):
     p.add_argument("--kind-share", action="append", default=[], metavar="FAMILY/KIND=VALUE", help="set one single kind's share (repeatable); the sum must stay the bundle total")
     p.add_argument("--add-kind", action="append", default=[], metavar="FAMILY/KIND=CAP", help="add a single-kind row at share 0 with this level cap (the second door C/box=4); give it a share with --kind-share")
     p.add_argument("--exit-judge", default=None, help="E2 stage exit adapter for the new OUT (and the E3 entry gate that names it), e.g. mapgain_two_boundary_e2")
+    p.add_argument("--ledger-pin", type=Path, help="json file with the ledger line that approves the --exit-judge swap (required with it)")
+    p.add_argument("--ledger-repo", type=Path, help="the ledger checkout (default: EX42_LEDGER_REPO)")
     a = p.parse_args(argv)
     caps = {k: int(v) for k, v in (item.split("=", 1) for item in a.kind_cap)}
     shares = {k: float(v) for k, v in (item.split("=", 1) for item in a.kind_share)}
@@ -251,7 +291,8 @@ def main(argv=None):
     print(json.dumps(draft(a.source_dir, a.run_dir, a.iteration, a.mesh_dir, a.out, profile=a.profile, promotion=cell,
                                           adjust_from=a.adjust_from, keep_mesh=a.keep_mesh,
                                           bake_caps_run=a.bake_caps_run, bake_boundaries=a.bake_boundaries, kind_caps=caps or None,
-                                          kind_shares=shares or None, add_kinds=adds or None, exit_judge=a.exit_judge), indent=1))
+                                          kind_shares=shares or None, add_kinds=adds or None, exit_judge=a.exit_judge,
+                                          ledger_pin=json.loads(a.ledger_pin.read_text(encoding="utf-8")) if a.ledger_pin else None, ledger_repo=a.ledger_repo), indent=1))
 
 
 if __name__ == "__main__":

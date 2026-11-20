@@ -151,6 +151,7 @@ def main(argv=None) -> int:
     ap.add_argument("--root", required=True, help="folder with the child run outputs")
     ap.add_argument("--kinds", required=True, help="kind=level pairs, e.g. A/gaps=1,A/balance_beams=1,C/box=5")
     ap.add_argument("--mesh-dir", required=True)
+    ap.add_argument("--mesh-dir-box", default=None, help="mesh folder the C/box kind was evaluated on (default: --mesh-dir); each verdict records the geometry sha256 of its mesh")
     ap.add_argument("--boundary", type=int, required=True, help="boundary number b (iteration / 250)")
     ap.add_argument("--out", required=True, help="eval/scores/m<iter> folder: writes mapgain_outcomes.json and ladder_outcomes_list.json")
     ap.add_argument("--earlier", default=None, help="an earlier ladder_outcomes_list.json to extend (default: the nearest earlier boundary's file next to --out)")
@@ -175,6 +176,7 @@ def main(argv=None) -> int:
             cells[sp] = read_cell(a.root, tag, sp, threshold=thr)
         v = judge_kind(cells)
         v["level"] = level
+        v["mesh_sha256"] = json.loads((Path(a.mesh_dir_box if name == "box" and a.mesh_dir_box else a.mesh_dir) / "mesh_manifest.json").read_text(encoding="utf-8-sig"))["mesh_sha256"]
         v["crossed_definition"] = "alive_end" if name == "box" else f"farthest x >= first gap end + 0.3 m ({thr})"
         verdicts[kind] = v
     out = Path(a.out)
