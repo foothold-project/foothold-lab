@@ -158,7 +158,7 @@ def reset_root_state_by_column(env, env_ids, lo, hi, velocity_range, asset_cfg=N
     asset.write_root_velocity_to_sim(velocities, env_ids=env_ids)
 
 
-def apply_column_reset(env_cfg, table: list[dict[str, Any]]) -> dict | None:
+def apply_column_reset(env_cfg, table: list[dict[str, Any]], *, beam_start_env='EX42_BEAM_START_Y') -> dict | None:
     """Swap env_cfg.events.reset_base for the per-column version (Kit python)."""
     if not table:
         raise ValueError("EX-42 reset table missing: refusing to fall back to the default range silently")
@@ -166,7 +166,7 @@ def apply_column_reset(env_cfg, table: list[dict[str, Any]]) -> dict | None:
 
     lo, hi = table_tensors(table)
     from foothold_s2.ex42_beam_start import configure
-    receipt = configure(table, lo, hi)
+    receipt = configure(table, lo, hi, key=beam_start_env)
     old = env_cfg.events.reset_base.params
     env_cfg.events.reset_base = EventTermCfg(
         func=reset_root_state_by_column, mode="reset",

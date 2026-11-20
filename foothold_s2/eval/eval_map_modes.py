@@ -247,11 +247,13 @@ if parser_sparse:                                                               
 args.ex42_mesh = None
 if args.mesh_dir:
     from foothold_s2.eval.ex42_mesh_eval import attach as _attach_ex42_mesh
+    _beam_start_kind = kind_cell and args.ex42_kind_family == 'A' and args.ex42_kind_name == 'balance_beams'
     if args.crop_margin is None:
-        args.ex42_mesh = _attach_ex42_mesh(env_cfg, args.mesh_dir)
+        args.ex42_mesh = _attach_ex42_mesh(env_cfg, args.mesh_dir, beam_start_kind=_beam_start_kind)
     else:
         args.ex42_mesh = _attach_ex42_mesh(env_cfg, args.mesh_dir, crop_margin=args.crop_margin, crop_level=args.fixed_level,
-                                           crop_family=args.ex42_kind_family, crop_kind=args.ex42_kind_name)
+                                           crop_family=args.ex42_kind_family, crop_kind=args.ex42_kind_name,
+                                           beam_start_kind=_beam_start_kind)
 if args.push_ladder:
     from foothold_s2.eval.ex41_push_ladder import configure_single_terrain
 

@@ -97,7 +97,8 @@ def crop_cells_for(record, *, level, family=None, kind=None):
     return [(int(level), i) for i in ids]
 
 
-def attach(env_cfg, mesh_dir, *, crop_margin=None, crop_level=None, crop_family=None, crop_kind=None):
+def attach(env_cfg, mesh_dir, *, crop_margin=None, crop_level=None, crop_family=None, crop_kind=None,
+           beam_start_kind=False):
     """Before gym.make: mount exact mesh and its declared per-column reset.
 
     `crop_margin` (CPU evaluation only, default None = the whole mesh as always) keeps just the triangles around the cells the
@@ -115,5 +116,9 @@ def attach(env_cfg, mesh_dir, *, crop_margin=None, crop_level=None, crop_family=
             record["mesh_npz"], record["mesh_sha256"], crop_margin=crop_margin,
             crop_cells=crop_cells_for(record, level=crop_level, family=crop_family, kind=crop_kind))
     env_cfg.scene.terrain.max_init_terrain_level = 2
-    record.update(apply_column_reset(env_cfg, build_column_table(record["column_family"])) or {})
+    # Evaluation never inherits the training knob. Keep/map64/default consumers
+    # retain their old reset; only an explicit named-kind call opts in.
+    from foothold_s2.ex42_beam_start import EVAL_ENV
+    record.update(apply_column_reset(env_cfg, build_column_table(record["column_family"]),
+                                     beam_start_env=EVAL_ENV if beam_start_kind else None) or {})
     return record

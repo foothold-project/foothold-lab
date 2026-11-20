@@ -39,6 +39,8 @@ def cfg():
 @pytest.fixture(autouse=True)
 def seams(monkeypatch):
     monkeypatch.delenv(ENV, raising=False)
+    monkeypatch.delenv('EX42_BEAM_START_Y_EVAL', raising=False)
+    monkeypatch.delenv('EX42_BEAM_START_Y_FLAG', raising=False)
     managers = ModuleType('isaaclab.managers')
     managers.EventTermCfg = Term
     monkeypatch.setitem(sys.modules, 'isaaclab.managers', managers)
@@ -129,9 +131,10 @@ def test_evaluation_attachment_is_same_sampler_and_seed_fixed(monkeypatch):
     record = {'column_family': FAMILIES, 'mesh_npz': 'mesh.npz', 'mesh_sha256': 'a' * 64}
     monkeypatch.setattr(me, 'preflight', lambda p: copy.deepcopy(record))
     monkeypatch.setenv(ENV, '.05')
+    monkeypatch.setenv('EX42_BEAM_START_Y_EVAL', '.05')
     train, _ = training()
     ev = cfg()
-    result = me.attach(ev, Path('mesh'))
+    result = me.attach(ev, Path('mesh'), beam_start_kind=True)
     assert result['beam_start_y']['half_width_m'] == .05
     for seed in (42, 43, 44):
         p, _, _, _, _ = reset(ev, seed)
@@ -195,3 +198,167 @@ def test_mapswap_probe_uses_shared_eval_entry_without_reset_override():
     source = probe.read_text()
     assert 'runpy.run_module("foothold_s2.eval.eval_map_modes"' in source
     assert 'reset_base' not in source and 'write_root_pose_to_sim' not in source
+
+
+@pytest.mark.parametrize('train_value', ['on', '.03', '.1'])
+def test_train_on_eval_unset_preserves_kind_keep_and_flag_bytes(monkeypatch, train_value):
+    from foothold_s2 import ex42_beam_start as beam
+    record = {'column_family': FAMILIES, 'mesh_npz': 'mesh.npz', 'mesh_sha256': 'a' * 64}
+    monkeypatch.setattr(me, 'preflight', lambda p: copy.deepcopy(record))
+    for kind in (False, True):
+        monkeypatch.delenv(ENV, raising=False)
+        baseline = cfg()
+        before = me.attach(baseline, 'mesh', beam_start_kind=kind)
+        a = reset(baseline, 42)
+        monkeypatch.setenv(ENV, train_value)
+        actual = cfg()
+        after = me.attach(actual, 'mesh', beam_start_kind=kind)
+        b = reset(actual, 42)
+        assert json.dumps(before).encode() == json.dumps(after).encode()
+        for i in range(3):
+            assert a[i].numpy().tobytes() == b[i].numpy().tobytes()
+        # Official flag evaluation pins all ranges, and adds no field when eval is off.
+        cr.pin_column_reset_midpoint(baseline.events.reset_base)
+        beam.configure_flag_reset(actual.events.reset_base, after)
+        assert json.dumps(before).encode() == json.dumps(after).encode()
+        assert beam.flag_receipt_fields(after, 42) == {}
+        for a0, b0 in zip(reset(baseline, 42)[:3], reset(actual, 42)[:3]):
+            assert a0.numpy().tobytes() == b0.numpy().tobytes()
+
+
+def test_eval_on_is_independent_kind_only_and_flag_midpoint_by_default(monkeypatch):
+    from foothold_s2 import ex42_beam_start as beam
+    record = {'column_family': FAMILIES, 'mesh_npz': 'mesh.npz', 'mesh_sha256': 'a' * 64}
+    monkeypatch.setattr(me, 'preflight', lambda p: copy.deepcopy(record))
+    monkeypatch.setenv('EX42_BEAM_START_Y_EVAL', '.04')
+    train, tr = training()
+    assert 'beam_start_y' not in tr
+    keep, kind, flag = cfg(), cfg(), cfg()
+    assert me.attach(keep, 'mesh') == record
+    kr = me.attach(kind, 'mesh', beam_start_kind=True)
+    assert kr['beam_start_y']['env'] == 'EX42_BEAM_START_Y_EVAL'
+    assert kr['beam_start_y']['half_width_m'] == .04
+    fr = me.attach(flag, 'mesh')
+    beam.configure_flag_reset(flag.events.reset_base, fr)
+    assert fr['beam_start_policy']['mode'] == 'midpoint'
+    assert fr['beam_start_policy']['effective_half_width_m'] == 0
+    assert fr['beam_start_policy']['requested_half_width_m'] == .04
+    fields = beam.flag_receipt_fields(fr, 43)
+    assert fields['beam_start_policy']['eval_seed'] == 43
+    assert torch.equal(flag.events.reset_base.params['lo'], flag.events.reset_base.params['hi'])
+
+
+def test_flag_opt_in_unpins_only_beam_y_and_keeps_all_other_midpoints(monkeypatch):
+    from foothold_s2 import ex42_beam_start as beam
+    record = {'column_family': FAMILIES, 'mesh_npz': 'mesh.npz', 'mesh_sha256': 'a' * 64}
+    monkeypatch.setattr(me, 'preflight', lambda p: copy.deepcopy(record))
+    monkeypatch.setenv('EX42_BEAM_START_Y_EVAL', '.06')
+    monkeypatch.setenv('EX42_BEAM_START_Y_FLAG', '1')
+    ev = cfg()
+    mounted = me.attach(ev, 'mesh')
+    before = copy.deepcopy(ev.events.reset_base)
+    cr.pin_column_reset_midpoint(before)
+    beam.configure_flag_reset(ev.events.reset_base, mounted)
+    ids = mounted['beam_start_y']['columns']
+    lo, hi = ev.events.reset_base.params['lo'], ev.events.reset_base.params['hi']
+    assert torch.all(lo[ids, 1] == -.06) and torch.all(hi[ids, 1] == .06)
+    assert mounted['beam_start_policy']['mode'] == 'uniform'
+    for name in ('lo', 'hi'):
+        restored = ev.events.reset_base.params[name].clone()
+        restored[ids, 1] = before.params[name][ids, 1]
+        assert torch.equal(restored, before.params[name])
+    assert torch.equal(reset(ev, 43)[0], reset(ev, 43)[0])
+    assert not torch.equal(reset(ev, 43)[0], reset(ev, 44)[0])
+    assert beam.flag_receipt_fields(mounted, 42)['beam_start_y']['half_width_m'] == .06
+
+
+@pytest.mark.parametrize('flag,ev', [('2', 'on'), ('on', 'on'), ('1', None), ('1', '0'), ('0', 'nan')])
+def test_invalid_flag_choice_or_missing_eval_range_is_rejected(monkeypatch, flag, ev):
+    from foothold_s2 import ex42_beam_start as beam
+    monkeypatch.setenv('EX42_BEAM_START_Y_FLAG', flag)
+    if ev is not None:
+        monkeypatch.setenv('EX42_BEAM_START_Y_EVAL', ev)
+    c = cfg()
+    cr.apply_column_reset(c, cr.build_column_table(FAMILIES))
+    with pytest.raises(ValueError, match='EX42_BEAM_START_Y'):
+        beam.configure_flag_reset(c.events.reset_base, {'column_family': FAMILIES})
+
+
+def test_official_flag_config_and_receipt_consume_the_policy():
+    source = (ROOT / 'foothold_s2/eval/ex42_flag_eval.py').read_text()
+    tree = ast.parse(source)
+    fn = next(n for n in tree.body if isinstance(n, ast.FunctionDef) and n.name == '_configure')
+    calls = [n for n in ast.walk(fn) if isinstance(n, ast.Call)]
+    assert any(ast.unparse(n.func) == 'beam_start.configure_flag_reset' for n in calls)
+    assert not any(ast.unparse(n.func) == 'pin_column_reset_midpoint' for n in calls)
+    # Execute the actual receipt expression's expansion, not a separately written imitation.
+    main = next(n for n in tree.body if isinstance(n, ast.FunctionDef) and n.name == 'main')
+    rec = next(n.value for n in ast.walk(main) if isinstance(n, ast.Assign)
+               and any(isinstance(t, ast.Name) and t.id == 'receipt' for t in n.targets))
+    expansion = next(v for k, v in zip(rec.keys, rec.values) if k is None
+                     and 'beam_start.flag_receipt_fields' in ast.unparse(v))
+    from foothold_s2 import ex42_beam_start as beam_start
+    expr = ast.Expression(expansion)
+    result = eval(compile(expr, '<official flag header>', 'eval'),
+                  {'beam_start': beam_start, 'mounted': {}, 'args': NS(seed=42)})
+    assert result == {}
+
+
+@pytest.mark.parametrize('family,kind,crop', [(None, None, None), ('A', 'balance_beams', None),
+                                          ('A', 'balance_beams', 8), ('B', 'beam', None),
+                                          ('A', 'pyramid_stairs', None)])
+def test_actual_map_eval_attach_statement_scopes_the_eval_knob(monkeypatch, family, kind, crop):
+    record = {'column_family': FAMILIES, 'mesh_npz': 'mesh.npz', 'mesh_sha256': 'a' * 64,
+              'columns': [r['kind'] for r in cr.build_column_table(FAMILIES)], 'eval_cols': 23}
+    monkeypatch.setattr(me, 'preflight', lambda p: copy.deepcopy(record))
+    monkeypatch.setenv(ENV, 'on')
+    monkeypatch.setenv('EX42_BEAM_START_Y_EVAL', '.03')
+    tree = ast.parse((ROOT / 'foothold_s2/eval/eval_map_modes.py').read_text())
+    entry = next(n for n in tree.body if isinstance(n, ast.If) and ast.unparse(n.test) == 'args.mesh_dir')
+    ns = {'args': NS(mesh_dir='mesh', crop_margin=crop, fixed_level=1, ex42_kind_family=family,
+                     ex42_kind_name=kind, ex42_mesh=None), 'env_cfg': cfg(), 'kind_cell': kind is not None}
+    exec(compile(ast.Module(body=[entry], type_ignores=[]), '<actual map attach>', 'exec'), ns)
+    mounted = ns['args'].ex42_mesh
+    assert ('beam_start_y' in mounted) == (family == 'A' and kind == 'balance_beams')
+    if 'beam_start_y' in mounted:
+        assert mounted['beam_start_y']['half_width_m'] == .03
+
+
+def test_actual_official_flag_config_training_on_does_not_leak(monkeypatch):
+    from foothold_s2 import ex42_beam_start as beam
+    record = {'column_family': FAMILIES, 'mesh_npz': 'mesh.npz', 'mesh_sha256': 'a' * 64}
+    monkeypatch.setattr(me, 'preflight', lambda p: copy.deepcopy(record))
+    obs = ModuleType('foothold_s2.sensors.start_obs')
+    obs.AUG = NS(enabled=True)
+    monkeypatch.setitem(sys.modules, obs.__name__, obs)
+    source = (ROOT / 'foothold_s2/eval/ex42_flag_eval.py').read_text()
+    fn = next(n for n in ast.parse(source).body if isinstance(n, ast.FunctionDef) and n.name == '_configure')
+    def load(_task, key):
+        if key == 'rsl_rl_cfg_entry_point':
+            return NS()
+        c = cfg()
+        c.observations = NS(policy=NS(enable_corruption=True))
+        c.curriculum, c.sim = NS(), NS()
+        c.events.reset_robot_joints = Term()
+        c.commands = NS(base_velocity=NS(params={}))
+        c.actions = NS(joint_pos=NS())
+        return c
+    ns = {'load_cfg_from_registry': load, 'kind_cell': False, 'beam_start': beam,
+          'args': NS(task='EX42', envs=64, seed=42, device='cpu', mesh_dir='mesh',
+                     expected_mesh_sha256='a' * 64, count='flag_one'),
+          'adapters': NS(disable_eval_randomization=lambda c: ['disabled']),
+          'COUNTS': {'flag_one': 1}, 'settings': {'reach_radius_m': .3, 'flag_speed_mps': .5},
+          'ex42_friction': NS(configure=lambda *a: None), 'friction_policy': {}}
+    exec(compile(ast.Module(body=[fn], type_ignores=[]), '<official _configure>', 'exec'), ns)
+    before, _, _, br = ns['_configure']()
+    monkeypatch.setenv(ENV, 'on')
+    after, _, _, ar = ns['_configure']()
+    assert json.dumps(br).encode() == json.dumps(ar).encode()
+    for a, b in zip(reset(before, 42)[:3], reset(after, 42)[:3]):
+        assert a.numpy().tobytes() == b.numpy().tobytes()
+    monkeypatch.setenv('EX42_BEAM_START_Y_EVAL', '.05')
+    monkeypatch.setenv('EX42_BEAM_START_Y_FLAG', '1')
+    explicit, _, _, er = ns['_configure']()
+    ids = er['beam_start_y']['columns']
+    assert torch.all(explicit.events.reset_base.params['lo'][ids, 1] == -.05)
+    assert torch.all(explicit.events.reset_base.params['hi'][ids, 1] == .05)
