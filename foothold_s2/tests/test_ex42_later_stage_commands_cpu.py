@@ -71,6 +71,7 @@ def test_the_stage_start_view_carries_the_level_up_cell_so_the_rule_is_not_silen
     from foothold_s2.curriculum import ex41
     source = te.load_ex42_stage_zero_source(plan)
     args = (source[0], source[1], {"parent_sha256": "0" * 64})
+    shipped = plan.document.pop("terrain_promotion", None)         # the E2 v1 restart plan ships the cell ON: take it out to see the view with and without it
     assert ex41.terrain_promotion_cell(te.make_ex42_stage_zero_plan_view(*args, ex42_plan=plan, stage_id="E1F")) is None
     cell = {"x_progress_kinds": ["A/gaps"], "x_progress_fraction": 0.5, "forward_only": True}
     plan.document["terrain_promotion"] = cell
@@ -78,4 +79,6 @@ def test_the_stage_start_view_carries_the_level_up_cell_so_the_rule_is_not_silen
         got = ex41.terrain_promotion_cell(te.make_ex42_stage_zero_plan_view(*args, ex42_plan=plan, stage_id="E1F"))
     finally:
         del plan.document["terrain_promotion"]
+        if shipped is not None:
+            plan.document["terrain_promotion"] = shipped
     assert got is not None and got["x_progress_kinds"] == ("A/gaps",) and got["forward_only"] is True

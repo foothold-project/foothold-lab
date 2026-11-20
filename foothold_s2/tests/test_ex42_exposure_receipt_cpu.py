@@ -17,7 +17,7 @@ from foothold_s2.scripts import ex42_training_entry as te
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
 PLAN = ROOT / "foothold_s2" / "curriculum" / "ex42-prep.yaml"
-MESH = pathlib.Path("/home/jay/data/foothold/s2_lab/ex42_mesh_1118_easy10/seed42_E0_c333_flags_E2_1111_v2_edge_easy10")   # the mesh the plan pins for E3 (easy ladder, CG E.12 draft)
+MESH = pathlib.Path("/mnt/win-d/mai/data/foothold/sonnet_beam_mesh_1119/b2m_rpy_lv")   # the mesh the plan pins for every stage since the E2 v1 restart (e2_easy10_beam_edge, geometry 7deb20ce; was the easy10 mesh on 11/19)
 PSHA = "a" * 64
 
 
