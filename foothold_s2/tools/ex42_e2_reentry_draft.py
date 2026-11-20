@@ -34,6 +34,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import re
 import shutil
 from pathlib import Path
 
@@ -179,10 +180,19 @@ def check_ledger_pin(pin: dict, repo, adapter: str) -> dict:
     text = pin["line_text"]
     if not isinstance(text, str) or hashlib.sha256(text.encode("utf-8")).hexdigest() != pin["line_sha256"]:
         raise ValueError("ledger line text differs from its sha256")
-    if text.encode("utf-8") not in _ledger_lines(repo, pin["commit"], pin["path"]):
-        raise ValueError("the ledger line is not in the ledger at that commit")
-    if not pin["decision_id"] or any(n not in text for n in (EXIT_JUDGE_LINE_TAG, pin["decision_id"], adapter)):
-        raise ValueError(f"the ledger line must carry {EXIT_JUDGE_LINE_TAG}, the decision id and {adapter}")
+    lines = _ledger_lines(repo, pin["commit"], pin["path"])
+    number = pin["line"]
+    if type(number) is not int or not 1 <= number <= len(lines) or lines[number - 1] != text.encode("utf-8"):
+        raise ValueError("the ledger line is not at the pinned line number of the ledger at that commit")
+    if not pin["decision_id"] or any(n not in text for n in (EXIT_JUDGE_LINE_TAG, pin["decision_id"])):
+        raise ValueError(f"the ledger line must carry {EXIT_JUDGE_LINE_TAG} and the decision id")
+    # the adapter is a named field of the line (exact name, not a substring: a line that mentions the old adapter in its reason must not approve the old one)
+    named = re.findall(r"어댑터 ([A-Za-z0-9_]+)", text)
+    if named != [adapter]:
+        raise ValueError(f"the ledger line must name exactly one adapter field ('어댑터 <name>') and it must be {adapter} (found {named})")
+    ids = re.findall(r"결정 id ([A-Za-z0-9_.\-]+)", text)
+    if ids != [pin["decision_id"]]:
+        raise ValueError(f"the ledger line's decision id field ('결정 id <id>') must be exactly {pin['decision_id']} (found {ids})")
     return pin
 
 
