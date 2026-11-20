@@ -97,7 +97,7 @@ class _Ctx:
     pass
 
 
-def _verify_fixture(tmp_path, monkeypatch, verdict_now="graduate", verdict_old="ceiling", *, level_now=5, level_old=5, mesh=BEAM_MESH, receipts=True, learned="PASS"):
+def _verify_fixture(tmp_path, monkeypatch, verdict_now="graduate", verdict_old="ceiling", *, level_now=5, level_old=5, mesh=BEAM_MESH, receipts=True, learned="PASS", measured=None):
     """The score comes from the real MapGainTwoBoundaryJudge.judge() over files in tmp_path; only the parts that need the real Kit baseline
     (maintenance table, learned_cells reader, previous window lookup) are replaced."""
     from foothold_s2 import ex42_e0_judge, ex42_learned_cells_evidence, ex42_stage_judges
@@ -115,8 +115,9 @@ def _verify_fixture(tmp_path, monkeypatch, verdict_now="graduate", verdict_old="
     kinds = mx.judged_kinds(plan)
     scores = tmp_path / "eval" / "scores"
     scores.mkdir(parents=True)
-    now = _boundary(scores, 500, {k: _row(verdict_now, level_now, mesh) for k in kinds})
-    _boundary(scores, 250, {k: _row(verdict_old, level_old, mesh) for k in kinds})
+    rows = [k for k in kinds if measured is None or k in measured]
+    now = _boundary(scores, 500, {k: _row(verdict_now, level_now, mesh) for k in rows})
+    _boundary(scores, 250, {k: _row(verdict_old, level_old, mesh) for k in rows})
     if receipts:
         _receipt(tmp_path, 250)
         _receipt(tmp_path, 0)
@@ -135,6 +136,38 @@ def test_judge_runs_end_to_end_and_its_score_passes_the_p1_verify(tmp_path, monk
     assert verdict == "PASS" and score["stage_exit"]["adapter"] == mx.NAME and score["mapgain_exit"]["end_level"] == 5
     assert {k: v for k, v in seen.items()} == {tuple(k.split("/", 1)): True for k in mx.judged_kinds(plan)}       # the previous window's passes reach learned_cells
     assert ADAPTERS[mx.NAME].verify(score, "PASS", "PASS", plan=plan) == {"stage_exit": score["stage_exit"]}
+
+
+FIRST_ORDER = [k for k in ("A/gaps", "A/balance_beams", "C/box")]
+
+
+def test_the_three_third_order_kinds_are_not_judged_until_a_boundary_measures_them():
+    kinds = mx.judged_kinds(_plan())
+    rows = {k: _row("graduate") for k in FIRST_ORDER}
+    items = mx.kind_items(kinds, rows, dict(rows), 5)
+    for k in mx.NOT_LEARNED_YET:
+        assert items[f"{k}/L5/mapgain_current"]["role"] == "record_only" and "아직 안 배움" in items[f"{k}/L5/mapgain_current"]["reason"]
+    assert aggregate(i["judgement"] for i in items.values() if i["role"] == "judge") == "PASS"
+    # the eval starts measuring B/gap: only the current boundary has it, so the previous one is a HOLD (two boundaries are needed), no longer skipped
+    now = {**rows, "B/gap": _row("graduate")}
+    items = mx.kind_items(kinds, now, dict(rows), 5)
+    assert items["B/gap/L5/mapgain_current"]["role"] == "judge" and items["B/gap/L5/mapgain_previous"]["judgement"] == "HOLD"
+    assert aggregate(i["judgement"] for i in items.values() if i["role"] == "judge") == "HOLD"
+    # and a measured not_yet is a FAIL, not a skip
+    assert mx.kind_items(kinds, {**rows, "C/gap": _row("not_yet")}, {**rows, "C/gap": _row("graduate")}, 5)["C/gap/L5/mapgain_current"]["judgement"] == "FAIL"
+    # a first-order kind with no row is still a HOLD
+    assert mx.kind_items(kinds, {"A/gaps": _row("graduate")}, None, 5)["C/box/L5/mapgain_current"]["judgement"] == "HOLD"
+
+
+def test_the_stage_exit_passes_end_to_end_with_only_the_first_order_kinds_measured_and_the_p1_verify_accepts_it(tmp_path, monkeypatch):
+    plan, score, verdict = _verify_fixture(tmp_path, monkeypatch, measured=FIRST_ORDER)
+    seen = score.pop("_named_kinds_seen")
+    assert verdict == "PASS" and [k for k, v in seen.items() if v] == [tuple(k.split("/", 1)) for k in FIRST_ORDER]
+    assert all(score["stage_exit"]["items"][f"{k}/L5/mapgain_current"]["role"] == "record_only" for k in mx.NOT_LEARNED_YET)
+    assert ADAPTERS[mx.NAME].verify(score, "PASS", "PASS", plan=plan) == {"stage_exit": score["stage_exit"]}
+    score["stage_exit"]["items"]["A/gaps/L5/mapgain_current"]["role"] = "record_only"   # a first-order kind cannot be hidden as record_only
+    with pytest.raises(ValueError):
+        ADAPTERS[mx.NAME].verify(score, "PASS", "PASS", plan=plan)
 
 
 def test_a_hand_typed_caps_level_is_refused_against_the_training_receipt(tmp_path, monkeypatch):

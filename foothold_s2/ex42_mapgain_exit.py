@@ -35,6 +35,10 @@ NAME = "mapgain_two_boundary_e2"
 STAGE = "E2"
 GRADUATED_VERDICTS = ("graduate", "ceiling")
 HOLD_FLOOR = 0.03
+# Kinds of the E2 start block that are the THIRD learning order (lead-lx 11/20 18:3x, look-at (a) answer): the boundary eval does not measure them yet, so until a boundary
+# carries a verdict row for one of them it is recorded as "undecidable, not learned yet" (role record_only) and does not block the stage. From the boundary on whose eval
+# measures it (a row in the current or the previous boundary) it is judged like any other kind, and a row missing at the other boundary is then a HOLD.
+NOT_LEARNED_YET = ("B/gap", "C/gap", "B/beam")
 # Evaluation meshes that are not a training profile of the plan: the v1 boundary eval measures gap and beam kinds on the beam mesh (ex42_v1_boundary_eval.sh V1_MESH).
 EVAL_MESHES = {"7deb20ce792dfc408e9c1ba032448e684f233f58f3e517659606094d3063abba": "sonnet_beam_mesh_1119/b2m_rpy_lv"}
 
@@ -126,6 +130,10 @@ def kind_items(kinds: list[str], now: dict | None, previous: dict | None, end: i
         check_rows(kinds, previous, caps_previous, meshes, "previous boundary")
     items = {}
     for kind in kinds:
+        if kind in NOT_LEARNED_YET and (now or {}).get(kind) is None and (previous or {}).get(kind) is None:
+            skipped = {"role": "record_only", "judgement": "HOLD", "reason": "판정 불가 (아직 안 배움: 셋째 순서, 경계 평가에 아직 없음)"}
+            items[f"{kind}/L{end}/mapgain_current"] = items[f"{kind}/L{end}/mapgain_previous"] = skipped
+            continue
         items[f"{kind}/L{end}/mapgain_current"] = kind_state((now or {}).get(kind), end, caps_now is not None or meshes is None)
         items[f"{kind}/L{end}/mapgain_previous"] = kind_state((previous or {}).get(kind), end, caps_previous is not None or meshes is None)
     return items
@@ -205,10 +213,10 @@ class MapGainTwoBoundaryJudge(StageJudge):
             raise ValueError("EX-42 map-gain P1 outcomes differ from the files")
         names = {"maintenance_current", "maintenance_previous", "learned_cells", *recount}
         if (exit_row.get("adapter") != self.name or exit_row.get("windows") != 2 or exit_row.get("judgement") != judgment or set(items) != names or
-                any(item.get("judgement") not in ("PASS", "HOLD", "FAIL") or item.get("role") != "judge" for item in items.values()) or
+                any(item.get("judgement") not in ("PASS", "HOLD", "FAIL") or item.get("role") not in ("judge", "record_only") for item in items.values()) or
                 _map39_cell_check(score, judgment, ("eval_gt", "eval_pred", "probe_prop_only")) != expected or
                 items.get("maintenance_current", {}).get("judgement") != expected or
-                aggregate(item.get("judgement") for item in items.values()) != judgment):
+                aggregate(item.get("judgement") for item in items.values() if item.get("role") == "judge") != judgment):
             raise ValueError("EX-42 map-gain P1 aggregate stage exit differs")
         if any(items[k] != v for k, v in recount.items()):
             raise ValueError("EX-42 map-gain P1 kind items differ from the recount")
