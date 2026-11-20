@@ -26,6 +26,8 @@
   --team-pos-col: 50mm;      /* 포지션 */
   /* 간격 */
   --section-gap: 4.2mm;      /* 절 사이 */
+  --table-gap: 1.6mm;        /* 표와 표 사이 */
+  --h3-gap: 2.6mm;           /* 소제목 위 간격 */
   --page-margin: 11mm 12mm 12mm 12mm;  /* 쪽 여백 (위 오른쪽 아래 왼쪽) · @page 줄도 같이 고칠 것 */
   /* 색 */
   --ink: #1c2329; --sub: #56616b; --line: #c9d0d6; --soft: #eef2f4; --key: #f6f8f9; --accent: #1f5a6e; --warn: #a3412c;
@@ -50,9 +52,30 @@ h2 { font-size: var(--font-h2); font-weight: 730; margin: 0 0 2mm; padding-botto
 h2 .no { color: var(--accent); margin-right: 2mm; }
 .sec { break-inside: avoid; }
 .sec + .sec { margin-top: var(--section-gap); }
-h3 { font-size: var(--font-h3); font-weight: 690; margin: 2.6mm 0 1.2mm; }
+h3 { font-size: var(--font-h3); font-weight: 690; margin: var(--h3-gap) 0 1.2mm; }
 p { margin: 0 0 1.5mm; }
-table { width: 100%; border-collapse: collapse; margin: 0 0 1.6mm; font-size: var(--font-table); }
+table { width: 100%; border-collapse: collapse; margin: 0 0 var(--table-gap); font-size: var(--font-table); }
+
+/* ---------- 화면 미리보기 (인쇄 · PDF 에는 안 나옴) ---------- */
+@media screen {
+  html { background: #8f979e; }
+  body { padding: 8mm 360px 8mm 8mm; }
+  .page { width: 210mm; height: 297mm; padding: 11mm 12mm 12mm 12mm; margin: 0 auto 8mm; background: #fff; box-shadow: 0 2px 10px rgba(0,0,0,.35); position: relative; overflow: hidden; }
+  .page::after { content: attr(data-label); position: absolute; right: 12mm; bottom: 5mm; font-size: 7.2pt; color: #56616b; }
+  .page.over { outline: 2.5pt solid #d1342f; }
+  .page.over::before { content: "이 쪽 넘침 · 아래가 다음 쪽으로 밀림"; position: absolute; left: 12mm; bottom: 4.5mm; color: #fff; background: #d1342f; font-size: 8pt; padding: 0.6mm 2mm; z-index: 2; }
+  .fill { position: absolute; left: 0; top: 0; width: 4px; background: #1f5a6e; opacity: .55; }
+  #panel { position: fixed; top: 10px; right: 10px; width: 330px; max-height: calc(100vh - 20px); overflow: auto; background: #fff; border: 1px solid #c9d0d6; border-radius: 6px; padding: 10px 12px; font: 12px/1.4 Pretendard, sans-serif; box-shadow: 0 2px 12px rgba(0,0,0,.3); z-index: 10; }
+  #panel h4 { margin: 8px 0 4px; font-size: 12px; color: #1f5a6e; }
+  #panel label { display: grid; grid-template-columns: 112px 1fr 58px; gap: 6px; align-items: center; margin: 2px 0; }
+  #panel input[type=range] { width: 100%; }
+  #panel .v { text-align: right; font-variant-numeric: tabular-nums; color: #1c2329; }
+  #panel button { margin: 6px 4px 0 0; padding: 4px 8px; font: inherit; border: 1px solid #1f5a6e; background: #1f5a6e; color: #fff; border-radius: 4px; cursor: pointer; }
+  #panel button.alt { background: #fff; color: #1f5a6e; }
+  #panel .hint { color: #56616b; font-size: 11px; margin-top: 6px; }
+  #pages { font-weight: 700; }
+}
+@media print { #panel { display: none; } .fill { display: none; } }
 th, td { border: var(--table-line) solid var(--line); padding: var(--cell-pad-y) var(--cell-pad-x); vertical-align: top; text-align: left; }
 thead th { background: var(--soft); font-weight: 660; }
 td.k { width: var(--key-col); background: var(--key); color: var(--sub); font-weight: 620; }
@@ -307,5 +330,76 @@ state = ame2["go2_env_state"]              # 완료 회차 · 출발 저장본 �
   </div>
 </section>
 
+<!-- 조정 패널: 화면에서만 보이고 PDF 에는 안 나온다 -->
+<div id="panel">
+  <b>조정 칸</b> · 쪽 <span id="pages"></span>
+  <div id="ctl"></div>
+  <button id="bPrint">PDF 로 저장 (인쇄)</button><button class="alt" id="bCopy">지금 값 복사</button><button class="alt" id="bReset">처음 값</button>
+  <div class="hint">슬라이더를 움직이면 바로 바뀝니다. 왼쪽 파란 막대는 쪽이 얼마나 찼는지, 빨간 테두리는 그 쪽이 넘쳐 다음 쪽으로 밀린다는 뜻입니다.<br>
+  저장: 「PDF 로 저장」 → 대상 PDF · 여백 기본 · 「배경 그래픽」 켬. 또는 「지금 값 복사」 로 복사한 줄을 이 파일 맨 위 <code>:root { … }</code> 에 덮어쓰고 <code>bash render.sh</code>.</div>
+</div>
+<script>
+(function () {
+  if (window.matchMedia && window.matchMedia("print").matches) return;
+  var V = [
+    ["글씨", null],
+    ["--font-body", "본문", 7, 10.5, 0.1, "pt"],
+    ["--font-table", "표 안", 7, 10, 0.1, "pt"],
+    ["--font-small", "주석 · 부제", 6.5, 9.5, 0.1, "pt"],
+    ["--font-h1", "제목", 12, 22, 0.5, "pt"],
+    ["--font-h2", "절 제목", 9, 14, 0.2, "pt"],
+    ["--font-h3", "소제목", 8, 12, 0.2, "pt"],
+    ["--line-height", "줄 간격", 1.1, 1.8, 0.02, ""],
+    ["표", null],
+    ["--table-line", "표 선 굵기", 0.2, 1.5, 0.05, "pt"],
+    ["--cell-pad-y", "칸 위아래 여백", 0.3, 2.5, 0.05, "mm"],
+    ["--cell-pad-x", "칸 좌우 여백", 0.5, 3.5, 0.1, "mm"],
+    ["--key-col", "왼쪽 이름 칸 폭", 18, 40, 0.5, "mm"],
+    ["--table-gap", "표와 표 사이", 0, 6, 0.1, "mm"],
+    ["팀 표", null],
+    ["--team-name-col", "이름 열 폭", 12, 30, 0.5, "mm"],
+    ["--team-pos-col", "포지션 열 폭", 35, 75, 0.5, "mm"],
+    ["간격", null],
+    ["--section-gap", "절 사이", 0, 10, 0.1, "mm"],
+    ["--h3-gap", "소제목 위", 0, 6, 0.1, "mm"]
+  ];
+  var root = document.documentElement, cs = getComputedStyle(root), init = {}, ctl = document.getElementById("ctl");
+  V.forEach(function (d) {
+    if (!d[1]) { var h = document.createElement("h4"); h.textContent = d[0]; ctl.appendChild(h); return; }
+    var name = d[0], cur = parseFloat(cs.getPropertyValue(name)); init[name] = cur;
+    var lab = document.createElement("label"), t = document.createElement("span"), r = document.createElement("input"), v = document.createElement("span");
+    t.textContent = d[1]; r.type = "range"; r.min = d[2]; r.max = d[3]; r.step = d[4]; r.value = cur; v.className = "v";
+    var show = function () { v.textContent = (+r.value).toFixed(d[4] < 0.1 ? 2 : 1) + d[5]; };
+    r.oninput = function () { root.style.setProperty(name, r.value + d[5]); show(); check(); };
+    r.dataset.name = name; r.dataset.unit = d[5]; show();
+    lab.appendChild(t); lab.appendChild(r); lab.appendChild(v); ctl.appendChild(lab);
+  });
+  function check() {
+    var pages = document.querySelectorAll(".page"), over = 0;
+    pages.forEach(function (p, i) {
+      p.dataset.label = (i + 1) + " / " + pages.length;
+      var last = p.lastElementChild; while (last && (last.className === "fill")) last = last.previousElementSibling;
+      var used = last ? (last.offsetTop + last.offsetHeight) : 0;
+      var cap = p.clientHeight - parseFloat(getComputedStyle(p).paddingBottom);
+      var f = p.querySelector(".fill"); if (!f) { f = document.createElement("div"); f.className = "fill"; p.appendChild(f); }
+      f.style.height = Math.min(100, used / cap * 100) + "%";
+      var isOver = used > cap + 1; p.classList.toggle("over", isOver); if (isOver) over++;
+    });
+    document.getElementById("pages").textContent = pages.length + " 쪽" + (over ? " · 넘침 " + over + " 쪽" : " · 넘침 없음");
+  }
+  document.getElementById("bPrint").onclick = function () { window.print(); };
+  document.getElementById("bReset").onclick = function () {
+    ctl.querySelectorAll("input").forEach(function (r) { r.value = init[r.dataset.name]; root.style.setProperty(r.dataset.name, init[r.dataset.name] + r.dataset.unit); r.oninput(); });
+  };
+  document.getElementById("bCopy").onclick = function () {
+    var lines = [];
+    ctl.querySelectorAll("input").forEach(function (r) { lines.push("  " + r.dataset.name + ": " + r.value + r.dataset.unit + ";"); });
+    var txt = lines.join("\n");
+    (navigator.clipboard ? navigator.clipboard.writeText(txt) : Promise.reject()).then(function () { alert("복사했습니다. spec.html 맨 위 :root 안 같은 이름 줄을 이 값으로 바꾸세요.\n\n" + txt); }, function () { prompt("아래를 복사하세요", txt); });
+  };
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(check); else check();
+  window.addEventListener("load", check);
+})();
+</script>
 </body>
 </html>
