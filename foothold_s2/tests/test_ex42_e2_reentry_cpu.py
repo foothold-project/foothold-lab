@@ -134,3 +134,68 @@ def test_kind_caps_refuse_raising_unknown_kinds_and_missing_evidence(tmp_path):
         rd.set_kind_caps(_terrain(), tmp_path, 2, None)
     unchanged, report = rd.set_kind_caps(_terrain(), None, 0, None)
     assert unchanged == _terrain() and report["lowered"] == {}
+
+
+# ---- kind shares (lead 11/20 18:08): the second door C/box and a graduated kind at 0.03, the bundle staying 0.44 ----
+SOURCE_V1 = Path("/mnt/win-d/mai/data/foothold/s2_lab/ex42_record/e2_handoff_20261120_170553_v1/materialized_E2")
+needs_v1 = pytest.mark.skipif(not (SOURCE_V1 / "ex42-prep.yaml").is_file() or not (MESH / "terrain_manifest.json").is_file(),
+                              reason="the E2 v1 materialized folder is not on this machine")
+
+
+def _v1_terrain():
+    caps = {"A/gaps": 1, "B/gap": 2, "C/gap": 2, "B/beam": 2, "A/balance_beams": 1}
+    share = {"A/gaps": 0.14, "B/gap": 0.0533, "C/gap": 0.0533, "B/beam": 0.0534, "A/balance_beams": 0.14}
+    rules = [{"family": "A", "kinds_of": "continuous", "exposure": 1.0, "level_cap": 5}]
+    rules += [{"family": k.split("/")[0], "kind": k.split("/")[1], "share": share[k], "level_cap": c} for k, c in caps.items()]
+    return {"exposure_at_E2": {"default": {"exposure": 0.0, "level_cap": 0}, "positive": rules}, "kind_level_cap": {"end": 5, "step_per_boundary": 1}}
+
+
+def test_a_new_kind_row_and_moved_shares_keep_the_bundle_at_0_44():
+    terrain, report = rd.set_kind_shares(_v1_terrain(), {"A/gaps": 0.09, "A/balance_beams": 0.09, "C/box": 0.10}, {"C/box": 4})
+    assert report["added"] == {"C/box": 4} and report["total"] == pytest.approx(0.44, abs=1e-9)
+    assert rd.rule_caps(terrain)["C/box"] == 4 and rd.rule_shares(terrain)["C/box"] == 0.10
+    assert rd.rule_shares(terrain)["B/gap"] == 0.0533                       # untouched kinds keep their value
+    assert terrain["exposure_at_E2"]["positive"][0]["kinds_of"] == "continuous" and _v1_terrain()["exposure_at_E2"]["positive"][-1]["kind"] == "balance_beams"   # the input is not mutated
+
+
+def test_a_graduated_kind_goes_to_0_03_and_the_freed_share_must_be_named():
+    terrain, report = rd.set_kind_shares(_v1_terrain(), {"A/gaps": 0.03, "B/gap": 0.0533 + 0.11}, None)
+    assert rd.rule_shares(terrain)["A/gaps"] == 0.03 and report["total"] == pytest.approx(0.44, abs=1e-9)
+    with pytest.raises(ValueError, match="name the receiving kind"):
+        rd.set_kind_shares(_v1_terrain(), {"A/gaps": 0.03}, None)
+
+
+def test_kind_share_refusals():
+    with pytest.raises(ValueError, match="no such single-kind"):
+        rd.set_kind_shares(_v1_terrain(), {"C/box": 0.1}, None)
+    with pytest.raises(ValueError, match="must not be a row already"):
+        rd.set_kind_shares(_v1_terrain(), None, {"A/gaps": 3})
+    with pytest.raises(ValueError, match="a share between"):
+        rd.set_kind_shares(_v1_terrain(), {"A/gaps": -0.01}, None)
+    with pytest.raises(ValueError, match="level cap"):
+        rd.set_kind_shares(_v1_terrain(), None, {"C/box": 2.5})
+
+
+@needs_v1
+def test_the_e2_v1_reentry_with_c_box_reads_through_the_launch_side_readers(tmp_path):
+    """Rehearsal of the boundary hand-over: the running E2 v1 plan, a checkpoint of its run (fake files), C/box added at cap 4 and the first door giving up 0.10."""
+    from foothold_s2.curriculum.ex42_prep import EX42Plan, authorization_validators
+    from foothold_s2.ex42_stage_judges import adapter_for
+    run, sha = _fake_run(tmp_path, 250)
+    out = tmp_path / "draft"
+    shares = {"A/gaps": 0.09, "A/balance_beams": 0.09, "C/box": 0.10}
+    record = rd.draft(SOURCE_V1, run, 250, MESH, out, keep_mesh=True, kind_shares=shares, add_kinds={"C/box": 4})
+    plan = EX42Plan.load(out / "ex42-prep.yaml")
+    assert plan.sha256 == record["new_plan_sha256"] != record["source_plan_sha256"] and record["kind_shares"]["total"] == pytest.approx(0.44, abs=1e-9)
+    row = next(r for r in plan.document["stages"] if r["id"] == "E2")
+    assert row["parent"]["sha256"] == sha and row["parent"]["manifest_local_update"] == 250
+    assert rd.rule_caps(row["terrain"])["C/box"] == 4 and rd.rule_shares(row["terrain"])["C/box"] == 0.10
+    assert authorization_validators(plan)["E2"](out / "ex42-approvals.yaml", sha)["scope"]["parent_sha256"] == sha
+    assert adapter_for(plan.document, "E2") is not None
+    old = yaml.safe_load((SOURCE_V1 / "ex42-prep.yaml").read_text(encoding="utf-8-sig"))
+    for a, b in zip(old["stages"], plan.document["stages"]):
+        if a["id"] != "E2":
+            assert a == b
+    with pytest.raises(ValueError, match="name the receiving kind"):
+        rd.draft(SOURCE_V1, run, 250, MESH, tmp_path / "bad", keep_mesh=True, kind_shares={"A/gaps": 0.03})
+    assert not (tmp_path / "bad").exists()

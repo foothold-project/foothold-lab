@@ -14,6 +14,10 @@ materialized plan folder and changes only:
                           start values advanced by `raise_kind_caps` from the run's ladder evidence) into the new plan's start block, because a
                           new OUT counts its own boundaries from 0; --kind-cap <family/kind>=<n> then LOWERS single kinds (never raises). At the
                           start the exposure layer clips every env to min(level, cap of its column), so envs above a lowered cap come down;
+  * kind shares (optional, lead 11/20 18:08): --add-kind <family/kind>=<cap> opens a new single-kind row at share 0 (the second door, C/box) and
+                          --kind-share <family/kind>=<value> (repeatable) sets the share of single kinds. The sum of the single-kind shares must
+                          stay what the source plan had (the 0.44 bundle), so a share freed by one kind (a graduated kind goes to 0.03) has to be
+                          named on another in the same call; otherwise the draft is refused and nothing is written;
   * the approval cell's scope.parent_sha256 and the plan's stage_zero.approval_sha256 (the approvals file bytes changed).
 The `materialization` declaration and transition.json are NOT carried over: they describe E1F -> E2 with a gate receipt, and a plan
 that still carried them would be re-derived from that gate (validate_materialized_transition) and refused. The draft writes its own
@@ -105,9 +109,50 @@ def set_kind_caps(terrain: dict, run_dir: Path | None, boundaries: int, override
     return terrain, report
 
 
+def rule_shares(terrain: dict) -> dict:
+    """{family/kind: share} of the single-kind share rules of the stage's start block."""
+    rules = (terrain.get(f"exposure_at_{STAGE}") or {}).get("positive") or []
+    return {f"{r['family']}/{r['kind']}": float(r["share"]) for r in rules if "kind" in r and "share" in r}
+
+
+def set_kind_shares(terrain: dict, shares: dict | None, add: dict | None) -> tuple[dict, dict]:
+    """(terrain, report). `add` {family/kind: level_cap} appends single-kind rows at share 0; `shares` {family/kind: value} sets shares.
+    The sum of the single-kind shares must equal the sum before (the bundle total), to 1e-6. Raises before anything is written."""
+    block = terrain[f"exposure_at_{STAGE}"]
+    rules = [dict(r) for r in block["positive"]]
+    before = rule_shares(terrain)
+    report = {"before": dict(before), "added": {}, "set": {}}
+    for kind, cap in (add or {}).items():
+        family, _, name = kind.partition("/")
+        if not family or not name or kind in before:
+            raise ValueError(f"--add-kind {kind}: needs family/kind and must not be a row already (have {sorted(before)})")
+        if type(cap) is not int or not 0 <= cap <= 12:
+            raise ValueError(f"--add-kind {kind}={cap}: the level cap must be an integer")
+        rules.append({"family": family, "kind": name, "share": 0.0, "level_cap": cap})
+        report["added"][kind] = cap
+    have = {f"{r['family']}/{r['kind']}" for r in rules if "kind" in r and "share" in r}
+    for kind, value in (shares or {}).items():
+        if kind not in have:
+            raise ValueError(f"--kind-share {kind}: no such single-kind share rule (have {sorted(have)})")
+        if not isinstance(value, (int, float)) or isinstance(value, bool) or not 0 <= value <= 0.44:
+            raise ValueError(f"--kind-share {kind}={value}: a share between 0 and 0.44")
+        report["set"][kind] = value
+    rules = [dict(r, share=float(shares[f"{r['family']}/{r['kind']}"])) if "kind" in r and "share" in r and f"{r['family']}/{r['kind']}" in (shares or {}) else r
+             for r in rules]
+    terrain = {**terrain, f"exposure_at_{STAGE}": {**block, "positive": rules}}
+    after = rule_shares(terrain)
+    total_before, total_after = sum(before.values()), sum(after.values())
+    if abs(total_before - total_after) > 1e-6:
+        raise ValueError(f"the single-kind shares add up to {total_after:.6f}, the bundle is {total_before:.6f}: name the receiving kind in the same call "
+                         f"(before {before}, after {after})")
+    report.update(after=after, total=total_after)
+    return terrain, report
+
+
 def draft(source_dir: Path, run_dir: Path, iteration: int, mesh_dir: Path, out: Path, *, profile: str = "e2_easy10_beam_edge",
           promotion: dict | None = None, adjust_from: Path | None = None, keep_mesh: bool = False,
-          bake_caps_run: Path | None = None, bake_boundaries: int = 0, kind_caps: dict | None = None) -> dict:
+          bake_caps_run: Path | None = None, bake_boundaries: int = 0, kind_caps: dict | None = None,
+          kind_shares: dict | None = None, add_kinds: dict | None = None) -> dict:
     source_dir, out = Path(source_dir).resolve(strict=True), Path(out).absolute()
     if out.exists():
         raise FileExistsError(f"{out} exists (a draft folder is never reused)")
@@ -131,6 +176,9 @@ def draft(source_dir: Path, run_dir: Path, iteration: int, mesh_dir: Path, out: 
     caps_report = None
     if bake_caps_run is not None or kind_caps:
         row["terrain"], caps_report = set_kind_caps(row["terrain"], bake_caps_run, bake_boundaries, kind_caps)
+    shares_report = None
+    if kind_shares or add_kinds:
+        row["terrain"], shares_report = set_kind_shares(row["terrain"], kind_shares, add_kinds)
     if promotion is not None:
         plan["terrain_promotion"] = promotion
     plan.pop("materialization", None)
@@ -150,7 +198,7 @@ def draft(source_dir: Path, run_dir: Path, iteration: int, mesh_dir: Path, out: 
     record = {"format": REENTRY_FORMAT, "stage": STAGE, "source_dir": str(source_dir), "source_plan_sha256": old_plan_sha,
               "new_plan_sha256": hashlib.sha256(plan_bytes).hexdigest(), "approval_sha256": plan["stage_zero"]["approval_sha256"],
               "parent": pin, "run_dir": str(Path(run_dir).resolve()), "mesh_profile": None if keep_mesh else profile, "mesh_stages": moved, "keep_mesh": keep_mesh,
-              "terrain_promotion": promotion, "kind_caps": caps_report, "training_started": False}
+              "terrain_promotion": promotion, "kind_caps": caps_report, "kind_shares": shares_report, "training_started": False}
     if adjust_from is not None:
         # the live (per update) adjustment file binds the plan sha256: the same decisions, re-bound to the new plan. Nothing is added or decided here.
         adjust = json.loads(Path(adjust_from).read_text(encoding="utf-8-sig"))
@@ -180,12 +228,17 @@ def main(argv=None):
     p.add_argument("--bake-caps-run", type=Path, help="a run whose kind level caps after --bake-boundaries boundaries become the new plan's start caps")
     p.add_argument("--bake-boundaries", type=int, default=0)
     p.add_argument("--kind-cap", action="append", default=[], metavar="FAMILY/KIND=N", help="lower one kind's level cap (repeatable)")
+    p.add_argument("--kind-share", action="append", default=[], metavar="FAMILY/KIND=VALUE", help="set one single kind's share (repeatable); the sum must stay the bundle total")
+    p.add_argument("--add-kind", action="append", default=[], metavar="FAMILY/KIND=CAP", help="add a single-kind row at share 0 with this level cap (the second door C/box=4); give it a share with --kind-share")
     a = p.parse_args(argv)
     caps = {k: int(v) for k, v in (item.split("=", 1) for item in a.kind_cap)}
+    shares = {k: float(v) for k, v in (item.split("=", 1) for item in a.kind_share)}
+    adds = {k: int(v) for k, v in (item.split("=", 1) for item in a.add_kind)}
     cell = None if a.no_promotion else {"x_progress_kinds": a.kinds, "x_progress_fraction": a.x_fraction, "forward_only": True, **({"x_fall_down": True} if a.x_fall_down else {})}
     print(json.dumps(draft(a.source_dir, a.run_dir, a.iteration, a.mesh_dir, a.out, profile=a.profile, promotion=cell,
                                           adjust_from=a.adjust_from, keep_mesh=a.keep_mesh,
-                                          bake_caps_run=a.bake_caps_run, bake_boundaries=a.bake_boundaries, kind_caps=caps or None), indent=1))
+                                          bake_caps_run=a.bake_caps_run, bake_boundaries=a.bake_boundaries, kind_caps=caps or None,
+                                          kind_shares=shares or None, add_kinds=adds or None), indent=1))
 
 
 if __name__ == "__main__":
