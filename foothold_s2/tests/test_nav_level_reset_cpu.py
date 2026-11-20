@@ -103,3 +103,13 @@ def test_factory_switch_reads_config_then_environment():
     assert kf.task_level_reset_on_new_task({"task_level_reset_on_new_task": 0}, environ={"HIPAN_LEVEL_RESET_ON_NEW_TASK": "1"}) is False   # 설정이 먼저
     with pytest.raises(ValueError):
         kf.task_level_reset_on_new_task({}, environ={"HIPAN_LEVEL_RESET_ON_NEW_TASK": "2"})
+
+
+def test_fixed_level_eval_ignores_reset_switch(assets):
+    """고정 수준 평가 (hl_eval.fix_levels) 는 학습용 되돌림 스위치가 켜진 채 넘어와도 첫 reset 에서 수준을 1 로 덮지 않는다 (reviewer PR #902)."""
+    from foothold_s2.nav import hl_eval
+    t = nt.NavTask(assets, 4, np.random.default_rng(0))
+    t.level_reset_on_new_task = True
+    hl_eval.fix_levels(t, [3, 3, 4, 4])
+    t.reset_envs(np.arange(4))
+    assert [p.level for p in t.pgcl] == [3, 3, 4, 4]
