@@ -387,10 +387,15 @@ def apply_e0_exposure(env: Any, contract: dict[str, Any], parent_env_state: dict
     env.unwrapped._ex42_learned_cells = contract.get("low_floor") is not None     # recorded from the E1F start on
     env.unwrapped._ex42_env_contract = contract                          # the exposure receipt (E3 raw material) writes it
     attach_edge_tables(env.unwrapped, contract)
+    from foothold_s2 import ex42_gap_switches as gap_switches
+    spread_kinds = gap_switches.parse_kinds("EX42_LEVEL_SPREAD_KINDS", contract["column_table"])   # planner 17-5: start levels spread 0..cap on these columns; unset = off
+    spread = gap_switches.columns_of(spread_kinds, contract["column_table"]) if spread_kinds else None
+    if spread and not all(contract["exposure"][c] > 0 for c in spread):
+        raise ValueError("EX42_LEVEL_SPREAD_KINDS names a column with exposure 0")
     return apply_exposure(env.unwrapped.scene.terrain, contract["exposure"], contract["level_caps"],
                           shares=contract.get("shares"), low_floor=contract.get("low_floor"),
                           parent_env_state=parent_env_state, table=contract["column_table"],
-                          parent_same_mesh=parent_same_mesh)
+                          parent_same_mesh=parent_same_mesh, **({"spread_columns": spread} if spread else {}))
 
 
 def _kind_task(plan: EX42Plan, stage_id: str = STAGE_E0_ID) -> dict[str, Any]:
