@@ -20,7 +20,7 @@
       },
       "framework": {
         "simulator": "Isaac Sim 5.1.0",
-        "isaac_lab": "isaaclab 0.54.2 (Isaac Lab 2.3)",
+        "isaac_lab": "isaaclab 0.54.2 (Isaac Lab 2.3.2)",
         "rl_library": "rsl-rl-lib 3.1.2 (OnPolicyRunner)",
         "torch": "2.7.0+cu128"
       },
