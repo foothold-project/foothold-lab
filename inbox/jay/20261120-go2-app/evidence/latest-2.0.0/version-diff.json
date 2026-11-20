@@ -1,0 +1,734 @@
+{
+  "schema": "foothold-apk-version-diff/1",
+  "old_sha256": "71c9a34b1ec972f944007d4d8474e1bc3391dca1192fa2b46bc7b19be02a9e27",
+  "new_sha256": "7a36e9a847997ebea02d88fde6ccdd6e5c4c8d3f7e57619584b3c6718bfa2cf1",
+  "known_input": "PASS",
+  "manifest_identity_two_parsers": "PASS",
+  "zip_crc": "PASS",
+  "web_versions": [
+    [
+      "v1.2.44.12",
+      "2026-06-09 14:41:58"
+    ],
+    [
+      "v1.2.44.81",
+      "2026-07-24 17:37:52"
+    ]
+  ],
+  "versions": [
+    {
+      "package": "com.unitree.doggo2",
+      "version_name": "1.12.10",
+      "version_code": "144",
+      "min_sdk": "29",
+      "target_sdk": "35",
+      "entries": 2557,
+      "assets": 148
+    },
+    {
+      "package": "com.unitree.doggo2",
+      "version_name": "2.0.0",
+      "version_code": "202",
+      "min_sdk": "29",
+      "target_sdk": "35",
+      "entries": 2589,
+      "assets": 147
+    }
+  ],
+  "zip_diff_counts": {
+    "added": 86,
+    "removed": 54,
+    "changed": 627,
+    "same": 1876
+  },
+  "added_asset_paths": [
+    "assets/dist/assets/main-FYv2bfEa.css",
+    "assets/dist/assets/main-LIOZh9o1.js",
+    "assets/dist/assets/main-legacy-BlHXLDVj.js",
+    "assets/dist/assets/simulator-Bxhs7pUL.js",
+    "assets/dist/assets/simulator-legacy-EfG6DwLd.js",
+    "assets/dist/assets/slam.worker-B9-NnJ09.js",
+    "assets/dist/assets/three.worker-BhnsyeGz.js",
+    "assets/dist/assets/urdfDecompress.worker-BNHxDSaX.js",
+    "assets/dist/assets/videoTransform.worker-CGkZlAPM.js",
+    "assets/dist/js/PCDLoader-legacy/PCDLoader.CAhWERou.js",
+    "assets/dist/js/PCDLoader/PCDLoader.iHBBdeRw.js",
+    "assets/dist/js/Programming/Programming-legacy.CoCDfGBQ.js",
+    "assets/dist/js/Programming/Programming.CGDBEjKn.js",
+    "assets/dist/js/ProgrammingSuperstar/Programming-legacy.DovvhtN5.js",
+    "assets/dist/js/ProgrammingSuperstar/Programming.D4_yR-vy.js",
+    "assets/dist/js/js-interpreter-legacy/js-interpreter.D06BjnY5.js",
+    "assets/dist/js/js-interpreter/js-interpreter.DyyHBBps.js",
+    "assets/dist/js/pages/Bluetooth-legacy.DkelVCFj.js",
+    "assets/dist/js/pages/Bluetooth.ThA-74kd.js",
+    "assets/dist/js/robot/RobotModelLoader-legacy.DHwjlNCt.js",
+    "assets/dist/js/robot/RobotModelLoader.BK0VqEMu.js",
+    "assets/dist/js/slam/Slam-legacy.D9-iF549.js",
+    "assets/dist/js/slam/Slam.BsJuOfhQ.js",
+    "assets/dist/js/store-legacy/store.BXbPScYF.js",
+    "assets/dist/js/store/store.-Ml-K330.js",
+    "assets/dist/js/vconsole.min-legacy/vconsole.min.BHdAFGC3.js",
+    "assets/dist/js/vconsole.min/vconsole.min.ByvXAewc.js",
+    "assets/dist/models/as2_description.tar.xz"
+  ],
+  "changed_native_paths": [
+    "lib/arm64-v8a/libbaiduprotect.so"
+  ],
+  "unchanged_models_and_wasm": [
+    "assets/dist/assets/libvoxel-Bqa6xB-f.wasm",
+    "assets/dist/assets/libvoxel-doIu-r8s.wasm",
+    "assets/dist/models/Go2.glb",
+    "assets/dist/models/Go2JX.glb",
+    "assets/dist/models/Go2JXRoot.glb",
+    "assets/dist/models/Go2Root.glb",
+    "assets/dist/models/charge.glb",
+    "assets/dist/models/environment.glb"
+  ],
+  "component_diff": {
+    "added": [
+      "com.unitree.a2.ui.log.LogReportActivity",
+      "com.unitree.a2.ui.radar.As2RadarInfoActivity",
+      "com.unitree.doggo2.ui.v2.device.DeviceActivity",
+      "com.unitree.lib_ble.ui.netInput.BleNetActivity"
+    ],
+    "removed": [
+      "com.alipay.sdk.app.APayEntranceActivity",
+      "com.alipay.sdk.app.AlipayResultActivity",
+      "com.alipay.sdk.app.H5AuthActivity",
+      "com.alipay.sdk.app.H5OpenAuthActivity",
+      "com.alipay.sdk.app.H5PayActivity",
+      "com.alipay.sdk.app.PayResultActivity",
+      "com.unitree.pay.module.PayActivity",
+      "com.unitree.pay.module.PaySuccessActivity",
+      "com.unitree.wxapi.WXPayEntryActivity",
+      "com.xuexiang.xupdate.service.DownloadService",
+      "com.xuexiang.xupdate.utils.UpdateFileProvider",
+      "com.xuexiang.xupdate.widget.UpdateDialogActivity"
+    ],
+    "changed": [],
+    "same": [
+      "androidx.core.content.FileProvider",
+      "androidx.room.MultiInstanceInvalidationService",
+      "androidx.startup.InitializationProvider",
+      "androidx.test.core.app.InstrumentationActivityInvoker$BootstrapActivity",
+      "androidx.test.core.app.InstrumentationActivityInvoker$EmptyActivity",
+      "androidx.test.core.app.InstrumentationActivityInvoker$EmptyFloatingActivity",
+      "com.aliyun.emas.apm.components.ComponentDiscoveryService",
+      "com.aliyun.emas.apm.lifecycle.AppLifecycleRegisterProvider",
+      "com.aliyun.emas.apm.mem.monitor.javaleak.analysis.HeapAnalysisService",
+      "com.aliyun.emas.apm.mem.monitor.javaleak.send.JavaLeakService",
+      "com.blankj.utilcode.util.MessengerUtils$ServerService",
+      "com.blankj.utilcode.util.UtilsFileProvider",
+      "com.blankj.utilcode.util.UtilsTransActivity",
+      "com.blankj.utilcode.util.UtilsTransActivity4MainProcess",
+      "com.just.agentweb.AgentActionFragment",
+      "com.just.agentweb.AgentWebFileProvider",
+      "com.luck.picture.lib.basic.PictureFileProvider",
+      "com.luck.picture.lib.basic.PictureSelectorSupporterActivity",
+      "com.luck.picture.lib.basic.PictureSelectorTransparentActivity",
+      "com.luck.picture.lib.service.ForegroundService",
+      "com.lxj.xpopup.util.XPermission$PermissionActivity",
+      "com.unitree.a2.ui.baseInfo.A2InfoActivity",
+      "com.unitree.a2.ui.battery.BatteryActivity",
+      "com.unitree.a2.ui.bindRemote.A2RemoteBindActivity",
+      "com.unitree.a2.ui.config.A2MotorOffsetActivity",
+      "com.unitree.a2.ui.mainborad.MainboardActivity",
+      "com.unitree.a2.ui.robotData.A2DataActivity",
+      "com.unitree.a2.ui.robotSetting.A2SettingActivity",
+      "com.unitree.a2.ui.standard.A2ImuActivity",
+      "com.unitree.a2.ui.standard.A2LegActivity",
+      "com.unitree.doggo2.ui.activity.TestUdpActivity",
+      "com.unitree.doggo2.ui.activity.aboutApp.AboutAppActivity",
+      "com.unitree.doggo2.ui.activity.account.AccountActivity",
+      "com.unitree.doggo2.ui.activity.batteryData.BatteryDataActivity",
+      "com.unitree.doggo2.ui.activity.checkSelf.CheckSelfActivity",
+      "com.unitree.doggo2.ui.activity.configSetting.LoadActivity",
+      "com.unitree.doggo2.ui.activity.configSetting.OffsetActivity",
+      "com.unitree.doggo2.ui.activity.configSetting.StabilityActivity",
+      "com.unitree.doggo2.ui.activity.course.CourseActivity",
+      "com.unitree.doggo2.ui.activity.dataBill.DataBillActivity",
+      "com.unitree.doggo2.ui.activity.develop.DevelopActivity",
+      "com.unitree.doggo2.ui.activity.dogAudio.DogAudioActivity",
+      "com.unitree.doggo2.ui.activity.dogBaseData.DogInfoActivity",
+      "com.unitree.doggo2.ui.activity.dogData.DogDataActivity",
+      "com.unitree.doggo2.ui.activity.dogFollow.DogFollowActivity",
+      "com.unitree.doggo2.ui.activity.dogList.DogListActivity",
+      "com.unitree.doggo2.ui.activity.dogSetting.DogSettingActivity",
+      "com.unitree.doggo2.ui.activity.dogShare.DogShareActivity",
+      "com.unitree.doggo2.ui.activity.errors.ErrorsActivity",
+      "com.unitree.doggo2.ui.activity.fanInfo.FanInfoActivity",
+      "com.unitree.doggo2.ui.activity.feedback.FeedBackActivity",
+      "com.unitree.doggo2.ui.activity.flowList.FlowListActivity",
+      "com.unitree.doggo2.ui.activity.function.FunctionActivity",
+      "com.unitree.doggo2.ui.activity.gps.GpsLocationActivity",
+      "com.unitree.doggo2.ui.activity.gptSpeech.SpeechRecognizeActivity",
+      "com.unitree.doggo2.ui.activity.guide.GuideActivity",
+      "com.unitree.doggo2.ui.activity.guide.ManualActivity",
+      "com.unitree.doggo2.ui.activity.guideVideo.GuideVideoActivity",
+      "com.unitree.doggo2.ui.activity.infoSetting.InfoSettingActivity",
+      "com.unitree.doggo2.ui.activity.launch.LaunchActivity",
+      "com.unitree.doggo2.ui.activity.main.MainActivity",
+      "com.unitree.doggo2.ui.activity.main.NewGuideActivity",
+      "com.unitree.doggo2.ui.activity.map3D.Map3DActivity",
+      "com.unitree.doggo2.ui.activity.mechanicalArm.MechanicalArmActivity",
+      "com.unitree.doggo2.ui.activity.mine.MineActivity",
+      "com.unitree.doggo2.ui.activity.modifyPwd.ModifyPasswordActivity",
+      "com.unitree.doggo2.ui.activity.netInfo.NetInfoActivity",
+      "com.unitree.doggo2.ui.activity.orderList.OrderListActivity",
+      "com.unitree.doggo2.ui.activity.permission.NetConnectPermissionActivity",
+      "com.unitree.doggo2.ui.activity.pet.GestureActivity",
+      "com.unitree.doggo2.ui.activity.pet.PetPlayActivity",
+      "com.unitree.doggo2.ui.activity.pet.PetSettingActivity",
+      "com.unitree.doggo2.ui.activity.pet.createPet.CreateEditActivity",
+      "com.unitree.doggo2.ui.activity.pet.createPet.CreateRoleActivity",
+      "com.unitree.doggo2.ui.activity.picture.PictureActivity",
+      "com.unitree.doggo2.ui.activity.programWorkShop.ProgramWorkshopActivity",
+      "com.unitree.doggo2.ui.activity.programme.ProgrammeListActivity",
+      "com.unitree.doggo2.ui.activity.programme.RemoteSettingActivity",
+      "com.unitree.doggo2.ui.activity.radarInfo.RadarInfoActivity",
+      "com.unitree.doggo2.ui.activity.remoteBind.RemoteBindActivity",
+      "com.unitree.doggo2.ui.activity.serverStatus.ServerStatusActivity",
+      "com.unitree.doggo2.ui.activity.sharedInfo.SharedInfoActivity",
+      "com.unitree.doggo2.ui.activity.simCard.SimCardActivity",
+      "com.unitree.doggo2.ui.activity.simCard.Switch4GActivity",
+      "com.unitree.doggo2.ui.activity.singleHand.RemoteControlActivity",
+      "com.unitree.doggo2.ui.activity.singleHand.SingleHandActivity",
+      "com.unitree.doggo2.ui.activity.standardImu.StandardImuActivity",
+      "com.unitree.doggo2.ui.activity.standardLeg.StandardLegActivity",
+      "com.unitree.doggo2.ui.activity.switchSport.SwitchSportActivity",
+      "com.unitree.doggo2.ui.activity.update.HardwareUpdate2Activity",
+      "com.unitree.doggo2.ui.activity.update.HardwareUpdateActivity",
+      "com.unitree.doggo2.ui.activity.userSetting.UserSettingActivity",
+      "com.unitree.doggo2.ui.activity.versionInfo.VersionInfoActivity",
+      "com.unitree.doggo2.ui.activity.web.WebActivity",
+      "com.unitree.doggo2.ui.activity.wifiSTA.WifiSTAActivity",
+      "com.unitree.doggo2.ui.doggie.aiSetting.AiSettingActivity",
+      "com.unitree.doggo2.ui.doggie.eyeSetting.EyeSettingActivity",
+      "com.unitree.lib_ble.ui.bindDog.BindDogActivity",
+      "com.unitree.lib_ble.ui.ble.BluetoothService",
+      "com.unitree.lib_ble.ui.connect.ApConnectActivity",
+      "com.unitree.lib_ble.ui.connect.ConnectActivity",
+      "com.unitree.lib_ble.ui.connect.ConnectSuccessActivity",
+      "com.unitree.lib_ble.ui.dog.DogBluetoothActivity",
+      "com.unitree.lib_ble.ui.netConfiguration.NetConfigurationActivity",
+      "com.unitree.lib_ble.ui.netInput.NetInput3Activity",
+      "com.unitree.lib_ble.ui.netInput.NetInputActivity",
+      "com.unitree.lib_ble.ui.remote.RemoteActivity",
+      "com.unitree.login.ui.changeBind.ChangeBindActivity",
+      "com.unitree.login.ui.login.LoginActivity",
+      "com.unitree.rxdownload.utils.ClarityPotion",
+      "com.weijiaxing.logviewer.FloatingLogcatService",
+      "com.weijiaxing.logviewer.LogcatActivity",
+      "com.weijiaxing.logviewer.LogcatDetailActivity",
+      "com.yalantis.ucrop.UCropActivity",
+      "com.yalantis.ucrop.UCropMultipleActivity",
+      "me.jessyan.autosize.InitProvider",
+      "pub.devrel.easypermissions.AppSettingsDialogHolderActivity"
+    ]
+  },
+  "component_counts": [
+    {
+      "activity": 111,
+      "service": 9,
+      "provider": 9
+    },
+    {
+      "activity": 105,
+      "service": 8,
+      "provider": 8
+    }
+  ],
+  "permissions": {
+    "added": [],
+    "removed": [
+      "android.permission.INSTALL_PACKAGES",
+      "android.permission.READ_MEDIA_IMAGES",
+      "android.permission.REQUEST_INSTALL_PACKAGES"
+    ]
+  },
+  "resource_diffs": {
+    "default": {
+      "old_count": 1401,
+      "new_count": 1415,
+      "added": [
+        "app_motor_title",
+        "app_title_imu_standard",
+        "clear_success",
+        "develop_tip",
+        "device_title_audio",
+        "device_title_info",
+        "device_title_motor",
+        "device_title_net",
+        "device_title_peripheral",
+        "device_title_safe",
+        "device_title_server",
+        "minor_btn_title",
+        "minor_over_limit_confirm",
+        "minor_over_limit_content",
+        "minor_over_limit_title",
+        "minor_pwd_confirm_btn",
+        "minor_pwd_confirm_subtitle",
+        "minor_pwd_confirm_title",
+        "minor_pwd_create_btn",
+        "minor_pwd_create_subtitle",
+        "minor_pwd_create_title",
+        "minor_pwd_forget",
+        "minor_pwd_not_match",
+        "minor_pwd_previous",
+        "minor_pwd_verify_subtitle",
+        "minor_pwd_verify_title",
+        "minor_pwd_wrong",
+        "remember_pwd",
+        "title_battery",
+        "title_device_log",
+        "title_device_name",
+        "title_device_sn",
+        "title_hand",
+        "title_ip",
+        "title_net_type",
+        "title_ota_switch",
+        "title_remote_check",
+        "unbind_success",
+        "voice_offline",
+        "voice_type_1",
+        "voice_type_2",
+        "voice_type_3",
+        "voice_type_4"
+      ],
+      "removed": [
+        "alipay_standard_sdk_loading",
+        "alipay_standard_sdk_loading_go_auth",
+        "alipay_standard_sdk_loading_go_pay",
+        "xupdate_connecting_service",
+        "xupdate_download_complete",
+        "xupdate_error_check_apk_cache_dir_empty",
+        "xupdate_error_check_ignored_version",
+        "xupdate_error_check_json_empty",
+        "xupdate_error_check_net_request",
+        "xupdate_error_check_no_network",
+        "xupdate_error_check_no_new_version",
+        "xupdate_error_check_no_wifi",
+        "xupdate_error_check_parse",
+        "xupdate_error_check_updating",
+        "xupdate_error_download_failed",
+        "xupdate_error_download_permission_denied",
+        "xupdate_error_install_failed",
+        "xupdate_error_prompt_activity_destroy",
+        "xupdate_error_prompt_unknown",
+        "xupdate_lab_background_update",
+        "xupdate_lab_downloading",
+        "xupdate_lab_ignore",
+        "xupdate_lab_install",
+        "xupdate_lab_new_version_size",
+        "xupdate_lab_ready_update",
+        "xupdate_lab_update",
+        "xupdate_start_download",
+        "xupdate_tip_download_url_error",
+        "xupdate_tip_permissions_reject"
+      ],
+      "changed": [
+        "app_title_leg_standard",
+        "eye_current_theme",
+        "eye_setting_title",
+        "title_remote"
+      ],
+      "same_count": 1368
+    },
+    "en": {
+      "old_count": 0,
+      "new_count": 0,
+      "added": [],
+      "removed": [],
+      "changed": [],
+      "same_count": 0
+    },
+    "ko": {
+      "old_count": 145,
+      "new_count": 145,
+      "added": [],
+      "removed": [],
+      "changed": [],
+      "same_count": 145
+    },
+    "zh": {
+      "old_count": 1066,
+      "new_count": 1105,
+      "added": [
+        "app_motor_title",
+        "app_title_imu_standard",
+        "clear_success",
+        "develop_tip",
+        "device_title_audio",
+        "device_title_info",
+        "device_title_motor",
+        "device_title_net",
+        "device_title_peripheral",
+        "device_title_safe",
+        "device_title_server",
+        "minor_btn_title",
+        "minor_over_limit_confirm",
+        "minor_over_limit_content",
+        "minor_over_limit_title",
+        "minor_pwd_confirm_btn",
+        "minor_pwd_confirm_subtitle",
+        "minor_pwd_confirm_title",
+        "minor_pwd_create_btn",
+        "minor_pwd_create_subtitle",
+        "minor_pwd_create_title",
+        "minor_pwd_forget",
+        "minor_pwd_not_match",
+        "minor_pwd_previous",
+        "minor_pwd_verify_subtitle",
+        "minor_pwd_verify_title",
+        "minor_pwd_wrong",
+        "remember_pwd",
+        "title_battery",
+        "title_device_log",
+        "title_device_name",
+        "title_hand",
+        "title_ip",
+        "title_net_type",
+        "title_ota_switch",
+        "title_remote_check",
+        "unbind_success",
+        "voice_offline",
+        "voice_type_1",
+        "voice_type_2",
+        "voice_type_3",
+        "voice_type_4"
+      ],
+      "removed": [
+        "alipay_standard_sdk_loading",
+        "alipay_standard_sdk_loading_go_auth",
+        "alipay_standard_sdk_loading_go_pay"
+      ],
+      "changed": [
+        "app_imu_frequency",
+        "app_title_leg_standard",
+        "title_remote"
+      ],
+      "same_count": 1060
+    }
+  },
+  "selected_ui_changes": [
+    {
+      "key": "app_motor_title",
+      "old": null,
+      "new": "Body Info"
+    },
+    {
+      "key": "app_title_imu_standard",
+      "old": null,
+      "new": "IMU Calibration"
+    },
+    {
+      "key": "clear_success",
+      "old": null,
+      "new": "Clearing successful"
+    },
+    {
+      "key": "develop_tip",
+      "old": null,
+      "new": "Coming soon!"
+    },
+    {
+      "key": "device_title_audio",
+      "old": null,
+      "new": "Audio"
+    },
+    {
+      "key": "device_title_info",
+      "old": null,
+      "new": "About Robot"
+    },
+    {
+      "key": "device_title_motor",
+      "old": null,
+      "new": "Motor"
+    },
+    {
+      "key": "device_title_net",
+      "old": null,
+      "new": "Network"
+    },
+    {
+      "key": "device_title_peripheral",
+      "old": null,
+      "new": "Peripheral"
+    },
+    {
+      "key": "device_title_safe",
+      "old": null,
+      "new": "Security"
+    },
+    {
+      "key": "device_title_server",
+      "old": null,
+      "new": "Services"
+    },
+    {
+      "key": "minor_btn_title",
+      "old": null,
+      "new": "Minor Mode"
+    },
+    {
+      "key": "minor_over_limit_confirm",
+      "old": null,
+      "new": "Got it"
+    },
+    {
+      "key": "minor_over_limit_content",
+      "old": null,
+      "new": "\"Today's usage has exceeded %1$d minutes\""
+    },
+    {
+      "key": "minor_over_limit_title",
+      "old": null,
+      "new": "Notice"
+    },
+    {
+      "key": "title_battery",
+      "old": null,
+      "new": "Battery"
+    },
+    {
+      "key": "title_device_log",
+      "old": null,
+      "new": "Device log"
+    },
+    {
+      "key": "title_device_name",
+      "old": null,
+      "new": "Robot Name"
+    },
+    {
+      "key": "title_device_sn",
+      "old": null,
+      "new": "SN"
+    },
+    {
+      "key": "title_hand",
+      "old": null,
+      "new": "Hand"
+    },
+    {
+      "key": "title_ip",
+      "old": null,
+      "new": "IP Adress"
+    },
+    {
+      "key": "title_net_type",
+      "old": null,
+      "new": "Connection Mode"
+    },
+    {
+      "key": "title_ota_switch",
+      "old": null,
+      "new": "OTA permission"
+    },
+    {
+      "key": "title_remote_check",
+      "old": null,
+      "new": "Remote control function testing"
+    },
+    {
+      "key": "unbind_success",
+      "old": null,
+      "new": "Unbinding successful"
+    },
+    {
+      "key": "voice_offline",
+      "old": null,
+      "new": "Offline Voice Playback"
+    },
+    {
+      "key": "voice_type_1",
+      "old": null,
+      "new": "Wake-up Conversation Mode"
+    },
+    {
+      "key": "voice_type_2",
+      "old": null,
+      "new": "Keypad Conversation Mode"
+    },
+    {
+      "key": "voice_type_3",
+      "old": null,
+      "new": "Close"
+    },
+    {
+      "key": "voice_type_4",
+      "old": null,
+      "new": "Develop Conversation Mode"
+    },
+    {
+      "key": "app_title_leg_standard",
+      "old": "Legs",
+      "new": "Body Calibration"
+    },
+    {
+      "key": "eye_current_theme",
+      "old": "正在使用的表情包：",
+      "new": "Emoji packs currently in use:"
+    },
+    {
+      "key": "eye_setting_title",
+      "old": "眼睛表情管理",
+      "new": "Eye expression management"
+    },
+    {
+      "key": "title_remote",
+      "old": "Remote Control",
+      "new": "Remote Control Binding"
+    }
+  ],
+  "new_robot_archive": {
+    "path": "assets/dist/models/as2_description.tar.xz",
+    "sha256": "42a4ea8e8b42a4bb32ebdde76561c9611d76058ac813b3b077c3efc9edc24689",
+    "members": [
+      {
+        "path": "as2_description/lib.glb",
+        "bytes": 9232688
+      },
+      {
+        "path": "as2_description/as2.urdf",
+        "bytes": 21881
+      }
+    ],
+    "urdf": {
+      "name": "as2",
+      "links": 18,
+      "joints": 17,
+      "joint_types": {
+        "floating": 1,
+        "revolute": 12,
+        "fixed": 4
+      }
+    }
+  },
+  "new_javascript": [
+    {
+      "path": "assets/dist/assets/ammo-CP2eG2rD.js",
+      "strict_utf8": false
+    },
+    {
+      "path": "assets/dist/assets/main-LIOZh9o1.js",
+      "strict_utf8": false
+    },
+    {
+      "path": "assets/dist/assets/main-legacy-BlHXLDVj.js",
+      "strict_utf8": false
+    },
+    {
+      "path": "assets/dist/assets/polyfills-legacy-CIX-2_z7.js",
+      "strict_utf8": false
+    },
+    {
+      "path": "assets/dist/assets/simulator-Bxhs7pUL.js",
+      "strict_utf8": false
+    },
+    {
+      "path": "assets/dist/assets/simulator-legacy-EfG6DwLd.js",
+      "strict_utf8": false
+    },
+    {
+      "path": "assets/dist/assets/slam.worker-B9-NnJ09.js",
+      "strict_utf8": false
+    },
+    {
+      "path": "assets/dist/assets/three.worker-BhnsyeGz.js",
+      "strict_utf8": false
+    },
+    {
+      "path": "assets/dist/assets/three.worker-VAdOurOh.js",
+      "strict_utf8": false
+    },
+    {
+      "path": "assets/dist/assets/urdfDecompress.worker-BNHxDSaX.js",
+      "strict_utf8": false
+    },
+    {
+      "path": "assets/dist/assets/videoTransform.worker-CGkZlAPM.js",
+      "strict_utf8": false
+    },
+    {
+      "path": "assets/dist/js/PCDLoader-legacy/PCDLoader.CAhWERou.js",
+      "strict_utf8": false
+    },
+    {
+      "path": "assets/dist/js/PCDLoader/PCDLoader.iHBBdeRw.js",
+      "strict_utf8": false
+    },
+    {
+      "path": "assets/dist/js/ProgrammingSuperstar/Programming-legacy.DovvhtN5.js",
+      "strict_utf8": false
+    },
+    {
+      "path": "assets/dist/js/ProgrammingSuperstar/Programming.D4_yR-vy.js",
+      "strict_utf8": false
+    },
+    {
+      "path": "assets/dist/js/Programming/Programming-legacy.CoCDfGBQ.js",
+      "strict_utf8": false
+    },
+    {
+      "path": "assets/dist/js/Programming/Programming.CGDBEjKn.js",
+      "strict_utf8": false
+    },
+    {
+      "path": "assets/dist/js/js-interpreter-legacy/js-interpreter.D06BjnY5.js",
+      "strict_utf8": false
+    },
+    {
+      "path": "assets/dist/js/js-interpreter/js-interpreter.DyyHBBps.js",
+      "strict_utf8": false
+    },
+    {
+      "path": "assets/dist/js/pages/Bluetooth-legacy.DkelVCFj.js",
+      "strict_utf8": false
+    },
+    {
+      "path": "assets/dist/js/pages/Bluetooth.ThA-74kd.js",
+      "strict_utf8": false
+    },
+    {
+      "path": "assets/dist/js/robot/RobotModelLoader-legacy.DHwjlNCt.js",
+      "strict_utf8": false
+    },
+    {
+      "path": "assets/dist/js/robot/RobotModelLoader.BK0VqEMu.js",
+      "strict_utf8": false
+    },
+    {
+      "path": "assets/dist/js/slam/Slam-legacy.D9-iF549.js",
+      "strict_utf8": false
+    },
+    {
+      "path": "assets/dist/js/slam/Slam.BsJuOfhQ.js",
+      "strict_utf8": false
+    },
+    {
+      "path": "assets/dist/js/store-legacy/store.BXbPScYF.js",
+      "strict_utf8": false
+    },
+    {
+      "path": "assets/dist/js/store/store.-Ml-K330.js",
+      "strict_utf8": false
+    },
+    {
+      "path": "assets/dist/js/vconsole.min-legacy/vconsole.min.BHdAFGC3.js",
+      "strict_utf8": false
+    },
+    {
+      "path": "assets/dist/js/vconsole.min/vconsole.min.ByvXAewc.js",
+      "strict_utf8": false
+    }
+  ],
+  "old_analysis_byte_identity": "Same SHA as REPORT-astra-10.md from 2026-10-13",
+  "limitations": [
+    "File name changes are not feature changes",
+    "Resource presence is not activation",
+    "No protected payload decoding or app/robot runtime",
+    "No paid tool execution"
+  ]
+}

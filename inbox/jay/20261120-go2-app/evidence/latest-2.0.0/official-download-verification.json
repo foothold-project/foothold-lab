@@ -1,0 +1,14 @@
+{
+  "url": "https://global-fitness-static.unitree.com/robot/app/UnitreeGo.apk",
+  "response_url": "https://global-fitness-static.unitree.com/robot/app/UnitreeGo.apk",
+  "http_status": 200,
+  "headers": {
+    "Content-Length": "191452888",
+    "Content-Type": "application/vnd.android.package-archive",
+    "ETag": "\"75A207D9954DB30B334854E26CFEFD4D\"",
+    "Last-Modified": "Mon, 03 Aug 2026 03:41:19 GMT"
+  },
+  "bytes": 191452888,
+  "sha256": "7a36e9a847997ebea02d88fde6ccdd6e5c4c8d3f7e57619584b3c6718bfa2cf1",
+  "retrieved_at": "2026-11-20T21:43:19.746283+09:00"
+}

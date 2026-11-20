@@ -1,0 +1,167 @@
+locale	key	value
+default	app_battery_title_count	Cycle Times
+default	app_battery_title_power	Battery Level
+default	app_battery_title_tem1	BAT1
+default	app_battery_title_tem2	BAT2
+default	app_battery_title_tem3	MOS
+default	app_battery_title_voltage	Voltage
+default	app_change_wifi_tip	"Do you want to try joining the wireless LAN \""%s\"" of the robot dog and connect using AP mode."
+default	app_com_rotation_speed	Rotate speed of low-speed motor
+default	app_data_motor0	Body Motor
+default	app_data_motor1	Thigh Motor
+default	app_data_motor2	Shank Motor
+default	app_data_motor3	Wheel Motor
+default	app_data_title_battery	Battery
+default	app_data_title_radar	Unitree Perception LiDAR
+default	app_dog_disconnect_tip	Robot Dog Disconnected
+default	app_dog_follow	UWB
+default	app_dog_stop	Stop
+default	app_follow_base	Body IMU
+default	app_follow_distance	Distance
+default	app_follow_mode	Mode
+default	app_follow_orientation	Orientation
+default	app_follow_pitching	Pitch
+default	app_follow_roll	Roll
+default	app_follow_tag	Label IMU
+default	app_follow_yaw	Yaw
+default	app_have_been_reconnected	Connected by another terminal. Please try again later
+default	app_joy_mode_0	Rocker Control
+default	app_joy_mode_1	Walk Tracking
+default	app_joy_mode_2	Runing Tracking
+default	app_joy_mode_3	Stand Up
+default	app_joy_mode_4	Crouch Down
+default	app_joy_mode_5	Damp
+default	app_joy_mode_6	Side Roll
+default	app_joy_mode_7	Trigger Motion
+default	app_joy_mode_8	Stand Up
+default	app_lidar_title_radar	LiDAR Operating Status
+default	app_load_center	Center of Mass
+default	app_load_inertia	Inertia
+default	app_load_mass	Mass
+default	app_load_tip_in	This configuration applies to the motion control when a Payload is added, if there is no Payload, please keep the initial configuration.
+default	app_main_simulator	Simulator
+default	app_main_slam	Navigation
+default	app_map_3d_title	3D LiDAR Mapping
+default	app_mode_ai	AI Mode
+default	app_mode_ai_tip	Use feet to measure the environment and adaptively adjust movement patterns to explore complex terrain
+default	app_mode_leading	Advanced Mode
+default	app_mode_leading_tip	Explore unprecedented new heights of robot dog control and push the limits of athletic performance
+default	app_mode_normal	General Mode
+default	app_mode_normal_tip	Integration of rich operation commands, fully enjoy the interactive joys
+default	app_no_sport_tip	No motion control, please check !
+default	app_offset_tau	Base torque
+default	app_offset_tip_in	This configuration will modify the offset direction in sport mode, please do not set it randomly.
+default	app_open_wifi_tip	Please turn on Wi-Fi
+default	app_point_name_hint	Please set the name of the fixing point
+default	app_remote_switch	Remote Control Switch
+default	app_robot_disconnect	No robot dog connected
+default	app_save_point	Save Position
+default	app_simulator_title	Simulator
+default	app_slam_title	Navigator
+default	app_sport_close_failure	Sport control shutdown failed
+default	app_sport_not_support	Function is not supported for current mode
+default	app_sport_switch_success	Switching is successful!
+default	app_sys_rotation_speed	Rotate speed of high-speed motor
+default	app_title_config_load	Payload Configuration
+default	app_title_config_offset	Offset Configuration
+default	app_title_leg_standard	Legs
+default	app_title_standard	Calibration
+default	app_title_standard_ask	"""Calibration configuration will affect the overall performance of the robot dog's movement. Please do not calibrate arbitrarily"""
+default	connect_wifi_failure	Wi-Fi connection fails
+default	remote_setting_title	Button Settings
+default	remote_tip	Note: Use Unitree remote control to trigger the corresponding program. Use the Y + B button to terminate the program.
+default	remote_type_action	Action
+default	remote_type_mode	Mode
+default	setting_wifi_info	Configuring network information
+default	stop_sport_mode	Disable motion control Failed
+default	tip_default_sport	Select the default mode that robot enters after booting up.
+default	title_default_sport	Default Mode
+default	title_dog_upload	Upload device logs
+default	voice_assistant	Voice Assistant
+default	voice_volume	Voice Volume
+default	voice_word	Wake-up Words
+default	wifi_connecting	Connecting to Wi-Fi
+default	wifi_success	Wi-Fi Connection Successful
+zh	app_battery_title_count	循环次数
+zh	app_battery_title_power	电量
+zh	app_battery_title_tem1	BAT1
+zh	app_battery_title_tem2	BAT2
+zh	app_battery_title_tem3	MOS
+zh	app_battery_title_voltage	电压
+zh	app_change_wifi_tip	"是否尝试加入机器狗的无线局域网\""%s\""，并使用AP模式进行连接"
+zh	app_com_rotation_speed	低速电机转速
+zh	app_data_motor0	机身电机
+zh	app_data_motor1	大腿电机
+zh	app_data_motor2	小腿电机
+zh	app_data_motor3	轮足电机
+zh	app_data_title_battery	电池
+zh	app_data_title_radar	Unitree 感知激光雷达
+zh	app_dog_disconnect_tip	机器狗断开连接
+zh	app_dog_follow	伴随遥控器
+zh	app_dog_stop	急停
+zh	app_follow_base	机身IMU
+zh	app_follow_distance	距离
+zh	app_follow_mode	模式
+zh	app_follow_orientation	方位
+zh	app_follow_pitching	俯仰
+zh	app_follow_roll	横滚
+zh	app_follow_tag	标签IMU
+zh	app_follow_yaw	偏航
+zh	app_have_been_reconnected	狗已被其他终端连接，请稍后再试
+zh	app_joy_mode_0	摇杆控制
+zh	app_joy_mode_1	行走跟踪
+zh	app_joy_mode_2	跑步跟踪
+zh	app_joy_mode_3	站起
+zh	app_joy_mode_4	趴下
+zh	app_joy_mode_5	阻尼
+zh	app_joy_mode_6	侧滚
+zh	app_joy_mode_7	触发运动
+zh	app_joy_mode_8	站立
+zh	app_lidar_title_radar	雷达运行状态
+zh	app_load_center	质心
+zh	app_load_inertia	惯量
+zh	app_load_mass	质量
+zh	app_load_tip_in	该配置适用于加装负载时的运控配置，如无负载，请保持初始状态。
+zh	app_main_simulator	模拟器
+zh	app_main_slam	导航
+zh	app_map_3d_title	3D激光建图
+zh	app_mode_ai	Ai模式
+zh	app_mode_ai_tip	使用脚步丈量环境，自适应调节运动模式，在复杂的地形下探索前进
+zh	app_mode_leading	前沿模式
+zh	app_mode_leading_tip	探索前所未有的机器狗控制新高度，挑战运动性能的极限
+zh	app_mode_normal	常规模式
+zh	app_mode_normal_tip	集成丰富稳定的操作指令，享受灵活多变的交互乐趣
+zh	app_no_sport_tip	当前无运控，无法继续
+zh	app_offset_tau	机身力矩Tau
+zh	app_offset_tip_in	该配置会修改机器狗运动时的偏移方向，请勿随意设置。
+zh	app_open_wifi_tip	请打开Wi-Fi
+zh	app_point_name_hint	请设置定点名称
+zh	app_remote_switch	遥控器开关
+zh	app_robot_disconnect	未连接机器狗
+zh	app_save_point	保存位置
+zh	app_simulator_title	模拟器
+zh	app_slam_title	导航
+zh	app_sport_close_failure	运控关闭失败
+zh	app_sport_not_support	当前模式不支持
+zh	app_sport_switch_success	切换成功
+zh	app_sys_rotation_speed	高速电机转速
+zh	app_title_config_load	负载配置
+zh	app_title_config_offset	偏移配置
+zh	app_title_leg_standard	狗腿
+zh	app_title_standard	标定
+zh	app_title_standard_ask	标定配置会影响机器狗运动整体性能，请勿随意标定
+zh	connect_wifi_failure	Wi-Fi连接失败
+zh	remote_setting_title	按键设置
+zh	remote_tip	注：使用Unitree遥控器，可触发对应程序。使用遥控器Y+B按键，终止程序。
+zh	remote_type_action	动作
+zh	remote_type_mode	模式
+zh	setting_wifi_info	正在配置网络信息
+zh	stop_sport_mode	关闭运控失败
+zh	tip_default_sport	选择机器狗开机后默认进入的模式。
+zh	title_default_sport	启动模式
+zh	title_dog_upload	上传设备日志
+zh	voice_assistant	语音助手
+zh	voice_volume	语音音量
+zh	voice_word	语音词条
+zh	wifi_connecting	正在连接Wi-Fi
+zh	wifi_success	Wi-Fi 连接成功
