@@ -15,6 +15,11 @@ Standing still gives 0, walking at the commanded speed or faster gives 1, moving
 (down to -1), so rocking back and forth averages to about 0 instead of being paid (lead 2026-11-14 01:27). The taper
 removes the jump at the upper edge of the band. Overshoot is not paid here and is still charged by the tracking terms.
 
+Saturation point (planner BOUNDARY-E2R2-M250-PREP 21, lead 2026-11-21 05:51): with `cap_frac` k (EX42_SLOW_PROGRESS_CAP_FRAC,
+0.5 <= k < 1) the value saturates at k * |c_xy| instead of |c_xy|:
+    value  = clip(v_xy . c_hat / (k |c_xy|), -1, 1) * taper(|c_xy|)
+so the term stops paying for speed beyond k of the command. Without it (None, the default) the formula is the one above, bit for bit.
+
 No Kit import at module level.
 """
 from __future__ import annotations
@@ -27,7 +32,7 @@ TERM = "ex42_slow_progress"
 DEFAULTS = {"speed_min": BAND_DEFAULTS["speed_min"], "speed_max": BAND_DEFAULTS["speed_max"], "taper_from": 0.25}
 
 
-def slow_progress_value(vel_xy, cmd_xy, cmd_wz, *, speed_min, speed_max, taper_from=None, excluded=None, turn_exempt=None):
+def slow_progress_value(vel_xy, cmd_xy, cmd_wz, *, speed_min, speed_max, taper_from=None, excluded=None, turn_exempt=None, cap_frac=None):
     """(N,) value from body-frame planar velocity (N, 2), planar command (N, 2), turn command (N,), the (N,) mask of the
     envs left out (flag envs) and the (N,) mask of the envs whose turn command does not count (heading envs)."""
     if not 0.0 < speed_min < speed_max:
@@ -49,13 +54,20 @@ def slow_progress_value(vel_xy, cmd_xy, cmd_wz, *, speed_min, speed_max, taper_f
     safe_vel = torch.where(active[:, None], vel_xy, torch.zeros_like(vel_xy))
     safe_speed = speed.clamp_min(speed_min)
     along = (safe_vel * cmd_xy).sum(-1) / safe_speed                       # speed along the commanded direction
-    value = torch.maximum(torch.minimum(along, safe_speed), -safe_speed) / safe_speed
+    if cap_frac is None:
+        value = torch.maximum(torch.minimum(along, safe_speed), -safe_speed) / safe_speed
+    else:
+        k = float(cap_frac)
+        if not 0.5 <= k < 1.0:
+            raise ValueError("slow progress cap_frac must be in [0.5, 1.0)")
+        cap = safe_speed * k                                                 # saturation at k of the commanded speed
+        value = torch.maximum(torch.minimum(along, cap), -cap) / cap
     if taper_from < speed_max:
         value = value * ((speed_max - speed) / (speed_max - taper_from)).clamp(0.0, 1.0)
     return torch.where(active, value, torch.zeros_like(speed))
 
 
-def slow_progress_term(env, command_name, speed_min, speed_max, taper_from=None, include_heading=True):
+def slow_progress_term(env, command_name, speed_min, speed_max, taper_from=None, include_heading=True, cap_frac=None):
     """Reward manager term. The reward manager does not call it while its weight is 0."""
     command = env.command_manager.get_command(command_name)
     term = env.command_manager.get_term(command_name)
@@ -66,7 +78,25 @@ def slow_progress_term(env, command_name, speed_min, speed_max, taper_from=None,
     return slow_progress_value(velocity, command[:, :2], command[:, 2], speed_min=float(speed_min),
                                speed_max=float(speed_max), taper_from=taper_from,
                                excluded=flag.bool() if include_heading else heading.bool() | flag.bool(),
-                               turn_exempt=heading.bool() if include_heading else None)
+                               turn_exempt=heading.bool() if include_heading else None, cap_frac=cap_frac)
+
+
+ENV_CAP = "EX42_SLOW_PROGRESS_CAP_FRAC"
+
+
+def read_cap_frac(environ=None):
+    """EX42_SLOW_PROGRESS_CAP_FRAC: None when unset or empty (the old term), else a number in [0.5, 1.0). Anything else is an error."""
+    import os
+    raw = (environ if environ is not None else os.environ).get(ENV_CAP, "").strip()
+    if not raw:
+        return None
+    try:
+        k = float(raw)
+    except ValueError:
+        k = float("nan")
+    if not 0.5 <= k < 1.0:
+        raise ValueError("%s must be a number in [0.5, 1.0): %r" % (ENV_CAP, raw))
+    return k
 
 
 def register(env_cfg, term_cfg_class=None) -> bool:
