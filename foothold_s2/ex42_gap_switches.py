@@ -3,6 +3,8 @@
   EX42_EDGE_EXTRA_KINDS      발 가장자리 항 (foot_edge) 의 마스크를 더 넓은 열까지 (예: B/gap,B/beam,C/gap). 마스크는 메시 윗면에서 시작할 때 만든다
                              (메시 파일 · 메시 sha · 계획 sha 는 안 바뀐다). 가중치는 계획 행의 foot_edge_weight 그대로 (0 이면 오류).
   EX42_TRACK_LIN_MIN_KINDS   그 열 env 의 선속도 추종만 START 원문 식 exp(-|min(v, cmd) - cmd|^2 / std^2) (과속 무벌점). 나머지 열은 지금 식 (정확 추종).
+  EX42_EDGE_PENALTY_OFF_KINDS  그 열 env 의 발 가장자리 벌점 (foot_edge) 을 끈다 (planner 18 절): 메시 가장자리 표의 그 열 번호를 -1 로 (표가 없는 열과 같은 길 · 항이 0).
+                             다른 열은 같은 표 그대로. 메시에 가장자리 표가 있고 계획 행 foot_edge_weight 가 0 이 아닐 때만 (아니면 오류).
   EX42_FALL_PLANE_KINDS      그 열 env 의 발 빠짐 종료를 출발 발판 평면 기준으로 (발 z < 타일 원점 z - 0.25). 나머지 열은 지금 식 (가장 가까운 스캔 점 기준).
 
 값은 family/kind 목록 (A/gaps,B/gap,C/gap 처럼). 열 표에 없는 이름 · 중복 · 모양이 틀린 값은 오류 (조용히 꺼지지 않게).
@@ -16,6 +18,7 @@ from typing import Any
 ENV_EDGE = "EX42_EDGE_EXTRA_KINDS"
 ENV_MIN = "EX42_TRACK_LIN_MIN_KINDS"
 ENV_PLANE = "EX42_FALL_PLANE_KINDS"
+ENV_EDGE_OFF = "EX42_EDGE_PENALTY_OFF_KINDS"
 PLANE_MARGIN_M = 0.25                       # go2_params.TERMINATION["foot_below_ground_m"] 와 같은 값 (START 원문 221 행의 여유)
 _NAME = re.compile(r"[A-F]/[a-z_0-9]+")
 
@@ -43,13 +46,16 @@ def columns_of(kinds: tuple[str, ...], table: list[dict[str, Any]]) -> tuple[int
 
 def read_switches(table: list[dict[str, Any]], environ=None) -> dict[str, Any]:
     """{edge_kinds, min_kinds, plane_kinds (각 family/kind 튜플), edge_columns, min_columns, plane_columns}. 셋 다 꺼져 있으면 모두 빈 값."""
-    edge, mn, plane = (parse_kinds(n, table, environ) for n in (ENV_EDGE, ENV_MIN, ENV_PLANE))
-    return {"edge_kinds": edge, "min_kinds": mn, "plane_kinds": plane,
-            "edge_columns": columns_of(edge, table), "min_columns": columns_of(mn, table), "plane_columns": columns_of(plane, table)}
+    edge, mn, plane, off = (parse_kinds(n, table, environ) for n in (ENV_EDGE, ENV_MIN, ENV_PLANE, ENV_EDGE_OFF))
+    if set(edge) & set(off):
+        raise ValueError("%s and %s name the same kinds: %s" % (ENV_EDGE, ENV_EDGE_OFF, sorted(set(edge) & set(off))))
+    return {"edge_kinds": edge, "min_kinds": mn, "plane_kinds": plane, "edge_off_kinds": off,
+            "edge_columns": columns_of(edge, table), "min_columns": columns_of(mn, table), "plane_columns": columns_of(plane, table),
+            "edge_off_columns": columns_of(off, table)}
 
 
 def any_on(sw: dict[str, Any]) -> bool:
-    return bool(sw["edge_kinds"] or sw["min_kinds"] or sw["plane_kinds"])
+    return bool(sw["edge_kinds"] or sw["min_kinds"] or sw["plane_kinds"] or sw.get("edge_off_kinds"))
 
 
 def receipt(sw: dict[str, Any]) -> dict[str, Any]:
@@ -61,6 +67,8 @@ def receipt(sw: dict[str, Any]) -> dict[str, Any]:
         out["track_lin_min_kinds"] = list(sw["min_kinds"])
     if sw["plane_kinds"]:
         out["fall_plane_kinds"] = list(sw["plane_kinds"])
+    if sw.get("edge_off_kinds"):
+        out["edge_penalty_off_kinds"] = list(sw["edge_off_kinds"])
     return {"gap_switches": out} if out else {}
 
 

@@ -371,7 +371,7 @@ class LowLevelFloor:
 
 
 def apply_exposure(terrain, exposure, caps, generator=None, parent_env_state=None, table=None,
-                   parent_same_mesh: bool = False, shares=None, low_floor=None) -> dict[str, Any]:
+                   parent_same_mesh: bool = False, shares=None, low_floor=None, spread_columns=None) -> dict[str, Any]:
     """Runtime step on the TerrainImporter (call once after the env exists, before the first reset):
     start from the parent's (column, level) per env when given (else assign only to exposed columns),
     cut levels at the caps, and wrap update_env_origins so every later level change is cut the same
@@ -411,6 +411,7 @@ def apply_exposure(terrain, exposure, caps, generator=None, parent_env_state=Non
 
     everyone = torch.arange(num_envs, device=device)
     refresh(everyone)
+    spread = spread_start_levels(terrain, cap, spread_columns, refresh) if spread_columns else None
     original = terrain.update_env_origins
     floor = None
     if low_floor is not None:
@@ -432,7 +433,33 @@ def apply_exposure(terrain, exposure, caps, generator=None, parent_env_state=Non
             "level_caps": [int(c) for c in cap.tolist()], "envs": num_envs,
             "start": "parent_env_state" if inherited else "assigned",
             **({"low_level_floor": floor.receipt()} if floor is not None else {}),
-            **({"rebalance": rebalance} if inherited and rebalance else {})}
+            **({"rebalance": rebalance} if inherited and rebalance else {}),
+            **({"level_spread": spread} if spread is not None else {})}
+
+
+def spread_start_levels(terrain, cap, columns, refresh) -> dict[str, Any]:
+    """EX42_LEVEL_SPREAD_KINDS (planner BOUNDARY-E2R2-M250-PREP 17-5): once, at the start, the envs that sit on `columns` get the levels
+    0..cap of their column in turn (env-id order, i % (cap + 1)), so each level holds about the same number of envs. No random draw (the
+    generator stream is untouched), no column change; every later move is the curriculum's (promotion / demotion / cap / low floor as before)."""
+    import torch
+    device = terrain.terrain_levels.device
+    n_cols = terrain.terrain_origins.shape[1]
+    if any(type(c) is not int or not 0 <= c < n_cols for c in columns):
+        raise ValueError("EX-42 level spread column is outside the mesh")
+    on = torch.zeros(n_cols, dtype=torch.bool, device=device)
+    on[list(columns)] = True
+    ids = torch.nonzero(on[terrain.terrain_types.long()], as_tuple=False).flatten()
+    if len(ids) == 0:
+        raise ValueError("EX-42 level spread: no env sits on the listed columns (exposure 0?)")
+
+    def count(levels):
+        return {str(int(k)): int(v) for k, v in zip(*torch.unique(levels, return_counts=True))}
+
+    before = count(terrain.terrain_levels[ids])
+    top = cap[terrain.terrain_types[ids].long()]
+    terrain.terrain_levels[ids] = torch.arange(len(ids), device=device) % (top + 1)
+    refresh(ids)
+    return {"columns": [int(c) for c in columns], "envs": int(len(ids)), "before": before, "after": count(terrain.terrain_levels[ids])}
 
 
 def raise_open_cap(terrain, old: int, new: int) -> dict[str, Any]:

@@ -535,6 +535,13 @@ class StartRunner(OnPolicyRunner):
         else:
             print("EX42_STONE_FWD_FLOOR it=%d floor=%g stone_envs=%d of=%d stone_fwd_draws=%d stone_below_floor=%d other_fwd_draws=%d other_below_floor=%d stone_fwd_min=%s" % (
                 it, got[0], got[1], got[2], got[3], got[4], got[5], got[6], "none" if got[7] is None else "%.3f" % got[7]) + (" kinds=%s" % ",".join(stage.stone_forward_floor_kinds) if getattr(stage, "stone_forward_floor_kinds", ()) else ""), flush=True)
+        raw_env = getattr(self.env, "unwrapped", self.env)
+        eo = getattr(raw_env, "_ex42_edge_off_acc", None)
+        if eo is not None:     # only when EX42_EDGE_PENALTY_OFF_KINDS is set: off prints nothing (the old log stays line for line)
+            a = eo.tolist()
+            print("EX42_EDGE_PENALTY_OFF it=%d kinds=%s off_env_steps=%d off_on_env_steps=%d off_on_frac=%.6f steps=%d" % (
+                it, ",".join(getattr(raw_env, "_ex42_env_contract", {}).get("gap_switches", {}).get("edge_penalty_off_kinds", [])),
+                int(a[1]), int(a[0]), (a[0] / a[1]) if a[1] else 0.0, int(a[2])), flush=True)
         hold = getattr(stage, "slow_hold_range_s", None)
         print("EX42_COMMAND_CELLS it=%d low_side_fraction=%g low_forward_fraction=%g slow_hold_range_s=%s" % (
             it, float(getattr(stage, "low_side_fraction", 0.0)), float(stage.low_forward_fraction),

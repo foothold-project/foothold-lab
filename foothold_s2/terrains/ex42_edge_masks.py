@@ -205,6 +205,33 @@ class EdgeTables:
         self.meta = meta
         self.extra: list[dict[str, Any]] = []
 
+    def drop_columns(self, columns) -> dict[str, Any]:
+        """EX42_EDGE_PENALTY_OFF_KINDS: 그 열의 마스크 번호를 -1 로 (마스크 없는 열과 같은 길 · 항 0). 끄기 전 · 뒤에 그 열 inner 칸 한가운데 발로 값을 재서 돌려준다
+        (끄기 전 > 0 · 뒤 0 이 아니면 오류). 다른 열의 번호 · 표는 그대로."""
+        import torch
+        dev = self.inner.device
+        cols = [int(c) for c in columns]
+        probes = []
+        for col in cols:
+            k = int(self.col_to_k[col])
+            if k < 0:
+                raise ValueError(f"EX-42 edge penalty off: column {col} has no edge mask (nothing to turn off)")
+            r, cell = next(((r, torch.nonzero(self.inner[r, k])[0]) for r in range(self.inner.shape[0]) if bool(self.inner[r, k].any())), (None, None))
+            if r is None:
+                raise ValueError(f"EX-42 edge penalty off: column {col} mask is empty")
+            fam = int(round(self.shift[1].item() * 2 / self.tile[1]))
+            x = -self.tile[0] * self.inner.shape[0] / 2.0 + self.tile[0] * r + (cell[0].item() + 0.5) * self.res
+            y = -self.tile[1] * fam / 2.0 + self.tile[1] * col + (cell[1].item() + 0.5) * self.res
+            probes.append((col, r, torch.tensor([[[x, y]]], device=dev, dtype=torch.float32)))
+        one = torch.ones(1, 1, dtype=torch.bool, device=dev)
+        before = [float(self.penalty(f, one, torch.tensor([r], device=dev), torch.tensor([c], device=dev))[0]) for c, r, f in probes]
+        self.col_to_k[cols] = -1
+        after = [float(self.penalty(f, one, torch.tensor([r], device=dev), torch.tensor([c], device=dev))[0]) for c, r, f in probes]
+        if not all(b > 0 for b in before) or any(a != 0.0 for a in after):
+            raise RuntimeError(f"EX-42 edge penalty off did not take: before {before} after {after}")
+        self.off_columns = tuple(cols)
+        return {"columns": cols, "inner_before": before, "inner_after": after}
+
     def add_extra(self, built: list[dict[str, Any]]) -> None:
         """`build_extra_masks` 결과를 붙인다 (EX42_EDGE_EXTRA_KINDS). 이 열의 값은 기존 표가 0 이던 열이라 합치기만 하면 된다."""
         import torch

@@ -302,6 +302,8 @@ def prepare_e0_env_cfg(env_cfg: Any, plan: EX42Plan, mesh_dir: str | Path, stage
     from foothold_s2 import ex42_gap_switches as gap_switches
     switches = gap_switches.read_switches(table)                   # three optional gap / beam column candidates (env vars, default off; off = the receipt below is unchanged)
     if gap_switches.any_on(switches):
+        if switches.get("edge_off_kinds") and (edge is None or foot_edge_w == 0.0):
+            raise ValueError(f"{gap_switches.ENV_EDGE_OFF} needs a mesh with edge masks and a non-zero foot_edge_weight in the plan row (else there is nothing to turn off)")
         if switches["edge_kinds"] and (edge is None or foot_edge_w == 0.0):
             raise ValueError(f"{gap_switches.ENV_EDGE} needs a mesh with edge masks and a non-zero foot_edge_weight in the plan row (else the term stays 0)")
         track_func = None
@@ -363,6 +365,11 @@ def attach_edge_tables(raw: Any, contract: dict[str, Any]) -> dict[str, Any] | N
                                     int(tables.inner.shape[0]), covered={int(c) for c in (tables.col_to_k >= 0).nonzero().flatten().tolist()})
             tables.add_extra(_em.build_extra_masks(arrays["vertices"], arrays["faces"], arrays["origins"], specs))
         check = tables.self_check()
+        off_cols = tuple((contract.get("gap_switches") or {}).get("edge_penalty_off_kinds") or ())
+        if off_cols:                                               # EX42_EDGE_PENALTY_OFF_KINDS (planner 18): those columns read 0 (the no-mask path); other columns keep the same tables
+            from foothold_s2 import ex42_gap_switches as _gs
+            check["edge_penalty_off"] = tables.drop_columns(_gs.columns_of(off_cols, contract["column_table"]))
+            print("EX42_EDGE_PENALTY_OFF where=start " + json.dumps(check["edge_penalty_off"], sort_keys=True), flush=True)
         raw.ex42_edge_tables = tables
     try:
         weight = float(raw.reward_manager.get_term_cfg("foot_edge").weight)
@@ -387,10 +394,15 @@ def apply_e0_exposure(env: Any, contract: dict[str, Any], parent_env_state: dict
     env.unwrapped._ex42_learned_cells = contract.get("low_floor") is not None     # recorded from the E1F start on
     env.unwrapped._ex42_env_contract = contract                          # the exposure receipt (E3 raw material) writes it
     attach_edge_tables(env.unwrapped, contract)
+    from foothold_s2 import ex42_gap_switches as gap_switches
+    spread_kinds = gap_switches.parse_kinds("EX42_LEVEL_SPREAD_KINDS", contract["column_table"])   # planner 17-5: start levels spread 0..cap on these columns; unset = off
+    spread = gap_switches.columns_of(spread_kinds, contract["column_table"]) if spread_kinds else None
+    if spread and not all(contract["exposure"][c] > 0 for c in spread):
+        raise ValueError("EX42_LEVEL_SPREAD_KINDS names a column with exposure 0")
     return apply_exposure(env.unwrapped.scene.terrain, contract["exposure"], contract["level_caps"],
                           shares=contract.get("shares"), low_floor=contract.get("low_floor"),
                           parent_env_state=parent_env_state, table=contract["column_table"],
-                          parent_same_mesh=parent_same_mesh)
+                          parent_same_mesh=parent_same_mesh, **({"spread_columns": spread} if spread else {}))
 
 
 def _kind_task(plan: EX42Plan, stage_id: str = STAGE_E0_ID) -> dict[str, Any]:
