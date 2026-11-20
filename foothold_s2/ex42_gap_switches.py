@@ -3,7 +3,8 @@
   EX42_EDGE_EXTRA_KINDS      발 가장자리 항 (foot_edge) 의 마스크를 더 넓은 열까지 (예: B/gap,B/beam,C/gap). 마스크는 메시 윗면에서 시작할 때 만든다
                              (메시 파일 · 메시 sha · 계획 sha 는 안 바뀐다). 가중치는 계획 행의 foot_edge_weight 그대로 (0 이면 오류).
   EX42_TRACK_LIN_MIN_KINDS   그 열 env 의 선속도 추종만 START 원문 식 exp(-|min(v, cmd) - cmd|^2 / std^2) (과속 무벌점). 나머지 열은 지금 식 (정확 추종).
-  EX42_FALL_PLANE_KINDS      그 열 env 의 발 빠짐 종료를 출발 발판 평면 기준으로 (발 z < 타일 원점 z - 0.25). 나머지 열은 지금 식 (가장 가까운 스캔 점 기준).
+  EX42_FALL_PLANE_KINDS      그 열 env 의 발 빠짐 종료를 출발 발판 평면 기준으로 (발 z < 타일 원점 z - 문턱, 문턱 기본 0.25). 나머지 열은 지금 식 (가장 가까운 스캔 점 기준).
+  EX42_FALL_PLANE_MARGIN_M   위 평면 종료의 문턱 (m, 기본 0.25 = 안 정하면 옛 값). 평면 열에만 먹고 나머지 열 문턱 (0.25) 은 그대로. 0 < 값 <= 0.25 만 받는다 (EX42_FALL_PLANE_KINDS 없이 주면 오류).
 
 값은 family/kind 목록 (A/gaps,B/gap,C/gap 처럼). 열 표에 없는 이름 · 중복 · 모양이 틀린 값은 오류 (조용히 꺼지지 않게).
 """
@@ -16,6 +17,7 @@ from typing import Any
 ENV_EDGE = "EX42_EDGE_EXTRA_KINDS"
 ENV_MIN = "EX42_TRACK_LIN_MIN_KINDS"
 ENV_PLANE = "EX42_FALL_PLANE_KINDS"
+ENV_PLANE_MARGIN = "EX42_FALL_PLANE_MARGIN_M"
 PLANE_MARGIN_M = 0.25                       # go2_params.TERMINATION["foot_below_ground_m"] 와 같은 값 (START 원문 221 행의 여유)
 _NAME = re.compile(r"[A-F]/[a-z_0-9]+")
 
@@ -44,7 +46,18 @@ def columns_of(kinds: tuple[str, ...], table: list[dict[str, Any]]) -> tuple[int
 def read_switches(table: list[dict[str, Any]], environ=None) -> dict[str, Any]:
     """{edge_kinds, min_kinds, plane_kinds (각 family/kind 튜플), edge_columns, min_columns, plane_columns}. 셋 다 꺼져 있으면 모두 빈 값."""
     edge, mn, plane = (parse_kinds(n, table, environ) for n in (ENV_EDGE, ENV_MIN, ENV_PLANE))
-    return {"edge_kinds": edge, "min_kinds": mn, "plane_kinds": plane,
+    raw = (environ if environ is not None else os.environ).get(ENV_PLANE_MARGIN, "").strip()
+    margin = PLANE_MARGIN_M
+    if raw:
+        try:
+            margin = float(raw)
+        except ValueError:
+            raise ValueError("%s invalid (a number in metres): %r" % (ENV_PLANE_MARGIN, raw)) from None
+        if not plane:
+            raise ValueError("%s needs %s (else it would silently do nothing)" % (ENV_PLANE_MARGIN, ENV_PLANE))
+        if not (0.0 < margin <= PLANE_MARGIN_M) or margin != margin:
+            raise ValueError("%s must be in (0, %s] metres: %r" % (ENV_PLANE_MARGIN, PLANE_MARGIN_M, raw))
+    return {"edge_kinds": edge, "min_kinds": mn, "plane_kinds": plane, "plane_margin_m": margin,
             "edge_columns": columns_of(edge, table), "min_columns": columns_of(mn, table), "plane_columns": columns_of(plane, table)}
 
 
@@ -61,6 +74,8 @@ def receipt(sw: dict[str, Any]) -> dict[str, Any]:
         out["track_lin_min_kinds"] = list(sw["min_kinds"])
     if sw["plane_kinds"]:
         out["fall_plane_kinds"] = list(sw["plane_kinds"])
+        if sw["plane_margin_m"] != PLANE_MARGIN_M:
+            out["fall_plane_margin_m"] = sw["plane_margin_m"]         # only when not the old 0.25: the default receipt stays byte-identical
     return {"gap_switches": out} if out else {}
 
 
@@ -73,6 +88,8 @@ def apply_cfg(env_cfg, sw: dict[str, Any], track_func=None) -> None:
         env_cfg.rewards.track_lin_vel.params["min_columns"] = list(sw["min_columns"])
     if sw["plane_kinds"]:
         env_cfg.terminations.foot_below_ground.params["plane_columns"] = list(sw["plane_columns"])
+        if sw["plane_margin_m"] != PLANE_MARGIN_M:
+            env_cfg.terminations.foot_below_ground.params["plane_margin"] = float(sw["plane_margin_m"])
 
 
 # ---- 순수 torch 식 (Isaac 없이 시험) ------------------------------------------------------------------------------------------------------

@@ -232,3 +232,47 @@ def test_prepare_refuses_extra_edge_kinds_without_a_foot_edge_weight():
     src = (Path(__file__).resolve().parents[1] / "scripts" / "ex42_training_entry.py").read_text(encoding="utf-8")
     assert "non-zero foot_edge_weight in the plan row" in src and "gap_switches.apply_cfg(env_cfg, switches, track_func)" in src
     assert src.count("gap_switches.read_switches(table)") == 1
+
+
+# ---- 문턱 (EX42_FALL_PLANE_MARGIN_M · 11/20 lead: A/gaps 만 0.10) ----------------------------------------------------------------------------
+
+def test_plane_margin_default_keeps_the_old_receipt_and_cfg():
+    sw = gs.read_switches(_table(), {gs.ENV_PLANE: "A/gaps"})
+    assert sw["plane_margin_m"] == 0.25 and gs.receipt(sw) == {"gap_switches": {"fall_plane_kinds": ["A/gaps"]}}
+    cfg = types.SimpleNamespace(terminations=types.SimpleNamespace(foot_below_ground=types.SimpleNamespace(params={"margin": 0.25})))
+    gs.apply_cfg(cfg, sw)
+    assert cfg.terminations.foot_below_ground.params == {"margin": 0.25, "plane_columns": [45, 46, 47]}      # no plane_margin key = the old 0.25 term
+
+
+def test_plane_margin_010_for_a_gaps_only_and_validation():
+    sw = gs.read_switches(_table(), {gs.ENV_PLANE: "A/gaps", gs.ENV_PLANE_MARGIN: "0.10"})
+    assert sw["plane_margin_m"] == 0.10 and sw["plane_kinds"] == ("A/gaps",) and sw["edge_kinds"] == () and sw["min_kinds"] == ()
+    assert gs.receipt(sw) == {"gap_switches": {"fall_plane_kinds": ["A/gaps"], "fall_plane_margin_m": 0.10}}
+    cfg = types.SimpleNamespace(terminations=types.SimpleNamespace(foot_below_ground=types.SimpleNamespace(params={"margin": 0.25})))
+    gs.apply_cfg(cfg, sw)
+    assert cfg.terminations.foot_below_ground.params == {"margin": 0.25, "plane_columns": [45, 46, 47], "plane_margin": 0.10}
+    for bad in ("0", "-0.1", "0.3", "abc", "nan"):
+        with pytest.raises(ValueError):
+            gs.read_switches(_table(), {gs.ENV_PLANE: "A/gaps", gs.ENV_PLANE_MARGIN: bad})
+    with pytest.raises(ValueError, match="needs"):
+        gs.read_switches(_table(), {gs.ENV_PLANE_MARGIN: "0.10"})
+
+
+def test_margin_010_ends_the_episode_in_a_20cm_pit_for_a_gaps_columns_only_and_never_on_a_flat_stance():
+    pit = _fake_env([0.0, 0.0, -0.15, -0.15], ground_z=-0.15, origin_z=0.0, col=46)          # 발이 출발 발판보다 15 cm 아래 (홈 바닥)
+    assert not _done(pit, plane_columns=[45, 46, 47])                                         # 문턱 0.25 (옛 값): 15 cm 는 안 끝남
+    assert _done(pit, plane_columns=[45, 46, 47], plane_margin=0.10)                         # 문턱 0.10: 끝남
+    assert not _done(pit, plane_columns=[56], plane_margin=0.10)                             # 다른 열 (B 틈) 은 안 켬: 옛 식 그대로
+    assert not _done(_fake_env([0.0, 0.0, -0.15, -0.15], ground_z=-0.15, origin_z=0.0, col=49), plane_columns=[45, 46, 47], plane_margin=0.10)   # 평균대 등 다른 열 제외
+    flat = _fake_env([0.02, 0.02, 0.02, 0.02], ground_z=0.0, origin_z=0.0, col=46)           # 평평한 디딤 (발 중심 2 cm 위)
+    assert not _done(flat, plane_columns=[45, 46, 47], plane_margin=0.10)
+    stride = _fake_env([0.02, -0.05, 0.08, -0.09], ground_z=0.0, origin_z=0.0, col=46)        # 걸음 중 가장 낮은 발 -9 cm: 문턱 0.10 안쪽
+    assert not _done(stride, plane_columns=[45, 46, 47], plane_margin=0.10)
+
+
+def test_the_plane_margin_is_wired_only_through_the_training_entry_not_the_eval_path():
+    root = Path(__file__).resolve().parents[1]
+    assert "apply_cfg(" in (root / "scripts" / "ex42_training_entry.py").read_text(encoding="utf-8")
+    for p in (root / "eval").glob("*.py"):
+        text = p.read_text(encoding="utf-8")
+        assert "ex42_gap_switches" not in text and "ENV_PLANE" not in text and "FALL_PLANE" not in text, p.name
