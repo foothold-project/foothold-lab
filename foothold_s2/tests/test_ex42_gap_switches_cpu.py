@@ -276,3 +276,15 @@ def test_the_plane_margin_is_wired_only_through_the_training_entry_not_the_eval_
     for p in (root / "eval").glob("*.py"):
         text = p.read_text(encoding="utf-8")
         assert "ex42_gap_switches" not in text and "ENV_PLANE" not in text and "FALL_PLANE" not in text, p.name
+
+
+def test_margin_010_never_reaches_the_other_columns_their_scan_rule_stays_at_025():
+    """reviewer r4 [하]: 0.10 은 평면 열 (A/gaps) 에만. 다른 열 (B 틈 56 · 평균대 49 · 연속 0) 의 옛 식 (가장 가까운 스캔 점 - 0.25) 은 plane_margin 을 받아도 그대로."""
+    for col in (56, 62, 49, 0):
+        near = _fake_env([0.0, 0.0, -0.15, -0.15], ground_z=0.0, origin_z=0.0, col=col)       # 스캔 점보다 15 cm 아래: 0.25 문턱이면 안 끝남, 0.10 이 새면 끝남
+        far = _fake_env([0.0, 0.0, -0.30, -0.30], ground_z=0.0, origin_z=0.0, col=col)        # 30 cm 아래: 0.25 문턱이면 끝남
+        assert not _done(near, plane_columns=[45, 46, 47], plane_margin=0.10), col
+        assert _done(far, plane_columns=[45, 46, 47], plane_margin=0.10), col
+        assert not _done(near, plane_columns=[45, 46, 47]), col                               # 문턱 안 주면 같은 결과 (옛 식)
+    on = _fake_env([0.0, 0.0, -0.15, -0.15], ground_z=0.0, origin_z=0.0, col=46)             # 평면 열 안에서는 평면 식 (타일 원점 - 0.10) 이 이긴다
+    assert _done(on, plane_columns=[45, 46, 47], plane_margin=0.10)
