@@ -1,7 +1,7 @@
 # [FOOTHOLD] Unitree Go2 사족보행 강화학습 데이터 산출물 명세서
 
 > 분류: 제출 산출물
-> 작성: Claude 세션 (오흥재 지시, lead-lx) · 2026-11-20
+> 작성: Claude 세션 (오흥재 지시, lead-lx) · 산출물 2 칸 임석헌 · 2026-11-20
 > 근거: 팀장 11/20 11:02 지시 양식 · 학습 실행 EX-42-B-E1F 원본 설정 (`params/agent.yaml` · `params/env.yaml`) · 저장본 sha256 실측 · 계보 문서 `docs/research/20261119-lineage-6-canon3-m15500.md` · 산출물 2: 저장본 `tp424_in_p1_s5_from17000/model_16999.pt` (sha256 실측) · 같은 폴더 `params/agent.yaml` · `params/env.yaml` · `sync_record.txt` · 평가 기록 `docs/stage1_logs/req424/ev/results/evalx_raw_tpevf24_b1.txt` · 정리 표 `docs/MODEL_27K_AVG_LEVEL_TABLE.md` (FOOTHOLD AME-2 작업 저장소)
 > 요지: 정책 가중치 (.pt) 와 학습 설정 (.yaml) 을 데이터 산출물로 낸다. 산출물 1 (START 기반 m15500) 은 채움 · 산출물 2 (AME-2 재현 teacher · 누적 27,001 iter) 도 채움
 > 상태: 산출물 1 · 2 확정
@@ -64,20 +64,37 @@ FOOTHOLD_UnitreeGo2_RL_Data_Deliverable/
 
 ## 3. 데이터 생성 환경 (Simulation Environment)
 
+두 산출물에 공통인 것:
+
 - **대상 하드웨어:** Unitree Go2 (12-DoF 사족보행 로봇)
-- **시뮬레이터 · 라이브러리:** Isaac Sim 5.1.0 · Isaac Lab 2.3 (isaaclab 0.54.2) · rsl-rl-lib 3.1.2 · PyTorch 2.7.0
-- **데이터 수집 방식:** 병렬 시뮬레이션 환경 3,072 개에서 PPO (On-policy) 롤아웃 경험 데이터를 축적. 한 번의 iteration 마다 환경당 24 스텝을 모아 정책을 갱신한다
-- **제어 주기:** 물리 0.005 초 · 행동 4 스텝마다 = 50 Hz · 에피소드 최대 20 초
-- **입력 관측 데이터 (Observation):** 관절 위치 · 속도, IMU 각속도와 투영 중력, 속도 명령, 직전 행동 (고유감각) + 깊이 카메라 영상에서 복원한 발밑 높이 지도의 잠재 특징. 학습 중에는 정답 높이 지도 (Height Scanner) 도 함께 쓴다
+- **시뮬레이터:** Isaac Sim 5.1.0 · Isaac Lab 2.3.2 (isaaclab 0.54.2) · PyTorch 2.7.0
+- **데이터 수집 방식:** 병렬 시뮬레이션 환경에서 PPO (On-policy) 롤아웃 경험 데이터를 축적. 한 번의 iteration 마다 환경당 24 스텝을 모아 정책을 갱신한다
+- **제어 주기:** 물리 0.005 초 · 행동 4 스텝마다 = 50 Hz
 - **출력 행동 데이터 (Action):** 12 개 관절 목표 위치 오프셋 (Joint Position Targets · 기본 자세 기준 · 배율 0.25)
-- **보상:** 속도 추종 (선속도 · 각속도) 과 자세 · 관절 토크 · 행동 변화 · 충돌 · 발 미끄러짐 벌점 등 가중치가 0 이 아닌 22 항. 항목과 가중치는 `config_start.yaml` 문서 2 의 `rewards`
+
+산출물마다 다른 것 (각 `config_*.yaml` 에서 읽은 값):
+
+| 칸 | 산출물 1 · START (`config_start.yaml`) | 산출물 2 · AME-2 (`config_ame2.yaml`) |
+|---|---|---|
+| 병렬 환경 수 | 3,072 | 4,096 |
+| 에피소드 최대 길이 | 20 초 | 16 초 |
+| 강화학습 라이브러리 | rsl-rl-lib 3.1.2 | AME-2 공개 코드에 든 rsl_rl 5.0.0 |
+| PPO 갱신 | 에폭 5 × 미니배치 4 · 학습률 1e-3 (KL 적응) · 엔트로피 0.01 | 에폭 4 × 미니배치 3 · Adam · 학습률 1e-3 (KL 적응) · 엔트로피 0.004 (감쇠) |
+| 학습 seed | 42 | 1001 (평균한 다른 한 판은 42) |
+| 명령 | 몸 속도 (전진 · 옆 · 회전) | 목표 지점 (몸 기준 x · y · 방향) |
+| 입력 관측 (Observation) | 관절 위치 · 속도, IMU 각속도와 투영 중력, 속도 명령, 직전 행동 (고유감각) + 깊이 카메라 영상에서 복원한 발밑 높이 지도의 잠재 특징. 학습 중에는 정답 높이 지도 (Height Scanner) 도 함께 쓴다 | 고유감각 49 (몸 선속도 포함) + 정답 높이 지도 29 × 13 × 3 (teacher 의 특권 입력 · 깊이 카메라는 쓰지 않음) |
+| 정책 망 | MLP 512 · 256 · 128 (actor 입력 98) | AME2GazeModel (시선 창 12 × 10 · attention) |
+| 보상 | 속도 추종 (선속도 · 각속도) 과 자세 · 관절 토크 · 행동 변화 · 충돌 · 발 미끄러짐 벌점 등 가중치가 0 이 아닌 22 항 | 목표 위치 · 방향 추종 · 목표로 다가가기 · 목표에서 서기 보상과 조기 종료 · 헛디딤 · 미끄러짐 · 자기 충돌 · 관절 한계 벌점 등 가중치가 0 이 아닌 20 항 |
+
+항목과 가중치의 정본은 각 설정 파일 문서 2 의 `rewards` 다. 하이퍼파라미터 전체는 `model_manifest.json` 에 있다.
 
 ## 4. 파일 검증 및 활용 방법
 
-1. **받기:** `.pt` 는 git LFS 로 저장돼 있다.
+1. **받기:** 제출 ZIP 안의 `.pt` 는 실제 가중치 파일이다 (산출물 1 약 30 MB · 산출물 2 약 150 MB). 저장소 (github.com/foothold-project/foothold-lab) 에서 받을 때는 `.pt` 가 git LFS 로 저장돼 있어 아래 명령이 필요하다. git-lfs 없이 받으면 130 바이트 남짓한 포인터 파일만 생긴다.
    ```
    git lfs pull --include "deliverables/FOOTHOLD_UnitreeGo2_RL_Data_Deliverable/**/*.pt"
    ```
+   이 문서에 나오는 `docs/...` · `inbox/...` 경로는 위 저장소 안의 경로다 (ZIP 에는 들어 있지 않다).
 2. **무결성:** `sha256sum 01_START_Baseline/model_15500.pt` · `sha256sum 02_AME2_Reproduction/model_27000.pt` 값이 `model_manifest.json` 의 각 `sha256` 과 같아야 한다.
 3. **로드:**
    ```python
