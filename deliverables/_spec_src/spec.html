@@ -19,15 +19,18 @@
   /* 표 */
   --table-line: 0.5pt;       /* 표 선 굵기 */
   --cell-pad-y: 0.85mm;      /* 칸 안 위아래 여백 */
-  --cell-pad-x: 1.6mm;       /* 칸 안 좌우 여백 */
-  --key-col: 27mm;           /* 표 왼쪽 이름 칸 폭 */
+  --cell-pad-x: 1mm;       /* 칸 안 좌우 여백 */
+  --key-col: 22mm;           /* 표 왼쪽 이름 칸 폭 */
   /* 팀 표 열 폭 */
   --team-name-col: 16mm;     /* 이름 */
   --team-pos-col: 50mm;      /* 포지션 */
+  /* 산출물 1 성능 표 열 폭 */
+  --perf-axis-col: 32mm;     /* 축 */
+  --perf-result-col: 54mm;   /* 결과 */
   /* 간격 */
-  --section-gap: 4.2mm;      /* 절 사이 */
-  --table-gap: 1.6mm;        /* 표와 표 사이 */
-  --h3-gap: 2.6mm;           /* 소제목 위 간격 */
+  --section-gap: 5.3mm;      /* 절 사이 */
+  --table-gap: 2.6mm;        /* 표와 표 사이 */
+  --h3-gap: 4.5mm;           /* 소제목 위 간격 */
   --page-margin: 11mm 12mm 12mm 12mm;  /* 쪽 여백 (위 오른쪽 아래 왼쪽) · @page 줄도 같이 고칠 것 */
   /* 색 */
   --ink: #1c2329; --sub: #56616b; --line: #c9d0d6; --soft: #eef2f4; --key: #f6f8f9; --accent: #1f5a6e; --warn: #a3412c;
@@ -98,6 +101,7 @@ ul.tight li { margin: 0; }
 .team .pos { width: var(--team-pos-col); }
 .team .pos b { display: block; }
 .team .pos span { color: var(--sub); font-size: var(--font-small); white-space: nowrap; }
+.perf td.k { width: var(--perf-axis-col); }
 .axis td { background: var(--soft); padding-top: 1.1mm; padding-bottom: 1.1mm; }
 .axis .tag { display: inline-block; min-width: 26mm; font-weight: 740; color: var(--accent); }
 .axis .desc { color: var(--ink); }
@@ -129,7 +133,7 @@ ul.tight li { margin: 0; }
     <h2><span class="no">1.</span>팀 소개</h2>
     <table>
       <tr><td class="k">과정명</td><td>인공지능사관학교 7기 AI 도약과정</td><td class="k" style="width:20mm">팀명</td><td style="width:40mm">FOOTHOLD (실증-02)</td></tr>
-      <tr><td class="k">프로젝트명</td><td colspan="3"><b>FOOTHOLD: Sim-to-Field, Terrain-Adaptive Mission Platform for Legged Robots</b> · 시뮬에서 현장까지, 미경험 험지 사족보행 로봇 임무 플랫폼</td></tr>
+      <tr><td class="k">프로젝트명</td><td colspan="3"><b>FOOTHOLD: Sim-to-Field, Terrain-Adaptive Mission Platform for Legged Robots</b><br>시뮬에서 현장까지, 미경험 험지 사족보행 로봇 임무 플랫폼</td></tr>
     </table>
     <table class="team">
       <thead><tr><th class="nm">이름</th><th class="pos">포지션</th><th>역할 및 업무</th></tr></thead>
@@ -176,8 +180,8 @@ ul.tight li { margin: 0; }
     </table>
 
     <h3>시뮬 성능 · 축별 (64 대 · 시드 42, 정답 지도 | 복원 지도 | 지도 끔)</h3>
-    <table>
-      <thead><tr><th style="width:32mm">축</th><th>조건</th><th style="width:54mm">결과</th></tr></thead>
+    <table class="perf">
+      <thead><tr><th style="width:var(--perf-axis-col)">축</th><th>조건</th><th style="width:var(--perf-result-col)">결과</th></tr></thead>
       <tbody>
         <tr><td class="k" rowspan="3">명령 추종</td><td>전진 0.5 · 1.0 m/s (속도 오차 중앙값)</td><td>0.041 | 0.042 · 0.076 | 0.076 m/s</td></tr>
         <tr><td>옆 ±0.5 · 후진 0.5 · 1.0 m/s (속도 오차 중앙값)</td><td>0.047 ~ 0.050 · 0.054 · 0.090 m/s</td></tr>
@@ -359,6 +363,9 @@ state = ame2["go2_env_state"]              # 완료 회차 · 출발 저장본 �
     ["팀 표", null],
     ["--team-name-col", "이름 열 폭", 12, 30, 0.5, "mm"],
     ["--team-pos-col", "포지션 열 폭", 35, 75, 0.5, "mm"],
+    ["산출물 1 성능 표", null],
+    ["--perf-axis-col", "축 열 폭", 20, 45, 0.5, "mm"],
+    ["--perf-result-col", "결과 열 폭", 40, 95, 0.5, "mm"],
     ["간격", null],
     ["--section-gap", "절 사이", 0, 10, 0.1, "mm"],
     ["--h3-gap", "소제목 위", 0, 6, 0.1, "mm"]
