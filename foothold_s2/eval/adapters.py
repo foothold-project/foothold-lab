@@ -537,7 +537,15 @@ def load_s2_runner(env, train_cfg, checkpoint, device, expect=None, *, checkpoin
     cfg["ex41_pose_commands"] = pose_commands
     runner = StartRunner(env, cfg, log_dir=None, device=device)
     runner.alg.policy.load_state_dict(sd["model_state_dict"])
-    runner.perception.load_state_dict(sd["perception_state_dict"])
+    from foothold_s2.runners import perception_ema as pema
+
+    state, why = (sd["perception_state_dict"], "online")
+    if sd.get("perception_ema") is not None:                         # v28u: a run that rolled out with averaged perception weights is evaluated with them
+        ema_state, why = pema.ema_state_dict(sd["perception_state_dict"], sd["perception_ema"])
+        if ema_state is not None:
+            state, why = ema_state, "ema"
+    runner.perception.load_state_dict(state)
+    print("EVAL_PERCEPTION_SOURCE=%s%s" % (why if why in ("ema", "online") else "online", "" if why in ("ema", "online") else " (%s)" % why), flush=True)
     runner.alg.policy.eval()
     runner.perception.eval()
 

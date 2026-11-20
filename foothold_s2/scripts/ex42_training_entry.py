@@ -45,22 +45,30 @@ def e_stage_table(stages: list[dict[str, Any]]) -> dict[str, dict[str, Any]]:
     run, and the pin is written into the plan when that is known. `previous` is the stage whose run is the parent
     (None for the first, whose parent is the stage-zero m13000). Nothing here names a stage."""
     table: dict[str, dict[str, Any]] = {}
-    previous = None
+    previous = None                 # the plan row just before, whether or not it pins a parent (E2 follows E1F, which pins none in the E2 plan)
+    previous_caps: set[int] = set()
+    previous_mirror = False
     mirror = False                  # the critic mirror stays on from the stage that turns it on until a stage says off
     for row in stages:
         mirror = row.get("critic_mirror", mirror)
         if type(mirror) is not bool:
             raise ValueError(f"EX-42 stage {row.get('id')} critic_mirror must be a bool")
+        updates = row.get("maximum_updates", row.get("minimum_updates"))
+        caps = ({updates + k * (row.get("extension_updates") or 0) for k in range((row.get("extension_max_count") or 0) + 1)}
+                if type(updates) is int else set())      # this row's finished run may have saved one of these (read by the next row's parent check)
         parent = row.get("parent")
-        if not isinstance(parent, dict):
-            continue
-        table[row["id"]] = {
-            "updates": row.get("maximum_updates", row["minimum_updates"]),               # the base cap; the first check (minimum) is not a limit
-            "extension_updates": row.get("extension_updates") or 0, "extension_max_count": row.get("extension_max_count") or 0, "parent_local": parent["manifest_local_update"],
-            "parent_cumulative": parent["cumulative_update"], "parent_key": parent["checkpoint_key"],
-            "critic_mirror": mirror,
-            "previous": previous}
-        previous = row["id"]
+        if isinstance(parent, dict):
+            if parent.get("source_stage_id") == row["id"]:
+                # A run seeded from its own stage's boundary checkpoint (the plan changed under a running stage, so it restarts as a new
+                # OUT, lead-lx 11/19 07:1x): the "previous stage" the parent's saved state must name is this stage, with its own caps and mirror.
+                previous, previous_caps, previous_mirror = row["id"], caps, mirror
+            table[row["id"]] = {
+                "updates": row.get("maximum_updates", row["minimum_updates"]),     # the base cap; the first check (minimum) is not a limit
+                "extension_updates": row.get("extension_updates") or 0, "extension_max_count": row.get("extension_max_count") or 0, "parent_local": parent["manifest_local_update"],
+                "parent_cumulative": parent["cumulative_update"], "parent_key": parent["checkpoint_key"],
+                "critic_mirror": mirror,
+                "previous": previous, "previous_caps": previous_caps, "previous_mirror": previous_mirror}
+        previous, previous_caps, previous_mirror = row["id"], caps, mirror
     return table
 
 
@@ -267,20 +275,42 @@ def prepare_e0_env_cfg(env_cfg: Any, plan: EX42Plan, mesh_dir: str | Path, stage
     stage_terrain = {**stage_row, "kind_task": _kind_task(plan, stage_id)}
     from foothold_s2.terrains.ex42_k_ladder import ladder_terrain
     stage_terrain, ladder_receipt = ladder_terrain(stage_terrain, stage_id, boundary_index, ladder_outcomes)   # a continued segment: k boundaries on
-    from foothold_s2.terrains.ex42_exposure import raise_continuous_cap
+    from foothold_s2.terrains.ex42_exposure import raise_continuous_cap, raise_kind_caps
+    stage_terrain, cap_moves = raise_kind_caps(stage_terrain, stage_id, boundary_index, ladder_outcomes)   # D axis: +1 cap per kind that passed, receipt before/after
+    ladder_receipt = [*ladder_receipt, *cap_moves]
     stage_terrain, continuous_cap = raise_continuous_cap(stage_terrain, stage_id, boundary_index)   # L+: +1 per boundary passed
     exposure, level_caps = exposure_by_column(stage_terrain, table, stage_id)       # plan values; raises if none positive
     from foothold_s2.terrains.ex42_exposure import column_shares
     shares = column_shares(stage_terrain, table, stage_id)
     from foothold_s2.terrains.ex42_exposure import low_level_floor
     floor = low_level_floor(stage_terrain, table, stage_id)
+    from foothold_s2.terrains.ex42_edge_masks import load_edge_masks
+    edge = load_edge_masks(npz)                                    # None: an older mesh (the foot_edge term reads 0 there, as before)
+    foot_edge_w = _foot_edge_weight(_e_stage(plan, stage_id), edge)
+    if foot_edge_w != 0.0:                                         # the plan row asks for the START foot-edge term: set it on the env config (a term on the config exists in every EX-42 env)
+        env_cfg.rewards.foot_edge.weight = foot_edge_w
     mask = push_gate_mask(table, {f: k for f, k in e0_push_off_kinds(plan, stage_id).items() if f in set(families)})
     env_cfg.scene.terrain.terrain_generator = mesh_file_generator_cfg(npz, sha)
     from foothold_s2.terrains.ex42_flags import attach_mesh_flags
     flag_table = attach_mesh_flags(env_cfg, npz, env_cfg.scene.terrain.terrain_generator.num_rows, len(table))
     apply_column_reset(env_cfg, table)
     wrapped = apply_column_push_gate(env_cfg, mask)
-    return {"mesh_sha256": sha, "columns": len(table), "families": sorted(set(families)),
+    edge_receipt = {} if edge is None else {"edge_masks_npz": str(npz), "edge_masks": {"columns": [int(c) for c in edge["columns"]], "kinds": edge["meta"]["kinds"],
+                                                                                    "inner_cells": int(edge["inner"].sum()), "outer_cells": int(edge["outer"].sum())}}
+    if foot_edge_w != 0.0:
+        edge_receipt["foot_edge_weight"] = foot_edge_w
+    from foothold_s2 import ex42_gap_switches as gap_switches
+    switches = gap_switches.read_switches(table)                   # three optional gap / beam column candidates (env vars, default off; off = the receipt below is unchanged)
+    if gap_switches.any_on(switches):
+        if switches["edge_kinds"] and (edge is None or foot_edge_w == 0.0):
+            raise ValueError(f"{gap_switches.ENV_EDGE} needs a mesh with edge masks and a non-zero foot_edge_weight in the plan row (else the term stays 0)")
+        track_func = None
+        if switches["min_kinds"]:
+            from foothold_s2.rewards import start_rewards
+            track_func = start_rewards.track_lin_vel_min_on_columns
+        gap_switches.apply_cfg(env_cfg, switches, track_func)
+        print("EX42_GAP_SWITCHES " + json.dumps(gap_switches.receipt(switches)["gap_switches"], sort_keys=True), flush=True)
+    return {**edge_receipt, **gap_switches.receipt(switches), "mesh_sha256": sha, "columns": len(table), "families": sorted(set(families)),
             "exposure": exposure, "level_caps": level_caps, "shares": shares, "low_floor": floor, "flag_table": flag_table,
             "continuous_level_cap": continuous_cap,      # None: the stage keeps the stage-zero promotion cap
             "k_ladder": {"boundary_index": boundary_index, "moves": ladder_receipt,
@@ -298,6 +328,54 @@ def _e0_stage(plan: EX42Plan) -> dict[str, Any]:
     return _e_stage(plan, STAGE_E0_ID)
 
 
+FOOT_EDGE_WEIGHT_FENCE = (-1.0, 0.0)      # START default core.WEIGHTS["foot_edge"] = -1.0 is the strongest value; 0 = off (older rows carry no key)
+
+
+def _foot_edge_weight(stage_row: dict[str, Any], edge: dict[str, Any] | None) -> float:
+    """The plan row's `foot_edge_weight` (no key = 0 = off). A weight needs a mesh that carries edge masks, or the term would read 0 (raises)."""
+    value = stage_row.get("foot_edge_weight", 0.0)
+    if type(value) not in (int, float) or value != value or not FOOT_EDGE_WEIGHT_FENCE[0] <= value <= FOOT_EDGE_WEIGHT_FENCE[1]:
+        raise ValueError(f"EX-42 foot_edge_weight must be a number in {list(FOOT_EDGE_WEIGHT_FENCE)}, got {value!r}")
+    if value != 0.0 and edge is None:
+        raise ValueError("EX-42 foot_edge_weight is not 0 but the training mesh carries no edge masks (ex42_edge_mesh_build): the term would read 0")
+    return float(value)
+
+
+def attach_edge_tables(raw: Any, contract: dict[str, Any]) -> dict[str, Any] | None:
+    """Mount the foot-edge masks of the mesh (when it has them) on the env, and refuse a live foot_edge weight without them.
+
+    A mesh with masks: `raw.ex42_edge_tables` is set and checked on the attached tensors (`EdgeTables.self_check`).
+    A mesh without: nothing is set and the term reads 0, which is only allowed while the weight is 0 (a weight above 0 on a term that reads
+    0 would be a silent no-op, so it raises here)."""
+    from foothold_s2.terrains.ex42_edge_masks import EdgeTables, load_edge_masks
+    npz = contract.get("edge_masks_npz")
+    tables, check = None, None
+    if npz:
+        tables = EdgeTables(load_edge_masks(npz), len(contract["column_table"]), raw.device)
+        extra_kinds = tuple((contract.get("gap_switches") or {}).get("edge_extra_kinds") or ())
+        if extra_kinds:                                            # EX42_EDGE_EXTRA_KINDS: masks of more columns, built from the mesh top surface at start (the mesh files and their sha stay as pinned)
+            import json as _json
+            import numpy as _np
+            from foothold_s2.terrains import ex42_edge_masks as _em
+            mesh_dir = Path(npz).parent
+            arrays = _np.load(npz, allow_pickle=False)
+            specs = _em.extra_specs(_json.loads((mesh_dir / "terrain_manifest.json").read_text(encoding="utf-8-sig")), extra_kinds,
+                                    int(tables.inner.shape[0]), covered={int(c) for c in (tables.col_to_k >= 0).nonzero().flatten().tolist()})
+            tables.add_extra(_em.build_extra_masks(arrays["vertices"], arrays["faces"], arrays["origins"], specs))
+        check = tables.self_check()
+        raw.ex42_edge_tables = tables
+    try:
+        weight = float(raw.reward_manager.get_term_cfg("foot_edge").weight)
+    except (ValueError, KeyError, AttributeError):
+        weight = 0.0
+    asked = float(contract.get("foot_edge_weight", 0.0))
+    if abs(weight - asked) > 1e-12:
+        raise RuntimeError(f"EX-42 foot_edge weight on the live reward manager is {weight}, the plan row asked for {asked}")
+    if weight != 0.0 and tables is None:
+        raise RuntimeError("EX-42 foot_edge weight is not 0 but the mesh carries no edge masks: the term would read 0 (use a mesh built by ex42_edge_mesh_build)")
+    return None if tables is None else {"self_check": check, "weight": weight}
+
+
 def apply_e0_exposure(env: Any, contract: dict[str, Any], parent_env_state: dict[str, Any],
                       parent_same_mesh: bool = False) -> dict[str, Any]:
     """After gym.make: start from the parent's (column, level) per env, then cut at the column caps (Kit side).
@@ -308,6 +386,7 @@ def apply_e0_exposure(env: Any, contract: dict[str, Any], parent_env_state: dict
     env.unwrapped._ex42_column_table = contract["column_table"]          # the learned_cells recorder names columns by it
     env.unwrapped._ex42_learned_cells = contract.get("low_floor") is not None     # recorded from the E1F start on
     env.unwrapped._ex42_env_contract = contract                          # the exposure receipt (E3 raw material) writes it
+    attach_edge_tables(env.unwrapped, contract)
     return apply_exposure(env.unwrapped.scene.terrain, contract["exposure"], contract["level_caps"],
                           shares=contract.get("shares"), low_floor=contract.get("low_floor"),
                           parent_env_state=parent_env_state, table=contract["column_table"],
@@ -531,8 +610,13 @@ def continuation_state_matches(live: Any, saved: Any) -> bool:
     """After a resumed segment loaded its checkpoint: the live runtime state is the checkpoint's, apart from the two
     fields a later segment carries higher, the L+ level cap and the stage bound of a HOLD extension. `load_state_dict`
     has already refused any value outside their allowance, so they are left out of this readback."""
+    # The command allocation counters are record-only and `load_state_dict` restarts them at zero on every rank
+    # (`restart_counts`: a shared DDP checkpoint stores only rank 0's), so the live counts never equal the saved
+    # ones. The contract is still compared. (lead-lx 11/19 04:1x: E2 m250 resume refused on this field.)
     def rest(state):
-        return {**state, "maximum_updates": None, "terrain": {**(state.get("terrain") or {}), "level_cap": None}}
+        allocation = state.get("command_allocation")
+        return {**state, "maximum_updates": None, "terrain": {**(state.get("terrain") or {}), "level_cap": None},
+                **({"command_allocation": {**allocation, "counts": None}} if isinstance(allocation, dict) else {})}
     return isinstance(live, dict) and isinstance(saved, dict) and rest(live) == rest(saved)
 
 
@@ -1137,6 +1221,50 @@ def make_ex42_stage_zero_plan_view(source_plan: Any, stage: Any,
                 raise ValueError("EX-42 stage low_forward_fraction invalid")
             from dataclasses import replace
             stage = replace(stage, low_forward_fraction=float(slow_fraction))
+        side_fraction = row.get("low_side_fraction")
+        if side_fraction is not None:
+            if type(side_fraction) not in (int, float) or not 0 <= side_fraction <= 1:
+                raise ValueError("EX-42 stage low_side_fraction invalid")
+            if side_fraction and stage.ranges["side_vy_abs"][0] > 0.1 + 1e-9:
+                raise ValueError("EX-42 stage low_side_fraction needs side_vy_abs to start at 0.1 or below")
+            from dataclasses import replace
+            stage = replace(stage, low_side_fraction=float(side_fraction))
+        hold_range = row.get("slow_hold_range_s")
+        if hold_range is not None:
+            if (not isinstance(hold_range, (list, tuple)) or len(hold_range) != 2
+                    or any(type(v) not in (int, float) or isinstance(v, bool) or not math.isfinite(v) for v in hold_range)
+                    or not 0 < hold_range[0] <= hold_range[1] <= 30):
+                raise ValueError("EX-42 stage slow_hold_range_s invalid (two numbers, 0 < lo <= hi <= 30 s)")
+            from dataclasses import replace
+            stage = replace(stage, slow_hold_range_s=(float(hold_range[0]), float(hold_range[1])))
+        stone_floor = os.environ.get("EX42_STONE_FWD_FLOOR")              # E2 o2 (e2.env): stepping-stones envs get no forward command below this (m/s); unset = off
+        if stone_floor not in (None, ""):
+            try:
+                floor_value = float(stone_floor)
+            except ValueError:
+                floor_value = float("nan")
+            floor_kinds = tuple(k.strip() for k in os.environ.get("EX42_STONE_FWD_FLOOR_KINDS", "").split(",") if k.strip())   # e.g. A/gaps,B/gap,C/gap
+            if any(re.fullmatch(r"[A-F]/[a-z_0-9]+", k) is None for k in floor_kinds) or len(set(floor_kinds)) != len(floor_kinds):
+                raise ValueError("EX42_STONE_FWD_FLOOR_KINDS invalid (comma list of family/kind such as A/gaps,B/gap,C/gap)")
+            top = 0.9 if floor_kinds else 0.6                                 # the stones-only cell keeps its old limit
+            if not math.isfinite(floor_value) or not 0.1 <= floor_value <= top:
+                raise ValueError("EX42_STONE_FWD_FLOOR invalid (a speed in [0.1, %g] m/s)" % top)
+            from dataclasses import replace
+            stage = replace(stage, stone_forward_floor=floor_value, stone_forward_floor_kinds=floor_kinds)
+        elif os.environ.get("EX42_STONE_FWD_FLOOR_KINDS", "").strip():
+            raise ValueError("EX42_STONE_FWD_FLOOR_KINDS needs EX42_STONE_FWD_FLOOR")
+        turn_first = row.get("flag_turn_first_rad")
+        if turn_first is not None:
+            if type(turn_first) not in (int, float) or isinstance(turn_first, bool) or not math.isfinite(turn_first) or not 0.1 <= turn_first <= 3.0:
+                raise ValueError("EX-42 stage flag_turn_first_rad invalid (a number of radians in [0.1, 3.0])")
+            from dataclasses import replace
+            stage = replace(stage, flag_turn_first_rad=float(turn_first))
+        turn_scope = row.get("flag_turn_first_scope")
+        if turn_scope is not None:
+            if turn_scope not in ("first", "all") or turn_first is None:
+                raise ValueError("EX-42 stage flag_turn_first_scope invalid (first or all, and only with flag_turn_first_rad)")
+            from dataclasses import replace
+            stage = replace(stage, flag_turn_first_scope=str(turn_scope))
     return SimpleNamespace(
         command_contract=command_contract,
         is_ex41=True, stages=[stage], domain_randomization=source_plan.domain_randomization,
@@ -1145,6 +1273,9 @@ def make_ex42_stage_zero_plan_view(source_plan: Any, stage: Any,
         fixed_schedule=source_plan.fixed_schedule,
         parent_sha256=parent_receipt["parent_sha256"], parent_update=parent_update,
         ex42_stage_zero=True, parent_receipt=dict(parent_receipt),
+        # the stage's level-up rule cell: prepare_terrain_cfg reads plan.document['terrain_promotion'] (absent = today's rule)
+        document=({"terrain_promotion": ex42_plan.document["terrain_promotion"]}
+                  if ex42_plan is not None and "terrain_promotion" in ex42_plan.document else {}),
     )
 
 
@@ -1941,7 +2072,7 @@ def inspect_ex42_stage_parent(*, plan: EX42Plan, stage_id: str, approvals_path: 
         raise ValueError(f"EX-42 {stage_id} is not a stage that continues a previous stage's run")
     validator = stage_approval_validator(plan, stage_id)
     previous, local, cumulative = spec["previous"], spec["parent_local"], spec["parent_cumulative"]
-    mirror_before = E_STAGE_SPECS[previous]["critic_mirror"]
+    mirror_before = spec["previous_mirror"]
     pin = dict(_e_stage(plan, stage_id)["parent"])
     approval = validator(plan, approvals_path, pin["sha256"])
     parent = plan.verify_parent_manifest(parent_manifest_path, stage_id=stage_id)
@@ -1965,7 +2096,7 @@ def inspect_ex42_stage_parent(*, plan: EX42Plan, stage_id: str, approvals_path: 
     state = checkpoint.get("continuous_curriculum")
     if (not isinstance(state, dict) or state.get("format") != "foothold-ex42-stage-zero-state/1"
             or state.get("stage_id") != previous or state.get("iteration") != local
-            or state.get("maximum_updates") not in _stage_caps(previous)):
+            or state.get("maximum_updates") not in spec["previous_caps"]):
         raise ValueError(f"EX-42 {stage_id} parent curriculum state is not the finished {previous} state")
     required = ("model_state_dict", "optimizer_state_dict", "ppo_learning_rate",
                 "perception_state_dict", "perception_optimizer_state_dict", "adasmpl",

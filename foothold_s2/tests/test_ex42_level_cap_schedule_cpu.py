@@ -160,6 +160,13 @@ def test_the_readback_after_load_accepts_the_raised_cap_and_nothing_else():
     assert not te.continuation_state_matches(None, saved) and not te.continuation_state_matches(live.state_dict(), None)
     extended = {**saved, "maximum_updates": 2250}        # a HOLD extension resumes a save that ran to the base cap
     assert te.continuation_state_matches(extended, saved)
+    # 2026-11-19 E2 m250: the command allocation counters restart at zero on load (record only), its contract does not
+    allocation = {"contract": {"stage_id": "E2", "shares": {"forward": 0.17}}, "counts": {"samples": [[5, 1]]}}
+    restarted = {**allocation, "counts": {"samples": [[0, 0]]}}
+    assert te.continuation_state_matches({**saved, "command_allocation": restarted}, {**saved, "command_allocation": allocation})
+    other = {**restarted, "contract": {"stage_id": "E2", "shares": {"forward": 0.20}}}
+    assert not te.continuation_state_matches({**saved, "command_allocation": other}, {**saved, "command_allocation": allocation})
+    assert not te.continuation_state_matches(saved, {**saved, "command_allocation": allocation})
     text = (pathlib.Path(te.__file__).resolve().parents[1] / "scripts" / "train_start.py").read_text(encoding="utf-8")
     assert "runner.continuous_curriculum.state_dict() != resume_saved" not in text
     assert "or not continuation_state_matches(runner.continuous_curriculum.state_dict()," in text

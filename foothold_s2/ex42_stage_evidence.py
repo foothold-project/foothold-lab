@@ -6,6 +6,7 @@ records require their own pinned producers through the optional bindings manifes
 """
 from __future__ import annotations
 
+import hashlib
 import json
 from pathlib import Path
 
@@ -36,10 +37,22 @@ def validate_m0_m3(path, template):
     if not pinned or mesh.get('geometry_sha256') != pinned['geometry_sha256']:
         raise ValueError('M0~M3 mesh geometry differs from E2 profile')
     files = mesh.get('files') or {}
+    differing, measured_dirs = [], set()
     for name in ('terrain_mesh.npz', 'mesh_manifest.json'):
         measured = _checked_ref(files.get(name), path.parent)
+        measured_dirs.add(str(Path(measured).resolve().parent))
         if digest(measured) != pinned['files'][name]['sha256']:
+            differing.append(name)
+    relaxed = None
+    if differing:      # lead 2026-11-18 15:59: edge profile = same measured mesh + edge_masks arrays only; any other difference stays STOP
+        from foothold_s2.tools.ex42_m0_m3 import edge_profile_relaxed
+        if len(measured_dirs) != 1:
             raise ValueError('M0~M3 mesh file differs from E2 profile')
+        try:
+            relaxed = edge_profile_relaxed(next(iter(measured_dirs)), pinned['directory'])
+        except Exception as exc:
+            raise ValueError('M0~M3 mesh file differs from E2 profile: ' + str(exc)) from exc
+        print(relaxed['line'], flush=True)
     try:
         from foothold_s2.tools.ex42_m0_m3 import verify_receipt
     except ImportError as exc:
@@ -47,6 +60,36 @@ def validate_m0_m3(path, template):
     rebuilt = verify_receipt(path, digest(path), mesh_dir=pinned['directory'])
     if rebuilt.get('status') != 'PASS':
         raise ValueError('M0~M3 raw measurement verification did not PASS')
+    return relaxed
+
+
+KIND_ORDER_KEY = 'prerequisites.kind_opening_order_recorded'
+KIND_ORDER_FORMAT = 'foothold-ex42-kind-opening-order/1'
+
+
+def kind_opening_order_file(row, template, target, output_dir):
+    """(text, path, ref): the fingerprint file of the kind opening order the target row registered in the plan (`terrain.k_ladder.order`).
+
+    What it says: the order in which the kinds open was written down in the plan BEFORE any result of the stage; `order_sha256` is the
+    sha256 of that order in sorted-key compact JSON. What it does not say: which kinds actually opened. That is a different record, the
+    exposure receipt's `ladder_outcomes` (ex42_exposure_receipt.py), written while the stage runs. Nothing is measured here."""
+    terrain = row.get('terrain') or {}
+    order = (terrain.get('k_ladder') or {}).get('order')
+    if order == []:
+        # CG E.12: the bundle opens in the start block, the ladder opens nothing more. The order written before any result is then the
+        # start block's named kinds in plan order (an empty order is NOT the same as no order: a missing key still refuses).
+        order = [{'family': r['family'], 'kind': r['kind'], 'level_cap': r['level_cap']}
+                 for r in (terrain.get(f'exposure_at_{target}') or {}).get('positive', []) if 'kind' in r]
+    if not isinstance(order, list) or not order:
+        raise ValueError(f'{target} row registers no kind opening order (terrain.k_ladder.order)')
+    order_sha = hashlib.sha256(json.dumps(order, sort_keys=True, separators=(',', ':'), ensure_ascii=False,
+                                          allow_nan=False).encode('utf-8')).hexdigest()
+    body = {'format': KIND_ORDER_FORMAT, 'target_stage': target, 'template_plan_sha256': template.sha256,
+            'order': order, 'order_sha256': order_sha}
+    text = json.dumps(body, ensure_ascii=False, sort_keys=True, indent=2, allow_nan=False) + '\n'
+    path = Path(output_dir).resolve() / f'kind_opening_order_{target}.json'
+    ref = {'path': str(path), 'sha256': hashlib.sha256(text.encode('utf-8')).hexdigest(), 'pointer': 'order_sha256'}
+    return text, path, ref
 
 
 def produce(*, template_path, source_path, target, gate_path, manifest_path, output_dir, bindings_path=None):
@@ -54,7 +97,11 @@ def produce(*, template_path, source_path, target, gate_path, manifest_path, out
     template, source = EX42Plan.load(template_path), EX42Plan.load(source_path)
     gate_path = Path(gate_path).resolve(strict=True)
     gate = _json(gate_path)
-    if gate.get('state') != 'complete' or gate.get('judgment') != 'PASS' or gate.get('plan_sha256') != source.sha256:
+    first_window = gate.get('state') == 'first_window_handoff'      # E1F m250 on the team lead's recorded approval (ex42_e1f_first_window); never written as a PASS
+    if first_window:
+        if gate.get('judgment') != 'FIRST_WINDOW_HANDOFF' or gate.get('plan_sha256') != source.sha256 or gate.get('stage_id') != 'E1F':
+            raise ValueError('first window handoff receipt does not belong to this E1F plan')
+    elif gate.get('state') != 'complete' or gate.get('judgment') != 'PASS' or gate.get('plan_sha256') != source.sha256:
         raise ValueError('stage evidence requires actual predecessor PASS under its source plan')
     row = _row(template, target)
     contract = row['authorization_contract']
@@ -64,8 +111,13 @@ def produce(*, template_path, source_path, target, gate_path, manifest_path, out
     policy = source
     if gate.get('evaluation_plan'):
         policy = EX42Plan.load(_checked_ref(gate['evaluation_plan'], gate_path.parent))
-    validate_source_exit(source, gate, gate_path, evaluation_plan=policy)
+    if first_window:
+        from foothold_s2.ex42_e1f_first_window import read_first_window_handoff
+        read_first_window_handoff(gate_path, policy_plan=policy)      # recounts the raw flag cells, the maintenance table and the ledger line
+    else:
+        validate_source_exit(source, gate, gate_path, evaluation_plan=policy)
     bindings = {}
+    relaxed_m0_m3 = None
     paths = set(contract['required_sha256_paths']) | set(contract['required_string_paths'])
     paths |= set(contract['required_boolean_paths']) - {'critic_mirror'}
     if bindings_path:
@@ -75,7 +127,7 @@ def produce(*, template_path, source_path, target, gate_path, manifest_path, out
                 raise ValueError(f'unregistered binding: {key}')
             path = _checked_ref(value, Path(bindings_path).parent)
             if key == 'prerequisites.m0_m3_receipt_sha256':
-                validate_m0_m3(path, template)
+                relaxed_m0_m3 = validate_m0_m3(path, template)
             bindings[key] = dict(value, path=str(path))
     mesh_key = 'prerequisites.predecessor_exit.evaluation_mesh_sha256'
     if mesh_key in paths:
@@ -86,7 +138,7 @@ def produce(*, template_path, source_path, target, gate_path, manifest_path, out
         npz = Path(mesh.get('mesh_npz', '')).resolve(strict=True)
         manifest = _json(mesh.get('manifest', ''))
         if (manifest.get('mesh_sha256') != mesh.get('mesh_sha256')
-                or manifest.get('mesh_file_sha256') != digest(npz)):
+                or manifest.get('mesh_file_sha256') not in (None, digest(npz))):      # the E0 evaluation mesh manifest predates the field (same tolerance as ex42_flag_publication); the geometry sha above still has to match the receipt
             raise ValueError('mesh producer SHA differs')
         bindings[mesh_key] = _ref(npz)
     flags = source.document.get('evaluation', {}).get('flag_cells') or {}
@@ -99,6 +151,10 @@ def produce(*, template_path, source_path, target, gate_path, manifest_path, out
     stage_key = 'prerequisites.predecessor_exit.stage_id'
     if stage_key in paths:
         bindings[stage_key] = dict(_ref(gate_path), pointer='stage_id')
+    kind_order = None
+    if KIND_ORDER_KEY in paths and KIND_ORDER_KEY not in bindings:      # a bindings manifest that names it wins
+        kind_order = kind_opening_order_file(row, template, target, output_dir)
+        bindings[KIND_ORDER_KEY] = kind_order[2]
     # materialize derives the matching path from its baseline SHA reference.
     automatically_set = {'critic_mirror'}
     if 'prerequisites.flag_baseline.sha256' in bindings:
@@ -116,13 +172,28 @@ def produce(*, template_path, source_path, target, gate_path, manifest_path, out
                 'checkpoint_sha256': gate['checkpoint_sha256'], 'bindings': bindings, 'budget_observed': budget}
     if policy.sha256 != source.sha256:
         document['evaluation_plan'] = _ref(policy.path)
+    if first_window:
+        document['predecessor_exit'] = {'mode': 'first_window_handoff', 'receipt_sha256': digest(gate_path),
+                                        'ledger_line_sha256': gate['lead_approval']['line_sha256'],
+                                        'hold_items': gate['hold_items']}
     axes = row.get('boundary_axes') or []
     if len(axes) == 1:
         document['boundary_axis'] = axes[0]
-    # Multiple axes need a pre-registered entry axis. A gate must not choose one
-    # after observing performance. The planner's table is wired separately.
+    elif (row.get('boundary') or {}).get('entry_axis') in axes:
+        # Multiple axes: only the entry axis the plan registered before any result (row boundary.entry_axis, lead 2026-11-16 11:09).
+        # A gate must not choose one after observing performance; no registered entry axis inside the row's axes = none is written
+        # and materialize refuses ("multi-axis boundary needs a declared allowed axis").
+        document['boundary_axis'] = row['boundary']['entry_axis']
     output = Path(output_dir) / f'{target}_{digest(gate_path)[:12]}.json'
     output.parent.mkdir(parents=True, exist_ok=True)
+    if kind_order is not None:
+        text_order, path_order, _ = kind_order
+        if path_order.exists():
+            if path_order.read_text(encoding='utf-8') != text_order:
+                raise ValueError('existing kind opening order file differs; never overwrite')
+        else:
+            with path_order.open('x', encoding='utf-8') as stream:
+                stream.write(text_order)
     text = json.dumps(document, ensure_ascii=False, sort_keys=True, indent=2, allow_nan=False) + '\n'
     if output.exists():
         if output.read_text(encoding='utf-8') != text:
@@ -130,4 +201,9 @@ def produce(*, template_path, source_path, target, gate_path, manifest_path, out
     else:
         with output.open('x', encoding='utf-8') as stream:
             stream.write(text)
+    if relaxed_m0_m3 is not None:      # the EDGE_PROFILE_FILE_SHA_RELAXED line goes next to the evidence (also printed above)
+        side = output.parent / 'edge_profile_file_sha_relaxed.json'
+        side_text = json.dumps(relaxed_m0_m3, ensure_ascii=False, sort_keys=True, indent=2) + '\n'
+        if not side.exists() or side.read_text(encoding='utf-8') == side_text:
+            side.write_text(side_text, encoding='utf-8')
     return output

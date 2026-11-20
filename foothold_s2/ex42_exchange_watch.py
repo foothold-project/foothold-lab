@@ -9,14 +9,15 @@ import math
 
 
 def compare(now: dict, previous: dict | None, *, measured: dict,
-            baseline: dict, kind_now: dict, kind_previous: dict | None) -> dict:
+            baseline: dict, kind_now: dict, kind_previous: dict | None,
+            kind_key: str = "e2_kind", subcells: tuple = ("forward", "flag_four")) -> dict:
     if previous is None:
         return {"role": "judge", "judgement": "HOLD", "source": "fixed_eval",
                 "reason": "직전 경계 평가 없음", "violations": [], "missing": ["previous_boundary"]}
     if (now.get("conditions", {}).get("eval_seed") != previous.get("conditions", {}).get("eval_seed") or
             now.get("score_config_sha256") != previous.get("score_config_sha256") or
             now.get("stage_id") != previous.get("stage_id") or
-            now.get("e2_kind", {}).get("mesh_sha256") != previous.get("e2_kind", {}).get("mesh_sha256")):
+            now.get(kind_key, {}).get("mesh_sha256") != previous.get(kind_key, {}).get("mesh_sha256")):
         return {"role": "judge", "judgement": "HOLD", "source": "fixed_eval",
                 "reason": "직전 경계 시드·설정·단계·메시가 다름", "violations": [], "missing": ["identity"]}
     limits = {"alive_at_end": measured["survival_drop_envs"],
@@ -64,7 +65,7 @@ def compare(now: dict, previous: dict | None, *, measured: dict,
         if not isinstance(new_row, dict) or not isinstance(old_row, dict):
             missing.append(f"kind/{mode}")
             continue
-        for subcell in ("forward", "flag_four"):
+        for subcell in subcells:
             newer, older = new_row.get(subcell, {}), old_row.get(subcell, {})
             valid_new, valid_old = newer.get("valid_count"), older.get("valid_count")
             for metric in ("success_count", "survival_count"):

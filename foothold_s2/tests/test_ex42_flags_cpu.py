@@ -68,3 +68,20 @@ def test_attach_puts_the_provider_on_the_command_term(tmp_path):
     cfg = types.SimpleNamespace(commands=types.SimpleNamespace(base_velocity=types.SimpleNamespace(flag_provider=None)))
     receipt = fl.attach_mesh_flags(cfg, _npz(tmp_path, flags), 3, 76)
     assert isinstance(cfg.commands.base_velocity.flag_provider, fl.MeshFlagProvider) and receipt["columns"] == 76
+
+
+def test_the_flag_provider_can_be_dumped_by_isaac_labs_yaml_writer():
+    """The smoke of E2 died in dump_yaml(env_cfg): callable_to_string reads value.__name__ and the provider instance had none."""
+    import importlib.util
+    import numpy as np
+    from foothold_s2.terrains.ex42_flags import MeshFlagProvider
+    provider = MeshFlagProvider(np.zeros((2, 3, 4, 2), dtype=np.float32))
+    assert provider.__name__ == "MeshFlagProvider" and provider.__module__ == "foothold_s2.terrains.ex42_flags"
+    path = "/home/jay/mai/projects/IsaacLab/source/isaaclab/isaaclab/utils/string.py"
+    spec = importlib.util.spec_from_file_location("isaaclab_string_for_test", path)
+    try:
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+    except Exception:
+        return                                           # Isaac Lab is not importable here: the attribute checks above stand
+    assert module.callable_to_string(provider) == "foothold_s2.terrains.ex42_flags:MeshFlagProvider"

@@ -230,13 +230,22 @@ def measured_budget(template_path, source_path, manifest_path, gate_path):
     template, source = EX42Plan.load(template_path), EX42Plan.load(source_path)
     manifest = json.loads(Path(manifest_path).read_text(encoding="utf-8-sig"))
     gate = json.loads(Path(gate_path).read_text(encoding="utf-8-sig"))
-    if gate.get("state") != "complete" or gate.get("plan_sha256") != source.sha256:
+    first_window = gate.get("state") == "first_window_handoff"
+    if (gate.get("state") != "complete" and not first_window) or gate.get("plan_sha256") != source.sha256:
         raise ValueError("budget source gate plan/state differs")
+    score = gate
+    if first_window:        # the receipt carries the boundary identity; the pair check below reads the real boundary score it names
+        from foothold_s2.ex42_e1f_first_window import read_first_window_handoff
+        score = json.loads(Path(read_first_window_handoff(gate_path)["p1_score_path"]).read_text(encoding="utf-8-sig"))
     iteration = gate.get("checkpoint_iteration")
-    if type(iteration) is not int or iteration <= 0 or manifest.get("progress", {}).get("completed_updates") != iteration:
-        raise ValueError("budget source is not the completed boundary checkpoint")
+    done = manifest.get("progress", {}).get("completed_updates")
+    # The parent is a boundary checkpoint the manifest has PUBLISHED (named save with the scored sha, checked by validate_score_pair below).
+    # The run may have trained past it (an earlier boundary such as m500 of a stage that went on to 750): only a manifest that has not
+    # reached the checkpoint is refused. The budget counts the checkpoint's own iteration, never the manifest's progress.
+    if type(iteration) is not int or iteration <= 0 or type(done) is not int or done < iteration:
+        raise ValueError("budget source is not a completed boundary checkpoint (the manifest has not reached it)")
     checkpoint = Path(manifest_path).resolve().parent / f"model_{iteration}.pt"
-    validate_score_pair(expected_iteration=iteration, score=gate, manifest=manifest,
+    validate_score_pair(expected_iteration=iteration, score=score, manifest=manifest,
                         checkpoint_exists=checkpoint.is_file(), checkpoint_sha256=_sha256(checkpoint))
     stage = next((r for r in source.document["stages"] if r["id"] == gate.get("stage_id")), None)
     cumulative = ((stage or {}).get("parent") or {}).get("cumulative_update")

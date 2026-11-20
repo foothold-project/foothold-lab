@@ -122,6 +122,13 @@ def check_e1_gate(path: Path, *, checkpoint_sha256: str, exit_updates: tuple[int
     """W09 is based on a measured E1 graduate, never only a saved model."""
     path = Path(path).resolve(strict=True)
     row = json.loads(path.read_text(encoding="utf-8-sig"))
+    if row.get("state") == "cap_handoff":       # no graduation PASS: the team lead's approved cap handoff receipt (its own reader checks it)
+        from foothold_s2.ex42_e1_cap_handoff import read_cap_handoff
+        got = read_cap_handoff(path, exit_updates=exit_updates)
+        if got["checkpoint_sha256"] != checkpoint_sha256 or got["checkpoint_iteration"] not in exit_updates:
+            raise ValueError("W09 cap handoff receipt is for another checkpoint")
+        return {"path": str(path), "sha256": digest(path), "measurement": got["measurement"],
+                "measurement_sha256": got["measurement_sha256"], "kind": "cap_handoff"}
     measurement = Path(row.get("measurement", ""))
     if (row.get("state") != "complete" or row.get("stage_id") != "E1" or
             row.get("checkpoint_iteration") not in exit_updates or row.get("judgment") != "PASS" or

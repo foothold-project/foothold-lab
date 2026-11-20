@@ -5,8 +5,10 @@ import pytest
 import yaml
 
 PLAN = Path(__file__).resolve().parents[1] / "curriculum" / "ex42-prep.yaml"
+# CG v0.18 draft E.12: E2 and E3 are entered on K once (the bundle opens together); D (cap +1) follows. Before: E2 had K only, E3 started on D.
 EXPECTED = {
-    "E3": ("terrain_kind_level_cap", ["terrain_kind_level_cap", "terrain_exposure", "terrain_level_cap", "command_allocation"],
+    "E2": ("terrain_exposure", ["terrain_exposure", "terrain_kind_level_cap"], "rotate_in_order_one_axis_per_boundary"),
+    "E3": ("terrain_exposure", ["terrain_exposure", "terrain_kind_level_cap", "terrain_level_cap", "command_allocation"],
            "rotate_in_order_one_axis_per_boundary"),
     "E4": ("terrain_exposure", ["terrain_exposure", "terrain_kind_level_cap", "command_allocation"],
            "rotate_in_order_one_axis_per_boundary"),
@@ -73,26 +75,39 @@ def test_a_multi_axis_stage_without_the_block_is_refused():
         check_boundary(row)
 
 
-def test_e3_start_block_is_the_e2_end_state_plus_the_entry_axis_only():
+def test_e3_start_block_is_the_e2_end_state_plus_the_k_bundle_once():
+    """CG v0.18 draft E.12: E3 = the E2 five kinds held at 0.03 (cap 5, graduated) plus the three-kind bundle opened on K once (cap 2)."""
     rows = _rows()
-    e2 = {(r.get("kind") or r.get("kinds_of")): r for r in rows["E2"]["terrain"]["exposure_at_E2"]["positive"]}
-    e3 = {(r.get("kind") or r.get("kinds_of")): r for r in rows["E3"]["terrain"]["exposure_at_E3"]["positive"]}
-    assert set(e3) == set(e2)                                            # no kind opens at the stage entry
-    assert e3["continuous"] == e2["continuous"]                          # the continuous cap does not move (L+ is its own boundary)
-    low2, low3 = e2["stepping_stones_low"], e3["stepping_stones_low"]
-    assert low3["share"] == low2["share"] and low3["level_cap"] == low2["level_cap"] + 1   # D: that kind's cap +1, share unchanged
-    assert rows["E3"]["terrain"]["k_ladder"]["order"][0] == {"family": "C", "kind": "flat", "level_cap": 0}
+    key = lambda r: (r["family"], r.get("kind") or r.get("kinds_of"))                   # a kind name repeats across families (B/gap, C/gap)
+    e2 = {key(r): r for r in rows["E2"]["terrain"]["exposure_at_E2"]["positive"]}
+    e3 = {key(r): r for r in rows["E3"]["terrain"]["exposure_at_E3"]["positive"]}
+    bundle = {("B", "pallets"), ("A", "stepping_beams"), ("A", "stepping_stones_low")}
+    assert set(e3) - set(e2) == bundle                                                     # the bundle opens at the stage entry
+    # E2 v1 second door (lead 11/20 18:08): C/box opens in the E2 row only. The E3 row does not carry it yet, so E3 would drop C/box: open decision for the lead
+    # (carry C/box into E3 at 0.03 cap 5 and take 0.03 from the bundle, or leave it). Until then the difference is exactly C/box and nothing else.
+    assert set(e2) - set(e3) == {("C", "box")}
+    assert e3[("A", "continuous")] == e2[("A", "continuous")]                              # the continuous cap does not move (L+ is its own boundary)
+    for name in set(e2) - {("A", "continuous"), ("C", "box")}:                              # held at the floor, graduated level
+        assert e3[name]["share"] == 0.03 and e3[name]["level_cap"] == 5
+    assert all(e3[name]["level_cap"] == 2 for name in bundle)
+    assert abs(sum(r["share"] for r in e3.values() if "share" in r) - 0.44) < 1e-9
+    ladder = rows["E3"]["terrain"]["k_ladder"]
+    assert ladder["order"] == [] and ladder["kind_floor"] == 0.03                         # the bundle opens in the start block, not on the ladder
 
 
 def test_command_shares_follow_the_canon_c_boundaries():
     rows = _rows()
     e1f, e3, e4 = rows["E1F"]["shares"], rows["E3"], rows["E4"]
-    assert e3["shares"] == e1f and e1f["flag"] == 0.1                    # E2 changes no command share
+    assert e1f["flag"] == 0.1
+    # E1F new composition (lead 2026-11-16 09:26) and E2 carrying it (10:40): E1F and E2 hold the new vector; E3 and later rows still hold the
+    # earlier one, so E2 -> E3 moves reverse and side back (open: lead decides whether the E3 row follows)
+    assert rows["E2"]["shares"] == e1f
+    assert {k for k in e1f if e1f[k] != e3["shares"][k]} == {"reverse", "side_left", "side_right"}
     after = e3["command_allocation_boundary"]["shares"]
     assert abs(sum(after.values()) - 1.0) < 1e-9 and after["flag"] == 0.15
     assert (after["forward"], after["walk_left"], after["walk_right"]) == (0.14, 0.05, 0.05)
     assert {k: v for k, v in after.items() if k not in ("forward", "walk_left", "walk_right", "flag")} == \
-           {k: v for k, v in e1f.items() if k not in ("forward", "walk_left", "walk_right", "flag")}
+           {k: v for k, v in e3["shares"].items() if k not in ("forward", "walk_left", "walk_right", "flag")}   # vs the E2 vector (E1F's own reverse and side moved 2026-11-16)
     assert e4["shares"] == after
     assert e4["command_allocation_boundary"]["targets"] == {"flag": 0.2, "forward": 0.11, "diagonal_total": 0.07}
     last = e4["command_allocation_boundary"]["shares"]
@@ -114,7 +129,8 @@ def test_every_stage_the_share_contract_reads_has_an_explicit_vector():
 
     document = yaml.safe_load(PLAN.read_text(encoding="utf-8"))
     rows = {row["id"]: row for row in document["stages"]}
-    assert rows["E2"]["shares"] == rows["E1F"]["shares"]                 # CG E.2 E2: no command share moves at the K boundary
+    # CG E.2 E2: no command share moves at the K boundary: E2 carries the E1F vector (2026-11-16 10:40); E3 and later keep the earlier one (open: lead)
+    assert rows["E2"]["shares"] == rows["E1F"]["shares"]
     plan = SimpleNamespace(document=document)
     for stage in ("E1F", "E2", "E3", "E4", "E5", "E6a", "E6b"):
         contract = read_contract(plan, stage)

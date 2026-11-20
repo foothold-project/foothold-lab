@@ -64,3 +64,18 @@ def test_the_ranges_are_not_adjustable_in_those_stages(plan, tmp_path):
     path.write_text(json.dumps(document), encoding="utf-8")
     with pytest.raises(ValueError, match=r"may only name boundaries \[\] for commands"):
         adj.start_segment(view, plan, "E1F", boundary_index=1, path=str(path), log_dir=str(tmp_path), write=False)
+
+
+def test_the_stage_start_view_carries_the_level_up_cell_so_the_rule_is_not_silently_off(plan):
+    """6b99f98a1: prepare_terrain_cfg reads plan.document on the E-stage start path; the view had no document and the rule never applied."""
+    from foothold_s2.curriculum import ex41
+    source = te.load_ex42_stage_zero_source(plan)
+    args = (source[0], source[1], {"parent_sha256": "0" * 64})
+    assert ex41.terrain_promotion_cell(te.make_ex42_stage_zero_plan_view(*args, ex42_plan=plan, stage_id="E1F")) is None
+    cell = {"x_progress_kinds": ["A/gaps"], "x_progress_fraction": 0.5, "forward_only": True}
+    plan.document["terrain_promotion"] = cell
+    try:
+        got = ex41.terrain_promotion_cell(te.make_ex42_stage_zero_plan_view(*args, ex42_plan=plan, stage_id="E1F"))
+    finally:
+        del plan.document["terrain_promotion"]
+    assert got is not None and got["x_progress_kinds"] == ("A/gaps",) and got["forward_only"] is True

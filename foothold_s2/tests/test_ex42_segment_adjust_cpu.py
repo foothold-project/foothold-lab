@@ -774,10 +774,11 @@ def test_a_limits_file_with_a_bad_command_cell_is_refused(tmp_path):
 def test_the_shipped_e1_row_registers_low_forward_fraction_inside_the_limits(row_plan):
     assert next(r for r in row_plan.document["stages"] if r["id"] == "E1")["low_forward_fraction"] == 0.5       # 2026-11-14 00:28
     assert adj.stage_low_forward(row_plan, "E1") == 0.5
-    assert adj.stage_slow_track_heading(row_plan, "E1") is True and adj.stage_slow_track_heading(row_plan, "E1F") is False
-    assert adj.stage_low_forward(row_plan, "E1F") == 0.4                    # lead 2026-11-13 16:00: E1F keeps it
+    assert adj.stage_slow_track_heading(row_plan, "E1") is True and adj.stage_slow_track_heading(row_plan, "E1F") is True
+    assert adj.stage_low_forward(row_plan, "E1F") == 0.5                    # lead 2026-11-13 16:00: E1F keeps it; v29-11 (2026-11-15 22:46): 0.4 -> 0.5
+    assert adj.stage_low_forward(row_plan, "E2") == 0.5                     # lead 2026-11-16 10:40: E2 carries the E1F cells
     assert all(adj.stage_low_forward(row_plan, stage_id) is None
-               for stage_id in ("E0", "E2", "E3", "E4", "E5", "M", "E6a", "E6b"))       # decided from E1's final evidence
+               for stage_id in ("E0", "E3", "E4", "E5", "M", "E6a", "E6b"))       # decided from E1's final evidence
 
 
 def test_the_row_share_holds_from_the_first_update_and_reaches_the_sampler(row_plan, tmp_path):
@@ -824,13 +825,13 @@ def test_the_live_objects_keep_the_share(row_plan, tmp_path):
     source = te.load_ex42_stage_zero_source(row_plan)
     flagged = te.make_ex42_stage_zero_plan_view(source[0], source[1], {"parent_sha256": "0" * 64}, ex42_plan=row_plan,
                                                 stage_id="E1F")
-    assert flagged.command_contract is not None and flagged.stages[0].low_forward_fraction == 0.4   # approved E1F source share
+    assert flagged.command_contract is not None and flagged.stages[0].low_forward_fraction == 0.5   # approved E1F source share (v29-11: 0.5)
     record = adj.start_segment(flagged, row_plan, "E1F", boundary_index=0, path=None, log_dir=str(tmp_path), write=True)
-    assert record["low_forward_fraction"]["value"] == 0.4 and record["low_forward_fraction"]["source"] == "plan"
+    assert record["low_forward_fraction"]["value"] == 0.5 and record["low_forward_fraction"]["source"] == "plan"
     assert record["rewards"]["values"] is None                                # the E1F row has no reward cells
     free = ex42_shares.CommandShares(flagged.command_contract, flagged.stages[0]).free_stage    # what a free env draws from
     slow, forward, _ = slow_forward_share(free)
-    assert free.low_forward_fraction == 0.4 and forward > 0.15 and abs(slow - forward * 0.4) < 0.002
+    assert free.low_forward_fraction == 0.5 and forward > 0.15 and abs(slow - forward * 0.5) < 0.002
     without = ex42_shares.CommandShares(flagged.command_contract, replace(flagged.stages[0], low_forward_fraction=0.2)).free_stage
     assert abs(slow_forward_share(without)[0] - forward * 0.2) < 0.002          # the share E1F would fall back to
 

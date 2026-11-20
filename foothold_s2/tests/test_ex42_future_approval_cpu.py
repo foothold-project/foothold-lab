@@ -22,7 +22,8 @@ def test_canonical_e1f_shares_and_exposure_are_explicit():
     p = EX42Plan.load(TABLE)
     s = next(x for x in p.document['stages'] if x['id']=='E1F')
     expected = dict(p.document['stage_zero']['shares'])
-    expected.update(flag=0.10, forward=0.17, spin_left=0.07, spin_right=0.07)
+    expected.update(flag=0.10, forward=0.17, spin_left=0.07, spin_right=0.07,
+                    reverse=0.10, side_left=0.09, side_right=0.09)      # E1F new composition (lead 2026-11-16 09:26)
     assert s['shares'] == expected
     assert sum(s['shares'].values()) == pytest.approx(1.0)
     assert s['terrain']['exposure_at_E1F']['positive'][0]['level_cap'] is None

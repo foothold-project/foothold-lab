@@ -9,6 +9,7 @@ import types
 
 import pytest
 import torch
+import yaml
 
 from foothold_s2 import ex42_exposure_receipt as er
 from foothold_s2.curriculum.ex42_prep import EX42Plan
@@ -16,7 +17,7 @@ from foothold_s2.scripts import ex42_training_entry as te
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
 PLAN = ROOT / "foothold_s2" / "curriculum" / "ex42-prep.yaml"
-MESH = pathlib.Path("/mnt/win-d/mai/data/foothold/s2_lab/ex42_mesh_1111/seed42_E0_c333_flags_E2_1111_v2")   # the mesh the plan pins for E3
+MESH = pathlib.Path("/home/jay/data/foothold/s2_lab/ex42_mesh_1118_easy10/seed42_E0_c333_flags_E2_1111_v2_edge_easy10")   # the mesh the plan pins for E3 (easy ladder, CG E.12 draft)
 PSHA = "a" * 64
 
 
@@ -40,14 +41,33 @@ def _cfg():
     events = types.SimpleNamespace(
         reset_base=Term(params={"pose_range": {}, "velocity_range": {"x": (0.0, 0.0)}}),
         ex40_push=Term(func=lambda *a: None, mode="interval", params={"velocity_range": {"x": (-1, 1)}}))
-    return types.SimpleNamespace(events=events, commands=types.SimpleNamespace(
+    return types.SimpleNamespace(rewards=types.SimpleNamespace(foot_edge=types.SimpleNamespace(weight=0.0)), events=events, commands=types.SimpleNamespace(
                                      base_velocity=types.SimpleNamespace(flag_provider=None)),
                                  scene=types.SimpleNamespace(terrain=types.SimpleNamespace(terrain_generator=None)))
 
 
-def _contract(stage="E3", k=0, outcomes=None):
-    return te.prepare_e0_env_cfg(_cfg(), EX42Plan.load(PLAN), MESH, stage_id=stage, boundary_index=k,
+def _contract(stage="E3", k=0, outcomes=None, plan=None):
+    return te.prepare_e0_env_cfg(_cfg(), EX42Plan.load(PLAN) if plan is None else plan, MESH, stage_id=stage, boundary_index=k,
                                  ladder_outcomes=outcomes)
+
+
+def _ladder_plan(tmp_path):
+    """The plan's E3 with a one-kind K ladder put back (CG v0.18 draft E.12 opens E3's bundle in the start block and keeps `order: []`, so the
+    plan itself no longer exercises the ladder machinery): stepping_stones_low is the one `new` kind (0.05, cap 0), C/flat opens next and B/rough after it."""
+    doc = yaml.safe_load(PLAN.read_text(encoding="utf-8-sig"))
+    terrain = next(r for r in doc["stages"] if r["id"] == "E3")["terrain"]
+    for rule in terrain["exposure_at_E3"]["positive"]:
+        if rule.get("kind") == "stepping_stones_low":
+            rule["share"], rule["level_cap"] = 0.05, 0
+    terrain.pop("kind_level_cap", None)                                # this helper tests the K ladder alone, not the D axis
+    terrain["k_ladder"] = {"grades": {"new": 0.05, "current": 0.1}, "kind_floor": 0.02,
+                           "order": [{"family": "C", "kind": "flat", "level_cap": 0}, {"family": "B", "kind": "rough", "level_cap": 0}]}
+    for sibling in PLAN.parent.iterdir():                              # the plan reads its source plan and approvals beside it
+        if sibling.is_file() and sibling.suffix in (".yaml", ".json"):
+            (tmp_path / sibling.name).write_bytes(sibling.read_bytes())
+    path = tmp_path / "ex42-prep-ladder.yaml"
+    path.write_text(yaml.safe_dump(doc, sort_keys=False, allow_unicode=True), encoding="utf-8")
+    return EX42Plan.load(path)
 
 
 need_mesh = pytest.mark.skipif(not MESH.is_dir(), reason="real mesh not on this machine")
@@ -69,15 +89,16 @@ def test_the_receipt_carries_the_real_contract_and_opened_kinds_follow_the_expos
 
 
 @need_mesh
-def test_a_k_ladder_move_changes_the_receipt_and_its_kinds():
+def test_a_k_ladder_move_changes_the_receipt_and_its_kinds(tmp_path):
+    plan = _ladder_plan(tmp_path)
     # E3 starts as the E2 end state plus the entry axis D only (lead 2026-11-12 02:00): stepping_stones_low is the one `new`
     # kind of the start block and C/flat is the first kind the K ladder opens.
     flat_pass = {"A/stepping_stones_low": {"first_window_pass": True}}
-    first = er.build_receipt(_contract(k=1, outcomes=[flat_pass]), stage_id="E3", plan_sha256=PSHA, iteration=250,
+    first = er.build_receipt(_contract(k=1, outcomes=[flat_pass], plan=plan), stage_id="E3", plan_sha256=PSHA, iteration=250,
                              kind="boundary")
-    later = er.build_receipt(_contract(k=2, outcomes=[flat_pass, {}]), stage_id="E3", plan_sha256=PSHA, iteration=500,
+    later = er.build_receipt(_contract(k=2, outcomes=[flat_pass, {}], plan=plan), stage_id="E3", plan_sha256=PSHA, iteration=500,
                              kind="boundary")
-    held = er.build_receipt(_contract(k=2, outcomes=[{}, {}]), stage_id="E3", plan_sha256=PSHA, iteration=500,
+    held = er.build_receipt(_contract(k=2, outcomes=[{}, {}], plan=plan), stage_id="E3", plan_sha256=PSHA, iteration=500,
                             kind="boundary")
     assert first["boundary_index"] == 1 and later["boundary_index"] == 2
     assert [(m["kind"], m["grade"]) for m in first["k_ladder_moves"]] == [("A/stepping_stones_low", "current")]
@@ -234,9 +255,9 @@ def test_the_receipt_records_the_ordered_outcomes_the_ladder_really_used_inside_
 
 
 @need_mesh
-def test_the_consumer_replays_the_k_moves_from_the_plan_and_the_recorded_outcomes():
-    plan = EX42Plan.load(PLAN)
-    body = er.build_receipt(_contract(k=2, outcomes=[LOW_PASS, {}]), stage_id="E3", plan_sha256=PSHA, iteration=500,
+def test_the_consumer_replays_the_k_moves_from_the_plan_and_the_recorded_outcomes(tmp_path):
+    plan = _ladder_plan(tmp_path)
+    body = er.build_receipt(_contract(k=2, outcomes=[LOW_PASS, {}], plan=plan), stage_id="E3", plan_sha256=PSHA, iteration=500,
                             kind="boundary")
     assert [m["kind"] for m in er.recompute_from_plan(body, plan)["moves"]] == ["A/stepping_stones_low", "C/flat"]
     fake = json.loads(json.dumps(body)); fake["ladder_outcomes"] = [{}, {}]                  # outcomes changed, sha refreshed
@@ -270,9 +291,9 @@ def test_outcomes_longer_than_the_boundary_index_or_not_dicts_are_refused():
 
 
 @need_mesh
-def test_swapping_the_kinds_of_an_open_and_a_closed_column_is_caught_by_the_mesh_column_table():
-    plan = EX42Plan.load(PLAN)
-    body = er.build_receipt(_contract(k=2, outcomes=[LOW_PASS, {}]), stage_id="E3", plan_sha256=PSHA, iteration=500,
+def test_swapping_the_kinds_of_an_open_and_a_closed_column_is_caught_by_the_mesh_column_table(tmp_path):
+    plan = _ladder_plan(tmp_path)
+    body = er.build_receipt(_contract(k=2, outcomes=[LOW_PASS, {}], plan=plan), stage_id="E3", plan_sha256=PSHA, iteration=500,
                             kind="boundary")
     rows = body["column_rows"]
     open_i = next(i for i, r in enumerate(rows) if r["open"])
@@ -288,3 +309,66 @@ def test_swapping_the_kinds_of_an_open_and_a_closed_column_is_caught_by_the_mesh
     other = json.loads(json.dumps(body)); other["mesh_sha256"] = "0" * 64; other["sha256"] = er._sha(other)
     with pytest.raises(ValueError, match="mesh_sha256 differs"):
         er.recompute_from_plan(other, plan)
+
+
+# ---- D axis (terrain_kind_level_cap): a bundle kind that passed the window ending at a boundary gets its cap +1 ----
+PASS = {"first_window_pass": True, "target_level_reached": False}
+
+
+def _e2_terrain():
+    return er.plan_stage_terrain(EX42Plan.load(PLAN), "E2")
+
+
+def _caps(terrain, stage="E2"):
+    return {f"{r['family']}/{r['kind']}": r["level_cap"] for r in terrain[f"exposure_at_{stage}"]["positive"] if "kind" in r}
+
+
+def test_a_kind_that_passed_gets_its_cap_up_by_one_and_the_receipt_has_before_and_after():
+    from foothold_s2.terrains.ex42_exposure import raise_kind_caps
+    start = _e2_terrain()
+    START = {"A/gaps": 1, "B/gap": 2, "C/gap": 2, "B/beam": 2, "A/balance_beams": 1, "C/box": 4}   # E2 v1 (11/20): the two first-door kinds open at cap 1, the other three at 2, the second door C/box at 4 (lead 18:08)
+    assert _caps(start) == START
+    moved, moves = raise_kind_caps(start, "E2", 2, [{"A/gaps": PASS, "B/gap": {"first_window_pass": False}}, {"A/gaps": PASS, "C/gap": PASS}])
+    assert _caps(moved) == {"A/gaps": 3, "B/gap": 2, "C/gap": 3, "B/beam": 2, "A/balance_beams": 1, "C/box": 4}
+    assert [(m["boundary"], m["kind"], m["before"], m["after"]) for m in moves] == [(1, "A/gaps", 1, 2), (2, "A/gaps", 2, 3), (2, "C/gap", 2, 3)]
+    assert all(m["axis"] == "terrain_kind_level_cap" and m["because"] == "first_window_pass" for m in moves)
+    assert _caps(start) == START                                                   # the plan itself never changes
+
+
+def test_no_evidence_is_a_hold_and_the_cap_stops_at_end_and_the_continuous_rule_never_moves():
+    from foothold_s2.terrains.ex42_exposure import raise_kind_caps
+    start = _e2_terrain()
+    assert raise_kind_caps(start, "E2", 3, None)[1] == [] and raise_kind_caps(start, "E2", 0, [{"A/gaps": PASS}])[1] == []
+    moved, moves = raise_kind_caps(start, "E2", 5, [{"A/gaps": PASS}] * 5)
+    assert _caps(moved)["A/gaps"] == 5 and len(moves) == 4                         # 1 -> 5, then nothing more
+    continuous = [r for r in moved["exposure_at_E2"]["positive"] if "kinds_of" in r][0]
+    assert continuous["level_cap"] == 5
+    graduated = _e2_terrain(); no_cell = {k: v for k, v in graduated.items() if k != "kind_level_cap"}
+    assert raise_kind_caps(no_cell, "E2", 2, [{"A/gaps": PASS}] * 2)[1] == []      # a row without the cell is unchanged
+    with pytest.raises(ValueError, match="kind_level_cap"):
+        raise_kind_caps({**graduated, "kind_level_cap": {"end": 5}}, "E2", 1, [])
+
+
+@need_mesh
+def test_the_e2_boundary_receipt_records_the_cap_move_and_the_consumer_replays_it():
+    plan = EX42Plan.load(PLAN)
+    contract = _contract("E2", k=1, outcomes=[{"A/gaps": PASS, "B/beam": PASS}])
+    body = er.build_receipt(contract, stage_id="E2", plan_sha256=PSHA, iteration=250, kind="boundary")
+    assert [(m["kind"], m["before"], m["after"]) for m in body["k_ladder_moves"]] == [("A/gaps", 1, 2), ("B/beam", 2, 3)]
+    assert body["opened_kinds"]["A/gaps"] == 2 and body["opened_kinds"]["B/gap"] == 2 and body["opened_kinds"]["C/box"] == 4
+    assert [m["kind"] for m in er.recompute_from_plan(body, plan)["moves"]] == ["A/gaps", "B/beam"]
+    fake = json.loads(json.dumps(body)); fake["k_ladder_moves"] = []; fake["sha256"] = er._sha(fake)
+    with pytest.raises(ValueError, match="k moves differ"):
+        er.recompute_from_plan(fake, plan)
+
+
+def test_the_e2_start_block_has_the_second_door_c_box_at_cap_4_and_the_bundle_still_sums_to_0_44():
+    rules = [r for r in _e2_terrain()["exposure_at_E2"]["positive"] if "kind" in r]
+    share = {f"{r['family']}/{r['kind']}": r["share"] for r in rules}
+    assert share["C/box"] == pytest.approx(0.10) and share["A/gaps"] == share["A/balance_beams"] == pytest.approx(0.09)
+    assert sum(share.values()) == pytest.approx(0.44, abs=1e-9)
+    assert _caps(_e2_terrain())["C/box"] == 4
+    from foothold_s2.terrains.ex42_exposure import raise_kind_caps
+    moved, _ = raise_kind_caps(_e2_terrain(), "E2", 1, [{"C/box": PASS}])             # one pass takes C/box to its end level 5 and the next adds nothing
+    assert _caps(moved)["C/box"] == 5
+    assert _caps(raise_kind_caps(_e2_terrain(), "E2", 2, [{"C/box": PASS}] * 2)[0])["C/box"] == 5

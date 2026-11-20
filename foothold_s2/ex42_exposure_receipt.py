@@ -158,9 +158,11 @@ def recompute_from_plan(body: dict[str, Any], plan: Any, mesh_dir: Any = None) -
     stage_id = body["stage_id"]
     moved, moves = ladder_terrain(plan_stage_terrain(plan, stage_id), stage_id, int(body["boundary_index"]),
                                   body["ladder_outcomes"])
+    from foothold_s2.terrains.ex42_exposure import raise_continuous_cap, raise_kind_caps
+    moved, cap_moves = raise_kind_caps(moved, stage_id, int(body["boundary_index"]), body["ladder_outcomes"])   # D axis, replayed from the same evidence
+    moves = [*moves, *cap_moves]
     if json.loads(json.dumps(moves, sort_keys=True)) != json.loads(json.dumps(body["k_ladder_moves"], sort_keys=True)):
         raise ValueError("EX-42 exposure receipt k moves differ from the plan replay of its ladder_outcomes")
-    from foothold_s2.terrains.ex42_exposure import raise_continuous_cap
     moved, _ = raise_continuous_cap(moved, stage_id, int(body["boundary_index"]))     # the L+ cap of that segment
     table = mesh_column_table(body, plan, mesh_dir)
     if [{"family": r["family"], "kind": r["kind"]} for r in body["column_rows"]] != table:
@@ -183,3 +185,19 @@ def fold_ranks(documents: list[dict[str, Any]]) -> dict[str, Any]:
     if sorted(d["rank"] for d in documents) != list(range(first["world_size"])):
         raise ValueError("EX-42 exposure receipts do not cover every rank")
     return first
+
+
+def read_boundary_receipt(checkpoint: str | Path, *, stage_id: str, plan_sha256: str) -> dict[str, Any]:
+    """The verified, rank-folded `exposure_receipt_<it>.json` the training wrote at this checkpoint's boundary."""
+    import re
+    checkpoint = Path(checkpoint)
+    iteration = int(re.fullmatch(r"model_(\d+)\.pt", checkpoint.name).group(1))
+    files = sorted(p for p in checkpoint.parent.iterdir()
+                   if re.fullmatch(rf"exposure_receipt_{iteration}(_rank\d+)?\.json", p.name))
+    if not files:
+        raise ValueError("EX-42 boundary exposure receipt is missing")
+    body = fold_ranks([json.loads(p.read_text(encoding="utf-8")) for p in files])
+    if (body["stage_id"] != stage_id or body["plan_sha256"] != plan_sha256 or body["iteration"] != iteration
+            or body["kind"] != "boundary"):
+        raise ValueError("EX-42 boundary exposure receipt identity differs")
+    return body

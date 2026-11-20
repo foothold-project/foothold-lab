@@ -236,8 +236,11 @@ def test_every_runtime_stage_is_followed_by_the_next_runtime_stage_and_e6b_by_no
     plan = EX42Plan.load(PLAN)
     order = _document_order_without_j()
     assert list(plan.runtime_stage_ids)[1:] == order and order[-1] == "E6b"
-    for i, sid in enumerate(order):
-        expected = order[i + 1] if i + 1 < len(order) else None
+    enabled = [sid for sid in order if _rows()[sid].get("enabled") is not False]
+    assert "M" in order and "M" not in enabled and plan.following_stage_id("E5") == "E6a"  # the disabled M branch is no hand-off target
+    for sid in enabled:
+        i = enabled.index(sid)
+        expected = enabled[i + 1] if i + 1 < len(enabled) else None
         assert plan.following_stage_id(sid) == expected, sid
         minimum = _rows()[sid]["minimum_updates"]
         gate, manifest = _gate_and_manifest(tmp_path / sid, minimum)

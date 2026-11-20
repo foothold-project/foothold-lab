@@ -166,6 +166,24 @@ def build(env, *, dry_run=False, now=None):
     child = dict(env, CUDA_DEVICE_ORDER="PCI_BUS_ID", OMNI_KIT_ACCEPT_EULA="YES", PYTHONUNBUFFERED="1",
                  PYTHONPATH=str(SOURCE_ROOT) + (":" + env["PYTHONPATH"] if env.get("PYTHONPATH") else ""))
     child.update(mesh_env)
+    if not dry_run:
+        # Two-rank NCCL on this machine dies with Cuda 700 at the first broadcast without it (E1F 11/16 19:06; the E1 start
+        # scripts set it). setdefault: a value the caller put in the environment wins. The one-rank dry run has no NCCL.
+        child.setdefault("NCCL_SHM_DISABLE", "1")
+    if action == "continue" and stage in ("E2", "E3", "E4", "E5"):
+        # the K ladder reads one evidence entry per boundary passed; the stage judge keeps that list next to each score
+        import re
+        import yaml
+        interval = yaml.safe_load(Path(plan).read_text(encoding="utf-8-sig"))["evaluation"]["interval_updates"]
+        origin = int(re.fullmatch(r"model_(\d+)\.pt", Path(resume).name).group(1))
+        listing = Path(run_dir) / "eval" / "scores" / f"m{origin}" / "ladder_outcomes_list.json"
+        try:
+            entries = json.loads(listing.read_text(encoding="utf-8"))
+        except (OSError, ValueError) as exc:
+            raise LaunchRefused(f"{listing} is missing or unreadable: the {stage} ladder needs its boundary evidence ({exc})")
+        if not isinstance(entries, list) or len(entries) != origin // interval or any(not isinstance(e, dict) for e in entries):
+            raise LaunchRefused(f"{listing} does not hold one evidence entry per boundary passed ({origin // interval})")
+        child["EX42_LADDER_OUTCOMES"] = str(listing)
     # Carry this run's immutable calibration/parent pins into the following
     # transition. Each boundary generates its own evidence and actual budget.
     child.update(EX42_MATERIALIZE_TEMPLATE_PLAN=str(plan), EX42_MATERIALIZE_TEMPLATE_APPROVALS=str(approvals),

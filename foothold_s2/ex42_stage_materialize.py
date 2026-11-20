@@ -91,12 +91,12 @@ def _finite_tree(value):
             _finite_tree(x)
 
 
-def _measurement(gate, gate_path):
+def _measurement(gate, gate_path, *, cap_handoff=False):
     path = _checked_ref({'path': gate.get('measurement'), 'sha256': gate.get('measurement_sha256')},
                         Path(gate_path).parent)
     measured = _json(path)
     if (measured.get('checkpoint_sha256') != gate['checkpoint_sha256']
-            or measured.get('judgement') != 'PASS'):
+            or (measured.get('judgement') != 'PASS' and not cap_handoff)):
         raise ValueError('measurement checkpoint or PASS differs')
     return measured
 
@@ -226,7 +226,7 @@ def source_exit_bounds(source, template, stage):
     return minimum, expected['maximum_updates']
 
 
-def inherited_rewards(source, stage, parent_manifest, iteration, limits_path):
+def inherited_rewards(source, stage, parent_manifest, iteration, limits_path, target_plan=None, target_stage=None):
     """The reward cells the source stage really ran with in the segment that produced `model_<iteration>.pt`.
 
     decisions.tsv 2026-11-13 21:50: a target row without its own `rewards` cell does not fall back to the code's stage
@@ -236,11 +236,14 @@ def inherited_rewards(source, stage, parent_manifest, iteration, limits_path):
     segment (`ex42_resume_segments[*].local_update_origin`). A run that was never resumed ran its plan row throughout
     and leaves no readback file, so it inherits the row itself. A resumed segment must have left
     `segment_rewards_b<k>[_rank<r>].json`; a missing or differing file is refused, never replaced by defaults."""
-    from foothold_s2.commands.ex42_segment_adjust import REWARD_CELLS, TOL, complete_cells, reward_limits, stage_rewards
+    from foothold_s2.commands.ex42_segment_adjust import (REWARD_CELLS, TOL, _plan_fenced, complete_cells, reward_limits,
+                                                          stage_rewards)
     row = _row(source, stage)
     if row.get('rewards') is None:
         return None, {}
     limits = reward_limits(limits_path)      # the target template's limits: the values must be startable there
+    if target_plan is not None:              # ... including the target row's own wider fence (E1F, E2: PLAN_WIDENABLE cells)
+        limits = _plan_fenced(limits, target_plan, target_stage)
     interval = source.document['evaluation']['interval_updates']
     segments = _json(parent_manifest).get('ex42_resume_segments', [])
     origins = [segment.get('local_update_origin') if isinstance(segment, dict) else None for segment in segments] \
@@ -334,13 +337,36 @@ def _prepare(*, plan, source_plan, approvals, target, parent_manifest, gate_rece
         raise ValueError('scope differs from its table base cap; cannot enlarge authorization')
     ev_path = Path(evidence).resolve(strict=True); ev = _json(ev_path)
     gate_path = Path(gate_receipt).resolve(strict=True); gate = _json(gate_path)
+    first_window = gate.get('state') == 'first_window_handoff'
+    cap_handoff = gate.get('state') == 'cap_handoff' or first_window      # the receipt kinds that carry a non-PASS boundary on the team lead's recorded approval
+    score = gate
+    if first_window:
+        # E1F's FIRST window (m250): no earlier window exists, so the previous-window items are HOLD by construction. The receipt reader recounts
+        # the raw flag cells and the maintenance table and demands exactly that situation plus the team lead's ledger line (ex42_e1f_first_window).
+        from foothold_s2.ex42_e1f_first_window import read_first_window_handoff
+        if gate.get('stage_id') != 'E1F' or (ev.get('predecessor_exit') or {}).get('mode') != 'first_window_handoff':
+            raise ValueError('first window handoff receipt needs an E1F gate and first_window_handoff predecessor evidence')
+        got = read_first_window_handoff(gate_path, policy_plan=EX42Plan.load(_checked_ref(ev['evaluation_plan'], ev_path.parent)) if ev.get('evaluation_plan') is not None else None)
+        score = _json(Path(got['p1_score_path']))
+    elif cap_handoff:
+        # E1 handed over without a graduation PASS on the team lead's recorded approval (ex42_e1_cap_handoff reads the receipt back in
+        # full: boundary score, missed cells recounted, maintenance PASS, survival floor, ledger line). Nothing below is relaxed
+        # except the PASS requirement itself; the evidence must say so and must not claim a PASS.
+        from foothold_s2.curriculum.ex42_prep import stage_exit_updates
+        from foothold_s2.ex42_e1_cap_handoff import read_cap_handoff
+        if gate.get('stage_id') != 'E1' or (ev.get('predecessor_exit') or {}).get('mode') != 'cap_handoff':
+            raise ValueError('cap handoff receipt needs an E1 gate and cap_handoff predecessor evidence')
+        got = read_cap_handoff(gate_path, exit_updates=stage_exit_updates(source.document, 'E1'),
+                               policy_plan=EX42Plan.load(_checked_ref(ev['evaluation_plan'], ev_path.parent)) if ev.get('evaluation_plan') is not None else source)
+        score = _json(Path(got['p1_score_path']))
     if (ev.get('format') != EVIDENCE_FORMAT or ev.get('target_stage') != target
             or ev.get('source_plan_sha256') != source.sha256 or ev.get('gate_sha256') != digest(gate_path)
             or ev.get('checkpoint_sha256') != gate.get('checkpoint_sha256')
             or ev.get('source_stage') != gate.get('stage_id')):
         raise ValueError('materialize evidence identity differs')
     stage = gate.get('stage_id')
-    if (stage not in row['authorization_contract']['source_stage_ids'] or gate.get('judgment') != 'PASS'
+    if (stage not in row['authorization_contract']['source_stage_ids']
+            or gate.get('judgment') != ('FIRST_WINDOW_HANDOFF' if first_window else 'CAP_HANDOFF' if cap_handoff else 'PASS')
             or gate.get('plan_sha256') != source.sha256):
         raise ValueError('gate is not predecessor PASS under its actual source plan')
     source_row = _row(source, stage)
@@ -356,15 +382,20 @@ def _prepare(*, plan, source_plan, approvals, target, parent_manifest, gate_rece
     manifest = _json(parent_manifest)
     checkpoint = Path(parent_manifest).resolve().parent / f'model_{iteration}.pt'
     actual_sha = digest(checkpoint)
-    validate_score_pair(expected_iteration=iteration,score=gate,manifest=manifest,
+    validate_score_pair(expected_iteration=iteration,score=score,manifest=manifest,
                         checkpoint_exists=True,checkpoint_sha256=actual_sha)
     evaluation_plan=None
     if ev.get('evaluation_plan') is not None:
         evaluation_plan=EX42Plan.load(_checked_ref(ev['evaluation_plan'],ev_path.parent))
-        measured=_measurement(gate,gate_path)
+        measured=_measurement(gate,gate_path,cap_handoff=cap_handoff)
         if measured.get('maintenance_source_sha256')!=evaluation_plan.sha256:
             raise ValueError('evaluation plan has no matching measured policy SHA')
-    validate_source_exit(source, gate, gate_path,evaluation_plan=evaluation_plan)
+    if cap_handoff:
+        validate_ex42_map_score(score, source.document['evaluation']['map_modes'])
+        if (ev.get('predecessor_exit') or {}).get('receipt_sha256') != digest(gate_path):
+            raise ValueError('cap handoff evidence is not bound to this receipt')
+    else:
+        validate_source_exit(source, gate, gate_path,evaluation_plan=evaluation_plan)
     pin = dict(source_stage_id=stage,manifest_local_update=iteration,checkpoint_key=checkpoint.name,
                sha256=actual_sha,cumulative_update=source_row['parent']['cumulative_update']+iteration)
     if scope['parent_sha256'] not in (None, actual_sha):
@@ -390,9 +421,26 @@ def _prepare(*, plan, source_plan, approvals, target, parent_manifest, gate_rece
     inherited, inherited_refs = (None, {})
     if row.get('rewards') is None:
         inherited, inherited_refs = inherited_rewards(source, stage, parent_manifest, iteration,
-                                                      template.path.parent / 'ex42-reward-adjust-limits.yaml')
+                                                      template.path.parent / 'ex42-reward-adjust-limits.yaml',
+                                                      target_plan=template, target_stage=target)
         if inherited is not None:
             row['rewards'] = dict(inherited['values'])
+    start = row.get('reward_start')
+    if start is not None:
+        # E1F (lead 2026-11-16 15:20, planner 15:17): the stage starts two reward cells away from what the source stage ended with.
+        # Only the PLAN_WIDENABLE cells, only on top of an inherited full set, and inside the row's own fence.
+        from foothold_s2.commands.ex42_segment_adjust import PLAN_WIDENABLE, _plan_fenced, _rewards, reward_limits
+        if (not isinstance(start, dict) or not start or not set(start) <= set(PLAN_WIDENABLE)
+                or any(type(v) not in (int, float) or not math.isfinite(v) for v in start.values())):
+            raise ValueError(f'{target} reward_start may name only {list(PLAN_WIDENABLE)} as numbers')
+        if inherited is None:        # an already materialized template: its own cells must already be the start
+            if row.get('rewards') is None or any(row['rewards'].get(k) != float(v) for k, v in start.items()):
+                raise ValueError(f'{target} reward_start needs the reward cells inherited from {stage}')
+        else:
+            fenced = _plan_fenced(reward_limits(template.path.parent / 'ex42-reward-adjust-limits.yaml'), template, target)
+            row['rewards'] = _rewards({**row['rewards'], **{k: float(v) for k, v in start.items()}}, fenced, f'{target} reward_start')
+        if inherited is not None:
+            inherited['start_override'] = {k: float(v) for k, v in start.items()}
     flag_artifacts = {}
     if flag_chain is not None:
         if target != FLAG_CHAIN_TARGET:
@@ -463,6 +511,15 @@ def _prepare(*, plan, source_plan, approvals, target, parent_manifest, gate_rece
         flag_cells['calibration_sha256'] = flag_artifacts['flag_calibration']['sha256']
         flag_cells['flag_baseline'] = flag_artifacts['flag_baseline']
         artifacts.update(flag_artifacts)
+    else:
+        # The flag stage published these pins; the stages after it inherit them (the template carries none, and E3 and later
+        # entries read the calibration pin from the source plan).
+        carried = source.document['evaluation'].get('flag_cells') or {}
+        if (carried.get('calibration') or {}).get('path'):
+            flag_cells = document['evaluation']['flag_cells']
+            for key in ('calibration', 'calibration_sha256', 'flag_baseline'):
+                if key in carried:
+                    flag_cells[key] = deepcopy(carried[key])
     document['approval_file']='ex42-approvals.yaml'
     document['materialization']={'format':FORMAT,'target_stage':target,'transition_file':'transition.json'}
     approval_bytes=yaml.safe_dump(approvals_doc,sort_keys=False,allow_unicode=True).encode()

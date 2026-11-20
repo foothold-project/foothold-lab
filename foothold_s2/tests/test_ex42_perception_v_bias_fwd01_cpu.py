@@ -14,6 +14,12 @@ from foothold_s2.models import start_perception as sp
 from foothold_s2.runners.start_runner import StartRunner
 from foothold_s2.tests.start_fake_env import FakeStartEnv, train_cfg
 
+
+@pytest.fixture(autouse=True)
+def _vx_corr_off(monkeypatch):
+    # v29-14 turns the est vx correction on by default; these tests pin the raw est layout and values.
+    monkeypatch.setenv("EX42_PERCEPTION_VX_CORR", "0")
+
 N = 8
 
 
@@ -26,7 +32,7 @@ def _term(r, heading=None, age=None, period=4.0):
     """a command term stand-in: heading flags, and time_left chosen so that (period - time_left) == age."""
     heading = torch.zeros(N, dtype=torch.bool) if heading is None else torch.as_tensor(heading, dtype=torch.bool)
     age = torch.full((N,), 3.0) if age is None else torch.as_tensor(age, dtype=torch.float32)
-    t = SimpleNamespace(heading=heading, time_left=period - age, cfg=SimpleNamespace(resampling_time_range=(period, period)))
+    t = SimpleNamespace(heading=heading, is_flag_env=torch.zeros_like(heading), time_left=period - age, cfg=SimpleNamespace(resampling_time_range=(period, period)))
     r._command_term = lambda: t
     return t
 

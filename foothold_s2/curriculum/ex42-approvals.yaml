@@ -17,7 +17,7 @@ plan_amendment_1938:
   budget_basis: ex42_new_updates
   maximum_updates: 20000
   extensions_within_remaining_budget: true
-  easy_kind_floor: 0.015
+  easy_kind_floor: 0.015   # the 11/11 19:38 approval as recorded. E2~E5 hold floor is 0.03 now (CG E.12 #4, lead 11/18 23:3x); prep k_ladder.kind_floor carries it. Nothing reads this key.
 requirements:
   - parent_adoption_decision
   - explicit_lead_approval
@@ -180,6 +180,9 @@ stage_e1f_authorization:
       forward: -0.06
       spin_left: -0.02
       spin_right: -0.02
+      reverse: -0.04
+      side_left: 0.02
+      side_right: 0.02
     exposure_source: same_as_E1_end
   extension_authorized: false
   minimum_updates: 250
@@ -234,13 +237,40 @@ stage_e2_authorization:
     terrain_change: none
     boundary_mode: stop_evaluate_resume
     exposure_delta:
-      family: A
-      kind: stepping_stones_low
-      prep_alias: start_stones_l0
+    - family: A
+      kind: gaps
       share:
         from: 0.0
-        to: 0.05
-      level_cap: 0
+        to: 0.088
+      level_cap: 2
+      donor: continuous
+    - family: B
+      kind: gap
+      share:
+        from: 0.0
+        to: 0.088
+      level_cap: 2
+      donor: continuous
+    - family: C
+      kind: gap
+      share:
+        from: 0.0
+        to: 0.088
+      level_cap: 2
+      donor: continuous
+    - family: B
+      kind: beam
+      share:
+        from: 0.0
+        to: 0.088
+      level_cap: 2
+      donor: continuous
+    - family: A
+      kind: balance_beams
+      share:
+        from: 0.0
+        to: 0.088
+      level_cap: 2
       donor: continuous
   extension_authorized: false
   boundary_evaluation_interval_updates: 250
@@ -252,15 +282,15 @@ stage_e2_authorization:
   - landing_evaluation_mesh_sha256
   - flag_baseline
   - m0_m3_receipt_sha256
-  kind_choice:
-    prep: start_stones_l0
-    mesh_kind: stepping_stones_low
+  # CG E.12 draft: E2 opens a five-kind bundle (B gap back in on the GPU 32|32 measure, planner 11/19) on K once; the old one-kind choice (start_stones_l0) is gone.
+  kind_bundle:
+  - {family: A, kind: gaps}
+  - {family: B, kind: gap}
+  - {family: C, kind: gap}
+  - {family: B, kind: beam}
+  - {family: A, kind: balance_beams}
   exit_gate:
-    cells:
-    - family: A
-      kind: stepping_stones_low
-      level: 0
-      command: forward_1.0
+    cells: opened_kinds_at_level_cap
     completion: last_support_0.5s
     denominator: forward+flag_all
     success_min: 52
@@ -272,8 +302,44 @@ stage_e2_authorization:
     learned_cells_min_grade: assumption
   judge_cells_added:
   - family: A
-    kind: stepping_stones_low
-    level: 0
+    kind: gaps
+    level: opened_cap
+    command: forward_1.0
+    modes:
+    - gt
+    - pred
+    record_modes:
+    - 'off'
+  - family: B
+    kind: gap
+    level: opened_cap
+    command: forward_1.0
+    modes:
+    - gt
+    - pred
+    record_modes:
+    - 'off'
+  - family: C
+    kind: gap
+    level: opened_cap
+    command: forward_1.0
+    modes:
+    - gt
+    - pred
+    record_modes:
+    - 'off'
+  - family: B
+    kind: beam
+    level: opened_cap
+    command: forward_1.0
+    modes:
+    - gt
+    - pred
+    record_modes:
+    - 'off'
+  - family: A
+    kind: balance_beams
+    level: opened_cap
     command: forward_1.0
     modes:
     - gt
@@ -282,8 +348,28 @@ stage_e2_authorization:
     - 'off'
   record_cells_added:
   - family: A
-    kind: stepping_stones_low
-    level: 0
+    kind: gaps
+    level: opened_cap
+    command: flag_reach
+    flags: 1
+  - family: B
+    kind: gap
+    level: opened_cap
+    command: flag_reach
+    flags: 1
+  - family: C
+    kind: gap
+    level: opened_cap
+    command: flag_reach
+    flags: 1
+  - family: B
+    kind: beam
+    level: opened_cap
+    command: flag_reach
+    flags: 1
+  - family: A
+    kind: balance_beams
+    level: opened_cap
     command: flag_reach
     flags: 1
 
@@ -325,6 +411,15 @@ stage_e3_authorization:
     kind_opening_order_recorded: null
     stage_judgment_policy: pending
   critic_mirror: null
+  exit_gate:
+    cells: opened_kinds_at_level_cap
+    success_min: 52
+    survival_min: 60
+    windows: 2
+    learned_cells_min: 32
+    learned_cells_min_grade: assumption
+    exchange_learning_watch: true
+    maintenance_table: pass
   draft_source: planner-lx/DRAFT-EX42-APPROVAL-CELLS-E2-E6B-1111.md
 
 # Team 13:07 approval; materialize measured evidence before launch.
@@ -364,6 +459,15 @@ stage_e4_authorization:
       stage_id: E3
     stage_judgment_policy: pending
   critic_mirror: null
+  exit_gate:
+    cells: opened_kinds_at_level_cap
+    success_min: 52
+    survival_min: 60
+    windows: 2
+    learned_cells_min: 32
+    learned_cells_min_grade: assumption
+    exchange_learning_watch: true
+    maintenance_table: pass
   draft_source: planner-lx/DRAFT-EX42-APPROVAL-CELLS-E2-E6B-1111.md
 
 # Team 13:07 approval; materialize measured evidence before launch.
@@ -398,6 +502,15 @@ stage_e5_authorization:
       stage_id: E4
     stage_judgment_policy: pending
   critic_mirror: null
+  exit_gate:
+    cells: opened_kinds_at_level_cap
+    success_min: 52
+    survival_min: 60
+    windows: 2
+    learned_cells_min: 32
+    learned_cells_min_grade: assumption
+    exchange_learning_watch: true
+    maintenance_table: pass
   draft_source: planner-lx/DRAFT-EX42-APPROVAL-CELLS-E2-E6B-1111.md
 
 # Team 13:07 approval; materialize measured evidence before launch.

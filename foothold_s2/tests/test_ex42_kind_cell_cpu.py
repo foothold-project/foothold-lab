@@ -69,3 +69,30 @@ def test_four_foot_raw_evidence_rejects_missing_or_nonfinite_active_steps():
         ft.verify_kind_foot_arrays(contact, foot, alive)
     alive[1, 0] = False
     ft.verify_kind_foot_arrays(contact, foot, alive)
+
+
+def test_a_32_env_kind_cell_validates_only_against_its_own_env_count():
+    mesh = {"column_family": [r["family"] for r in TABLE], "columns": [r["kind"] for r in TABLE]}
+    levels, types = ft.kind_assignment(32, 10, TABLE, "B", "rough", 6)
+    record = {"rows": 10, "cols": len(TABLE), "num_envs": 32, "fixed_level": 6, "family": "B", "kind": "rough",
+              "assignment_sha256": ft.assignment_sha256(levels, types)}
+    result = {"envs": 32, "fixed_terrain": record,
+              "terrain_tiles": [{"env": i, "column": int(types[i]), "level": 6, "kind": "rough"} for i in range(32)]}
+    validate_kind_cell(result, mesh, family="B", kind="rough", level=6, envs=32)
+    with pytest.raises(ValueError, match="kind evaluation"):
+        validate_kind_cell(result, mesh, family="B", kind="rough", level=6)          # the E2 default stays 64
+
+
+def test_a_start_yaw_zero_kind_cell_must_record_the_plus_x_start_and_a_random_yaw_cell_must_not():
+    mesh = {"column_family": [r["family"] for r in TABLE], "columns": [r["kind"] for r in TABLE]}
+    levels, types = ft.kind_assignment(32, 10, TABLE, "B", "rough", 6)
+    record = {"rows": 10, "cols": len(TABLE), "num_envs": 32, "fixed_level": 6, "family": "B", "kind": "rough",
+              "assignment_sha256": ft.assignment_sha256(levels, types)}
+    result = {"envs": 32, "fixed_terrain": record,
+              "terrain_tiles": [{"env": i, "column": int(types[i]), "level": 6, "kind": "rough"} for i in range(32)]}
+    kw = dict(family="B", kind="rough", level=6, envs=32)
+    validate_kind_cell(result, mesh, **kw)                                          # no record, plan says random yaw
+    validate_kind_cell({**result, "start_yaw_override": 0.0}, mesh, start_yaw_zero=True, **kw)
+    for bad, flag in ((result, True), ({**result, "start_yaw_override": 0.5}, True), ({**result, "start_yaw_override": 0.0}, False)):
+        with pytest.raises(ValueError, match="start yaw"):
+            validate_kind_cell(bad, mesh, start_yaw_zero=flag, **kw)

@@ -12,6 +12,12 @@ from foothold_s2.models import start_perception as sp
 from foothold_s2.runners.start_runner import StartRunner
 from foothold_s2.tests.start_fake_env import FakeStartEnv, train_cfg
 
+
+@pytest.fixture(autouse=True)
+def _vx_corr_off(monkeypatch):
+    # v29-14 turns the est vx correction on by default; these tests pin the raw est layout and values.
+    monkeypatch.setenv("EX42_PERCEPTION_VX_CORR", "0")
+
 OLD_KEYS = {"l_tr", "l_ie", "kl", "o_next", "v", "hf", "hb"}
 
 

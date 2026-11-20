@@ -62,6 +62,26 @@ training_mesh_profiles:
       terrain_mesh.npz: 59b0bf3e3023f40da828b86eebff4513222e13452c70fc49b8951d7e8d42d771
       mesh_manifest.json: c6954b6c7ffaaeee2e17c3b9365a40b4391dd2ef33bafd2ab4b526daf42851a7
       terrain_manifest.json: 7e9dab9420c3c6694df9e2e5d5d9155ff4a5448d1ac7a9936a96c07d2a7a6740
+  # e2_named_flags_v2 plus the foot-edge masks (inner 2.5 cm, outer 5 cm bands from the mesh top surface; foothold_s2/terrains/ex42_edge_masks.py).
+  # Same vertices and faces (the same geometry_sha256); the files differ (npz carries edge_* arrays, mesh_manifest.json carries `edge_masks`).
+  e2_named_flags_v2_edge:
+    directory: /home/jay/data/foothold/s2_lab/ex42_mesh_1118_edge/seed42_E0_c333_flags_E2_1111_v2_edge
+    geometry_sha256: 88197b3adfdde327edc633c025c6ad9aa690ea59aa7df5d51d548f7f56c12a95
+    files:
+      terrain_mesh.npz: b4e9c051fcb9ed7dd24ac3265177ac98d5d3b4554ee9c1ed16730524aadcae2e
+      mesh_manifest.json: b31da042571252cc9f32f744495f8791a9909962c0dbcff41f1dab2bcd5854f5
+      terrain_manifest.json: 7e9dab9420c3c6694df9e2e5d5d9155ff4a5448d1ac7a9936a96c07d2a7a6740
+  # e2_named_flags_v2_edge with the A stepping_stones_low rows 0..9 replaced by the easy ladder (feature/sonnet-code-e2-easystone5-1118 · splice,
+  # every other tile byte-identical). Same edge masks. M0 M1 M2 M3 receipt e51e8fae8804 (PASS) under
+  # /home/jay/data/foothold/s2_lab/ex42_m0m3_1118_easy10/20261119_002338/m0-m3.json. The lower-column declaration is
+  # inbox/jay/20261111-analysis/evidence/ex42-declarations-1118-easy10.json (the 1111 file stays for the old mesh).
+  e2_easy10_edge:
+    directory: /home/jay/data/foothold/s2_lab/ex42_mesh_1118_easy10/seed42_E0_c333_flags_E2_1111_v2_edge_easy10
+    geometry_sha256: 95471953ec1eafebe1a5db1842408b4d828e596c9e446edea38e79a75485f81d
+    files:
+      terrain_mesh.npz: 56ea999610009dcd7e167302674329c0ba5bf13ff2fd6ff5a8d81070c01e10c3
+      mesh_manifest.json: f0a26869394d46ff93d42cccacd0e742f0443479bf781aafe23bdfd716b4f187
+      terrain_manifest.json: 4c72204f20153569ba8b49b8dcf56e156936244a0667aa50ed251867b05df69d
 environment:
   num_envs: 6144
   task_id: FootholdS2-Go2-S2-SB-v0
@@ -143,7 +163,7 @@ stage_zero:
     cumulative_update: 12000
     manifest_local_update: 6000
     sha256: 1c6af6319c823c718af4965064f1c312b0d25177f5223a49c323aab3b6f1e613
-  approval_sha256: 80a6079b5d77f6f65e7be71c120982f8e7f1379666bc890f68e2c267a7d10696
+  approval_sha256: 436b385ae301824b1e4cc28a5beb48ef8356fe047907d7d0bc2e25bb3d26e62a
   minimum_updates: 1000
   maximum_updates: 1000
   extension_updates: 0
@@ -444,13 +464,63 @@ stages:
   # `turn_overlay` are E1's plan values. `shares` here are the 13 free slots for environments outside the continuous
   # columns; inside them the split is the row's own `shares` (with flag), which this cell does not change.
   commands:
-    shares: {forward: 0.19, walk_left: 0.06, walk_right: 0.06, spin_left: 0.09, spin_right: 0.09, stand: 0.1, reverse: 0.14, side_left: 0.09, side_right: 0.09, diag_fwd_left: 0.02, diag_fwd_right: 0.02, diag_back_left: 0.025, diag_back_right: 0.025}
+    shares: {forward: 0.1888888889, walk_left: 0.0666666667, walk_right: 0.0666666667, spin_left: 0.0777777778, spin_right: 0.0777777778, stand: 0.1111111111, reverse: 0.1111111111, side_left: 0.1, side_right: 0.1, diag_fwd_left: 0.0222222222, diag_fwd_right: 0.0222222222, diag_back_left: 0.0277777778, diag_back_right: 0.0277777778}
     ranges: {forward_vx: [0.1, 1.5], walk_vx: [0.3, 1.2], walk_wz_abs: [0.1, 1.0], spin_wz_abs: [0.15, 1.5], reverse_vx: [-1.3, -0.2], side_vy_abs: [0.1, 0.8], diag_vx_abs: [0.3, 0.6], diag_vy_abs: [0.2, 0.5]}
     turn_overlay: {fraction: 0.25, wz_abs: [0.2, 0.6]}
   # The slow-forward share E1 trains with stays in force in E1F, so that what E1 learns under slow commands is kept
   # (lead 2026-11-13 16:00; the value is inside the limits of decisions.tsv 2026-11-13 15:17, ledger commit a00ab2a8).
-  # The rows after E1F have no cell: they are decided from E1's final evidence.
-  low_forward_fraction: 0.4
+  # E2 carries the same cells (below, lead 2026-11-16 10:40); the rows from E3 on have no cell: they are decided from E1's final evidence.
+  # v29-11 (lead 2026-11-15 22:46, planner work table 22:45): the four low-speed devices E1 trains with go on in E1F. The slow forward share is
+  # 0.5 (the same value as E1's own row; inside the limits of decisions.tsv 2026-11-13 15:17), heading envs inside the slow band count for
+  # ex42_slow_track, and the live monitor and live adjustment blocks are E1's, so the lead can still move the cells a boundary decides.
+  low_forward_fraction: 0.5
+  # E1F new composition (lead 2026-11-16 09:26, planner 09:23): the side commands are drawn with |vy| in [0.1, 0.3] for 0.4 of the draws (the fence
+  # [0, 0.5] is the limits file's command_cells.low_side_fraction; the live adjustment may move it inside that fence), and the slow forward
+  # commands (0.1 <= |v_xy| < 0.3, no turn) are held for U(6, 8) s. The E1 row has neither cell: no slow-side draw and no long hold there.
+  low_side_fraction: 0.4
+  slow_hold_range_s: [6.0, 8.0]
+  # Fence of a boundary adjustment of slow_hold_range_s (EX42_SEGMENT_ADJUST): an entry is null (off) or a pair inside it, and 0 < lo <= hi <= 30.
+  slow_hold_fence_s: [4.0, 12.0]
+  slow_track_heading: true
+  # E1F starts two reward cells away from what E1 ended with (lead 2026-11-16 15:20, planner 15:17): slow_progress 0.4 (the push from below the
+  # command) and slow_track_sigma 0.35 (a narrower tracking width, over- and undershoot both punished). slow_track weight stays what E1 ended with
+  # (0.3). The other cells are E1's last readback (ex42_stage_materialize.inherited_rewards); this cell only overlays these two and only at
+  # materialization, inside the fence below. E2 has no such cell: it inherits E1F's last readback. Back-out order (boundary adjustment): Pc off,
+  # then slow_progress 0.3 and slow_track_sigma 0.5, both inside the row fence.
+  reward_start: {slow_progress: 0.4, slow_track_sigma: 0.35}
+  live_monitor:
+    enabled: true
+    moving_updates: 20
+    decline_from_peak: null
+    map_off_survival_updates: 50
+    map_off_survival_drop_alert: null
+    # E1F starts with the slow_track value E1 ended with (the materialized reward cell, 0.3); configure_from_plan sets the term from this cell.
+    initial_slow_track_weight: 0.3
+    alert_run_env: EX42_ALERT_RUN_ID
+    initial: {slow_forward: learning, side_left: learning, side_right: learning}
+  live_adjustment:
+    file_env: EX42_UPDATE_ADJUST
+    segment_reward_limits_sha256: 15dfcdcdf464fab34db1829d82ac95048d45b686f16cb54244655458314ee04e
+    # Repeated cells must equal the segment fence; this plan SHA pins that agreement.
+    extra_reward_limits:
+      zero_yaw: [-2.0, -0.5]
+      feet_air_time_threshold: [0.04, 0.5]
+      slow_track: [0.0, 0.3]
+      # The two cells below are fenced wider than the limits file (it keeps its bytes: the source E1 row pins its sha). The row pair must
+      # contain the file's pair ([0.5, 0.5] and [0.0, 0.3]); commands.ex42_segment_adjust.PLAN_WIDENABLE names the only two cells allowed to.
+      slow_track_sigma: [0.35, 0.5]
+      slow_track_speed_min: [0.1, 0.1]
+      slow_track_speed_max: [0.3, 0.3]
+      slow_progress: [0.0, 0.6]
+    command_limits:
+      low_forward_fraction: [0.2, 0.5]
+      low_side_fraction: [0.0, 0.5]
+    # policy_std_cap cannot start above 0 from the plan (the code refuses a non-zero runtime_start); the E1F adjust file sets 0.48 at update 1.
+    runtime_limits:
+      policy_std_cap: [0.0, 2.0]
+      terrain_level_cap: [5, 9]
+    runtime_start:
+      policy_std_cap: 0.0
   exit_judge: flag_two_window
   authorization_contract:
     validator: bounded
@@ -475,6 +545,9 @@ stages:
         forward: -0.06
         spin_left: -0.02
         spin_right: -0.02
+        reverse: -0.04
+        side_left: 0.02
+        side_right: 0.02
       boundary.exposure_source: same_as_E1_end
     required_boolean_paths: []
     required_stage_values:
@@ -485,9 +558,9 @@ stages:
         spin_left: 0.07
         spin_right: 0.07
         stand: 0.1
-        reverse: 0.14
-        side_left: 0.07
-        side_right: 0.07
+        reverse: 0.1
+        side_left: 0.09
+        side_right: 0.09
         diag_fwd_left: 0.02
         diag_fwd_right: 0.02
         diag_back_left: 0.025
@@ -520,9 +593,9 @@ stages:
     spin_left: 0.07
     spin_right: 0.07
     stand: 0.1
-    reverse: 0.14
-    side_left: 0.07
-    side_right: 0.07
+    reverse: 0.1
+    side_left: 0.09
+    side_right: 0.09
     diag_fwd_left: 0.02
     diag_fwd_right: 0.02
     diag_back_left: 0.025
@@ -560,11 +633,69 @@ stages:
   # `turn_overlay` are E1's plan values. `shares` here are the 13 free slots for environments outside the continuous
   # columns; inside them the split is the row's own `shares` (with flag), which this cell does not change.
   commands:
-    shares: {forward: 0.19, walk_left: 0.06, walk_right: 0.06, spin_left: 0.09, spin_right: 0.09, stand: 0.1, reverse: 0.14, side_left: 0.09, side_right: 0.09, diag_fwd_left: 0.02, diag_fwd_right: 0.02, diag_back_left: 0.025, diag_back_right: 0.025}
+    shares: {forward: 0.1888888889, walk_left: 0.0666666667, walk_right: 0.0666666667, spin_left: 0.0777777778, spin_right: 0.0777777778, stand: 0.1111111111, reverse: 0.1111111111, side_left: 0.1, side_right: 0.1, diag_fwd_left: 0.0222222222, diag_fwd_right: 0.0222222222, diag_back_left: 0.0277777778, diag_back_right: 0.0277777778}
     ranges: {forward_vx: [0.1, 1.5], walk_vx: [0.3, 1.2], walk_wz_abs: [0.1, 1.0], spin_wz_abs: [0.15, 1.5], reverse_vx: [-1.3, -0.2], side_vy_abs: [0.1, 0.8], diag_vx_abs: [0.3, 0.6], diag_vy_abs: [0.2, 0.5]}
     turn_overlay: {fraction: 0.25, wz_abs: [0.2, 0.6]}
+  # E1F low-speed devices carried into E2 (lead 2026-11-16 10:40, FRAME-E1F-E2-FIRST-SEGMENT-1116 2.1): the cells below are the E1F row's, copied as they
+  # are (same values, same fences, same live blocks). Without them E2 would fall back to the default slow-forward draw and lose the slow steps E1 and E1F
+  # trained. The rows from E3 on still have no cell.
+  # The slow-forward share E1 trains with stays in force in E1F, so that what E1 learns under slow commands is kept
+  # (lead 2026-11-13 16:00; the value is inside the limits of decisions.tsv 2026-11-13 15:17, ledger commit a00ab2a8).
+  # v29-11 (lead 2026-11-15 22:46, planner work table 22:45): the four low-speed devices E1 trains with go on in E1F. The slow forward share is
+  # 0.5 (the same value as E1's own row; inside the limits of decisions.tsv 2026-11-13 15:17), heading envs inside the slow band count for
+  # ex42_slow_track, and the live monitor and live adjustment blocks are E1's, so the lead can still move the cells a boundary decides.
+  low_forward_fraction: 0.5
+  # E1F new composition (lead 2026-11-16 09:26, planner 09:23): the side commands are drawn with |vy| in [0.1, 0.3] for 0.4 of the draws (the fence
+  # [0, 0.5] is the limits file's command_cells.low_side_fraction; the live adjustment may move it inside that fence), and the slow forward
+  # commands (0.1 <= |v_xy| < 0.3, no turn) are held for U(6, 8) s. The E1 row has neither cell: no slow-side draw and no long hold there.
+  low_side_fraction: 0.4
+  slow_hold_range_s: [6.0, 8.0]
+  # Fence of a boundary adjustment of slow_hold_range_s (EX42_SEGMENT_ADJUST): an entry is null (off) or a pair inside it, and 0 < lo <= hi <= 30.
+  slow_hold_fence_s: [4.0, 12.0]
+  # Flag envs turn first (lead 2026-11-18 10:54, team lead goal 10:52: turn the body first toward the first flag, then walk straight through the next ones):
+  # a walking flag env whose flag is more than flag_turn_first_rad (the 2026-11-17 07:27 terrain value) off its heading turns in place (vx = vy = 0, wz = clip(angle)).
+  # flag_turn_first_scope first = only on the first flag of the episode (flag_step idx == 0); from the second flag on it walks straight with the small wz. all = every flag.
+  flag_turn_first_rad: 0.5
+  flag_turn_first_scope: first
+  slow_track_heading: true
+  live_monitor:
+    enabled: true
+    moving_updates: 20
+    decline_from_peak: null
+    map_off_survival_updates: 50
+    map_off_survival_drop_alert: null
+    # E1F starts with the slow_track value E1 ended with (the materialized reward cell, 0.3); configure_from_plan sets the term from this cell.
+    initial_slow_track_weight: 0.3
+    alert_run_env: EX42_ALERT_RUN_ID
+    initial: {slow_forward: learning, side_left: learning, side_right: learning}
+  live_adjustment:
+    file_env: EX42_UPDATE_ADJUST
+    segment_reward_limits_sha256: 15dfcdcdf464fab34db1829d82ac95048d45b686f16cb54244655458314ee04e
+    # Repeated cells must equal the segment fence; this plan SHA pins that agreement.
+    extra_reward_limits:
+      zero_yaw: [-2.0, -0.5]
+      feet_air_time_threshold: [0.04, 0.5]
+      slow_track: [0.0, 0.3]
+      # The two cells below are fenced wider than the limits file (it keeps its bytes: the source E1 row pins its sha). The row pair must
+      # contain the file's pair ([0.5, 0.5] and [0.0, 0.3]); commands.ex42_segment_adjust.PLAN_WIDENABLE names the only two cells allowed to.
+      slow_track_sigma: [0.35, 0.5]
+      slow_track_speed_min: [0.1, 0.1]
+      slow_track_speed_max: [0.3, 0.3]
+      slow_progress: [0.0, 0.6]
+    command_limits:
+      low_forward_fraction: [0.2, 0.5]
+      low_side_fraction: [0.0, 0.5]
+    # policy_std_cap cannot start above 0 from the plan (the code refuses a non-zero runtime_start); the E1F adjust file sets 0.48 at update 1.
+    runtime_limits:
+      policy_std_cap: [0.0, 2.0]
+      terrain_level_cap: [5, 9]
+    runtime_start:
+      policy_std_cap: 0.0
   exit_judge: kind_two_window_e2
-  training_mesh_profile: e2_named_flags_v2
+  training_mesh_profile: e2_easy10_edge
+  # START foot-edge term (core.WEIGHTS[foot_edge] = -1.0, the paper default) from the first update of this stage. 0 or no key = off (as before).
+  # Needs the _edge mesh above (ex42_training_entry._foot_edge_weight raises on a mesh without masks). Fence [-1.0, 0.0], fixed by the plan: not a boundary cell.
+  foot_edge_weight: -1.0
   authorization_contract:
     validator: bounded
     source_stage_ids:
@@ -586,13 +717,24 @@ stages:
     required_boolean_paths:
     - critic_mirror
     required_stage_values: {}
-  name: one_easy_new_terrain_kind
+  name: gap_and_wide_door_bundle
   minimum_updates: 250
   maximum_updates: 1500
   extension_updates: 500
   extension_max_count: 2
+  # E2 enters on K once (the four-kind bundle opens together at cap 2, CG E.12). Inside the stage the bundle cap rises 2 -> 5 on D, one axis per boundary.
   boundary_axes:
   - terrain_exposure
+  - terrain_kind_level_cap
+  boundary:
+    entry_axis: terrain_exposure
+    axis_order: [terrain_exposure, terrain_kind_level_cap]
+    rule: rotate_in_order_one_axis_per_boundary
+    not_eligible: skip
+    none_eligible: no_axis_change
+    source:
+      canon: CURRICULUM-GATES v0.18 draft E.12 (bundle open on K once, cap +1 on D)
+      decisions: ['2026-11-18 23:4x lead']
   # Command shares = the E1F vector. CG E.2 E2 one-axis row: the K boundary changes no continuous cap, no command share and
   # no flag share (연속 상한 · 명령 몫 · 깃발 변경 0).
   shares:
@@ -602,19 +744,27 @@ stages:
     spin_left: 0.07
     spin_right: 0.07
     stand: 0.1
-    reverse: 0.14
-    side_left: 0.07
-    side_right: 0.07
+    reverse: 0.1
+    side_left: 0.09
+    side_right: 0.09
     diag_fwd_left: 0.02
     diag_fwd_right: 0.02
     diag_back_left: 0.025
     diag_back_right: 0.025
     flag: 0.1
   enabled: true
-  kind_choice: start_stones_l0
+  # kind_choice / kind_alternatives (one kind, L0) are gone: E2 opens a four-kind bundle (terrain.exposure_at_E2), CG E.12.
   hold_policy: hold_exposure_continue_training
   terrain:
     # planner 14:5x 표 (CG:258~262 D163); 연속 상한 5 와 새 종류 L0 5 % 는 가정, E1F 끝 상한 증거로 바꿀 것
+    # CG v0.18 초안 (E.12 · lead 11/18 23:2x 결정 · 팀장 11/18 21:37 승인 · 병합 전): 다섯 종을 함께 연다 (K 축 한 번).
+    # 묶음 ③ 틈 셋 (A gaps · B gap · C gap) + 묶음 ④ 의 넓은 문 둘 (B beam · A balance_beams) · 종류마다 0.088 (합 0.44) · 상한 2 에서 시작.
+    # 앞 값은 A stepping_stones_low 하나 share 0.20 · level_cap 5 였다 (이 종류는 E3 로 감).
+    # B gap 은 다시 넣었다 (lead 11/19 00:3x): B/gap L0 는 CPU 평가 (32 env) 에서 평가 자식이 PRED 칸에서 끝나지 않아 GPU 로 쟀다
+    # (sonnet-code-lx 11/19 00:30 · cuda:1 · 32|32 · 3.0 m) · 까닭 조사는 sonnet 몫.
+    # 이 행의 kind_choice · kind_alternatives · name · exit_judge 는 옛 「한 종류」 값 그대로다 (sonnet 몫 · lead 배정 · CG E.12).
+    # E2 v1 (planner DESIGN-E2-V1-1120 v1.1 section 3; lead 11/20 13:56): first door = A gaps and A balance_beams (cap 1, share 0.09 each since 11/20 18:08, was 0.14); the other three bundle kinds keep cap 2
+    # with 0.16 in all, C/box takes 0.10 (sum 0.44). C/box (second door) is a row of its own below, cap 4 from the start (lead 11/20 18:08); the boundary judge is ex42_v1_mapgain_boundary.py.
     exposure_at_E2:
       default:
         exposure: 0.0
@@ -625,9 +775,36 @@ stages:
         exposure: 1.0
         level_cap: 5
       - family: A
-        kind: stepping_stones_low
-        share: 0.05
-        level_cap: 0
+        kind: gaps
+        share: 0.09
+        level_cap: 1
+      - family: B
+        kind: gap
+        share: 0.0533
+        level_cap: 2
+      - family: C
+        kind: gap
+        share: 0.0533
+        level_cap: 2
+      - family: B
+        kind: beam
+        share: 0.0534
+        level_cap: 2
+      - family: A
+        kind: balance_beams
+        share: 0.09
+        level_cap: 1
+      # Second door (lead 11/20 18:08, planner CHECK-E2V1-GOAL-1120 (3); sonnet-code-lx): C/box opens at cap 4 (canon3 already holds C/box to L4 with the map, L5 is where it learns).
+      # Its share 0.10 is moved out of the two first-door kinds, 0.05 each (0.14 -> 0.09), so the bundle stays 0.44. Candidates the lead picks from (value in C/box / each first-door kind):
+      #   alpha 0.06 / 0.11    beta 0.10 / 0.09 (written here)    gamma 0.14 / 0.07
+      # C/box has no gap, so ex42_v1_mapgain_boundary.py counts envs alive at the end as crossed (the eval takes C/box=<level> in --caps).
+      - family: C
+        kind: box
+        share: 0.10
+        level_cap: 4
+    # D axis (CG v0.18 draft E.12): a bundle kind that passed the window ending at a boundary gets its level cap +1 for the next segment, up to end (graduation cap).
+    # ex42_exposure.raise_kind_caps reads the ladder evidence (EX42_LADDER_OUTCOMES); the boundary receipt records before / after per kind.
+    kind_level_cap: {end: 5, step_per_boundary: 1}
     floors:
       global_command_floor:
         reverse: 0.05
@@ -636,10 +813,11 @@ stages:
       # CG:380 (E.3): continuous L0~2 envs >= 30 % of the continuous envs, held from the E1F start.
       # The 30 is an assumption (CG marks 2 / 30 / 32 as assumptions); the planner contract 16:2x records it.
       continuous_low_level_floor: {levels: [0, 2], fraction_of_continuous: 0.30, class: assumption, source: CG:380}
-  kind_alternatives:
-  - start_beam_l0
-  - start_gap_l0
 - id: E3
+  # Inherits E2's last reward values (slow_progress up to 0.6, slow_track_sigma down to 0.35): the same row fence as E1F/E2, read by
+  # commands.ex42_segment_adjust.row_reward_fence (no live adjustment here). The limits file keeps its bytes.
+  reward_fence: {slow_progress: [0.0, 0.6], slow_track_sigma: [0.35, 0.5]}
+  exit_judge: kind_two_window_e3
   # The command ranges and the turn overlay reinforced in E1 stay in force after it (decisions.tsv 2026-11-12 12:52,
   # 13:03). Without this cell a stage falls back to the stage-zero ranges (ex42_shares.stage_commands). `ranges` and
   # `turn_overlay` are E1's plan values. `shares` here are the 13 free slots for environments outside the continuous
@@ -648,7 +826,7 @@ stages:
     shares: {forward: 0.19, walk_left: 0.06, walk_right: 0.06, spin_left: 0.09, spin_right: 0.09, stand: 0.1, reverse: 0.14, side_left: 0.09, side_right: 0.09, diag_fwd_left: 0.02, diag_fwd_right: 0.02, diag_back_left: 0.025, diag_back_right: 0.025}
     ranges: {forward_vx: [0.1, 1.5], walk_vx: [0.3, 1.2], walk_wz_abs: [0.1, 1.0], spin_wz_abs: [0.15, 1.5], reverse_vx: [-1.3, -0.2], side_vy_abs: [0.1, 0.8], diag_vx_abs: [0.3, 0.6], diag_vy_abs: [0.2, 0.5]}
     turn_overlay: {fraction: 0.25, wz_abs: [0.2, 0.6]}
-  training_mesh_profile: e2_named_flags_v2
+  training_mesh_profile: e2_easy10_edge
   authorization_contract:
     validator: bounded
     source_stage_ids:
@@ -673,17 +851,19 @@ stages:
   extension_updates: 1000
   extension_max_count: 2
   boundary_axes:
-  - terrain_kind_level_cap
   - terrain_exposure
+  - terrain_kind_level_cap
   - terrain_level_cap
   - command_allocation
   # Fixed before any result of this stage is seen (lead 2026-11-12 01:40). One axis per boundary (CG one-axis rule).
-  # CG order as written: D, K, L+, C (E.1 E3 row and E.2 E3 one-axis row). The entry axis is the first one.
+  # v0.18 draft (CG E.12): E3 is entered on K once (the three-kind bundle opens together at cap 2 in the start block below), so K is the entry axis
+  # and D (the bundle cap +1) follows at the next boundaries. Before: D, K, L+, C with D as entry (one kind, cap 0 -> 1). K opens nothing more
+  # inside the stage (no k_ladder order), so K is skipped as not eligible when the rotation comes back to it.
   # L+ is the continuous cap +1 per boundary up to L9: decisions.tsv 2026-11-06 22:3x, 23:2x, 2026-11-08 19:0x.
   # An axis whose CG condition is not met is skipped; with none eligible the boundary changes no axis (CG E.1 E1 row).
   boundary:
-    entry_axis: terrain_kind_level_cap
-    axis_order: [terrain_kind_level_cap, terrain_exposure, terrain_level_cap, command_allocation]
+    entry_axis: terrain_exposure
+    axis_order: [terrain_exposure, terrain_kind_level_cap, terrain_level_cap, command_allocation]
     rule: rotate_in_order_one_axis_per_boundary
     not_eligible: skip
     none_eligible: no_axis_change
@@ -732,6 +912,15 @@ stages:
     # one axis per boundary D163; team lead confirmation pending at the morning report). The share stays 0.05 (new), the
     # continuous cap stays the E2 value and C/flat opens first on the K ladder instead of in this block.
     # planner 표 (CG:275~281); 세 등급 몫 · 시작 상한은 가정
+    # CG v0.18 초안 (E.12 · lead 11/18 23:2x 결정 · 팀장 11/18 21:37 승인 · 병합 전): 위 네 줄 (진입 축 D · stepping_stones_low 0.05 · 상한 1) 은 옛 값이다.
+    # 새 시작 블록 = E2 끝 + K 축 한 번: E2 의 다섯 종을 유지 하한 0.03 으로 내리고 묶음 ④ 가운데 문 셋을 함께 연다
+    # (B pallets · A stepping_beams · A stepping_stones_low · 상한 2 에서 시작).
+    # ④ ③ 묶음의 합은 늘 0.44 (lead 11/18 23:3x · (가) 채택으로 닫음): 지금 묶음 합 = 0.44 - 앞 다섯 종 유지 하한 합 0.15 = 0.29 를 같은 몫 (0.29 / 3 · 하나는 0.0966666666).
+    # 연속 몫 0.56 이라 실효 연속 하한 42.9 % (CG E.3 · D176 ④) 를 그대로 지킨다.
+    # A stepping_stones_low 는 쉬운 징검돌 사다리 메시 (가지 feature/sonnet-code-e2-easystone5-1118) 가 학습 메시로 승인되어야 한다.
+    # 유지 하한 다섯 종의 level_cap = 졸업 레벨 5 그대로 (내리지도 올리지도 않음 · lead 11/18 23:4x).
+    # 이 행의 boundary.entry_axis 는 K (terrain_exposure) 로 고쳤고 (묶음을 함께 여는 K 한 번 · 그 뒤 D 가 상한 +1), 아래 k_ladder 는
+    # 순서를 비우고 유지 하한 0.03 만 남겼다 (경계마다 한 종류를 더 여는 사다리는 몫 합 0.44 를 깨므로 쓰지 않음).
     exposure_at_E3:
       default:
         exposure: 0.0
@@ -742,25 +931,47 @@ stages:
         exposure: 1.0
         level_cap: 5
       - family: A
+        kind: gaps
+        share: 0.03
+        level_cap: 5
+      - family: B
+        kind: gap
+        share: 0.03
+        level_cap: 5
+      - family: C
+        kind: gap
+        share: 0.03
+        level_cap: 5
+      - family: B
+        kind: beam
+        share: 0.03
+        level_cap: 5
+      - family: A
+        kind: balance_beams
+        share: 0.03
+        level_cap: 5
+      - family: B
+        kind: pallets
+        share: 0.0966666666
+        level_cap: 2
+      - family: A
+        kind: stepping_beams
+        share: 0.0966666667
+        level_cap: 2
+      - family: A
         kind: stepping_stones_low
-        share: 0.05
-        level_cap: 1
-    # K 경계 사다리 (planner §2 여는 순서 · 가정): 경계마다 종류 하나 열기 (5 %), 다음 경계 현재 (10 %), 그다음 쉬움 (3 %)
+        share: 0.0966666667
+        level_cap: 2
+    # K 경계 사다리: 새 묶음 열기는 시작 블록이 한다 (CG E.12). 경계마다 종류 하나를 더 여는 옛 순서 (C flat 부터 열두 종) 는 비웠다.
+    # 몫 합 0.44 를 깨고 시작 블록의 종류와도 겹치기 때문이다. 유지 하한은 0.03 (CG E.12 #4). 여는 순서 기록 (kind_opening_order_recorded)
+    # 은 비어 있으면 시작 블록의 이름 있는 종류를 plan 순서로 쓴다 (ex42_stage_evidence.kind_opening_order_file).
     k_ladder:
-      grades: {new: 0.05, current: 0.1, easy: 0.03}
-      order:
-      - {family: C, kind: flat, level_cap: 0}
-      - {family: B, kind: rough, level_cap: 0}
-      - {family: C, kind: discrete_grid, level_cap: 0}
-      - {family: A, kind: stepping_stones_high, level_cap: 0}
-      - {family: C, kind: pyramid_stairs, level_cap: 0}
-      - {family: C, kind: inverted_pyramid_stairs, level_cap: 0}
-      - {family: B, kind: stair_up, level_cap: 0}
-      - {family: B, kind: stair_down, level_cap: 0}
-      - {family: B, kind: boxes, level_cap: 0}
-      - {family: A, kind: balance_beams, level_cap: 0}
-      - {family: A, kind: stepping_beams, level_cap: 0}
-      - {family: A, kind: gaps, level_cap: 0}
+      grades: {new: 0.05, current: 0.1}
+      kind_floor: 0.03
+      order: []
+    # D axis (CG v0.18 draft E.12): a bundle kind that passed the window ending at a boundary gets its level cap +1 for the next segment, up to end (graduation cap).
+    # ex42_exposure.raise_kind_caps reads the ladder evidence (EX42_LADDER_OUTCOMES); the boundary receipt records before / after per kind.
+    kind_level_cap: {end: 5, step_per_boundary: 1}
     floors:
       global_command_floor:
         reverse: 0.05
@@ -770,6 +981,10 @@ stages:
       # The 30 is an assumption (CG marks 2 / 30 / 32 as assumptions); the planner contract 16:2x records it.
       continuous_low_level_floor: {levels: [0, 2], fraction_of_continuous: 0.30, class: assumption, source: CG:380}
 - id: E4
+  # Inherits E2's last reward values (slow_progress up to 0.6, slow_track_sigma down to 0.35): the same row fence as E1F/E2, read by
+  # commands.ex42_segment_adjust.row_reward_fence (no live adjustment here). The limits file keeps its bytes.
+  reward_fence: {slow_progress: [0.0, 0.6], slow_track_sigma: [0.35, 0.5]}
+  exit_judge: kind_two_window_e4
   # The command ranges and the turn overlay reinforced in E1 stay in force after it (decisions.tsv 2026-11-12 12:52,
   # 13:03). Without this cell a stage falls back to the stage-zero ranges (ex42_shares.stage_commands). `ranges` and
   # `turn_overlay` are E1's plan values. `shares` here are the 13 free slots for environments outside the continuous
@@ -778,7 +993,7 @@ stages:
     shares: {forward: 0.19, walk_left: 0.06, walk_right: 0.06, spin_left: 0.09, spin_right: 0.09, stand: 0.1, reverse: 0.14, side_left: 0.09, side_right: 0.09, diag_fwd_left: 0.02, diag_fwd_right: 0.02, diag_back_left: 0.025, diag_back_right: 0.025}
     ranges: {forward_vx: [0.1, 1.5], walk_vx: [0.3, 1.2], walk_wz_abs: [0.1, 1.0], spin_wz_abs: [0.15, 1.5], reverse_vx: [-1.3, -0.2], side_vy_abs: [0.1, 0.8], diag_vx_abs: [0.3, 0.6], diag_vy_abs: [0.2, 0.5]}
     turn_overlay: {fraction: 0.25, wz_abs: [0.2, 0.6]}
-  training_mesh_profile: e2_named_flags_v2
+  training_mesh_profile: e2_easy10_edge
   authorization_contract:
     validator: bounded
     source_stage_ids:
@@ -859,6 +1074,13 @@ stages:
   hold_policy: hold_exposure_continue_training
   terrain:
     # planner 표 (CG:292~298 D159 D176); 쉬움 1.5 % 는 가정 (연 종류 하한 산수)
+    # CG v0.18 초안 (E.12 · lead 11/18 23:2x 결정 · 팀장 11/18 21:37 승인 · 병합 전): 앞 값은 13 종 0.015 + B climb_up 0.05 였다.
+    # 새 시작 블록 = E3 끝 + K 축 한 번: E3 의 세 종을 유지 하한 0.03 으로 내리고 (앞 여덟 종 0.03) 묶음 ④ 뒤 문 둘을 함께 연다
+    # (B stones · A stepping_stones_high · 상한 2 에서 시작).
+    # ④ ③ 묶음의 합은 늘 0.44 (lead 11/18 23:3x · (가) 채택으로 닫음): 지금 묶음 합 = 0.44 - 앞 여덟 종 유지 하한 합 0.24 = 0.20 (각 0.10).
+    # 연속 몫 0.56 이라 실효 연속 하한 42.9 % (CG E.3 · D176 ④) 를 그대로 지킨다.
+    # 유지 하한 여덟 종의 level_cap = 졸업 레벨 5 그대로 (내리지도 올리지도 않음 · lead 11/18 23:4x).
+    # 아래 k_ladder 는 순서를 비우고 kind_floor 를 0.03 으로 고쳤다 (E3 와 같은 까닭 · 옛 순서는 이 블록의 종류와 겹쳤다).
     exposure_at_E4:
       default:
         exposure: 0.0
@@ -869,81 +1091,54 @@ stages:
         exposure: 1.0
         level_cap: 9
       - family: A
-        kind: stepping_stones_low
-        share: 0.015
+        kind: gaps
+        share: 0.03
         level_cap: 5
-      - family: A
-        kind: stepping_stones_high
-        share: 0.015
+      - family: B
+        kind: gap
+        share: 0.03
+        level_cap: 5
+      - family: C
+        kind: gap
+        share: 0.03
+        level_cap: 5
+      - family: B
+        kind: beam
+        share: 0.03
         level_cap: 5
       - family: A
         kind: balance_beams
-        share: 0.015
+        share: 0.03
+        level_cap: 5
+      - family: B
+        kind: pallets
+        share: 0.03
         level_cap: 5
       - family: A
         kind: stepping_beams
-        share: 0.015
+        share: 0.03
         level_cap: 5
       - family: A
-        kind: gaps
-        share: 0.015
+        kind: stepping_stones_low
+        share: 0.03
         level_cap: 5
       - family: B
-        kind: stair_up
-        share: 0.015
-        level_cap: 3
-      - family: B
-        kind: stair_down
-        share: 0.015
-        level_cap: 3
-      - family: B
-        kind: rough
-        share: 0.015
-        level_cap: 3
-      - family: B
-        kind: boxes
-        share: 0.015
-        level_cap: 3
-      - family: C
-        kind: pyramid_stairs
-        share: 0.015
-        level_cap: 3
-      - family: C
-        kind: inverted_pyramid_stairs
-        share: 0.015
-        level_cap: 3
-      - family: C
-        kind: discrete_grid
-        share: 0.015
-        level_cap: 3
-      - family: C
-        kind: flat
-        share: 0.015
-        level_cap: 3
-      - family: B
-        kind: climb_up
-        share: 0.05
-        level_cap: 0
-    # K 경계 사다리: 쉬움 하한 1.5 %는 팀장 19:38 확정
+        kind: stones
+        share: 0.10
+        level_cap: 2
+      - family: A
+        kind: stepping_stones_high
+        share: 0.10
+        level_cap: 2
+    # K 경계 사다리: 묶음 열기는 시작 블록이 한다 (E3 와 같음). 유지 하한은 0.03 (CG E.12 #4 · 옛 1.5 % 는 팀장 19:38 값 이력).
     k_ladder:
       grades: {new: 0.05, current: 0.1}
-      kind_floor: 0.015      # teamlead 19:38 approved easy-kind floor
-      kind_floor_decision_source: 7121e0188cf1cbe558704764227e306e6097149f
-      order:
-      - {family: B, kind: climb_down, level_cap: 0}
-      - {family: C, kind: box, level_cap: 0}
-      - {family: C, kind: discrete_obstacles, level_cap: 0}
-      - {family: B, kind: obstacles, level_cap: 0}
-      - {family: B, kind: stones, level_cap: 0}
-      - {family: B, kind: pallets, level_cap: 0}
-      - {family: B, kind: consecutive, level_cap: 0}
-      - {family: B, kind: beam, level_cap: 0}
-      - {family: B, kind: gap, level_cap: 0}
-      - {family: C, kind: gap, level_cap: 0}
-      - {family: E, kind: stairs_high, level_cap: 0}
-      - {family: E, kind: stairs_high_inv, level_cap: 0}
-      - {family: E, kind: slope_steep, level_cap: 0}
-      - {family: E, kind: slope_steep_inv, level_cap: 0}
+      kind_floor: 0.03
+      kind_floor_decision_source: 7121e0188cf1cbe558704764227e306e6097149f   # 이력: 1.5 % 승인 줄. 0.03 은 lead 11/18 23:3x (CG E.12 #4)
+      order: []
+    # D axis (CG v0.18 draft E.12): a bundle kind that passed the window ending at a boundary gets its level cap +1 for the next segment, up to end (graduation cap).
+    # ex42_exposure.raise_kind_caps reads the ladder evidence (EX42_LADDER_OUTCOMES); the boundary receipt records before / after per kind.
+    kind_level_cap: {end: 5, step_per_boundary: 1}
     floors:
       global_command_floor:
         reverse: 0.05
@@ -960,6 +1155,10 @@ stages:
   - E
   - continuous
 - id: E5
+  # Inherits E2's last reward values (slow_progress up to 0.6, slow_track_sigma down to 0.35): the same row fence as E1F/E2, read by
+  # commands.ex42_segment_adjust.row_reward_fence (no live adjustment here). The limits file keeps its bytes.
+  reward_fence: {slow_progress: [0.0, 0.6], slow_track_sigma: [0.35, 0.5]}
+  exit_judge: kind_two_window_e5
   # The command ranges and the turn overlay reinforced in E1 stay in force after it (decisions.tsv 2026-11-12 12:52,
   # 13:03). Without this cell a stage falls back to the stage-zero ranges (ex42_shares.stage_commands). `ranges` and
   # `turn_overlay` are E1's plan values. `shares` here are the 13 free slots for environments outside the continuous
@@ -968,7 +1167,7 @@ stages:
     shares: {forward: 0.19, walk_left: 0.06, walk_right: 0.06, spin_left: 0.09, spin_right: 0.09, stand: 0.1, reverse: 0.14, side_left: 0.09, side_right: 0.09, diag_fwd_left: 0.02, diag_fwd_right: 0.02, diag_back_left: 0.025, diag_back_right: 0.025}
     ranges: {forward_vx: [0.1, 1.5], walk_vx: [0.3, 1.2], walk_wz_abs: [0.1, 1.0], spin_wz_abs: [0.15, 1.5], reverse_vx: [-1.3, -0.2], side_vy_abs: [0.1, 0.8], diag_vx_abs: [0.3, 0.6], diag_vy_abs: [0.2, 0.5]}
     turn_overlay: {fraction: 0.25, wz_abs: [0.2, 0.6]}
-  training_mesh_profile: e2_named_flags_v2
+  training_mesh_profile: e2_easy10_edge
   authorization_contract:
     validator: bounded
     source_stage_ids:
@@ -1027,6 +1226,15 @@ stages:
   hold_policy: hold_exposure_continue_training
   terrain:
     # planner 표 (CG:309~314); 28 종 고르게 2 % · 상한은 E4 목표값 (가정), 실제 E4 끝 값으로 바꿀 것
+    # CG v0.18 초안 (E.12 · lead 11/18 23:2x 결정 · 팀장 11/18 21:37 승인 · 병합 전): 앞 값은 28 종 각 0.02 였다.
+    # 새 시작 블록 = E4 끝 + K 축 한 번: E5 는 섞기라 익힌 열 종을 유지 하한이 아니라 같은 몫으로 나눈다 (lead 11/18 23:4x · 11/19 00:3x):
+    # 합 0.44 · 종류마다 0.044 (0.44 / 10). 익힌 열 종 0.44 + ② 꼬리 넷 0.12 = 0.56 · 연속 0.44 (④ ③ 묶음의 합은 늘 0.44 · E5 는 ② 꼬리 넷 0.12 가 그 밖에 더해짐).
+    # 묶음 ② 높이 18 종 (A 넷은 배운 종류 · B · C · E 14 종은 본 적 없음) 은 L3 · L6 에서 무너지지 않았다 (planner CPU 실측 11/18~19 · 표 KINDS-L0-ORDER-1118).
+    # 그래서 따로 단계 없이 E5 섞기에 0.44 밖 몫으로 넣는다 (lead 11/19 00:5x): 꼬리 넷 (E stairs_high · C box · B climb_down · E stairs_high_inv) 을 먼저 · 각 0.03 (합 0.12).
+    # 연속 0.56 - 0.12 = 0.44 로 하한 0.429 위 · 다섯 종부터는 하한을 깨서 (0.15 -> 0.41) 한 번에 넷 (planner 손계산 11/19 · lead 11/19 00:5x 대조 · 동의).
+    # 꼬리 넷이 L6 판정을 넘으면 그 다음 약한 종류 (L6 표 생존 낮은 순) 로 바꿔 끼운다 (lead 11/19 00:5x). 앞 값의 나머지 14 종 (stair_up · rough · climb_up · flat · slope_steep 들) 은
+    # 이 블록에서 뺐다. 익힌 열 종의 level_cap = 졸업 레벨 5 그대로 (E5 섞기는 열 종 상한 5 · lead 11/18 23:4x).
+    # M · E6a · E6b 의 시작 블록은 옛 E5 값 (28 종) 을 이어받은 그대로다 (sonnet 몫 · lead 배정 · CG E.12).
     exposure_at_E5:
       default:
         exposure: 0.0
@@ -1037,117 +1245,62 @@ stages:
         exposure: 1.0
         level_cap: 9
       - family: A
-        kind: stepping_stones_low
-        share: 0.02
+        kind: gaps
+        share: 0.044
         level_cap: 5
-      - family: A
-        kind: stepping_stones_high
-        share: 0.02
+      - family: B
+        kind: gap
+        share: 0.044
+        level_cap: 5
+      - family: C
+        kind: gap
+        share: 0.044
+        level_cap: 5
+      - family: B
+        kind: beam
+        share: 0.044
         level_cap: 5
       - family: A
         kind: balance_beams
-        share: 0.02
+        share: 0.044
+        level_cap: 5
+      - family: B
+        kind: pallets
+        share: 0.044
         level_cap: 5
       - family: A
         kind: stepping_beams
-        share: 0.02
+        share: 0.044
         level_cap: 5
       - family: A
-        kind: gaps
-        share: 0.02
+        kind: stepping_stones_low
+        share: 0.044
         level_cap: 5
       - family: B
-        kind: stair_up
-        share: 0.02
-        level_cap: 3
-      - family: B
-        kind: stair_down
-        share: 0.02
-        level_cap: 3
-      - family: B
-        kind: rough
-        share: 0.02
-        level_cap: 3
-      - family: B
-        kind: boxes
-        share: 0.02
-        level_cap: 3
-      - family: B
-        kind: climb_up
-        share: 0.02
-        level_cap: 3
-      - family: B
-        kind: climb_down
-        share: 0.02
-        level_cap: 3
-      - family: B
-        kind: gap
-        share: 0.02
-        level_cap: 3
-      - family: B
-        kind: pallets
-        share: 0.02
-        level_cap: 3
-      - family: B
         kind: stones
-        share: 0.02
-        level_cap: 3
-      - family: B
-        kind: beam
-        share: 0.02
-        level_cap: 3
-      - family: B
-        kind: consecutive
-        share: 0.02
-        level_cap: 3
-      - family: B
-        kind: obstacles
-        share: 0.02
-        level_cap: 3
-      - family: C
-        kind: pyramid_stairs
-        share: 0.02
-        level_cap: 3
-      - family: C
-        kind: inverted_pyramid_stairs
-        share: 0.02
-        level_cap: 3
-      - family: C
-        kind: discrete_grid
-        share: 0.02
-        level_cap: 3
-      - family: C
-        kind: flat
-        share: 0.02
-        level_cap: 3
-      - family: C
-        kind: gap
-        share: 0.02
-        level_cap: 3
-      - family: C
-        kind: box
-        share: 0.02
-        level_cap: 3
-      - family: C
-        kind: discrete_obstacles
-        share: 0.02
-        level_cap: 3
-      - family: E
-        kind: slope_steep
-        share: 0.02
-        level_cap: 6
-      - family: E
-        kind: slope_steep_inv
-        share: 0.02
-        level_cap: 6
+        share: 0.044
+        level_cap: 5
+      - family: A
+        kind: stepping_stones_high
+        share: 0.044
+        level_cap: 5
+      # ② 꼬리 넷 (0.44 밖 · 각 0.03): 상한 6 · 판정도 L6 (lead 11/19 00:5x)
       - family: E
         kind: stairs_high
-        share: 0.02
-        level_cap: 3
+        share: 0.03
+        level_cap: 6
+      - family: C
+        kind: box
+        share: 0.03
+        level_cap: 6
+      - family: B
+        kind: climb_down
+        share: 0.03
+        level_cap: 6
       - family: E
         kind: stairs_high_inv
-        share: 0.02
-        level_cap: 3
+        share: 0.03
+        level_cap: 6
     floors:
       global_command_floor:
         reverse: 0.05
@@ -1157,6 +1310,7 @@ stages:
       # The 30 is an assumption (CG marks 2 / 30 / 32 as assumptions); the planner contract 16:2x records it.
       continuous_low_level_floor: {levels: [0, 2], fraction_of_continuous: 0.30, class: assumption, source: CG:380}
 - id: M
+  reward_fence: {slow_progress: [0.0, 0.6], slow_track_sigma: [0.35, 0.5]}      # inherited from E2 on (see E3); limits file unchanged
   # The command ranges and the turn overlay reinforced in E1 stay in force after it (decisions.tsv 2026-11-12 12:52,
   # 13:03). Without this cell a stage falls back to the stage-zero ranges (ex42_shares.stage_commands). `ranges` and
   # `turn_overlay` are E1's plan values. `shares` here are the 13 free slots for environments outside the continuous
@@ -1165,7 +1319,7 @@ stages:
     shares: {forward: 0.19, walk_left: 0.06, walk_right: 0.06, spin_left: 0.09, spin_right: 0.09, stand: 0.1, reverse: 0.14, side_left: 0.09, side_right: 0.09, diag_fwd_left: 0.02, diag_fwd_right: 0.02, diag_back_left: 0.025, diag_back_right: 0.025}
     ranges: {forward_vx: [0.1, 1.5], walk_vx: [0.3, 1.2], walk_wz_abs: [0.1, 1.0], spin_wz_abs: [0.15, 1.5], reverse_vx: [-1.3, -0.2], side_vy_abs: [0.1, 0.8], diag_vx_abs: [0.3, 0.6], diag_vy_abs: [0.2, 0.5]}
     turn_overlay: {fraction: 0.25, wz_abs: [0.2, 0.6]}
-  training_mesh_profile: e2_named_flags_v2
+  training_mesh_profile: e2_easy10_edge
   authorization_contract:
     validator: bounded
     source_stage_ids: []
@@ -1269,6 +1423,7 @@ stages:
         kind: climb_down
         share: 0.02
         level_cap: 3
+      # B gap: CPU 평가 32 env 전용 멈춤 · 학습 GPU 무관 (CG v0.18 초안 E.12)
       - family: B
         kind: gap
         share: 0.02
@@ -1346,6 +1501,7 @@ stages:
       # The 30 is an assumption (CG marks 2 / 30 / 32 as assumptions); the planner contract 16:2x records it.
       continuous_low_level_floor: {levels: [0, 2], fraction_of_continuous: 0.30, class: assumption, source: CG:380}
 - id: E6a
+  reward_fence: {slow_progress: [0.0, 0.6], slow_track_sigma: [0.35, 0.5]}      # inherited from E2 on (see E3); limits file unchanged
   # The command ranges and the turn overlay reinforced in E1 stay in force after it (decisions.tsv 2026-11-12 12:52,
   # 13:03). Without this cell a stage falls back to the stage-zero ranges (ex42_shares.stage_commands). `ranges` and
   # `turn_overlay` are E1's plan values. `shares` here are the 13 free slots for environments outside the continuous
@@ -1354,7 +1510,7 @@ stages:
     shares: {forward: 0.19, walk_left: 0.06, walk_right: 0.06, spin_left: 0.09, spin_right: 0.09, stand: 0.1, reverse: 0.14, side_left: 0.09, side_right: 0.09, diag_fwd_left: 0.02, diag_fwd_right: 0.02, diag_back_left: 0.025, diag_back_right: 0.025}
     ranges: {forward_vx: [0.1, 1.5], walk_vx: [0.3, 1.2], walk_wz_abs: [0.1, 1.0], spin_wz_abs: [0.15, 1.5], reverse_vx: [-1.3, -0.2], side_vy_abs: [0.1, 0.8], diag_vx_abs: [0.3, 0.6], diag_vy_abs: [0.2, 0.5]}
     turn_overlay: {fraction: 0.25, wz_abs: [0.2, 0.6]}
-  training_mesh_profile: e2_named_flags_v2
+  training_mesh_profile: e2_easy10_edge
   authorization_contract:
     validator: bounded
     source_stage_ids:
@@ -1464,6 +1620,7 @@ stages:
         kind: climb_down
         share: 0.02
         level_cap: 3
+      # B gap: CPU 평가 32 env 전용 멈춤 · 학습 GPU 무관 (CG v0.18 초안 E.12)
       - family: B
         kind: gap
         share: 0.02
@@ -1541,6 +1698,7 @@ stages:
       # The 30 is an assumption (CG marks 2 / 30 / 32 as assumptions); the planner contract 16:2x records it.
       continuous_low_level_floor: {levels: [0, 2], fraction_of_continuous: 0.30, class: assumption, source: CG:380}
 - id: E6b
+  reward_fence: {slow_progress: [0.0, 0.6], slow_track_sigma: [0.35, 0.5]}      # inherited from E2 on (see E3); limits file unchanged
   # The command ranges and the turn overlay reinforced in E1 stay in force after it (decisions.tsv 2026-11-12 12:52,
   # 13:03). Without this cell a stage falls back to the stage-zero ranges (ex42_shares.stage_commands). `ranges` and
   # `turn_overlay` are E1's plan values. `shares` here are the 13 free slots for environments outside the continuous
@@ -1549,7 +1707,7 @@ stages:
     shares: {forward: 0.19, walk_left: 0.06, walk_right: 0.06, spin_left: 0.09, spin_right: 0.09, stand: 0.1, reverse: 0.14, side_left: 0.09, side_right: 0.09, diag_fwd_left: 0.02, diag_fwd_right: 0.02, diag_back_left: 0.025, diag_back_right: 0.025}
     ranges: {forward_vx: [0.1, 1.5], walk_vx: [0.3, 1.2], walk_wz_abs: [0.1, 1.0], spin_wz_abs: [0.15, 1.5], reverse_vx: [-1.3, -0.2], side_vy_abs: [0.1, 0.8], diag_vx_abs: [0.3, 0.6], diag_vy_abs: [0.2, 0.5]}
     turn_overlay: {fraction: 0.25, wz_abs: [0.2, 0.6]}
-  training_mesh_profile: e2_named_flags_v2
+  training_mesh_profile: e2_easy10_edge
   authorization_contract:
     validator: bounded
     source_stage_ids:
@@ -1662,6 +1820,7 @@ stages:
         kind: climb_down
         share: 0.015
         level_cap: 3
+      # B gap: CPU 평가 32 env 전용 멈춤 · 학습 GPU 무관 (CG v0.18 초안 E.12)
       - family: B
         kind: gap
         share: 0.015
@@ -1753,6 +1912,7 @@ stages:
 # approved: false, so no automatic launch exists for them. Dimensions are the ladder of s2.2 (assumption, to be re-cut from the
 # measured EX-42 pass sizes). Family F is a separate mesh bundle (analyst); the kind names here are the code's contract.
 - id: J0
+  reward_fence: {slow_progress: [0.0, 0.6], slow_track_sigma: [0.35, 0.5]}      # inherited from E2 on (see E3); limits file unchanged
   authorization_contract:
     validator: bounded
     source_stage_ids:
@@ -1973,6 +2133,7 @@ stages:
         opens_in: J4
     jump_share_cap: 0.2
 - id: J1
+  reward_fence: {slow_progress: [0.0, 0.6], slow_track_sigma: [0.35, 0.5]}      # inherited from E2 on (see E3); limits file unchanged
   authorization_contract:
     validator: bounded
     source_stage_ids:
@@ -2145,6 +2306,7 @@ stages:
         class: assumption
         source: CG:380
 - id: J2
+  reward_fence: {slow_progress: [0.0, 0.6], slow_track_sigma: [0.35, 0.5]}      # inherited from E2 on (see E3); limits file unchanged
   authorization_contract:
     validator: bounded
     source_stage_ids:
@@ -2331,6 +2493,7 @@ stages:
         kind: jump_down_low
         level_cap: 0
 - id: J3
+  reward_fence: {slow_progress: [0.0, 0.6], slow_track_sigma: [0.35, 0.5]}      # inherited from E2 on (see E3); limits file unchanged
   authorization_contract:
     validator: bounded
     source_stage_ids:
@@ -2516,6 +2679,7 @@ stages:
         class: assumption
         source: CG:380
 - id: J4
+  reward_fence: {slow_progress: [0.0, 0.6], slow_track_sigma: [0.35, 0.5]}      # inherited from E2 on (see E3); limits file unchanged
   authorization_contract:
     validator: bounded
     source_stage_ids:
@@ -2823,6 +2987,46 @@ evaluation:
     weak_subcell_warning_fraction_of_success_floor: 0.5
     judge_modes: [eval_gt, eval_pred]
     record_modes: [probe_prop_only]
+  kind_stage_cells:
+    forward_command: fwd1.0
+    forward_steps: 600
+    forward_seconds: 12.0
+    completion_settle_s: 0.5
+    envs_per_kind: 32
+    valid_min_each: 24
+    judge_modes: [eval_gt, eval_pred]
+    record_modes: [probe_prop_only]
+    # planner TABLE-E3E5-KIND-COMPLETION-1116 (values are assumption grade: dimension calculations, not measured on the mesh).
+    # A = the measured finish platform (the E2 rule). travel = straight-line displacement (m) from the first sample, for kinds
+    # with a fixed reset heading or whose heading does not matter. center_max = max(|x|, |y|) from the tile center (m), for the
+    # pyramid-shaped kinds (reset yaw and xy are random there; assumes the cell origin is the tile center).
+    # No entry = HOLD, never a pass: B climb_up, climb_down, gap (random heading and the obstacle is on one side only).
+    # learned_cells_min 32 stays at the E2 value (grade: assumption, proportional to the E2 threshold); the 32-env cell scales the counts 26 / 30.
+    completion:
+      A: {rule: start_finish_platform}
+      B/stair_up: {rule: travel, m: 3.8}
+      B/stair_down: {rule: travel, m: 3.8}
+      B/consecutive: {rule: travel, m: 5.3}
+      B/beam: {rule: travel, m: 4.0}
+      B/pallets: {rule: travel, m: 4.0}
+      B/stones: {rule: travel, m: 4.0}
+      B/obstacles: {rule: travel, m: 4.0}
+      B/rough: {rule: travel, m: 4.0}
+      B/boxes: {rule: travel, m: 4.0}
+      B/climb_up: {rule: forward_x, m: 4.5, start_yaw_zero: true}
+      B/climb_down: {rule: forward_x, m: 4.5, start_yaw_zero: true}
+      B/gap: {rule: forward_x, m: 5.4, start_yaw_zero: true}
+      C/gap: {rule: travel, m: 7.5}
+      C/box: {rule: travel, m: 7.3}
+      C/discrete_obstacles: {rule: travel, m: 7.0}
+      C/flat: {rule: travel, m: 3.5}
+      C/discrete_grid: {rule: travel, m: 3.5}
+      C/pyramid_stairs: {rule: center_max, m: 3.75}
+      C/inverted_pyramid_stairs: {rule: center_max, m: 3.75}
+      E/stairs_high: {rule: center_max, m: 3.5}
+      E/stairs_high_inv: {rule: center_max, m: 3.5}
+      E/slope_steep: {rule: center_max, m: 3.85}
+      E/slope_steep_inv: {rule: center_max, m: 3.85}
   paper_cells:
     judge_from_stage: E4
     slope:

@@ -267,7 +267,7 @@ def resample_ex39(gen, n, arm, yaw):
             "heading": heading, "psi_star": psi_star, "slot": slot}
 
 
-def resample_stage(gen, n, stage, yaw):
+def resample_stage(gen, n, stage, yaw, stone_mask=None):
     """W55: sample one immutable episode-stage profile from curriculum.yaml.
 
     The generator is the existing command generator. No new RNG stream or
@@ -294,6 +294,9 @@ def resample_stage(gen, n, stage, yaw):
     back_vx = _u(gen, (n,), *r["reverse_vx"])
     diag_vx = _u(gen, (n,), *(r.get("diag_vx_abs") or (0.3, 0.6)))
     side_vy = _u(gen, (n,), *r["side_vy_abs"])
+    if getattr(stage, "low_side_fraction", 0.0):        # same shape as low_forward_fraction: no draw at all while it is 0
+        low_side = _u(gen, (n,)) < stage.low_side_fraction
+        side_vy = torch.where(low_side, _u(gen, (n,), 0.1, 0.3), _u(gen, (n,), 0.3, r["side_vy_abs"][1]))
     diag_vy = _u(gen, (n,), *(r.get("diag_vy_abs") or (0.2, 0.5)))
     walk_wz = _u(gen, (n,), *r["walk_wz_abs"])
     spin_wz = _u(gen, (n,), *r["spin_wz_abs"])
@@ -323,6 +326,14 @@ def resample_stage(gen, n, stage, yaw):
         pick = (reverse | side | diagonal) & (_u(gen, (n,)) < fraction)
         turn = _u(gen, (n,), low, high) * torch.where(_u(gen, (n,)) < 0.5, 1.0, -1.0)
         wz = torch.where(pick, turn, wz)
+    floor = getattr(stage, "stone_forward_floor", None)
+    if floor and stone_mask is not None:
+        # E2 o2: an env on stepping stones gets no forward command below `floor` (the slow ones are drawn again from floor to the top of the
+        # forward range). One extra draw, only while the cell is on, after every other draw: a stage without it is bit for bit the old sampler.
+        if floor >= r["forward_vx"][1]:
+            raise ValueError("stone_forward_floor must be below the top of the forward range")
+        again = _u(gen, (n,), floor, r["forward_vx"][1])
+        vx = torch.where(forward & stone_mask & (vx < floor), again, vx)
     return {"cmd": torch.stack([vx, vy, wz], dim=1), "stand": stand, "spin": spin,
             "heading": heading, "psi_star": psi_star, "slot": slot}
 
@@ -535,12 +546,15 @@ def flag_resample(state, ids, gen, params):
         state.backoff_v[ids] = torch.where(on, new_v, state.backoff_v[ids])
 
 
-def flag_step(state, pos_xy, yaw, dt, params):
+def flag_step(state, pos_xy, yaw, dt, params, turn_first_rad=None, turn_scope="all"):
     """한 제어 스텝: 깃발 진행을 갱신하고 명령 (n, 3) 을 돌려준다.
 
     - 0.5 m 안에 들면 다음 깃발. 마지막 깃발이면 세 칸 0 을 `flag_final_hold_s` 동안(이후도 0) 유지.
     - 물러나기 중이면 직전에 지난 깃발 쪽 단위 벡터 x backoff_v, wz 0 (몸을 돌리지 않는다).
     - v < 0.3 이면 (0, 0, spin_wz), 아니면 방향 x v 에 wz = clip(방향 각, +-1).
+    - turn_first_rad (plan 칸 `flag_turn_first_rad`, 없으면 꺼짐): 걷는 env 의 깃발 방향 각이 이 값보다 크면 제자리 회전 (xy 0, wz = clip(방향 각, +-flag_wz_clip)),
+      안이면 위와 같이 직진 + 작은 wz. 물러나기 · 제자리 회전 (v < 0.3) 갈래는 그대로.
+    - turn_scope (plan 칸 `flag_turn_first_scope`): "all" (기본, 모든 깃발에서 위 판정) | "first" (에피소드의 첫 깃발, state.idx == 0 에서만 그 판정 · 둘째 깃발부터는 각이 커도 직진 + 작은 wz).
     깃발이 하나도 없는 env(n_flags == 0)는 세 칸 0.
     """
     n = pos_xy.shape[0]
@@ -571,6 +585,14 @@ def flag_step(state, pos_xy, yaw, dt, params):
     forward = torch.stack([unit[:, 0] * state.v, unit[:, 1] * state.v,
                            torch.clip(angle, -params.flag_wz_clip, params.flag_wz_clip)], dim=1)
     spinning = torch.stack([zeros, zeros, state.spin_wz], dim=1)
+    if turn_first_rad:
+        turn_in_place = torch.stack([zeros, zeros, forward[:, 2]], dim=1)
+        far = angle.abs() > turn_first_rad
+        if turn_scope == "first":
+            far = far & (state.idx == 0)
+        elif turn_scope != "all":
+            raise ValueError(f"turn_scope must be all or first, got {turn_scope!r}")
+        forward = torch.where(far[:, None], turn_in_place, forward)
     cmd = torch.where(moving[:, None], forward, spinning)
 
     back = state.backoff_left > 0.0
@@ -581,6 +603,9 @@ def flag_step(state, pos_xy, yaw, dt, params):
     back_cmd = torch.stack([back_unit[:, 0] * state.backoff_v, back_unit[:, 1] * state.backoff_v, zeros], dim=1)
     use_back = back & (state.passed >= 1) & (~finished)
     cmd = torch.where(use_back[:, None], back_cmd, cmd)
+    # record only: the walking envs that took the turn-in-place branch this step (the log's flag_turn_fraction)
+    state.turning = (moving & far & ~use_back & ~finished) if turn_first_rad else torch.zeros_like(moving)
+    state.turning_first = (state.turning & (state.idx == 0)) if turn_first_rad else torch.zeros_like(moving)       # record only: the part of `turning` on the first flag
     state.backoff_left = torch.where(back, torch.clamp(state.backoff_left - dt, min=0.0), state.backoff_left)
 
     cmd = torch.where((finished | (state.n_flags <= 0))[:, None], torch.zeros_like(cmd), cmd)

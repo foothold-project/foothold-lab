@@ -516,3 +516,25 @@ def test_gpu_gate_ignores_the_real_rustdesk_server_but_not_a_kit_beside_it():
     beside = REAL_SMI_RUSTDESK + "7004, GPU-" + REAL_GPU0 + ", 40, /home/jay/miniforge3/envs/isaac311/bin/python3.11\n"
     with pytest.raises(ValueError, match="7004"):
         split.wait_gpus_free([REAL_GPU0], timeout_s=0, query=lambda: beside, sleep=lambda s: None)
+
+
+# 11/15 23:09 real nvidia-smi line: the Orca IDE utility process held 717 MiB on GPU 1 and blocked the m1000 boundary evaluation.
+REAL_SMI_ORCA = "1342587, GPU-" + REAL_GPU1 + ", 717, /opt/Orca/orca-ide --type=utility --utility-sub-type=network.mojom.NetworkService\n"
+
+
+def test_gpu_gate_ignores_the_orca_ide_utility_line_but_not_a_compute_process_beside_it():
+    sleeps = []
+    split.wait_gpus_free([REAL_GPU0, REAL_GPU1], timeout_s=0, query=lambda: REAL_SMI_ORCA, sleep=sleeps.append)
+    assert sleeps == []
+    for name in ("python3.11 train.py", "torchrun --nproc 2", "kit --ext x"):
+        beside = REAL_SMI_ORCA + "7005, GPU-" + REAL_GPU1 + ", 40, /home/jay/bin/" + name + "\n"
+        with pytest.raises(ValueError, match="7005"):
+            split.wait_gpus_free([REAL_GPU1], timeout_s=0, query=lambda b=beside: b, sleep=lambda s: None)
+    # only the first word names the process: an argument that says orca-ide does not hide a python
+    arg = "7006, GPU-" + REAL_GPU1 + ", 900, /usr/bin/python3 /opt/Orca/orca-ide\n"
+    with pytest.raises(ValueError, match="7006"):
+        split.wait_gpus_free([REAL_GPU1], timeout_s=0, query=lambda: arg, sleep=lambda s: None)
+    # a path with a space is cut at the space and keeps blocking (known limit, fails closed)
+    spaced = "7007, GPU-" + REAL_GPU1 + ", 900, /opt/My Apps/orca-ide --type=utility\n"
+    with pytest.raises(ValueError, match="7007"):
+        split.wait_gpus_free([REAL_GPU1], timeout_s=0, query=lambda: spaced, sleep=lambda s: None)

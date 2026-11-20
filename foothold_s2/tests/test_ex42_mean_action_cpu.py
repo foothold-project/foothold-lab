@@ -41,7 +41,7 @@ def _rollout(alg, obs, rewards_for_mean=0.0, seed=11, steps=STEPS):
 
 def test_constants_and_the_helper():
     assert mirror.MEAN_ACTION_PERCEPTION_SHARE == 0.0                   # v29: off (the helper below still checks 0.12 as an argument)
-    assert mirror.SMALL_NOISE_LOWSPEED_CMD == 0.0 and mirror.SMALL_NOISE_ENV_SHARE == 0.25 and mirror.SMALL_NOISE_SIGMA_SCALE == 0.2   # v28f-like
+    assert mirror.SMALL_NOISE_LOWSPEED_CMD == 0.3 and mirror.SMALL_NOISE_ENV_SHARE == 0.25 and mirror.SMALL_NOISE_SIGMA_SCALE == 0.2   # v29-4: v28n low-speed rule on, share and scale as v28f
     assert mirror.small_noise_static_share() == 0.25
     assert mean_action_mask(N, 0.0) is None
     mask = mean_action_mask(1024, 0.12)

@@ -17,6 +17,153 @@ MODES = ("eval_gt", "eval_pred", "probe_prop_only")
 JUDGE_MODES = MODES[:2]
 LOW_CASES = ("fwd0.1", "fwd0.2", "side+0.2", "side-0.2", "side+0.4", "side-0.4")
 YAW_CASES = ("fwd0.5", "fwd1.0")
+# E1 exit MAE definition (team lead 2026-11-15 21:11, ledger 9cf03f93): None keeps the per-step
+# |vx - command| mean. A number of seconds (0.5) judges |window mean vx - command| instead.
+# Off by default so every locked copy and every cached score keeps its old evidence.
+MAE_WINDOW_S = None
+# Graduation evaluation plan (team lead 2026-11-15 22:12): the same decisions travel inside the evaluation plan itself,
+# evaluation.e1_widened.graduation, so the plan sha pins them. No block = the plan judges exactly as before.
+GRADUATION_KEYS = {"mae_window_s", "near_R_0p1", "l3_fwd10_role", "fixed_fwd10_rule", "parent_evaluation_plan_sha256",
+                   "record_cells", "conditional_record"}
+RECORD_CELL_RE = re.compile(r"low/L5/(eval_gt|eval_pred)/side[+-]0\.4")
+CONDITIONAL_CELL_RE = re.compile(r"low/L5/(eval_gt|eval_pred)/side[+-]0\.2")
+CONDITIONAL_KEYS = {"cells", "success_min", "R_min", "survival_min", "companion", "decision"}
+CONDITIONAL_COMPANION = "L0_same_map_same_command_PASS"
+
+
+def graduation(plan: dict) -> dict:
+    block = (plan.get("evaluation", {}).get("e1_widened") or {}).get("graduation")
+    return block if isinstance(block, dict) else {}
+
+
+def plan_mae_window_s(plan: dict):
+    """Window seconds the plan asks for (None = module MAE_WINDOW_S / legacy per-step MAE)."""
+    return graduation(plan).get("mae_window_s")
+
+
+def _conditional_ok(block) -> bool:
+    num = lambda v: type(v) in (int, float) and math.isfinite(v)
+    return (isinstance(block, dict) and set(block) - {"from_iteration"} == CONDITIONAL_KEYS and CONDITIONAL_KEYS <= set(block)
+            and ("from_iteration" not in block
+                 or (type(block["from_iteration"]) is int and block["from_iteration"] > 0 and block["from_iteration"] % 250 == 0))
+            and isinstance(block["cells"], list) and block["cells"] and len(set(block["cells"])) == len(block["cells"])
+            and all(isinstance(k, str) and CONDITIONAL_CELL_RE.fullmatch(k) for k in block["cells"])
+            and type(block["success_min"]) is int and 1 <= block["success_min"] <= 64
+            and type(block["survival_min"]) is int and 1 <= block["survival_min"] <= 64
+            and num(block["R_min"]) and 0 < block["R_min"] <= 1
+            and block["companion"] == CONDITIONAL_COMPANION
+            and isinstance(block["decision"], str) and re.fullmatch(r"[0-9a-f]{8}", block["decision"]) is not None)
+
+
+def check_graduation(block) -> dict:
+    """Approved values only; anything else in the graduation block is refused."""
+    if block is None:
+        return {}
+    num = lambda v: type(v) in (int, float) and math.isfinite(v)
+    if (not isinstance(block, dict) or not set(block) <= GRADUATION_KEYS
+            or ("mae_window_s" in block and not (num(block["mae_window_s"]) and 0 < block["mae_window_s"] <= 3))
+            or ("near_R_0p1" in block and not (num(block["near_R_0p1"]) and 0 < block["near_R_0p1"] < .5))
+            or block.get("l3_fwd10_role", "judge_if_exposed") not in ("judge_if_exposed", "record_only")
+            or block.get("fixed_fwd10_rule", "heading_forward") not in ("heading_forward", "exit_line")
+            or ("record_cells" in block and not (
+                isinstance(block["record_cells"], list) and len(set(block["record_cells"])) == len(block["record_cells"])
+                and all(isinstance(k, str) and RECORD_CELL_RE.fullmatch(k) for k in block["record_cells"])))
+            or ("conditional_record" in block and not _conditional_ok(block["conditional_record"]))
+            or ("parent_evaluation_plan_sha256" in block and
+                re.fullmatch(r"[0-9a-f]{64}", str(block["parent_evaluation_plan_sha256"])) is None)):
+        raise ValueError("E1 graduation block has an unapproved key or value")
+    return block
+
+
+def apply_record_cells(result: dict, plan: dict) -> dict:
+    """Graduation plan only: the listed judged cells become record cells (value kept, not in any verdict).
+
+    judge_cells itself is untouched; the rejudge tool applies this to its result. A plan without the field is a no-op."""
+    keys = graduation(plan).get("record_cells") or []
+    if not keys:
+        return result
+    items = dict(result["items"])
+    for key in keys:
+        row = items[key]
+        if row.get("role") == "record":
+            continue
+        items[key] = {"role": "record", "judgement_if_judged": row.get("judgement"),
+                      **{k: v for k, v in row.items() if k not in ("judgement", "near_threshold", "reason")}}
+    states = [r["judgement"] for r in items.values() if r.get("role") != "record"]
+    verdict = "FAIL" if "FAIL" in states else "HOLD" if "HOLD" in states or not states else "PASS"
+    return {**result, "judgement": verdict, "items": items}
+
+
+def _window_iteration(checkpoint) -> int | None:
+    """Update number of a window = the model_<N>.pt name its score is bound to (same field previous_e1_score checks); None if unreadable."""
+    try:
+        match = re.fullmatch(r"model_(\d+)\.pt", Path(checkpoint).name)
+    except TypeError:
+        return None
+    return int(match.group(1)) if match else None
+
+
+def apply_conditional_record_prior(prior_v2: dict, plan: dict, previous: dict) -> dict:
+    """The stored previous window is read under the rule at ITS OWN update number (its score's checkpoint name), not the current window's."""
+    return apply_conditional_record(prior_v2, plan, _window_iteration(previous.get("checkpoint")))
+
+
+def apply_conditional_record(result: dict, plan: dict, iteration: int | None = None) -> dict:
+    """Graduation plan v3 only (decision ledger conditional_record.decision): when EVERY judged FAIL is one of
+    conditional_record.cells, each such cell stands on the floor (success, R, survival) and its companion cell (same map mode,
+    same command, level L0) is PASS, those FAIL cells become record cells (value kept, judgement_if_judged FAIL, not in the
+    verdict). Any single miss changes nothing. HOLD cells are not looked at. No key = no-op (same object back)."""
+    block = graduation(plan).get("conditional_record")
+    if not block:
+        return result
+    start = block.get("from_iteration")      # plan v4: the rule judges only windows at or after this update (m2000 is not counted)
+    if start is not None:
+        if type(iteration) is not int:
+            return {**result, "conditional_record_skipped": "window update number unreadable: rule not applied"}
+        if iteration < start:
+            return result
+    items = result["items"]
+    failed = [k for k, v in items.items() if v.get("role") != "record" and v.get("judgement") == "FAIL"]
+    if not failed or not set(failed) <= set(block["cells"]):
+        return result
+    for key in failed:
+        row = items[key]
+        companion = items.get(key.replace("/L5/", "/L0/", 1))
+        if (type(row.get("success")) not in (int, float) or row["success"] < block["success_min"]
+                or type(row.get("R")) not in (int, float) or row["R"] < block["R_min"]
+                or type(row.get("survival")) not in (int, float) or row["survival"] < block["survival_min"]
+                or companion is None or companion.get("role") == "record" or companion.get("judgement") != "PASS"):
+            return result
+    items = dict(items)
+    for key in failed:
+        row = items[key]
+        items[key] = {"role": "record", "judgement_if_judged": "FAIL", "conditional_record": block["decision"],
+                      **{k: v for k, v in row.items() if k not in ("judgement", "near_threshold", "reason")}}
+    states = [r["judgement"] for r in items.values() if r.get("role") != "record"]
+    verdict = "FAIL" if "FAIL" in states else "HOLD" if "HOLD" in states or not states else "PASS"
+    return {**result, "judgement": verdict, "items": items}
+
+
+def window_mae_per_env(vx, alive, command_v: float, dt: float, window_s: float):
+    """Per-env mean of |window-mean speed - command| over fully alive windows.
+
+    Windows are window_s/dt steps long, laid end to end from step 0; a tail shorter than a window is
+    dropped and a window with any dead step is skipped. Returns (mae, windows); an env with no fully
+    alive window has windows == 0 and mae == 0 (the caller decides what that means)."""
+    steps = window_s / dt
+    if not (window_s > 0 and dt > 0 and abs(steps - round(steps)) < 1e-6 and round(steps) >= 1):
+        raise ValueError(f"E1 v2 MAE window {window_s}s is not a whole number of {dt}s steps")
+    steps = int(round(steps))
+    vx, alive = np.asarray(vx, dtype=np.float64), np.asarray(alive, dtype=bool)
+    count = vx.shape[0] // steps
+    if count < 1:
+        raise ValueError("E1 v2 MAE window longer than the evaluation")
+    cut = count * steps
+    mean = vx[:cut].reshape(count, steps, -1).mean(1)
+    full = alive[:cut].reshape(count, steps, -1).all(1)
+    windows = full.sum(0)
+    mae = (np.abs(mean - command_v) * full).sum(0) / np.maximum(windows, 1)
+    return mae, windows
 
 
 def _sha(path: Path) -> str:
@@ -60,7 +207,8 @@ def _source(path: Path, checkpoint_sha: str, seed: int, modes: tuple[str, ...],
     return doc
 
 
-def _map_cell(path: Path, doc: dict, mode: str, case: str) -> dict:
+def _map_cell(path: Path, doc: dict, mode: str, case: str, *, mae_window_s: float | None = None,
+              record_window_s: float | None = None) -> dict:
     command = doc["commands"][case]
     speed = math.hypot(command[0], command[1])
     if speed <= 0 or command[2] != 0:
@@ -94,6 +242,27 @@ def _map_cell(path: Path, doc: dict, mode: str, case: str) -> dict:
             raw_mae = (np.abs(z["vx"] - command[0]) * alive).sum(0) / np.maximum(alive_steps, 1)
             if not np.allclose(raw_mae, errors, rtol=2e-5, atol=1e-6):
                 raise ValueError(f"E1 v2 body-forward MAE differs: {raw}")
+        window_record = {}
+        # The velocity channel the command is along: vx for the forward cells, vy for the side cells. A raw written before
+        # v29-14c has vx only, so its side cells have no channel to window (they keep the per-step MAE, basis "step").
+        channel = z["vx"] if command[0] else (z["vy"] if "vy" in z else None)
+        command_v = command[0] or command[1]
+        wanted = mae_window_s if mae_window_s is not None else record_window_s
+        if wanted is not None:
+            step_errors = errors
+            window_mean = windows = None
+            if channel is not None:
+                window_mean, windows = window_mae_per_env(channel, alive, command_v, dt, wanted)
+                # An env that never completes a fully alive window keeps its per-step MAE (no free zero).
+                window_mean = np.where(windows > 0, window_mean, step_errors)
+            judged_window = mae_window_s is not None and window_mean is not None
+            window_record = {"mae_basis": "window" if judged_window else "step", "mae_window_s": float(wanted),
+                             "per_env_mae_step_mps": step_errors.tolist(), "mae_step_mps": float(np.median(step_errors)),
+                             "mae_window_mps": None if window_mean is None else float(np.median(_finite(window_mean, case))),
+                             "per_env_mae_window_mps": None if window_mean is None else window_mean.tolist(),
+                             "per_env_mae_windows": None if windows is None else windows.tolist()}
+            if judged_window:
+                errors = _finite(window_mean, case)
         ratio = body_forward_per_env(z["vx"], alive, dt, speed) if command[0] else projection / (speed * alive.shape[0] * dt)
         if (not np.isfinite(ratio).all() or
                 int(alive[-1].sum()) != row["alive_envs_at_end"] or
@@ -105,7 +274,7 @@ def _map_cell(path: Path, doc: dict, mode: str, case: str) -> dict:
                 "command_mps": speed, "envs": 64,
                 "per_env_R": ratio.tolist(), "per_env_mae_mps": errors.tolist(),
                 "per_env_alive_end": alive[-1].astype(bool).tolist(),
-                "raw_file": str(raw), "raw_sha256": _sha(raw)}
+                "raw_file": str(raw), "raw_sha256": _sha(raw), **window_record}
 
 
 def _yaw_cell(path: Path, doc: dict, mode: str, case: str) -> dict:
@@ -139,8 +308,29 @@ def _yaw_cell(path: Path, doc: dict, mode: str, case: str) -> dict:
                 "raw_file": str(raw), "raw_sha256": _sha(raw)}
 
 
-def measure_cells(evaluation: Path, checkpoint_sha: str, seed: int, *, require_low: bool = True) -> dict:
-    """Read exact per-env raw. Missing sources are explicit HOLD inputs, never guessed from briefs."""
+def mae_window_s_from_plan(plan: dict | None) -> float | None:
+    """The window the plan asks for (evaluation.e1_widened.graduation.mae_window_s); None when the plan has no such cell,
+    which is every plan an official boundary evaluation runs today (so they keep the per-step MAE, byte for byte)."""
+    graduation = (((plan or {}).get("evaluation") or {}).get("e1_widened") or {}).get("graduation") or {}
+    value = graduation.get("mae_window_s")
+    if value is None:
+        return None
+    if type(value) not in (int, float) or not math.isfinite(value) or value <= 0:
+        raise ValueError("E1 v2 plan mae_window_s must be a positive number of seconds")
+    return float(value)
+
+
+def measure_cells(evaluation: Path, checkpoint_sha: str, seed: int, *, require_low: bool = True,
+                  mae_window_s: float | None = None, plan: dict | None = None,
+                  record_window_s: float | None = None) -> dict:
+    """Read exact per-env raw. Missing sources are explicit HOLD inputs, never guessed from briefs.
+
+    mae_window_s None uses the plan's graduation.mae_window_s when a plan is given, else the module MAE_WINDOW_S (None = legacy
+    per-step MAE, the result is then byte identical to the one before the window existed). record_window_s adds the window
+    values (mae_window_mps, mae_basis, ...) to every cell without changing the judged mae_mps."""
+    if mae_window_s is None and plan is not None:
+        mae_window_s = mae_window_s_from_plan(plan)
+    mae_window_s = MAE_WINDOW_S if mae_window_s is None else mae_window_s
     evaluation = Path(evaluation)
     result = {"format": "foothold-ex42-e1-v2-cells/1", "checkpoint_sha256": checkpoint_sha,
               "seed": seed, "low": {}, "side05": {}, "yaw": {}, "sources": {}}
@@ -154,13 +344,13 @@ def measure_cells(evaluation: Path, checkpoint_sha: str, seed: int, *, require_l
         if doc.get("command_suite") != "e1_v2" or set(doc.get("commands", {})) != set(LOW_CASES):
             raise ValueError("E1 v2 low command coverage differs")
         result["sources"][f"low_L{level}"] = {"path": str(path), "sha256": _sha(path)}
-        result["low"][f"L{level}"] = {mode: {case: _map_cell(path, doc, mode, case)
+        result["low"][f"L{level}"] = {mode: {case: _map_cell(path, doc, mode, case, mae_window_s=mae_window_s, record_window_s=record_window_s)
                                              for case in LOW_CASES} for mode in MODES}
     map_path = evaluation / "map64" / "map_modes.json"
     if map_path.is_file():
         doc = _source(map_path, checkpoint_sha, seed, MODES, level=None)
         result["sources"]["map64"] = {"path": str(map_path), "sha256": _sha(map_path)}
-        result["side05"] = {mode: {case: _map_cell(map_path, doc, mode, case)
+        result["side05"] = {mode: {case: _map_cell(map_path, doc, mode, case, mae_window_s=mae_window_s, record_window_s=record_window_s)
                                    for case in ("side+0.5", "side-0.5")} for mode in MODES}
     axis_path = evaluation / "axis_v2" / "axis_v2.json"
     if axis_path.is_file():
@@ -176,7 +366,9 @@ def judge_cells(cells: dict, plan: dict, *, repeats: dict[int, dict] | None = No
                 _ignore_near: bool = False) -> dict:
     """Judge GT and PRED per cell. OFF is retained as record only."""
     cfg = plan["evaluation"]["e1_exit_v2"]
-    near = cfg["near_threshold"]
+    near = dict(cfg["near_threshold"])
+    if "near_R_0p1" in graduation(plan):
+        near["R_0p1"] = graduation(plan)["near_R_0p1"]
     repeats = repeats or {}
     states, rows = [], {}
 
@@ -348,6 +540,8 @@ def treatment(checkpoint: Path, iteration: int, plan: dict, *, expected_plan_sha
         actual = {"commands": stage["commands"], "rewards": stage["rewards"],
                   "low_forward_fraction": stage.get("low_forward_fraction"),
                   "live_adjustments": live_adjustments}
+        if stage.get("low_side_fraction") is not None:      # only a plan that uses the cell: every other fingerprint is unchanged
+            actual["low_side_fraction"] = stage["low_side_fraction"]
         fingerprint = hashlib.sha256(json.dumps(actual, sort_keys=True, separators=(",", ":")).encode()).hexdigest()
         return {"state": "complete", "source": "plan", "boundary_index": 0, "sha256": fingerprint,
                 "live_adjustments": live_adjustments}
@@ -377,6 +571,8 @@ def treatment(checkpoint: Path, iteration: int, plan: dict, *, expected_plan_sha
         raise ValueError("E1 v2 treatment slow-forward share missing")
     actual = {"commands": commands["commands"], "rewards": rewards["live"],
               "low_forward_fraction": low["value"], "live_adjustments": live_adjustments}
+    if isinstance(commands.get("low_side_fraction"), dict):
+        actual["low_side_fraction"] = commands["low_side_fraction"]["value"]
     fingerprint = hashlib.sha256(json.dumps(actual, sort_keys=True, separators=(",", ":")).encode()).hexdigest()
     return {"state": "complete", "source": "segment_receipt", "boundary_index": boundary, "sha256": fingerprint,
             "live_adjustments": live_adjustments,
@@ -409,8 +605,34 @@ def canonical_evidence(value):
     return value
 
 
-def _verified_cells(score: dict, evaluation: Path, seed: int) -> dict:
-    actual = measure_cells(evaluation, score["checkpoint_sha256"], seed)
+def stored_mae_definition(cells, plan_window_s):
+    """(judged window, record window) the PRIOR window's saved cells were counted with, so its raw recount uses the same MAE definition.
+
+    The prior boundary was judged under its own definition (per-step MAE, or a window): the saved cells say which (mae_basis,
+    mae_window_s per cell). Cells that carry no basis are the per-step definition. Only when every MAE cell agrees is the saved
+    definition used; any disagreement keeps the current plan's window, so the recount differs and the prior stays refused."""
+    seen = set()
+
+    def walk(node):
+        if isinstance(node, dict):
+            if "mae_mps" in node:
+                basis = node.get("mae_basis")
+                seen.add((None, None) if basis is None else
+                         (node.get("mae_window_s"), None) if basis == "window" else (None, node.get("mae_window_s")))
+            else:
+                for child in node.values():
+                    walk(child)
+    walk(cells)
+    return next(iter(seen)) if len(seen) == 1 else (plan_window_s, None)
+
+
+def _verified_cells(score: dict, evaluation: Path, seed: int, mae_window_s=None, *, saved_definition: bool = False) -> dict:
+    """Recount the raw files and compare with the score's cells. saved_definition: count with the MAE definition the saved cells
+    carry (a window judged under an older definition is checked by that definition); otherwise with mae_window_s."""
+    record_window_s = None
+    if saved_definition:
+        mae_window_s, record_window_s = stored_mae_definition(score.get("e1_v2_cells"), mae_window_s)
+    actual = measure_cells(evaluation, score["checkpoint_sha256"], seed, mae_window_s=mae_window_s, record_window_s=record_window_s)
     if ("e1_v2_cells" in score
             and canonical_evidence(actual) != canonical_evidence(score["e1_v2_cells"])):
         raise ValueError("E1 v2 cached cells differ from source identity or raw values")
@@ -450,20 +672,22 @@ def _judge_e1_v2(score: dict, baseline: dict, measured: dict, plan: dict,
     previous_filtered = {**previous, "d44_cells": previous_turn} if previous is not None else None
     result = judge_e1(current_filtered, baseline, measured, legacy_plan, previous=previous_filtered)
     result["d44_cells"] = score["d44_cells"]
-    score = {**score, "e1_v2_cells": _verified_cells(score, evaluation, seed)}
+    score = {**score, "e1_v2_cells": _verified_cells(score, evaluation, seed, plan_mae_window_s(plan))}
     result["e1_v2_cells"] = score["e1_v2_cells"]
     repeats = {}
     for repeat_seed in plan["evaluation"]["e1_exit_v2"]["repeat_seeds"][1:]:
         folder = evaluation / f"e1_v2_repeat_seed{repeat_seed}"
         if folder.exists():
-            repeats[repeat_seed] = measure_cells(folder, score["checkpoint_sha256"], repeat_seed)
+            repeats[repeat_seed] = measure_cells(folder, score["checkpoint_sha256"], repeat_seed,
+                                                mae_window_s=plan_mae_window_s(plan))
     previous_cells = previous.get("e1_v2_cells", {}) if previous is not None else {}
     if previous_cells:
-        _verified_cells(previous, Path(previous["e1_v2_evaluation"]), seed)
+        _verified_cells(previous, Path(previous["e1_v2_evaluation"]), seed, plan_mae_window_s(plan), saved_definition=True)
     expected_repeats = set(plan["evaluation"]["e1_exit_v2"]["repeat_seeds"][1:])
-    current_v2 = judge_cells(result["e1_v2_cells"], plan,
-                             repeats=repeats if set(repeats) == expected_repeats else None,
-                             previous_cells=previous_cells)
+    # A graduation plan lists record_cells (L5 side +-0.4); apply_record_cells is a no-op for every other plan.
+    current_v2 = apply_conditional_record(apply_record_cells(judge_cells(
+        result["e1_v2_cells"], plan, repeats=repeats if set(repeats) == expected_repeats else None,
+        previous_cells=previous_cells), plan), plan, _window_iteration(checkpoint))
     if repeats and set(repeats) != expected_repeats:
         current_v2["repeat_evidence"] = {"judgement": "HOLD", "reason": "세 시드 자료 일부 결측"}
     # The prior P1 receipt has already judged its own seed 42/7/13 bundle.
@@ -472,6 +696,8 @@ def _judge_e1_v2(score: dict, baseline: dict, measured: dict, plan: dict,
     prior_v2 = ((previous.get("e1_exit_v2") or {}).get("current") if previous is not None else None)
     if not isinstance(prior_v2, dict) or prior_v2.get("judgement") not in ("PASS", "HOLD", "FAIL"):
         prior_v2 = {"judgement": "HOLD", "reason": "직전 창 v2 판정 없음"}
+    elif isinstance(prior_v2.get("items"), dict):
+        prior_v2 = apply_conditional_record_prior(prior_v2, plan, previous)      # a previous window stored before v3 is read under the same rule (no key = unchanged)
     match = re.fullmatch(r"model_(\d+)\.pt", Path(checkpoint).name)
     if match is None:
         raise ValueError("E1 v2 checkpoint iteration missing")

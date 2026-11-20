@@ -64,8 +64,20 @@ def validate_automatic_stage_launch(
         raise ValueError('EX-42 automatic gate receipt SHA differs')
     gate = json.loads(raw)
     source_stage = gate.get('stage_id') if isinstance(gate, dict) else None
-    if (not isinstance(gate, dict) or gate.get('judgment') != 'PASS'
-            or source_stage not in proof['source_stage_ids']):
+    cap_handoff = isinstance(gate, dict) and gate.get('state') == 'cap_handoff'
+    score = gate
+    if cap_handoff:
+        # E1 handed over without a graduation PASS on the team lead's recorded approval: the receipt is read back in full
+        # (boundary score, missed cells recounted, maintenance PASS, survival floor, ledger line) and its boundary score is the score.
+        from foothold_s2.curriculum.ex42_prep import stage_exit_updates
+        from foothold_s2.ex42_e1_cap_handoff import read_cap_handoff
+        if source_stage != 'E1' or gate.get('judgment') != 'CAP_HANDOFF':
+            raise ValueError('EX-42 automatic cap handoff must be an E1 receipt')
+        got = read_cap_handoff(gate_path, exit_updates=stage_exit_updates(plan.document, 'E1'))
+        score = json.loads(Path(got['p1_score_path']).read_text(encoding='utf-8-sig'))
+    elif (not isinstance(gate, dict) or gate.get('judgment') != 'PASS'):
+        raise ValueError('EX-42 automatic gate must be predecessor PASS under this plan')
+    if source_stage not in proof['source_stage_ids']:
         raise ValueError('EX-42 automatic gate must be predecessor PASS under this plan')
     transition = None
     if gate.get('plan_sha256') != plan.sha256:
@@ -87,9 +99,9 @@ def validate_automatic_stage_launch(
     stage = next(row for row in plan.document['stages'] if row['id'] == target_stage)
     iteration = stage['parent']['manifest_local_update']
     manifest = json.loads(Path(parent_manifest_path).read_text(encoding='utf-8-sig'))
-    validate_score_pair(expected_iteration=iteration, score=gate, manifest=manifest,
+    validate_score_pair(expected_iteration=iteration, score=score, manifest=manifest,
                         checkpoint_exists=True, checkpoint_sha256=parent['checkpoint_sha256'])
-    validate_ex42_map_score(gate, ['gt', 'pred', 'off'])
+    validate_ex42_map_score(score, ['gt', 'pred', 'off'])
     measurement_name = gate.get('measurement')
     if not isinstance(measurement_name, str) or not measurement_name:
         raise ValueError('EX-42 automatic gate measurement is absent')

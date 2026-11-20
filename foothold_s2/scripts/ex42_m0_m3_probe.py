@@ -145,7 +145,9 @@ def main(argv=None):
     timer=threading.Timer(600,watchdog);timer.daemon=True;timer.start();app=None
     try:
         app=run(args,result,started)
-        app.close();app=None
+        # Publish the receipt BEFORE app.close (as run()'s comment says): on this machine app.close() spins in
+        # simulation_context._app_control_on_stop_handle_fn -> render() and never returns (11/17 00:24 and 10:44 probes
+        # measured everything in under 60 s, then sat in close until the 600 s watchdog wrote a timeout marker).
         result['elapsed_seconds']=time.monotonic()-started
         errors=m.probe_errors(result,result['identity'])
         if errors: raise ValueError(str(errors))
@@ -157,6 +159,9 @@ def main(argv=None):
     m.write_once(args.out,result)
     print(json.dumps({'status':result['status'],'receipt':m.file_ref(args.out)}),flush=True)
     timer.cancel()
+    if app is not None:
+        # Kit shutdown is not part of the measurement and hangs here: leave without closing it (the receipt is published and flushed).
+        sys.stdout.flush();sys.stderr.flush();os._exit(code)
     return code
 
 

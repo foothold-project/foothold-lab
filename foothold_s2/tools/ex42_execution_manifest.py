@@ -226,7 +226,13 @@ def assemble_saved_mesh(plan, mesh_dir, declarations, declaration_paths):
             and sha_file(mesh_dir/'terrain_mesh.npz') != receipt['mesh_file_sha256']):
         raise ValueError('saved mesh file SHA differs from measurement receipt')
     annotation = None
-    if 'flag_annotation_source' in receipt:
+    if 'beam_splice' in receipt:       # B/beam splice on top of a ladder-splice source: verifies the source chain too
+        from foothold_s2.scripts.ex42_beam_splice_mesh import verify_beam_splice
+        annotation = verify_beam_splice(mesh_dir)
+    elif 'ladder_splice' in receipt:
+        from foothold_s2.tools.ex42_ladder_splice import verify_ladder_splice
+        annotation = verify_ladder_splice(mesh_dir)
+    elif 'flag_annotation_source' in receipt:
         from foothold_s2.tools.ex42_mesh_flags import verify_annotation
         annotation = verify_annotation(mesh_dir)
     mesh = load_combined_mesh(mesh_dir/'terrain_mesh.npz', receipt['mesh_sha256'])
@@ -349,9 +355,20 @@ def main(argv=None):
     parser.add_argument('--mesh-dir', type=Path, required=True)
     parser.add_argument('--declarations', type=Path, action='append', required=True)
     parser.add_argument('--output', type=Path, required=True)
+    parser.add_argument('--candidate-pin', action='store_true',
+                        help='candidate mesh (ladder splice): take the mesh identity pin of the plan from the mesh receipt IN MEMORY (the plan file '
+                             'is not touched) and record the override in the manifest provenance; the plan must be re-pinned before training')
     args = parser.parse_args(argv)
     plan = EX42Plan.load(args.table)
+    override = None
+    if args.candidate_pin:
+        pin = plan.document['assumptions_pending_lead']['terrain_manifest_measurements']['value']
+        new_sha = read_object(args.mesh_dir/'mesh_manifest.json')['mesh_sha256']
+        override = {'plan_pin_mesh_sha256': pin['mesh_sha256'], 'candidate_mesh_sha256': new_sha, 'plan_file_changed': False}
+        pin['mesh_sha256'] = new_sha
     manifest = assemble_saved_mesh(plan, args.mesh_dir, read_declarations(args.declarations), args.declarations)
+    if override is not None:
+        manifest['provenance']['candidate_pin_override'] = override
     write_once(args.output, manifest)
     print(json.dumps({'status': manifest['status'], 'kinds': len(manifest['kinds']),
         'missing': [{'family': r['family'], 'kind': r['kind'], 'fields': r['fields']}

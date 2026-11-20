@@ -69,7 +69,14 @@ def foot_edge_term(env, sensor_cfg, asset_cfg):
     tables = getattr(env, "s2_tables", None)
 
     if tables is None:
-        return record(env, "foot_edge", torch.zeros(env.num_envs, device=env.device))
+        mesh = getattr(env, "ex42_edge_tables", None)           # EX-42 합친 메시: 메시 윗면에서 만든 마스크 (terrains/ex42_edge_masks.py). 없으면 아래처럼 0 (옛 메시)
+        if mesh is None:
+            return record(env, "foot_edge", torch.zeros(env.num_envs, device=env.device))
+        feet = env.scene[asset_cfg.name].data.body_pos_w[:, asset_cfg.body_ids, :2]
+        force = env.scene.sensors[sensor_cfg.name].data.net_forces_w[:, sensor_cfg.body_ids]
+        contact = torch.linalg.norm(force, dim=-1) > 1.0
+        terrain = env.scene.terrain
+        return record(env, "foot_edge", mesh.penalty(feet, contact, terrain.terrain_levels, terrain.terrain_types))
 
     feet = env.scene[asset_cfg.name].data.body_pos_w[:, asset_cfg.body_ids, :2]
     force = env.scene.sensors[sensor_cfg.name].data.net_forces_w[:, sensor_cfg.body_ids]
@@ -91,6 +98,18 @@ def track_lin_vel_min_form(env, command_name, std, asset_cfg=SceneEntityCfg("rob
     cmd = env.command_manager.get_command(command_name)[:, :2]
 
     return torch.exp(-torch.sum((torch.minimum(asset.data.root_lin_vel_b[:, :2], cmd) - cmd) ** 2, dim=-1) / std ** 2)
+
+
+def track_lin_vel_min_on_columns(env, command_name, std, min_columns, asset_cfg=SceneEntityCfg("robot")):
+    """선속도 추종 (EX-42 처방 후보 2): 지형 열이 `min_columns` 인 env 만 START 원문 식 (min(v, cmd), 과속 무벌점), 나머지는 정확 추종 (`track_lin_vel_xy_exp` 와 같은 식).
+    항 이름 · std 칸은 그대로라 실시간 조정 (track_lin_vel_std) 이 그대로 먹는다. `EX42_TRACK_LIN_MIN_KINDS` 로 켠다 (ex42_gap_switches)."""
+    from foothold_s2.ex42_gap_switches import column_env_mask, track_lin_mixed
+
+    asset = env.scene[asset_cfg.name]
+    terrain = env.scene.terrain
+    on = column_env_mask(terrain.terrain_types, tuple(min_columns), int(terrain.terrain_origins.shape[1]))
+
+    return track_lin_mixed(asset.data.root_lin_vel_b[:, :2], env.command_manager.get_command(command_name)[:, :2], std, on)
 
 
 def calf_ext_limit_band(env, asset_cfg=SceneEntityCfg("robot", joint_names=".*_calf_joint"), margin=core.CALF_BAND_MARGIN):

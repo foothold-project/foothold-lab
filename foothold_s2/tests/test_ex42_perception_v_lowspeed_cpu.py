@@ -15,8 +15,8 @@ from foothold_s2.runners.start_runner import StartRunner
 from foothold_s2.tests.start_fake_env import FakeStartEnv, train_cfg
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
-PLAN_SHA = "1f4ff70d8820e2e754ed1120b821fafb22a04e40d7f84f1ff0a9a9cfedff8a92"
-APPROVALS_SHA = "80a6079b5d77f6f65e7be71c120982f8e7f1379666bc890f68e2c267a7d10696"
+PLAN_SHA = "c90cd869c03cf4524761c4507f896ddad36c82129d1ec5cea49f1b8fd380a26b"
+APPROVALS_SHA = "436b385ae301824b1e4cc28a5beb48ef8356fe047907d7d0bc2e25bb3d26e62a"
 OLD_KEYS = {"l_tr", "l_ie", "kl", "o_next", "v", "hf", "hb"}
 
 
@@ -148,7 +148,7 @@ def test_real_runner_batch_the_weight_changes_the_velocity_loss_only_through_the
         b = _truth(base, vx, vy)
         off, on = loss(b, 1.0), loss(b, 3.0)
         assert float(on["v"]) > float(off["v"]), (vx, vy)
-        assert float(on["l_ie"]) - float(off["l_ie"]) == pytest.approx(float(on["v"]) - float(off["v"]), rel=1e-3)
+        assert float(on["l_ie"]) - float(off["l_ie"]) == pytest.approx(sp.PERCEPTION_V_LOSS_COEF * (float(on["v"]) - float(off["v"])), rel=1e-3)  # l_ie carries PERCEPTION_V_LOSS_COEF (v29-9 P-v) on its v term
         for k in ("kl", "o_next", "hf", "hb", "l_tr"):
             assert float(on[k]) == pytest.approx(float(off[k]), rel=1e-6)                 # nothing else moves
     # the increment is the sum of the per-axis increments: weighted vx only + weighted vy only = both, with the same estimate and truth in the other column

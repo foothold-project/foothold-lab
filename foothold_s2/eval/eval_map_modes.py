@@ -67,16 +67,17 @@ parser.add_argument("--push-ladder-map-mode", choices=("eval_gt", "eval_pred", "
 parser.add_argument("--push-ladder-command", choices=("walk_0.5", "walk_1.0", "walk_1.5", "stand_turn_1.2", "stand"), default="walk_0.5")
 parser.add_argument("--push-ladder-directions", choices=("full", "cardinal"), default="full")
 parser.add_argument("--eval-seed", type=int, default=42, help="명령마다 env.reset 앞에서 torch.manual_seed 에 주는 값(시작 위치 · 관측 잡음, 행동은 평균). 기본 42 = 기존과 같음. 지형 기하 시드(SPARSE_GEOMETRY_SEED)는 따로 고정이라 안 바뀐다")
+parser.add_argument("--start-yaw-zero", action="store_true", help="E1 wide fixed cells and EX-42 named-kind cells only: set every env start yaw to +x (0 rad) after the fixed-terrain reset; position and joints stay (lead 11/15 팀장 21:49)")
 parser.add_argument("--out", required=True)
 AppLauncher.add_app_launcher_args(parser)
 args = parser.parse_args()
 friction_policy = ex42_friction.map_policy(args)
 kind_cell = args.ex42_kind_family is not None or args.ex42_kind_name is not None
 if kind_cell and (not args.ex42_kind_family or not args.ex42_kind_name or not args.mesh_dir
-                  or not args.fixed_terrain or args.fixed_level is None or args.envs != 64
+                  or not args.fixed_terrain or args.fixed_level is None or args.envs not in (32, 64)
                   or args.terrain_set != "default" or args.axis_v2 or args.terrain_skill
                   or args.terrain_skill_v2 or args.push_ladder):
-    parser.error("EX-42 kind cell needs family, kind, mesh, fixed level and 64 env without other suites")
+    parser.error("EX-42 kind cell needs family, kind, mesh, fixed level and 32 or 64 env without other suites")
 if args.mesh_dir and (args.terrain_set != "default" or args.push_ladder or args.terrain_skill
                       or args.terrain_skill_v2 or not args.fixed_terrain):
     parser.error("--mesh-dir needs fixed default terrain without other terrain suites")
@@ -125,6 +126,8 @@ if args.fixed_level is not None and not 0 <= args.fixed_level <= 9:
     parser.error("--fixed-level 은 0..9 정수(지형 레벨 행 수 10)")                                  # 행 수 대조는 apply 에서 한 번 더
 if args.eval_seed < 0:
     parser.error("--eval-seed 는 0 이상 정수(Kit 기동 전 거절)")
+if args.start_yaw_zero and ((args.command_suite != "e1_wide_fixed" and not kind_cell) or not args.fixed_terrain or args.fixed_level is None or parser_sparse):
+    parser.error("--start-yaw-zero 는 --command-suite e1_wide_fixed 나 --ex42-kind-* 종 칸과, --fixed-terrain --fixed-level N 에만 쓴다(Kit 기동 전 거절)")
 CMD_NAMES = tuple(_command_cells.commands(args.command_suite))
 WANT_CMDS = CMD_NAMES if args.commands == "all" else tuple(args.commands.split(","))
 
@@ -313,7 +316,7 @@ def _run_identity():
 
 
 def _save_env_arrays(mode, cname, vx, fw, al, dn, dt, start_xy, row, map_err=None,
-                     kind_foot_arrays=None):
+                     kind_foot_arrays=None, vy=None, wz=None):
     """X27j: env 별 기록 npz(env_arrays_<mode>_<cmd>.npz). 지형 종류 이름 · 열(terrain_types) · 레벨 행(terrain_levels) · 시작 위치 · 종료 사유 · 전진 거리 · 생존.
     종류 이름은 지형 생성기의 sub_terrain 비율과 열 수로 만든 열 -> 종류 표(columns.column_types)에서 계산한다(계산 근거는 map_modes.json 의 env_array_basis)."""
     terrain = raw.scene.terrain
@@ -362,7 +365,7 @@ def _save_env_arrays(mode, cname, vx, fw, al, dn, dt, start_xy, row, map_err=Non
         contact, foot_local = kind_foot_arrays
         fixed_terrain.verify_kind_foot_arrays(contact, foot_local, al)
         extra.update(foot_contact=contact, foot_pos_local=foot_local,
-                     root_x_local_m=fw)
+                     root_x_local_m=fw, root_y_local_m=POS[:, :, 1].cpu().numpy())
         row["kind_foot_evidence"] = {"foot_order": ["FL_foot", "FR_foot", "RL_foot", "RR_foot"],
                                      "contact_threshold_n": 1.0,
                                      "valid_mask": "alive excludes post-reset samples",
@@ -370,6 +373,10 @@ def _save_env_arrays(mode, cname, vx, fw, al, dn, dt, start_xy, row, map_err=Non
     if args.command_suite == "e1_wide_fixed":
         extra["root_x_local_m"] = fw
         extra["root_y_local_m"] = POS[:, :, 1].cpu().numpy()
+    if vy is not None:        # v29-14c: body vy and yaw rate beside vx so the side and turn cells can be windowed like the forward ones
+        extra["vy"] = vy
+    if wz is not None:
+        extra["wz"] = wz
     np.savez(os.path.join(args.out, "env_arrays_%s_%s.npz" % (mode, cname)), env=np.arange(len(col)), terrain_level=lev, terrain_col=col, kind=kind, start_xy=start_xy,
              fwd_end_m=fw[-1], body_vx_integral_m=dist, alive_end=al[-1], alive_steps=al.sum(0), first_done_step=first_done, end_reason=reason,
              vx=vx, alive=al, dones=dn, dt=dt, assignment_sha256=fixed_terrain.assignment_sha256(lev, col),
@@ -538,6 +545,17 @@ for mode in args.modes.split(","):
             START_SUPPORT = _gh.start_support(_sp2.SIDE_TABLE, _names, int(_gen.num_rows), res["fixed_terrain"]["tiles"],
                                               (robot.data.root_pos_w[:, :2] - raw.scene.env_origins[:, :2]).cpu().numpy())      # 시작 자리가 발판 위인가(빔 밖 · 구덩이 시작 판별): reset · yaw 맞춤 뒤 이 명령의 실제 시작 xy(아래 offset 과 같은 값)
             res["terrain_geometry_sha256"] = _gh.geometry_record(_sp2.SIDE_TABLE, _names, int(_gen.num_rows), [(t["level"], t["col"]) for t in res["fixed_terrain"]["tiles"]])
+        if args.start_yaw_zero:                                                          # 넓힌 칸: reset 이 뽑는 무작위 yaw 로는 «전진» 이 지도 +x 와 어긋난다. 시작 yaw 만 0 으로(위치 · 관절은 그대로), 듬성 평가와 같은 방식
+            st = robot.data.root_state_w.clone()
+            st[:, 3:7] = torch.tensor([1.0, 0.0, 0.0, 0.0], device=dev)               # 쿼터니언 w x y z
+            st[:, 7:] = 0.0
+            robot.write_root_pose_to_sim(st[:, :7])
+            robot.write_root_velocity_to_sim(st[:, 7:])
+            q = robot.data.root_quat_w
+            yaw0 = torch.atan2(2.0 * (q[:, 0] * q[:, 3] + q[:, 1] * q[:, 2]), 1.0 - 2.0 * (q[:, 2] ** 2 + q[:, 3] ** 2))
+            if yaw0.abs().max().item() > 1.0e-3:
+                raise RuntimeError("넓힌 칸 평가: 시작 yaw 를 0 으로 맞추지 못했다(최대 %.4f rad)" % yaw0.abs().max().item())
+            res["start_yaw_override"] = 0.0
         offset = (robot.data.root_pos_w[:, :2] - raw.scene.env_origins[:, :2]).abs().max().item()      # 로봇이 (고정한) 새 원점 근처에서 시작했는지: B 의 reset 은 원점 기준 x · y ±0.5 m
 
         if offset > START_OFFSET_MAX_M + 1.0e-3:
@@ -712,7 +730,7 @@ for mode in args.modes.split(","):
         _save_env_arrays(mode, cname, vx, FW.cpu().numpy(), al, DN.cpu().numpy(), dt, START_XY0, row,
                          map_err=None if mode == "none" else ERR.cpu().numpy(),
                          kind_foot_arrays=(FOOT_CONTACT.cpu().numpy(), FOOT_POS.cpu().numpy())
-                         if kind_cell else None)  # EX-42 kind completion remains unjudged.
+                         if kind_cell else None, vy=vy, wz=wz)  # EX-42 kind completion remains unjudged. vy, wz: v29-14c raw for the side-cell window MAE.
         if parser_sparse:                                                                # 새 키 · 새 파일만 더한다. 기존 키 · 기존 칸은 그대로
             from foothold_s2.eval import kind_stats
 
@@ -844,7 +862,8 @@ out_json = os.path.join(args.out, "map_modes.json")
 if kind_cell:
     from foothold_s2.eval.ex42_mesh_eval import validate_kind_cell
     validate_kind_cell(res, args.ex42_mesh, family=args.ex42_kind_family,
-                       kind=args.ex42_kind_name, level=args.fixed_level)
+                       kind=args.ex42_kind_name, level=args.fixed_level, envs=args.envs,
+                       start_yaw_zero=args.start_yaw_zero)
 with open(out_json + ".tmp", "w", encoding="utf-8") as stream:
     res["evaluation_friction"] = ex42_friction.verify(raw, friction_policy)
     json.dump(res, stream, ensure_ascii=False, indent=1, allow_nan=False)

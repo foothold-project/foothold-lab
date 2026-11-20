@@ -190,7 +190,7 @@ def test_full_e1_v2_keeps_prior_three_seed_pass_and_stop_cases_record_only(tmp_p
     score["e1_v2_cells"] = current_cells
     # This is the two-window combiner test. Real producer/raw validation is
     # covered independently by test_ex42_e1_source_identity_cpu.py.
-    monkeypatch.setattr("foothold_s2.ex42_e1_v2._verified_cells", lambda s, *_: s["e1_v2_cells"])
+    monkeypatch.setattr("foothold_s2.ex42_e1_v2._verified_cells", lambda s, *_, **__: s["e1_v2_cells"])
     for case in ("stop_restart_eval_gt", "stop_restart_eval_pred"):
         score["d44_cells"][case] = _landing(plan, tmp_path, case, success=0)
         previous["d44_cells"][case] = _landing(plan, tmp_path, case, success=0)

@@ -74,7 +74,7 @@ SMALL_NOISE_SIGMA_SCALE = 0.2
 # v28m (lead 11/15 07:02, ON by default; set the threshold to 0 to turn it off: the share above then applies as in v28l):
 # an env whose command has |(vx, vy)| below the threshold rolls out with the small noise for that step, decided again at
 # every step from the command it acts on (so on every command resample); the other envs keep a fixed spread share.
-SMALL_NOISE_LOWSPEED_CMD = 0.0   # v28p: OFF (v28n had 0.3); set 0.3 to bring the v28n rule back (then the rest share below applies)
+SMALL_NOISE_LOWSPEED_CMD = 0.3   # v29-4 (lead 11/15 15:27): the v28n rule is ON (v28p had 0.0 = OFF); 0.0 turns it off again (then only SMALL_NOISE_ENV_SHARE applies)
 SMALL_NOISE_REST_SHARE = 0.25
 # v28p (lead 11/15 09:26, ON by default; set the share to 0 to turn it off: nothing below changes then, bit-identical to v28n/v28f):
 # this share of the envs (spread evenly over the env index, same on every rank) acts with the MEAN action (noise exactly 0).

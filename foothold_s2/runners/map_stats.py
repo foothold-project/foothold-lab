@@ -48,8 +48,10 @@ class MapStatsRecorder:
         self.in_step = False
         self._last_refined = None
 
-    def attach(self) -> None:
-        p = self.runner.perception
+    def attach(self, p=None) -> None:
+        if p is None:
+            p = self.runner.perception
+            self.runner._map_stats_recorder = self   # v29-7: the runner wraps its averaged perception copy the same way (it does not take the online module's closures along)
         orig_step, orig_adv = p.step, p._advance
         rec = self
 
