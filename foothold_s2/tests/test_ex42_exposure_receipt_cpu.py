@@ -326,12 +326,13 @@ def _caps(terrain, stage="E2"):
 def test_a_kind_that_passed_gets_its_cap_up_by_one_and_the_receipt_has_before_and_after():
     from foothold_s2.terrains.ex42_exposure import raise_kind_caps
     start = _e2_terrain()
-    assert set(_caps(start).values()) == {2}                                       # the bundle opens at cap 2 on K
+    START = {"A/gaps": 1, "B/gap": 2, "C/gap": 2, "B/beam": 2, "A/balance_beams": 1}   # E2 v1 (11/20): the two first-door kinds open at cap 1, the other three at 2
+    assert _caps(start) == START
     moved, moves = raise_kind_caps(start, "E2", 2, [{"A/gaps": PASS, "B/gap": {"first_window_pass": False}}, {"A/gaps": PASS, "C/gap": PASS}])
-    assert _caps(moved) == {"A/gaps": 4, "B/gap": 2, "C/gap": 3, "B/beam": 2, "A/balance_beams": 2}
-    assert [(m["boundary"], m["kind"], m["before"], m["after"]) for m in moves] == [(1, "A/gaps", 2, 3), (2, "A/gaps", 3, 4), (2, "C/gap", 2, 3)]
+    assert _caps(moved) == {"A/gaps": 3, "B/gap": 2, "C/gap": 3, "B/beam": 2, "A/balance_beams": 1}
+    assert [(m["boundary"], m["kind"], m["before"], m["after"]) for m in moves] == [(1, "A/gaps", 1, 2), (2, "A/gaps", 2, 3), (2, "C/gap", 2, 3)]
     assert all(m["axis"] == "terrain_kind_level_cap" and m["because"] == "first_window_pass" for m in moves)
-    assert _caps(start) == {k: 2 for k in _caps(start)}                            # the plan itself never changes
+    assert _caps(start) == START                                                   # the plan itself never changes
 
 
 def test_no_evidence_is_a_hold_and_the_cap_stops_at_end_and_the_continuous_rule_never_moves():
@@ -339,7 +340,7 @@ def test_no_evidence_is_a_hold_and_the_cap_stops_at_end_and_the_continuous_rule_
     start = _e2_terrain()
     assert raise_kind_caps(start, "E2", 3, None)[1] == [] and raise_kind_caps(start, "E2", 0, [{"A/gaps": PASS}])[1] == []
     moved, moves = raise_kind_caps(start, "E2", 5, [{"A/gaps": PASS}] * 5)
-    assert _caps(moved)["A/gaps"] == 5 and len(moves) == 3                         # 2 -> 5, then nothing more
+    assert _caps(moved)["A/gaps"] == 5 and len(moves) == 4                         # 1 -> 5, then nothing more
     continuous = [r for r in moved["exposure_at_E2"]["positive"] if "kinds_of" in r][0]
     assert continuous["level_cap"] == 5
     graduated = _e2_terrain(); no_cell = {k: v for k, v in graduated.items() if k != "kind_level_cap"}
@@ -353,8 +354,8 @@ def test_the_e2_boundary_receipt_records_the_cap_move_and_the_consumer_replays_i
     plan = EX42Plan.load(PLAN)
     contract = _contract("E2", k=1, outcomes=[{"A/gaps": PASS, "B/beam": PASS}])
     body = er.build_receipt(contract, stage_id="E2", plan_sha256=PSHA, iteration=250, kind="boundary")
-    assert [(m["kind"], m["before"], m["after"]) for m in body["k_ladder_moves"]] == [("A/gaps", 2, 3), ("B/beam", 2, 3)]
-    assert body["opened_kinds"]["A/gaps"] == 3 and body["opened_kinds"]["B/gap"] == 2
+    assert [(m["kind"], m["before"], m["after"]) for m in body["k_ladder_moves"]] == [("A/gaps", 1, 2), ("B/beam", 2, 3)]
+    assert body["opened_kinds"]["A/gaps"] == 2 and body["opened_kinds"]["B/gap"] == 2
     assert [m["kind"] for m in er.recompute_from_plan(body, plan)["moves"]] == ["A/gaps", "B/beam"]
     fake = json.loads(json.dumps(body)); fake["k_ladder_moves"] = []; fake["sha256"] = er._sha(fake)
     with pytest.raises(ValueError, match="k moves differ"):
