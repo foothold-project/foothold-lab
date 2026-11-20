@@ -299,6 +299,33 @@ def execute_kind_stage_children(checkpoint, output, device, *, task, plan_path, 
 G1_SUITES = ("hipan_g1", "hipan_g1b")
 
 
+def continuous_boundary_plan(**kwargs):
+    """Opt-in only: default path does not even inspect the added evidence."""
+    from foothold_s2 import ex42_continuous_cells as cells
+    return cells.build_plan(**kwargs) if cells.enabled() else None
+
+
+def run_continuous_boundary(*, checkpoint, output, **kwargs):
+    from foothold_s2 import ex42_continuous_cells as cells
+    if not cells.enabled():
+        return None
+    # This sidecar cannot change the legacy score or handoff. Technical failures
+    # are visible HOLD_NO_DATA, never absent or a silently passing empty bundle.
+    try:
+        spec = continuous_boundary_plan(checkpoint=checkpoint, output=output,
+                                        **{k: kwargs[k] for k in ('device', 'task', 'plan_path', 'plan',
+                                                                 'mesh_dir', 'stage_id', 'opened')})
+        return cells.execute(spec, checkpoint=checkpoint, output=output,
+                             **{k: kwargs[k] for k in ('checkpoint_sha256', 'mesh', 'plan_path',
+                                                      'process', 'env', 'physical_gpu')})
+    except (OSError, ValueError, KeyError, TypeError, subprocess.SubprocessError) as exc:
+        path = Path(output) / 'continuous_cells.json'
+        cells.write(path, {'definition': cells.DEFINITION, 'judgement': 'HOLD_NO_DATA',
+                           'reason': f'{type(exc).__name__}: {exc}', 'cells': []})
+        return {'path': str(path), 'sha256': cells.sha(path), 'judgement': 'HOLD_NO_DATA',
+                'decision_use': 'record_only'}
+
+
 def e1_v2_commands(checkpoint, output, device, cfg, *, eval_seed, mesh_dir, evaluation_plan):
     """The six low-speed commands, two pinned A levels and all three map modes."""
     if mesh_dir is None:
@@ -681,6 +708,9 @@ def run(checkpoint, expected_sha256, output, device, *, eval_seed=None, mesh_dir
         raise ValueError("EX-42 P1 requires plan, approvals, iteration and pinned mesh")
     if evaluation_plan is not None and p1_plan is None:
         raise ValueError("EX-42 evaluation plan requires a P1 execution plan")
+    from foothold_s2 import ex42_continuous_cells as continuous
+    if continuous.enabled() and p1_plan is None:
+        raise ValueError("continuous boundary cells require a P1 execution plan")
     policy_path = Path(evaluation_plan or p1_plan).resolve(strict=True) if p1_plan is not None else None
     from foothold_s2.eval.ex42_friction import DEFAULT_PLAN, load_policy
     friction_policy = load_policy(policy_path or DEFAULT_PLAN)
@@ -995,6 +1025,22 @@ def run(checkpoint, expected_sha256, output, device, *, eval_seed=None, mesh_dir
             row.update(state="HOLD", reason=f"EX-42 {p1_stage_id} named-kind evaluation failed: {exc}")
             _atomic(output / "eval_receipt.json", row)
             return 5
+    # Independently recorded retention cells; no training/exit judgment is overwritten.
+    from foothold_s2 import ex42_continuous_cells as continuous
+    if continuous.enabled() and p1_plan is not None:
+        try:
+            from foothold_s2.curriculum.ex42_prep import EX42Plan
+            from foothold_s2.ex42_kind_stage_judge import opened_kinds
+            execution = EX42Plan.load(p1_plan)
+            caps = opened_kinds(checkpoint, stage_id=p1_stage_id, plan_sha256=execution.sha256,
+                                plan=execution.document)
+        except (OSError, ValueError, KeyError) as exc:
+            caps = {}  # Missing cap is emitted as HOLD_NO_DATA by the sidecar, never plan fallback.
+        row['continuous_cells'] = run_continuous_boundary(
+            checkpoint=checkpoint, output=output, device=device, task=cfg['task'], plan_path=policy_path,
+            plan=policy.document, mesh_dir=mesh_dir, stage_id=p1_stage_id, opened=caps,
+            checkpoint_sha256=expected_sha256, mesh=mesh, process=process, env=env, physical_gpu=physical_gpu)
+        _atomic(output / 'eval_receipt.json', row)
     try:
         score = measure(checkpoint, output, expected_seed=seed,
                         expected_mesh_sha256=mesh["mesh_sha256"] if mesh else None,
@@ -1165,6 +1211,18 @@ def main(argv=None):
                 kind_stage_kit_commands(args.checkpoint, args.out, args.device, task=config()[0]["task"], plan_path=policy_path,
                                         plan=policy.document, mesh_dir=args.mesh_dir,
                                         seed=config()[0]["eval_seed"] if args.eval_seed is None else args.eval_seed, kinds=wanted)]}
+        from foothold_s2 import ex42_continuous_cells as continuous
+        if continuous.enabled():
+            if args.p1_plan is None:
+                parser.error('continuous boundary cells require a P1 execution plan')
+            execution = EX42Plan.load(args.p1_plan)
+            from foothold_s2.ex42_kind_stage_judge import opened_kinds
+            caps = opened_kinds(args.checkpoint, stage_id=args.p1_stage_id,
+                                plan_sha256=execution.sha256, plan=execution.document)
+            plan['continuous_cells'] = continuous_boundary_plan(
+                checkpoint=args.checkpoint, output=args.out, device=args.device, task=config()[0]['task'],
+                plan_path=policy_path, plan=policy.document, mesh_dir=args.mesh_dir,
+                stage_id=args.p1_stage_id, opened=caps)
         print(json.dumps(plan))
         return 0
     return run(args.checkpoint, expected_sha, args.out, args.device,
