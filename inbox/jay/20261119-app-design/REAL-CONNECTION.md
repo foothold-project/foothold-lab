@@ -178,6 +178,8 @@ Go2 본체 (DDS 토픽 `rt/lowstate` · `rt/sportmodestate` 등) → 랜선 `enP
 
 ---
 
+> **11/20 덧붙임 (app-design-lx 직접 잼):** Jetson agent r24 설치 끝 (11/20 18:26 · `7c8397cc`) · 자동 시작 꺼짐 · 오늘 19:00 쯤 손으로 띄워 서버 현장 승인까지 받은 기록 (승인 만료 19:30) · 앱 서버는 NaverCloud GPU 서버 (L4). 자세히는 `APP-AUDIT.md` 1.6.3.
+
 ## 6. 로컬에서 「실기가 붙은 화면」 을 재현하는 후보
 
 이미 있는 것: `apps/web/tools/dev_stack.py` (임시 PostgreSQL · uvicorn · 계정 셋 · 로봇 `Go2-7` 하나 · 가짜 agent). 이 가짜 agent 는 평범한 `Session` 이라 `robot_info` · 배터리 · 장치를 안 보내고, 로봇에 `serial` 이 없고 (`dev_stack.py:60`), uvicorn 에 `FH_SERVER_DRIVE_ENABLED` 를 안 준다 (`dev_stack.py:67`). 그래서 앞선 실사가 빈 화면만 찍었다.
