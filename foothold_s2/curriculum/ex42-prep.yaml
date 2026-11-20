@@ -54,6 +54,14 @@ training_budget:
   decision_source:
     commit: 7121e0188cf1cbe558704764227e306e6097149f
     path: inbox/jay/20261104-ex41-restart/decisions.tsv
+# E2 v1 restart 11/20 (lead 19:2x, planner SURVEY-EFFECTIVE-SETTINGS-1120 section 5 item 1): the level-up rule of the E2 B and C runs of 11/19: x progress past half a tile,
+# forward commands only, a fall short of that steps the env down (sparse kinds only; the log line EX42_X_PROMOTION where=start kinds=10 forward_only=True x_fall_down=True).
+terrain_promotion:
+  x_progress_kinds: ['A/gaps', 'B/gap', 'C/gap', 'B/beam', 'A/balance_beams', 'B/pallets', 'A/stepping_beams', 'A/stepping_stones_low', 'A/stepping_stones_high', 'B/stones']
+  x_progress_fraction: 0.5
+  forward_only: true
+  x_fall_down: true
+
 training_mesh_profiles:
   e2_named_flags_v2:
     directory: /home/jay/data/foothold/s2_lab/ex42_mesh_1111/seed42_E0_c333_flags_E2_1111_v2
@@ -82,6 +90,14 @@ training_mesh_profiles:
       terrain_mesh.npz: 56ea999610009dcd7e167302674329c0ba5bf13ff2fd6ff5a8d81070c01e10c3
       mesh_manifest.json: f0a26869394d46ff93d42cccacd0e742f0443479bf781aafe23bdfd716b4f187
       terrain_manifest.json: 4c72204f20153569ba8b49b8dcf56e156936244a0667aa50ed251867b05df69d
+  # e2_easy10_edge with B/beam rows replaced (short beam 2 m, level-scaled tilt): the mesh E2 B and C runs trained on (beam mesh 7deb20ce). E2 v1 restart 11/20 (lead 19:2x).
+  e2_easy10_beam_edge:
+    directory: /mnt/win-d/mai/data/foothold/sonnet_beam_mesh_1119/b2m_rpy_lv
+    geometry_sha256: 7deb20ce792dfc408e9c1ba032448e684f233f58f3e517659606094d3063abba
+    files:
+      terrain_mesh.npz: 745d7886b3ee6b7ed3a7c71649b1cd9bcc00ef0b97676a2b1d68f2d5ef77baea
+      mesh_manifest.json: 261523d0fba60e59f395208dd88f8c725b289556ee087a565005c28e984b53ec
+      terrain_manifest.json: 8a166aec291b2675e1c7dc6163598608ce0213a4d58b1e85a07dec01bd6ab44c
 environment:
   num_envs: 6144
   task_id: FootholdS2-Go2-S2-SB-v0
@@ -692,7 +708,7 @@ stages:
     runtime_start:
       policy_std_cap: 0.0
   exit_judge: kind_two_window_e2
-  training_mesh_profile: e2_easy10_edge
+  training_mesh_profile: e2_easy10_beam_edge
   # START foot-edge term (core.WEIGHTS[foot_edge] = -1.0, the paper default) from the first update of this stage. 0 or no key = off (as before).
   # Needs the _edge mesh above (ex42_training_entry._foot_edge_weight raises on a mesh without masks). Fence [-1.0, 0.0], fixed by the plan: not a boundary cell.
   foot_edge_weight: -1.0
@@ -818,7 +834,7 @@ stages:
     shares: {forward: 0.19, walk_left: 0.06, walk_right: 0.06, spin_left: 0.09, spin_right: 0.09, stand: 0.1, reverse: 0.14, side_left: 0.09, side_right: 0.09, diag_fwd_left: 0.02, diag_fwd_right: 0.02, diag_back_left: 0.025, diag_back_right: 0.025}
     ranges: {forward_vx: [0.1, 1.5], walk_vx: [0.3, 1.2], walk_wz_abs: [0.1, 1.0], spin_wz_abs: [0.15, 1.5], reverse_vx: [-1.3, -0.2], side_vy_abs: [0.1, 0.8], diag_vx_abs: [0.3, 0.6], diag_vy_abs: [0.2, 0.5]}
     turn_overlay: {fraction: 0.25, wz_abs: [0.2, 0.6]}
-  training_mesh_profile: e2_easy10_edge
+  training_mesh_profile: e2_easy10_beam_edge
   authorization_contract:
     validator: bounded
     source_stage_ids:
@@ -985,7 +1001,7 @@ stages:
     shares: {forward: 0.19, walk_left: 0.06, walk_right: 0.06, spin_left: 0.09, spin_right: 0.09, stand: 0.1, reverse: 0.14, side_left: 0.09, side_right: 0.09, diag_fwd_left: 0.02, diag_fwd_right: 0.02, diag_back_left: 0.025, diag_back_right: 0.025}
     ranges: {forward_vx: [0.1, 1.5], walk_vx: [0.3, 1.2], walk_wz_abs: [0.1, 1.0], spin_wz_abs: [0.15, 1.5], reverse_vx: [-1.3, -0.2], side_vy_abs: [0.1, 0.8], diag_vx_abs: [0.3, 0.6], diag_vy_abs: [0.2, 0.5]}
     turn_overlay: {fraction: 0.25, wz_abs: [0.2, 0.6]}
-  training_mesh_profile: e2_easy10_edge
+  training_mesh_profile: e2_easy10_beam_edge
   authorization_contract:
     validator: bounded
     source_stage_ids:
@@ -1159,7 +1175,7 @@ stages:
     shares: {forward: 0.19, walk_left: 0.06, walk_right: 0.06, spin_left: 0.09, spin_right: 0.09, stand: 0.1, reverse: 0.14, side_left: 0.09, side_right: 0.09, diag_fwd_left: 0.02, diag_fwd_right: 0.02, diag_back_left: 0.025, diag_back_right: 0.025}
     ranges: {forward_vx: [0.1, 1.5], walk_vx: [0.3, 1.2], walk_wz_abs: [0.1, 1.0], spin_wz_abs: [0.15, 1.5], reverse_vx: [-1.3, -0.2], side_vy_abs: [0.1, 0.8], diag_vx_abs: [0.3, 0.6], diag_vy_abs: [0.2, 0.5]}
     turn_overlay: {fraction: 0.25, wz_abs: [0.2, 0.6]}
-  training_mesh_profile: e2_easy10_edge
+  training_mesh_profile: e2_easy10_beam_edge
   authorization_contract:
     validator: bounded
     source_stage_ids:
@@ -1311,7 +1327,7 @@ stages:
     shares: {forward: 0.19, walk_left: 0.06, walk_right: 0.06, spin_left: 0.09, spin_right: 0.09, stand: 0.1, reverse: 0.14, side_left: 0.09, side_right: 0.09, diag_fwd_left: 0.02, diag_fwd_right: 0.02, diag_back_left: 0.025, diag_back_right: 0.025}
     ranges: {forward_vx: [0.1, 1.5], walk_vx: [0.3, 1.2], walk_wz_abs: [0.1, 1.0], spin_wz_abs: [0.15, 1.5], reverse_vx: [-1.3, -0.2], side_vy_abs: [0.1, 0.8], diag_vx_abs: [0.3, 0.6], diag_vy_abs: [0.2, 0.5]}
     turn_overlay: {fraction: 0.25, wz_abs: [0.2, 0.6]}
-  training_mesh_profile: e2_easy10_edge
+  training_mesh_profile: e2_easy10_beam_edge
   authorization_contract:
     validator: bounded
     source_stage_ids: []
@@ -1502,7 +1518,7 @@ stages:
     shares: {forward: 0.19, walk_left: 0.06, walk_right: 0.06, spin_left: 0.09, spin_right: 0.09, stand: 0.1, reverse: 0.14, side_left: 0.09, side_right: 0.09, diag_fwd_left: 0.02, diag_fwd_right: 0.02, diag_back_left: 0.025, diag_back_right: 0.025}
     ranges: {forward_vx: [0.1, 1.5], walk_vx: [0.3, 1.2], walk_wz_abs: [0.1, 1.0], spin_wz_abs: [0.15, 1.5], reverse_vx: [-1.3, -0.2], side_vy_abs: [0.1, 0.8], diag_vx_abs: [0.3, 0.6], diag_vy_abs: [0.2, 0.5]}
     turn_overlay: {fraction: 0.25, wz_abs: [0.2, 0.6]}
-  training_mesh_profile: e2_easy10_edge
+  training_mesh_profile: e2_easy10_beam_edge
   authorization_contract:
     validator: bounded
     source_stage_ids:
@@ -1699,7 +1715,7 @@ stages:
     shares: {forward: 0.19, walk_left: 0.06, walk_right: 0.06, spin_left: 0.09, spin_right: 0.09, stand: 0.1, reverse: 0.14, side_left: 0.09, side_right: 0.09, diag_fwd_left: 0.02, diag_fwd_right: 0.02, diag_back_left: 0.025, diag_back_right: 0.025}
     ranges: {forward_vx: [0.1, 1.5], walk_vx: [0.3, 1.2], walk_wz_abs: [0.1, 1.0], spin_wz_abs: [0.15, 1.5], reverse_vx: [-1.3, -0.2], side_vy_abs: [0.1, 0.8], diag_vx_abs: [0.3, 0.6], diag_vy_abs: [0.2, 0.5]}
     turn_overlay: {fraction: 0.25, wz_abs: [0.2, 0.6]}
-  training_mesh_profile: e2_easy10_edge
+  training_mesh_profile: e2_easy10_beam_edge
   authorization_contract:
     validator: bounded
     source_stage_ids:
