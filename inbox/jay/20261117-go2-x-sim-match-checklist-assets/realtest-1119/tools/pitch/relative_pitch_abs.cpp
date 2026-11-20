@@ -1,4 +1,5 @@
 #include <array>
+#include <cstdlib>
 #include <atomic>
 #include <chrono>
 #include <cmath>
@@ -222,7 +223,9 @@ int main(int argc, char** argv) {
     }
     motion_sensor.stop();
     motion_sensor.close();
-    return 0;
+    std::cout << std::endl;
+    // 11/20: SDK 정리 중 free() 오류로 죽는 일이 있어 정리 없이 바로 끝낸다 (기록 파일은 이미 씀)
+    std::_Exit(0);
   } catch (const std::exception& error) {
     std::cerr << error.what() << '\n';
     return 1;
