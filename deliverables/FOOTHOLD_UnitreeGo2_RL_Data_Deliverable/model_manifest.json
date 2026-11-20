@@ -1,0 +1,83 @@
+{
+  "schema": "foothold-rl-data-deliverable/1",
+  "project": "FOOTHOLD",
+  "robot": "Unitree Go2 (12-DoF quadruped)",
+  "updated": "2026-11-20",
+  "models": [
+    {
+      "id": "01_START_Baseline",
+      "file": "01_START_Baseline/model_15500.pt",
+      "config": "01_START_Baseline/config_start.yaml",
+      "sha256": "13caeb4ae52dd41ab3c2d23f9e6e34801a2414aa811c3efd4b38895e9ce29df6",
+      "size_bytes": 30361227,
+      "basis": "START (sparse-terrain locomotion with height-map reconstruction) based velocity-command locomotion policy",
+      "internal_name": "canon 3 (EX-42 stage E1F, local checkpoint model_250.pt)",
+      "iterations": {
+        "cumulative": 15500,
+        "this_run_local": 250,
+        "parent_cumulative": 15250,
+        "note": "The checkpoint key 'iter' stores the local count 250. Cumulative 15500 = parent 15250 + 250."
+      },
+      "framework": {
+        "simulator": "Isaac Sim 5.1.0",
+        "isaac_lab": "isaaclab 0.54.2 (Isaac Lab 2.3)",
+        "rl_library": "rsl-rl-lib 3.1.2 (OnPolicyRunner)",
+        "torch": "2.7.0+cu128"
+      },
+      "algorithm": {
+        "name": "PPO",
+        "type": "on-policy",
+        "num_envs": 3072,
+        "num_steps_per_env": 24,
+        "num_learning_epochs": 5,
+        "num_mini_batches": 4,
+        "learning_rate_initial": 0.001,
+        "learning_rate_schedule": "adaptive (desired_kl 0.01)",
+        "learning_rate_at_checkpoint": 0.00011390625149942935,
+        "gamma": 0.99,
+        "lambda": 0.95,
+        "clip_param": 0.2,
+        "entropy_coef": 0.01,
+        "value_loss_coef": 1.0,
+        "max_grad_norm": 1.0,
+        "seed": 42
+      },
+      "network": {
+        "actor_hidden_dims": [512, 256, 128],
+        "critic_hidden_dims": [512, 256, 128],
+        "activation": "elu",
+        "actor_input_dim": 98,
+        "action_dim": 12,
+        "policy_params_model_state_dict": 722329,
+        "perception_module": "depth image to height-map reconstruction (perception_state_dict); actor reads latent map features"
+      },
+      "environment": {
+        "sim_dt_s": 0.005,
+        "decimation": 4,
+        "control_hz": 50,
+        "episode_length_s": 20.0,
+        "observation_policy_terms": ["base_ang_vel", "projected_gravity", "velocity_commands", "joint_pos", "joint_vel", "actions"],
+        "observation_other_groups": ["depth", "gt_map", "gt_feet", "base_vel", "contacts", "pose_cmd", "critic"],
+        "action": "joint position targets as offsets from default pose (scale 0.25, 12 joints)",
+        "command": "base velocity (vx, vy, yaw rate)",
+        "reward_terms_nonzero_weight": 22
+      },
+      "checkpoint_keys": ["model_state_dict", "optimizer_state_dict", "perception_state_dict", "perception_ema", "perception_cfg", "adasmpl", "env_state", "iter", "normalization_state", "continuous_curriculum"],
+      "load": "torch.load(path, map_location='cpu', weights_only=False)",
+      "related": {
+        "onnx_for_robot": "inbox/jay/20261103-policy-handoff/start-m15500-app/ (start-m15500_map_on.onnx, start-m15500_map_off.onnx, same sha256 checkpoint as start-m15500.pt)",
+        "lineage_doc": "docs/research/20261119-lineage-6-canon3-m15500.md"
+      }
+    },
+    {
+      "id": "02_AME2_Reproduction",
+      "file": "02_AME2_Reproduction/model_27000.pt",
+      "config": "02_AME2_Reproduction/config_ame2.yaml",
+      "sha256": "TBD",
+      "size_bytes": null,
+      "basis": "AME-2 based Go2 reproduction",
+      "iterations": {"cumulative": 27000},
+      "status": "pending (to be filled by the AME-2 track owner)"
+    }
+  ]
+}
