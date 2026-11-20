@@ -57,4 +57,4 @@ wait
 bad=0; for j in "${JOBS[@]}"; do IFS='|' read -r _ tag _ <<< "$j"; [ -f "$RUNS/$tag/DONE" ] || { echo "missing DONE $tag" >&2; bad=$((bad+1)); }; done
 [ $bad = 0 ] || { echo "$bad runs missing, not judging" >&2; exit 4; }
 exec "$PY" -I -B -c "import sys;sys.path.insert(0,'$SRC');from foothold_s2.tools.ex42_v1_mapgain_boundary import main;raise SystemExit(main(sys.argv[1:]))" \
-  --root "$RUNS" --kinds "$CAPS" --mesh-dir "$MESH" --boundary $(( IT / 250 )) --out "$OUT" ${V1_EARLIER:+--earlier "$V1_EARLIER"}   # without V1_EARLIER the judge finds the nearest earlier m<N>/ladder_outcomes_list.json next to --out
+  --root "$RUNS" --kinds "$CAPS" --mesh-dir "$MESH" --boundary $(( IT / 250 )) --out "$OUT" --checkpoint "$CK" ${V1_EARLIER:+--earlier "$V1_EARLIER"}   # without V1_EARLIER the judge finds the nearest earlier m<N>/ladder_outcomes_list.json next to --out

@@ -83,9 +83,11 @@ def test_e3_start_block_is_the_e2_end_state_plus_the_k_bundle_once():
     e3 = {key(r): r for r in rows["E3"]["terrain"]["exposure_at_E3"]["positive"]}
     bundle = {("B", "pallets"), ("A", "stepping_beams"), ("A", "stepping_stones_low")}
     assert set(e3) - set(e2) == bundle                                                     # the bundle opens at the stage entry
-    assert set(e2) - set(e3) == set()
+    # E2 v1 second door (lead 11/20 18:08): C/box opens in the E2 row only. The E3 row does not carry it yet, so E3 would drop C/box: open decision for the lead
+    # (carry C/box into E3 at 0.03 cap 5 and take 0.03 from the bundle, or leave it). Until then the difference is exactly C/box and nothing else.
+    assert set(e2) - set(e3) == {("C", "box")}
     assert e3[("A", "continuous")] == e2[("A", "continuous")]                              # the continuous cap does not move (L+ is its own boundary)
-    for name in set(e2) - {("A", "continuous")}:                                           # held at the floor, graduated level
+    for name in set(e2) - {("A", "continuous"), ("C", "box")}:                              # held at the floor, graduated level
         assert e3[name]["share"] == 0.03 and e3[name]["level_cap"] == 5
     assert all(e3[name]["level_cap"] == 2 for name in bundle)
     assert abs(sum(r["share"] for r in e3.values() if "share" in r) - 0.44) < 1e-9

@@ -18,6 +18,8 @@ materialized plan folder and changes only:
                           --kind-share <family/kind>=<value> (repeatable) sets the share of single kinds. The sum of the single-kind shares must
                           stay what the source plan had (the 0.44 bundle), so a share freed by one kind (a graduated kind goes to 0.03) has to be
                           named on another in the same call; otherwise the draft is refused and nothing is written;
+  * the E2 exit judge (optional, lead 11/20 18:08 (B)): --exit-judge <adapter> sets stages[E2].exit_judge, the E3 entry_gate_adapter that names the same judge and the
+                          approvals file's later_stage_entry_gate_adapter of the E2 cell (mapgain_two_boundary_e2 = graduation by map gain in two consecutive boundaries);
   * the approval cell's scope.parent_sha256 and the plan's stage_zero.approval_sha256 (the approvals file bytes changed).
 The `materialization` declaration and transition.json are NOT carried over: they describe E1F -> E2 with a gate receipt, and a plan
 that still carried them would be re-derived from that gate (validate_materialized_transition) and refused. The draft writes its own
@@ -152,7 +154,7 @@ def set_kind_shares(terrain: dict, shares: dict | None, add: dict | None) -> tup
 def draft(source_dir: Path, run_dir: Path, iteration: int, mesh_dir: Path, out: Path, *, profile: str = "e2_easy10_beam_edge",
           promotion: dict | None = None, adjust_from: Path | None = None, keep_mesh: bool = False,
           bake_caps_run: Path | None = None, bake_boundaries: int = 0, kind_caps: dict | None = None,
-          kind_shares: dict | None = None, add_kinds: dict | None = None) -> dict:
+          kind_shares: dict | None = None, add_kinds: dict | None = None, exit_judge: str | None = None) -> dict:
     source_dir, out = Path(source_dir).resolve(strict=True), Path(out).absolute()
     if out.exists():
         raise FileExistsError(f"{out} exists (a draft folder is never reused)")
@@ -183,6 +185,16 @@ def draft(source_dir: Path, run_dir: Path, iteration: int, mesh_dir: Path, out: 
         plan["terrain_promotion"] = promotion
     plan.pop("materialization", None)
     cell = approvals[f"stage_{STAGE.lower()}_authorization"]
+    judge_report = None
+    if exit_judge is not None:
+        from foothold_s2.ex42_stage_judges import ADAPTERS
+        if exit_judge not in ADAPTERS:
+            raise ValueError(f"--exit-judge {exit_judge}: not a registered adapter (have {sorted(ADAPTERS)})")
+        nxt = next(r for r in plan["stages"] if r["id"] == "E3")
+        judge_report = {"E2.exit_judge": [row.get("exit_judge"), exit_judge],
+                        "E3.entry_gate_adapter": [nxt["authorization_contract"]["entry_gate_adapter"], exit_judge],
+                        "approvals.later_stage_entry_gate_adapter": [cell.get("later_stage_entry_gate_adapter"), exit_judge]}
+        row["exit_judge"] = nxt["authorization_contract"]["entry_gate_adapter"] = cell["later_stage_entry_gate_adapter"] = exit_judge
     cell["scope"]["parent_sha256"] = pin["sha256"]
     approval_bytes = _dump(approvals)
     plan["stage_zero"]["approval_sha256"] = hashlib.sha256(approval_bytes).hexdigest()
@@ -198,7 +210,7 @@ def draft(source_dir: Path, run_dir: Path, iteration: int, mesh_dir: Path, out: 
     record = {"format": REENTRY_FORMAT, "stage": STAGE, "source_dir": str(source_dir), "source_plan_sha256": old_plan_sha,
               "new_plan_sha256": hashlib.sha256(plan_bytes).hexdigest(), "approval_sha256": plan["stage_zero"]["approval_sha256"],
               "parent": pin, "run_dir": str(Path(run_dir).resolve()), "mesh_profile": None if keep_mesh else profile, "mesh_stages": moved, "keep_mesh": keep_mesh,
-              "terrain_promotion": promotion, "kind_caps": caps_report, "kind_shares": shares_report, "training_started": False}
+              "terrain_promotion": promotion, "kind_caps": caps_report, "kind_shares": shares_report, "exit_judge": judge_report, "training_started": False}
     if adjust_from is not None:
         # the live (per update) adjustment file binds the plan sha256: the same decisions, re-bound to the new plan. Nothing is added or decided here.
         adjust = json.loads(Path(adjust_from).read_text(encoding="utf-8-sig"))
@@ -230,6 +242,7 @@ def main(argv=None):
     p.add_argument("--kind-cap", action="append", default=[], metavar="FAMILY/KIND=N", help="lower one kind's level cap (repeatable)")
     p.add_argument("--kind-share", action="append", default=[], metavar="FAMILY/KIND=VALUE", help="set one single kind's share (repeatable); the sum must stay the bundle total")
     p.add_argument("--add-kind", action="append", default=[], metavar="FAMILY/KIND=CAP", help="add a single-kind row at share 0 with this level cap (the second door C/box=4); give it a share with --kind-share")
+    p.add_argument("--exit-judge", default=None, help="E2 stage exit adapter for the new OUT (and the E3 entry gate that names it), e.g. mapgain_two_boundary_e2")
     a = p.parse_args(argv)
     caps = {k: int(v) for k, v in (item.split("=", 1) for item in a.kind_cap)}
     shares = {k: float(v) for k, v in (item.split("=", 1) for item in a.kind_share)}
@@ -238,7 +251,7 @@ def main(argv=None):
     print(json.dumps(draft(a.source_dir, a.run_dir, a.iteration, a.mesh_dir, a.out, profile=a.profile, promotion=cell,
                                           adjust_from=a.adjust_from, keep_mesh=a.keep_mesh,
                                           bake_caps_run=a.bake_caps_run, bake_boundaries=a.bake_boundaries, kind_caps=caps or None,
-                                          kind_shares=shares or None, add_kinds=adds or None), indent=1))
+                                          kind_shares=shares or None, add_kinds=adds or None, exit_judge=a.exit_judge), indent=1))
 
 
 if __name__ == "__main__":

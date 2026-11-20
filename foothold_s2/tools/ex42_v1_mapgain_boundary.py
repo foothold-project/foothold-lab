@@ -155,6 +155,7 @@ def main(argv=None) -> int:
     ap.add_argument("--out", required=True, help="eval/scores/m<iter> folder: writes mapgain_outcomes.json and ladder_outcomes_list.json")
     ap.add_argument("--earlier", default=None, help="an earlier ladder_outcomes_list.json to extend (default: the nearest earlier boundary's file next to --out)")
     ap.add_argument("--interval", type=int, default=250, help="iterations per boundary (to find the earlier boundary folders)")
+    ap.add_argument("--checkpoint", default=None, help="the evaluated model_<N>.pt: its sha256 goes to mapgain_meta.json (the stage exit judge binds the outcomes to the checkpoint with it)")
     a = ap.parse_args(argv)
     kinds = {}
     for item in a.kinds.split(","):
@@ -179,6 +180,11 @@ def main(argv=None) -> int:
     out = Path(a.out)
     out.mkdir(parents=True, exist_ok=True)
     (out / "mapgain_outcomes.json").write_text(json.dumps(verdicts, indent=1, sort_keys=True, ensure_ascii=False), encoding="utf-8")
+    if a.checkpoint:
+        import hashlib
+        ck = Path(a.checkpoint)
+        (out / "mapgain_meta.json").write_text(json.dumps({"format": "foothold-ex42-mapgain-meta/1", "checkpoint": ck.name, "checkpoint_sha256": hashlib.sha256(ck.read_bytes()).hexdigest(),
+                                                           "boundary": a.boundary, "kinds": kinds}, indent=1, sort_keys=True), encoding="utf-8")
     base = json.loads(Path(a.earlier).read_text(encoding="utf-8")) if a.earlier else find_earlier(out, a.boundary, a.interval)
     write_evidence(out / "ladder_outcomes_list.json", a.boundary, verdicts, base)
     for k, v in verdicts.items():

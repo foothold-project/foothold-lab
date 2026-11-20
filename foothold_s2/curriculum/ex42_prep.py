@@ -278,7 +278,7 @@ def _stage_approval_row(plan: "EX42Plan", stage_id: str) -> dict[str, Any]:
 # module; readiness also checks registration before launch) or `pending` (not ready, the stage cannot start).
 ENTRY_GATE_ADAPTERS = ('map39', 'stage_exit_v1', 'flag_two_window', 'pending',
                        'kind_two_window_e2', 'kind_two_window_e3', 'kind_two_window_e4',
-                       'kind_two_window_e5', 'posture_two_window_e6a')
+                       'kind_two_window_e5', 'posture_two_window_e6a', 'mapgain_two_boundary_e2')
 
 
 def entry_gate_adapter_ready(plan: "EX42Plan", row: dict[str, Any], contract: dict[str, Any]) -> bool:
