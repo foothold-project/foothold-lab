@@ -76,7 +76,16 @@ def foot_edge_term(env, sensor_cfg, asset_cfg):
         force = env.scene.sensors[sensor_cfg.name].data.net_forces_w[:, sensor_cfg.body_ids]
         contact = torch.linalg.norm(force, dim=-1) > 1.0
         terrain = env.scene.terrain
-        return record(env, "foot_edge", mesh.penalty(feet, contact, terrain.terrain_levels, terrain.terrain_types))
+        value = mesh.penalty(feet, contact, terrain.terrain_levels, terrain.terrain_types)
+        off = getattr(mesh, "off_columns", None)
+        if off:                                                    # EX42_EDGE_PENALTY_OFF_KINDS: count, on the turned-off columns, the envs whose term is not 0 (must stay 0)
+            from foothold_s2.ex42_gap_switches import column_env_mask
+            on = column_env_mask(terrain.terrain_types, tuple(off), int(terrain.terrain_origins.shape[1]))
+            acc = getattr(env, "_ex42_edge_off_acc", None)
+            if acc is None:
+                acc = env._ex42_edge_off_acc = torch.zeros(3, device=value.device)
+            acc += torch.stack([(on & (value != 0)).sum(), on.sum(), torch.ones((), device=value.device)]).float()
+        return record(env, "foot_edge", value)
 
     feet = env.scene[asset_cfg.name].data.body_pos_w[:, asset_cfg.body_ids, :2]
     force = env.scene.sensors[sensor_cfg.name].data.net_forces_w[:, sensor_cfg.body_ids]

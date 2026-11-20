@@ -302,6 +302,8 @@ def prepare_e0_env_cfg(env_cfg: Any, plan: EX42Plan, mesh_dir: str | Path, stage
     from foothold_s2 import ex42_gap_switches as gap_switches
     switches = gap_switches.read_switches(table)                   # three optional gap / beam column candidates (env vars, default off; off = the receipt below is unchanged)
     if gap_switches.any_on(switches):
+        if switches.get("edge_off_kinds") and (edge is None or foot_edge_w == 0.0):
+            raise ValueError(f"{gap_switches.ENV_EDGE_OFF} needs a mesh with edge masks and a non-zero foot_edge_weight in the plan row (else there is nothing to turn off)")
         if switches["edge_kinds"] and (edge is None or foot_edge_w == 0.0):
             raise ValueError(f"{gap_switches.ENV_EDGE} needs a mesh with edge masks and a non-zero foot_edge_weight in the plan row (else the term stays 0)")
         track_func = None
@@ -363,6 +365,11 @@ def attach_edge_tables(raw: Any, contract: dict[str, Any]) -> dict[str, Any] | N
                                     int(tables.inner.shape[0]), covered={int(c) for c in (tables.col_to_k >= 0).nonzero().flatten().tolist()})
             tables.add_extra(_em.build_extra_masks(arrays["vertices"], arrays["faces"], arrays["origins"], specs))
         check = tables.self_check()
+        off_cols = tuple((contract.get("gap_switches") or {}).get("edge_penalty_off_kinds") or ())
+        if off_cols:                                               # EX42_EDGE_PENALTY_OFF_KINDS (planner 18): those columns read 0 (the no-mask path); other columns keep the same tables
+            from foothold_s2 import ex42_gap_switches as _gs
+            check["edge_penalty_off"] = tables.drop_columns(_gs.columns_of(off_cols, contract["column_table"]))
+            print("EX42_EDGE_PENALTY_OFF where=start " + json.dumps(check["edge_penalty_off"], sort_keys=True), flush=True)
         raw.ex42_edge_tables = tables
     try:
         weight = float(raw.reward_manager.get_term_cfg("foot_edge").weight)

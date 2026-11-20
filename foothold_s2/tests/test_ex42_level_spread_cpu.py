@@ -136,3 +136,107 @@ def test_spread_is_deterministic_and_draws_no_random_number():
     assert torch.equal(torch.random.get_rng_state(), state)
     assert t.terrain_levels[t.terrain_types == 1].tolist() == [0, 1, 2, 0, 1, 2] and bool((t.terrain_levels[t.terrain_types == 0] == 0).all())
     assert r == {"columns": [1], "envs": 6, "before": {"0": 6}, "after": {"0": 2, "1": 2, "2": 2}}
+
+
+# ---- EX42_EDGE_PENALTY_OFF_KINDS (planner 18 · lead 1121 03:21): A 틈 열만 발 가장자리 벌점 끔 ------------------------------------------------
+
+GAPS = (45, 46, 47)
+
+
+def _tables():
+    from foothold_s2.terrains.ex42_edge_masks import EdgeTables, load_edge_masks
+    return EdgeTables(load_edge_masks(str(MESH / "terrain_mesh.npz")), 76, "cpu")
+
+
+def _feet_on_masks(t, cols, n_per=64, seed=0):
+    """각 열 · 줄의 inner/outer 칸 가운데에 발 하나를 둔 (N, 1, 2) 좌표와 그 줄 · 열."""
+    g = torch.Generator().manual_seed(seed)
+    feet, rows, ts = [], [], []
+    fam = int(round(t.shift[1].item() * 2 / t.tile[1]))
+    for col in cols:
+        k = int(t.col_to_k[col])
+        for r in range(t.inner.shape[0]):
+            cells = torch.nonzero(t.inner[r, k] | t.outer[r, k])
+            if len(cells) == 0:
+                continue
+            for i in torch.randint(len(cells), (n_per,), generator=g):
+                c = cells[int(i)]
+                feet.append([-t.tile[0] * t.inner.shape[0] / 2.0 + t.tile[0] * r + (c[0].item() + 0.5) * t.res,
+                             -t.tile[1] * fam / 2.0 + t.tile[1] * col + (c[1].item() + 0.5) * t.res])
+                rows.append(r); ts.append(col)
+    return torch.tensor(feet, dtype=torch.float32)[:, None, :], torch.tensor(rows), torch.tensor(ts)
+
+
+needs_masks = pytest.mark.skipif(not (MESH / "terrain_mesh.npz").is_file(), reason="beam mesh not on this machine")
+
+
+@needs_masks
+def test_edge_off_reads_zero_on_the_gap_columns_and_every_other_column_is_unchanged():
+    t = _tables()
+    masked = [int(c) for c in (t.col_to_k >= 0).nonzero().flatten()]
+    assert set(GAPS) <= set(masked)                                          # the beam mesh has A/gaps edge masks (verifier: A gap edge on)
+    feet, rows, cols = _feet_on_masks(t, masked)
+    contact = torch.ones(len(feet), 1, dtype=torch.bool)
+    before = t.penalty(feet, contact, rows, cols)
+    gap = torch.isin(cols, torch.tensor(GAPS))
+    assert int((before[gap] != 0).sum()) > 100                               # the term was on there
+    check = t.drop_columns(GAPS)
+    after = t.penalty(feet, contact, rows, cols)
+    assert check["columns"] == list(GAPS) and all(v > 0 for v in check["inner_before"]) and check["inner_after"] == [0.0, 0.0, 0.0]
+    assert bool((after[gap] == 0).all())                                    # on: those columns read 0
+    assert torch.equal(after[~gap], before[~gap])                           # every other column bit for bit
+    on = torch.isin(cols, torch.tensor(GAPS))
+    assert int((on & (after != 0)).sum()) == 0                               # the first-update count EX42_EDGE_PENALTY_OFF ... off_on_env_steps=0
+
+
+@needs_masks
+def test_edge_off_refuses_a_column_without_a_mask():
+    t = _tables()
+    free = int((t.col_to_k < 0).nonzero().flatten()[0])
+    with pytest.raises(ValueError, match="no edge mask"):
+        t.drop_columns((free,))
+
+
+def test_edge_off_switch_reads_the_table_and_is_off_by_default():
+    from foothold_s2 import ex42_gap_switches as gs
+    from foothold_s2.terrains.ex42_column_reset import build_column_table
+    table = build_column_table(["A"] * 50 + ["B"] * 12 + ["C"] * 7 + ["D"] * 3 + ["E"] * 4)
+    sw = gs.read_switches(table, {})
+    assert gs.receipt(sw) == {} and not gs.any_on(sw) and sw["edge_off_columns"] == ()
+    sw = gs.read_switches(table, {gs.ENV_EDGE_OFF: "A/gaps"})
+    assert sw["edge_off_columns"] == GAPS and gs.receipt(sw) == {"gap_switches": {"edge_penalty_off_kinds": ["A/gaps"]}}
+    with pytest.raises(ValueError, match="same kinds"):
+        gs.read_switches(table, {gs.ENV_EDGE_OFF: "A/gaps", gs.ENV_EDGE: "A/gaps"})
+
+
+@needs_real
+def test_entry_on_drops_the_gap_columns_from_the_live_tables_and_off_keeps_them(monkeypatch, isaac_stubs):
+    from foothold_s2.curriculum.ex42_prep import EX42Plan
+    from foothold_s2.scripts import ex42_training_entry as te
+    for on in (False, True):
+        monkeypatch.delenv("EX42_LEVEL_SPREAD_KINDS", raising=False)
+        monkeypatch.delenv("EX42_EDGE_PENALTY_OFF_KINDS", raising=False)
+        if on:
+            monkeypatch.setenv("EX42_EDGE_PENALTY_OFF_KINDS", "A/gaps")
+        contract = te.prepare_e0_env_cfg(_cfg(), EX42Plan.load(PLAN), MESH, stage_id="E2")
+        env = _env(64)
+        got = te.attach_edge_tables(env.unwrapped, contract)
+        k = env.unwrapped.ex42_edge_tables.col_to_k
+        if on:
+            assert contract["gap_switches"] == {"edge_penalty_off_kinds": ["A/gaps"]}
+            assert [int(k[c]) for c in GAPS] == [-1, -1, -1] and got["self_check"]["edge_penalty_off"]["inner_after"] == [0.0, 0.0, 0.0]
+            assert int((k >= 0).sum()) == base_masked - 3
+        else:
+            assert "gap_switches" not in contract and "edge_penalty_off" not in got["self_check"]
+            assert all(int(k[c]) >= 0 for c in GAPS)
+            base_masked = int((k >= 0).sum())
+
+
+def test_first_update_line_and_live_count_are_wired():
+    import ast
+    root = Path(__file__).resolve().parents[1]
+    src = (root / "rewards" / "start_rewards.py").read_text(encoding="utf-8")
+    assert '"_ex42_edge_off_acc"' in src and "on & (value != 0)" in src
+    runner = (root / "runners" / "start_runner.py").read_text(encoding="utf-8")
+    assert "EX42_EDGE_PENALTY_OFF it=%d kinds=%s off_env_steps=%d off_on_env_steps=%d off_on_frac=%.6f steps=%d" in runner
+    ast.parse(src); ast.parse(runner)
