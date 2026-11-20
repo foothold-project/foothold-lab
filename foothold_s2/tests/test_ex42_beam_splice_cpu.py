@@ -1,6 +1,7 @@
 """CPU tests for the B/beam splice mesh (short beam, level-scaled tilt), its plan pin draft, and what a same-run resume does with a new mesh pin."""
 from __future__ import annotations
 
+import re
 import hashlib
 import json
 import shutil
@@ -85,10 +86,18 @@ def _fake_mesh(folder: Path):
         (folder / name).write_bytes(name.encode())
 
 
+
+def _plan_before_the_beam_pin(text: str) -> str:
+    """The shipped plan since 11/20 19:2x already pins e2_easy10_beam_edge; the pin-draft tool is for a plan that has not: undo the pin in the text (profile block out, stage names back to e2_easy10_edge)."""
+    out = re.sub(r"  # e2_easy10_edge with B/beam rows replaced[^\n]*\n  e2_easy10_beam_edge:\n(?:    [^\n]*\n|      [^\n]*\n)+", "", text, count=1)
+    assert "  e2_easy10_beam_edge:" not in out
+    return out.replace("training_mesh_profile: e2_easy10_beam_edge", "training_mesh_profile: e2_easy10_edge")
+
+
 def test_the_pin_draft_changes_only_the_profile_and_the_stage_names_and_the_plan_sha_moves(tmp_path):
     from foothold_s2.tools import ex42_beam_pin_draft as pd
     table = ROOT / "foothold_s2/curriculum/ex42-prep.yaml"
-    text = table.read_text(encoding="utf-8")
+    text = _plan_before_the_beam_pin(table.read_text(encoding="utf-8"))
     _fake_mesh(tmp_path / "mesh")
     out = pd.draft(text, tmp_path / "mesh", "e2_easy10_beam_edge", "note")
     old, new = text.splitlines(), out.splitlines()
@@ -134,7 +143,7 @@ def test_a_resume_under_the_draft_plan_is_refused_by_the_plan_sha_pin_of_the_sav
     for sibling in table.parent.glob("*.yaml"):
         if sibling.name != table.name:
             (plan_dir / sibling.name).write_bytes(sibling.read_bytes())
-    (plan_dir / table.name).write_text(pd.draft(table.read_text(encoding="utf-8"), tmp_path / "mesh", "e2_easy10_beam_edge", "n"), encoding="utf-8")
+    (plan_dir / table.name).write_text(pd.draft(_plan_before_the_beam_pin(table.read_text(encoding="utf-8")), tmp_path / "mesh", "e2_easy10_beam_edge", "n"), encoding="utf-8")
     draft_sha = EX42Plan.load(plan_dir / table.name).sha256
     args = _boundary_checkpoint(tmp_path)
     assert draft_sha != args[2]
