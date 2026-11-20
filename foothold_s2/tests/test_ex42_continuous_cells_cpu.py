@@ -58,7 +58,51 @@ def test_disabled_extension_does_not_read_evidence_write_or_change_result_bytes(
     assert eo.run_continuous_boundary(checkpoint=checkpoint, output=output) is None
     monkeypatch.setenv(cc.SWITCH, '0')
     assert eo.run_continuous_boundary(checkpoint=checkpoint, output=output) is None
+    monkeypatch.setenv(cc.SWITCH, '')
+    assert eo.run_continuous_boundary(checkpoint=checkpoint, output=output) is None
     assert {p.name: p.read_bytes() for p in output.iterdir()} == files
+
+
+@pytest.mark.parametrize('value', ['2', 'on', ' ', '-1'])
+def test_invalid_enabled_value_is_still_rejected(value):
+    with pytest.raises(ValueError):
+        cc.enabled({cc.SWITCH: value})
+
+
+def test_timeout_policy_default_is_explicit_estimate_and_override_is_recorded():
+    default = cc.timeout_policy({})
+    assert default['seconds'] == 3600 and '어림' in default['source']
+    assert cc.timeout_policy({'EX42_CONTCELL_TIMEOUT_S': '2400'})['seconds'] == 2400
+    for invalid in ('0', '-1', 'nan', 'inf', 'bad', ''):
+        with pytest.raises(ValueError):
+            cc.timeout_policy({'EX42_CONTCELL_TIMEOUT_S': invalid})
+
+
+def test_actual_child_timeout_records_missing_then_runs_next_child(tmp_path, monkeypatch):
+    import sys
+    from foothold_s2 import ex41_eval_once as process
+    output = tmp_path / 'evaluation'
+    output.mkdir()
+    checkpoint = tmp_path / 'checkpoint'
+    checkpoint.write_bytes(b'checkpoint')
+    marker = tmp_path / 'next-child-ran'
+    children = [dict(name='slow', argv=[sys.executable, '-c', 'import time; time.sleep(60)']),
+                dict(name='next', argv=[sys.executable, '-c',
+                                        'from pathlib import Path; Path(' + repr(str(marker)) + ').write_text("ran")'])]
+    monkeypatch.setattr(cc, 'read_child', lambda child, **kw: [])
+    result = cc.execute({'commands': children, 'stage_id': 'E2'}, checkpoint=checkpoint,
+                        checkpoint_sha256=cc.sha(checkpoint), output=output, mesh={'mesh_sha256': 'a' * 64},
+                        plan_path=PLAN, process=process,
+                        env={'EX42_CONTCELL_TIMEOUT_S': '0.5', 'PATH': '/usr/bin:/bin'}, physical_gpu={})
+    record = json.loads(Path(result['path']).read_text())
+    assert result['judgement'] == 'HOLD_NO_DATA'
+    assert marker.read_text() == 'ran'
+    assert set(record['failures']) == {'slow'}
+    assert record['children']['slow']['rc'] == 124
+    assert record['children']['slow']['state'] == 'timeout'
+    assert record['children']['next']['state'] == 'done'
+    assert record['timeout']['seconds'] == .5 and 'EX42_CONTCELL_TIMEOUT_S' in record['timeout']['source']
+    assert json.loads((output / 'children/slow/child.json').read_text())['state'] == 'timeout'
 
 
 def rows(off=40):

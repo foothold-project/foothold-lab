@@ -7,7 +7,9 @@ from __future__ import annotations
 
 import hashlib
 import json
+import math
 import os
+import shutil
 import subprocess
 import zipfile
 from pathlib import Path
@@ -39,9 +41,43 @@ DEFINITION = {
 
 def enabled(environ=None):
     value = (os.environ if environ is None else environ).get(SWITCH, '0')
-    if value not in ('0', '1'):
-        raise ValueError(f'{SWITCH} must be 0 or 1')
+    if value not in ('', '0', '1'):
+        raise ValueError(f'{SWITCH} must be empty, 0 or 1')
     return value == '1'
+
+
+def timeout_policy(environ=None):
+    env = os.environ if environ is None else environ
+    key = 'EX42_CONTCELL_TIMEOUT_S'
+    raw = env.get(key, '3600')
+    try:
+        seconds = float(raw)
+    except (ValueError, TypeError):
+        raise ValueError(f'{key} must be finite positive seconds') from None
+    if not math.isfinite(seconds) or seconds <= 0:
+        raise ValueError(f'{key} must be finite positive seconds')
+    source = ('lead 2026-11-20 23:48 default 3600 s; 어림: CPU beam 64 env x300 step x1 mode '
+              '49~50 s reported by opus-code, /home/jay/mai/tmp/sonnet-code-lx/beam_cpu.sh; '
+              '600 step x8 cells approximately 800 s, not a measured continuous-child duration')
+    if key in env:
+        source = (key + ' runtime override; operator supplies measured first CPU child seconds x3; '
+                  'measurement not independently verified by this evaluator')
+    return {'seconds': seconds, 'source': source, 'kill_after_s': 5}
+
+
+def bounded_child(process, argv, folder, *, env, timeout):
+    """Linux timeout owns only this child group; preserve the existing log/receipt path."""
+    executable = shutil.which('timeout', path=env.get('PATH'))
+    if executable is None:
+        raise ValueError('continuous child requires GNU timeout on this Linux evaluator')
+    wrapped = [executable, '--signal=TERM', '--kill-after=5s', f"{timeout['seconds']}s", *argv]
+    state = process.hidden_child(wrapped, folder, env=env)
+    state.update(timeout=dict(timeout), evaluator_argv=list(argv))
+    if state.get('rc') in (124, 137):
+        state.update(state='timeout', reason='timeout wrapper returned ' + str(state['rc']) +
+                     '; 137 can also indicate an external kill; cell evidence is incomplete')
+    write(Path(folder) / 'child.json', state)
+    return state
 
 
 def sha(path):
@@ -80,7 +116,8 @@ def build_plan(*, checkpoint, output, device, task, plan_path, plan, mesh_dir, s
                     f"--kit_args=--/UJITSO/datastore/localCachePath={machine_path('isaac_cache_root')}"]
             children.append(dict(name=f'continuous_{kind}_s{seed}', argv=argv, folder=str(folder), kind=kind,
                                  level=cap, seed=seed))
-    return dict(definition=DEFINITION, stage_id=stage_id, cells=rows, commands=children)
+    return dict(definition=DEFINITION, stage_id=stage_id, cells=rows, commands=children,
+                timeout=timeout_policy())
 
 
 def count_trace(trace, *, fall, timeout, finish_x_m):
@@ -203,9 +240,11 @@ def read_child(child, *, mesh, checkpoint_sha256, plan_path, physical_gpu):
 
 def execute(spec, *, checkpoint, checkpoint_sha256, output, mesh, plan_path, process, env, physical_gpu):
     rows, failures, children = [], {}, {}
+    timeout = timeout_policy(env)
     for child in spec['commands']:
         try:
-            state = process.hidden_child(child['argv'], Path(output) / 'children' / child['name'], env=env)
+            state = bounded_child(process, child['argv'], Path(output) / 'children' / child['name'],
+                                  env=env, timeout=timeout)
             children[child['name']] = state
             if state.get('state') != 'done':
                 raise ValueError(f"child state {state.get('state')}: {state.get('reason')}")
@@ -220,7 +259,7 @@ def execute(spec, *, checkpoint, checkpoint_sha256, output, mesh, plan_path, pro
     result.update(format='foothold-ex42-continuous-cells/1', checkpoint=str(checkpoint),
                   checkpoint_sha256=checkpoint_sha256, stage_id=spec['stage_id'],
                   evaluation_plan=dict(path=str(plan_path), sha256=sha(plan_path)),
-                  mesh_sha256=mesh['mesh_sha256'], children=children)
+                  mesh_sha256=mesh['mesh_sha256'], children=children, timeout=timeout)
     path = Path(output) / 'continuous_cells.json'
     write(path, result)
     return dict(path=str(path), sha256=sha(path), judgement=result['judgement'], decision_use='record_only')
