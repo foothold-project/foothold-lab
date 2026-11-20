@@ -326,10 +326,10 @@ def _caps(terrain, stage="E2"):
 def test_a_kind_that_passed_gets_its_cap_up_by_one_and_the_receipt_has_before_and_after():
     from foothold_s2.terrains.ex42_exposure import raise_kind_caps
     start = _e2_terrain()
-    START = {"A/gaps": 1, "B/gap": 2, "C/gap": 2, "B/beam": 2, "A/balance_beams": 1}   # E2 v1 (11/20): the two first-door kinds open at cap 1, the other three at 2
+    START = {"A/gaps": 1, "B/gap": 2, "C/gap": 2, "B/beam": 2, "A/balance_beams": 1, "C/box": 4}   # E2 v1 (11/20): the two first-door kinds open at cap 1, the other three at 2, the second door C/box at 4 (lead 18:08)
     assert _caps(start) == START
     moved, moves = raise_kind_caps(start, "E2", 2, [{"A/gaps": PASS, "B/gap": {"first_window_pass": False}}, {"A/gaps": PASS, "C/gap": PASS}])
-    assert _caps(moved) == {"A/gaps": 3, "B/gap": 2, "C/gap": 3, "B/beam": 2, "A/balance_beams": 1}
+    assert _caps(moved) == {"A/gaps": 3, "B/gap": 2, "C/gap": 3, "B/beam": 2, "A/balance_beams": 1, "C/box": 4}
     assert [(m["boundary"], m["kind"], m["before"], m["after"]) for m in moves] == [(1, "A/gaps", 1, 2), (2, "A/gaps", 2, 3), (2, "C/gap", 2, 3)]
     assert all(m["axis"] == "terrain_kind_level_cap" and m["because"] == "first_window_pass" for m in moves)
     assert _caps(start) == START                                                   # the plan itself never changes
@@ -355,8 +355,20 @@ def test_the_e2_boundary_receipt_records_the_cap_move_and_the_consumer_replays_i
     contract = _contract("E2", k=1, outcomes=[{"A/gaps": PASS, "B/beam": PASS}])
     body = er.build_receipt(contract, stage_id="E2", plan_sha256=PSHA, iteration=250, kind="boundary")
     assert [(m["kind"], m["before"], m["after"]) for m in body["k_ladder_moves"]] == [("A/gaps", 1, 2), ("B/beam", 2, 3)]
-    assert body["opened_kinds"]["A/gaps"] == 2 and body["opened_kinds"]["B/gap"] == 2
+    assert body["opened_kinds"]["A/gaps"] == 2 and body["opened_kinds"]["B/gap"] == 2 and body["opened_kinds"]["C/box"] == 4
     assert [m["kind"] for m in er.recompute_from_plan(body, plan)["moves"]] == ["A/gaps", "B/beam"]
     fake = json.loads(json.dumps(body)); fake["k_ladder_moves"] = []; fake["sha256"] = er._sha(fake)
     with pytest.raises(ValueError, match="k moves differ"):
         er.recompute_from_plan(fake, plan)
+
+
+def test_the_e2_start_block_has_the_second_door_c_box_at_cap_4_and_the_bundle_still_sums_to_0_44():
+    rules = [r for r in _e2_terrain()["exposure_at_E2"]["positive"] if "kind" in r]
+    share = {f"{r['family']}/{r['kind']}": r["share"] for r in rules}
+    assert share["C/box"] == pytest.approx(0.10) and share["A/gaps"] == share["A/balance_beams"] == pytest.approx(0.09)
+    assert sum(share.values()) == pytest.approx(0.44, abs=1e-9)
+    assert _caps(_e2_terrain())["C/box"] == 4
+    from foothold_s2.terrains.ex42_exposure import raise_kind_caps
+    moved, _ = raise_kind_caps(_e2_terrain(), "E2", 1, [{"C/box": PASS}])             # one pass takes C/box to its end level 5 and the next adds nothing
+    assert _caps(moved)["C/box"] == 5
+    assert _caps(raise_kind_caps(_e2_terrain(), "E2", 2, [{"C/box": PASS}] * 2)[0])["C/box"] == 5

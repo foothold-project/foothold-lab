@@ -40,4 +40,4 @@ def test_each_stage_start_block_resolves_on_the_real_mesh_with_its_planned_share
 def test_a_later_stage_block_is_present_for_every_stage_and_the_sparse_columns_grow_by_stage():
     rows = _rows()
     assert all(f"exposure_at_{stage}" in rows[stage]["terrain"] for stage in STAGES)
-    assert [len(rows[s]["terrain"][f"exposure_at_{s}"]["positive"]) for s in ("E2", "E3", "E4", "E5", "E6b")] == [6, 9, 11, 15, 30]
+    assert [len(rows[s]["terrain"][f"exposure_at_{s}"]["positive"]) for s in ("E2", "E3", "E4", "E5", "E6b")] == [7, 9, 11, 15, 30]
