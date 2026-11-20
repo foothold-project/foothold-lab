@@ -73,11 +73,161 @@
       "id": "02_AME2_Reproduction",
       "file": "02_AME2_Reproduction/model_27000.pt",
       "config": "02_AME2_Reproduction/config_ame2.yaml",
-      "sha256": "TBD",
-      "size_bytes": null,
-      "basis": "AME-2 based Go2 reproduction",
-      "iterations": {"cumulative": 27000},
-      "status": "pending (to be filled by the AME-2 track owner)"
+      "sha256": "f4eaadb495f590e02c42103f524d0841616a58d33e73b2646ddeb34dc2fb1a41",
+      "size_bytes": 150409420,
+      "basis": "AME-2 based Go2 reproduction: goal-position locomotion policy (teacher) that attends over a ground-truth height map with an active gaze crop, reproduced on Unitree Go2 in Isaac Lab from the public AME-2 code (leggedrobotics/ame2_minimal)",
+      "internal_name": "ame2-m27001 (app bundle name) = tp424_in_p1_s5_from17000/model_16999.pt, weight average of the final checkpoints of runs tp424_p1_s4 and tp424_p2_s4",
+      "policy_role": "teacher",
+      "policy_role_note": "Teacher: the actor reads privileged inputs (base linear velocity and a ground-truth height map from simulator ray casts). No student for this line has been trained yet.",
+      "iterations": {
+        "cumulative": 27001,
+        "this_run_local": 17000,
+        "parent_cumulative": 10001,
+        "checkpoint_iter_key": 16999,
+        "note": "File named model_27000.pt by the deliverable layout; the exact cumulative count is 27001 = 10001 updates of the start checkpoint (go2_env_state.start_from.source_completed_updates) + 17000 updates counted from it (go2_env_state.completed_updates). The checkpoint key 'iter' stores 16999 (index of the last update). The run folder name tp424_in_p1_s5_from17000 counts from the start checkpoint (completed_updates 17000), not cumulatively. From completed 15000 on, two runs (pod 1 and pod 2) each trained 500 updates from the same checkpoint and their weights were then averaged; this was repeated four times (N = 15000 + 500 s, s = 1..4); this checkpoint is the output of averaging 4 at N = 17000 (sync_record.txt)."
+      },
+      "framework": {
+        "simulator": "Isaac Sim 5.1.0 (5.1.0-rc.19)",
+        "isaac_lab": "isaaclab 0.54.2 (Isaac Lab 2.3.2)",
+        "rl_library": "rsl_rl 5.0.0 as vendored in leggedrobotics/ame2_minimal commit 8beb9a68 (byte-identical) with the FOOTHOLD Go2 runner (OnPolicyRunner)",
+        "torch": "2.7.0+cu128"
+      },
+      "algorithm": {
+        "name": "PPO",
+        "type": "on-policy",
+        "optimizer": "adam",
+        "mixed_precision": false,
+        "num_envs": 4096,
+        "num_steps_per_env": 24,
+        "num_learning_epochs": 4,
+        "num_mini_batches": 3,
+        "gradient_accumulation_chunks": 4,
+        "learning_rate_initial": 0.001,
+        "learning_rate_schedule": "adaptive (desired_kl 0.01)",
+        "learning_rate_at_checkpoint": 1.5000000000000004e-05,
+        "gamma": 0.99,
+        "lambda": 0.95,
+        "clip_param": 0.2,
+        "entropy_coef": 0.004,
+        "entropy_coef_at_checkpoint": 0.001,
+        "value_loss_coef": 1.0,
+        "max_grad_norm": 1.0,
+        "seed": 1001,
+        "seed_note": "Seed of run tp424_p1_s4 whose params are shipped; the averaged partner run tp424_p2_s4 used seed 42."
+      },
+      "network": {
+        "actor_class": "AME2GazeModel",
+        "actor_hidden_dims": [512, 512],
+        "actor_hidden_dims_note": "hidden sizes of the actor output MLP (288 -> 512 -> 512 -> 12); the actor also has a prop encoder 49 -> 512 -> 512 -> 128, a query MLP 192 -> 512 -> 512 -> 96, map encoders and 32-head attention (fields below)",
+        "critic_hidden_dims": [512, 512],
+        "critic_hidden_dims_note": "hidden sizes of each of the 16 MoE critic experts (446 -> 512 -> 512 -> 20)",
+        "actor_inputs": {
+          "prop": [49],
+          "mapping": [29, 13, 3]
+        },
+        "actor_input_dim": 1180,
+        "action_dim": 12,
+        "prop_encoder_dims": [512, 512, 128],
+        "attention_heads": 32,
+        "gaze_crop": [12, 10],
+        "output_mlp_dims": [512, 512],
+        "activation": "elu",
+        "recurrent": false,
+        "perception_module": "none: the teacher reads the ground-truth ray-cast height map directly (no reconstruction module)",
+        "policy_params_model_state_dict": 9780202,
+        "policy_params_model_state_dict_note": "actor_state_dict + critic_state_dict (this checkpoint stores them as two keys instead of one model_state_dict)",
+        "policy_params_actor_state_dict": 1251994,
+        "critic": "MoE 16 experts, input 446, hidden [512, 512], 20 outputs (one value per reward term)",
+        "critic_params_critic_state_dict": 8528208
+      },
+      "environment": {
+        "sim_dt_s": 0.005,
+        "decimation": 4,
+        "control_hz": 50,
+        "episode_length_s": 16.0,
+        "observation_policy_terms": ["base_lin_vel", "base_ang_vel", "projected_gravity", "joint_pos", "joint_vel", "actions", "pose_commands", "teacher_mapping (height map 29x13x3)"],
+        "observation_other_groups": ["critic"],
+        "action": "joint position targets as offsets from default pose (scale 0.25, 12 joints)",
+        "command": "goal pose (x, y, sin and cos of heading error) in the base yaw frame, clipped to 2 m",
+        "reward_terms_nonzero_weight": 20,
+        "terrains": ["rough", "stair_down", "stair_up", "boxes_j", "discrete_j", "climb_up", "climb_down", "steps_j", "stones", "gap", "pallets", "beam"],
+        "task": "Ame2-Go2-Gaze-N9P12"
+      },
+      "evaluation": {
+        "benchmark": "100-episode benchmark: 12 terrains x 10 levels, 2400 robots (20 per terrain-level cell), 5 counted episodes per robot after an uncounted first one, task Ame2-Go2-Gaze-N9P12-Eval5; per seed 100 episodes per cell, over the four seeds 400 per cell and 4000 per terrain; success = reach the goal",
+        "seeds": [42, 1001, 2002, 3003],
+        "success_all_pct": 89.39,
+        "success_all_count": [42906, 48000],
+        "success_all_by_seed_pct": {
+          "42": 89.28,
+          "1001": 89.47,
+          "2002": 89.23,
+          "3003": 89.57
+        },
+        "success_by_terrain_pct": {
+          "rough": 99.38,
+          "stair_down": 99.35,
+          "stair_up": 97.97,
+          "boxes_j": 95.88,
+          "discrete_j": 97.5,
+          "climb_up": 96.85,
+          "climb_down": 97.75,
+          "steps_j": 96.42,
+          "stones": 55.73,
+          "gap": 62.75,
+          "pallets": 85.28,
+          "beam": 87.8
+        },
+        "success_by_terrain_count_of_4000": {
+          "rough": 3975,
+          "stair_down": 3974,
+          "stair_up": 3919,
+          "boxes_j": 3835,
+          "discrete_j": 3900,
+          "climb_up": 3874,
+          "climb_down": 3910,
+          "steps_j": 3857,
+          "stones": 2229,
+          "gap": 2510,
+          "pallets": 3411,
+          "beam": 3512
+        },
+        "source": "existing evaluation record, not recomputed: raw results docs/stage1_logs/req424/ev/results/evalx_raw_tpevf24_b1.txt and table docs/MODEL_27K_AVG_LEVEL_TABLE.md (tool docs/stage1_logs/req424/x3/m27k_levels.py) in the FOOTHOLD AME-2 work repository; benchmark set tpevf24 run on 2026-11-18",
+        "link_to_this_checkpoint": "meta_raw_tpevf24.txt (same folder as the raw results): for all four seeds checkpoint = .../tp424_in_p1_s5_from17000/model_16999.pt and ck_sha256_inputs_start = f4eaadb495f590e02c42103f524d0841616a58d33e73b2646ddeb34dc2fb1a41 (= sha256 of model_27000.pt)"
+      },
+      "averaging": {
+        "is_average": true,
+        "number_of_sources": 2,
+        "round": 4,
+        "completed_updates_at_round": 17000,
+        "sources": [
+          {
+            "run": "2026-11-18_00-29-16_tp424_p1_s4_adam_fp32_4x3_from16500_to17000",
+            "checkpoint": "model_16999.pt",
+            "sha256": "4ef7ec6551898661346fa856bcdee31e9b4b934a464f955b56eb801ba5548103",
+            "seed": 1001
+          },
+          {
+            "run": "2026-11-18_00-29-28_tp424_p2_s4_adam_fp32_4x3_from16500_to17000",
+            "checkpoint": "model_16999.pt",
+            "sha256": "216e227642e6c85e9b8edb49f4205504627dc8630402156c1e2cbfe7140bbf40",
+            "seed": 42
+          }
+        ],
+        "method": "arithmetic mean (float64 then cast back) of every actor and critic tensor and of Adam exp_avg / exp_avg_sq; learning rate = geometric mean; other entries (environment and curriculum state, counters) kept from the pod 1 source; the averaged parts digest 98b75f905d272e23836de70d027cbc10ae4ab8bc5152a724e06c487dfffc09e2",
+        "earlier_rounds": "rounds 1..3 at N = 15500, 16000, 16500 averaged the two pods' 500-update segments the same way; segment 1 started from the single-run checkpoint model_14999 (completed 15000)",
+        "tool": "run/sync424.py (REQ424 two-pod trial)"
+      },
+      "config_provenance": "config_ame2.yaml = params/agent.yaml and params/env.yaml of the checkpoint folder tp424_in_p1_s5_from17000, which sync424.py copied from the pod 1 source run and checked by sha256 at copy time (sync424.py lines 234-237). sha256 measured on the training volume on 2026-11-19: env.yaml 48088f33708196c90c10d1e5b4971e6646796a718f3c1355e5afc68ea487c623 and agent.yaml 855b1b578eaded8aa3a4c8c167b364bdf51e501bea204646e85d4c3f91ca1530, equal in the checkpoint folder and in the pod 1 source run 2026-11-18_00-29-16_tp424_p1_s4_adam_fp32_4x3_from16500_to17000.",
+      "policy_role_evidence": "experiment_name go2_gaze_teacher (agent.yaml line 15); actor obs_groups = teacher_mapping and teacher_prop (agent.yaml lines 7-10); teacher_prop includes base_lin_vel and teacher_mapping is the ground-truth ray-cast height map (config_ame2.yaml document 2, observations)",
+      "checkpoint_keys": ["actor_state_dict", "critic_state_dict", "optimizer_state_dict", "iter", "infos", "go2_env_state"],
+      "load": "torch.load(path, map_location='cpu', weights_only=False)",
+      "related": {
+        "onnx_for_robot": "none: a teacher with privileged inputs is not run on the robot (a student is not trained yet)",
+        "onnx_for_app": "inbox/jay/20261103-policy-handoff/ame2-m27001-app/ (app copy by the lead) from the submission inbox/lim/20261103-policy-handoff/ame2-m27001/ (PR #878): ame2-m27001.onnx, contract, test vectors",
+        "lineage_doc": "inbox/jay/20261103-policy-handoff/ame2-m27001-app/CONTRACT.md section 1 (checkpoint, run, code); per-level evaluation table docs/MODEL_27K_AVG_LEVEL_TABLE.md in the FOOTHOLD AME-2 work repository",
+        "averaged_from_sha256": ["4ef7ec6551898661346fa856bcdee31e9b4b934a464f955b56eb801ba5548103", "216e227642e6c85e9b8edb49f4205504627dc8630402156c1e2cbfe7140bbf40"]
+      }
     }
   ]
 }
