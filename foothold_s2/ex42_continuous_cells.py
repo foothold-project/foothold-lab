@@ -24,7 +24,7 @@ SEEDS = (42, 43, 44)
 COMMANDS = ('fwd0.5', 'fwd1.0')
 DEFINITION = {
     'name': '연속 넘음 정의 v1 (11/20 lead 승인)',
-    'source': 'ccfe67bdc · lead-lx 2026-11-20 23:21/23:25',
+    'source': 'ccfe67bdc · 1bf3162e9 · lead-lx 2026-11-20 23:21/23:25',
     'duration_s': 12.0, 'settle_s': 0.5, 'envs_per_cell': 64,
     'start': 'existing named-kind position reset; yaw fixed +x; coordinates relative to tile center origin',
     'reach': 'root_x_local_m >= 3.5 m; slopes >= 3.85 m, then continuously alive 0.5 s',
