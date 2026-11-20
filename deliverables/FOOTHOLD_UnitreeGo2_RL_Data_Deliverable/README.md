@@ -2,7 +2,7 @@
 
 > 분류: 제출 산출물
 > 작성: Claude 세션 (오흥재 지시, lead-lx) · 2026-11-20
-> 근거: 팀장 11/20 11:02 지시 양식 · 학습 실행 EX-42-B-E1F 원본 설정 (`params/agent.yaml` · `params/env.yaml`) · 저장본 sha256 실측 · 계보 문서 `docs/research/20261119-lineage-6-canon3-m15500.md` · 산출물 2: 저장본 `tp424_in_p1_s5_from17000/model_16999.pt` (sha256 실측) · 같은 폴더 `params/agent.yaml` · `params/env.yaml` · `sync_record.txt` · 평가 묶음 `evalgz_tpevf24_b1` (평가 seed 42 · 1001 · 2002 · 3003)
+> 근거: 팀장 11/20 11:02 지시 양식 · 학습 실행 EX-42-B-E1F 원본 설정 (`params/agent.yaml` · `params/env.yaml`) · 저장본 sha256 실측 · 계보 문서 `docs/research/20261119-lineage-6-canon3-m15500.md` · 산출물 2: 저장본 `tp424_in_p1_s5_from17000/model_16999.pt` (sha256 실측) · 같은 폴더 `params/agent.yaml` · `params/env.yaml` · `sync_record.txt` · 평가 기록 `docs/stage1_logs/req424/ev/results/evalx_raw_tpevf24_b1.txt` · 정리 표 `docs/MODEL_27K_AVG_LEVEL_TABLE.md` (FOOTHOLD AME-2 작업 저장소)
 > 요지: 정책 가중치 (.pt) 와 학습 설정 (.yaml) 을 데이터 산출물로 낸다. 산출물 1 (START 기반 m15500) 은 채움 · 산출물 2 (AME-2 재현 teacher · 누적 27,001 iter) 도 채움
 > 상태: 산출물 1 · 2 확정
 
@@ -27,7 +27,7 @@ FOOTHOLD_UnitreeGo2_RL_Data_Deliverable/
 | 구분 | 파일명 | 기반 논문 및 알고리즘 | 학습 스텝 (Iteration) | 주요 특징 및 비고 |
 | :--- | :--- | :--- | :--- | :--- |
 | **산출물 1** | `model_15500.pt` | **START** 기반 보행 제어 · PPO | 누적 15,500 iters | 지형 학습 전 기본 보행 정본. 속도 명령 (전진 · 옆 · 회전 · 느린 전진 0.1 m/s) 을 따르고, 깊이 카메라로 발밑 높이 지도를 복원해 함께 쓴다 |
-| **산출물 2** | `model_27000.pt` | **AME-2** 기반 Go2 재현 · PPO (Adam) · teacher | 누적 27,001 iters (이 학습 실행 17,000 + 출발 저장본 10,001) | 목표 지점까지 12 가지 험지 (계단 · 상자 · 연속 단차 · 징검돌 · 틈 · 팔레트 · 좁은 빔 등) 를 건너는 teacher 정책. 정답 높이 지도 29 × 13 위를 시선 창 12 × 10 으로 골라 attention 으로 읽는다. 12 지형 성공률 89.39 % (평가 seed 4 개 평균) |
+| **산출물 2** | `model_27000.pt` | **AME-2** 기반 Go2 재현 · PPO (Adam) · teacher | 누적 27,001 iters (이 학습 실행 17,000 + 출발 저장본 10,001) | 목표 지점까지 12 가지 험지 (계단 · 상자 · 연속 단차 · 징검돌 · 틈 · 팔레트 · 좁은 빔 등) 를 건너는 teacher 정책. 정답 높이 지도 29 × 13 위를 시선 창 12 × 10 으로 골라 attention 으로 읽는다. 12 지형 성공률 89.39 % (평가 seed 4 개, 기존 평가 기록) |
 
 ### 산출물 1 · `01_START_Baseline/model_15500.pt`
 
@@ -56,9 +56,9 @@ FOOTHOLD_UnitreeGo2_RL_Data_Deliverable/
 | 설정 | `config_ame2.yaml` = 이 저장본 폴더의 `params/agent.yaml` · `params/env.yaml` 원본 그대로. 평균 도구가 팟 1 원본 실행 `2026-11-18_00-29-16_tp424_p1_s4_adam_fp32_4x3_from16500_to17000` 의 params 를 복사하고 그 자리에서 sha256 을 대조했다 (`sync424.py` 234 ~ 237 행). 2026-11-19 학습 볼륨에서 잰 sha256 도 두 곳이 같다 (env.yaml `48088f33…` · agent.yaml `855b1b57…`). 팟 2 원본의 params 는 seed 42 · run_name · log_dir 만 다르다 |
 | 학습 환경 (3 절과 다른 점) | 병렬 환경 4,096 개 · 에피소드 최대 16 초 · 명령은 속도가 아니라 목표 지점 (몸 기준 x · y · 방향 차의 sin · cos, 2 m 로 자름) · 관측은 고유감각 49 (몸 선속도 포함) + 정답 높이 지도 29 × 13 × 3 · 보상 20 항 (모두 가중치 0 아님) · 강화학습 라이브러리는 AME-2 공개 코드에 든 rsl_rl 5.0.0 · Isaac Lab 2.3.2 (isaaclab 0.54.2) · Isaac Sim 5.1.0 · PyTorch 2.7.0 |
 | 같은 정책의 ONNX (앱용) | `inbox/lim/20261103-policy-handoff/ame2-m27001/` (PR #878, `ame2-m27001.onnx` · 계약 · 시험 벡터. 원본 PyTorch 와 action 최대 차 2.9e-6) |
-| 시뮬 성능 요약 (12 지형 × 10 단계 · 로봇 2,400 대 · 평가 seed 42 · 1001 · 2002 · 3003, seed 마다 12,000 에피소드) | 목표 도달 성공률 12 지형 평균 89.39 % (seed 범위 89.23 ~ 89.57 %). 지형별 4 seed 평균 % (학습 설정의 지형 이름): rough 99.38 · stair_down 99.35 · stair_up 97.97 · boxes_j 95.88 · discrete_j 97.5 · climb_up 96.85 · climb_down 97.75 · steps_j 96.43 · stones 55.73 · gap 62.75 · pallets 85.28 · beam 87.8 |
-| 성능 출처 | 이 저장본으로 2026-11-18 에 돌린 벤치마크 묶음 `evalgz_tpevf24_b1` 의 결과 파일 넷: `20261118T050827Z_21902/evg_tpa4p1_16999_s42.pt` · `20261118T051720Z_22766/evg_tpa4p1_16999_s1001.pt` · `20261118T052610Z_23637/evg_tpa4p1_16999_s2002.pt` · `20261118T053504Z_24516/evg_tpa4p1_16999_s3003.pt`. 성공은 각 로봇의 첫 에피소드를 빼고 5 에피소드로 센다 (벤치마크 대기열 검사와 같은 규칙). 지형별 값은 이 파일들에서 2026-11-20 에 계산했고 `model_manifest.json` 의 `evaluation` 에 있다 |
-| 못 하는 것 | 징검돌 (55.7 %) · 틈 (62.8 %) 은 아직 낮다. 특권 입력을 쓰는 teacher 라 실기 Go2 에 그대로 올릴 수 없다 (실기용 student 는 미확인 · 정해질 때까지 시뮬 트윈 전용). 이 저장본이 걷는 영상은 미확인 |
+| 시뮬 성능 요약 (100 에피소드 벤치마크 · 12 지형 × 10 단계 · 평가 seed 42 · 1001 · 2002 · 3003, 단계 칸마다 seed 당 100 에피소드 = 4 seed 400 에피소드) | 목표 도달 성공률 12 지형 전체 **89.39 %** (42,906 / 48,000). seed 별 89.28 · 89.47 · 89.23 · 89.57 %. 지형별 % (성공 / 4,000, 학습 설정의 지형 이름): rough 99.38 (3,975) · stair_down 99.35 (3,974) · stair_up 97.97 (3,919) · boxes_j 95.88 (3,835) · discrete_j 97.50 (3,900) · climb_up 96.85 (3,874) · climb_down 97.75 (3,910) · steps_j 96.42 (3,857) · stones 55.73 (2,229) · gap 62.75 (2,510) · pallets 85.28 (3,411) · beam 87.80 (3,512) |
+| 성능 출처 | 다시 계산하지 않고 기존 평가 기록에서 옮김: FOOTHOLD AME-2 작업 저장소의 원자료 `docs/stage1_logs/req424/ev/results/evalx_raw_tpevf24_b1.txt` 와 정리 표 `docs/MODEL_27K_AVG_LEVEL_TABLE.md` (도구 `docs/stage1_logs/req424/x3/m27k_levels.py`), 평가 묶음 tpevf24 (2026-11-18, 과제 `Ame2-Go2-Gaze-N9P12-Eval5`). 이 저장본과의 연결: 같은 폴더 `meta_raw_tpevf24.txt` 의 네 seed 모두 checkpoint 가 `tp424_in_p1_s5_from17000/model_16999.pt` 이고 `ck_sha256_inputs_start` 가 `f4eaadb4…1a41` (= `model_27000.pt` 의 sha256). 성공은 각 로봇의 첫 에피소드를 빼고 센다. 표의 boxes · discrete 는 학습 설정의 boxes_j · discrete_j |
+| 못 하는 것 | 징검돌 (stones 55.73 %) · 틈 (gap 62.75 %) 은 아직 낮다. 특권 입력을 쓰는 teacher 라 실기 Go2 에 그대로 올릴 수 없다 (실기용 student 는 미확인 · 정해질 때까지 시뮬 트윈 전용). 이 저장본이 걷는 영상은 미확인 |
 
 ## 3. 데이터 생성 환경 (Simulation Environment)
 

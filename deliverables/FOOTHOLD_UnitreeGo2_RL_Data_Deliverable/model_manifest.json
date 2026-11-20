@@ -147,11 +147,17 @@
         "task": "Ame2-Go2-Gaze-N9P12"
       },
       "evaluation": {
-        "benchmark": "12 terrains x 10 levels, 2400 robots, 5 counted episodes per robot (12000 counted episodes per seed), task Ame2-Go2-Gaze-N9P12-Eval5, success = reach the goal",
+        "benchmark": "100-episode benchmark: 12 terrains x 10 levels, 2400 robots (20 per terrain-level cell), 5 counted episodes per robot after an uncounted first one, task Ame2-Go2-Gaze-N9P12-Eval5; per seed 100 episodes per cell, over the four seeds 400 per cell and 4000 per terrain; success = reach the goal",
         "seeds": [42, 1001, 2002, 3003],
-        "success_all_mean_pct": 89.39,
-        "success_all_range_pct": [89.23, 89.57],
-        "success_by_terrain_mean_pct": {
+        "success_all_pct": 89.39,
+        "success_all_count": [42906, 48000],
+        "success_all_by_seed_pct": {
+          "42": 89.28,
+          "1001": 89.47,
+          "2002": 89.23,
+          "3003": 89.57
+        },
+        "success_by_terrain_pct": {
           "rough": 99.38,
           "stair_down": 99.35,
           "stair_up": 97.97,
@@ -159,13 +165,28 @@
           "discrete_j": 97.5,
           "climb_up": 96.85,
           "climb_down": 97.75,
-          "steps_j": 96.43,
+          "steps_j": 96.42,
           "stones": 55.73,
           "gap": 62.75,
           "pallets": 85.28,
           "beam": 87.8
         },
-        "source": "benchmark set evalgz_tpevf24_b1 run on 2026-11-18 with this checkpoint: 20261118T050827Z_21902/evg_tpa4p1_16999_s42.pt, 20261118T051720Z_22766/evg_tpa4p1_16999_s1001.pt, 20261118T052610Z_23637/evg_tpa4p1_16999_s2002.pt, 20261118T053504Z_24516/evg_tpa4p1_16999_s3003.pt; success counted over each robot's episodes except its first (5 per robot, the benchmark queue's check rule); per-terrain values computed from these files on 2026-11-20"
+        "success_by_terrain_count_of_4000": {
+          "rough": 3975,
+          "stair_down": 3974,
+          "stair_up": 3919,
+          "boxes_j": 3835,
+          "discrete_j": 3900,
+          "climb_up": 3874,
+          "climb_down": 3910,
+          "steps_j": 3857,
+          "stones": 2229,
+          "gap": 2510,
+          "pallets": 3411,
+          "beam": 3512
+        },
+        "source": "existing evaluation record, not recomputed: raw results docs/stage1_logs/req424/ev/results/evalx_raw_tpevf24_b1.txt and table docs/MODEL_27K_AVG_LEVEL_TABLE.md (tool docs/stage1_logs/req424/x3/m27k_levels.py) in the FOOTHOLD AME-2 work repository; benchmark set tpevf24 run on 2026-11-18",
+        "link_to_this_checkpoint": "meta_raw_tpevf24.txt (same folder as the raw results): for all four seeds checkpoint = .../tp424_in_p1_s5_from17000/model_16999.pt and ck_sha256_inputs_start = f4eaadb495f590e02c42103f524d0841616a58d33e73b2646ddeb34dc2fb1a41 (= sha256 of model_27000.pt)"
       },
       "averaging": {
         "is_average": true,
