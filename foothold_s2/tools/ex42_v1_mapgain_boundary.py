@@ -111,6 +111,15 @@ def write_evidence(ladder_list: Path, boundary: int, kinds: dict[str, dict], bas
     return entries
 
 
+def find_earlier(out: Path, boundary: int, interval: int = 250) -> list | None:
+    """The nearest earlier boundary's ladder_outcomes_list.json next to `out` (<scores>/m<back * interval>/), like write_ladder_evidence; None when none."""
+    for back in range(boundary - 1, 0, -1):
+        previous = Path(out).parent / f"m{back * interval}" / "ladder_outcomes_list.json"
+        if previous.is_file():
+            return json.loads(previous.read_text(encoding="utf-8"))
+    return None
+
+
 def first_gap_end(mesh_dir: str | Path, family: str, kind: str, col: int, level: int) -> float:
     """Local x (m, from the env origin) of the end of the first void on the centre line of tile (level, col), the farthest-top ray cast of
     the gate_ends.py of the map-gain tables. Balance beams: 3.0 (the table value). Needs trimesh (eval environment only)."""
@@ -144,7 +153,8 @@ def main(argv=None) -> int:
     ap.add_argument("--mesh-dir", required=True)
     ap.add_argument("--boundary", type=int, required=True, help="boundary number b (iteration / 250)")
     ap.add_argument("--out", required=True, help="eval/scores/m<iter> folder: writes mapgain_outcomes.json and ladder_outcomes_list.json")
-    ap.add_argument("--earlier", default=None, help="an earlier ladder_outcomes_list.json to extend")
+    ap.add_argument("--earlier", default=None, help="an earlier ladder_outcomes_list.json to extend (default: the nearest earlier boundary's file next to --out)")
+    ap.add_argument("--interval", type=int, default=250, help="iterations per boundary (to find the earlier boundary folders)")
     a = ap.parse_args(argv)
     kinds = {}
     for item in a.kinds.split(","):
@@ -169,7 +179,7 @@ def main(argv=None) -> int:
     out = Path(a.out)
     out.mkdir(parents=True, exist_ok=True)
     (out / "mapgain_outcomes.json").write_text(json.dumps(verdicts, indent=1, sort_keys=True, ensure_ascii=False), encoding="utf-8")
-    base = json.loads(Path(a.earlier).read_text(encoding="utf-8")) if a.earlier else None
+    base = json.loads(Path(a.earlier).read_text(encoding="utf-8")) if a.earlier else find_earlier(out, a.boundary, a.interval)
     write_evidence(out / "ladder_outcomes_list.json", a.boundary, verdicts, base)
     for k, v in verdicts.items():
         print(f"{k} L{v['level']}: {v['verdict']} (raise cap: {v['raise_cap']})")

@@ -74,3 +74,20 @@ def test_read_cell_counts_crossed_and_alive(tmp_path):
     c = J.read_cell(tmp_path, "A_gaps_L1", "1.0", seeds=(42, 43), threshold=2.0)
     assert c["gt"] == (16.0, 48.0)                       # seed 42: 32 envs past 2.0 m, seed 43: 0 -> mean 16
     assert J.read_cell(tmp_path, "A_gaps_L1", "0.7", seeds=(42,)) is None
+
+
+def test_main_finds_the_earlier_boundary_and_keeps_the_raised_cap(tmp_path):
+    """b1 A/gaps passed -> cap 2; at b2 the kind is not graduated: the cap must stay 2 without --earlier (it used to fall back to 1)."""
+    from foothold_s2.terrains.ex42_exposure import raise_kind_caps
+    scores = tmp_path / "scores"
+    J.write_evidence(scores / "m250" / "ladder_outcomes_list.json", 1, {"A/gaps": {"first_window_pass": True}})
+    assert J.find_earlier(scores / "m500", 2) == [{"A/gaps": {"first_window_pass": True, "target_level_reached": False}}]
+    assert J.find_earlier(scores / "m250", 1) is None
+    base = J.find_earlier(scores / "m500", 2)
+    entries = J.write_evidence(scores / "m500" / "ladder_outcomes_list.json", 2, {"A/gaps": {"first_window_pass": False}}, base)
+    terrain = {"kind_level_cap": {"end": 5, "step_per_boundary": 1},
+               "exposure_at_E2": {"positive": [{"family": "A", "kind": "gaps", "share": 0.14, "level_cap": 1}]}}
+    new, _ = raise_kind_caps(terrain, "E2", 2, entries)
+    assert new["exposure_at_E2"]["positive"][0]["level_cap"] == 2
+    lost, _ = raise_kind_caps(terrain, "E2", 2, J.write_evidence(tmp_path / "x.json", 2, {"A/gaps": {"first_window_pass": False}}, None))
+    assert lost["exposure_at_E2"]["positive"][0]["level_cap"] == 1      # the old failure mode (no earlier evidence), kept as the contrast

@@ -42,7 +42,11 @@ one() {   # lane|tag|fam|name|level|speed|seed|swap|modes|mesh
       --task FootholdS2-Go2-S2-SB-v0 --checkpoint "$CK" --envs 64 --steps 300 --modes "$MD" --command-suite core --commands fwd0.5 \
       --fixed-terrain --fixed-level "$lv" --mesh-dir "$MS" --ex42-kind-family "$fam" --ex42-kind-name "$name" --eval-seed "$S" --out "$D" --device cuda:0 $KIT \
       2> "$D/stderr.log" < /dev/null | grep -a -v getMaterialFromInternalFaceIndex > "$D/stdout.log"
-    rc=${PIPESTATUS[0]}; [ "$rc" = 0 ] && ! grep -aq Traceback "$D/stderr.log" "$D/stdout.log" && touch "$D/DONE"
+    rc=${PIPESTATUS[0]}; ok=0; [ "$rc" = 0 ] && ! grep -aq Traceback "$D/stderr.log" "$D/stdout.log" && ok=1
+    if [ "$SW" != none ] && [ $ok = 1 ]; then   # flat / shift20: the swap must really have happened (swapped_calls > 0), else the run is a failure
+      grep -a MAPPROBE "$D/stdout.log" | tail -1 | grep -aEq 'swapped_calls[^0-9]+[1-9][0-9]*' || ok=0
+    fi
+    [ $ok = 1 ] && touch "$D/DONE"
     echo "$(date +%H:%M:%S) $tag lane=$lane gpu=$gpu rc=$rc tb=$(cat "$D"/std*.log | grep -ac Traceback) $(grep -a MAPPROBE "$D/stdout.log" | tail -1)" >> "$OUT/mapgain_eval.log"
   )
 }
@@ -53,4 +57,4 @@ wait
 bad=0; for j in "${JOBS[@]}"; do IFS='|' read -r _ tag _ <<< "$j"; [ -f "$RUNS/$tag/DONE" ] || { echo "missing DONE $tag" >&2; bad=$((bad+1)); }; done
 [ $bad = 0 ] || { echo "$bad runs missing, not judging" >&2; exit 4; }
 exec "$PY" -I -B -c "import sys;sys.path.insert(0,'$SRC');from foothold_s2.tools.ex42_v1_mapgain_boundary import main;raise SystemExit(main(sys.argv[1:]))" \
-  --root "$RUNS" --kinds "$CAPS" --mesh-dir "$MESH" --boundary $(( IT / 250 )) --out "$OUT" ${V1_EARLIER:+--earlier "$V1_EARLIER"}
+  --root "$RUNS" --kinds "$CAPS" --mesh-dir "$MESH" --boundary $(( IT / 250 )) --out "$OUT" ${V1_EARLIER:+--earlier "$V1_EARLIER"}   # without V1_EARLIER the judge finds the nearest earlier m<N>/ladder_outcomes_list.json next to --out
