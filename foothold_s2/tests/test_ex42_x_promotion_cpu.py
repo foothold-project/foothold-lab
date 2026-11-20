@@ -6,6 +6,7 @@ import types
 from pathlib import Path
 
 import pytest
+import yaml
 import torch
 
 from foothold_s2.curriculum import ex41, rules
@@ -132,7 +133,9 @@ def test_default_off_in_the_sources():
     assert "        if self.max_x is not None:\n            self.max_x = torch.maximum(" in text                 # nothing extra is computed when off
     entry = (ROOT / "foothold_s2/scripts/ex42_training_entry.py").read_text(encoding="utf-8")
     assert "x_progress" not in entry and entry.count("terrain_promotion") == 4                                # the training entry only carries the plan cell through the stage-zero view (the stage start path)
-    assert "terrain_promotion" not in (ROOT / "foothold_s2/curriculum/ex42-prep.yaml").read_text(encoding="utf-8")
+    shipped = yaml.safe_load((ROOT / "foothold_s2/curriculum/ex42-prep.yaml").read_text(encoding="utf-8-sig"))["terrain_promotion"]   # the E2 v1 restart plan ships the rule ON (lead 11/20 19:2x), same cell as the C run
+    assert shipped["x_progress_fraction"] == 0.5 and shipped["forward_only"] is True and shipped["x_fall_down"] is True
+    assert shipped["x_progress_kinds"] == ["A/gaps", "B/gap", "C/gap", "B/beam", "A/balance_beams", "B/pallets", "A/stepping_beams", "A/stepping_stones_low", "A/stepping_stones_high", "B/stones"]
 
 
 def test_the_real_plan_loader_accepts_the_cell_and_the_plan_sha_moves(tmp_path):
@@ -142,11 +145,13 @@ def test_the_real_plan_loader_accepts_the_cell_and_the_plan_sha_moves(tmp_path):
     for sibling in table.parent.glob("*.yaml"):
         (tmp_path / sibling.name).write_bytes(sibling.read_bytes())
     base = EX42Plan.load(tmp_path / table.name)
-    assert ex41.terrain_promotion_cell(base) is None
-    with (tmp_path / table.name).open("a", encoding="utf-8") as f:
-        f.write("\nterrain_promotion:\n  x_progress_kinds: [B/beam, B/gap]\n  x_progress_fraction: 0.5\n  forward_only: false\n")
+    cell = ex41.terrain_promotion_cell(base)
+    assert cell["x_progress_fraction"] == 0.5 and cell["forward_only"] is True and cell["x_fall_down"] is True and len(cell["x_progress_kinds"]) == 10
+    text = (tmp_path / table.name).read_text(encoding="utf-8")
+    assert text.count("  x_progress_fraction: 0.5\n") == 1
+    (tmp_path / table.name).write_text(text.replace("  x_progress_fraction: 0.5\n", "  x_progress_fraction: 0.6\n"), encoding="utf-8")
     changed = EX42Plan.load(tmp_path / table.name)
-    assert ex41.terrain_promotion_cell(changed)["x_progress_kinds"] == ("B/beam", "B/gap") and changed.sha256 != base.sha256
+    assert ex41.terrain_promotion_cell(changed)["x_progress_fraction"] == 0.6 and changed.sha256 != base.sha256
 
 
 def test_a_fall_short_of_the_x_fraction_steps_a_masked_env_down_and_nothing_else_changes():
