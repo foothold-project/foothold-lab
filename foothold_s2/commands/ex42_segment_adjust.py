@@ -499,6 +499,11 @@ def apply_reward_params(env_cfg, record, term_cfg_class=None) -> dict:
     progress = getattr(env_cfg.rewards, "ex42_slow_progress").params
     progress["speed_min"], progress["speed_max"] = band["speed_min"], band["speed_max"]
     progress["taper_from"] = min(max(progress.get("taper_from", band["speed_max"]), band["speed_min"]), band["speed_max"])
+    cap_frac = ex42_slow_progress.read_cap_frac()                     # planner 21: saturation at k of the command (unset = the old term, params untouched)
+    if cap_frac is not None:
+        progress["cap_frac"] = cap_frac
+        out["slow_progress_cap_frac"] = {"before": 1.0, "after": cap_frac}
+        print("EX42_SLOW_PROGRESS_CAP where=start cap_frac=%g term=ex42_slow_progress" % cap_frac, flush=True)
     if (record or {}).get("slow_track_heading"):       # the plan row includes heading envs (2026-11-14 00:28)
         params = getattr(env_cfg.rewards, "ex42_slow_track").params
         before = bool(params.get("include_heading", False))
@@ -532,6 +537,13 @@ def reward_readback(env, record) -> dict:
         if not carried:
             raise ValueError("EX-42 segment rewards: the plan row includes heading envs in slow_track, the live term does not")
         out["slow_track_heading"] = carried
+    from foothold_s2.rewards import ex42_slow_progress
+    cap_frac = ex42_slow_progress.read_cap_frac()
+    if cap_frac is not None:                           # planner 21: the live term must carry the asked saturation (outside `live` as well)
+        carried = manager.get_term_cfg("ex42_slow_progress").params.get("cap_frac")
+        if carried is None or abs(float(carried) - cap_frac) > TOL:
+            raise ValueError(f"EX-42 segment rewards: {ex42_slow_progress.ENV_CAP}={cap_frac} but the live slow_progress term carries {carried}")
+        out["slow_progress_cap_frac"] = float(carried)
     return out
 
 
