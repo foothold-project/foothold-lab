@@ -26,13 +26,13 @@
   --team-pos-col: 50mm;      /* 포지션 */
   /* 산출물 1 성능 표 열 폭 */
   --perf-axis-col: 32mm;     /* 축 */
-  --perf-result-col: 54mm;   /* 결과 */
+  --perf-result-col: 68mm;   /* 결과 */
   /* 간격 */
-  --cover-gap: 2.6mm;        /* 제목 묶음과 목차 사이 */
-  --toc-gap: 3.4mm;          /* 목차와 1. 팀 소개 사이 */
-  --section-gap: 5.3mm;      /* 절 사이 */
-  --table-gap: 2.6mm;        /* 표와 표 사이 */
-  --h3-gap: 4.5mm;           /* 소제목 위 간격 */
+  --cover-gap: 5.5mm;        /* 제목 묶음과 목차 사이 */
+  --toc-gap: 5.5mm;          /* 목차와 1. 팀 소개 사이 */
+  --section-gap: 4.9mm;      /* 절 사이 */
+  --table-gap: 3.2mm;        /* 표와 표 사이 */
+  --h3-gap: 6mm;           /* 소제목 위 간격 */
   --page-margin: 11mm 12mm 12mm 12mm;  /* 쪽 여백 (위 오른쪽 아래 왼쪽) · @page 줄도 같이 고칠 것 */
   /* 색 */
   --ink: #1c2329; --sub: #56616b; --line: #c9d0d6; --soft: #eef2f4; --key: #f6f8f9; --accent: #1f5a6e; --warn: #a3412c;
@@ -374,7 +374,7 @@ state = ame2["go2_env_state"]              # 완료 회차 · 출발 저장본 �
     ["--cover-gap", "제목 ↔ 목차", 0, 12, 0.1, "mm"],
     ["--toc-gap", "목차 ↔ 1. 팀 소개", 0, 12, 0.1, "mm"],
     ["--section-gap", "절 사이", 0, 10, 0.1, "mm"],
-    ["--h3-gap", "소제목 위", 0, 6, 0.1, "mm"]
+    ["--h3-gap", "소제목 위", 0, 10, 0.1, "mm"]
   ];
   var root = document.documentElement, cs = getComputedStyle(root), init = {}, ctl = document.getElementById("ctl");
   V.forEach(function (d) {
