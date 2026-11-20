@@ -101,7 +101,7 @@
 | 항목 | 상태 | 근거 |
 |---|---|---|
 | 단 하나의 강한 메시지 | 같이 정함 (11/21 03:1x) | 위 피드백 1 |
-| 고객 (Target) · 시장 규모 · 숫자 가치 | 조사 중 (`TARGET-RESEARCH.md` 예정) · 라현 문서 `docs/research/20261007-underground-recon-service-review.md` 출발 | 피드백 「누가 사는가」 · 「숫자로」 |
+| 고객 (Target) · 시장 규모 · 숫자 가치 | 조사 초안 나옴 (11/21 03:24 · 저장소 밖 `/home/jay/data/app-design-1119/research/TARGET-RESEARCH.md` · 출처 원문 대조 전) · 라현 문서 `docs/research/20261007-underground-recon-service-review.md` 출발 | 피드백 「누가 사는가」 · 「숫자로」 |
 | 3DGS 겉모습 · AI Top View 환경 생성 | 범위 밖 후보 | 피드백 2 |
 | 발표 장면 세부 | 더 논의 | 피드백 3 |
 | 제안 5 (안전 목표 · 증명 구분) | 다시 설명함 · 답 대기 | 피드백 5 |
