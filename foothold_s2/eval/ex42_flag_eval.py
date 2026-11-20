@@ -73,6 +73,7 @@ from isaaclab_tasks.utils import load_cfg_from_registry  # noqa: E402
 
 import foothold_s2.sb_tasks  # noqa: E402,F401
 from foothold_s2.eval import adapters, ex41_eval_loader, fixed_terrain, map_mode_cells, run_identity  # noqa: E402
+from foothold_s2 import ex42_beam_start as beam_start  # noqa: E402
 
 
 def _sha(path):
@@ -105,8 +106,7 @@ def _configure():
     for name in ("terrain_levels", "command_range"):
         if hasattr(env_cfg.curriculum, name):
             setattr(env_cfg.curriculum, name, None)
-    from foothold_s2.terrains.ex42_column_reset import pin_column_reset_midpoint
-    pin_column_reset_midpoint(env_cfg.events.reset_base)
+    beam_start.configure_flag_reset(env_cfg.events.reset_base, mounted)
     env_cfg.events.reset_robot_joints.params["position_range"] = (1.0, 1.0)
     env_cfg.events.reset_robot_joints.params["velocity_range"] = (0.0, 0.0)
     cmd = env_cfg.commands.base_velocity
@@ -218,6 +218,7 @@ def main():
                                                  args.device, checkpoint_state=checkpoint_state)
         args.out.mkdir(parents=True, exist_ok=False)
         receipt = {"format": "foothold-ex42-flag-eval/1", "state": "done",
+                   **beam_start.flag_receipt_fields(mounted, args.seed),
                    "checkpoint": str(args.checkpoint.resolve()), "checkpoint_sha256": _sha(args.checkpoint),
                    "plan_sha256": hashlib.sha256(plan_bytes).hexdigest(),
                    "mesh_sha256": mounted["mesh_sha256"], "seed": args.seed,
