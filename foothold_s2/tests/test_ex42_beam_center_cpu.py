@@ -130,3 +130,21 @@ def test_forward_commands_only(monkeypatch):
     env = _env([1] * 6, [[3.0, 0.05]] * 6, map_off=torch.zeros(6, dtype=torch.bool), cmd=cmds)
     # forward · stand-ish · side · turn · backward · edge (|vy| = |wz| = 0.1 still forward)
     assert bc.beam_center_term(env).tolist() == pytest.approx([0.05, 0, 0, 0, 0, 0.05], abs=1e-6)
+
+
+def test_map_off_is_reread_every_call_and_beam_columns_never_get_map_off(monkeypatch, capsys):
+    """planner 07:26 (first_call beam_envs_map_on=430 of beam_envs=430): the real draw filter (map_switch.eligible_map_off, used by
+    start_runner._restrict_map_off) never switches the map off on A/balance_beams (a sparse column, lead decision 11/11), so map-on = all
+    beam envs is expected there; the term still re-reads env._ex42_map_off on every call (a map-off env's value is 0 from that call on)."""
+    from foothold_s2.runners.map_switch import eligible_map_off
+    _on(monkeypatch)
+    names = ["boxes", "balance_beams", "flat", "B/beam"]                  # generator_column_names: A columns are bare kind names
+    cols = torch.tensor([0, 1, 2, 3, 1])
+    drawn = torch.ones(5, dtype=torch.bool)                              # every env drew «map off»
+    off = drawn & eligible_map_off(cols, torch.zeros(5, dtype=torch.long), names)
+    assert off.tolist() == [True, False, True, False, False]             # only A continuous / flat columns may lose the map
+    env = _env(cols.tolist(), [[3.0, 0.05]] * 5, map_off=off)
+    assert bc.beam_center_term(env).tolist() == pytest.approx([0, 0.05, 0, 0, 0.05], abs=1e-6)
+    assert "beam_envs=2 beam_envs_map_on=2 of=5" in capsys.readouterr().out
+    env._ex42_map_off = torch.tensor([False, True, False, False, False])  # the runner publishes a new flag before the next env.step
+    assert bc.beam_center_term(env).tolist() == pytest.approx([0, 0, 0, 0, 0.05], abs=1e-6)   # a map-off env's term value is 0
