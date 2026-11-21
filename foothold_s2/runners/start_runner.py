@@ -783,6 +783,13 @@ class StartRunner(OnPolicyRunner):
             self.env.episode_length_buf = torch.randint_like(
                 self.env.episode_length_buf, high=int(self.env.max_episode_length)
             )
+        from foothold_s2.runners import ex42_seed_offset
+        if ex42_seed_offset.offset():                           # lead 08:35: after every restore (parent RNG, env state), reseed with the offset seed
+            env_seed = getattr(getattr(getattr(self.env, "unwrapped", self.env), "cfg", None), "seed", None)
+            if type(env_seed) is not int:
+                raise ValueError("EX42_SEED_OFFSET needs the env seed (env.cfg.seed)")
+            rec = ex42_seed_offset.reseed(env_seed, self._command_term())
+            print("EX42_SEED_OFFSET where=start offset=%d env_seed=%d reseeded=%s" % (ex42_seed_offset.offset(), env_seed, ",".join(rec["reseeded"])), flush=True)
         raw = self.env.get_observations().to(self.device)
         self._scatter_and_record_before_rollout()                 # EX-35: 흩기 · 영수증은 reset 이 다 끝난 뒤 첫 rollout 직전의 실제 값으로
         self.train_mode()

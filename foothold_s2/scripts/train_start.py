@@ -972,7 +972,8 @@ def main(env_cfg, agent_cfg):
         parent_seed = EX42_STAGE_ZERO_CHECKPOINT.get("env_seed")
         if type(parent_seed) is not int:
             raise ValueError("EX-42 stage-zero parent environment seed is missing")
-        agent_cfg.seed = parent_seed
+        from foothold_s2.runners import ex42_seed_offset
+        agent_cfg.seed = parent_seed + ex42_seed_offset.offset()          # lead 08:35: EX42_SEED_OFFSET (0 = the parent's seed, as before)
         agent_cfg.max_iterations = (args_cli.max_iterations if args_cli.ex42_speed_probe else EX42_STAGE_UPDATES)
     env_cfg.scene.num_envs = args_cli.num_envs if args_cli.num_envs is not None else env_cfg.scene.num_envs  # per-process
     agent_cfg.max_iterations = args_cli.max_iterations if args_cli.max_iterations is not None else agent_cfg.max_iterations
@@ -1251,7 +1252,8 @@ def main(env_cfg, agent_cfg):
                 "parent_cumulative_update": EX42_STAGE_PARENT_UPDATES[1]}
                if EX42_E0_REQUESTED else {}))
         agent_cfg.max_iterations = (args_cli.max_iterations if args_cli.ex42_speed_probe else EX42_STAGE_UPDATES)
-        agent_cfg.seed = int(EX42_STAGE_ZERO_CHECKPOINT["env_seed"])
+        from foothold_s2.runners import ex42_seed_offset
+        agent_cfg.seed = int(EX42_STAGE_ZERO_CHECKPOINT["env_seed"]) + ex42_seed_offset.offset()   # lead 08:35 (0 = as before)
     pc = dict(train_cfg.get("perception", {}) or {})
     if args_cli.map_input:
         pc["map_input"] = args_cli.map_input
