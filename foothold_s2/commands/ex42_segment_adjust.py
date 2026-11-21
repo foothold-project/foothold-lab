@@ -482,6 +482,9 @@ def apply_reward_params(env_cfg, record, term_cfg_class=None) -> dict:
     ex42_slow_track.register(env_cfg, term_cfg_class)
     ex42_slow_progress.register(env_cfg, term_cfg_class)
     ex42_heading_hold.register(env_cfg, term_cfg_class)      # only with EX42_HEADING_HOLD=1 (lead 2026-11-21 17:21), weight 0
+    from foothold_s2.commands import ex42_posture
+
+    ex42_posture.register_rewards(env_cfg, term_cfg_class)   # only with EX42_POSTURE=1 (lead 2026-11-21 19:34): height · roll tracking (paper Table III)
     values = ((record or {}).get("rewards") or {}).get("values")
     out = {}
     for cell, (term, param, default) in PARAM_CELLS.items():

@@ -355,6 +355,11 @@ class StartRunner(OnPolicyRunner):
         if "pose_cmd" not in raw.keys() or tuple(raw["pose_cmd"].shape) != (raw.batch_size[0], 2):
             raise ValueError("EX-41 pose_cmd must have shape (N,2)")
         pose = raw["pose_cmd"]
+        from foothold_s2.commands import ex42_posture
+
+        if ex42_posture.enabled():                 # EX42_POSTURE=1 (lead 2026-11-21 19:34): the posture command is live; finite and in range
+            ex42_posture.check_runner_pose(pose)
+            return pose
         if not torch.isfinite(pose).all() or torch.count_nonzero(pose):
             raise ValueError("EX-41 D93 pose_cmd must be finite and zero in this stage")
         return pose

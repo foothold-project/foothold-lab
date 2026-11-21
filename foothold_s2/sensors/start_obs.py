@@ -93,6 +93,9 @@ def apply_ex41_pose_observation(env_cfg) -> None:
     if getattr(obs, "pose_cmd", None) is not None:
         raise ValueError("EX-41 pose_cmd observation group already exists")
     obs.pose_cmd = PoseCommandGroup()
+    from foothold_s2.commands import ex42_posture
+
+    ex42_posture.register_observation(obs.pose_cmd)        # EX42_POSTURE=1 일 때만 자세 칸이 명령 값 (기본: 0 그대로)
 
 
 def apply_start_perception(env_cfg, robot_base: str = "{ENV_REGEX_NS}/Robot/base") -> None:
