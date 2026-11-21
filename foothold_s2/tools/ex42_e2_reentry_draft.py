@@ -170,12 +170,24 @@ def set_kind_shares(terrain: dict, shares: dict | None, add: dict | None, drop: 
     if zero:
         raise ValueError(f"single-kind rows at share 0: {zero} (give them a share with --kind-share or do not add them)")
     if shrink:
-        if not shares or add or drop:
-            raise ValueError("--shrink-to-continuous needs --kind-share values only (no --add-kind or --drop-kind)")
-        up = sorted(k for k, v in shares.items() if v > before[k] + 1e-12)
-        if up or not total_after < sum(before.values()) - 1e-9:               # against the source's own sparse total (0.28 here), not the 0.44 bundle
+        if not shares or drop:
+            raise ValueError("--shrink-to-continuous needs --kind-share values (no --drop-kind)")
+        up = sorted(k for k, v in shares.items() if k in before and v > before[k] + 1e-12)
+        if up:
+            raise ValueError(f"--shrink-to-continuous only lowers the shares of existing rows: raised {up}")
+        if add:
+            # lead 2026-11-21 20:17: open new rows (D/crawl) at a small share in the same call. Their share comes from the continuous columns
+            # (or from the existing rows lowered in the same call); the single-kind sum may not pass the 0.44 bundle.
+            unshared = sorted(k for k in add if k not in shares)
+            if unshared:
+                raise ValueError(f"--shrink-to-continuous with --add-kind: give the new rows a share ({unshared})")
+            if total_after > BUNDLE_TOTAL + 1e-9:
+                raise ValueError(f"--shrink-to-continuous with --add-kind: the single-kind sum {total_after:.6f} passes the {BUNDLE_TOTAL} bundle")
+            report["from_continuous"] = round(total_after - sum(before.values()), 9)
+        elif not total_after < sum(before.values()) - 1e-9:                  # against the source's own sparse total (0.28 here), not the 0.44 bundle
             raise ValueError(f"--shrink-to-continuous only lowers shares: raised {up}, sum {total_after:.6f} vs the source's {sum(before.values()):.6f}")
-        report["shrunk_to_continuous"] = round(sum(before.values()) - total_after, 9)
+        else:
+            report["shrunk_to_continuous"] = round(sum(before.values()) - total_after, 9)
     elif abs(allowed_total - total_after) > 1e-6:
         raise ValueError(f"the single-kind shares add up to {total_after:.6f}, the bundle is {allowed_total:.6f}: name the receiving kind in the same call "
                          f"(before {before}, after {after})")

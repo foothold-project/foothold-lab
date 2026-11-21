@@ -261,3 +261,22 @@ def test_shrink_to_continuous_lowers_shares_only_when_asked_and_gives_the_rest_t
             rd.set_kind_shares(base, bad, None, shrink=True)                                  # raising or keeping the total is not a shrink
     with pytest.raises(ValueError, match="cannot also be added|needs --kind-share values only"):
         rd.set_kind_shares(base, small, None, ["A/gaps"], shrink=True)
+
+
+def test_shrink_with_add_kind_opens_a_small_new_row_in_one_call():
+    """lead 2026-11-21 20:17: D/crawl at a small share in the same call as --shrink-to-continuous (the 0.44 rule refused it; a second draft
+    from a draft double-counted the parent's cumulative updates)."""
+    base, _ = rd.set_kind_shares(_v1_terrain(), None, None, ["B/gap", "C/gap", "B/beam", "A/gaps"])      # a beams-only 0.14 plan (rx2)
+    assert rd.rule_shares(base) == {"A/balance_beams": pytest.approx(0.14)}
+    out, rep = rd.set_kind_shares(base, {"D/crawl": 0.04}, {"D/crawl": 2}, shrink=True)
+    assert rd.rule_shares(out) == {"A/balance_beams": pytest.approx(0.14), "D/crawl": pytest.approx(0.04)} and rep["from_continuous"] == pytest.approx(0.04)
+    out2, rep2 = rd.set_kind_shares(base, {"A/balance_beams": 0.10, "D/crawl": 0.04}, {"D/crawl": 2}, shrink=True)
+    assert rd.rule_shares(out2) == {"A/balance_beams": pytest.approx(0.10), "D/crawl": pytest.approx(0.04)} and rep2["from_continuous"] == pytest.approx(0.0)
+    with pytest.raises(ValueError, match="give the new rows a share|share 0"):
+        rd.set_kind_shares(base, {"A/balance_beams": 0.10}, {"D/crawl": 2}, shrink=True)
+    with pytest.raises(ValueError, match="only lowers the shares of existing rows"):
+        rd.set_kind_shares(base, {"A/balance_beams": 0.2, "D/crawl": 0.04}, {"D/crawl": 2}, shrink=True)
+    with pytest.raises(ValueError, match="passes the 0.44 bundle"):
+        rd.set_kind_shares(base, {"D/crawl": 0.31}, {"D/crawl": 2}, shrink=True)
+    with pytest.raises(ValueError, match="bundle is"):
+        rd.set_kind_shares(base, {"D/crawl": 0.04}, {"D/crawl": 2})                           # without the flag: the strict rule as before
