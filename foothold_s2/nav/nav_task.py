@@ -96,6 +96,7 @@ class NavTask:
         self.straighten, self.path_range_m = bool(straighten), tuple(path_range_m)
         self.table = None; self.table_tol_m = 0.75; self.table_sha256 = None; self.task_table_hits = 0; self.task_table_miss = 0; self.task_redraw_on_reset = 0   # 시작 · 목표 · 경로 표 (build_table): 학습 중에는 표에서 뽑는다
         self.winding_frac, self.winding_min, self.goal_candidates = float(winding_frac), float(winding_min), int(goal_candidates)
+        self.strict_winding = False       # P2 스위치 (kit_factories.fresh_tasks): True 면 _pick_goal 의 굴곡 몫을 winding_frac 로 지킴
         self.task_new = 0                 # 새로 뽑은 과제 수 (누적)
         self.task_winding = 0             # 그 가운데 굴곡 비 winding_min 이상 (누적)
         self.task_relaxed = 0             # 목표 조건 (경로 길이 범위) 을 못 맞춰 옛 꼴로 물러선 수 (누적)
@@ -168,7 +169,10 @@ class NavTask:
             if not (lo <= L <= hi):
                 continue
             (wound if L / straight >= self.winding_min else ok).append((t, pts))
-        pool = (wound or ok) if want_wind else (ok + wound)
+        if self.strict_winding:     # P2 (HIPAN_FRESH_TASKS): 굴곡 아닌 차례는 굴곡 아닌 쌍만 (고정표 _table_pick 과 같은 규칙 · 굴곡 몫 = winding_frac)
+            pool = (wound or ok) if want_wind else (ok or wound)
+        else:
+            pool = (wound or ok) if want_wind else (ok + wound)
         if not pool:
             return None
         return pool[int(self.rng.integers(len(pool)))]

@@ -18,10 +18,27 @@ REQUIRED = ("lower_checkpoint", "lower_sha256", "num_envs", "device", "seed", "r
 _APP = None                                      # Kit 앱 (한 프로세스에 하나). isaaclab 모듈은 앱이 뜬 뒤에만 import 할 수 있다 (11/17 첫 로컬 실행: 앱 없이 isaaclab_tasks import 에서 죽음)
 
 
+FRESH_PATH_RANGE_M = (5.0, 30.0)         # HiPAN 원문 시험 구간 [5,10] [10,20] [20,30] m 을 덮는 학습 과제 경로 길이 (lead 11/22 01:28 P2)
+
+
+def fresh_tasks(environ=None) -> bool:
+    """P2 스위치 HIPAN_FRESH_TASKS (lead 11/22 01:28 · planner HIPAN-M2000-BENCH-S0-CAUSE-1122 3 절 · 기본 꺼짐 = m2000 학습 조건 그대로):
+    켜면 (a) 같은 과제 연속 실패 자르기 끔 (HIPAN_NEW_TASK_AFTER_FAILS 가 있어도 0) (b) 시작점 64 x 목표 32 고정표를 만들지 않고 새 과제마다 목표를 방 지도에서
+    새로 뽑음 (충돌 없는 칸 · 최단 경로 FRESH_PATH_RANGE_M · 굴곡 winding_min 1.2 위 몫 winding_frac 0.5 · nav_task._pick_goal 그대로) (c) 나머지 (보상 · 수준 · v_des ·
+    시간 상한) 그대로. 시작은 Isaac 의 env 원점 (방마다 n_starts 곳 · 방 영수증 · 이어 받기와 묶여 그대로)."""
+    env = os.environ if environ is None else environ
+    v = str(env.get("HIPAN_FRESH_TASKS", "")).strip()
+    if v not in ("", "0", "1"):
+        raise ValueError(f"HIPAN_FRESH_TASKS must be 0 or 1, got {v!r}")
+    return v == "1"
+
+
 def new_task_after_fails(cfg: dict, environ=None) -> int:
     """처방 A 스위치 (planner HIPAN-STICKY-TASK-1120 · 논문 밖): factory 설정 task_new_after_fails 또는 환경 변수 HIPAN_NEW_TASK_AFTER_FAILS (Pod 은 --remote-env). 0 (기본) = 끔 = 옛 동작. N >= 1 = 같은 과제 연속 N 번 실패하면 표에서 새 과제."""
     env = os.environ if environ is None else environ
     nf = int(cfg.get("task_new_after_fails", env.get("HIPAN_NEW_TASK_AFTER_FAILS", 0)) or 0)
+    if fresh_tasks(env):
+        return 0                                    # P2 (a): 실패 자르기 끔
     if nf < 0:
         raise ValueError(f"task_new_after_fails must be >= 0, got {nf}")
     return nf
@@ -129,8 +146,14 @@ def _build(cfg: dict, with_camera: bool):
     rows = raw.scene.terrain.terrain_levels.cpu().numpy()
     from foothold_s2.nav import room_generator as rg
 
-    starts = None if not int(cfg.get("task_table_per_start", 32)) else [rg.start_points(a.room, int(cfg["n_starts"]), seed=int(cfg["room_seed"]) + row)[:, :2] for row, a in enumerate(prepared["assets"])]
-    task = make_task(prepared["assets"], int(cfg["num_envs"]), int(cfg["seed"]), rows, raw.scene.env_origins[:, :2].cpu().numpy(), starts, int(cfg.get("task_table_per_start", 32)), reach_m=float(cfg["reach_m"]) if "reach_m" in cfg else None)
+    fresh = fresh_tasks()
+    per_start = 0 if fresh else int(cfg.get("task_table_per_start", 32))          # P2 (b): 고정표 없음 → 새 과제마다 방 지도에서
+    starts = None if not per_start else [rg.start_points(a.room, int(cfg["n_starts"]), seed=int(cfg["room_seed"]) + row)[:, :2] for row, a in enumerate(prepared["assets"])]
+    task = make_task(prepared["assets"], int(cfg["num_envs"]), int(cfg["seed"]), rows, raw.scene.env_origins[:, :2].cpu().numpy(), starts, per_start, reach_m=float(cfg["reach_m"]) if "reach_m" in cfg else None)
+    if fresh:
+        task.path_range_m, task.strict_winding = FRESH_PATH_RANGE_M, True
+    print(f"HIPAN_FRESH_TASKS {'on' if fresh else 'off'} table={'none' if fresh else per_start} path_range_m={list(task.path_range_m)} winding_min={task.winding_min} "
+          f"winding_frac={task.winding_frac} strict_winding={task.strict_winding} cut_after_fails={new_task_after_fails(cfg)}", flush=True)
     if task.reach_m <= 0:
         raise ValueError(f"reach_m must be > 0, got {task.reach_m}")
     from foothold_s2.nav import pgcl as _pgcl
