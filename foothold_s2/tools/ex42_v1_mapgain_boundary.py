@@ -35,6 +35,10 @@ GAIN = 10.0
 CROSS_MIN = 48
 SLACK = 10.0
 SPEEDS = ("0.7", "1.0")
+# Crossing line by kind (lead 08:26 ledger c13a14709 · planner 08:25): on the E3 kinds the first gap ends 0.5~1.1 m after the start, so
+# "first gap end + 0.3" is 0.8~1.4 m and a flat map already crosses 59~64 of 64 (ceiling = graduation, the cap would climb by itself).
+# These kinds use the balance-beam form instead: a fixed far line, FIXED_GAP_END + 0.3 = 3.3 m. The E2 kinds keep their measured first gap end.
+FIXED_GAP_END = {"A/balance_beams": 3.0, "B/pallets": 3.0, "A/stepping_beams": 3.0, "A/stepping_stones_low": 3.0}
 INPUTS = ("gt", "pred", "flat", "shift", "off")
 MODE_OF = {"gt": "eval_gt", "pred": "eval_pred", "flat": "eval_gt", "shift": "eval_gt", "off": "probe_prop_only"}
 # which output folder (tag suffix) each input comes from: the main run writes gt, pred, off; flat and shift have their own runs
@@ -122,9 +126,11 @@ def find_earlier(out: Path, boundary: int, interval: int = 250) -> list | None:
 
 def first_gap_end(mesh_dir: str | Path, family: str, kind: str, col: int, level: int) -> float:
     """Local x (m, from the env origin) of the end of the first void on the centre line of tile (level, col), the farthest-top ray cast of
-    the gate_ends.py of the map-gain tables. Balance beams: 3.0 (the table value). Needs trimesh (eval environment only)."""
-    if kind == "balance_beams":
-        return 3.0
+    the gate_ends.py of the map-gain tables. Kinds in FIXED_GAP_END (balance beams and, from E3, pallets, stepping beams, easy stepping
+    stones): that fixed value. Needs trimesh (eval environment only)."""
+    fixed = FIXED_GAP_END.get(f"{family}/{kind}")
+    if fixed is not None:
+        return fixed
     import trimesh
     z = np.load(Path(mesh_dir) / "terrain_mesh.npz", allow_pickle=True)
     verts, faces, origins = z["vertices"], z["faces"], z["origins"]
