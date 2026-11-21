@@ -8,7 +8,7 @@
 
 먼저 읽기: foothold-go2 `AGENTS.md` 5 · 5a (로봇 명령은 팀장 동의 · 조이스틱) · lab PR #881 가지 `docs/go2-realtest-1119` 의 `inbox/jay/20261117-go2-x-sim-match-checklist-assets/realtest-1119/ACADEMY-1120.md` (측정 한 장).
 
-Jetson 접속: ai-lx01 에서 `nvidia@<tailnet 주소>` (주소는 lab `tools/jetson_storage/go2_session.sh` 의 `J=`) · `-o StrictHostKeyChecking=yes` 로 붙음 (`go2x-jetson` 이름은 호스트 키 미등록이라 안 붙음).
+Jetson 접속: ai-lx01 에서 `nvidia@<tailnet 주소>` (주소는 ai-lx01 의 `~/.mai/jetson-storage/hosts.env` 의 `JETSON=` · 저장소에 두지 않음) · `-o StrictHostKeyChecking=yes` 로 붙음 (기기 이름으로는 호스트 키 미등록이라 안 붙음).
 
 ## 1. 바로 할 실험 (학원 · Jetson 터미널 · 로봇은 팀장 조이스틱)
 
