@@ -12,6 +12,9 @@ hind foot drops", unrelated to the gait width or the hip term. Today's median dr
              per-env map-off flag as env._ex42_map_off every step; map-off envs are left out, reconstructed-map envs stay in). Elsewhere 0.
              The centre line is tile y = 0: checked on the real mesh (b2m_rpy_lv, columns 35~39, every level: top y mid 0.0000 m).
     planner 06:38 · lead 06:39 (ledger e617fe49f): r_center = -5.0 x min(|dy|, 0.10) (l1, EX42_BEAM_CENTER_W=-5.0).
+    lead 07:39 (ledger 2b9bdc33d · planner 07:38): the body must face along the beam: |yaw| <= EX42_BEAM_CENTER_YAW (default 0.3 rad)
+             from +x (a robot that starts turned walks off the beam whatever it does, so its |dy| is a penalty it cannot fix). The check
+             line adds, per all / gt / recon: candidates before the yaw test (n_cand), the yaw pass share and |dy| median of the passed ones.
     lead 06:40 (ledger b148fd9b2): forward-command envs only (vx > 0.1, |vy| <= 0.1, |wz| <= 0.1: side, turn and stand commands left out);
              the check line splits ground-truth-map and reconstructed-map envs (the runner publishes env._ex42_use_gt beside map-off).
     form   EX42_BEAM_CENTER_FORM = l1  : value = min(|dy|, EX42_BEAM_CENTER_CLIP)      weight must be < 0 (a penalty)
@@ -33,7 +36,7 @@ import torch
 TERM = "ex42_beam_center"
 ENV_SWITCH = "EX42_BEAM_CENTER"
 KEYS = ("EX42_BEAM_CENTER_FORM", "EX42_BEAM_CENTER_W", "EX42_BEAM_CENTER_SIGMA", "EX42_BEAM_CENTER_CLIP", "EX42_BEAM_CENTER_X",
-        "EX42_BEAM_CENTER_CHECK_STEPS")
+        "EX42_BEAM_CENTER_CHECK_STEPS", "EX42_BEAM_CENTER_YAW")
 STATE = "_ex42_beam_center_state"
 BEAM_KIND = ("A", "balance_beams")
 SAMPLE_EVERY = 24
@@ -84,10 +87,13 @@ def settings() -> dict:
         raise ValueError(f"EX42_BEAM_CENTER_X must be 'x0,x1' (got {raw_x!r})") from None
     if not x0 < x1:
         raise ValueError(f"EX42_BEAM_CENTER_X must have x0 < x1 (got {raw_x!r})")
+    yaw = _num("EX42_BEAM_CENTER_YAW", 0.3)
+    if not 0 < yaw <= math.pi:
+        raise ValueError(f"EX42_BEAM_CENTER_YAW must be in (0, pi] (got {yaw})")
     steps = _num("EX42_BEAM_CENTER_CHECK_STEPS", 1200)
     if steps < SAMPLE_EVERY or steps != int(steps):
         raise ValueError("EX42_BEAM_CENTER_CHECK_STEPS must be a whole number >= 24")
-    return {"form": form, "weight": w, "sigma": sigma, "clip": clip, "x": (x0, x1), "check_steps": int(steps)}
+    return {"form": form, "weight": w, "sigma": sigma, "clip": clip, "x": (x0, x1), "yaw": yaw, "check_steps": int(steps)}
 
 
 def beam_columns(table) -> torch.Tensor:
@@ -103,6 +109,12 @@ def value(dy_abs: torch.Tensor, on: torch.Tensor, cfg: dict) -> torch.Tensor:
 class _State:
     def __init__(self, cfg, beam_cols):
         self.cfg, self.beam_cols, self.calls, self.samples, self.started = cfg, beam_cols, 0, [], False
+
+
+def body_yaw(quat_wxyz: torch.Tensor) -> torch.Tensor:
+    """Yaw (rad, -pi..pi) of Isaac (w, x, y, z) root quaternions."""
+    w, x, y, z = quat_wxyz.unbind(-1)
+    return torch.atan2(2.0 * (w * z + x * y), 1.0 - 2.0 * (y * y + z * z))
 
 
 def _rank() -> int:
@@ -126,7 +138,8 @@ def beam_center_term(env):
     if bool(((cols < 0) | (cols >= len(st.beam_cols))).any()):
         raise ValueError("EX-42 beam centre: a terrain column is outside the column table")
     beam_env = st.beam_cols[cols]
-    local = env.scene["robot"].data.root_pos_w[:, :2] - terrain.env_origins[:, :2]
+    robot = env.scene["robot"].data
+    local = robot.root_pos_w[:, :2] - terrain.env_origins[:, :2]
     x0, x1 = st.cfg["x"]
     if not hasattr(raw, "_ex42_map_off"):
         raise ValueError("EX-42 beam centre needs the runner's per-env map-off flag (raw._ex42_map_off) to leave map-off envs out")
@@ -135,7 +148,9 @@ def beam_center_term(env):
         map_off = torch.zeros(env.num_envs, dtype=torch.bool)
     cmd = env.command_manager.get_command("base_velocity").to(beam_env.device)
     forward = (cmd[:, 0] > CMD_EPS) & (cmd[:, 1].abs() <= CMD_EPS) & (cmd[:, 2].abs() <= CMD_EPS)
-    on = beam_env & forward & (local[:, 0] >= x0) & (local[:, 0] <= x1) & ~map_off.to(beam_env.device).bool()
+    cand = beam_env & forward & (local[:, 0] >= x0) & (local[:, 0] <= x1) & ~map_off.to(beam_env.device).bool()
+    yaw_ok = body_yaw(robot.root_quat_w.to(cand.device)).abs() <= st.cfg["yaw"]
+    on = cand & yaw_ok
     use_gt = getattr(raw, "_ex42_use_gt", None)
     gt = torch.ones_like(on) if use_gt is None else use_gt.to(on.device).bool()
     dy = local[:, 1].abs()
@@ -145,15 +160,19 @@ def beam_center_term(env):
         print(f"EX42_BEAM_CENTER where=first_call beam_envs={int(beam_env.sum())} beam_envs_map_on={int((beam_env & ~map_off.to(beam_env.device).bool()).sum())}"
               f" of={int(beam_env.numel())} rank={_rank()}", flush=True)
     st.calls += 1
-    if st.calls % SAMPLE_EVERY == 0 and bool(on.any()):
-        st.samples.append(torch.stack([dy[on], v[on], gt[on].float()], 1).detach().float().cpu())
+    if st.calls % SAMPLE_EVERY == 0 and bool(cand.any()):
+        st.samples.append(torch.stack([dy[cand], value(dy, cand, st.cfg)[cand], gt[cand].float(), yaw_ok[cand].float()], 1).detach().float().cpu())
     if st.calls % st.cfg["check_steps"] == 0:
         line = {"step": st.calls, "rank": _rank()}
-        s = torch.cat(st.samples) if st.samples else torch.zeros((0, 3)); st.samples = []
+        s = torch.cat(st.samples) if st.samples else torch.zeros((0, 4)); st.samples = []
         for name, sel in (("all", torch.ones(len(s), dtype=torch.bool)), ("gt", s[:, 2] > 0.5), ("recon", s[:, 2] <= 0.5)):
-            t = s[sel]
-            line[name] = ({"n": int(len(t)), "median_abs_dy_m": round(float(t[:, 0].median()), 5), "term_mean": round(float(t[:, 1].mean()), 6),
-                           "term_mean_weighted": round(float(t[:, 1].mean()) * st.cfg["weight"], 6)} if len(t) else {"n": 0})
+            c = s[sel]; t = c[c[:, 3] > 0.5]                                   # c: candidates before the yaw test · t: passed (the term's samples)
+            g = {"n_cand": int(len(c)), "yaw_pass": round(float(len(t)) / len(c), 4) if len(c) else None,
+                 "median_abs_dy_m_cand": round(float(c[:, 0].median()), 5) if len(c) else None, "n": int(len(t))}
+            if len(t):
+                g.update({"median_abs_dy_m": round(float(t[:, 0].median()), 5), "term_mean": round(float(t[:, 1].mean()), 6),
+                          "term_mean_weighted": round(float(t[:, 1].mean()) * st.cfg["weight"], 6)})
+            line[name] = g
         print("EX42_BEAM_CENTER_CHECK " + json.dumps(line), flush=True)
     return v
 
@@ -167,6 +186,6 @@ def register(env_cfg, term_cfg_class=None) -> bool:
         from isaaclab.managers import RewardTermCfg as term_cfg_class
     setattr(env_cfg.rewards, TERM, term_cfg_class(func=beam_center_term, weight=cfg["weight"], params={}))
     width = f"clip={cfg['clip']}" if cfg["form"] == "l1" else f"sigma={cfg['sigma']}"
-    print(f"EX42_BEAM_CENTER where=start weight={cfg['weight']} form={cfg['form']} {width} x={list(cfg['x'])} kind=A/balance_beams "
+    print(f"EX42_BEAM_CENTER where=start weight={cfg['weight']} form={cfg['form']} {width} x={list(cfg['x'])} yaw_max={cfg['yaw']} kind=A/balance_beams "
           f"dy=root_y-tile_origin_y check_steps={cfg['check_steps']} outside_START=1", flush=True)
     return True

@@ -30,11 +30,16 @@ def _on(monkeypatch, **extra):
         monkeypatch.setenv(k, v)
 
 
-def _env(cols, xy, map_off=None, origins=None, cmd=None, use_gt=None):
+def _quat_yaw(yaw):
+    yaw = torch.as_tensor(yaw, dtype=torch.float32)
+    return torch.stack([torch.cos(yaw / 2), torch.zeros_like(yaw), torch.zeros_like(yaw), torch.sin(yaw / 2)], -1)
+
+
+def _env(cols, xy, map_off=None, origins=None, cmd=None, use_gt=None, yaw=None):
     n = len(cols)
     origins = torch.zeros((n, 3)) if origins is None else origins
     pos = torch.column_stack([torch.tensor(xy, dtype=torch.float32) + origins[:, :2], torch.full((n,), 0.3)])
-    robot = SimpleNamespace(data=SimpleNamespace(root_pos_w=pos))
+    robot = SimpleNamespace(data=SimpleNamespace(root_pos_w=pos, root_quat_w=_quat_yaw([0.0] * n if yaw is None else yaw)))
     terrain = SimpleNamespace(terrain_types=torch.tensor(cols), env_origins=origins)
     scene = type("S", (), {"__getitem__": lambda self, k: robot, "terrain": terrain})()
     cmd = torch.tensor([[0.5, 0.0, 0.0]] * n) if cmd is None else torch.tensor(cmd)
@@ -55,7 +60,7 @@ def test_off_adds_nothing_and_loose_values_refuse(monkeypatch):
 def test_settings_and_sign_guard(monkeypatch):
     _on(monkeypatch)
     s = bc.settings()
-    assert s["form"] == "l1" and s["weight"] == -5.0 and s["clip"] == 0.10 and s["x"] == (0.5, 6.5) and s["check_steps"] == 1200
+    assert s["form"] == "l1" and s["weight"] == -5.0 and s["clip"] == 0.10 and s["x"] == (0.5, 6.5) and s["yaw"] == 0.3 and s["check_steps"] == 1200
     monkeypatch.setenv("EX42_BEAM_CENTER_W", "5")
     with pytest.raises(ValueError, match="must be < 0"):
         bc.settings()
@@ -79,7 +84,7 @@ def test_real_reward_entry_adds_the_term_with_the_start_line(monkeypatch, capsys
     t = getattr(cfg.rewards, bc.TERM)
     assert t.func is bc.beam_center_term and t.weight == -5.0
     out = capsys.readouterr().out
-    assert "EX42_BEAM_CENTER where=start weight=-5.0 form=l1 clip=0.1 x=[0.5, 6.5] kind=A/balance_beams" in out and "outside_START=1" in out
+    assert "EX42_BEAM_CENTER where=start weight=-5.0 form=l1 clip=0.1 x=[0.5, 6.5] yaw_max=0.3 kind=A/balance_beams" in out and "outside_START=1" in out
     src = Path(sa.__file__).read_text()
     assert "ex42_beam_center.register(env_cfg, term_cfg_class)" in src   # the real entry calls it
 
@@ -148,3 +153,24 @@ def test_map_off_is_reread_every_call_and_beam_columns_never_get_map_off(monkeyp
     assert "beam_envs=2 beam_envs_map_on=2 of=5" in capsys.readouterr().out
     env._ex42_map_off = torch.tensor([False, True, False, False, False])  # the runner publishes a new flag before the next env.step
     assert bc.beam_center_term(env).tolist() == pytest.approx([0, 0, 0, 0, 0.05], abs=1e-6)   # a map-off env's term value is 0
+
+
+def test_yaw_condition_and_check_line(monkeypatch, capsys):
+    """lead 07:39 (planner 07:38): only a body facing along the beam (|yaw| <= 0.3 rad from +x) is scored; the check line gives candidates,
+    the yaw pass share and the |dy| median of candidates and of passed samples, per all / gt / recon."""
+    _on(monkeypatch, EX42_BEAM_CENTER_CHECK_STEPS="24")
+    yaw = [0.0, 0.29, -0.31, 3.0, 0.1]
+    xy = [[3.0, 0.02], [3.0, 0.04], [3.0, 0.30], [3.0, 0.20], [3.0, 0.06]]
+    env = _env([1] * 5, xy, map_off=torch.zeros(5, dtype=torch.bool), yaw=yaw, use_gt=torch.tensor([True, True, True, False, False]))
+    v = bc.beam_center_term(env)
+    assert v.tolist() == pytest.approx([0.02, 0.04, 0, 0, 0.06], abs=1e-6)      # turned bodies (|yaw| 0.31 · 3.0) score 0
+    for _ in range(23):
+        bc.beam_center_term(env)
+    line = json.loads([l for l in capsys.readouterr().out.splitlines() if l.startswith("EX42_BEAM_CENTER_CHECK")][-1].split(" ", 1)[1])
+    a = line["all"]
+    assert a["n_cand"] == 5 and a["n"] == 3 and a["yaw_pass"] == pytest.approx(0.6) and a["median_abs_dy_m"] == pytest.approx(0.04, abs=1e-6)
+    assert a["median_abs_dy_m_cand"] == pytest.approx(0.06, abs=1e-6)
+    assert line["gt"]["n_cand"] == 3 and line["gt"]["n"] == 2 and line["recon"]["n_cand"] == 2 and line["recon"]["n"] == 1
+    monkeypatch.setenv("EX42_BEAM_CENTER_YAW", "0")
+    with pytest.raises(ValueError, match="EX42_BEAM_CENTER_YAW"):
+        bc.settings()
