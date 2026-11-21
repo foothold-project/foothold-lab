@@ -131,28 +131,36 @@ def unique_start_tasks(g, rng, *, per_band: int, bands, max_tries: int = 40000) 
 
 
 def make_type_tasks(kind: str, *, task_seed: int = 0, pose_active: bool = False, table=None, per_band: int = PER_BAND,
-                    rooms: str = "yaml", room_seed: int = 0) -> dict:
+                    rooms: str = "yaml", room_seed: int = 0, body_clear_m: float = 0.0) -> dict:
     spec_path = room_path(kind, rooms, room_seed)
     spec = rg.load_spec(spec_path)
     room = rg.build_room(spec)
     table = table or gm.load_grade_table(NAV / "grade_table_draft.yaml")
     g = gm.make_grade_map(room, table, pose_active=pose_active)
+    if body_clear_m > 0:                           # lead 11/22 05:39 (4): 시작 · 목표 · 최단 (구간) 을 몸 폭 지도에서 (P3 와 같은 식)
+        g = gm.body_clear_grade(g, room, body_clear_m)
     tasks = unique_start_tasks(g, np.random.default_rng(task_seed), per_band=per_band, bands=PAPER_BANDS_M)
     g_stand = gm.make_grade_map(room, table, pose_active=False) if pose_active else None
+    if g_stand is not None and body_clear_m > 0:
+        g_stand = gm.body_clear_grade(g_stand, room, body_clear_m)
     rows = []
     for i, t in enumerate(tasks):
         euclid = float(np.hypot(t.goal[0] - t.start[0], t.goal[1] - t.start[1]))
         row = {"id": i, "band": int(t.band), "start_xy": list(t.start), "goal_xy": list(t.goal),
                "shortest_m": round(float(t.shortest_m), 4), "euclid_m": round(euclid, 4), "needs_sparse": bool(t.needs_sparse)}
         if g_stand is not None:                    # 자세 없이 (서서) 가는 최단 · 못 가면 None: 자세가 줄여 주는 길이 · 자세 없이는 못 가는 과제
-            d = ns.geodesic_map(g_stand, np.asarray(t.start))[tuple(int(v / g.res) for v in t.goal)]
+            try:
+                d = ns.geodesic_map(g_stand, np.asarray(t.start))[tuple(int(v / g.res) for v in t.goal)]
+            except ValueError:                     # 몸 폭 지도에서 서서는 시작 칸이 막힘 (머리 위 장애 둘레): 서서는 못 감
+                d = np.inf
             row["shortest_stand_m"] = round(float(d), 4) if np.isfinite(d) else None
         rows.append(row)
     return {"format": "foothold-hipan-bench-tasks/1", "type": kind, "title": TITLES[kind],
             "room_spec": spec_path.relative_to(NAV).as_posix(), "room_spec_sha256": hashlib.sha256(spec_path.read_bytes()).hexdigest(),   # room_spec: nav/ 기준 상대 경로 (Runpod 사본에서도 같은 파일)
             "size_m": float(spec.get("size_m", rg.ROOM_M)), "task_seed": int(task_seed), "pose_active": bool(pose_active),
             "bands_m": [list(b) for b in PAPER_BANDS_M], "per_band": per_band, "eval_seeds": list(SEEDS),
-            "success_m": ns.SUCCESS_M, "distance": "shortest path on the grade map (assumption; paper does not say)",
+            "success_m": ns.SUCCESS_M, "distance": "shortest path on the grade map (assumption; paper does not say)" + (f"; body clearance {body_clear_m} m (passable cells within {body_clear_m} m of non-pit blocked cells shut)" if body_clear_m > 0 else ""),
+            **({"body_clear_m": float(body_clear_m)} if body_clear_m > 0 else {}),
             "tasks": rows}
 
 
@@ -184,6 +192,7 @@ def main(argv=None) -> int:
     ap.add_argument("--task-seed", type=int, default=0)
     ap.add_argument("--rooms", choices=("yaml", "wfc"), default="yaml", help="yaml = rooms/bench_<유형>.yaml (손으로 적은 임시) · wfc = WFC 유형 방을 만들어 rooms/bench_wfc_<유형>_s<시드>.yaml 로 쓰고 씀")
     ap.add_argument("--room-seed", type=int, default=0)
+    ap.add_argument("--body-clear-m", type=float, default=0.0, help="몸 폭 여유 (m): 시작 · 목표 · 최단을 이 여유의 등급 지도에서 (P3 · 0 = 옛 표)")
     ap.add_argument("--pose-active", action="store_true", help="머리 위 장애 아래를 자세 명령으로 지날 수 있다고 보고 등급 지도를 만든다")
     a = ap.parse_args(argv)
     out = Path(a.out); out.mkdir(parents=True, exist_ok=True)
@@ -192,7 +201,8 @@ def main(argv=None) -> int:
             print(f"wfc room -> {p}", flush=True)
     docs = []
     for kind in a.types:
-        doc = make_type_tasks(kind, task_seed=a.task_seed, pose_active=a.pose_active, rooms=a.rooms, room_seed=a.room_seed)
+        doc = make_type_tasks(kind, task_seed=a.task_seed, pose_active=a.pose_active, rooms=a.rooms, room_seed=a.room_seed,
+                              body_clear_m=a.body_clear_m)
         path = out / f"tasks_{kind}.json"
         path.write_text(json.dumps(doc, ensure_ascii=False, indent=1), encoding="utf-8")
         docs.append(doc)

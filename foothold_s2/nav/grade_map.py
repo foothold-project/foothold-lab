@@ -8,7 +8,7 @@
 from __future__ import annotations
 
 import hashlib
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from pathlib import Path
 
 import numpy as np
@@ -115,3 +115,24 @@ def sample_free_points(gm: GradeMap, rng: np.random.Generator, n: int, margin_m:
     if not len(cells):
         raise ValueError("no free cell")
     return (cells[rng.integers(0, len(cells), n)] + 0.5) * gm.res
+
+
+BODY_SOURCE_PITS = (rg.CELL_PIT, rg.CELL_GAP_PIT)    # 몸 폭 여유는 벽 · 다리 · 막힌 칸에서만 잰다 (구덩이 둘레를 넓히면 징검돌 · 평균대 길이 사라진다)
+
+
+def body_clear_grade(g: GradeMap, room, clear_m: float) -> GradeMap:
+    """P3 (30a0ea51c grade_map.body_clear_grade 와 같은 식 · lead 11/22 05:39 (4) 시험 과제표 몸 폭 지도판): 구덩이가 아닌 막힌 칸
+    (벽 · 다리 · 낮은 머리 위) 에서 셀 중심 거리 clear_m 미만인 통과 가능 칸을 막는다. 등급 · 비용 · 패치는 그대로 복사."""
+    from scipy import ndimage
+
+    if not clear_m > 0:
+        raise ValueError(f"clear_m must be > 0, got {clear_m}")
+    src = (g.grade == BLOCKED) & ~np.isin(room.cell, BODY_SOURCE_PITS)
+    if not src.any():
+        return replace(g, grade=g.grade.copy())
+    d = ndimage.distance_transform_edt(~src) * g.res
+    grade = g.grade.copy()
+    shut = (d < clear_m) & (grade != BLOCKED)
+    grade[shut] = BLOCKED
+    cost = np.asarray(g.cost, np.float32).copy(); cost[shut] = np.inf
+    return replace(g, grade=grade, cost=cost)
