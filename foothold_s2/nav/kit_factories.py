@@ -70,6 +70,15 @@ def path_clear_m(environ=None) -> float:
     return c
 
 
+def shape_geodesic(environ=None) -> bool:
+    """P4 스위치 HIPAN_SHAPE_GEODESIC (lead 11/22 05:43 · 기본 꺼짐): 경로 보상의 남은 길이를 과제 목표까지 측지 거리로 (목표를 향하는 구간). 0 · 비어 있음 = 끔 · 1 = 켬."""
+    env = os.environ if environ is None else environ
+    v = str(env.get("HIPAN_SHAPE_GEODESIC", "")).strip()
+    if v not in ("", "0", "1"):
+        raise ValueError(f"HIPAN_SHAPE_GEODESIC must be 0 or 1, got {v!r}")
+    return v == "1"
+
+
 def apply_path_clear(task, assets, clear_m: float) -> dict:
     """P3 켜짐: 방마다 몸 폭 지도를 만들어 task.plan_grades 에. 돌려주는 값 = 방마다 막힌 칸이 는 몫 (시작 줄 · 시험용)."""
     from foothold_s2.nav import grade_map as gm
@@ -206,6 +215,9 @@ def _build(cfg: dict, with_camera: bool):
     if pc:
         shut = apply_path_clear(task, prepared["assets"], pc)
         print(f"HIPAN_PATH_CLEAR_M {pc:g} (P3: 길 계획 몸 폭 지도 · 막힌 칸이 는 몫 방별 {shut})", flush=True)
+    if shape_geodesic():
+        task.shape_geodesic = True
+        print(f"HIPAN_SHAPE_GEODESIC on (P4: 목표를 향하는 구간의 남은 길이 = 측지 거리 · 지도 {'몸 폭 ' + format(task.plan_clear_m, 'g') if task.plan_grades is not None else '방 등급'})", flush=True)
     fs = final_successes()
     for _p in task.pgcl:
         _p.final_successes = fs

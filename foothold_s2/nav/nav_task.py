@@ -107,6 +107,8 @@ class NavTask:
         # shape_w 0 (기본) = 끔. 수준 2 이상 env 는 0. 수준 2 이상 env 비율이 shape_start_frac 을 넘으면 (회차 평균) 그 뒤 shape_decay_iters 회에 걸쳐 w 가 0 으로.
         self.shape_w, self.shape_clip, self.shape_start_frac, self.shape_decay_iters = 0.0, 0.5, 0.10, 100
         self.shape_scale, self._shape_decay_on, self._tail = 1.0, False, {}
+        self.shape_geodesic = False        # P4 (HIPAN_SHAPE_GEODESIC · lead 11/22 05:43 · planner: 마지막 수준의 남은 길이가 목표까지 직선이라 벽을 돌아가는 걸음을 벌함): True 면 지금 목표 (부목표가 아니라 과제 목표) 를 향하는 구간의 남은 길이를 길 계획 등급 지도 (P3 켜면 몸 폭 지도) 의 측지 거리로. False (기본) = 옛 직선 그대로
+        self._geo: dict = {}; self._geo_graph: dict = {}; self.geo_maps_built = 0; self.geo_build_s = 0.0
         self.shape_all_levels = False      # True (--shape-levels all) = 수준 2 이상 env 에도 r_shape (기본 False = 수준 1 만, 지금과 같음)
         self.shape_decay = True            # False (--shape-decay off) = 배율 1.0 고정 (감쇠 안 함 · 기본 True = 지금과 같음)
         self.redraw_on_fall = False       # True = 넘어진 뒤 (과제를 못 끝냄) 에도 표에서 새 과제 · False (기본, 논문 IV-C2) = 같은 과제 유지: 새 과제는 PGCL 이 요청할 때만
@@ -605,9 +607,53 @@ class NavTask:
             hit = self._tail[i] = (sub, pts, tail)
         return hit
 
+    def _geo_map(self, i):
+        """P4: env i 의 지금 과제 목표에서 길 계획 등급 지도 위 측지 거리 (H, W) · 못 가는 칸은 가장 가까운 갈 수 있는 칸 값 + 그 칸까지 거리 (몸이 막힌 칸에 걸쳐도 값이 튀지 않게).
+        과제 (방 · 목표) 마다 한 번 만들고 둔다. 그래프는 방마다 한 번."""
+        import time
+        from scipy import ndimage
+        from scipy.sparse.csgraph import dijkstra
+        from foothold_s2.nav import nav_score as ns
+
+        key = (int(self.room_id[i]), tuple(np.round(np.asarray(self.goal[i], float), 4)))
+        hit = self._geo.get(i)
+        if hit is not None and hit[0] == key:
+            return hit[1]
+        t0 = time.perf_counter()
+        g = self._pg(i)
+        graph = self._geo_graph.get((key[0], id(g)))
+        if graph is None:
+            graph = self._geo_graph[(key[0], id(g))] = ns._graph(g)[0]
+        goal = self._snap(g, self.goal[i])
+        if goal is None:
+            goal = np.asarray(self.goal[i], float)
+        c = np.clip((np.asarray(goal) / g.res).astype(int), 0, np.array(g.grade.shape) - 1)
+        d = dijkstra(graph, directed=False, indices=int(c[0] * g.grade.shape[1] + c[1])).reshape(g.grade.shape)
+        fin = np.isfinite(d)
+        if fin.any() and not fin.all():
+            edt, (ix, iy) = ndimage.distance_transform_edt(~fin, return_indices=True)
+            d = d[ix, iy] + edt * g.res
+        elif not fin.any():
+            d = np.zeros_like(d)
+        self._geo[i] = (key, d, g.res)
+        self.geo_maps_built += 1; self.geo_build_s += time.perf_counter() - t0
+        return self._geo[i][1]
+
+    def _geo_len(self, i, xy) -> float:
+        """P4: xy 에서 과제 목표까지 측지 거리 (셀 중심 값의 쌍선형 보간)."""
+        d = self._geo_map(i); res = self._geo[i][2]
+        u = np.asarray(xy, float) / res - 0.5
+        h, w = d.shape
+        x0 = int(np.clip(np.floor(u[0]), 0, h - 2)); y0 = int(np.clip(np.floor(u[1]), 0, w - 2))
+        fx = float(np.clip(u[0] - x0, 0.0, 1.0)); fy = float(np.clip(u[1] - y0, 0.0, 1.0))
+        return float((1 - fx) * (1 - fy) * d[x0, y0] + fx * (1 - fy) * d[x0 + 1, y0] + (1 - fx) * fy * d[x0, y0 + 1] + fx * fy * d[x0 + 1, y0 + 1])
+
     def _remaining(self, i, xy, k) -> float:
-        """xy 에서 k 번째 부목표 (k >= len 이면 목표) 로 직선 + 거기서 목표까지 이음 길이."""
+        """xy 에서 k 번째 부목표 (k >= len 이면 목표) 로 직선 + 거기서 목표까지 이음 길이.
+        P4 (shape_geodesic): 지금 향하는 것이 과제 목표면 (마지막 수준 전부 · 다른 수준의 마지막 구간) 직선 대신 측지 거리."""
         _sub, pts, tail = self._tail_len(i)
+        if self.shape_geodesic and np.array_equal(pts[min(k, len(pts) - 1)], pts[-1]):   # 지금 향하는 점이 과제 목표 (마지막 수준은 부목표가 목표 하나)
+            return self._geo_len(i, xy)
         return float(np.linalg.norm(np.asarray(xy, float) - pts[min(k, len(pts) - 1)]) + tail[min(k, len(pts) - 1)])
 
     def _shape_reward(self, pos_xy, i_now) -> np.ndarray:
