@@ -3,6 +3,7 @@
 
 Runs on the Jetson. Refuses to start below START_MIN_GB free, stops the bag
 with SIGINT (the bag closes cleanly) when free space drops below STOP_MIN_GB,
+when the time is up, or on Ctrl+C,
 and writes SHA256SUMS when it ends so jetson_sync.py can copy and verify it.
 
   python3 jrec.py full room-walk --seconds 330
@@ -99,11 +100,17 @@ def main(argv=None):
     log = open(os.path.join(out, 'bag.log'), 'w')
     p = subprocess.Popen(['bash', '-c', ROS, 'ros2'] + args + topics, stdout=log, stderr=subprocess.STDOUT,
                          start_new_session=True)
+    # Ctrl+C: the bag runs in its own session, so the terminal's SIGINT never reaches it.
+    # Catch it here and stop the bag the same way as the time limit (11/21 owner: Ctrl+C left the bag running).
+    ctrl_c = []
+    signal.signal(signal.SIGINT, lambda *_: ctrl_c.append(1))
     t0, stopped, low = time.time(), None, free0
     while p.poll() is None:
         free = free_gb(a.root)
         low = min(low, free)
-        if stopped is None and free < STOP_MIN_GB:
+        if stopped is None and ctrl_c:
+            stopped = 'ctrl_c'
+        elif stopped is None and free < STOP_MIN_GB:
             stopped = 'low_space'
         elif stopped is None and time.time() - t0 >= seconds:
             stopped = 'time'

@@ -1,5 +1,8 @@
 """Offline tests: no robot, no NAS. python3 -m unittest test_jetson_storage"""
 import hashlib
+import time
+import signal
+import json
 import os
 import subprocess
 import tempfile
@@ -50,6 +53,31 @@ class RecordTests(unittest.TestCase):
     def test_camera_profile_is_capped(self):
         self.assertEqual(jrec.PROFILES['camera'][1], 30)
         self.assertNotIn('/camera/camera/depth/image_rect_raw', jrec.PROFILES['map'][0])
+
+    def test_ctrl_c_stops_the_bag_and_writes_the_record(self):
+        # the fake bag sits in its own session like the real one and only leaves on SIGINT
+        fake = 'trap \'touch "$2.closed"; exit 0\' INT; while :; do sleep 0.1; done'
+        with tempfile.TemporaryDirectory() as d:
+            code = ('import jrec, sys; jrec.ROS = sys.argv[1]; jrec.free_gb = lambda p: 100.0; '
+                    'sys.exit(jrec.main(["map", "20260101-0000-t", "--seconds", "600", "--root", sys.argv[2]]))')
+            here = os.path.dirname(os.path.abspath(__file__))
+            p = subprocess.Popen(['python3', '-c', code, fake, d], cwd=here,
+                                 stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+            out = os.path.join(d, '20260101-0000-t')
+            for _ in range(50):
+                if os.path.exists(os.path.join(out, 'bag.log')):
+                    break
+                time.sleep(0.1)
+            time.sleep(1.0)
+            p.send_signal(signal.SIGINT)
+            rc = p.wait(30)
+            log = p.stdout.read()
+            p.stdout.close()
+            self.assertEqual(rc, 0, log)
+            self.assertTrue(os.path.exists(os.path.join(out, 'bag.closed')))
+            with open(os.path.join(out, 'record.json')) as f:
+                self.assertEqual(json.load(f)['stopped'], 'ctrl_c')
+            self.assertTrue(os.path.exists(os.path.join(out, 'SHA256SUMS')))
 
     def test_sums_match_sha256sum_and_skip_mark(self):
         with tempfile.TemporaryDirectory() as d:
