@@ -33,12 +33,33 @@ def fresh_tasks(environ=None) -> bool:
     return v == "1"
 
 
+def fresh_no_cut(environ=None) -> bool:
+    """P2 2차 (lead 11/22 02:04 · planner REVIEW-hipan-p2-1122 4 절 권고 1): HIPAN_FRESH_NO_CUT. 비어 있거나 1 = P2 1차 판 그대로 (켬이면 자르기 끔).
+    0 = 켬이어도 HIPAN_NEW_TASK_AFTER_FAILS (또는 factory task_new_after_fails) 자르기를 그대로 둔다 (새 과제가 들어오는 문을 둘로)."""
+    env = os.environ if environ is None else environ
+    v = str(env.get("HIPAN_FRESH_NO_CUT", "")).strip()
+    if v not in ("", "0", "1"):
+        raise ValueError(f"HIPAN_FRESH_NO_CUT must be 0 or 1, got {v!r}")
+    return v != "0"
+
+
+def final_successes(environ=None) -> int:
+    """P2 2차 (planner 권고 2): HIPAN_FINAL_SUCCESSES = 마지막 수준에서 새 과제를 요청할 연속 성공 수. 비어 있으면 5 (옛 값 · pgcl 기본 · 가정 22 §4 표)."""
+    env = os.environ if environ is None else environ
+    v = str(env.get("HIPAN_FINAL_SUCCESSES", "")).strip()
+    if v == "":
+        return 5
+    if not v.isdigit() or int(v) < 1:
+        raise ValueError(f"HIPAN_FINAL_SUCCESSES must be an integer >= 1, got {v!r}")
+    return int(v)
+
+
 def new_task_after_fails(cfg: dict, environ=None) -> int:
     """처방 A 스위치 (planner HIPAN-STICKY-TASK-1120 · 논문 밖): factory 설정 task_new_after_fails 또는 환경 변수 HIPAN_NEW_TASK_AFTER_FAILS (Pod 은 --remote-env). 0 (기본) = 끔 = 옛 동작. N >= 1 = 같은 과제 연속 N 번 실패하면 표에서 새 과제."""
     env = os.environ if environ is None else environ
     nf = int(cfg.get("task_new_after_fails", env.get("HIPAN_NEW_TASK_AFTER_FAILS", 0)) or 0)
-    if fresh_tasks(env):
-        return 0                                    # P2 (a): 실패 자르기 끔
+    if fresh_tasks(env) and fresh_no_cut(env):
+        return 0                                    # P2 (a): 실패 자르기 끔 (HIPAN_FRESH_NO_CUT=0 이면 자르기 유지 · P2 2차)
     if nf < 0:
         raise ValueError(f"task_new_after_fails must be >= 0, got {nf}")
     return nf
@@ -152,6 +173,10 @@ def _build(cfg: dict, with_camera: bool):
     task = make_task(prepared["assets"], int(cfg["num_envs"]), int(cfg["seed"]), rows, raw.scene.env_origins[:, :2].cpu().numpy(), starts, per_start, reach_m=float(cfg["reach_m"]) if "reach_m" in cfg else None)
     if fresh:
         task.path_range_m, task.strict_winding = FRESH_PATH_RANGE_M, True
+    fs = final_successes()
+    for _p in task.pgcl:
+        _p.final_successes = fs
+    print(f"PGCL_FINAL_SUCCESSES {fs}" + ("" if fs == 5 else " (P2 2차: 마지막 수준 연속 성공 수 바꿈 · 기본 5)"), flush=True)
     print(f"HIPAN_FRESH_TASKS {'on' if fresh else 'off'} table={'none' if fresh else per_start} path_range_m={list(task.path_range_m)} winding_min={task.winding_min} "
           f"winding_frac={task.winding_frac} strict_winding={task.strict_winding} cut_after_fails={new_task_after_fails(cfg)}", flush=True)
     if task.reach_m <= 0:
@@ -185,7 +210,7 @@ def _build(cfg: dict, with_camera: bool):
     print(f"TASK_RESET_ON_FALL {'new_task_from_table' if task.redraw_on_fall else 'same_task_kept'} table_tol_m {task.table_tol_m}", flush=True)
     nf = new_task_after_fails(cfg)
     task.new_task_after_fails = nf
-    print("TASK_CUT_AFTER_FAILS " + ("off (same task kept until 5 final successes)" if not nf else f"n={nf} (논문 밖: 같은 과제 연속 {nf} 번 실패하면 표에서 새 과제 · 수준 그대로)"), flush=True)
+    print("TASK_CUT_AFTER_FAILS " + (f"off (same task kept until {fs} final successes)" if not nf else f"n={nf} (논문 밖: 같은 과제 연속 {nf} 번 실패하면 표에서 새 과제 · 수준 그대로)"), flush=True)
     task.level_reset_on_new_task = task_level_reset_on_new_task(cfg)
     print("TASK_LEVEL_RESET_ON_NEW_TASK " + ("on (새 과제를 뽑을 때 그 env 의 PGCL 수준 1 · 연속 성공 0 · --resume-levels 로 넣은 수준도 첫 과제에서 1 로)" if task.level_reset_on_new_task else "off (수준은 오르기만 · 옛 동작)"), flush=True)
     depth_fn = (lambda: th(raw.scene["depth_camera"].data.output["distance_to_image_plane"])) if with_camera else None
