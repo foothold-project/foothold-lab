@@ -1159,6 +1159,13 @@ def first_observation_readback(raw: Any, expected_envs: int) -> dict[str, Any]:
     pose = raw["pose_cmd"]
     if not bool(pose.isfinite().all().item()):
         raise ValueError("EX-41 first pose_cmd is not finite")
+    from foothold_s2.commands import ex42_posture
+    if ex42_posture.enabled():          # EX42_POSTURE=1 (rx2pz · lead 11/21 23:41): the first targets are drawn in the posture ranges, not zero
+        ex42_posture.check_runner_pose(pose)
+        return {"groups": groups,
+                "pose_cmd": {"columns": ["height_delta_m", "body_roll_rad"], "posture": True,
+                             "min": pose.detach().min(dim=0).values.cpu().tolist(), "max": pose.detach().max(dim=0).values.cpu().tolist(),
+                             "shape": list(pose.shape)}}
     nonzero_by_column = pose.detach().ne(0).any(dim=0).cpu().tolist()
     if nonzero_by_column != [False, False]:
         raise ValueError("EX-41 first pose_cmd columns are not both zero")

@@ -222,3 +222,32 @@ def test_w78_eval_attaches_w86_to_unwrapped_env_before_suite(tmp_path, monkeypat
     make_at = source.index("gym.make(")
     suite_at = source.index("run_terrain_skill_v2(args")
     assert make_at < attach_at < suite_at
+
+
+def test_posture_switch_lets_the_posture_producer_through_the_pose_gate(monkeypatch):
+    """rx2pz Kit smoke 11/21 23:40 (smoke_234009.log:118-129): EX42_POSTURE=1 swaps the pose_cmd producer inside
+    apply_ex41_pose_observation (start_obs -> ex42_posture.register_observation) and the gate only took the zero producer."""
+    from foothold_s2.commands import ex42_posture as ps
+    from foothold_s2.eval.ex41_eval_loader import prepare_ex41_env_cfg
+
+    def zero_pose_command(_env):
+        return None
+
+    def apply(cfg):                      # the real start_obs.apply_ex41_pose_observation: group with the zero producer, then the posture hook
+        cfg.observations.pose_cmd = SimpleNamespace(pose_cmd=SimpleNamespace(func=zero_pose_command, params={}),
+                                                    enable_corruption=False, concatenate_terms=True)
+        ps.register_observation(cfg.observations.pose_cmd)
+
+    monkeypatch.setitem(sys.modules, "foothold_s2.sensors.start_obs", SimpleNamespace(zero_pose_command=zero_pose_command,
+                                                                                       apply_ex41_pose_observation=apply))
+    for k in ("EX42_POSTURE", *ps.CURRICULUM_KEYS, "EX42_POSTURE_H0"):
+        monkeypatch.delenv(k, raising=False)
+    off = prepare_ex41_env_cfg(_cfg())
+    assert off["producer"].endswith("zero_pose_command") and off["configured_value"] == [0.0, 0.0]
+    monkeypatch.setenv("EX42_POSTURE", "1")
+    cfg = _cfg()
+    on = prepare_ex41_env_cfg(cfg)
+    assert cfg.observations.pose_cmd.pose_cmd.func is ps.posture_command_obs and on["producer"].endswith("posture_command_obs")
+    monkeypatch.delenv("EX42_POSTURE")            # a posture producer with the switch off is still refused
+    with pytest.raises(ValueError, match="zero_pose_command producer"):
+        prepare_ex41_env_cfg(cfg)

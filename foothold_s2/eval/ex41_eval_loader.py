@@ -30,8 +30,12 @@ def prepare_ex41_env_cfg(env_cfg: Any) -> dict[str, Any]:
         apply_ex41_pose_observation(env_cfg)
         existing = obs.pose_cmd
     term = getattr(existing, "pose_cmd", None)
-    if term is None or getattr(term, "func", None) is not zero_pose_command:
-        raise ValueError("EX-41 pose_cmd must use the registered zero_pose_command producer")
+    from foothold_s2.commands import ex42_posture
+    posture = ex42_posture.enabled()          # EX42_POSTURE=1 (rx2pz · lead 11/21 23:41): the posture producer replaces the zero one
+    want = ex42_posture.posture_command_obs if posture else zero_pose_command
+    if term is None or getattr(term, "func", None) is not want:
+        raise ValueError("EX-41 pose_cmd must use the registered zero_pose_command producer"
+                         + (" (EX42_POSTURE=1: ex42_posture.posture_command_obs)" if posture else ""))
     if getattr(existing, "enable_corruption", None) is not False:
         raise ValueError("EX-41 pose_cmd corruption must be disabled")
     if getattr(existing, "concatenate_terms", None) is not True:
@@ -40,8 +44,9 @@ def prepare_ex41_env_cfg(env_cfg: Any) -> dict[str, Any]:
         "group": "pose_cmd",
         "shape_per_env": [2],
         "columns": list(POSE_COLUMNS),
-        "configured_value": [0.0, 0.0],
-        "producer": "foothold_s2.sensors.start_obs.zero_pose_command",
+        "configured_value": "ex42_posture targets" if posture else [0.0, 0.0],
+        "producer": ("foothold_s2.commands.ex42_posture.posture_command_obs" if posture
+                     else "foothold_s2.sensors.start_obs.zero_pose_command"),
         "applied": applied,
     }
 

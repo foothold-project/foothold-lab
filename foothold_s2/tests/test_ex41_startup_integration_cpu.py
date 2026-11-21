@@ -1020,3 +1020,16 @@ def test_u21_rejects_disk_manifest_yaml_and_parent_sha_mismatch(tmp_path):
     parent.write_bytes(b"changed parent")
     with pytest.raises(ValueError, match="parent checkpoint SHA changed"):
         verify_ex41_start_readback(run, plan, parent_receipt, manifest, env, runtime)
+
+
+def test_first_observation_takes_in_range_posture_targets_only_with_the_switch(monkeypatch):
+    """rx2pz (lead 11/21 23:41): with EX42_POSTURE=1 the first pose_cmd holds drawn targets; the readback checks the ranges instead of zero."""
+    pose = torch.tensor([[0.02, -0.05], [-0.01, 0.08], [0.0, 0.0]])
+    monkeypatch.delenv("EX42_POSTURE", raising=False)
+    with pytest.raises(ValueError, match="not both zero"):
+        first_observation_readback(_first_obs(pose=pose), expected_envs=3)
+    monkeypatch.setenv("EX42_POSTURE", "1")
+    receipt = first_observation_readback(_first_obs(pose=pose), expected_envs=3)
+    assert receipt["pose_cmd"]["posture"] is True and receipt["pose_cmd"]["shape"] == [3, 2]
+    with pytest.raises(ValueError, match="outside the posture ranges"):
+        first_observation_readback(_first_obs(pose=torch.tensor([[0.0, 1.5]] * 3)), expected_envs=3)
