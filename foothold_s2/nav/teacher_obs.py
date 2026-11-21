@@ -10,9 +10,11 @@
 from __future__ import annotations
 
 import os
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 import numpy as np
+
+from foothold_s2.nav import pose_actions as _pose_actions
 
 from foothold_s2.nav import room_generator as rg
 from foothold_s2.nav import teacher_maps as tm
@@ -23,7 +25,7 @@ ROOM_ORIGIN_XY = np.array([rg.ROOM_M / 2, rg.ROOM_M / 2])
 @dataclass(frozen=True)
 class TeacherObsLayout:
     o_p: int = 45
-    c_prev: int = 3
+    c_prev: int = field(default_factory=lambda: _pose_actions.command_cols())   # 3 (기본) · HIPAN_POSE_ACTIONS=1 이면 5
     x_m: int = 6
     subgoal: int = 2
     occ: tuple = (14, 11, 11)
@@ -85,7 +87,7 @@ def build(voxels: dict, room_id, state, c_prev, subgoal_xy, layout: TeacherObsLa
     c_prev = np.asarray(c_prev, dtype=np.float64)
     subgoal_xy = np.asarray(subgoal_xy, dtype=np.float64)
     if room_id.shape != (n,) or c_prev.shape != (n, layout.c_prev) or subgoal_xy.shape != (n, 2) or state.proprio.shape != (n, layout.o_p):
-        raise ValueError("room_id (n,), c_prev (n, 3), subgoal_xy (n, 2) and a state with proprio (n, 45) are required")
+        raise ValueError(f"room_id (n,), c_prev (n, {layout.c_prev}), subgoal_xy (n, 2) and a state with proprio (n, 45) are required")
     if not set(np.unique(room_id)) <= set(voxels):
         raise ValueError(f"room_id names rooms without voxels: {sorted(set(np.unique(room_id)) - set(voxels))}")
     pos = to_room_frame(state.pos_local, origin_xy)

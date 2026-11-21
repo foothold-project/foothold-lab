@@ -13,8 +13,13 @@ from foothold_s2.nav import rewards_hl as rh
 
 
 def to_hl_state(state, *, pos_room_xy, subgoal_xy, eta, v_des, cmd_prev, cmd_prev2) -> rh.HLState:
-    cmd = np.asarray(state.applied)[:, :3]
+    from foothold_s2.nav import pose_actions
+
+    cols = pose_actions.command_cols()
+    cmd = np.asarray(state.applied)[:, :cols]
     actual = np.concatenate([np.asarray(state.vel_b)[:, :2], np.asarray(state.yaw_rate).reshape(-1, 1)], axis=1)
+    if cols == 5:                                                   # HIPAN_POSE_ACTIONS=1: r6 이 자세 두 칸도 잰다 (실제 dh · roll)
+        actual = np.concatenate([actual, pose_actions.actual_pose(state)], axis=1)
     return rh.HLState(
         pos_xy=np.asarray(pos_room_xy, float), subgoal_xy=np.asarray(subgoal_xy, float), v_xy=np.asarray(state.vel_b)[:, :2],
         v_z=np.asarray(state.vel_b)[:, 2], omega_xy=np.asarray(state.ang_vel_b)[:, :2], q=np.asarray(state.q), q0=np.asarray(state.q0),
@@ -25,4 +30,6 @@ def to_hl_state(state, *, pos_room_xy, subgoal_xy, eta, v_des, cmd_prev, cmd_pre
 
 def reward(state, arrive_m: float = rh.ARRIVE_M, **kw) -> tuple:
     """(합 (n,), 가중치를 곱한 항 dict). 자세 스위치는 끈 채 (설계 결정 1: 상위 출력 3 칸). arrive_m = r1 의 도달 반경 (기본 논문 0.1 m)."""
-    return rh.reward_total(to_hl_state(state, **kw), pose_active=False, arrive_m=arrive_m)
+    from foothold_s2.nav import pose_actions
+
+    return rh.reward_total(to_hl_state(state, **kw), pose_active=pose_actions.enabled(), arrive_m=arrive_m)

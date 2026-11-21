@@ -12,7 +12,9 @@ from foothold_s2.nav.teacher_obs import TeacherObsLayout
 NUM_ENVS = 1024                 # 설계 §3 (가정 · 메모리 실측 뒤 확정)
 LATENT = 32                     # 설계 §3 (논문)
 SAVE_INTERVAL = 50              # 설계 §3 · §8: 50 회마다 저장
-ACTION_DIM = 3                  # 상위 출력 (vx vy wz) · 설계 결정 1
+from foothold_s2.nav import pose_actions as _pose_actions
+
+ACTION_DIM = _pose_actions.action_dim()   # 상위 출력 (vx vy wz) · 설계 결정 1 · HIPAN_POSE_ACTIONS=1 이면 5 (dh roll 더함 · 원문 5 차원)
 
 ASSUMED = ("learning_rate", "gamma", "lam", "clip_param", "num_learning_epochs", "num_mini_batches", "desired_kl",
            "lr_max", "lr_min", "kl_warn", "entropy_coef", "num_steps_per_env", "hidden", "conv_channels", "max_grad_norm", "init_noise_std")

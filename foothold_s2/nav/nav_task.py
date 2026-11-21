@@ -88,7 +88,10 @@ class NavTask:
         self.visit = rewards_hl.VisitGrid(self.n)
         self.visit_reset = "episode"      # "task" (--visit-reset task) = 방문 격자 (η) 를 새 과제를 뽑을 때만 비움 (같은 과제를 PGCL 이 유지하는 동안 쌓임) · 기본 "episode" = 에피소드마다 비움 (지금과 같음 · 논문 미기재)
         self._fresh_task: set = set()     # 이번 reset 에서 새 과제가 뽑힌 env (visit_reset == "task" 일 때 격자를 비울 대상)
-        self.cmd_prev = np.zeros((self.n, 3)); self.cmd_prev2 = np.zeros((self.n, 3))
+        from foothold_s2.nav import pose_actions
+
+        self.cmd_cols = pose_actions.command_cols()          # 3 · HIPAN_POSE_ACTIONS=1 이면 5 (자세 칸 포함)
+        self.cmd_prev = np.zeros((self.n, self.cmd_cols)); self.cmd_prev2 = np.zeros((self.n, self.cmd_cols))
         self.subgoal = np.zeros((self.n, 2))
         self.min_task_m, self.max_task_tries = min_task_m, max_task_tries
         # 방 설계 (DESIGN-HIPAN-ROOMS-1117 3.3): 목표는 경로 길이로 뽑고 (path_range_m) 과제의 winding_frac 는 굴곡 비 (경로 / 직선) winding_min 이상인 쌍에서 뽑는다.
@@ -548,7 +551,7 @@ class NavTask:
             terms = {k: (np.where(done, v if k == "r10" else 0.0, v)) for k, v in terms.items()}
             total = sum(terms.values())
         self.cmd_prev2 = self.cmd_prev.copy()
-        self.cmd_prev = np.asarray(state.applied)[:, :3].copy()
+        self.cmd_prev = np.asarray(state.applied)[:, :self.cmd_cols].copy()
         reached = np.array([p.all_reached for p in self.pgcl]) & ~done
         self._quat0 = np.asarray(state.quat_w)[0]
         self._note_cos(state, pos_room[:, :2], done)

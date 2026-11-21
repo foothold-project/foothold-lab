@@ -69,6 +69,10 @@ class NavEnv:
             raise ValueError(f"lower policy has {lower.n} envs, environment has {self.n}")
         if space.pose_active != lower.pose_active:
             raise ValueError("pose switch differs between the command space and the lower policy")
+        from foothold_s2.nav import pose_actions
+
+        if pose_actions.enabled() and not lower.pose_active:
+            raise ValueError("HIPAN_POSE_ACTIONS=1 needs a lower policy with a posture receipt (lower_adapter.pose_active_from_receipt: E6a passed)")
         self.hold = space.hold_steps
         self.obs = None
         if fix_heading is None:
@@ -188,8 +192,11 @@ class NavEnv:
         timed = np.zeros(self.n, bool)
         errs, applied = [], None
         collided = np.zeros(self.n, bool)
+        from foothold_s2.nav import pose_actions
+
+        a, pose = pose_actions.split(a) if a.ndim == 2 and a.shape[1] in (3, 5) else (a, None)
         for k in range(self.hold):
-            applied = self.space.step(a)
+            applied = self.space.step(a) if pose is None else self.space.step(a, pose_action=pose)
             self._fix_heading(self.term)
             lower_adapter.apply_command(self.term, applied.cmd, applied.stand, self.lower.pose_active)
             action = self.lower.act(self.obs)
