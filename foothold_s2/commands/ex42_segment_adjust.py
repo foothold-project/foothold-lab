@@ -477,12 +477,13 @@ def apply_reward_params(env_cfg, record, term_cfg_class=None) -> dict:
     the config does not have it yet (every E stage carries the term), then puts the segment's parameter cells and the
     slow_track weight on the config. {cell: {before, after}}; without reward cells nothing but the registration changes.
     `ex42_slow_progress` is registered the same way and follows the speed band of slow_track."""
-    from foothold_s2.rewards import ex42_heading_hold, ex42_hip_sparse, ex42_slow_progress, ex42_slow_track
+    from foothold_s2.rewards import ex42_beam_center, ex42_heading_hold, ex42_hip_sparse, ex42_slow_progress, ex42_slow_track
 
     ex42_slow_track.register(env_cfg, term_cfg_class)
     ex42_slow_progress.register(env_cfg, term_cfg_class)
     ex42_heading_hold.register(env_cfg, term_cfg_class)      # only with EX42_HEADING_HOLD=1 (lead 2026-11-21 17:21), weight 0
     ex42_hip_sparse.register(env_cfg)                         # only with EX42_HIP_SPARSE=1 (lead 2026-11-21 21:35): hip L1 lower on sparse envs
+    ex42_beam_center.register(env_cfg, term_cfg_class)        # only with EX42_BEAM_CENTER=1 (lead 2026-11-22 06:41): beam centre keeping, outside START
     values = ((record or {}).get("rewards") or {}).get("values")
     out = {}
     for cell, (term, param, default) in PARAM_CELLS.items():

@@ -966,6 +966,8 @@ class StartRunner(OnPolicyRunner):
                     prev_xy = self._robot_xy_for_off()                        # M-T6: env.step 이 끝난 에피소드를 reset 해 버리기 전 위치(끝난 에피소드가 놓였던 칸을 알려고)
                     if continuous is not None:
                         continuous.record_pre_step()
+                    getattr(self.env, "unwrapped", self.env)._ex42_map_off = self.pstate.map_off   # EX-42 beam centre (lead 06:39): reward leaves map-off envs out
+                    getattr(self.env, "unwrapped", self.env)._ex42_use_gt = self.pstate.use_gt     # and splits its check line by ground-truth / reconstructed map (06:40)
                     raw, rewards, dones, extras = self.env.step(actions.to(self.env.device))
                     if w86_attached:
                         from foothold_s2.rewards.w86_runtime import quarantine_step
