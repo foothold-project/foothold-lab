@@ -319,3 +319,19 @@ def test_rx2pz_draft_keeps_the_canonical_parent_drops_every_sparse_row_and_the_f
     assert row["shares"]["flag"] == 0.0 and rec["command_shares"]["flag_before"] == 0.1
     assert e_stage_table(plan.document["stages"])["E2"]["previous"] == "E1F"
     assert authorization_validators(plan)["E2"](out / "ex42-approvals.yaml", row["parent"]["sha256"])["scope"]["parent_sha256"] == row["parent"]["sha256"]
+
+
+@pytest.mark.skipif(not (E1F_RUN / "model_250.pt").is_file() or not (FIRST_E2 / "ex42-prep.yaml").is_file(), reason="canonical 3 run not here")
+def test_relocate_mesh_keeps_the_bytes_and_moves_only_the_directory(tmp_path):
+    import shutil
+    from foothold_s2.curriculum.ex42_prep import EX42Plan
+    from foothold_s2.ex42_stage_mesh import pinned_stage_mesh
+    moved = tmp_path / "mesh"; shutil.copytree(MESH, moved)
+    rec = rd.draft(FIRST_E2, E1F_RUN, 250, MESH, tmp_path / "pz", keep_mesh=True, parent_from_source=True, relocate_mesh=moved)
+    plan = EX42Plan.load(tmp_path / "pz" / "ex42-prep.yaml")
+    assert pinned_stage_mesh(plan.document, "E2")["directory"] == str(moved.resolve()) and rec["relocated_mesh"]["to"] == str(moved.resolve())
+    (moved / "mesh_manifest.json").write_text("{}")                                     # other bytes: refused
+    with pytest.raises(Exception):
+        rd.draft(FIRST_E2, E1F_RUN, 250, MESH, tmp_path / "pz2", keep_mesh=True, parent_from_source=True, relocate_mesh=moved)
+    with pytest.raises(ValueError, match="goes with --keep-mesh|already exists"):
+        rd.draft(FIRST_E2, E1F_RUN, 250, MESH, tmp_path / "pz3", parent_from_source=True, relocate_mesh=MESH)

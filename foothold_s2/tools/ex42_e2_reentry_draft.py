@@ -28,6 +28,8 @@ materialized plan folder and changes only:
   * --parent-from-source (lead 11/21 20:24, rx2pz: a new E2-stage OUT from the canonical lower 3 = E1F m250): the source row's own parent pin is kept
                           (it must name another stage, E1F); --run-dir is that parent's run and --iteration its local update, and the file must have the
                           pinned sha256. The training entry then reads the run as a first E2 (previous stage E1F), as the first E2 did;
+  * --relocate-mesh <dir> (lead 11/22 00:55, EX-42 on Runpod): with --keep-mesh, the E2 row's own mesh profile points at <dir>, which must hold
+                          the same bytes (geometry sha and every file sha equal the profile's); only the directory string changes;
   * --no-flags (same order, "깃발 env 0"): stages[E2].shares.flag -> 0 and the free command slots scaled by 1 / (1 - flag) (the sum stays 1).
 The `materialization` declaration and transition.json are NOT carried over: they describe E1F -> E2 with a gate receipt, and a plan
 that still carried them would be re-derived from that gate (validate_materialized_transition) and refused. The draft writes its own
@@ -269,7 +271,7 @@ def draft(source_dir: Path, run_dir: Path, iteration: int, mesh_dir: Path, out: 
           promotion: dict | None = None, adjust_from: Path | None = None, keep_mesh: bool = False,
           bake_caps_run: Path | None = None, bake_boundaries: int = 0, kind_caps: dict | None = None,
           kind_shares: dict | None = None, add_kinds: dict | None = None, drop_kinds: list | None = None, shrink_to_continuous: bool = False, exit_judge: str | None = None, ledger_pin: dict | None = None, ledger_repo=None,
-          parent_from_source: bool = False, no_flags: bool = False) -> dict:
+          parent_from_source: bool = False, no_flags: bool = False, relocate_mesh: Path | None = None) -> dict:
     source_dir, out = Path(source_dir).resolve(strict=True), Path(out).absolute()
     if out.exists():
         raise FileExistsError(f"{out} exists (a draft folder is never reused)")
@@ -281,6 +283,17 @@ def draft(source_dir: Path, run_dir: Path, iteration: int, mesh_dir: Path, out: 
     row = next(r for r in plan["stages"] if r["id"] == STAGE)
     pin = source_parent_pin(row, run_dir, iteration) if parent_from_source else parent_pin(row, run_dir, iteration)
     row["parent"] = pin
+    relocated = None
+    if relocate_mesh is not None:
+        if not keep_mesh:
+            raise ValueError("--relocate-mesh goes with --keep-mesh (same mesh bytes, another directory)")
+        name = row.get("training_mesh_profile")
+        old = plan["training_mesh_profiles"][name]
+        new = mesh_profile(relocate_mesh)
+        if new["geometry_sha256"] != old["geometry_sha256"] or new["files"] != old["files"]:
+            raise ValueError(f"--relocate-mesh {relocate_mesh}: the files differ from profile {name} (geometry or file sha256)")
+        plan["training_mesh_profiles"][name] = {**old, "directory": new["directory"]}
+        relocated = {"profile": name, "from": old["directory"], "to": new["directory"]}
     flags_report = None
     if no_flags:
         row["shares"], flags_report = drop_flag_share(row["shares"])
@@ -332,7 +345,7 @@ def draft(source_dir: Path, run_dir: Path, iteration: int, mesh_dir: Path, out: 
               "new_plan_sha256": hashlib.sha256(plan_bytes).hexdigest(), "approval_sha256": plan["stage_zero"]["approval_sha256"],
               "parent": pin, "run_dir": str(Path(run_dir).resolve()), "mesh_profile": None if keep_mesh else profile, "mesh_stages": moved, "keep_mesh": keep_mesh,
               "terrain_promotion": promotion, "kind_caps": caps_report, "kind_shares": shares_report, "exit_judge": judge_report,
-              "parent_from_source": parent_from_source, "command_shares": flags_report, "training_started": False}
+              "parent_from_source": parent_from_source, "command_shares": flags_report, "relocated_mesh": relocated, "training_started": False}
     if adjust_from is not None:
         # the live (per update) adjustment file binds the plan sha256: the same decisions, re-bound to the new plan. Nothing is added or decided here.
         adjust = json.loads(Path(adjust_from).read_text(encoding="utf-8-sig"))
@@ -371,6 +384,7 @@ def main(argv=None):
     p.add_argument("--ledger-repo", type=Path, help="the ledger checkout (default: EX42_LEDGER_REPO)")
     p.add_argument("--parent-from-source", action="store_true", help="keep the source row's parent pin (another stage, E1F m250); --run-dir / --iteration name that file")
     p.add_argument("--no-flags", action="store_true", help="stages[E2].shares.flag -> 0, the free slots scaled to add up to 1")
+    p.add_argument("--relocate-mesh", type=Path, default=None, help="with --keep-mesh: the same mesh bytes in another directory (Runpod)")
     a = p.parse_args(argv)
     caps = {k: int(v) for k, v in (item.split("=", 1) for item in a.kind_cap)}
     shares = {k: float(v) for k, v in (item.split("=", 1) for item in a.kind_share)}
@@ -381,7 +395,7 @@ def main(argv=None):
                                           bake_caps_run=a.bake_caps_run, bake_boundaries=a.bake_boundaries, kind_caps=caps or None,
                                           kind_shares=shares or None, add_kinds=adds or None, drop_kinds=a.drop_kind or None, shrink_to_continuous=a.shrink_to_continuous, exit_judge=a.exit_judge,
                                           ledger_pin=json.loads(a.ledger_pin.read_text(encoding="utf-8")) if a.ledger_pin else None, ledger_repo=a.ledger_repo,
-                                          parent_from_source=a.parent_from_source, no_flags=a.no_flags), indent=1))
+                                          parent_from_source=a.parent_from_source, no_flags=a.no_flags, relocate_mesh=a.relocate_mesh), indent=1))
 
 
 if __name__ == "__main__":
