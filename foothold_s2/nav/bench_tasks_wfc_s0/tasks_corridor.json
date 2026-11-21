@@ -1,0 +1,4541 @@
+{
+ "format": "foothold-hipan-bench-tasks/1",
+ "type": "corridor",
+ "title": "Corridor",
+ "room_spec": "rooms/bench_wfc_corridor_s0.yaml",
+ "room_spec_sha256": "6613f7d55f63f3eab9d340962b0c92ff895800f36e5f521921a22ad816031fcf",
+ "size_m": 20.0,
+ "task_seed": 0,
+ "pose_active": false,
+ "bands_m": [
+  [
+   5.0,
+   10.0
+  ],
+  [
+   10.0,
+   20.0
+  ],
+  [
+   20.0,
+   30.0
+  ]
+ ],
+ "per_band": 100,
+ "eval_seeds": [
+  0,
+  1,
+  2,
+  3,
+  4,
+  5,
+  6,
+  7,
+  8,
+  9
+ ],
+ "success_m": 0.2,
+ "distance": "shortest path on the grade map (assumption; paper does not say)",
+ "tasks": [
+  {
+   "id": 0,
+   "band": 0,
+   "start_xy": [
+    16.45,
+    0.9500000000000001
+   ],
+   "goal_xy": [
+    19.150000000000002,
+    9.65
+   ],
+   "shortest_m": 9.8184,
+   "euclid_m": 9.1093,
+   "needs_sparse": false
+  },
+  {
+   "id": 1,
+   "band": 0,
+   "start_xy": [
+    5.25,
+    16.650000000000002
+   ],
+   "goal_xy": [
+    9.15,
+    13.15
+   ],
+   "shortest_m": 8.0083,
+   "euclid_m": 5.2402,
+   "needs_sparse": false
+  },
+  {
+   "id": 2,
+   "band": 0,
+   "start_xy": [
+    2.0500000000000003,
+    5.3500000000000005
+   ],
+   "goal_xy": [
+    6.550000000000001,
+    4.75
+   ],
+   "shortest_m": 9.177,
+   "euclid_m": 4.5398,
+   "needs_sparse": false
+  },
+  {
+   "id": 3,
+   "band": 0,
+   "start_xy": [
+    15.450000000000001,
+    9.35
+   ],
+   "goal_xy": [
+    17.95,
+    4.3500000000000005
+   ],
+   "shortest_m": 6.0355,
+   "euclid_m": 5.5902,
+   "needs_sparse": false
+  },
+  {
+   "id": 4,
+   "band": 0,
+   "start_xy": [
+    9.15,
+    13.75
+   ],
+   "goal_xy": [
+    13.75,
+    17.45
+   ],
+   "shortest_m": 8.5485,
+   "euclid_m": 5.9034,
+   "needs_sparse": false
+  },
+  {
+   "id": 5,
+   "band": 0,
+   "start_xy": [
+    13.850000000000001,
+    13.450000000000001
+   ],
+   "goal_xy": [
+    16.150000000000002,
+    6.15
+   ],
+   "shortest_m": 8.2527,
+   "euclid_m": 7.6538,
+   "needs_sparse": false
+  },
+  {
+   "id": 6,
+   "band": 0,
+   "start_xy": [
+    18.25,
+    10.75
+   ],
+   "goal_xy": [
+    17.55,
+    5.15
+   ],
+   "shortest_m": 5.8899,
+   "euclid_m": 5.6436,
+   "needs_sparse": false
+  },
+  {
+   "id": 7,
+   "band": 0,
+   "start_xy": [
+    12.850000000000001,
+    12.25
+   ],
+   "goal_xy": [
+    9.55,
+    5.75
+   ],
+   "shortest_m": 8.2184,
+   "euclid_m": 7.2897,
+   "needs_sparse": false
+  },
+  {
+   "id": 8,
+   "band": 0,
+   "start_xy": [
+    16.55,
+    6.8500000000000005
+   ],
+   "goal_xy": [
+    18.05,
+    0.55
+   ],
+   "shortest_m": 6.9213,
+   "euclid_m": 6.4761,
+   "needs_sparse": false
+  },
+  {
+   "id": 9,
+   "band": 0,
+   "start_xy": [
+    14.65,
+    1.35
+   ],
+   "goal_xy": [
+    18.75,
+    5.25
+   ],
+   "shortest_m": 6.0083,
+   "euclid_m": 5.6586,
+   "needs_sparse": false
+  },
+  {
+   "id": 10,
+   "band": 0,
+   "start_xy": [
+    3.5500000000000003,
+    2.95
+   ],
+   "goal_xy": [
+    7.25,
+    9.25
+   ],
+   "shortest_m": 9.0627,
+   "euclid_m": 7.3062,
+   "needs_sparse": false
+  },
+  {
+   "id": 11,
+   "band": 0,
+   "start_xy": [
+    0.9500000000000001,
+    2.35
+   ],
+   "goal_xy": [
+    4.25,
+    9.950000000000001
+   ],
+   "shortest_m": 8.9669,
+   "euclid_m": 8.2855,
+   "needs_sparse": false
+  },
+  {
+   "id": 12,
+   "band": 0,
+   "start_xy": [
+    5.95,
+    6.25
+   ],
+   "goal_xy": [
+    12.350000000000001,
+    7.95
+   ],
+   "shortest_m": 7.2698,
+   "euclid_m": 6.6219,
+   "needs_sparse": false
+  },
+  {
+   "id": 13,
+   "band": 0,
+   "start_xy": [
+    7.45,
+    8.25
+   ],
+   "goal_xy": [
+    4.8500000000000005,
+    1.6500000000000001
+   ],
+   "shortest_m": 9.0184,
+   "euclid_m": 7.0937,
+   "needs_sparse": false
+  },
+  {
+   "id": 14,
+   "band": 0,
+   "start_xy": [
+    0.65,
+    7.75
+   ],
+   "goal_xy": [
+    6.3500000000000005,
+    6.15
+   ],
+   "shortest_m": 7.6314,
+   "euclid_m": 5.9203,
+   "needs_sparse": false
+  },
+  {
+   "id": 15,
+   "band": 0,
+   "start_xy": [
+    9.55,
+    7.8500000000000005
+   ],
+   "goal_xy": [
+    7.65,
+    3.25
+   ],
+   "shortest_m": 5.387,
+   "euclid_m": 4.9769,
+   "needs_sparse": false
+  },
+  {
+   "id": 16,
+   "band": 0,
+   "start_xy": [
+    14.55,
+    18.45
+   ],
+   "goal_xy": [
+    7.95,
+    17.35
+   ],
+   "shortest_m": 7.0556,
+   "euclid_m": 6.691,
+   "needs_sparse": false
+  },
+  {
+   "id": 17,
+   "band": 0,
+   "start_xy": [
+    19.450000000000003,
+    6.8500000000000005
+   ],
+   "goal_xy": [
+    14.25,
+    7.65
+   ],
+   "shortest_m": 5.5314,
+   "euclid_m": 5.2612,
+   "needs_sparse": false
+  },
+  {
+   "id": 18,
+   "band": 0,
+   "start_xy": [
+    7.15,
+    6.3500000000000005
+   ],
+   "goal_xy": [
+    11.15,
+    12.55
+   ],
+   "shortest_m": 8.6184,
+   "euclid_m": 7.3783,
+   "needs_sparse": false
+  },
+  {
+   "id": 19,
+   "band": 0,
+   "start_xy": [
+    12.55,
+    8.85
+   ],
+   "goal_xy": [
+    18.150000000000002,
+    3.95
+   ],
+   "shortest_m": 7.6296,
+   "euclid_m": 7.4411,
+   "needs_sparse": false
+  },
+  {
+   "id": 20,
+   "band": 0,
+   "start_xy": [
+    13.15,
+    9.850000000000001
+   ],
+   "goal_xy": [
+    14.950000000000001,
+    5.65
+   ],
+   "shortest_m": 5.3556,
+   "euclid_m": 4.5695,
+   "needs_sparse": false
+  },
+  {
+   "id": 21,
+   "band": 0,
+   "start_xy": [
+    2.95,
+    13.55
+   ],
+   "goal_xy": [
+    10.25,
+    16.650000000000002
+   ],
+   "shortest_m": 9.4627,
+   "euclid_m": 7.931,
+   "needs_sparse": false
+  },
+  {
+   "id": 22,
+   "band": 0,
+   "start_xy": [
+    16.25,
+    18.35
+   ],
+   "goal_xy": [
+    12.350000000000001,
+    12.950000000000001
+   ],
+   "shortest_m": 8.6213,
+   "euclid_m": 6.6611,
+   "needs_sparse": false
+  },
+  {
+   "id": 23,
+   "band": 0,
+   "start_xy": [
+    6.25,
+    0.65
+   ],
+   "goal_xy": [
+    2.85,
+    6.95
+   ],
+   "shortest_m": 8.2941,
+   "euclid_m": 7.1589,
+   "needs_sparse": false
+  },
+  {
+   "id": 24,
+   "band": 0,
+   "start_xy": [
+    13.65,
+    10.25
+   ],
+   "goal_xy": [
+    19.450000000000003,
+    9.15
+   ],
+   "shortest_m": 7.2497,
+   "euclid_m": 5.9034,
+   "needs_sparse": false
+  },
+  {
+   "id": 25,
+   "band": 0,
+   "start_xy": [
+    18.25,
+    8.450000000000001
+   ],
+   "goal_xy": [
+    11.75,
+    13.350000000000001
+   ],
+   "shortest_m": 9.6468,
+   "euclid_m": 8.14,
+   "needs_sparse": false
+  },
+  {
+   "id": 26,
+   "band": 0,
+   "start_xy": [
+    10.65,
+    16.45
+   ],
+   "goal_xy": [
+    5.3500000000000005,
+    19.650000000000002
+   ],
+   "shortest_m": 6.6255,
+   "euclid_m": 6.1911,
+   "needs_sparse": false
+  },
+  {
+   "id": 27,
+   "band": 0,
+   "start_xy": [
+    13.65,
+    11.850000000000001
+   ],
+   "goal_xy": [
+    13.15,
+    4.15
+   ],
+   "shortest_m": 7.9071,
+   "euclid_m": 7.7162,
+   "needs_sparse": false
+  },
+  {
+   "id": 28,
+   "band": 0,
+   "start_xy": [
+    6.550000000000001,
+    16.95
+   ],
+   "goal_xy": [
+    7.25,
+    12.950000000000001
+   ],
+   "shortest_m": 7.6154,
+   "euclid_m": 4.0608,
+   "needs_sparse": false
+  },
+  {
+   "id": 29,
+   "band": 0,
+   "start_xy": [
+    6.45,
+    11.65
+   ],
+   "goal_xy": [
+    13.55,
+    10.65
+   ],
+   "shortest_m": 7.9284,
+   "euclid_m": 7.1701,
+   "needs_sparse": false
+  },
+  {
+   "id": 30,
+   "band": 0,
+   "start_xy": [
+    4.45,
+    14.350000000000001
+   ],
+   "goal_xy": [
+    8.450000000000001,
+    6.8500000000000005
+   ],
+   "shortest_m": 9.1569,
+   "euclid_m": 8.5,
+   "needs_sparse": false
+  },
+  {
+   "id": 31,
+   "band": 0,
+   "start_xy": [
+    11.950000000000001,
+    12.850000000000001
+   ],
+   "goal_xy": [
+    8.950000000000001,
+    9.850000000000001
+   ],
+   "shortest_m": 5.2971,
+   "euclid_m": 4.2426,
+   "needs_sparse": false
+  },
+  {
+   "id": 32,
+   "band": 0,
+   "start_xy": [
+    15.75,
+    19.05
+   ],
+   "goal_xy": [
+    14.850000000000001,
+    12.75
+   ],
+   "shortest_m": 7.887,
+   "euclid_m": 6.364,
+   "needs_sparse": false
+  },
+  {
+   "id": 33,
+   "band": 0,
+   "start_xy": [
+    6.3500000000000005,
+    1.25
+   ],
+   "goal_xy": [
+    8.85,
+    5.45
+   ],
+   "shortest_m": 5.2355,
+   "euclid_m": 4.8877,
+   "needs_sparse": false
+  },
+  {
+   "id": 34,
+   "band": 0,
+   "start_xy": [
+    16.95,
+    9.25
+   ],
+   "goal_xy": [
+    15.05,
+    1.85
+   ],
+   "shortest_m": 8.6556,
+   "euclid_m": 7.64,
+   "needs_sparse": false
+  },
+  {
+   "id": 35,
+   "band": 0,
+   "start_xy": [
+    12.850000000000001,
+    13.05
+   ],
+   "goal_xy": [
+    8.65,
+    6.75
+   ],
+   "shortest_m": 8.8012,
+   "euclid_m": 7.5717,
+   "needs_sparse": false
+  },
+  {
+   "id": 36,
+   "band": 0,
+   "start_xy": [
+    10.75,
+    8.55
+   ],
+   "goal_xy": [
+    17.650000000000002,
+    4.8500000000000005
+   ],
+   "shortest_m": 8.4326,
+   "euclid_m": 7.8294,
+   "needs_sparse": false
+  },
+  {
+   "id": 37,
+   "band": 0,
+   "start_xy": [
+    15.15,
+    12.55
+   ],
+   "goal_xy": [
+    17.25,
+    7.25
+   ],
+   "shortest_m": 7.8669,
+   "euclid_m": 5.7009,
+   "needs_sparse": false
+  },
+  {
+   "id": 38,
+   "band": 0,
+   "start_xy": [
+    14.65,
+    9.15
+   ],
+   "goal_xy": [
+    8.950000000000001,
+    4.45
+   ],
+   "shortest_m": 7.9397,
+   "euclid_m": 7.3878,
+   "needs_sparse": false
+  },
+  {
+   "id": 39,
+   "band": 0,
+   "start_xy": [
+    10.65,
+    10.25
+   ],
+   "goal_xy": [
+    3.45,
+    12.15
+   ],
+   "shortest_m": 7.987,
+   "euclid_m": 7.4465,
+   "needs_sparse": false
+  },
+  {
+   "id": 40,
+   "band": 0,
+   "start_xy": [
+    18.45,
+    18.95
+   ],
+   "goal_xy": [
+    11.05,
+    17.05
+   ],
+   "shortest_m": 8.187,
+   "euclid_m": 7.64,
+   "needs_sparse": false
+  },
+  {
+   "id": 41,
+   "band": 0,
+   "start_xy": [
+    5.8500000000000005,
+    18.45
+   ],
+   "goal_xy": [
+    13.05,
+    16.35
+   ],
+   "shortest_m": 8.0698,
+   "euclid_m": 7.5,
+   "needs_sparse": false
+  },
+  {
+   "id": 42,
+   "band": 0,
+   "start_xy": [
+    3.85,
+    17.45
+   ],
+   "goal_xy": [
+    10.350000000000001,
+    16.85
+   ],
+   "shortest_m": 6.7485,
+   "euclid_m": 6.5276,
+   "needs_sparse": false
+  },
+  {
+   "id": 43,
+   "band": 0,
+   "start_xy": [
+    12.350000000000001,
+    4.55
+   ],
+   "goal_xy": [
+    14.55,
+    8.25
+   ],
+   "shortest_m": 5.2556,
+   "euclid_m": 4.3046,
+   "needs_sparse": false
+  },
+  {
+   "id": 44,
+   "band": 0,
+   "start_xy": [
+    12.15,
+    12.350000000000001
+   ],
+   "goal_xy": [
+    10.65,
+    6.45
+   ],
+   "shortest_m": 6.8042,
+   "euclid_m": 6.0877,
+   "needs_sparse": false
+  },
+  {
+   "id": 45,
+   "band": 0,
+   "start_xy": [
+    8.75,
+    4.65
+   ],
+   "goal_xy": [
+    15.65,
+    4.95
+   ],
+   "shortest_m": 7.9941,
+   "euclid_m": 6.9065,
+   "needs_sparse": false
+  },
+  {
+   "id": 46,
+   "band": 0,
+   "start_xy": [
+    9.15,
+    5.3500000000000005
+   ],
+   "goal_xy": [
+    18.150000000000002,
+    6.8500000000000005
+   ],
+   "shortest_m": 9.787,
+   "euclid_m": 9.1241,
+   "needs_sparse": false
+  },
+  {
+   "id": 47,
+   "band": 0,
+   "start_xy": [
+    7.75,
+    10.75
+   ],
+   "goal_xy": [
+    4.45,
+    18.85
+   ],
+   "shortest_m": 9.8811,
+   "euclid_m": 8.7464,
+   "needs_sparse": false
+  },
+  {
+   "id": 48,
+   "band": 0,
+   "start_xy": [
+    11.450000000000001,
+    8.55
+   ],
+   "goal_xy": [
+    6.45,
+    2.6500000000000004
+   ],
+   "shortest_m": 9.1669,
+   "euclid_m": 7.7337,
+   "needs_sparse": false
+  },
+  {
+   "id": 49,
+   "band": 0,
+   "start_xy": [
+    8.450000000000001,
+    17.35
+   ],
+   "goal_xy": [
+    2.35,
+    17.650000000000002
+   ],
+   "shortest_m": 6.2243,
+   "euclid_m": 6.1074,
+   "needs_sparse": false
+  },
+  {
+   "id": 50,
+   "band": 0,
+   "start_xy": [
+    7.65,
+    12.75
+   ],
+   "goal_xy": [
+    6.050000000000001,
+    8.05
+   ],
+   "shortest_m": 5.7527,
+   "euclid_m": 4.9649,
+   "needs_sparse": false
+  },
+  {
+   "id": 51,
+   "band": 0,
+   "start_xy": [
+    14.950000000000001,
+    14.850000000000001
+   ],
+   "goal_xy": [
+    12.75,
+    5.95
+   ],
+   "shortest_m": 9.8113,
+   "euclid_m": 9.1679,
+   "needs_sparse": false
+  },
+  {
+   "id": 52,
+   "band": 0,
+   "start_xy": [
+    5.550000000000001,
+    2.45
+   ],
+   "goal_xy": [
+    4.05,
+    9.950000000000001
+   ],
+   "shortest_m": 8.287,
+   "euclid_m": 7.6485,
+   "needs_sparse": false
+  },
+  {
+   "id": 53,
+   "band": 0,
+   "start_xy": [
+    14.350000000000001,
+    8.15
+   ],
+   "goal_xy": [
+    12.55,
+    13.05
+   ],
+   "shortest_m": 5.6456,
+   "euclid_m": 5.2202,
+   "needs_sparse": false
+  },
+  {
+   "id": 54,
+   "band": 0,
+   "start_xy": [
+    3.6500000000000004,
+    6.65
+   ],
+   "goal_xy": [
+    8.85,
+    6.65
+   ],
+   "shortest_m": 7.4385,
+   "euclid_m": 5.2,
+   "needs_sparse": false
+  },
+  {
+   "id": 55,
+   "band": 0,
+   "start_xy": [
+    13.850000000000001,
+    12.350000000000001
+   ],
+   "goal_xy": [
+    8.35,
+    8.450000000000001
+   ],
+   "shortest_m": 7.7598,
+   "euclid_m": 6.7424,
+   "needs_sparse": false
+  },
+  {
+   "id": 56,
+   "band": 0,
+   "start_xy": [
+    12.850000000000001,
+    6.25
+   ],
+   "goal_xy": [
+    19.150000000000002,
+    3.5500000000000003
+   ],
+   "shortest_m": 7.4184,
+   "euclid_m": 6.8542,
+   "needs_sparse": false
+  },
+  {
+   "id": 57,
+   "band": 0,
+   "start_xy": [
+    0.75,
+    16.650000000000002
+   ],
+   "goal_xy": [
+    5.15,
+    13.950000000000001
+   ],
+   "shortest_m": 5.5184,
+   "euclid_m": 5.1624,
+   "needs_sparse": false
+  },
+  {
+   "id": 58,
+   "band": 0,
+   "start_xy": [
+    2.25,
+    8.450000000000001
+   ],
+   "goal_xy": [
+    6.95,
+    10.25
+   ],
+   "shortest_m": 7.7042,
+   "euclid_m": 5.0329,
+   "needs_sparse": false
+  },
+  {
+   "id": 59,
+   "band": 0,
+   "start_xy": [
+    3.1500000000000004,
+    8.75
+   ],
+   "goal_xy": [
+    7.65,
+    11.65
+   ],
+   "shortest_m": 7.2627,
+   "euclid_m": 5.3535,
+   "needs_sparse": false
+  },
+  {
+   "id": 60,
+   "band": 0,
+   "start_xy": [
+    6.95,
+    13.65
+   ],
+   "goal_xy": [
+    2.6500000000000004,
+    9.65
+   ],
+   "shortest_m": 9.6799,
+   "euclid_m": 5.8728,
+   "needs_sparse": false
+  },
+  {
+   "id": 61,
+   "band": 0,
+   "start_xy": [
+    15.65,
+    0.9500000000000001
+   ],
+   "goal_xy": [
+    15.15,
+    5.550000000000001
+   ],
+   "shortest_m": 5.777,
+   "euclid_m": 4.6271,
+   "needs_sparse": false
+  },
+  {
+   "id": 62,
+   "band": 0,
+   "start_xy": [
+    6.45,
+    8.05
+   ],
+   "goal_xy": [
+    3.85,
+    5.45
+   ],
+   "shortest_m": 5.2243,
+   "euclid_m": 3.677,
+   "needs_sparse": false
+  },
+  {
+   "id": 63,
+   "band": 0,
+   "start_xy": [
+    18.95,
+    7.65
+   ],
+   "goal_xy": [
+    14.55,
+    4.15
+   ],
+   "shortest_m": 5.8497,
+   "euclid_m": 5.6223,
+   "needs_sparse": false
+  },
+  {
+   "id": 64,
+   "band": 0,
+   "start_xy": [
+    9.75,
+    12.950000000000001
+   ],
+   "goal_xy": [
+    5.25,
+    6.65
+   ],
+   "shortest_m": 8.164,
+   "euclid_m": 7.7421,
+   "needs_sparse": false
+  },
+  {
+   "id": 65,
+   "band": 0,
+   "start_xy": [
+    8.15,
+    12.65
+   ],
+   "goal_xy": [
+    1.6500000000000001,
+    8.55
+   ],
+   "shortest_m": 9.8042,
+   "euclid_m": 7.6851,
+   "needs_sparse": false
+  },
+  {
+   "id": 66,
+   "band": 0,
+   "start_xy": [
+    15.450000000000001,
+    14.15
+   ],
+   "goal_xy": [
+    13.350000000000001,
+    19.150000000000002
+   ],
+   "shortest_m": 5.8698,
+   "euclid_m": 5.4231,
+   "needs_sparse": false
+  },
+  {
+   "id": 67,
+   "band": 0,
+   "start_xy": [
+    11.65,
+    13.65
+   ],
+   "goal_xy": [
+    6.75,
+    11.15
+   ],
+   "shortest_m": 5.9355,
+   "euclid_m": 5.5009,
+   "needs_sparse": false
+  },
+  {
+   "id": 68,
+   "band": 0,
+   "start_xy": [
+    13.65,
+    11.15
+   ],
+   "goal_xy": [
+    19.650000000000002,
+    6.45
+   ],
+   "shortest_m": 8.474,
+   "euclid_m": 7.6217,
+   "needs_sparse": false
+  },
+  {
+   "id": 69,
+   "band": 0,
+   "start_xy": [
+    17.45,
+    6.3500000000000005
+   ],
+   "goal_xy": [
+    13.65,
+    11.950000000000001
+   ],
+   "shortest_m": 7.174,
+   "euclid_m": 6.7676,
+   "needs_sparse": false
+  },
+  {
+   "id": 70,
+   "band": 0,
+   "start_xy": [
+    9.05,
+    8.25
+   ],
+   "goal_xy": [
+    3.95,
+    5.550000000000001
+   ],
+   "shortest_m": 7.7657,
+   "euclid_m": 5.7706,
+   "needs_sparse": false
+  },
+  {
+   "id": 71,
+   "band": 0,
+   "start_xy": [
+    1.75,
+    18.150000000000002
+   ],
+   "goal_xy": [
+    7.3500000000000005,
+    12.850000000000001
+   ],
+   "shortest_m": 7.7953,
+   "euclid_m": 7.7104,
+   "needs_sparse": false
+  },
+  {
+   "id": 72,
+   "band": 0,
+   "start_xy": [
+    7.8500000000000005,
+    8.85
+   ],
+   "goal_xy": [
+    5.3500000000000005,
+    12.75
+   ],
+   "shortest_m": 5.1012,
+   "euclid_m": 4.6325,
+   "needs_sparse": false
+  },
+  {
+   "id": 73,
+   "band": 0,
+   "start_xy": [
+    3.0500000000000003,
+    7.95
+   ],
+   "goal_xy": [
+    9.950000000000001,
+    5.45
+   ],
+   "shortest_m": 8.5113,
+   "euclid_m": 7.3389,
+   "needs_sparse": false
+  },
+  {
+   "id": 74,
+   "band": 0,
+   "start_xy": [
+    14.55,
+    9.65
+   ],
+   "goal_xy": [
+    5.3500000000000005,
+    9.25
+   ],
+   "shortest_m": 9.3657,
+   "euclid_m": 9.2087,
+   "needs_sparse": false
+  },
+  {
+   "id": 75,
+   "band": 0,
+   "start_xy": [
+    4.15,
+    1.25
+   ],
+   "goal_xy": [
+    8.25,
+    7.3500000000000005
+   ],
+   "shortest_m": 8.5012,
+   "euclid_m": 7.3498,
+   "needs_sparse": false
+  },
+  {
+   "id": 76,
+   "band": 0,
+   "start_xy": [
+    4.45,
+    9.05
+   ],
+   "goal_xy": [
+    8.25,
+    3.75
+   ],
+   "shortest_m": 8.3971,
+   "euclid_m": 6.5215,
+   "needs_sparse": false
+  },
+  {
+   "id": 77,
+   "band": 0,
+   "start_xy": [
+    11.05,
+    6.95
+   ],
+   "goal_xy": [
+    6.95,
+    3.85
+   ],
+   "shortest_m": 5.4426,
+   "euclid_m": 5.14,
+   "needs_sparse": false
+  },
+  {
+   "id": 78,
+   "band": 0,
+   "start_xy": [
+    10.25,
+    13.55
+   ],
+   "goal_xy": [
+    3.25,
+    15.55
+   ],
+   "shortest_m": 7.8284,
+   "euclid_m": 7.2801,
+   "needs_sparse": false
+  },
+  {
+   "id": 79,
+   "band": 0,
+   "start_xy": [
+    10.450000000000001,
+    7.3500000000000005
+   ],
+   "goal_xy": [
+    10.850000000000001,
+    13.950000000000001
+   ],
+   "shortest_m": 7.677,
+   "euclid_m": 6.6121,
+   "needs_sparse": false
+  },
+  {
+   "id": 80,
+   "band": 0,
+   "start_xy": [
+    8.35,
+    10.950000000000001
+   ],
+   "goal_xy": [
+    1.6500000000000001,
+    7.75
+   ],
+   "shortest_m": 8.4355,
+   "euclid_m": 7.425,
+   "needs_sparse": false
+  },
+  {
+   "id": 81,
+   "band": 0,
+   "start_xy": [
+    12.05,
+    13.450000000000001
+   ],
+   "goal_xy": [
+    10.05,
+    18.650000000000002
+   ],
+   "shortest_m": 9.2669,
+   "euclid_m": 5.5714,
+   "needs_sparse": false
+  },
+  {
+   "id": 82,
+   "band": 0,
+   "start_xy": [
+    6.95,
+    19.150000000000002
+   ],
+   "goal_xy": [
+    4.15,
+    13.65
+   ],
+   "shortest_m": 6.9426,
+   "euclid_m": 6.1717,
+   "needs_sparse": false
+  },
+  {
+   "id": 83,
+   "band": 0,
+   "start_xy": [
+    0.9500000000000001,
+    17.45
+   ],
+   "goal_xy": [
+    7.3500000000000005,
+    17.35
+   ],
+   "shortest_m": 6.4414,
+   "euclid_m": 6.4008,
+   "needs_sparse": false
+  },
+  {
+   "id": 84,
+   "band": 0,
+   "start_xy": [
+    15.55,
+    9.65
+   ],
+   "goal_xy": [
+    17.650000000000002,
+    4.45
+   ],
+   "shortest_m": 6.0698,
+   "euclid_m": 5.608,
+   "needs_sparse": false
+  },
+  {
+   "id": 85,
+   "band": 0,
+   "start_xy": [
+    18.35,
+    18.35
+   ],
+   "goal_xy": [
+    15.25,
+    14.15
+   ],
+   "shortest_m": 8.9627,
+   "euclid_m": 5.2202,
+   "needs_sparse": false
+  },
+  {
+   "id": 86,
+   "band": 0,
+   "start_xy": [
+    15.65,
+    1.6500000000000001
+   ],
+   "goal_xy": [
+    13.450000000000001,
+    9.05
+   ],
+   "shortest_m": 9.2225,
+   "euclid_m": 7.7201,
+   "needs_sparse": false
+  },
+  {
+   "id": 87,
+   "band": 0,
+   "start_xy": [
+    15.75,
+    7.65
+   ],
+   "goal_xy": [
+    9.450000000000001,
+    4.45
+   ],
+   "shortest_m": 8.6255,
+   "euclid_m": 7.0661,
+   "needs_sparse": false
+  },
+  {
+   "id": 88,
+   "band": 0,
+   "start_xy": [
+    2.5500000000000003,
+    3.45
+   ],
+   "goal_xy": [
+    5.65,
+    6.8500000000000005
+   ],
+   "shortest_m": 8.7284,
+   "euclid_m": 4.6011,
+   "needs_sparse": false
+  },
+  {
+   "id": 89,
+   "band": 0,
+   "start_xy": [
+    5.3500000000000005,
+    13.350000000000001
+   ],
+   "goal_xy": [
+    12.25,
+    12.25
+   ],
+   "shortest_m": 7.3556,
+   "euclid_m": 6.9871,
+   "needs_sparse": false
+  },
+  {
+   "id": 90,
+   "band": 0,
+   "start_xy": [
+    12.25,
+    16.45
+   ],
+   "goal_xy": [
+    5.050000000000001,
+    17.75
+   ],
+   "shortest_m": 7.7385,
+   "euclid_m": 7.3164,
+   "needs_sparse": false
+  },
+  {
+   "id": 91,
+   "band": 0,
+   "start_xy": [
+    2.85,
+    9.05
+   ],
+   "goal_xy": [
+    1.4500000000000002,
+    3.0500000000000003
+   ],
+   "shortest_m": 6.5799,
+   "euclid_m": 6.1612,
+   "needs_sparse": false
+  },
+  {
+   "id": 92,
+   "band": 0,
+   "start_xy": [
+    1.6500000000000001,
+    2.5500000000000003
+   ],
+   "goal_xy": [
+    5.75,
+    8.35
+   ],
+   "shortest_m": 8.377,
+   "euclid_m": 7.1028,
+   "needs_sparse": false
+  },
+  {
+   "id": 93,
+   "band": 0,
+   "start_xy": [
+    7.15,
+    9.15
+   ],
+   "goal_xy": [
+    7.25,
+    1.4500000000000002
+   ],
+   "shortest_m": 8.487,
+   "euclid_m": 7.7006,
+   "needs_sparse": false
+  },
+  {
+   "id": 94,
+   "band": 0,
+   "start_xy": [
+    8.950000000000001,
+    9.05
+   ],
+   "goal_xy": [
+    17.55,
+    8.75
+   ],
+   "shortest_m": 9.387,
+   "euclid_m": 8.6052,
+   "needs_sparse": false
+  },
+  {
+   "id": 95,
+   "band": 0,
+   "start_xy": [
+    13.25,
+    5.25
+   ],
+   "goal_xy": [
+    15.65,
+    9.65
+   ],
+   "shortest_m": 5.8627,
+   "euclid_m": 5.012,
+   "needs_sparse": false
+  },
+  {
+   "id": 96,
+   "band": 0,
+   "start_xy": [
+    16.650000000000002,
+    9.75
+   ],
+   "goal_xy": [
+    9.05,
+    8.85
+   ],
+   "shortest_m": 9.4213,
+   "euclid_m": 7.6531,
+   "needs_sparse": false
+  },
+  {
+   "id": 97,
+   "band": 0,
+   "start_xy": [
+    3.35,
+    13.15
+   ],
+   "goal_xy": [
+    9.950000000000001,
+    11.15
+   ],
+   "shortest_m": 7.4284,
+   "euclid_m": 6.8964,
+   "needs_sparse": false
+  },
+  {
+   "id": 98,
+   "band": 0,
+   "start_xy": [
+    10.75,
+    9.75
+   ],
+   "goal_xy": [
+    15.15,
+    6.95
+   ],
+   "shortest_m": 5.5598,
+   "euclid_m": 5.2154,
+   "needs_sparse": false
+  },
+  {
+   "id": 99,
+   "band": 0,
+   "start_xy": [
+    14.05,
+    9.75
+   ],
+   "goal_xy": [
+    8.65,
+    4.25
+   ],
+   "shortest_m": 7.9711,
+   "euclid_m": 7.7078,
+   "needs_sparse": false
+  },
+  {
+   "id": 100,
+   "band": 1,
+   "start_xy": [
+    12.350000000000001,
+    5.550000000000001
+   ],
+   "goal_xy": [
+    17.150000000000002,
+    19.150000000000002
+   ],
+   "shortest_m": 16.9012,
+   "euclid_m": 14.4222,
+   "needs_sparse": false
+  },
+  {
+   "id": 101,
+   "band": 1,
+   "start_xy": [
+    6.15,
+    8.55
+   ],
+   "goal_xy": [
+    14.950000000000001,
+    15.950000000000001
+   ],
+   "shortest_m": 12.9196,
+   "euclid_m": 11.4978,
+   "needs_sparse": false
+  },
+  {
+   "id": 102,
+   "band": 1,
+   "start_xy": [
+    0.8500000000000001,
+    1.75
+   ],
+   "goal_xy": [
+    9.15,
+    12.15
+   ],
+   "shortest_m": 15.1267,
+   "euclid_m": 13.306,
+   "needs_sparse": false
+  },
+  {
+   "id": 103,
+   "band": 1,
+   "start_xy": [
+    12.55,
+    6.45
+   ],
+   "goal_xy": [
+    3.95,
+    19.150000000000002
+   ],
+   "shortest_m": 16.6723,
+   "euclid_m": 15.3379,
+   "needs_sparse": false
+  },
+  {
+   "id": 104,
+   "band": 1,
+   "start_xy": [
+    11.450000000000001,
+    18.05
+   ],
+   "goal_xy": [
+    5.3500000000000005,
+    12.450000000000001
+   ],
+   "shortest_m": 12.5083,
+   "euclid_m": 8.2807,
+   "needs_sparse": false
+  },
+  {
+   "id": 105,
+   "band": 1,
+   "start_xy": [
+    9.950000000000001,
+    7.550000000000001
+   ],
+   "goal_xy": [
+    2.35,
+    2.0500000000000003
+   ],
+   "shortest_m": 11.0397,
+   "euclid_m": 9.3814,
+   "needs_sparse": false
+  },
+  {
+   "id": 106,
+   "band": 1,
+   "start_xy": [
+    5.45,
+    6.45
+   ],
+   "goal_xy": [
+    16.55,
+    19.25
+   ],
+   "shortest_m": 19.8823,
+   "euclid_m": 16.9425,
+   "needs_sparse": false
+  },
+  {
+   "id": 107,
+   "band": 1,
+   "start_xy": [
+    0.55,
+    7.25
+   ],
+   "goal_xy": [
+    5.050000000000001,
+    18.45
+   ],
+   "shortest_m": 19.6823,
+   "euclid_m": 12.0702,
+   "needs_sparse": false
+  },
+  {
+   "id": 108,
+   "band": 1,
+   "start_xy": [
+    10.25,
+    16.45
+   ],
+   "goal_xy": [
+    9.15,
+    7.8500000000000005
+   ],
+   "shortest_m": 14.8983,
+   "euclid_m": 8.6701,
+   "needs_sparse": false
+  },
+  {
+   "id": 109,
+   "band": 1,
+   "start_xy": [
+    13.850000000000001,
+    16.25
+   ],
+   "goal_xy": [
+    8.65,
+    10.05
+   ],
+   "shortest_m": 10.1012,
+   "euclid_m": 8.092,
+   "needs_sparse": false
+  },
+  {
+   "id": 110,
+   "band": 1,
+   "start_xy": [
+    2.35,
+    7.45
+   ],
+   "goal_xy": [
+    18.35,
+    10.55
+   ],
+   "shortest_m": 17.874,
+   "euclid_m": 16.2975,
+   "needs_sparse": false
+  },
+  {
+   "id": 111,
+   "band": 1,
+   "start_xy": [
+    9.850000000000001,
+    11.350000000000001
+   ],
+   "goal_xy": [
+    3.5500000000000003,
+    4.15
+   ],
+   "shortest_m": 11.3326,
+   "euclid_m": 9.5671,
+   "needs_sparse": false
+  },
+  {
+   "id": 112,
+   "band": 1,
+   "start_xy": [
+    8.85,
+    5.75
+   ],
+   "goal_xy": [
+    3.35,
+    13.55
+   ],
+   "shortest_m": 10.7811,
+   "euclid_m": 9.5441,
+   "needs_sparse": false
+  },
+  {
+   "id": 113,
+   "band": 1,
+   "start_xy": [
+    0.65,
+    0.55
+   ],
+   "goal_xy": [
+    15.05,
+    7.25
+   ],
+   "shortest_m": 17.9794,
+   "euclid_m": 15.8824,
+   "needs_sparse": false
+  },
+  {
+   "id": 114,
+   "band": 1,
+   "start_xy": [
+    12.850000000000001,
+    11.65
+   ],
+   "goal_xy": [
+    0.9500000000000001,
+    19.25
+   ],
+   "shortest_m": 15.2238,
+   "euclid_m": 14.1198,
+   "needs_sparse": false
+  },
+  {
+   "id": 115,
+   "band": 1,
+   "start_xy": [
+    5.050000000000001,
+    9.05
+   ],
+   "goal_xy": [
+    5.75,
+    16.75
+   ],
+   "shortest_m": 13.261,
+   "euclid_m": 7.7318,
+   "needs_sparse": false
+  },
+  {
+   "id": 116,
+   "band": 1,
+   "start_xy": [
+    7.15,
+    16.95
+   ],
+   "goal_xy": [
+    15.350000000000001,
+    6.3500000000000005
+   ],
+   "shortest_m": 17.5355,
+   "euclid_m": 13.4015,
+   "needs_sparse": false
+  },
+  {
+   "id": 117,
+   "band": 1,
+   "start_xy": [
+    15.350000000000001,
+    0.75
+   ],
+   "goal_xy": [
+    10.950000000000001,
+    10.950000000000001
+   ],
+   "shortest_m": 13.5924,
+   "euclid_m": 11.1086,
+   "needs_sparse": false
+  },
+  {
+   "id": 118,
+   "band": 1,
+   "start_xy": [
+    13.05,
+    19.25
+   ],
+   "goal_xy": [
+    18.55,
+    8.35
+   ],
+   "shortest_m": 15.3497,
+   "euclid_m": 12.209,
+   "needs_sparse": false
+  },
+  {
+   "id": 119,
+   "band": 1,
+   "start_xy": [
+    16.150000000000002,
+    1.1500000000000001
+   ],
+   "goal_xy": [
+    8.75,
+    7.45
+   ],
+   "shortest_m": 12.5569,
+   "euclid_m": 9.7185,
+   "needs_sparse": false
+  },
+  {
+   "id": 120,
+   "band": 1,
+   "start_xy": [
+    7.25,
+    10.950000000000001
+   ],
+   "goal_xy": [
+    3.75,
+    1.1500000000000001
+   ],
+   "shortest_m": 12.874,
+   "euclid_m": 10.4062,
+   "needs_sparse": false
+  },
+  {
+   "id": 121,
+   "band": 1,
+   "start_xy": [
+    10.850000000000001,
+    10.75
+   ],
+   "goal_xy": [
+    10.25,
+    19.05
+   ],
+   "shortest_m": 14.2681,
+   "euclid_m": 8.3217,
+   "needs_sparse": false
+  },
+  {
+   "id": 122,
+   "band": 1,
+   "start_xy": [
+    9.55,
+    7.3500000000000005
+   ],
+   "goal_xy": [
+    17.85,
+    2.95
+   ],
+   "shortest_m": 10.1225,
+   "euclid_m": 9.3941,
+   "needs_sparse": false
+  },
+  {
+   "id": 123,
+   "band": 1,
+   "start_xy": [
+    7.65,
+    19.450000000000003
+   ],
+   "goal_xy": [
+    16.150000000000002,
+    6.95
+   ],
+   "shortest_m": 18.4468,
+   "euclid_m": 15.1162,
+   "needs_sparse": false
+  },
+  {
+   "id": 124,
+   "band": 1,
+   "start_xy": [
+    17.25,
+    6.75
+   ],
+   "goal_xy": [
+    5.050000000000001,
+    14.05
+   ],
+   "shortest_m": 15.2238,
+   "euclid_m": 14.2172,
+   "needs_sparse": false
+  },
+  {
+   "id": 125,
+   "band": 1,
+   "start_xy": [
+    6.8500000000000005,
+    9.05
+   ],
+   "goal_xy": [
+    13.950000000000001,
+    18.55
+   ],
+   "shortest_m": 14.2811,
+   "euclid_m": 11.86,
+   "needs_sparse": false
+  },
+  {
+   "id": 126,
+   "band": 1,
+   "start_xy": [
+    4.95,
+    18.45
+   ],
+   "goal_xy": [
+    12.950000000000001,
+    5.3500000000000005
+   ],
+   "shortest_m": 17.8279,
+   "euclid_m": 15.3496,
+   "needs_sparse": false
+  },
+  {
+   "id": 127,
+   "band": 1,
+   "start_xy": [
+    11.15,
+    19.35
+   ],
+   "goal_xy": [
+    18.150000000000002,
+    9.25
+   ],
+   "shortest_m": 16.2095,
+   "euclid_m": 12.2886,
+   "needs_sparse": false
+  },
+  {
+   "id": 128,
+   "band": 1,
+   "start_xy": [
+    14.55,
+    7.8500000000000005
+   ],
+   "goal_xy": [
+    4.75,
+    0.35000000000000003
+   ],
+   "shortest_m": 13.3894,
+   "euclid_m": 12.3406,
+   "needs_sparse": false
+  },
+  {
+   "id": 129,
+   "band": 1,
+   "start_xy": [
+    17.25,
+    8.55
+   ],
+   "goal_xy": [
+    6.3500000000000005,
+    11.05
+   ],
+   "shortest_m": 12.4326,
+   "euclid_m": 11.183,
+   "needs_sparse": false
+  },
+  {
+   "id": 130,
+   "band": 1,
+   "start_xy": [
+    13.55,
+    13.450000000000001
+   ],
+   "goal_xy": [
+    3.25,
+    4.65
+   ],
+   "shortest_m": 15.9953,
+   "euclid_m": 13.5473,
+   "needs_sparse": false
+  },
+  {
+   "id": 131,
+   "band": 1,
+   "start_xy": [
+    2.25,
+    14.55
+   ],
+   "goal_xy": [
+    13.55,
+    16.650000000000002
+   ],
+   "shortest_m": 12.1698,
+   "euclid_m": 11.4935,
+   "needs_sparse": false
+  },
+  {
+   "id": 132,
+   "band": 1,
+   "start_xy": [
+    7.45,
+    2.25
+   ],
+   "goal_xy": [
+    6.550000000000001,
+    13.950000000000001
+   ],
+   "shortest_m": 12.6527,
+   "euclid_m": 11.7346,
+   "needs_sparse": false
+  },
+  {
+   "id": 133,
+   "band": 1,
+   "start_xy": [
+    4.65,
+    19.450000000000003
+   ],
+   "goal_xy": [
+    14.55,
+    14.75
+   ],
+   "shortest_m": 12.2569,
+   "euclid_m": 10.959,
+   "needs_sparse": false
+  },
+  {
+   "id": 134,
+   "band": 1,
+   "start_xy": [
+    2.15,
+    9.35
+   ],
+   "goal_xy": [
+    14.05,
+    16.05
+   ],
+   "shortest_m": 16.3154,
+   "euclid_m": 13.6565,
+   "needs_sparse": false
+  },
+  {
+   "id": 135,
+   "band": 1,
+   "start_xy": [
+    6.550000000000001,
+    12.350000000000001
+   ],
+   "goal_xy": [
+    5.050000000000001,
+    1.25
+   ],
+   "shortest_m": 13.2225,
+   "euclid_m": 11.2009,
+   "needs_sparse": false
+  },
+  {
+   "id": 136,
+   "band": 1,
+   "start_xy": [
+    16.650000000000002,
+    2.25
+   ],
+   "goal_xy": [
+    6.15,
+    12.15
+   ],
+   "shortest_m": 16.0309,
+   "euclid_m": 14.4312,
+   "needs_sparse": false
+  },
+  {
+   "id": 137,
+   "band": 1,
+   "start_xy": [
+    13.450000000000001,
+    6.550000000000001
+   ],
+   "goal_xy": [
+    2.85,
+    19.450000000000003
+   ],
+   "shortest_m": 17.7007,
+   "euclid_m": 16.6964,
+   "needs_sparse": false
+  },
+  {
+   "id": 138,
+   "band": 1,
+   "start_xy": [
+    1.4500000000000002,
+    16.75
+   ],
+   "goal_xy": [
+    14.450000000000001,
+    15.950000000000001
+   ],
+   "shortest_m": 13.3314,
+   "euclid_m": 13.0246,
+   "needs_sparse": false
+  },
+  {
+   "id": 139,
+   "band": 1,
+   "start_xy": [
+    7.45,
+    11.850000000000001
+   ],
+   "goal_xy": [
+    4.65,
+    3.0500000000000003
+   ],
+   "shortest_m": 12.4083,
+   "euclid_m": 9.2347,
+   "needs_sparse": false
+  },
+  {
+   "id": 140,
+   "band": 1,
+   "start_xy": [
+    2.35,
+    13.15
+   ],
+   "goal_xy": [
+    9.55,
+    6.75
+   ],
+   "shortest_m": 10.9054,
+   "euclid_m": 9.6333,
+   "needs_sparse": false
+  },
+  {
+   "id": 141,
+   "band": 1,
+   "start_xy": [
+    17.55,
+    3.35
+   ],
+   "goal_xy": [
+    6.45,
+    5.050000000000001
+   ],
+   "shortest_m": 15.1681,
+   "euclid_m": 11.2294,
+   "needs_sparse": false
+  },
+  {
+   "id": 142,
+   "band": 1,
+   "start_xy": [
+    18.45,
+    2.6500000000000004
+   ],
+   "goal_xy": [
+    10.75,
+    10.950000000000001
+   ],
+   "shortest_m": 11.8995,
+   "euclid_m": 11.3217,
+   "needs_sparse": false
+  },
+  {
+   "id": 143,
+   "band": 1,
+   "start_xy": [
+    9.25,
+    16.95
+   ],
+   "goal_xy": [
+    13.75,
+    10.55
+   ],
+   "shortest_m": 10.7385,
+   "euclid_m": 7.8237,
+   "needs_sparse": false
+  },
+  {
+   "id": 144,
+   "band": 1,
+   "start_xy": [
+    7.550000000000001,
+    5.8500000000000005
+   ],
+   "goal_xy": [
+    13.450000000000001,
+    16.05
+   ],
+   "shortest_m": 15.0154,
+   "euclid_m": 11.7835,
+   "needs_sparse": false
+  },
+  {
+   "id": 145,
+   "band": 1,
+   "start_xy": [
+    18.650000000000002,
+    6.75
+   ],
+   "goal_xy": [
+    12.950000000000001,
+    13.75
+   ],
+   "shortest_m": 10.2397,
+   "euclid_m": 9.0272,
+   "needs_sparse": false
+  },
+  {
+   "id": 146,
+   "band": 1,
+   "start_xy": [
+    1.4500000000000002,
+    4.8500000000000005
+   ],
+   "goal_xy": [
+    12.15,
+    9.25
+   ],
+   "shortest_m": 12.9326,
+   "euclid_m": 11.5694,
+   "needs_sparse": false
+  },
+  {
+   "id": 147,
+   "band": 1,
+   "start_xy": [
+    6.75,
+    7.75
+   ],
+   "goal_xy": [
+    1.4500000000000002,
+    17.05
+   ],
+   "shortest_m": 12.5723,
+   "euclid_m": 10.7042,
+   "needs_sparse": false
+  },
+  {
+   "id": 148,
+   "band": 1,
+   "start_xy": [
+    18.55,
+    6.050000000000001
+   ],
+   "goal_xy": [
+    9.850000000000001,
+    4.3500000000000005
+   ],
+   "shortest_m": 10.4485,
+   "euclid_m": 8.8645,
+   "needs_sparse": false
+  },
+  {
+   "id": 149,
+   "band": 1,
+   "start_xy": [
+    14.450000000000001,
+    16.55
+   ],
+   "goal_xy": [
+    2.85,
+    9.55
+   ],
+   "shortest_m": 16.1983,
+   "euclid_m": 13.5484,
+   "needs_sparse": false
+  },
+  {
+   "id": 150,
+   "band": 1,
+   "start_xy": [
+    9.65,
+    2.5500000000000003
+   ],
+   "goal_xy": [
+    11.25,
+    12.75
+   ],
+   "shortest_m": 11.8142,
+   "euclid_m": 10.3247,
+   "needs_sparse": false
+  },
+  {
+   "id": 151,
+   "band": 1,
+   "start_xy": [
+    2.15,
+    0.8500000000000001
+   ],
+   "goal_xy": [
+    6.45,
+    12.25
+   ],
+   "shortest_m": 15.7953,
+   "euclid_m": 12.184,
+   "needs_sparse": false
+  },
+  {
+   "id": 152,
+   "band": 1,
+   "start_xy": [
+    13.950000000000001,
+    19.05
+   ],
+   "goal_xy": [
+    3.35,
+    15.65
+   ],
+   "shortest_m": 12.0083,
+   "euclid_m": 11.1319,
+   "needs_sparse": false
+  },
+  {
+   "id": 153,
+   "band": 1,
+   "start_xy": [
+    13.55,
+    5.95
+   ],
+   "goal_xy": [
+    12.25,
+    16.35
+   ],
+   "shortest_m": 12.4213,
+   "euclid_m": 10.4809,
+   "needs_sparse": false
+  },
+  {
+   "id": 154,
+   "band": 1,
+   "start_xy": [
+    2.6500000000000004,
+    17.85
+   ],
+   "goal_xy": [
+    12.850000000000001,
+    7.050000000000001
+   ],
+   "shortest_m": 15.435,
+   "euclid_m": 14.8553,
+   "needs_sparse": false
+  },
+  {
+   "id": 155,
+   "band": 1,
+   "start_xy": [
+    18.95,
+    6.25
+   ],
+   "goal_xy": [
+    10.850000000000001,
+    18.25
+   ],
+   "shortest_m": 16.7267,
+   "euclid_m": 14.4779,
+   "needs_sparse": false
+  },
+  {
+   "id": 156,
+   "band": 1,
+   "start_xy": [
+    18.85,
+    19.25
+   ],
+   "goal_xy": [
+    18.55,
+    7.3500000000000005
+   ],
+   "shortest_m": 19.2569,
+   "euclid_m": 11.9038,
+   "needs_sparse": false
+  },
+  {
+   "id": 157,
+   "band": 1,
+   "start_xy": [
+    2.75,
+    8.55
+   ],
+   "goal_xy": [
+    6.95,
+    13.850000000000001
+   ],
+   "shortest_m": 10.2355,
+   "euclid_m": 6.7624,
+   "needs_sparse": false
+  },
+  {
+   "id": 158,
+   "band": 1,
+   "start_xy": [
+    19.150000000000002,
+    6.75
+   ],
+   "goal_xy": [
+    0.9500000000000001,
+    9.450000000000001
+   ],
+   "shortest_m": 19.3184,
+   "euclid_m": 18.3992,
+   "needs_sparse": false
+  },
+  {
+   "id": 159,
+   "band": 1,
+   "start_xy": [
+    9.450000000000001,
+    1.25
+   ],
+   "goal_xy": [
+    0.45,
+    6.75
+   ],
+   "shortest_m": 14.8154,
+   "euclid_m": 10.5475,
+   "needs_sparse": false
+  },
+  {
+   "id": 160,
+   "band": 1,
+   "start_xy": [
+    17.25,
+    7.8500000000000005
+   ],
+   "goal_xy": [
+    8.05,
+    16.55
+   ],
+   "shortest_m": 16.4598,
+   "euclid_m": 12.6621,
+   "needs_sparse": false
+  },
+  {
+   "id": 161,
+   "band": 1,
+   "start_xy": [
+    4.55,
+    2.5500000000000003
+   ],
+   "goal_xy": [
+    3.35,
+    13.950000000000001
+   ],
+   "shortest_m": 17.1338,
+   "euclid_m": 11.463,
+   "needs_sparse": false
+  },
+  {
+   "id": 162,
+   "band": 1,
+   "start_xy": [
+    15.25,
+    9.75
+   ],
+   "goal_xy": [
+    7.3500000000000005,
+    2.75
+   ],
+   "shortest_m": 11.151,
+   "euclid_m": 10.5551,
+   "needs_sparse": false
+  },
+  {
+   "id": 163,
+   "band": 1,
+   "start_xy": [
+    5.25,
+    2.35
+   ],
+   "goal_xy": [
+    18.35,
+    4.15
+   ],
+   "shortest_m": 18.551,
+   "euclid_m": 13.2231,
+   "needs_sparse": false
+  },
+  {
+   "id": 164,
+   "band": 1,
+   "start_xy": [
+    12.65,
+    9.55
+   ],
+   "goal_xy": [
+    2.25,
+    12.950000000000001
+   ],
+   "shortest_m": 11.8912,
+   "euclid_m": 10.9417,
+   "needs_sparse": false
+  },
+  {
+   "id": 165,
+   "band": 1,
+   "start_xy": [
+    13.25,
+    1.35
+   ],
+   "goal_xy": [
+    14.55,
+    8.05
+   ],
+   "shortest_m": 10.2912,
+   "euclid_m": 6.825,
+   "needs_sparse": false
+  },
+  {
+   "id": 166,
+   "band": 1,
+   "start_xy": [
+    13.950000000000001,
+    5.550000000000001
+   ],
+   "goal_xy": [
+    0.9500000000000001,
+    16.05
+   ],
+   "shortest_m": 17.4664,
+   "euclid_m": 16.7108,
+   "needs_sparse": false
+  },
+  {
+   "id": 167,
+   "band": 1,
+   "start_xy": [
+    9.15,
+    9.35
+   ],
+   "goal_xy": [
+    1.1500000000000001,
+    2.5500000000000003
+   ],
+   "shortest_m": 12.3983,
+   "euclid_m": 10.4995,
+   "needs_sparse": false
+  },
+  {
+   "id": 168,
+   "band": 1,
+   "start_xy": [
+    3.1500000000000004,
+    12.450000000000001
+   ],
+   "goal_xy": [
+    13.15,
+    11.55
+   ],
+   "shortest_m": 10.3728,
+   "euclid_m": 10.0404,
+   "needs_sparse": false
+  },
+  {
+   "id": 169,
+   "band": 1,
+   "start_xy": [
+    18.150000000000002,
+    7.25
+   ],
+   "goal_xy": [
+    9.75,
+    11.55
+   ],
+   "shortest_m": 10.1811,
+   "euclid_m": 9.4366,
+   "needs_sparse": false
+  },
+  {
+   "id": 170,
+   "band": 1,
+   "start_xy": [
+    16.150000000000002,
+    6.550000000000001
+   ],
+   "goal_xy": [
+    0.65,
+    0.35000000000000003
+   ],
+   "shortest_m": 18.5853,
+   "euclid_m": 16.694,
+   "needs_sparse": false
+  },
+  {
+   "id": 171,
+   "band": 1,
+   "start_xy": [
+    12.55,
+    8.15
+   ],
+   "goal_xy": [
+    3.45,
+    1.05
+   ],
+   "shortest_m": 12.0995,
+   "euclid_m": 11.5421,
+   "needs_sparse": false
+  },
+  {
+   "id": 172,
+   "band": 1,
+   "start_xy": [
+    16.95,
+    2.0500000000000003
+   ],
+   "goal_xy": [
+    5.75,
+    8.25
+   ],
+   "shortest_m": 14.8225,
+   "euclid_m": 12.8016,
+   "needs_sparse": false
+  },
+  {
+   "id": 173,
+   "band": 1,
+   "start_xy": [
+    10.450000000000001,
+    12.55
+   ],
+   "goal_xy": [
+    16.45,
+    3.35
+   ],
+   "shortest_m": 12.5782,
+   "euclid_m": 10.9836,
+   "needs_sparse": false
+  },
+  {
+   "id": 174,
+   "band": 1,
+   "start_xy": [
+    5.3500000000000005,
+    7.65
+   ],
+   "goal_xy": [
+    15.05,
+    16.75
+   ],
+   "shortest_m": 14.9338,
+   "euclid_m": 13.3004,
+   "needs_sparse": false
+  },
+  {
+   "id": 175,
+   "band": 1,
+   "start_xy": [
+    17.25,
+    3.75
+   ],
+   "goal_xy": [
+    6.25,
+    2.75
+   ],
+   "shortest_m": 13.3782,
+   "euclid_m": 11.0454,
+   "needs_sparse": false
+  },
+  {
+   "id": 176,
+   "band": 1,
+   "start_xy": [
+    2.85,
+    5.95
+   ],
+   "goal_xy": [
+    13.05,
+    6.15
+   ],
+   "shortest_m": 12.5255,
+   "euclid_m": 10.202,
+   "needs_sparse": false
+  },
+  {
+   "id": 177,
+   "band": 1,
+   "start_xy": [
+    16.55,
+    9.15
+   ],
+   "goal_xy": [
+    9.850000000000001,
+    2.25
+   ],
+   "shortest_m": 12.2426,
+   "euclid_m": 9.6177,
+   "needs_sparse": false
+  },
+  {
+   "id": 178,
+   "band": 1,
+   "start_xy": [
+    15.350000000000001,
+    16.75
+   ],
+   "goal_xy": [
+    3.35,
+    5.65
+   ],
+   "shortest_m": 18.9409,
+   "euclid_m": 16.3466,
+   "needs_sparse": false
+  },
+  {
+   "id": 179,
+   "band": 1,
+   "start_xy": [
+    8.450000000000001,
+    1.6500000000000001
+   ],
+   "goal_xy": [
+    5.8500000000000005,
+    13.15
+   ],
+   "shortest_m": 12.8598,
+   "euclid_m": 11.7903,
+   "needs_sparse": false
+  },
+  {
+   "id": 180,
+   "band": 1,
+   "start_xy": [
+    15.55,
+    7.3500000000000005
+   ],
+   "goal_xy": [
+    3.0500000000000003,
+    8.05
+   ],
+   "shortest_m": 13.1213,
+   "euclid_m": 12.5196,
+   "needs_sparse": false
+  },
+  {
+   "id": 181,
+   "band": 1,
+   "start_xy": [
+    13.55,
+    1.6500000000000001
+   ],
+   "goal_xy": [
+    8.950000000000001,
+    2.75
+   ],
+   "shortest_m": 16.2397,
+   "euclid_m": 4.7297,
+   "needs_sparse": false
+  },
+  {
+   "id": 182,
+   "band": 1,
+   "start_xy": [
+    10.25,
+    8.85
+   ],
+   "goal_xy": [
+    0.35000000000000003,
+    17.05
+   ],
+   "shortest_m": 13.2966,
+   "euclid_m": 12.855,
+   "needs_sparse": false
+  },
+  {
+   "id": 183,
+   "band": 1,
+   "start_xy": [
+    18.45,
+    8.15
+   ],
+   "goal_xy": [
+    0.8500000000000001,
+    8.65
+   ],
+   "shortest_m": 17.9728,
+   "euclid_m": 17.6071,
+   "needs_sparse": false
+  },
+  {
+   "id": 184,
+   "band": 1,
+   "start_xy": [
+    7.45,
+    16.85
+   ],
+   "goal_xy": [
+    12.75,
+    7.15
+   ],
+   "shortest_m": 16.3113,
+   "euclid_m": 11.0535,
+   "needs_sparse": false
+  },
+  {
+   "id": 185,
+   "band": 1,
+   "start_xy": [
+    1.35,
+    1.55
+   ],
+   "goal_xy": [
+    12.05,
+    4.75
+   ],
+   "shortest_m": 13.864,
+   "euclid_m": 11.1683,
+   "needs_sparse": false
+  },
+  {
+   "id": 186,
+   "band": 1,
+   "start_xy": [
+    15.05,
+    8.65
+   ],
+   "goal_xy": [
+    6.550000000000001,
+    15.65
+   ],
+   "shortest_m": 11.751,
+   "euclid_m": 11.0114,
+   "needs_sparse": false
+  },
+  {
+   "id": 187,
+   "band": 1,
+   "start_xy": [
+    2.6500000000000004,
+    14.350000000000001
+   ],
+   "goal_xy": [
+    13.25,
+    4.55
+   ],
+   "shortest_m": 14.8936,
+   "euclid_m": 14.4361,
+   "needs_sparse": false
+  },
+  {
+   "id": 188,
+   "band": 1,
+   "start_xy": [
+    12.55,
+    13.65
+   ],
+   "goal_xy": [
+    0.55,
+    2.45
+   ],
+   "shortest_m": 18.3966,
+   "euclid_m": 16.4146,
+   "needs_sparse": false
+  },
+  {
+   "id": 189,
+   "band": 1,
+   "start_xy": [
+    18.55,
+    9.450000000000001
+   ],
+   "goal_xy": [
+    7.550000000000001,
+    18.650000000000002
+   ],
+   "shortest_m": 19.8267,
+   "euclid_m": 14.3402,
+   "needs_sparse": false
+  },
+  {
+   "id": 190,
+   "band": 1,
+   "start_xy": [
+    18.45,
+    6.45
+   ],
+   "goal_xy": [
+    3.75,
+    13.450000000000001
+   ],
+   "shortest_m": 17.5995,
+   "euclid_m": 16.2816,
+   "needs_sparse": false
+  },
+  {
+   "id": 191,
+   "band": 1,
+   "start_xy": [
+    1.1500000000000001,
+    18.75
+   ],
+   "goal_xy": [
+    14.05,
+    17.25
+   ],
+   "shortest_m": 13.5213,
+   "euclid_m": 12.9869,
+   "needs_sparse": false
+  },
+  {
+   "id": 192,
+   "band": 1,
+   "start_xy": [
+    8.75,
+    9.950000000000001
+   ],
+   "goal_xy": [
+    14.25,
+    1.85
+   ],
+   "shortest_m": 15.0267,
+   "euclid_m": 9.7908,
+   "needs_sparse": false
+  },
+  {
+   "id": 193,
+   "band": 1,
+   "start_xy": [
+    7.8500000000000005,
+    11.25
+   ],
+   "goal_xy": [
+    17.150000000000002,
+    3.1500000000000004
+   ],
+   "shortest_m": 13.3581,
+   "euclid_m": 12.3329,
+   "needs_sparse": false
+  },
+  {
+   "id": 194,
+   "band": 1,
+   "start_xy": [
+    8.950000000000001,
+    17.45
+   ],
+   "goal_xy": [
+    7.75,
+    4.15
+   ],
+   "shortest_m": 19.3024,
+   "euclid_m": 13.354,
+   "needs_sparse": false
+  },
+  {
+   "id": 195,
+   "band": 1,
+   "start_xy": [
+    6.15,
+    13.350000000000001
+   ],
+   "goal_xy": [
+    1.05,
+    3.0500000000000003
+   ],
+   "shortest_m": 15.2752,
+   "euclid_m": 11.4935,
+   "needs_sparse": false
+  },
+  {
+   "id": 196,
+   "band": 1,
+   "start_xy": [
+    12.350000000000001,
+    9.850000000000001
+   ],
+   "goal_xy": [
+    19.450000000000003,
+    18.150000000000002
+   ],
+   "shortest_m": 14.487,
+   "euclid_m": 10.9225,
+   "needs_sparse": false
+  },
+  {
+   "id": 197,
+   "band": 1,
+   "start_xy": [
+    12.25,
+    19.150000000000002
+   ],
+   "goal_xy": [
+    5.15,
+    15.15
+   ],
+   "shortest_m": 11.2154,
+   "euclid_m": 8.1492,
+   "needs_sparse": false
+  },
+  {
+   "id": 198,
+   "band": 1,
+   "start_xy": [
+    19.450000000000003,
+    1.05
+   ],
+   "goal_xy": [
+    13.450000000000001,
+    17.95
+   ],
+   "shortest_m": 19.8196,
+   "euclid_m": 17.9335,
+   "needs_sparse": false
+  },
+  {
+   "id": 199,
+   "band": 1,
+   "start_xy": [
+    5.3500000000000005,
+    0.9500000000000001
+   ],
+   "goal_xy": [
+    11.450000000000001,
+    13.75
+   ],
+   "shortest_m": 15.561,
+   "euclid_m": 14.1792,
+   "needs_sparse": false
+  },
+  {
+   "id": 200,
+   "band": 2,
+   "start_xy": [
+    9.35,
+    2.6500000000000004
+   ],
+   "goal_xy": [
+    6.3500000000000005,
+    19.55
+   ],
+   "shortest_m": 20.248,
+   "euclid_m": 17.1642,
+   "needs_sparse": false
+  },
+  {
+   "id": 201,
+   "band": 2,
+   "start_xy": [
+    1.25,
+    9.450000000000001
+   ],
+   "goal_xy": [
+    17.45,
+    0.9500000000000001
+   ],
+   "shortest_m": 21.1267,
+   "euclid_m": 18.2945,
+   "needs_sparse": false
+  },
+  {
+   "id": 202,
+   "band": 2,
+   "start_xy": [
+    3.5500000000000003,
+    2.0500000000000003
+   ],
+   "goal_xy": [
+    4.8500000000000005,
+    16.95
+   ],
+   "shortest_m": 20.1238,
+   "euclid_m": 14.9566,
+   "needs_sparse": false
+  },
+  {
+   "id": 203,
+   "band": 2,
+   "start_xy": [
+    17.75,
+    8.05
+   ],
+   "goal_xy": [
+    3.35,
+    19.25
+   ],
+   "shortest_m": 20.7037,
+   "euclid_m": 18.2428,
+   "needs_sparse": false
+  },
+  {
+   "id": 204,
+   "band": 2,
+   "start_xy": [
+    18.95,
+    7.15
+   ],
+   "goal_xy": [
+    0.9500000000000001,
+    17.55
+   ],
+   "shortest_m": 22.3078,
+   "euclid_m": 20.7885,
+   "needs_sparse": false
+  },
+  {
+   "id": 205,
+   "band": 2,
+   "start_xy": [
+    10.350000000000001,
+    19.450000000000003
+   ],
+   "goal_xy": [
+    2.85,
+    1.4500000000000002
+   ],
+   "shortest_m": 26.1049,
+   "euclid_m": 19.5,
+   "needs_sparse": false
+  },
+  {
+   "id": 206,
+   "band": 2,
+   "start_xy": [
+    15.450000000000001,
+    17.650000000000002
+   ],
+   "goal_xy": [
+    13.450000000000001,
+    1.55
+   ],
+   "shortest_m": 20.4782,
+   "euclid_m": 16.2237,
+   "needs_sparse": false
+  },
+  {
+   "id": 207,
+   "band": 2,
+   "start_xy": [
+    7.3500000000000005,
+    4.95
+   ],
+   "goal_xy": [
+    18.05,
+    19.25
+   ],
+   "shortest_m": 22.0953,
+   "euclid_m": 17.86,
+   "needs_sparse": false
+  },
+  {
+   "id": 208,
+   "band": 2,
+   "start_xy": [
+    1.1500000000000001,
+    4.25
+   ],
+   "goal_xy": [
+    19.55,
+    2.6500000000000004
+   ],
+   "shortest_m": 22.7179,
+   "euclid_m": 18.4694,
+   "needs_sparse": false
+  },
+  {
+   "id": 209,
+   "band": 2,
+   "start_xy": [
+    16.35,
+    1.85
+   ],
+   "goal_xy": [
+    2.5500000000000003,
+    16.25
+   ],
+   "shortest_m": 22.0291,
+   "euclid_m": 19.9449,
+   "needs_sparse": false
+  },
+  {
+   "id": 210,
+   "band": 2,
+   "start_xy": [
+    16.650000000000002,
+    18.25
+   ],
+   "goal_xy": [
+    1.9500000000000002,
+    8.55
+   ],
+   "shortest_m": 21.6711,
+   "euclid_m": 17.6119,
+   "needs_sparse": false
+  },
+  {
+   "id": 211,
+   "band": 2,
+   "start_xy": [
+    2.15,
+    18.25
+   ],
+   "goal_xy": [
+    16.25,
+    3.35
+   ],
+   "shortest_m": 22.0919,
+   "euclid_m": 20.5139,
+   "needs_sparse": false
+  },
+  {
+   "id": 212,
+   "band": 2,
+   "start_xy": [
+    7.65,
+    18.85
+   ],
+   "goal_xy": [
+    0.8500000000000001,
+    7.75
+   ],
+   "shortest_m": 20.7693,
+   "euclid_m": 13.0173,
+   "needs_sparse": false
+  },
+  {
+   "id": 213,
+   "band": 2,
+   "start_xy": [
+    2.85,
+    3.35
+   ],
+   "goal_xy": [
+    19.150000000000002,
+    1.6500000000000001
+   ],
+   "shortest_m": 21.2451,
+   "euclid_m": 16.3884,
+   "needs_sparse": false
+  },
+  {
+   "id": 214,
+   "band": 2,
+   "start_xy": [
+    12.450000000000001,
+    18.05
+   ],
+   "goal_xy": [
+    2.45,
+    2.45
+   ],
+   "shortest_m": 23.938,
+   "euclid_m": 18.53,
+   "needs_sparse": false
+  },
+  {
+   "id": 215,
+   "band": 2,
+   "start_xy": [
+    11.65,
+    18.35
+   ],
+   "goal_xy": [
+    1.55,
+    4.75
+   ],
+   "shortest_m": 22.6421,
+   "euclid_m": 16.9402,
+   "needs_sparse": false
+  },
+  {
+   "id": 216,
+   "band": 2,
+   "start_xy": [
+    8.55,
+    2.6500000000000004
+   ],
+   "goal_xy": [
+    8.55,
+    17.45
+   ],
+   "shortest_m": 20.4853,
+   "euclid_m": 14.8,
+   "needs_sparse": false
+  },
+  {
+   "id": 217,
+   "band": 2,
+   "start_xy": [
+    19.150000000000002,
+    5.95
+   ],
+   "goal_xy": [
+    0.8500000000000001,
+    6.25
+   ],
+   "shortest_m": 20.4912,
+   "euclid_m": 18.3025,
+   "needs_sparse": false
+  },
+  {
+   "id": 218,
+   "band": 2,
+   "start_xy": [
+    18.55,
+    8.65
+   ],
+   "goal_xy": [
+    1.75,
+    19.450000000000003
+   ],
+   "shortest_m": 22.6149,
+   "euclid_m": 19.972,
+   "needs_sparse": false
+  },
+  {
+   "id": 219,
+   "band": 2,
+   "start_xy": [
+    13.450000000000001,
+    1.05
+   ],
+   "goal_xy": [
+    1.1500000000000001,
+    2.6500000000000004
+   ],
+   "shortest_m": 23.8622,
+   "euclid_m": 12.4036,
+   "needs_sparse": false
+  },
+  {
+   "id": 220,
+   "band": 2,
+   "start_xy": [
+    16.95,
+    6.25
+   ],
+   "goal_xy": [
+    4.45,
+    18.95
+   ],
+   "shortest_m": 20.225,
+   "euclid_m": 17.8197,
+   "needs_sparse": false
+  },
+  {
+   "id": 221,
+   "band": 2,
+   "start_xy": [
+    13.65,
+    18.75
+   ],
+   "goal_xy": [
+    3.5500000000000003,
+    1.4500000000000002
+   ],
+   "shortest_m": 23.2208,
+   "euclid_m": 20.0325,
+   "needs_sparse": false
+  },
+  {
+   "id": 222,
+   "band": 2,
+   "start_xy": [
+    7.050000000000001,
+    14.950000000000001
+   ],
+   "goal_xy": [
+    12.350000000000001,
+    0.9500000000000001
+   ],
+   "shortest_m": 21.8321,
+   "euclid_m": 14.9696,
+   "needs_sparse": false
+  },
+  {
+   "id": 223,
+   "band": 2,
+   "start_xy": [
+    8.950000000000001,
+    1.6500000000000001
+   ],
+   "goal_xy": [
+    6.75,
+    17.35
+   ],
+   "shortest_m": 20.3853,
+   "euclid_m": 15.8534,
+   "needs_sparse": false
+  },
+  {
+   "id": 224,
+   "band": 2,
+   "start_xy": [
+    1.9500000000000002,
+    16.85
+   ],
+   "goal_xy": [
+    0.35000000000000003,
+    2.6500000000000004
+   ],
+   "shortest_m": 21.2049,
+   "euclid_m": 14.2899,
+   "needs_sparse": false
+  },
+  {
+   "id": 225,
+   "band": 2,
+   "start_xy": [
+    12.850000000000001,
+    18.85
+   ],
+   "goal_xy": [
+    2.6500000000000004,
+    2.45
+   ],
+   "shortest_m": 24.4894,
+   "euclid_m": 19.3132,
+   "needs_sparse": false
+  },
+  {
+   "id": 226,
+   "band": 2,
+   "start_xy": [
+    6.3500000000000005,
+    14.65
+   ],
+   "goal_xy": [
+    13.05,
+    1.6500000000000001
+   ],
+   "shortest_m": 20.8907,
+   "euclid_m": 14.625,
+   "needs_sparse": false
+  },
+  {
+   "id": 227,
+   "band": 2,
+   "start_xy": [
+    9.25,
+    0.65
+   ],
+   "goal_xy": [
+    13.25,
+    19.05
+   ],
+   "shortest_m": 22.0309,
+   "euclid_m": 18.8298,
+   "needs_sparse": false
+  },
+  {
+   "id": 228,
+   "band": 2,
+   "start_xy": [
+    7.25,
+    17.650000000000002
+   ],
+   "goal_xy": [
+    12.450000000000001,
+    1.75
+   ],
+   "shortest_m": 26.6196,
+   "euclid_m": 16.7287,
+   "needs_sparse": false
+  },
+  {
+   "id": 229,
+   "band": 2,
+   "start_xy": [
+    5.15,
+    14.65
+   ],
+   "goal_xy": [
+    15.450000000000001,
+    0.45
+   ],
+   "shortest_m": 20.5392,
+   "euclid_m": 17.5422,
+   "needs_sparse": false
+  },
+  {
+   "id": 230,
+   "band": 2,
+   "start_xy": [
+    1.4500000000000002,
+    1.9500000000000002
+   ],
+   "goal_xy": [
+    10.950000000000001,
+    18.45
+   ],
+   "shortest_m": 26.225,
+   "euclid_m": 19.0394,
+   "needs_sparse": false
+  },
+  {
+   "id": 231,
+   "band": 2,
+   "start_xy": [
+    7.050000000000001,
+    19.450000000000003
+   ],
+   "goal_xy": [
+    1.35,
+    5.8500000000000005
+   ],
+   "shortest_m": 21.1149,
+   "euclid_m": 14.7462,
+   "needs_sparse": false
+  },
+  {
+   "id": 232,
+   "band": 2,
+   "start_xy": [
+    14.950000000000001,
+    18.35
+   ],
+   "goal_xy": [
+    5.95,
+    1.35
+   ],
+   "shortest_m": 21.4551,
+   "euclid_m": 19.2354,
+   "needs_sparse": false
+  },
+  {
+   "id": 233,
+   "band": 2,
+   "start_xy": [
+    15.05,
+    15.15
+   ],
+   "goal_xy": [
+    2.35,
+    0.9500000000000001
+   ],
+   "shortest_m": 21.2765,
+   "euclid_m": 19.0507,
+   "needs_sparse": false
+  },
+  {
+   "id": 234,
+   "band": 2,
+   "start_xy": [
+    1.6500000000000001,
+    0.55
+   ],
+   "goal_xy": [
+    11.75,
+    16.650000000000002
+   ],
+   "shortest_m": 25.1179,
+   "euclid_m": 19.0058,
+   "needs_sparse": false
+  },
+  {
+   "id": 235,
+   "band": 2,
+   "start_xy": [
+    3.1500000000000004,
+    14.55
+   ],
+   "goal_xy": [
+    0.9500000000000001,
+    0.65
+   ],
+   "shortest_m": 20.3936,
+   "euclid_m": 14.073,
+   "needs_sparse": false
+  },
+  {
+   "id": 236,
+   "band": 2,
+   "start_xy": [
+    8.35,
+    6.25
+   ],
+   "goal_xy": [
+    19.55,
+    19.55
+   ],
+   "shortest_m": 21.1853,
+   "euclid_m": 17.3876,
+   "needs_sparse": false
+  },
+  {
+   "id": 237,
+   "band": 2,
+   "start_xy": [
+    4.55,
+    7.3500000000000005
+   ],
+   "goal_xy": [
+    16.85,
+    19.55
+   ],
+   "shortest_m": 20.3066,
+   "euclid_m": 17.3243,
+   "needs_sparse": false
+  },
+  {
+   "id": 238,
+   "band": 2,
+   "start_xy": [
+    19.450000000000003,
+    5.550000000000001
+   ],
+   "goal_xy": [
+    6.050000000000001,
+    18.05
+   ],
+   "shortest_m": 22.2338,
+   "euclid_m": 18.3251,
+   "needs_sparse": false
+  },
+  {
+   "id": 239,
+   "band": 2,
+   "start_xy": [
+    3.85,
+    14.55
+   ],
+   "goal_xy": [
+    16.25,
+    1.55
+   ],
+   "shortest_m": 20.2492,
+   "euclid_m": 17.9655,
+   "needs_sparse": false
+  },
+  {
+   "id": 240,
+   "band": 2,
+   "start_xy": [
+    10.850000000000001,
+    16.95
+   ],
+   "goal_xy": [
+    4.8500000000000005,
+    1.85
+   ],
+   "shortest_m": 22.4037,
+   "euclid_m": 16.2484,
+   "needs_sparse": false
+  },
+  {
+   "id": 241,
+   "band": 2,
+   "start_xy": [
+    12.850000000000001,
+    17.150000000000002
+   ],
+   "goal_xy": [
+    4.65,
+    3.95
+   ],
+   "shortest_m": 21.4752,
+   "euclid_m": 15.5396,
+   "needs_sparse": false
+  },
+  {
+   "id": 242,
+   "band": 2,
+   "start_xy": [
+    6.95,
+    8.25
+   ],
+   "goal_xy": [
+    19.55,
+    18.85
+   ],
+   "shortest_m": 20.2953,
+   "euclid_m": 16.4657,
+   "needs_sparse": false
+  },
+  {
+   "id": 243,
+   "band": 2,
+   "start_xy": [
+    18.150000000000002,
+    1.6500000000000001
+   ],
+   "goal_xy": [
+    1.55,
+    16.25
+   ],
+   "shortest_m": 23.3505,
+   "euclid_m": 22.107,
+   "needs_sparse": false
+  },
+  {
+   "id": 244,
+   "band": 2,
+   "start_xy": [
+    8.15,
+    0.9500000000000001
+   ],
+   "goal_xy": [
+    16.35,
+    18.95
+   ],
+   "shortest_m": 22.7581,
+   "euclid_m": 19.7798,
+   "needs_sparse": false
+  },
+  {
+   "id": 245,
+   "band": 2,
+   "start_xy": [
+    3.85,
+    0.8500000000000001
+   ],
+   "goal_xy": [
+    8.25,
+    16.150000000000002
+   ],
+   "shortest_m": 23.7066,
+   "euclid_m": 15.9201,
+   "needs_sparse": false
+  },
+  {
+   "id": 246,
+   "band": 2,
+   "start_xy": [
+    18.45,
+    9.850000000000001
+   ],
+   "goal_xy": [
+    2.25,
+    4.25
+   ],
+   "shortest_m": 20.164,
+   "euclid_m": 17.1406,
+   "needs_sparse": false
+  },
+  {
+   "id": 247,
+   "band": 2,
+   "start_xy": [
+    19.450000000000003,
+    1.4500000000000002
+   ],
+   "goal_xy": [
+    3.6500000000000004,
+    12.25
+   ],
+   "shortest_m": 20.9179,
+   "euclid_m": 19.1384,
+   "needs_sparse": false
+  },
+  {
+   "id": 248,
+   "band": 2,
+   "start_xy": [
+    0.8500000000000001,
+    1.35
+   ],
+   "goal_xy": [
+    7.050000000000001,
+    17.35
+   ],
+   "shortest_m": 24.3078,
+   "euclid_m": 17.1593,
+   "needs_sparse": false
+  },
+  {
+   "id": 249,
+   "band": 2,
+   "start_xy": [
+    9.05,
+    16.45
+   ],
+   "goal_xy": [
+    5.25,
+    0.8500000000000001
+   ],
+   "shortest_m": 23.4066,
+   "euclid_m": 16.0562,
+   "needs_sparse": false
+  },
+  {
+   "id": 250,
+   "band": 2,
+   "start_xy": [
+    4.55,
+    6.550000000000001
+   ],
+   "goal_xy": [
+    17.55,
+    18.85
+   ],
+   "shortest_m": 21.048,
+   "euclid_m": 17.8966,
+   "needs_sparse": false
+  },
+  {
+   "id": 251,
+   "band": 2,
+   "start_xy": [
+    7.550000000000001,
+    17.95
+   ],
+   "goal_xy": [
+    0.8500000000000001,
+    2.0500000000000003
+   ],
+   "shortest_m": 24.3563,
+   "euclid_m": 17.254,
+   "needs_sparse": false
+  },
+  {
+   "id": 252,
+   "band": 2,
+   "start_xy": [
+    18.05,
+    6.25
+   ],
+   "goal_xy": [
+    4.3500000000000005,
+    19.650000000000002
+   ],
+   "shortest_m": 21.9836,
+   "euclid_m": 19.1638,
+   "needs_sparse": false
+  },
+  {
+   "id": 253,
+   "band": 2,
+   "start_xy": [
+    18.25,
+    3.95
+   ],
+   "goal_xy": [
+    2.15,
+    13.55
+   ],
+   "shortest_m": 20.0765,
+   "euclid_m": 18.7449,
+   "needs_sparse": false
+  },
+  {
+   "id": 254,
+   "band": 2,
+   "start_xy": [
+    2.95,
+    4.95
+   ],
+   "goal_xy": [
+    16.650000000000002,
+    1.25
+   ],
+   "shortest_m": 20.8953,
+   "euclid_m": 14.1908,
+   "needs_sparse": false
+  },
+  {
+   "id": 255,
+   "band": 2,
+   "start_xy": [
+    18.150000000000002,
+    2.95
+   ],
+   "goal_xy": [
+    1.4500000000000002,
+    0.75
+   ],
+   "shortest_m": 20.238,
+   "euclid_m": 16.8443,
+   "needs_sparse": false
+  },
+  {
+   "id": 256,
+   "band": 2,
+   "start_xy": [
+    16.85,
+    8.15
+   ],
+   "goal_xy": [
+    0.45,
+    16.650000000000002
+   ],
+   "shortest_m": 20.0865,
+   "euclid_m": 18.4719,
+   "needs_sparse": false
+  },
+  {
+   "id": 257,
+   "band": 2,
+   "start_xy": [
+    16.650000000000002,
+    19.35
+   ],
+   "goal_xy": [
+    9.65,
+    2.25
+   ],
+   "shortest_m": 21.1368,
+   "euclid_m": 18.4773,
+   "needs_sparse": false
+  },
+  {
+   "id": 258,
+   "band": 2,
+   "start_xy": [
+    6.8500000000000005,
+    15.350000000000001
+   ],
+   "goal_xy": [
+    13.75,
+    1.4500000000000002
+   ],
+   "shortest_m": 20.7078,
+   "euclid_m": 15.5184,
+   "needs_sparse": false
+  },
+  {
+   "id": 259,
+   "band": 2,
+   "start_xy": [
+    18.95,
+    11.450000000000001
+   ],
+   "goal_xy": [
+    0.35000000000000003,
+    0.8500000000000001
+   ],
+   "shortest_m": 23.5664,
+   "euclid_m": 21.4084,
+   "needs_sparse": false
+  },
+  {
+   "id": 260,
+   "band": 2,
+   "start_xy": [
+    7.15,
+    17.25
+   ],
+   "goal_xy": [
+    9.950000000000001,
+    1.1500000000000001
+   ],
+   "shortest_m": 21.951,
+   "euclid_m": 16.3417,
+   "needs_sparse": false
+  },
+  {
+   "id": 261,
+   "band": 2,
+   "start_xy": [
+    8.85,
+    3.35
+   ],
+   "goal_xy": [
+    17.55,
+    18.150000000000002
+   ],
+   "shortest_m": 20.7711,
+   "euclid_m": 17.1677,
+   "needs_sparse": false
+  },
+  {
+   "id": 262,
+   "band": 2,
+   "start_xy": [
+    18.05,
+    3.5500000000000003
+   ],
+   "goal_xy": [
+    4.8500000000000005,
+    17.75
+   ],
+   "shortest_m": 21.7019,
+   "euclid_m": 19.3876,
+   "needs_sparse": false
+  },
+  {
+   "id": 263,
+   "band": 2,
+   "start_xy": [
+    7.75,
+    13.450000000000001
+   ],
+   "goal_xy": [
+    12.05,
+    1.25
+   ],
+   "shortest_m": 20.2765,
+   "euclid_m": 12.9356,
+   "needs_sparse": false
+  },
+  {
+   "id": 264,
+   "band": 2,
+   "start_xy": [
+    18.25,
+    1.05
+   ],
+   "goal_xy": [
+    2.6500000000000004,
+    2.6500000000000004
+   ],
+   "shortest_m": 20.6794,
+   "euclid_m": 15.6818,
+   "needs_sparse": false
+  },
+  {
+   "id": 265,
+   "band": 2,
+   "start_xy": [
+    1.25,
+    8.450000000000001
+   ],
+   "goal_xy": [
+    13.450000000000001,
+    18.25
+   ],
+   "shortest_m": 20.0368,
+   "euclid_m": 15.6486,
+   "needs_sparse": false
+  },
+  {
+   "id": 266,
+   "band": 2,
+   "start_xy": [
+    3.6500000000000004,
+    3.5500000000000003
+   ],
+   "goal_xy": [
+    19.25,
+    9.15
+   ],
+   "shortest_m": 20.3137,
+   "euclid_m": 16.5747,
+   "needs_sparse": false
+  },
+  {
+   "id": 267,
+   "band": 2,
+   "start_xy": [
+    14.450000000000001,
+    17.05
+   ],
+   "goal_xy": [
+    9.950000000000001,
+    0.9500000000000001
+   ],
+   "shortest_m": 20.4409,
+   "euclid_m": 16.7171,
+   "needs_sparse": false
+  },
+  {
+   "id": 268,
+   "band": 2,
+   "start_xy": [
+    9.35,
+    6.3500000000000005
+   ],
+   "goal_xy": [
+    19.55,
+    19.25
+   ],
+   "shortest_m": 20.5468,
+   "euclid_m": 16.4454,
+   "needs_sparse": false
+  },
+  {
+   "id": 269,
+   "band": 2,
+   "start_xy": [
+    5.25,
+    9.450000000000001
+   ],
+   "goal_xy": [
+    19.450000000000003,
+    19.25
+   ],
+   "shortest_m": 21.2125,
+   "euclid_m": 17.2534,
+   "needs_sparse": false
+  },
+  {
+   "id": 270,
+   "band": 2,
+   "start_xy": [
+    11.950000000000001,
+    18.55
+   ],
+   "goal_xy": [
+    3.0500000000000003,
+    1.05
+   ],
+   "shortest_m": 24.3907,
+   "euclid_m": 19.6331,
+   "needs_sparse": false
+  },
+  {
+   "id": 271,
+   "band": 2,
+   "start_xy": [
+    4.45,
+    12.25
+   ],
+   "goal_xy": [
+    12.75,
+    0.8500000000000001
+   ],
+   "shortest_m": 21.9007,
+   "euclid_m": 14.1014,
+   "needs_sparse": false
+  },
+  {
+   "id": 272,
+   "band": 2,
+   "start_xy": [
+    18.85,
+    8.65
+   ],
+   "goal_xy": [
+    5.3500000000000005,
+    18.150000000000002
+   ],
+   "shortest_m": 21.6711,
+   "euclid_m": 16.5076,
+   "needs_sparse": false
+  },
+  {
+   "id": 273,
+   "band": 2,
+   "start_xy": [
+    5.050000000000001,
+    15.05
+   ],
+   "goal_xy": [
+    18.05,
+    1.35
+   ],
+   "shortest_m": 20.022,
+   "euclid_m": 18.8862,
+   "needs_sparse": false
+  },
+  {
+   "id": 274,
+   "band": 2,
+   "start_xy": [
+    4.75,
+    9.25
+   ],
+   "goal_xy": [
+    19.55,
+    19.55
+   ],
+   "shortest_m": 22.0196,
+   "euclid_m": 18.0314,
+   "needs_sparse": false
+  },
+  {
+   "id": 275,
+   "band": 2,
+   "start_xy": [
+    4.3500000000000005,
+    0.8500000000000001
+   ],
+   "goal_xy": [
+    2.0500000000000003,
+    18.45
+   ],
+   "shortest_m": 22.0522,
+   "euclid_m": 17.7496,
+   "needs_sparse": false
+  },
+  {
+   "id": 276,
+   "band": 2,
+   "start_xy": [
+    2.85,
+    3.95
+   ],
+   "goal_xy": [
+    4.05,
+    19.450000000000003
+   ],
+   "shortest_m": 20.6823,
+   "euclid_m": 15.5464,
+   "needs_sparse": false
+  },
+  {
+   "id": 277,
+   "band": 2,
+   "start_xy": [
+    14.55,
+    18.75
+   ],
+   "goal_xy": [
+    14.25,
+    0.75
+   ],
+   "shortest_m": 20.8196,
+   "euclid_m": 18.0025,
+   "needs_sparse": false
+  },
+  {
+   "id": 278,
+   "band": 2,
+   "start_xy": [
+    1.6500000000000001,
+    6.65
+   ],
+   "goal_xy": [
+    9.05,
+    17.55
+   ],
+   "shortest_m": 21.9309,
+   "euclid_m": 13.1746,
+   "needs_sparse": false
+  },
+  {
+   "id": 279,
+   "band": 2,
+   "start_xy": [
+    5.65,
+    8.450000000000001
+   ],
+   "goal_xy": [
+    18.650000000000002,
+    18.85
+   ],
+   "shortest_m": 20.261,
+   "euclid_m": 16.6481,
+   "needs_sparse": false
+  },
+  {
+   "id": 280,
+   "band": 2,
+   "start_xy": [
+    15.65,
+    13.350000000000001
+   ],
+   "goal_xy": [
+    0.45,
+    3.6500000000000004
+   ],
+   "shortest_m": 20.0966,
+   "euclid_m": 18.0314,
+   "needs_sparse": false
+  },
+  {
+   "id": 281,
+   "band": 2,
+   "start_xy": [
+    18.75,
+    4.8500000000000005
+   ],
+   "goal_xy": [
+    4.45,
+    17.25
+   ],
+   "shortest_m": 20.9049,
+   "euclid_m": 18.9275,
+   "needs_sparse": false
+  },
+  {
+   "id": 282,
+   "band": 2,
+   "start_xy": [
+    11.15,
+    18.45
+   ],
+   "goal_xy": [
+    1.85,
+    0.55
+   ],
+   "shortest_m": 26.2635,
+   "euclid_m": 20.1718,
+   "needs_sparse": false
+  },
+  {
+   "id": 283,
+   "band": 2,
+   "start_xy": [
+    3.1500000000000004,
+    1.35
+   ],
+   "goal_xy": [
+    13.75,
+    17.45
+   ],
+   "shortest_m": 22.3208,
+   "euclid_m": 19.2762,
+   "needs_sparse": false
+  },
+  {
+   "id": 284,
+   "band": 2,
+   "start_xy": [
+    17.75,
+    1.1500000000000001
+   ],
+   "goal_xy": [
+    1.35,
+    7.550000000000001
+   ],
+   "shortest_m": 20.661,
+   "euclid_m": 17.6045,
+   "needs_sparse": false
+  },
+  {
+   "id": 285,
+   "band": 2,
+   "start_xy": [
+    11.15,
+    17.25
+   ],
+   "goal_xy": [
+    4.05,
+    2.35
+   ],
+   "shortest_m": 23.6108,
+   "euclid_m": 16.5052,
+   "needs_sparse": false
+  },
+  {
+   "id": 286,
+   "band": 2,
+   "start_xy": [
+    7.65,
+    0.65
+   ],
+   "goal_xy": [
+    6.8500000000000005,
+    17.35
+   ],
+   "shortest_m": 20.7853,
+   "euclid_m": 16.7192,
+   "needs_sparse": false
+  },
+  {
+   "id": 287,
+   "band": 2,
+   "start_xy": [
+    0.65,
+    17.95
+   ],
+   "goal_xy": [
+    12.350000000000001,
+    0.45
+   ],
+   "shortest_m": 28.9203,
+   "euclid_m": 21.0509,
+   "needs_sparse": false
+  },
+  {
+   "id": 288,
+   "band": 2,
+   "start_xy": [
+    9.55,
+    4.65
+   ],
+   "goal_xy": [
+    18.150000000000002,
+    19.450000000000003
+   ],
+   "shortest_m": 20.3196,
+   "euclid_m": 17.1172,
+   "needs_sparse": false
+  },
+  {
+   "id": 289,
+   "band": 2,
+   "start_xy": [
+    13.350000000000001,
+    17.05
+   ],
+   "goal_xy": [
+    4.75,
+    0.45
+   ],
+   "shortest_m": 20.9765,
+   "euclid_m": 18.6955,
+   "needs_sparse": false
+  },
+  {
+   "id": 290,
+   "band": 2,
+   "start_xy": [
+    14.950000000000001,
+    14.350000000000001
+   ],
+   "goal_xy": [
+    5.8500000000000005,
+    3.6500000000000004
+   ],
+   "shortest_m": 20.2267,
+   "euclid_m": 14.0464,
+   "needs_sparse": false
+  },
+  {
+   "id": 291,
+   "band": 2,
+   "start_xy": [
+    16.75,
+    2.85
+   ],
+   "goal_xy": [
+    18.85,
+    18.05
+   ],
+   "shortest_m": 21.4255,
+   "euclid_m": 15.3444,
+   "needs_sparse": false
+  },
+  {
+   "id": 292,
+   "band": 2,
+   "start_xy": [
+    7.8500000000000005,
+    3.1500000000000004
+   ],
+   "goal_xy": [
+    18.35,
+    18.25
+   ],
+   "shortest_m": 22.2267,
+   "euclid_m": 18.3918,
+   "needs_sparse": false
+  },
+  {
+   "id": 293,
+   "band": 2,
+   "start_xy": [
+    6.25,
+    12.55
+   ],
+   "goal_xy": [
+    12.05,
+    1.05
+   ],
+   "shortest_m": 21.135,
+   "euclid_m": 12.8798,
+   "needs_sparse": false
+  },
+  {
+   "id": 294,
+   "band": 2,
+   "start_xy": [
+    19.05,
+    8.05
+   ],
+   "goal_xy": [
+    1.1500000000000001,
+    19.55
+   ],
+   "shortest_m": 23.2149,
+   "euclid_m": 21.2758,
+   "needs_sparse": false
+  },
+  {
+   "id": 295,
+   "band": 2,
+   "start_xy": [
+    19.150000000000002,
+    18.75
+   ],
+   "goal_xy": [
+    18.75,
+    4.95
+   ],
+   "shortest_m": 20.661,
+   "euclid_m": 13.8058,
+   "needs_sparse": false
+  },
+  {
+   "id": 296,
+   "band": 2,
+   "start_xy": [
+    17.05,
+    9.55
+   ],
+   "goal_xy": [
+    2.85,
+    19.05
+   ],
+   "shortest_m": 20.9836,
+   "euclid_m": 17.0848,
+   "needs_sparse": false
+  },
+  {
+   "id": 297,
+   "band": 2,
+   "start_xy": [
+    6.65,
+    13.55
+   ],
+   "goal_xy": [
+    12.65,
+    1.1500000000000001
+   ],
+   "shortest_m": 20.5078,
+   "euclid_m": 13.7753,
+   "needs_sparse": false
+  },
+  {
+   "id": 298,
+   "band": 2,
+   "start_xy": [
+    6.25,
+    19.05
+   ],
+   "goal_xy": [
+    19.150000000000002,
+    4.8500000000000005
+   ],
+   "shortest_m": 22.438,
+   "euclid_m": 19.1846,
+   "needs_sparse": false
+  },
+  {
+   "id": 299,
+   "band": 2,
+   "start_xy": [
+    18.75,
+    3.35
+   ],
+   "goal_xy": [
+    3.1500000000000004,
+    19.150000000000002
+   ],
+   "shortest_m": 23.5505,
+   "euclid_m": 22.2036,
+   "needs_sparse": false
+  }
+ ]
+}

@@ -33,8 +33,54 @@ PER_BAND = 100
 SEEDS = tuple(range(10))                                           # 2604.26504.txt:727 「10 different seeds」 (무엇을 바꾸는지는 원문에 없음)
 
 
-def room_path(kind: str) -> Path:
-    return NAV / "rooms" / f"bench_{kind}.yaml"
+def room_path(kind: str, rooms: str = "yaml", seed: int = 0) -> Path:
+    return NAV / "rooms" / (f"bench_{kind}.yaml" if rooms == "yaml" else f"bench_wfc_{kind}_s{seed}.yaml")
+
+
+# WFC 네 유형 (원문 727 행의 서술만 있고 치수 · 확률은 원문에 없음 -> 전부 가정). 원문 IV-A (42 행): WFC 타일 (평지 · 거친 면 · 막힌 면) +
+# 무작위 벽 · 탁자 · 떠 있는 상자. room_generator 의 두 배치를 쓴다: maze (길 · 벽 · 문 · 막다른 길) · old (타일 + 흩은 장애물).
+#   Corridor  = 막다른 복도: maze · 벽 많이 (wall_keep 0.75) · 문 적게 · 탁자 · 상자 없음 (머리 위 장애 없음)
+#   Room      = 반쯤 닫힌 방 + 가운데 머리 위 장애: maze · wall_keep 0.55 + 가운데 8 x 8 m 에 탁자 · 떠 있는 상자 (WFC_ROOM_CENTER)
+#   Complex-1 = 빽빽한 장애 + 머리 위 장애: old · 막힌 타일 · 벽 · 탁자 · 상자 확률 높게
+#   Complex-2 = 얽힌 배치 + 머리 위 장애: maze · wall_keep 0.55 · 문 많이 + 탁자 · 상자 흩음
+WFC_PRESETS = {
+    "corridor": dict(layout="maze", wall_keep=0.75, keep_choices=(), door_frac=0.2, p_table=0.0, p_box=0.0, p_pillar=0.0, weights=(5.0, 2.0, 2.0, 0.05)),
+    "room": dict(layout="maze", wall_keep=0.55, keep_choices=(), door_frac=0.35, p_table=0.0, p_box=0.0, p_pillar=0.05, weights=(5.0, 2.0, 2.0, 0.05)),
+    "complex1": dict(layout="old", p_wall=0.5, p_table=0.3, p_box=0.3, weights=(3.0, 3.0, 3.0, 0.05)),
+    "complex2": dict(layout="maze", wall_keep=0.55, keep_choices=(), door_frac=0.6, p_table=0.15, p_box=0.15, p_pillar=0.05, weights=(4.0, 3.0, 2.0, 0.05)),
+}
+WFC_ROOM_CENTER = (6.0, 14.0, 6, 0.5)          # Room: 가운데 x y 6~14 m 에 머리 위 장애 6 개 · 상자 비율 0.5 (가정)
+
+
+def wfc_spec(kind: str, seed: int) -> dict:
+    """WFC 유형 방 명세 (room_generator.make_room 의 수락 조건 그대로 · sparse 패치 없음 · 모두 가정)."""
+    import dataclasses
+
+    cfg = dataclasses.replace(rg.FIRST_ROUND_CFG, **WFC_PRESETS[kind])
+    spec, _room = rg.make_room(seed, cfg)
+    if kind == "room":
+        lo, hi, n, box_frac = WFC_ROOM_CENTER
+        r = np.random.default_rng(seed + 17)
+        for _ in range(n):
+            x, y = (round(float(v), 1) for v in r.uniform(lo, hi - 1.0, 2))
+            spec["primitives"].append({"type": "box", "x": x, "y": y, "w": 0.8, "z0": 0.35, "h": 0.5} if r.random() < box_frac
+                                      else {"type": "table", "x": x, "y": y, "w": 0.8, "top": 0.7})
+    spec["bench"] = {"type": kind, "preset": {k: (list(v) if isinstance(v, tuple) else v) for k, v in WFC_PRESETS[kind].items()}, "assumption": "원문에 치수 · 확률 없음"}
+    return spec
+
+
+def write_wfc_rooms(seed: int = 0) -> list[Path]:
+    import yaml
+
+    out = []
+    for kind in TYPES:
+        path = room_path(kind, "wfc", seed)
+        path.write_text("# 분류: B/항법 · HiPAN 원문 시험 방 (WFC 유형 · bench_tasks.wfc_spec 이 만듦 · 손으로 고치지 않음)\n"
+                        f"# 작성: Claude 세션 (오흥재 지시, opus-code-lx) · 유형 {kind} · 시드 {seed}\n"
+                        "# 근거: 2604.26504.txt:42 · 727 (서술만) · 치수 · 확률은 원문에 없어 가정 (bench_tasks.WFC_PRESETS)\n"
+                        + yaml.safe_dump(wfc_spec(kind, seed), allow_unicode=True, sort_keys=False), encoding="utf-8")
+        out.append(path)
+    return out
 
 
 START_SEP_M = 0.3            # 과제마다 다른 시작점 (평가가 몸이 선 자리로 과제를 가른다 · hl_bench.BENCH_TOL_M 의 여섯 배)
@@ -70,8 +116,9 @@ def unique_start_tasks(g, rng, *, per_band: int, bands, max_tries: int = 40000) 
     return sorted(tasks, key=lambda t: t.band)
 
 
-def make_type_tasks(kind: str, *, task_seed: int = 0, pose_active: bool = False, table=None, per_band: int = PER_BAND) -> dict:
-    spec_path = room_path(kind)
+def make_type_tasks(kind: str, *, task_seed: int = 0, pose_active: bool = False, table=None, per_band: int = PER_BAND,
+                    rooms: str = "yaml", room_seed: int = 0) -> dict:
+    spec_path = room_path(kind, rooms, room_seed)
     spec = rg.load_spec(spec_path)
     room = rg.build_room(spec)
     table = table or gm.load_grade_table(NAV / "grade_table_draft.yaml")
@@ -109,12 +156,17 @@ def main(argv=None) -> int:
     ap.add_argument("--out", required=True)
     ap.add_argument("--types", nargs="+", default=list(TYPES), choices=TYPES)
     ap.add_argument("--task-seed", type=int, default=0)
+    ap.add_argument("--rooms", choices=("yaml", "wfc"), default="yaml", help="yaml = rooms/bench_<유형>.yaml (손으로 적은 임시) · wfc = WFC 유형 방을 만들어 rooms/bench_wfc_<유형>_s<시드>.yaml 로 쓰고 씀")
+    ap.add_argument("--room-seed", type=int, default=0)
     ap.add_argument("--pose-active", action="store_true", help="머리 위 장애 아래를 자세 명령으로 지날 수 있다고 보고 등급 지도를 만든다")
     a = ap.parse_args(argv)
     out = Path(a.out); out.mkdir(parents=True, exist_ok=True)
+    if a.rooms == "wfc":
+        for p in write_wfc_rooms(a.room_seed):
+            print(f"wfc room -> {p}", flush=True)
     docs = []
     for kind in a.types:
-        doc = make_type_tasks(kind, task_seed=a.task_seed, pose_active=a.pose_active)
+        doc = make_type_tasks(kind, task_seed=a.task_seed, pose_active=a.pose_active, rooms=a.rooms, room_seed=a.room_seed)
         path = out / f"tasks_{kind}.json"
         path.write_text(json.dumps(doc, ensure_ascii=False, indent=1), encoding="utf-8")
         docs.append(doc)

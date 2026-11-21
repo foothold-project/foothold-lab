@@ -25,3 +25,11 @@ def test_each_task_has_its_own_start():
     xy = np.array([r["start_xy"] for r in doc["tasks"]])
     d = np.linalg.norm(xy[:, None] - xy[None], axis=-1) + np.eye(len(xy)) * 99
     assert d.min() >= bt.START_SEP_M
+
+
+def test_wfc_rooms_are_made_by_the_generator_and_pass_its_acceptance():
+    for kind in bt.TYPES:
+        spec = bt.wfc_spec(kind, 0)
+        assert spec["bench"]["type"] == kind and spec["primitives"]
+    assert bt.room_path("room", "wfc", 0).name == "bench_wfc_room_s0.yaml" and bt.room_path("room").name == "bench_room.yaml"
+    assert sum(p["type"] in ("table", "box") for p in bt.wfc_spec("room", 0)["primitives"]) >= bt.WFC_ROOM_CENTER[2]
