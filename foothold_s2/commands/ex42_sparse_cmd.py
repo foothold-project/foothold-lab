@@ -22,8 +22,10 @@ import os
 import torch
 
 ENV_SWITCH = "EX42_SPARSE_PAPER_CMD"
+KINDS_ENV = "EX42_SPARSE_PAPER_CMD_KINDS"       # lead 08:10 (E3 prep): comma list of family/kind, e.g. A/gaps,B/pallets,B/beam,B/gap,C/gap
 FAMILY = "A"
 KINDS = ("stepping_stones_low", "stepping_stones_high", "balance_beams", "stepping_beams", "gaps")
+DEFAULT_COLUMNS = tuple(f"{FAMILY}/{k}" for k in KINDS)
 V_MAX, V_TURN, WZ_MAX = 1.5, 0.3, 1.2          # START: forward 0.3~1.5 · below 0.3 = turn in place U[-1.2, 1.2]
 WZ_MIN = 0.15                                   # the E2 stage spin_wz_abs low end (command contract)
 _COUNTS = {"sparse_draws": 0, "forward": 0, "turn": 0, "beam_draws": 0, "beam_forward": 0, "beam_turn": 0}   # beam = A/balance_beams only (lead 07:46)
@@ -37,11 +39,26 @@ def enabled() -> bool:
     return value == "1"
 
 
-def column_mask(table, kinds=KINDS) -> torch.Tensor:
-    """(columns,) bool: the column is an A-family kind in `kinds` (default: every A sparse kind)."""
+def columns() -> tuple:
+    """The family/kind names that take the paper form: EX42_SPARSE_PAPER_CMD_KINDS (comma list) or the five A sparse kinds."""
+    raw = os.environ.get(KINDS_ENV, "")
+    if raw == "":
+        return DEFAULT_COLUMNS
+    names = tuple(k.strip() for k in raw.split(",") if k.strip())
+    if not names or any(k.count("/") != 1 or not all(k.split("/")) for k in names):
+        raise ValueError(f"{KINDS_ENV} must be a comma list of family/kind (got {raw!r})")
+    return names
+
+
+def column_mask(table, kinds=None) -> torch.Tensor:
+    """(columns,) bool: the column's family/kind is in columns() (or, with `kinds`, an A-family kind in that tuple). Names not in the table refuse."""
     if table is None:
         raise ValueError("EX-42 sparse paper commands need the column table (raw._ex42_column_table) on the environment")
-    return torch.tensor([row["family"] == FAMILY and row["kind"] in kinds for row in table], dtype=torch.bool)
+    want = set(f"{FAMILY}/{k}" for k in kinds) if kinds is not None else set(columns())
+    have = {f"{row['family']}/{row['kind']}" for row in table}
+    if kinds is None and os.environ.get(KINDS_ENV, "") and want - have:   # an explicit list must name real columns (the default five need not all be there)
+        raise ValueError(f"{KINDS_ENV}: not in the column table: {sorted(want - have)}")
+    return torch.tensor([f"{row['family']}/{row['kind']}" in want for row in table], dtype=torch.bool)
 
 
 def start_line(table) -> None:
@@ -49,7 +66,7 @@ def start_line(table) -> None:
         return
     _STARTED["done"] = True
     mask = column_mask(table)
-    print(f"EX42_SPARSE_PAPER_CMD where=start columns={int(mask.sum())} of={len(mask)} kinds={','.join(KINDS)} family={FAMILY} "
+    print(f"EX42_SPARSE_PAPER_CMD where=start columns={int(mask.sum())} of={len(mask)} kinds={','.join(columns())} "
           f"forward=[{V_TURN}, {V_MAX}] side=0 turn_below={V_TURN} wz_abs=[{WZ_MIN}, {WZ_MAX}] outside_stage_mix=1", flush=True)
 
 

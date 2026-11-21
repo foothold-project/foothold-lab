@@ -318,8 +318,8 @@ class MixedVelocityCommand(CommandTerm):
             raise ValueError("EX-42 stone_forward_floor: a terrain column is outside the column table")
         return kinds[columns]
 
-    def _sparse_paper_mask(self, group, kinds_in=ex42_sparse_cmd.KINDS):
-        """(len(group),) bool: the env's terrain column is an A-family kind in `kinds_in` (default every A sparse kind, ex42_sparse_cmd.KINDS)."""
+    def _sparse_paper_mask(self, group, kinds_in=None):
+        """(len(group),) bool: the env's terrain column takes the paper form (ex42_sparse_cmd.columns(); with `kinds_in` an A-family kind in it)."""
         table = getattr(getattr(self._env, "unwrapped", self._env), "_ex42_column_table", None)
         ex42_sparse_cmd.start_line(table)
         kinds = ex42_sparse_cmd.column_mask(table, kinds_in).to(self.device)

@@ -108,3 +108,23 @@ def test_switch_values():
             sc.enabled()
     finally:
         del os.environ[sc.ENV_SWITCH]
+
+
+def test_kinds_list_from_env_takes_b_columns(monkeypatch):
+    """lead 08:10 (E3 prep): EX42_SPARSE_PAPER_CMD_KINDS names family/kind columns; B/beam joins, A/gaps left out; unknown names refuse."""
+    monkeypatch.setenv(sc.KINDS_ENV, "A/balance_beams,B/beam")
+    command, runtime = _term(monkeypatch, True)
+    monkeypatch.setenv(sc.KINDS_ENV, "A/balance_beams,B/beam")
+    cmd, slot, flag, heading = _draw(command)
+    cols = command._env.scene.terrain.terrain_types
+    on = ((cols == 1) | (cols == 3)) & ~flag
+    gaps = (cols == 2) & ~flag
+    assert bool(((slot[on] == 0) | (slot[on] == 3) | (slot[on] == 4)).all())
+    assert int((gaps & (slot != 0) & (slot != 3) & (slot != 4)).sum()) > 50           # A/gaps keeps the stage mix now
+    assert not bool(command_bad(cmd, slot, heading, runtime.env_stage, runtime.plan)[on].any())
+    monkeypatch.setenv(sc.KINDS_ENV, "B/nothing")
+    with pytest.raises(ValueError, match="not in the column table"):
+        sc.column_mask(command._env._ex42_column_table)
+    monkeypatch.setenv(sc.KINDS_ENV, "beam")
+    with pytest.raises(ValueError, match="family/kind"):
+        sc.columns()
