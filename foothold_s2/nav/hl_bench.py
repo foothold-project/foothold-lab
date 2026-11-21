@@ -69,8 +69,13 @@ def install_bench_table(task, docs) -> str:
 
     h = hashlib.sha256()
     table = []
+    from foothold_s2.nav import grade_map as gm
+
     for r, d in enumerate(docs):
         g = task.assets[r].grade
+        if d.get("pose_active") and not g.pose_active:          # 과제를 자세 켠 지도에서 뽑았으면 길도 그 지도에서 (머리 위 판 아래로 숙여 지나는 길)
+            g = gm.make_grade_map(task.assets[r].room, {**task.grade_table, "sha256": g.table_sha256}, pose_active=True) if hasattr(task, "grade_table") \
+                else gm.make_grade_map(task.assets[r].room, gm.load_grade_table(bt.NAV / "grade_table_draft.yaml"), pose_active=True)
         starts = np.array([t["start_xy"] for t in d["tasks"]], float)
         rows = []
         for t in d["tasks"]:

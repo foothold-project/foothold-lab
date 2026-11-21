@@ -33,3 +33,14 @@ def test_wfc_rooms_are_made_by_the_generator_and_pass_its_acceptance():
         assert spec["bench"]["type"] == kind and spec["primitives"]
     assert bt.room_path("room", "wfc", 0).name == "bench_wfc_room_s0.yaml" and bt.room_path("room").name == "bench_room.yaml"
     assert sum(p["type"] in ("table", "box") for p in bt.wfc_spec("room", 0)["primitives"]) >= bt.WFC_ROOM_CENTER[2]
+
+
+def test_low_ceiling_slabs_make_posture_matter_in_room_and_complex():
+    from foothold_s2.nav import grade_map as gm
+    from foothold_s2.nav import room_generator as rg
+    t = gm.load_grade_table(bt.NAV / "grade_table_draft.yaml")
+    for kind in ("room", "complex1", "complex2"):
+        r = rg.build_room(bt.wfc_spec(kind, 0))
+        stand = (gm.make_grade_map(r, t, pose_active=False).grade == gm.BLOCKED).mean()
+        crawl = (gm.make_grade_map(r, t, pose_active=True).grade == gm.BLOCKED).mean()
+        assert stand - crawl > 0.03, kind                     # was 0.002 before the slabs (lead 19:34)

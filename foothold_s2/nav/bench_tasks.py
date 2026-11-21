@@ -50,6 +50,12 @@ WFC_PRESETS = {
     "complex2": dict(layout="maze", wall_keep=0.55, keep_choices=(), door_frac=0.6, p_table=0.15, p_box=0.15, p_pillar=0.05, weights=(4.0, 3.0, 2.0, 0.05)),
 }
 WFC_ROOM_CENTER = (6.0, 14.0, 6, 0.5)          # Room: 가운데 x y 6~14 m 에 머리 위 장애 6 개 · 상자 비율 0.5 (가정)
+# 자세가 필요한 낮은 천장 판 (lead 19:34 「원문 Room/Complex 수준으로 · 자세 켜면 통과 칸이 뚜렷이 늘어야」). 등급 지도는 천장 여유
+# crawl_clearance 0.3 ~ stand_clearance 0.5 m 만 「숙여 지남」 으로 친다 (grade_map.py:70-71) -> 판 아래면 z0 를 U[0.30, 0.45] 로 (모두 가정).
+# 유형: 구역 (x y lo~hi m) · 판 수 · 판 한 변 길이 범위 (m). Corridor 는 판 없음 (원문: 벽으로 막힌 길만 시험).
+WFC_OVERHEAD = {"room": (5.0, 15.0, 22, (1.0, 2.0)), "complex1": (1.0, 19.0, 26, (0.8, 1.6)), "complex2": (1.0, 19.0, 20, (0.8, 1.6))}
+WFC_OVERHEAD_Z0 = (0.30, 0.45)
+WFC_OVERHEAD_H = 0.3
 
 
 def wfc_spec(kind: str, seed: int) -> dict:
@@ -65,7 +71,15 @@ def wfc_spec(kind: str, seed: int) -> dict:
             x, y = (round(float(v), 1) for v in r.uniform(lo, hi - 1.0, 2))
             spec["primitives"].append({"type": "box", "x": x, "y": y, "w": 0.8, "z0": 0.35, "h": 0.5} if r.random() < box_frac
                                       else {"type": "table", "x": x, "y": y, "w": 0.8, "top": 0.7})
-    spec["bench"] = {"type": kind, "preset": {k: (list(v) if isinstance(v, tuple) else v) for k, v in WFC_PRESETS[kind].items()}, "assumption": "원문에 치수 · 확률 없음"}
+    if kind in WFC_OVERHEAD:
+        lo, hi, n, (wl, wh) = WFC_OVERHEAD[kind]
+        r = np.random.default_rng(seed + 29)
+        for _ in range(n):
+            w = round(float(r.uniform(wl, wh)), 1)
+            x, y = (round(float(v), 1) for v in r.uniform(lo, hi - w, 2))
+            spec["primitives"].append({"type": "box", "x": x, "y": y, "w": w, "z0": round(float(r.uniform(*WFC_OVERHEAD_Z0)), 2), "h": WFC_OVERHEAD_H})
+    spec["bench"] = {"type": kind, "preset": {k: (list(v) if isinstance(v, tuple) else v) for k, v in WFC_PRESETS[kind].items()},
+                     "overhead": WFC_OVERHEAD.get(kind), "overhead_z0": list(WFC_OVERHEAD_Z0), "assumption": "원문에 치수 · 확률 없음"}
     return spec
 
 
@@ -124,12 +138,16 @@ def make_type_tasks(kind: str, *, task_seed: int = 0, pose_active: bool = False,
     table = table or gm.load_grade_table(NAV / "grade_table_draft.yaml")
     g = gm.make_grade_map(room, table, pose_active=pose_active)
     tasks = unique_start_tasks(g, np.random.default_rng(task_seed), per_band=per_band, bands=PAPER_BANDS_M)
+    g_stand = gm.make_grade_map(room, table, pose_active=False) if pose_active else None
     rows = []
     for i, t in enumerate(tasks):
         euclid = float(np.hypot(t.goal[0] - t.start[0], t.goal[1] - t.start[1]))
-        rows.append({"id": i, "band": int(t.band), "start_xy": list(t.start), "goal_xy": list(t.goal),
-                     "shortest_m": round(float(t.shortest_m), 4), "euclid_m": round(euclid, 4),
-                     "needs_sparse": bool(t.needs_sparse)})
+        row = {"id": i, "band": int(t.band), "start_xy": list(t.start), "goal_xy": list(t.goal),
+               "shortest_m": round(float(t.shortest_m), 4), "euclid_m": round(euclid, 4), "needs_sparse": bool(t.needs_sparse)}
+        if g_stand is not None:                    # 자세 없이 (서서) 가는 최단 · 못 가면 None: 자세가 줄여 주는 길이 · 자세 없이는 못 가는 과제
+            d = ns.geodesic_map(g_stand, np.asarray(t.start))[tuple(int(v / g.res) for v in t.goal)]
+            row["shortest_stand_m"] = round(float(d), 4) if np.isfinite(d) else None
+        rows.append(row)
     return {"format": "foothold-hipan-bench-tasks/1", "type": kind, "title": TITLES[kind],
             "room_spec": spec_path.relative_to(NAV).as_posix(), "room_spec_sha256": hashlib.sha256(spec_path.read_bytes()).hexdigest(),   # room_spec: nav/ 기준 상대 경로 (Runpod 사본에서도 같은 파일)
             "size_m": float(spec.get("size_m", rg.ROOM_M)), "task_seed": int(task_seed), "pose_active": bool(pose_active),
@@ -138,16 +156,24 @@ def make_type_tasks(kind: str, *, task_seed: int = 0, pose_active: bool = False,
             "tasks": rows}
 
 
+def posture_cols(rs) -> str:
+    if not rs or "shortest_stand_m" not in rs[0]:
+        return "자세 지도 아님"
+    blocked = sum(r["shortest_stand_m"] is None for r in rs)
+    shorter = sum(r["shortest_stand_m"] is not None and r["shortest_stand_m"] > r["shortest_m"] + 0.5 for r in rs)
+    return f"{blocked} · {shorter}"
+
+
 def band_table(docs: list[dict]) -> str:
-    lines = ["| 유형 | 구간 (m) | 과제 수 | 최단 중앙 · 최소 · 최대 (m) | 직선 중앙 · 최소 · 최대 (m) | 최단/직선 중앙 | 듬성 필요 |",
-             "|---|---|---|---|---|---|---|"]
+    lines = ["| 유형 | 구간 (m) | 과제 수 | 최단 중앙 · 최소 · 최대 (m) | 직선 중앙 · 최소 · 최대 (m) | 최단/직선 중앙 | 듬성 필요 | 자세 없이 못 감 · 자세로 짧아짐 (과제 수) |",
+             "|---|---|---|---|---|---|---|---|"]
     for d in docs:
         for b, (lo, hi) in enumerate(d["bands_m"]):
             rs = [r for r in d["tasks"] if r["band"] == b]
             s = np.array([r["shortest_m"] for r in rs]); e = np.array([r["euclid_m"] for r in rs])
             ratio = np.median(s / np.maximum(e, 1e-6))
             lines.append(f"| {d['title']} | [{lo:g}, {hi:g}] | {len(rs)} | {np.median(s):.2f} · {s.min():.2f} · {s.max():.2f} | "
-                         f"{np.median(e):.2f} · {e.min():.2f} · {e.max():.2f} | {ratio:.2f} | {sum(r['needs_sparse'] for r in rs)} |")
+                         f"{np.median(e):.2f} · {e.min():.2f} · {e.max():.2f} | {ratio:.2f} | {sum(r['needs_sparse'] for r in rs)} | {posture_cols(rs)} |")
     return "\n".join(lines)
 
 
