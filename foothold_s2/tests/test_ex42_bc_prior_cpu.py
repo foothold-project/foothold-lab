@@ -130,3 +130,19 @@ def test_the_prior_is_a_frozen_strict_copy_and_the_runner_attaches_it_only_on_th
     plain = PPO(_policy(obs, 1), num_learning_epochs=1, num_mini_batches=1, device="cpu")
     with pytest.raises(ValueError, match="CriticMirrorPPO"):
         StartRunner._attach_bc_prior(runner, plain, plain.policy)
+
+
+def test_the_grad_ratio_is_logged_for_the_first_updates_only_and_does_not_change_the_step(capsys):
+    obs = _obs()
+    prior = _policy(obs, 2).eval()
+    for p in prior.parameters():
+        p.requires_grad_(False)
+    plain = _alg(obs, prior=copy.deepcopy(prior), beta=1.0); plain.bc_ratio_updates = 0; _update(plain, obs)
+    measured = _alg(obs, prior=copy.deepcopy(prior), beta=1.0); measured.bc_ratio_updates = 1
+    first = _update(measured, obs)
+    assert all(torch.equal(a, b) for a, b in zip(_params(plain), _params(measured), strict=True))   # measuring is read-only
+    assert first["bc_prior_grad_ratio_raw"] > 0
+    out = capsys.readouterr().out
+    assert "grad_ratio_raw=" in out and "grad_ratio_weighted=" in out
+    second = _update(measured, obs)
+    assert "bc_prior_grad_ratio_raw" not in second and "grad_ratio_raw=" not in capsys.readouterr().out

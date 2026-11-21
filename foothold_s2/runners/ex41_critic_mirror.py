@@ -154,6 +154,8 @@ class CriticMirrorPPO(PPO):
     # EX42_BC_PRIOR_CKPT / EX42_BC_PRIOR_BETA. None = off (the update is the same bytes as before).
     bc_prior = None
     bc_beta = 0.0
+    bc_ratio_updates = 10        # lead 17:36 (a): grad-norm ratio ||d BC|| / ||d surrogate|| on the actor, the first 10 updates
+    _bc_updates_seen = 0
 
     def act(self, obs):
         if self.kl_audit is not None:
@@ -307,6 +309,8 @@ class CriticMirrorPPO(PPO):
             raise ValueError("EX-41 critic mirror supports feed-forward PPO without symmetry or RND")
         total_v = total_m = total_combined = total_s = total_e = total_b = total_over = mu_max = 0.0
         total_bc, total_bc_n, bc_batches = 0.0, 0, 0
+        ratio_sum, ratio_n = 0.0, 0
+        measure_ratio = self.bc_prior is not None and self._bc_updates_seen < self.bc_ratio_updates
         self.storage.yield_skipped = self.is_multi_gpu
         batches = self.storage.mini_batch_generator(self.num_mini_batches, self.num_learning_epochs)
         for batch in batches:
@@ -365,6 +369,14 @@ class CriticMirrorPPO(PPO):
                 with torch.no_grad():
                     prior_mu = self.bc_prior.act_inference(obs)
                 bc, bc_n = bc_loss(mu, prior_mu, slow_mask(obs[ACTOR_KEY]))
+                if measure_ratio and bc_n:
+                    actor_params = [q for q in self.policy.actor.parameters() if q.requires_grad]
+                    g_bc = torch.autograd.grad(bc, actor_params, retain_graph=True, allow_unused=True)
+                    g_s = torch.autograd.grad(surrogate, actor_params, retain_graph=True, allow_unused=True)
+                    norm = lambda gs: torch.sqrt(sum((g.square().sum() for g in gs if g is not None), torch.zeros(())))  # noqa: E731
+                    n_s = float(norm(g_s))
+                    if n_s > 0:
+                        ratio_sum += float(norm(g_bc)) / n_s; ratio_n += 1
                 base_loss = base_loss + self.bc_beta * bc
                 total_bc += float(bc.detach()); total_bc_n += bc_n; bc_batches += 1
             self.optimizer.zero_grad()
@@ -403,7 +415,11 @@ class CriticMirrorPPO(PPO):
             result.update(bounds_loss=total_b / count, mu_over_limit_frac=total_over / count, mu_abs_max=mu_max)
         if self.bc_prior is not None:
             result.update(bc_prior_loss=total_bc / max(bc_batches, 1), bc_prior_samples=float(total_bc_n))
+            ratio = f" grad_ratio_raw={ratio_sum / ratio_n:.6g} grad_ratio_weighted={self.bc_beta * ratio_sum / ratio_n:.6g}" if ratio_n else ""
+            if ratio_n:
+                result.update(bc_prior_grad_ratio_raw=ratio_sum / ratio_n)
+            self._bc_updates_seen += 1
             if getattr(self, "gpu_global_rank", 0) == 0:
                 print(f"EX42_BC_PRIOR beta={self.bc_beta} loss={total_bc / max(bc_batches, 1):.6g} samples={total_bc_n} "
-                      f"batches={bc_batches}", flush=True)
+                      f"batches={bc_batches}{ratio}", flush=True)
         return result
