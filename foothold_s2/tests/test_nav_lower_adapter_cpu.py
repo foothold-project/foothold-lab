@@ -107,6 +107,8 @@ class Term:
         self.stand = torch.zeros(3, dtype=torch.bool)
         self.heading = torch.full((3,), heading)
         self.is_flag_env = torch.full((3,), flag)
+        from types import SimpleNamespace
+        self._env = SimpleNamespace()                 # Isaac Lab CommandTerm keeps its env as _env (ManagerTermBase)
 
 
 def test_apply_command_writes_the_term_like_the_evaluator_does():
@@ -118,6 +120,7 @@ def test_apply_command_writes_the_term_like_the_evaluator_does():
     with pytest.raises(ValueError, match="pose"):
         la.apply_command(t, bad, np.zeros(3, bool), pose_active=False)
     la.apply_command(t, bad, np.zeros(3, bool), pose_active=True)
+    assert np.allclose(t._env._hipan_pose_cmd.numpy(), bad[:, 3:5])     # the pose goes to the lower observation slot
     with pytest.raises(RuntimeError):
         la.apply_command(Term(heading=True), cmd, np.zeros(3, bool), True)
     with pytest.raises(RuntimeError):

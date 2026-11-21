@@ -98,6 +98,11 @@ def apply_command(term, cmd5, stand, pose_active: bool) -> None:
         raise RuntimeError("heading or flag mode is on: commands would be rewritten")
     term.vel_command_b[:, :3] = cmd[:, :3]
     term.stand.copy_(torch.as_tensor(stand, dtype=torch.bool, device=term.stand.device))
+    if pose_active:                     # 상위 5 차원 (HIPAN_POSE_ACTIONS=1): [dh, roll] 를 하위 관측 pose_cmd 가 읽는 자리에 (pose_actions.pose_obs)
+        from foothold_s2.nav import pose_actions
+        if getattr(term, "_env", None) is None:
+            raise RuntimeError("the command term has no _env: the pose cannot reach the lower observation")
+        setattr(term._env, pose_actions.POSE_ATTR, cmd[:, 3:5].to(torch.float32).clone())
 
 
 def tracking_error(applied_cmd3, body_vel_b, yaw_rate):

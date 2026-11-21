@@ -65,3 +65,51 @@ def test_nav_env_refuses_five_actions_without_a_posture_lower(monkeypatch):
     space = SimpleNamespace(hold_steps=2, pose_active=False)
     with pytest.raises(ValueError, match="posture receipt"):
         nav_env.NavEnv(env, SimpleNamespace(n=2, pose_active=False), space, fix_heading=lambda t: None, sensor_name=None)
+
+
+def test_h0_is_the_measured_canon3_standing_height():
+    assert pa.H0 == pytest.approx(0.3461)
+
+
+def test_apply_command_hands_the_pose_to_the_lower_observation(monkeypatch):
+    from foothold_s2.nav import lower_adapter as la
+    raw = SimpleNamespace(num_envs=2, device="cpu")
+    term = SimpleNamespace(vel_command_b=torch.zeros(2, 3), stand=torch.zeros(2, dtype=torch.bool), heading=torch.zeros(2, dtype=torch.bool),
+                           is_flag_env=torch.zeros(2, dtype=torch.bool), _env=raw)
+    assert torch.equal(pa.pose_obs(raw), torch.zeros(2, 2))                       # before the first command
+    cmd = np.array([[0.5, 0, 0, -0.1, 0.3], [0, 0, 0, 0.02, -0.5]])
+    la.apply_command(term, cmd, np.zeros(2, bool), True)
+    assert torch.allclose(pa.pose_obs(raw), torch.tensor([[-0.1, 0.3], [0.02, -0.5]]))
+    with pytest.raises(ValueError, match="pose columns must be zero"):
+        la.apply_command(term, cmd, np.zeros(2, bool), False)
+
+
+def test_the_lower_runner_takes_in_range_pose_only_with_the_switch(monkeypatch):
+    from tensordict import TensorDict
+    from foothold_s2.runners.start_runner import StartRunner
+    raw = TensorDict({"pose_cmd": torch.tensor([[0.4 - pa.H0, 1.0], [0.1 - pa.H0, -1.0]])}, batch_size=[2])
+    monkeypatch.delenv(pa.ENV_SWITCH, raising=False)
+    with pytest.raises(ValueError, match="zero in this stage"):
+        StartRunner._pose_command(raw)
+    monkeypatch.setenv(pa.ENV_SWITCH, "1")
+    assert torch.equal(StartRunner._pose_command(raw), raw["pose_cmd"])
+    with pytest.raises(ValueError, match="outside the paper ranges"):
+        StartRunner._pose_command(TensorDict({"pose_cmd": torch.tensor([[0.2, 0.0]])}, batch_size=[1]))
+
+
+def test_pose_receipt_is_read_by_the_lower_adapter(tmp_path):
+    from foothold_s2.nav import lower_adapter as la, pose_receipt as pr
+    ck = tmp_path / "model_250.pt"; ck.write_bytes(b"lower")
+    ev = tmp_path / "judge.md"; ev.write_text("rx2pz graduation")
+    with pytest.raises(ValueError, match="--passed"):
+        pr.write(ck, ev, "lead line", tmp_path / "r0.json")
+    rec = pr.write(ck, ev, "lead line", tmp_path / "r.json", passed=True)
+    assert la.pose_active_from_receipt(rec, la.file_sha256(ck)) and not la.pose_active_from_receipt(rec, "0" * 64)
+
+
+def test_the_real_wiring_points():
+    from pathlib import Path
+    root = Path(__file__).resolve().parents[1]
+    cfg = (root / "tasks/nav_env_cfg.py").read_text(encoding="utf-8")
+    assert "env_cfg.observations.pose_cmd.pose_cmd.func = pose_actions.pose_obs" in cfg and "pose_receipt=pose_receipt)" in cfg
+    assert 'cfg.get("lower_pose_receipt")' in (root / "nav/kit_factories.py").read_text(encoding="utf-8")

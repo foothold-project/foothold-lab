@@ -131,7 +131,8 @@ def _build(cfg: dict, with_camera: bool):
             env_cfg.scene.depth_camera = hl_student.depth_camera_cfg()
     nav, _summary = build_nav_env(checkpoint=cfg["lower_checkpoint"], expected_sha256=cfg["lower_sha256"], room_mesh_npz=prepared["mesh"],
                                   room_mesh_sha256=prepared["manifest"]["mesh_sha256"], num_envs=int(cfg["num_envs"]), device=cfg["device"],
-                                  seed=int(cfg["seed"]), prep_path=cfg.get("prep_path"), extra_scene=extra)
+                                  seed=int(cfg["seed"]), prep_path=cfg.get("prep_path"), extra_scene=extra,
+                                  pose_receipt=json.loads(Path(cfg["lower_pose_receipt"]).read_text(encoding="utf-8")) if cfg.get("lower_pose_receipt") else None)
     raw = nav.raw
     if prepared.get("bench_docs") is not None:
         from foothold_s2.nav import hl_bench

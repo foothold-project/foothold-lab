@@ -96,7 +96,7 @@ def configure_lower_env_cfg(env_cfg, agent_cfg, *, num_envs: int, device: str, s
 
 
 def build_nav_env(*, checkpoint, expected_sha256: str, room_mesh_npz, room_mesh_sha256: str, num_envs: int, device: str,
-                  seed: int, map_mode: str = "eval_gt", command_mode: str = "clip", prep_path=None, extra_scene=None):
+                  seed: int, map_mode: str = "eval_gt", command_mode: str = "clip", prep_path=None, extra_scene=None, pose_receipt=None):
     """Kit python 에서만. 하위 env 를 만들고 하위 정책을 올려 `NavEnv` 를 돌려준다 (Kit 에서 돌려 본 적 없음: 미확인).
     순서는 D44 평가기와 같다: cfg -> 저장본 sha · 입력 폭 검사 (gym.make 전) -> gym.make -> 러너 -> 명령 항 heading 끄기."""
     import gymnasium as gym
@@ -116,9 +116,16 @@ def build_nav_env(*, checkpoint, expected_sha256: str, room_mesh_npz, room_mesh_
     if extra_scene is not None:         # 예: student 의 depth 카메라를 scene 에 더한다 (gym.make 전에만 가능)
         extra_scene(env_cfg)
     state, prep = lower_adapter.prepare(env_cfg, checkpoint, expected_sha256)
+    from foothold_s2.nav import pose_actions
+    if pose_actions.enabled():          # 상위 5 차원: 하위 관측 pose_cmd 를 상위가 낸 [dh, roll] 로 (자세 영수증이 맞아야 NavEnv 가 받음)
+        if not lower_adapter.pose_active_from_receipt(pose_receipt, prep["checkpoint_sha256"]):
+            raise ValueError("HIPAN_POSE_ACTIONS=1 needs a posture receipt for this lower checkpoint (factory lower_pose_receipt)")
+        env_cfg.observations.pose_cmd.pose_cmd.func = pose_actions.pose_obs
+        env_cfg.observations.pose_cmd.pose_cmd.params = {}
+        print(f"HIPAN_POSE_ACTIONS on H0={pose_actions.H0} receipt stage={pose_receipt.get('stage_id')} lower={prep['checkpoint_sha256'][:12]}", flush=True)
     env = RslRlVecEnvWrapper(gym.make(LOWER_TASK, cfg=env_cfg), clip_actions=agent_cfg.clip_actions)
     lower = lower_adapter.LowerPolicy.load(checkpoint, env, device, map_mode, agent_cfg=agent_cfg.to_dict(),
-                                           checkpoint_state=state, checkpoint_sha256=prep["checkpoint_sha256"])
+                                           checkpoint_state=state, checkpoint_sha256=prep["checkpoint_sha256"], pose_receipt=pose_receipt)
     if prep_path is None:
         from pathlib import Path
         prep_path = Path(__file__).resolve().parents[1] / "curriculum" / "ex42-prep.yaml"

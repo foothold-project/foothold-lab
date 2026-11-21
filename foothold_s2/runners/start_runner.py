@@ -380,6 +380,10 @@ class StartRunner(OnPolicyRunner):
         if "pose_cmd" not in raw.keys() or tuple(raw["pose_cmd"].shape) != (raw.batch_size[0], 2):
             raise ValueError("EX-41 pose_cmd must have shape (N,2)")
         pose = raw["pose_cmd"]
+        from foothold_s2.nav import pose_actions
+        if pose_actions.enabled():          # HiPAN 상위 5 차원 (lead 11/21 21:35 (2)): 자세 칸은 원문 범위 안이면 받는다
+            pose_actions.check_pose(pose)
+            return pose
         if not torch.isfinite(pose).all() or torch.count_nonzero(pose):
             raise ValueError("EX-41 D93 pose_cmd must be finite and zero in this stage")
         return pose

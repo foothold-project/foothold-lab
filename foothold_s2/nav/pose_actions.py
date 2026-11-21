@@ -3,7 +3,9 @@
 켜짐이면: 출력 5 칸 · teacher 관측의 c_prev 5 칸 · 상위 보상 r4 · r5 · r6 이 5 열 (rewards_hl.reward_terms pose_active) ·
 자세 두 칸은 원문 범위로 자른다 (높이 h ∈ [0.1, 0.4] m -> dh = h - H0 · roll ∈ [-1, 1] rad · 2604.26504.txt:635).
 하위가 자세를 배웠다는 영수증 (lower_adapter.pose_active_from_receipt · E6a 통과) 이 없으면 nav_env 가 거절한다 (명령 공간과 하위의 스위치가 달라서).
-H0 는 하위 EX-42 자세 경로 (commands/ex42_posture.H0_DEFAULT 0.31 m · 가정) 와 같은 값. No Kit import.
+H0 는 하위 rx2pz 판의 EX42_POSTURE_H0 (0.3461 m · 정본 3 서기 몸 높이 측정 · 11/21 20:51) 와 같은 값. 하위가 다른 H0 로 배웠으면 같이 바꾼다.
+자세 두 칸은 lower_adapter.apply_command 가 env 의 `_hipan_pose_cmd` 에 쓰고 하위 관측 pose_cmd (actor 96:98) 가 pose_obs 로 읽는다.
+No Kit import.
 """
 from __future__ import annotations
 
@@ -14,7 +16,7 @@ import numpy as np
 ENV_SWITCH = "HIPAN_POSE_ACTIONS"
 H_RANGE = (0.1, 0.4)
 ROLL_RANGE = (-1.0, 1.0)
-H0 = 0.31
+H0 = 0.3461                          # 정본 3 서기 몸 높이 중앙값 (CPU Kit 측정 · lead 11/21 21:35 (2) · rx2pz EX42_POSTURE_H0 와 같은 값)
 
 
 def enabled() -> bool:
@@ -49,3 +51,26 @@ def actual_pose(state) -> np.ndarray:
     w, x, y, z = q[:, 0], q[:, 1], q[:, 2], q[:, 3]
     roll = np.arctan2(2 * (w * x + y * z), 1 - 2 * (x * x + y * y))
     return np.column_stack([np.asarray(state.pos_local, float)[:, 2] - H0, roll])
+
+
+POSE_ATTR = "_hipan_pose_cmd"
+
+
+def pose_obs(env):
+    """하위 관측 pose_cmd (N, 2) = 상위가 낸 [dh, roll] (apply_command 가 쓴 값). 아직 없으면 0 (첫 reset)."""
+    import torch
+    v = getattr(env, POSE_ATTR, None)
+    if v is None:
+        return torch.zeros((env.num_envs, 2), device=env.device, dtype=torch.float32)
+    return v
+
+
+def check_pose(pose) -> None:
+    """하위 runner 의 자세 칸 확인 (HIPAN_POSE_ACTIONS=1): 유한 · 원문 범위 안 (dh ∈ [0.1 - H0, 0.4 - H0] · roll ∈ [-1, 1])."""
+    import torch
+    if not bool(torch.isfinite(pose).all()):
+        raise ValueError("HiPAN pose_cmd must be finite")
+    eps = 1e-5
+    dh, roll = pose[:, 0], pose[:, 1]
+    if bool((dh < H_RANGE[0] - H0 - eps).any() or (dh > H_RANGE[1] - H0 + eps).any() or (roll < ROLL_RANGE[0] - eps).any() or (roll > ROLL_RANGE[1] + eps).any()):
+        raise ValueError("HiPAN pose_cmd is outside the paper ranges")
