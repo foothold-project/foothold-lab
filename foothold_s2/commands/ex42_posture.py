@@ -24,7 +24,7 @@ rx2pz (lead 2026-11-21 20:24 · 원장 20:23 「자세 하위 따로 판」) 에
     명령 대 실제 기울기 (높이 · roll) · 넓힘 여부. 50 회 탐침 (꼬리표 rx2pz) 이 이 줄을 읽는다.
 σ 풀림 (EX42_POSTURE_SIGMA_ANNEAL=1 · lead 11/22 06:28 · 원장 3a06f0724 · planner 06:25 rx2pf2 +250 slope_h · slope_roll 0.00): 원문 폭
 exp(-|e|/0.0025) · exp(-|e|/0.05) 는 처음에 신호가 없음 → 높이 σ 0.05 m · roll σ 0.5 rad 로 넓게 시작하고 EX42_POSTURE_CHECK 의 slope 가 0.5 를
-넘을 때마다 그 축의 σ 를 절반 (끝값 = 원문 0.0025 · 0.05 에서 멈춤). 점검 줄 · 시작 줄에 σ 와 절반 사건. 켜면 EX42_POSTURE_CHECK_STEPS 를 커리큘럼 없이도
+넘을 때마다 그 축의 σ 를 절반 (06:31: 높이 시작 0.10 m) (끝값 = 원문 0.0025 · 0.05 에서 멈춤). 점검 줄 · 시작 줄에 σ 와 절반 사건. 켜면 EX42_POSTURE_CHECK_STEPS 를 커리큘럼 없이도
 받는다 (짧은 Kit 기동용). 끔 (기본) = 원문 폭 고정 · 옛 동작 그대로. 단서: rank 마다 자기 표본의 slope 로 판정한다 (두 rank 의 절반 시점이 다를 수 있음 · 점검 줄에 rank).
 No Kit import at module level.
 """
@@ -47,8 +47,12 @@ STATE = "_ex42_posture_state"
 CURRICULUM_KEYS = ("EX42_POSTURE_CURRICULUM", "EX42_POSTURE_H_START", "EX42_POSTURE_ROLL_START", "EX42_POSTURE_H_STEP", "EX42_POSTURE_ROLL_STEP",
                    "EX42_POSTURE_H_TOL", "EX42_POSTURE_ROLL_TOL", "EX42_POSTURE_CHECK_STEPS", "EX42_POSTURE_STATE")
 SIGMA_PAPER = (0.0025, 0.05)        # 원문 높이 · roll 폭 (2604.26504.txt:597-605)
-SIGMA_START = (0.05, 0.5)            # σ 풀림 시작값 (lead 06:28)
+SIGMA_START = (0.10, 0.5)            # σ 풀림 시작값 (lead 06:31 원장 7641d99ae: 높이 0.10 m · roll 0.5 rad)
 SIGMA_SLOPE = 0.5                    # 이 slope 를 넘으면 그 축 σ 절반
+# 자세 env 벌 낮춤 (EX42_POSTURE_PEN_MASK=1 · lead 06:31 원장 7641d99ae · planner 06:29 벌 합): 자세 명령 env 에서만 이 가중으로 (hip 듬성 열 가림과 같은 꼴:
+# 항 함수 안에서 값 x 목표/지금 가중 · 실시간 칸은 항 전체 가중이라 함수 안에서 가린다). 다른 env 는 항 가중 그대로. collision 은 바꾸지 않고 기록만.
+PEN_TARGETS = {"basic_hip_pos_penalty_l1": 0.0, "ex39_thigh_calf_pos_l1": -0.0025}
+PEN_LOG_ONLY = ("collision",)
 SAMPLE_EVERY = 24                    # 표본은 24 step (update 1 회) 마다 한 번
 BEAT_FRACTION = 0.4                  # 넓힘 문턱 = min(tol, 0.4 x 반폭)
 
@@ -102,6 +106,10 @@ def settings() -> dict:
     if anneal not in ("", "0", "1"):
         raise ValueError(f"EX42_POSTURE_SIGMA_ANNEAL must be 0 or 1 (got {anneal!r})")
     out["sigma_anneal"] = anneal == "1"
+    pm = os.environ.get("EX42_POSTURE_PEN_MASK", "")
+    if pm not in ("", "0", "1"):
+        raise ValueError(f"EX42_POSTURE_PEN_MASK must be 0 or 1 (got {pm!r})")
+    out["pen_mask"] = pm == "1"
     loose = [k for k in CURRICULUM_KEYS[1:] if os.environ.get(k, "") != "" and not (out["sigma_anneal"] and k == "EX42_POSTURE_CHECK_STEPS")]
     if cur != "1" and loose:
         raise ValueError(f"{', '.join(loose)} set but EX42_POSTURE_CURRICULUM is not 1")
@@ -161,6 +169,7 @@ class PostureState:
         self.checks = 0
         self.samples = []                # [(target_h, h, target_roll, roll, reward_h)] 적용 env 만
         self.sigma = list(SIGMA_START) if cfg.get("sigma_anneal") else list(SIGMA_PAPER)   # [높이 m, roll rad]
+        self.pen_sum = {}; self.pen_n = {}; self.pen_started = False   # 자세 env 의 벌 항 기여 (값 x 실제 가중) 합 · 횟수 (점검 사이)
         self.state_path = None
         if cfg["curriculum"] and cfg.get("state_path"):
             self.state_path = Path(f"{cfg['state_path']}.rank{_rank()}")
@@ -219,6 +228,9 @@ class PostureState:
                 if not roll_full and line["med_roll_err"] < min(self.cfg["roll_tol"], BEAT_FRACTION * self.roll_half):
                     self.roll_half += self.cfg["roll_step"]
                     line["widen_roll"] = True
+        if self.pen_n:
+            line["pen_posture_env_mean"] = {k: round(self.pen_sum[k] / self.pen_n[k], 7) for k in sorted(self.pen_n)}   # 자세 env 평균 · step 당 기여 (가중 곱함)
+            self.pen_sum, self.pen_n = {}, {}
         if self.cfg.get("sigma_anneal"):
             line["sigma_h"], line["sigma_roll"] = self.sigma[0], self.sigma[1]
             halve = []
@@ -339,6 +351,7 @@ def register_rewards(env_cfg, term_cfg_class=None) -> bool:
         from isaaclab.managers import RewardTermCfg as term_cfg_class
     setattr(env_cfg.rewards, HEIGHT_TERM, term_cfg_class(func=height_tracking, weight=cfg["height_w"], params={}))
     setattr(env_cfg.rewards, ROLL_TERM, term_cfg_class(func=roll_tracking, weight=cfg["roll_w"], params={}))
+    register_pen_mask(env_cfg)                               # EX42_POSTURE_PEN_MASK=1 일 때만 (lead 06:31)
     orient = getattr(env_cfg.rewards, ORIENT_TERM, None)
     if orient is not None:
         orient.func = posture_orientation                    # 원문 r7 (pitch 만) · 적용 env 만 · 칸 가중은 그대로 (지킬 칸 보호 · 옛 식은 끈 env 에 남음)
@@ -348,6 +361,50 @@ def register_rewards(env_cfg, term_cfg_class=None) -> bool:
           + (f" h_start={cfg['h_start']} roll_start={cfg['roll_start']} h_step={cfg['h_step']} roll_step={cfg['roll_step']}"
              f" h_tol={cfg['h_tol']} roll_tol={cfg['roll_tol']} state={cfg['state_path'] or '-'}" if cfg["curriculum"] else "")
           + (f" sigma_anneal=1 sigma_start={list(SIGMA_START)} sigma_end={list(SIGMA_PAPER)} halve_when_slope>{SIGMA_SLOPE}" if cfg.get("sigma_anneal") else f" sigma={list(SIGMA_PAPER)}"), flush=True)
+    return True
+
+
+def _pen_wrap(term, func, target):
+    """자세 env 벌 낮춤 · 기록. target None = 값을 안 바꾸고 기록만 (collision)."""
+    def posture_pen_term(env, **params):
+        value = func(env, **params)
+        raw = getattr(env, "unwrapped", env)
+        w = float(raw.reward_manager.get_term_cfg(term).weight)
+        st = _state(env)
+        act = st.active.to(value.device)
+        if target is not None:
+            factor = 0.0 if w == 0.0 else target / w
+            value = torch.where(act, value * factor, value)
+        if not st.pen_started and target is not None:
+            st.pen_started = True
+            print(f"EX42_POSTURE_PEN_MASK where=first_call masked_envs={int(act.sum())} of={int(act.numel())} "
+                  + " ".join(f"{k}={raw.reward_manager.get_term_cfg(k).weight}->{v}" for k, v in PEN_TARGETS.items()
+                             if k in raw.reward_manager.active_terms), flush=True)
+        if bool(act.any()):
+            st.pen_sum[term] = st.pen_sum.get(term, 0.0) + float((value[act] * w).mean())
+            st.pen_n[term] = st.pen_n.get(term, 0) + 1
+        return value
+    posture_pen_term.ex42_posture_pen = target
+    posture_pen_term.__wrapped__ = func
+    return posture_pen_term
+
+
+def register_pen_mask(env_cfg) -> bool:
+    if not settings().get("pen_mask"):
+        return False
+    done = []
+    for term, target in list(PEN_TARGETS.items()) + [(t, None) for t in PEN_LOG_ONLY]:
+        cfg = getattr(env_cfg.rewards, term, None)
+        if cfg is None:
+            if target is not None:
+                raise ValueError(f"EX42_POSTURE_PEN_MASK=1 but the env config has no {term} term")
+            continue
+        if getattr(cfg.func, "ex42_posture_pen", "unset") != "unset":
+            continue
+        if target is not None and cfg.weight < 0 and target < cfg.weight:
+            raise ValueError(f"posture pen target {target} for {term} is stronger than its weight {cfg.weight} (this only lowers)")
+        cfg.func = _pen_wrap(term, cfg.func, target); done.append(f"{term}:{cfg.weight}->{'log' if target is None else target}")
+    print(f"EX42_POSTURE_PEN_MASK where=start posture_envs_only {' '.join(done)}", flush=True)
     return True
 
 

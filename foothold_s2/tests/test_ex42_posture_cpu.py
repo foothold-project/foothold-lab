@@ -228,7 +228,7 @@ def test_register_swaps_orientation_only_when_on(monkeypatch):
 # ---- σ 풀림 (EX42_POSTURE_SIGMA_ANNEAL · lead 11/22 06:28 · 원장 3a06f0724) ----
 @pytest.fixture
 def clean_sigma(monkeypatch, clean_cur):
-    monkeypatch.delenv("EX42_POSTURE_SIGMA_ANNEAL", raising=False)
+    monkeypatch.delenv("EX42_POSTURE_SIGMA_ANNEAL", raising=False); monkeypatch.delenv("EX42_POSTURE_PEN_MASK", raising=False)
 
 
 def _follow(env, st, n, frac=1.0):
@@ -257,27 +257,27 @@ def test_sigma_starts_wide_halves_on_slope_and_stops_at_the_paper_width(monkeypa
     monkeypatch.setenv("EX42_POSTURE", "1"); monkeypatch.setenv("EX42_POSTURE_SIGMA_ANNEAL", "1"); monkeypatch.setenv("EX42_POSTURE_CHECK_STEPS", "48")
     n = 64
     env = _env(n, z=ps.H0_DEFAULT); ps.posture_command_obs(env); st = ps._state(env)
-    assert st.sigma == [0.05, 0.5]
-    # 넓은 σ 에서 높이 보상이 오차를 가른다 (원문 폭이면 0.01 m 오차가 0.018 · 넓으면 0.82)
+    assert st.sigma == [0.10, 0.5]
+    # 넓은 σ 에서 높이 보상이 오차를 가른다 (원문 폭이면 0.01 m 오차가 0.018 · 넓으면 0.90)
     st.target[:, 0] = ps.H0_DEFAULT + 0.01; env.scene["robot"].data.root_pos_w[:, 2] = ps.H0_DEFAULT
-    assert float(ps.height_tracking(env)[0]) == pytest.approx(math.exp(-0.01 / 0.05), rel=1e-4)
+    assert float(ps.height_tracking(env)[0]) == pytest.approx(math.exp(-0.01 / 0.10), rel=1e-4)
     # 따라가지 않음 (H0 에 서 있음): slope 0 → 절반 없음
     for _ in range(47):
         ps.height_tracking(env)
     c = _checks(capsys)[-1]
-    assert c["sigma_halved"] == [] and c["sigma_h"] == 0.05 and c["next_sigma_roll"] == 0.5
+    assert c["sigma_halved"] == [] and c["sigma_h"] == 0.10 and c["next_sigma_roll"] == 0.5
     # 그대로 따라감: slope 1 > 0.5 → 두 축 절반 · 다섯 번 더면 높이는 0.0025 에서 멈춤 (0.05/2^5 = 0.0016 → 0.0025)
     seen = []
-    for k in range(6):
+    for k in range(7):
         env.episode_length_buf[:] = 1; ps.posture_command_obs(env); env.episode_length_buf[:] = 5
         _follow(env, st, n, 1.0)
         for _ in range(48):
             ps.height_tracking(env)
         c = _checks(capsys)[-1]; seen.append((c["sigma_halved"], c["next_sigma_h"], c["next_sigma_roll"]))
-    assert seen[0] == (["h", "roll"], 0.025, 0.25)
-    assert seen[1][1:] == (0.0125, 0.125) and seen[2][1:] == (0.00625, 0.0625)
-    assert seen[3][1:] == (0.003125, 0.05) and seen[3][0] == ["h", "roll"]   # roll 은 0.0625 → 0.05 (끝값에서 멈춤)
-    assert seen[4] == (["h"], 0.0025, 0.05) and seen[5] == ([], 0.0025, 0.05)
+    assert seen[0] == (["h", "roll"], 0.05, 0.25)
+    assert seen[1][1:] == (0.025, 0.125) and seen[2][1:] == (0.0125, 0.0625)
+    assert seen[3][1:] == (0.00625, 0.05) and seen[3][0] == ["h", "roll"]   # roll 은 0.0625 → 0.05 (끝값에서 멈춤)
+    assert seen[4] == (["h"], 0.003125, 0.05) and seen[5] == (["h"], 0.0025, 0.05) and seen[6] == ([], 0.0025, 0.05)
     assert st.sigma == list(ps.SIGMA_PAPER)
 
 
@@ -290,4 +290,37 @@ def test_sigma_start_line(monkeypatch, clean_sigma, capsys):
         except Exception:
             pass
     out = capsys.readouterr().out
-    assert "sigma_anneal=1 sigma_start=[0.05, 0.5] sigma_end=[0.0025, 0.05] halve_when_slope>0.5" in out
+    assert "sigma_anneal=1 sigma_start=[0.1, 0.5] sigma_end=[0.0025, 0.05] halve_when_slope>0.5" in out
+
+
+
+def test_pen_mask_lowers_only_on_posture_envs_and_logs(monkeypatch, clean_sigma, capsys):
+    monkeypatch.setenv("EX42_POSTURE", "1"); monkeypatch.setenv("EX42_POSTURE_PEN_MASK", "1"); monkeypatch.setenv("EX42_POSTURE_SIGMA_ANNEAL", "1")
+    monkeypatch.setenv("EX42_POSTURE_CHECK_STEPS", "24")
+    n = 6
+    env = _env(n, z=ps.H0_DEFAULT); st = ps._state(env)
+    st.active[:] = torch.tensor([True, True, True, False, False, False])
+    ones = lambda e, **k: torch.ones(e.num_envs)  # noqa: E731
+    rew = SimpleNamespace(basic_hip_pos_penalty_l1=_Cfg(ones, -0.05), ex39_thigh_calf_pos_l1=_Cfg(ones, -0.01), collision=_Cfg(ones, -1.0))
+    assert ps.register_pen_mask(SimpleNamespace(rewards=rew))
+    weights = {"basic_hip_pos_penalty_l1": -0.05, "ex39_thigh_calf_pos_l1": -0.01, "collision": -1.0}
+    env.reward_manager = SimpleNamespace(get_term_cfg=lambda k: SimpleNamespace(weight=weights[k]), active_terms=list(weights))
+    hip = rew.basic_hip_pos_penalty_l1.func(env); tc = rew.ex39_thigh_calf_pos_l1.func(env); col = rew.collision.func(env)
+    assert hip.tolist() == [0, 0, 0, 1, 1, 1]                                    # 자세 env: 가중 0 · 나머지 그대로
+    assert tc[:3] * -0.01 == pytest.approx(torch.full((3,), -0.0025)) and tc[3:].tolist() == [1, 1, 1]
+    assert col.tolist() == [1] * 6                                               # collision 은 기록만
+    out = capsys.readouterr().out
+    assert "EX42_POSTURE_PEN_MASK where=start posture_envs_only basic_hip_pos_penalty_l1:-0.05->0.0 ex39_thigh_calf_pos_l1:-0.01->-0.0025 collision:-1.0->log" in out
+    assert "masked_envs=3 of=6 basic_hip_pos_penalty_l1=-0.05->0.0 ex39_thigh_calf_pos_l1=-0.01->-0.0025" in out
+    for _ in range(24):
+        ps.height_tracking(env)
+    c = _checks(capsys)[-1]
+    assert c["pen_posture_env_mean"] == {"basic_hip_pos_penalty_l1": 0.0, "collision": -1.0, "ex39_thigh_calf_pos_l1": pytest.approx(-0.0025)}
+    assert c["sigma_h"] == 0.10
+
+
+def test_pen_mask_off_leaves_the_terms(monkeypatch, clean_sigma):
+    monkeypatch.setenv("EX42_POSTURE", "1")
+    f = lambda e: 1  # noqa: E731
+    rew = SimpleNamespace(basic_hip_pos_penalty_l1=_Cfg(f, -0.05), ex39_thigh_calf_pos_l1=_Cfg(f, -0.01))
+    assert not ps.register_pen_mask(SimpleNamespace(rewards=rew)) and rew.basic_hip_pos_penalty_l1.func is f
