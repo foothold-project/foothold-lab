@@ -428,10 +428,30 @@ class StartRunner(OnPolicyRunner):
             alg.bounds_loss_limit = float(clip) if clip else None
         else:
             alg = PPO(policy, device=self.device, **alg_cfg, multi_gpu_cfg=self.multi_gpu_cfg)
+        self._attach_bc_prior(alg, policy)
         alg.init_storage("rl", self.env.num_envs, self.num_steps_per_env, obs, [self.env.num_actions])
         self._small_noise_target = alg
         self._apply_small_noise()
         return alg
+
+    def _attach_bc_prior(self, alg, policy) -> None:
+        """EX42_BC_PRIOR_CKPT + EX42_BC_PRIOR_BETA (lead 2026-11-21 17:21 / 17:24): a frozen parent actor for the BC loss on
+        slow-command samples. Neither set = off (nothing changes). Only the critic-mirror loop carries it: the algorithm must
+        be CriticMirrorPPO (pose commands); the mirror itself is granted after the runner is built (set_ex41_critic_mirror,
+        D174), so an update that runs with the mirror off refuses the prior there (CriticMirrorPPO._update_impl)."""
+        from foothold_s2.runners import ex42_bc_prior as bcp
+        from foothold_s2.runners.ex41_critic_mirror import CriticMirrorPPO
+
+        cfg = bcp.settings()
+        if cfg is None:
+            return
+        if not isinstance(alg, CriticMirrorPPO):
+            raise ValueError("EX-42 BC prior needs the EX-41 critic-mirror update loop (CriticMirrorPPO, pose commands)")
+        alg.bc_prior = bcp.load_prior(policy, cfg["ckpt"], self.device)
+        alg.bc_beta = cfg["beta"]
+        sha = hashlib.sha256(Path(cfg["ckpt"]).read_bytes()).hexdigest()
+        print(f"{bcp.LOG} where=start beta={cfg['beta']} ckpt={cfg['ckpt']} sha256={sha} band=[{bcp.SPEED_MIN}, {bcp.SPEED_MAX})",
+              flush=True)
 
     def _pin_perception_lr(self, where: str) -> None:
         """Set the perception optimizer lr to PERCEPTION_LR_OVERRIDE (every param group; the PPO optimizer is not touched) and log the

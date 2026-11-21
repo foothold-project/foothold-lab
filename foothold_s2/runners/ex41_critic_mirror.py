@@ -12,7 +12,7 @@ from torch import nn
 
 from rsl_rl.algorithms import PPO
 
-from foothold_s2.models.start_policy import CRITIC_KEY
+from foothold_s2.models.start_policy import ACTOR_KEY, CRITIC_KEY
 from foothold_s2.runners.ex41_valid_storage import ValidRolloutStorage, safe_minibatch_advantage
 
 
@@ -150,6 +150,10 @@ class CriticMirrorPPO(PPO):
     bounds_loss_coef = BOUNDS_LOSS_COEF
     bounds_loss_limit = None
     mean_action_mask = None      # [num_envs] bool set by the runner: these envs act with the mean action and are not PPO samples
+    # EX-42 BC prior (ex42_bc_prior, lead 2026-11-21 17:21): a frozen parent actor and beta, set by the runner from
+    # EX42_BC_PRIOR_CKPT / EX42_BC_PRIOR_BETA. None = off (the update is the same bytes as before).
+    bc_prior = None
+    bc_beta = 0.0
 
     def act(self, obs):
         if self.kl_audit is not None:
@@ -279,6 +283,8 @@ class CriticMirrorPPO(PPO):
                 result.update(value_mirror=0.0, value_combined=0.0)
             return result
         if not self.mirror_enabled:
+            if self.bc_prior is not None:
+                raise ValueError("EX-42 BC prior needs the critic-mirror update loop (the installed PPO.update path has no place for it)")
             safe_norm = self.normalize_advantage_per_mini_batch
             if safe_norm:
                 # Installed PPO normalizes after sampling.  Move the same
@@ -300,6 +306,7 @@ class CriticMirrorPPO(PPO):
         if self.symmetry or self.rnd or self.policy.is_recurrent:
             raise ValueError("EX-41 critic mirror supports feed-forward PPO without symmetry or RND")
         total_v = total_m = total_combined = total_s = total_e = total_b = total_over = mu_max = 0.0
+        total_bc, total_bc_n, bc_batches = 0.0, 0, 0
         self.storage.yield_skipped = self.is_multi_gpu
         batches = self.storage.mini_batch_generator(self.num_mini_batches, self.num_learning_epochs)
         for batch in batches:
@@ -353,6 +360,13 @@ class CriticMirrorPPO(PPO):
                 total_b += float(bounds.detach())
                 total_over += float((excess > 0).float().mean().detach())
                 mu_max = max(mu_max, float(mu.detach().abs().max()))
+            if self.bc_prior is not None:
+                from foothold_s2.runners.ex42_bc_prior import bc_loss, slow_mask
+                with torch.no_grad():
+                    prior_mu = self.bc_prior.act_inference(obs)
+                bc, bc_n = bc_loss(mu, prior_mu, slow_mask(obs[ACTOR_KEY]))
+                base_loss = base_loss + self.bc_beta * bc
+                total_bc += float(bc.detach()); total_bc_n += bc_n; bc_batches += 1
             self.optimizer.zero_grad()
             base_loss.backward(retain_graph=True)
             self._average_gradients(self.policy.parameters())
@@ -387,4 +401,9 @@ class CriticMirrorPPO(PPO):
                           small_noise_sigma_scale=float(shown.min()))
         if self.bounds_loss_limit is not None and self.bounds_loss_coef:
             result.update(bounds_loss=total_b / count, mu_over_limit_frac=total_over / count, mu_abs_max=mu_max)
+        if self.bc_prior is not None:
+            result.update(bc_prior_loss=total_bc / max(bc_batches, 1), bc_prior_samples=float(total_bc_n))
+            if getattr(self, "gpu_global_rank", 0) == 0:
+                print(f"EX42_BC_PRIOR beta={self.bc_beta} loss={total_bc / max(bc_batches, 1):.6g} samples={total_bc_n} "
+                      f"batches={bc_batches}", flush=True)
         return result
