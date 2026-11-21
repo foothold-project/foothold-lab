@@ -1,4 +1,5 @@
 """HiPAN 고정 수준 평가 (hl_eval) CPU 예행: 진짜 NavTask (방 · 표 · PGCL) + 몸이 속도 명령대로 움직이는 가짜 NavEnv + 진짜 저장본 형식의 teacher actor. Kit 없음."""
+import json
 from types import SimpleNamespace
 
 import numpy as np
@@ -138,6 +139,54 @@ def test_a_policy_that_walks_to_the_subgoal_scores_above_zero(rig):
 
     out = hl_eval.run_cell(env, task, Oracle(), levels=(3, 4), ticks=hl_eval.horizon_ticks(task) * 2, mode="mean", seed=1)
     assert any(v["succ"] > 0 for v in out.values()), out
+    ended = [e for v in out.values() for e in v["episodes"] if e["ended"]]
+    json.dumps(out, allow_nan=False)
+    assert len(ended) == sum(v["eps"] for v in out.values())
+    assert any(e["reason"] == "success" for e in ended)  # request_reset 뒤 done을 낙상으로 오인하지 않는다
+    assert all(np.isfinite(e["goal_distance_end_m"]) and 0 <= e["subgoals_reached"] <= e["subgoals_total"] for e in ended)
+
+
+def test_episode_reason_separates_forced_success_fall_timeout_and_stuck():
+    reason = hl_eval.episode_reason
+    assert reason(reached=True, done=True, timed_out=False, forced_reset=True, stuck=False) == "success"
+    assert reason(reached=False, done=True, timed_out=False, forced_reset=False, stuck=False) == "fall"
+    assert reason(reached=False, done=True, timed_out=True, forced_reset=False, stuck=False) == "timeout"
+    assert reason(reached=False, done=True, timed_out=True, forced_reset=False, stuck=True) == "stuck"
+
+
+def test_diagnostic_trace_uses_last_live_pose_before_auto_reset():
+    """기록 재생: 종료 틱의 몸 위치가 이미 시작점으로 리셋된 경우 목표 거리에는 직전 생존 틱을 쓴다."""
+    p = SimpleNamespace(_sub=[object(), object()], _i=1, level=3, all_reached=False)
+    task = SimpleNamespace(n=1, tick_s=1.0, goal=np.array([[2.0, 0.0]]), room_id=np.array([4]), pgcl=[p])
+    state = SimpleNamespace(done=np.array([False]), timed_out=np.array([False]))
+    env = SimpleNamespace(state=state, _pos_room=lambda _state, _ids: np.array([[0.0, 0.0]]))
+    diag = hl_eval.EpisodeDiagnostics(task)
+    diag.start(env)
+    diag.observe(np.array([[1.5, 0.0]]), np.array([False]))
+    state.done[0] = True
+    diag.observe(np.array([[0.0, 0.0]]), np.array([True]))
+    diag.finish(0, p, state, can_force_reset=False)
+    event = diag.events[0]
+    assert event["reason"] == "fall" and event["goal_distance_end_m"] == pytest.approx(0.5)
+    assert event["end_position_source"] == "last_live_before_auto_reset"
+    assert event["subgoals_reached"] == 1 and event["subgoals_total"] == 2
+    assert event["observed_goal_within_radius"] == {"0.1": False, "0.2": False, "0.5": True}
+
+
+def test_five_second_stationary_trace_is_stuck_when_episode_times_out():
+    p = SimpleNamespace(_sub=[object()], _i=0, level=4, all_reached=False)
+    task = SimpleNamespace(n=1, tick_s=1.0, goal=np.array([[3.0, 0.0]]), room_id=np.array([2]), pgcl=[p])
+    state = SimpleNamespace(done=np.array([False]), timed_out=np.array([False]))
+    env = SimpleNamespace(state=state, _pos_room=lambda _state, _ids: np.array([[0.0, 0.0]]))
+    diag = hl_eval.EpisodeDiagnostics(task)
+    diag.start(env)
+    for _ in range(5):
+        diag.observe(np.array([[0.0, 0.0]]), state.done)
+    state.done[0] = state.timed_out[0] = True
+    diag.observe(np.array([[0.0, 0.0]]), state.done)
+    diag.finish(0, p, state, can_force_reset=False)
+    assert diag.events[0]["reason"] == "stuck"
+    assert diag.events[0]["stuck_window_s"] == 5.0 and diag.events[0]["stuck_path_m"] == 0.0
 
 
 def test_table_and_json_shape():

@@ -23,6 +23,117 @@ import numpy as np
 DEFAULT_LEVELS = (3, 4, 5, 6)
 FINAL_LEVEL = 99                      # 「final」: d = 99 m 가 어떤 경로 (4 ~ 25 m) 보다 길어 마지막 수준 (목표만 · 부목표 없음 · pgcl.py:93 is_final) 이 된다. 학습 통계의 L3+ 에 쌓이는 수준
 METRICS = ("eps", "succ", "prog", "cos", "dend")
+STUCK_WINDOW_S = 5.0                  # 진단 전용: 마지막 5초의 실제 이동 길이가 0.10 m 미만이면 정체
+STUCK_PATH_M = 0.10
+GOAL_RADII_M = (0.1, 0.2, 0.5)
+
+
+def episode_reason(*, reached, done, timed_out, forced_reset, stuck):
+    """평가 진단만 분류한다. 학습 종료·PGCL·기존 평가 성공 판정은 바꾸지 않는다."""
+    if (reached and not done) or (done and forced_reset):
+        return "success"
+    if done and not timed_out:
+        return "fall"
+    if done and stuck:
+        return "stuck"
+    if done and timed_out:
+        return "timeout"
+    return "other_reset"
+
+
+class EpisodeDiagnostics:
+    """NavTask의 기존 종료 훅을 읽기만 하여 env별 종료 증거를 보존한다."""
+
+    def __init__(self, task):
+        self.task, self.n = task, task.n
+        self.tick_s = float(getattr(task, "tick_s", 0.1) or 0.1)
+        if self.tick_s <= 0:
+            raise ValueError("evaluation tick_s must be positive")
+        self.window = max(1, int(math.ceil(STUCK_WINDOW_S / self.tick_s)))
+        self.motion = np.zeros((self.window, self.n), dtype=np.float64)
+        self.motion_sum = np.zeros(self.n, dtype=np.float64)
+        self.age = np.zeros(self.n, dtype=np.int64)
+        self.episode_index = np.zeros(self.n, dtype=np.int64)
+        self.force_reset_pending = np.zeros(self.n, dtype=bool)
+        self.last_xy = np.full((self.n, 2), np.nan)
+        self.min_goal_m = np.full(self.n, np.inf)
+        self.slot = 0
+        self.active = False
+        self.reset_ids = set()
+        self.events = []
+
+    def _restart(self, env, ids):
+        ids = np.asarray(list(ids), dtype=np.int64)
+        if not len(ids):
+            return
+        self.last_xy[ids] = env._pos_room(env.state, ids)
+        self.min_goal_m[ids] = np.linalg.norm(self.last_xy[ids] - self.task.goal[ids], axis=1)
+        self.motion[:, ids] = 0
+        self.motion_sum[ids] = 0
+        self.age[ids] = 0
+
+    def start(self, env):
+        self._restart(env, range(self.n))
+        self.active = True
+
+    def observe(self, pos_room, done):
+        if not self.active:
+            return
+        xy = np.asarray(pos_room, dtype=float)[:, :2]
+        live = ~np.asarray(done, dtype=bool)
+        delta = np.linalg.norm(xy - self.last_xy, axis=1)
+        delta = np.where(live & np.isfinite(delta), delta, 0.0)
+        old = self.motion[self.slot].copy()
+        self.motion[self.slot] = delta
+        self.motion_sum += delta - old
+        self.slot = (self.slot + 1) % self.window
+        self.age[live] += 1
+        self.last_xy[live] = xy[live]
+        self.min_goal_m[live] = np.minimum(
+            self.min_goal_m[live], np.linalg.norm(xy[live] - self.task.goal[live], axis=1)
+        )
+        # TeacherVecEnv는 성공 틱에 request_reset만 예약하고 다음 틱의 done에서
+        # _note_episode_end를 호출한다. 예약을 기억해야 그 done을 낙상으로 세지 않는다.
+        reached = np.array([p.all_reached for p in self.task.pgcl], dtype=bool)
+        self.force_reset_pending |= reached & live
+
+    def _event(self, i, p, reason, ended, *, auto_reset=False):
+        distance = float(np.linalg.norm(self.last_xy[i] - self.task.goal[i]))
+        minimum = float(self.min_goal_m[i])
+        if not (np.isfinite(distance) and np.isfinite(minimum)):
+            raise ValueError(f"env {i} goal distance is not finite")
+        self.events.append({
+            "env_id": int(i), "room_id": int(self.task.room_id[i]), "episode_index": int(self.episode_index[i]),
+            "level": int(p.level), "reason": reason, "ended": bool(ended),
+            "subgoals_reached": int(p._i), "subgoals_total": len(p._sub),
+            "goal_distance_end_m": distance, "goal_distance_min_observed_m": minimum,
+            "end_position_source": "last_live_before_auto_reset" if auto_reset else "active_tick",
+            "observed_goal_within_radius": {str(radius): bool(minimum <= radius) for radius in GOAL_RADII_M},
+            "elapsed_observed_s": float(self.age[i] * self.tick_s),
+            "stuck_window_s": STUCK_WINDOW_S, "stuck_path_m": float(self.motion_sum[i]),
+        })
+
+    def finish(self, i, p, state, can_force_reset):
+        if not self.active or not p._sub:
+            return
+        done = bool(state.done[i])
+        stuck = bool(self.age[i] >= self.window and self.motion_sum[i] < STUCK_PATH_M)
+        forced = bool(self.force_reset_pending[i] and done and can_force_reset)
+        reason = episode_reason(reached=bool(p.all_reached), done=done,
+                                timed_out=bool(state.timed_out[i]), forced_reset=forced, stuck=stuck)
+        self._event(i, p, reason, True, auto_reset=done)
+        self.force_reset_pending[i] = False
+        self.episode_index[i] += 1
+        self.reset_ids.add(int(i))
+
+    def after_step(self, env):
+        ids = self.reset_ids
+        self._restart(env, ids)
+        self.reset_ids = set()
+
+    def close_horizon(self):
+        for i in np.flatnonzero(self.age > 0):
+            self._event(int(i), self.task.pgcl[i], "horizon", False)
 
 
 def stat_key(level: int) -> str:
@@ -141,32 +252,46 @@ def run_cell(env, task, actor, *, levels, ticks, mode, seed, std=None, device="c
     torch.manual_seed(seed)
     lv = assign_levels(task.room_id, levels)
     fix_levels(task, lv, fresh)
+    diagnostics = EpisodeDiagnostics(task)
     first: dict = {}
     orig = task._note_episode_end
+    orig_tick = task._note_tick
 
     def note(i, p):
         if p._sub and i not in first:
             first[i] = (int(p.level), bool(p.all_reached), float(p._i) / len(p._sub))
+        diagnostics.finish(i, p, env.state, hasattr(env.nav, "request_reset"))
         return orig(i, p)
 
+    def tick_note(state, pos_room, terms, done):
+        result = orig_tick(state, pos_room, terms, done)
+        diagnostics.observe(pos_room, done)
+        return result
+
     task._note_episode_end = note
+    task._note_tick = tick_note
     try:
         obs = env.reset()
+        diagnostics.start(env)
         with torch.no_grad():
             for _ in range(ticks):
                 mu = actor(obs.to(device))
                 a = mu if mode == "mean" else mu + float(std) * torch.randn_like(mu)
                 obs, _r, _d, _to, _info = env.step(a)
+                diagnostics.after_step(env)
         stats = env.take_nav_stats()
+        diagnostics.close_horizon()
     finally:
         task._note_episode_end = orig
+        task._note_tick = orig_tick
     out = {}
     for level in sorted(set(lv)):
         key = stat_key(level)
         f = [v for v in first.values() if v[0] == level]
         out[level] = {"eps": int(stats.get(f"nv_eps_{key}", 0)), "succ": float(stats.get(f"nv_succ_{key}", -1.0)), "prog": float(stats.get(f"nv_prog_{key}", -1.0)),
                       "cos": float(stats.get(f"nv_cos_{key}", -1.0)), "dend": float(stats.get(f"nv_dend_{key}", -1.0)),
-                      "first_eps": len(f), "first_succ": (sum(v[1] for v in f) / len(f)) if f else -1.0, "first_prog": (sum(v[2] for v in f) / len(f)) if f else -1.0}
+                      "first_eps": len(f), "first_succ": (sum(v[1] for v in f) / len(f)) if f else -1.0, "first_prog": (sum(v[2] for v in f) / len(f)) if f else -1.0,
+                      "episodes": [event for event in diagnostics.events if event["level"] == level]}
     return out
 
 
