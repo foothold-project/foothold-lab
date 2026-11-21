@@ -12,7 +12,7 @@ from torch import nn
 
 from rsl_rl.algorithms import PPO
 
-from foothold_s2.models.start_policy import CRITIC_KEY
+from foothold_s2.models.start_policy import ACTOR_KEY, CRITIC_KEY
 from foothold_s2.runners.ex41_valid_storage import ValidRolloutStorage, safe_minibatch_advantage
 
 
@@ -32,10 +32,9 @@ def assert_joint_order(joint_names) -> None:
         raise ValueError("EX-41 critic mirror joint_names differ from EX-40 coordinate metadata")
 
 
-def mirror_critic(x: torch.Tensor) -> torch.Tensor:
-    if x.shape[-1] != 666:
-        raise ValueError("EX-41 mirror needs 666 critic entries")
-    y = x.clone()
+def mirror_o45_into(y: torch.Tensor, x: torch.Tensor) -> None:
+    """Write the left-right mirror of the first 45 entries of x (o45) into y (the same layout; the rest of y is untouched).
+    Shared by the critic mirror and the actor mirror (EX42_ACTOR_MIRROR)."""
     # Angular velocity is an axial vector under left-right reflection.
     y[..., 0:3] = x[..., 0:3] * x.new_tensor((-1, 1, -1))
     y[..., 3:6] = x[..., 3:6] * x.new_tensor((1, -1, 1))
@@ -43,6 +42,13 @@ def mirror_critic(x: torch.Tensor) -> torch.Tensor:
     joint_signs = x.new_tensor(JOINT_SIGNS)
     for lo in (9, 21, 33):
         y[..., lo:lo + 12] = x[..., lo:lo + 12][..., JOINT_IDS] * joint_signs
+
+
+def mirror_critic(x: torch.Tensor) -> torch.Tensor:
+    if x.shape[-1] != 666:
+        raise ValueError("EX-41 mirror needs 666 critic entries")
+    y = x.clone()
+    mirror_o45_into(y, x)
     y[..., 45:48] = x[..., 45:48] * x.new_tensor((1, -1, 1))
     y[..., 48:52] = x[..., 48:52][..., list(LEG_SWAP)]
     y[..., 52:564] = x[..., 52:564].reshape(*x.shape[:-1], 32, 16).flip(-1).flatten(-2)
@@ -150,6 +156,8 @@ class CriticMirrorPPO(PPO):
     bounds_loss_coef = BOUNDS_LOSS_COEF
     bounds_loss_limit = None
     mean_action_mask = None      # [num_envs] bool set by the runner: these envs act with the mean action and are not PPO samples
+    # EX42_ACTOR_MIRROR (ex42_actor_mirror.py): weight of the actor left-right symmetry loss. 0 = off (nothing stored, nothing computed, no number changes).
+    actor_mirror_weight = 0.0
 
     def act(self, obs):
         if self.kl_audit is not None:
@@ -278,6 +286,8 @@ class CriticMirrorPPO(PPO):
             if self.mirror_enabled:
                 result.update(value_mirror=0.0, value_combined=0.0)
             return result
+        if self.actor_mirror_weight > 0.0 and not self.mirror_enabled:
+            raise ValueError("EX42_ACTOR_MIRROR needs the critic mirror update path (mirror_enabled)")
         if not self.mirror_enabled:
             safe_norm = self.normalize_advantage_per_mini_batch
             if safe_norm:
@@ -300,6 +310,8 @@ class CriticMirrorPPO(PPO):
         if self.symmetry or self.rnd or self.policy.is_recurrent:
             raise ValueError("EX-41 critic mirror supports feed-forward PPO without symmetry or RND")
         total_v = total_m = total_combined = total_s = total_e = total_b = total_over = mu_max = 0.0
+        total_sym = total_ratio = 0.0
+        ratio_batches = 0
         self.storage.yield_skipped = self.is_multi_gpu
         batches = self.storage.mini_batch_generator(self.num_mini_batches, self.num_learning_epochs)
         for batch in batches:
@@ -353,6 +365,24 @@ class CriticMirrorPPO(PPO):
                 total_b += float(bounds.detach())
                 total_over += float((excess > 0).float().mean().detach())
                 mu_max = max(mu_max, float(mu.detach().abs().max()))
+            if self.actor_mirror_weight > 0.0:
+                from foothold_s2.runners import ex42_actor_mirror as am
+                if am.MIRROR_KEY not in obs.keys():
+                    raise ValueError("EX42_ACTOR_MIRROR is on but the rollout stored no mirrored actor input")
+                obs_m = obs.clone()
+                obs_m[ACTOR_KEY] = obs[am.MIRROR_KEY]
+                mu_m = self.policy.act_inference(obs_m)             # the mean on the mirrored world, with gradient (actor MLP only)
+                sym = am.symmetry_loss(mu, mu_m)
+                if ratio_batches == 0:                              # gradient size of the two terms on the actor, once per update (the 10 to 20 % rule)
+                    actor_params = tuple(p for p in self.policy.actor.parameters() if p.requires_grad)
+                    g_s = torch.autograd.grad(surrogate, actor_params, retain_graph=True, allow_unused=True)
+                    g_m = torch.autograd.grad(sym, actor_params, retain_graph=True, allow_unused=True)
+                    n_s = torch.sqrt(sum(g.square().sum() for g in g_s if g is not None))
+                    n_m = torch.sqrt(sum(g.square().sum() for g in g_m if g is not None))
+                    total_ratio += float((n_m / (n_s + 1e-12)).detach())
+                    ratio_batches += 1
+                base_loss = base_loss + self.actor_mirror_weight * sym
+                total_sym += float(sym.detach())
             self.optimizer.zero_grad()
             base_loss.backward(retain_graph=True)
             self._average_gradients(self.policy.parameters())
@@ -385,6 +415,9 @@ class CriticMirrorPPO(PPO):
             shown = self.storage.noise_scale_env if self.storage.noise_scale_steps is None else self.storage.noise_scale_steps
             result.update(small_noise_env_share=float((shown < 1).float().mean()),
                           small_noise_sigma_scale=float(shown.min()))
+        if self.actor_mirror_weight > 0.0:                    # keys added only while the actor mirror is on
+            result.update(actor_mirror=total_sym / count, actor_mirror_grad_ratio=total_ratio / max(ratio_batches, 1),
+                          actor_mirror_weight=self.actor_mirror_weight)
         if self.bounds_loss_limit is not None and self.bounds_loss_coef:
             result.update(bounds_loss=total_b / count, mu_over_limit_frac=total_over / count, mu_abs_max=mu_max)
         return result

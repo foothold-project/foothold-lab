@@ -38,7 +38,7 @@ def test_e1f_row_gets_the_last_segment_live_values_including_an_adjustment(known
     plan, row = _e1f(result)
     source_row = next(x for x in yaml.safe_load(Path(known['source_plan']).read_text())['stages'] if x['id'] == 'E1')
     # what E1 ended with (the readback), then the E1F row's reward_start overlay (2026-11-16 15:20): slow_progress 0.4, slow_track_sigma 0.35
-    inherited = {**source_row['rewards'], 'slow_track': 0.3}
+    inherited = {**source_row['rewards'], 'slow_track': 0.3, 'slow_overspeed': 0.0}   # the readback carries the new cell (term off)
     assert row['rewards'] == {**inherited, 'slow_progress': 0.4, 'slow_track_sigma': 0.35}
     assert row['rewards']['zero_yaw'] == -1.0 and row['rewards']['track_lin_vel_std'] == 0.35 and row['rewards']['slow_track'] == 0.3
     transition = json.loads(Path(result['transition']).read_text())
@@ -115,7 +115,7 @@ def test_a_run_never_resumed_before_the_exit_inherits_the_source_plan_row(known,
     limits = Path(known['plan']).parent / 'ex42-reward-adjust-limits.yaml'
     row, refs = inherited_rewards(source, 'E1', known['parent_manifest'], iteration, limits)
     assert refs == {} and row['boundary_index'] == 0 and row['origin'] == 'source plan row'
-    assert row['values'] == next(x for x in source.document['stages'] if x['id'] == 'E1')['rewards']
+    assert row['values'] == {**next(x for x in source.document['stages'] if x['id'] == 'E1')['rewards'], 'slow_overspeed': 0.0}
 
 
 def test_last_live_adjustment_is_inherited_without_a_segment_restart(known):

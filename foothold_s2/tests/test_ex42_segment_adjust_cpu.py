@@ -264,7 +264,8 @@ def test_a_stage_without_a_command_profile_takes_no_command_entry(plan, tmp_path
 
 # the slow forward cells of 2026-11-13 15:30: registered, closed (each fence holds the one starting value)
 SLOW = {"feet_air_time_threshold": 0.5, "slow_track": 0.0, "slow_track_sigma": 0.5, "slow_track_speed_min": 0.1,
-        "slow_track_speed_max": 0.3, "slow_progress": 0.0}       # slow_progress: registered at weight 0 (2026-11-14 01:21)
+        "slow_track_speed_max": 0.3, "slow_progress": 0.0,       # slow_progress: registered at weight 0 (2026-11-14 01:21)
+           "slow_overspeed": 0.0}     # candidate C (2026-11-19 23:03): registered at weight 0
 REWARDS = {"track_lin_vel_std": 0.35, "track_ang_vel_std": 0.4, "feet_air_time": 0.2, "foot_slip": -0.2,
            "zero_yaw": -0.5, **SLOW}       # the plan value here; the zero_yaw tests below move it
 
@@ -283,7 +284,8 @@ def test_the_shipped_reward_limits_are_the_relayed_lines():
                                "feet_air_time_threshold": (0.04, 0.5), "slow_track": (0.0, 0.3),
                                "slow_track_sigma": (0.5, 0.5), "slow_track_speed_min": (0.1, 0.1),
                                "slow_track_speed_max": (0.3, 0.3),                        # the constants stay closed
-                               "slow_progress": (0.0, 0.3)}       # 2026-11-14 11:55 (4f7e431e): lead-approved fence
+                               "slow_progress": (0.0, 0.3),       # 2026-11-14 11:55 (4f7e431e): lead-approved fence
+                               "slow_overspeed": (0.0, 0.0)}      # closed until the team lead approves a fence (candidate C)
     assert len(limits["sha256"]) == 64 and adj.reward_limits("/nowhere/limits.yaml") is None
 
 
@@ -417,20 +419,21 @@ def _manager(lin=0.5, ang=0.5, air=0.0, slip=-0.15, yaw=-0.5, slow=0.0, threshol
              "ex41_feet_air_time": _Term(air, **air_params), "ex41_foot_slip": _Term(slip), "ex41_zero_yaw": _Term(yaw),
              "ex42_slow_track": _Term(slow, command_name="base_velocity", speed_min=0.1, speed_max=0.3, sigma=sigma,
                                       **({"include_heading": True} if heading else {})),       # the shipped E1 row includes heading envs
-             "ex42_slow_progress": _Term(progress, command_name="base_velocity", speed_min=0.1, speed_max=0.3, include_heading=True)}
+             "ex42_slow_progress": _Term(progress, command_name="base_velocity", speed_min=0.1, speed_max=0.3, include_heading=True),
+             "ex42_slow_overspeed": _Term(0.0, command_name="base_velocity", speed_min=0.1, speed_max=0.3, include_heading=True)}
     return types.SimpleNamespace(get_term_cfg=lambda name: terms[name]), terms
 
 
 def _env_cfg(terms, with_slow_track=True):
     """The env config before the env is built. Without `ex42_slow_track` the code under test registers it."""
-    names = ["track_lin_vel", "track_ang_vel", "ex41_feet_air_time"] + (["ex42_slow_track", "ex42_slow_progress"]
+    names = ["track_lin_vel", "track_ang_vel", "ex41_feet_air_time"] + (["ex42_slow_track", "ex42_slow_progress", "ex42_slow_overspeed"]
                                                                         if with_slow_track else [])
     return types.SimpleNamespace(rewards=types.SimpleNamespace(**{name: terms[name] for name in names}))
 
 
 UNCHANGED_SLOW = {"feet_air_time_threshold": {"before": 0.5, "after": 0.5}, "slow_track": {"before": 0.0, "after": 0.0},
                   "slow_track_sigma": {"before": 0.5, "after": 0.5}, "slow_track_speed_min": {"before": 0.1, "after": 0.1},
-                  "slow_track_speed_max": {"before": 0.3, "after": 0.3}, "slow_progress": {"before": 0.0, "after": 0.0}}
+                  "slow_track_speed_max": {"before": 0.3, "after": 0.3}, "slow_progress": {"before": 0.0, "after": 0.0}, "slow_overspeed": {"before": 0.0, "after": 0.0}}
 
 
 def test_the_tracking_widths_go_on_the_env_config_only_when_an_entry_asks(plan, view, tmp_path):
@@ -580,7 +583,7 @@ def test_the_live_zero_yaw_weight_is_read_back(plan, view, tmp_path):
 # ---- the stage row's own reward cells (E1 again from m13250, 2026-11-13): in force from the first update ----
 
 ROW_REWARDS = {"track_lin_vel_std": 0.35, "track_ang_vel_std": 0.5, "feet_air_time": 0.0, "foot_slip": -0.15, "zero_yaw": -1.0,
-               **SLOW, "slow_track": 0.2, "slow_progress": 0.2}   # v28, ledger b6024dd2: slow_progress 0.2 from the first update          # 2026-11-14 00:21: slow_track on from the first update; 01:21: air time stays 0          # decisions.tsv 2026-11-14 00:21: on from the first update
+               **SLOW, "slow_track": 0.2, "slow_progress": 0.2, "slow_overspeed": 0.0}   # v28, ledger b6024dd2: slow_progress 0.2 from the first update          # 2026-11-14 00:21: slow_track on from the first update; 01:21: air time stays 0          # decisions.tsv 2026-11-14 00:21: on from the first update
 
 
 @pytest.fixture()
@@ -595,7 +598,7 @@ def row_view(row_plan):
 
 
 def test_the_shipped_e1_row_registers_its_reward_cells_inside_the_limits(row_plan):
-    assert next(r for r in row_plan.document["stages"] if r["id"] == "E1")["rewards"] == ROW_REWARDS
+    assert next(r for r in row_plan.document["stages"] if r["id"] == "E1")["rewards"] == {k: v for k, v in ROW_REWARDS.items() if k != "slow_overspeed"}   # the row has no cell: off
     assert adj.stage_rewards(row_plan, "E1") == ROW_REWARDS
     assert adj.stage_rewards(row_plan, "E1F") is None and adj.stage_rewards(row_plan, "E0") is None
     limits = adj.reward_limits()["cells"]

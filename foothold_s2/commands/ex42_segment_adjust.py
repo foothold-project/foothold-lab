@@ -68,12 +68,13 @@ PARAM_CELLS = {**{cell: (term, "std", None) for cell, term in STD_CELLS.items()}
                "slow_track_speed_min": ("ex42_slow_track", "speed_min", None),
                "slow_track_speed_max": ("ex42_slow_track", "speed_max", None)}
 ENV_WEIGHT_CELLS = {"slow_track": "ex42_slow_track",       # cell -> env reward term whose weight it is
-                    "slow_progress": "ex42_slow_progress"}     # decisions.tsv 2026-11-14 01:21: registered at weight 0
+                    "slow_progress": "ex42_slow_progress",     # decisions.tsv 2026-11-14 01:21: registered at weight 0
+                    "slow_overspeed": "ex42_slow_overspeed"}   # candidate C (lead 2026-11-19 23:03): a penalty, registered at weight 0
 REWARD_CELLS = (*STD_CELLS, *WEIGHT_CELLS, "feet_air_time_threshold", "slow_track", "slow_track_sigma",
-                "slow_track_speed_min", "slow_track_speed_max", "slow_progress")
+                "slow_track_speed_min", "slow_track_speed_max", "slow_progress", "slow_overspeed")
 # Cells added after plans and receipts already existed: a row, an entry, a limits file or a readback without them means
 # this value (the term is off), so the older ten-cell documents stay readable.
-OPTIONAL_CELLS = {"slow_progress": 0.0}
+OPTIONAL_CELLS = {"slow_progress": 0.0, "slow_overspeed": 0.0}
 
 
 def complete_cells(cell):
@@ -197,8 +198,8 @@ def stage_low_forward(plan, stage_id, limits=None) -> float | None:
 
 # Reward cells a stage row may fence wider than the limits file (E1F, E2; 2026-11-16 lead 15:20, planner 15:17). The file keeps its bytes
 # (the source E1 row pins its sha, ex42_stage_materialize reads the template's file against it), so the wider fence is the row's own
-# `live_adjustment.extra_reward_limits.<cell>` (or `reward_fence.<cell>` on a stage without a live adjustment): it widens the file's pair or leaves it (a narrower row pair is ignored here; limits_from_plan refuses it), and only these two cells may differ.
-PLAN_WIDENABLE = ("slow_progress", "slow_track_sigma")
+# `live_adjustment.extra_reward_limits.<cell>` (or `reward_fence.<cell>` on a stage without a live adjustment): it widens the file's pair or leaves it (a narrower row pair is ignored here; limits_from_plan refuses it), and only the cells in PLAN_WIDENABLE may differ.
+PLAN_WIDENABLE = ("slow_progress", "slow_track_sigma", "slow_overspeed")
 
 
 def row_reward_fence(row, base_cells, stage_id) -> dict:
@@ -477,10 +478,11 @@ def apply_reward_params(env_cfg, record, term_cfg_class=None) -> dict:
     the config does not have it yet (every E stage carries the term), then puts the segment's parameter cells and the
     slow_track weight on the config. {cell: {before, after}}; without reward cells nothing but the registration changes.
     `ex42_slow_progress` is registered the same way and follows the speed band of slow_track."""
-    from foothold_s2.rewards import ex42_slow_progress, ex42_slow_track
+    from foothold_s2.rewards import ex42_slow_overspeed, ex42_slow_progress, ex42_slow_track
 
     ex42_slow_track.register(env_cfg, term_cfg_class)
     ex42_slow_progress.register(env_cfg, term_cfg_class)
+    ex42_slow_overspeed.register(env_cfg, term_cfg_class)
     values = ((record or {}).get("rewards") or {}).get("values")
     out = {}
     for cell, (term, param, default) in PARAM_CELLS.items():
@@ -498,6 +500,8 @@ def apply_reward_params(env_cfg, record, term_cfg_class=None) -> dict:
     band = getattr(env_cfg.rewards, "ex42_slow_track").params          # one band for both slow terms
     progress = getattr(env_cfg.rewards, "ex42_slow_progress").params
     progress["speed_min"], progress["speed_max"] = band["speed_min"], band["speed_max"]
+    over = getattr(env_cfg.rewards, "ex42_slow_overspeed").params
+    over["speed_min"], over["speed_max"] = band["speed_min"], band["speed_max"]
     progress["taper_from"] = min(max(progress.get("taper_from", band["speed_max"]), band["speed_min"]), band["speed_max"])
     if (record or {}).get("slow_track_heading"):       # the plan row includes heading envs (2026-11-14 00:28)
         params = getattr(env_cfg.rewards, "ex42_slow_track").params
