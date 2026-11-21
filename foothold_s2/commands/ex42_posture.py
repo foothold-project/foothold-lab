@@ -311,11 +311,39 @@ def register_rewards(env_cfg, term_cfg_class=None) -> bool:
         from isaaclab.managers import RewardTermCfg as term_cfg_class
     setattr(env_cfg.rewards, HEIGHT_TERM, term_cfg_class(func=height_tracking, weight=cfg["height_w"], params={}))
     setattr(env_cfg.rewards, ROLL_TERM, term_cfg_class(func=roll_tracking, weight=cfg["roll_w"], params={}))
+    orient = getattr(env_cfg.rewards, ORIENT_TERM, None)
+    if orient is not None:
+        orient.func = posture_orientation                    # 원문 r7 (pitch 만) · 적용 env 만 · 칸 가중은 그대로 (지킬 칸 보호 · 옛 식은 끈 env 에 남음)
+        print(f"EX42_POSTURE_ORIENT where=start term={ORIENT_TERM} weight={orient.weight} active=pitch_only_paper_w={PAPER_PITCH_W} inactive=gxy_l2", flush=True)
     print(f"EX42_POSTURE where=start h={list(cfg['h'])} roll={list(cfg['roll'])} h0={cfg['h0']} height_w={cfg['height_w']} roll_w={cfg['roll_w']}"
           f" curriculum={cfg['curriculum']} check_steps={cfg['check_steps']}"
           + (f" h_start={cfg['h_start']} roll_start={cfg['roll_start']} h_step={cfg['h_step']} roll_step={cfg['roll_step']}"
              f" h_tol={cfg['h_tol']} roll_tol={cfg['roll_tol']} state={cfg['state_path'] or '-'}" if cfg["curriculum"] else ""), flush=True)
     return True
+
+
+ORIENT_TERM = "flat_orientation"
+PAPER_PITCH_W = -0.5                 # 원문 Table III r7 = w7L |θ_y| · w7L -0.5 (pitch 만 · lead 11/22 03:00 PDF 5 쪽 눈 확인)
+
+
+def body_pitch(quat_wxyz):
+    w, x, y, z = quat_wxyz.unbind(-1)
+    return torch.asin(torch.clamp(2 * (w * y - z * x), -1.0, 1.0))
+
+
+def posture_orientation(env, asset_cfg=None):
+    """몸 자세 벌 (EX42_POSTURE 켬일 때 flat_orientation 칸의 함수를 이것으로 바꿈 · lead 11/22 03:00 · planner 02:59):
+    자세 명령 적용 env 는 원문 r7 = |θ_y| (pitch 만 · 칸 가중을 곱해 PAPER_PITCH_W 가 되게 |PAPER_PITCH_W / 지금 가중| 배) · 아닌 env (듬성 열 · 깃발) 는 옛 g_x² + g_y² 그대로.
+    옛 식은 roll 명령을 따를수록 깎였다 (roll 1.0 에서 -0.71 · 추종 보상 +0.2)."""
+    name = getattr(asset_cfg, "name", "robot") if asset_cfg is not None else "robot"
+    data = env.scene[name].data
+    old = torch.sum(data.projected_gravity_b[:, :2] ** 2, dim=1)
+    try:
+        w = float(env.reward_manager.get_term_cfg(ORIENT_TERM).weight)
+    except (AttributeError, ValueError, KeyError):
+        w = -1.0
+    new = body_pitch(data.root_quat_w).abs() * (abs(PAPER_PITCH_W) / abs(w)) if w != 0 else torch.zeros_like(old)
+    return torch.where(_state(env).active, new, old)
 
 
 def check_runner_pose(pose) -> None:

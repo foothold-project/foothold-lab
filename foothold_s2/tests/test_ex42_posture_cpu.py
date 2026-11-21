@@ -191,3 +191,35 @@ def test_band_stops_at_the_paper_ranges():
     cfg = {"curriculum": True, "h": (0.1, 0.4), "roll": (-1.0, 1.0), "h0": 0.33}
     assert ps.band(cfg, 0.02, 0.1) == ((pytest.approx(0.31), pytest.approx(0.35)), (-0.1, 0.1))
     assert ps.band(cfg, 0.5, 2.0) == ((0.1, 0.4), (-1.0, 1.0))
+
+
+def _quat_rpy(roll=0.0, pitch=0.0):
+    cr, sr, cp, sp = math.cos(roll / 2), math.sin(roll / 2), math.cos(pitch / 2), math.sin(pitch / 2)
+    return [cr * cp, sr * cp, cr * sp, -sr * sp]          # yaw 0 · (w x y z)
+
+
+def test_orientation_is_pitch_only_paper_on_posture_envs_and_old_elsewhere(monkeypatch):
+    """lead 11/22 03:00 · planner 02:59: 원문 r7 = -0.5 |θ_y| (pitch 만). 옛 g_x² + g_y² 는 roll 명령을 따르면 깎였다 (roll 1.0 에서 -0.71)."""
+    monkeypatch.setenv("EX42_POSTURE", "1")
+    q = torch.tensor([_quat_rpy(roll=1.0), _quat_rpy(pitch=0.3), _quat_rpy(roll=1.0), _quat_rpy(pitch=0.3)])
+    env = _env(4, quat=q)
+    g = torch.stack([torch.tensor([-math.sin(0.0), math.sin(1.0) * math.cos(0.0), -math.cos(1.0)]),
+                     torch.tensor([math.sin(0.3), 0.0, -math.cos(0.3)])] * 2)            # 몸 좌표계 중력 (Isaac projected_gravity_b 꼴)
+    env.scene["robot"].data.projected_gravity_b = g
+    env.reward_manager = SimpleNamespace(get_term_cfg=lambda name: _Cfg(weight=-1.0))
+    st = ps._state(env)
+    st.active = torch.tensor([True, True, False, False])
+    r = ps.posture_orientation(env)
+    assert r[0] == pytest.approx(0.0, abs=1e-6)                                       # roll 1.0 을 따른 몸: 벌 0 (옛 식이면 0.71)
+    assert r[1] == pytest.approx(0.5 * 0.3, rel=1e-4)                                 # pitch 0.3: 0.5 x |θ_y| (가중 -1 과 곱해 -0.15)
+    assert r[2] == pytest.approx(math.sin(1.0) ** 2, rel=1e-4) and r[3] == pytest.approx(math.sin(0.3) ** 2, rel=1e-4)   # 끈 env: 옛 식 그대로
+    env.reward_manager = SimpleNamespace(get_term_cfg=lambda name: _Cfg(weight=-2.0))   # 실시간 조정으로 칸 가중이 바뀌어도 원문 -0.5 를 지킴
+    assert ps.posture_orientation(env)[1] * -2.0 == pytest.approx(-0.5 * 0.3, rel=1e-4)
+
+
+def test_register_swaps_orientation_only_when_on(monkeypatch):
+    cfg = SimpleNamespace(rewards=SimpleNamespace(flat_orientation=_Cfg(func="old", weight=-1.0)))
+    assert ps.register_rewards(cfg, _Cfg) is False and cfg.rewards.flat_orientation.func == "old"
+    monkeypatch.setenv("EX42_POSTURE", "1")
+    assert ps.register_rewards(cfg, _Cfg) is True
+    assert cfg.rewards.flat_orientation.func is ps.posture_orientation and cfg.rewards.flat_orientation.weight == -1.0
