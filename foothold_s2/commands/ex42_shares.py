@@ -228,6 +228,10 @@ class CommandShares:
                               if checkpoint is not None else None),
                'checkpoint_binding': 'consumer must bind the saved model and manifest for this plan/stage/iteration',
                'counting': 'rank-local cumulative since count_origin_update; resume starts a new count segment'}
+        from foothold_s2.commands import ex42_sparse_cmd
+        sparse = ex42_sparse_cmd.summary()           # lead 07:44: A sparse columns in START's command form (only when EX42_SPARSE_PAPER_CMD=1)
+        if sparse is not None:
+            doc['sparse_paper_cmd'] = sparse
         target = Path(folder)/f'command_shares_{iteration}_rank{rank}.json'
         if target.exists():
             # A process that died between this record and its save left the name behind; the run came back to the

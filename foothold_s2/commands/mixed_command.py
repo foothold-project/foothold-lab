@@ -17,7 +17,7 @@ import torch
 from isaaclab.managers import CommandTerm, CommandTermCfg
 from isaaclab.utils import configclass
 
-from foothold_s2.commands import mixed_core as mc
+from foothold_s2.commands import ex42_sparse_cmd, mixed_core as mc
 from foothold_s2.curriculum import rules as curriculum_rules
 
 if TYPE_CHECKING:
@@ -231,6 +231,10 @@ class MixedVelocityCommand(CommandTerm):
                        mc.resample_free_modes(self.gen, len(group), self.params, self.iteration,
                                               self.range_curriculum.vmax_x, self.range_curriculum.vmax_y,
                                               yaw=self._yaw(group)))
+                if runtime is not None and ex42_sparse_cmd.enabled():   # lead 07:44: A sparse columns take START's command form (off = no draw)
+                    out = ex42_sparse_cmd.apply(out, self._sparse_paper_mask(group),
+                                                lambda k, lo, hi: mc._u(self.gen, (k,), lo, hi), self.slot_names,
+                                                beam=self._sparse_paper_mask(group, ("balance_beams",)))
                 self.vel_command_b[group] = out["cmd"].to(self.device)
                 self.stand[group] = out["stand"].to(self.device)
                 if not hasattr(self, "stop_elapsed_s"):
@@ -313,6 +317,16 @@ class MixedVelocityCommand(CommandTerm):
         if bool(((columns < 0) | (columns >= len(kinds))).any()):
             raise ValueError("EX-42 stone_forward_floor: a terrain column is outside the column table")
         return kinds[columns]
+
+    def _sparse_paper_mask(self, group, kinds_in=ex42_sparse_cmd.KINDS):
+        """(len(group),) bool: the env's terrain column is an A-family kind in `kinds_in` (default every A sparse kind, ex42_sparse_cmd.KINDS)."""
+        table = getattr(getattr(self._env, "unwrapped", self._env), "_ex42_column_table", None)
+        ex42_sparse_cmd.start_line(table)
+        kinds = ex42_sparse_cmd.column_mask(table, kinds_in).to(self.device)
+        columns = self._env.scene.terrain.terrain_types.long().to(self.device)
+        if bool(((columns < 0) | (columns >= len(kinds))).any()):
+            raise ValueError("EX-42 sparse paper commands: a terrain column is outside the column table")
+        return kinds[columns][group]
 
     def _stone_mask(self, group):
         return self._stone_env_all()[group]
