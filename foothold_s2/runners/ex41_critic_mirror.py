@@ -156,6 +156,10 @@ class CriticMirrorPPO(PPO):
     bc_beta = 0.0
     bc_ratio_updates = 10        # lead 17:36 (a): grad-norm ratio ||d BC|| / ||d surrogate|| on the actor, the first 10 updates
     _bc_updates_seen = 0
+    # EX-42 actor mirror loss (ex42_actor_mirror, lead 2026-11-22 04:34): weight set by the runner from EX42_ACTOR_MIRROR_WEIGHT.
+    # 0.0 = off (the update is the same bytes as before). The runner puts the mirrored actor input in the storage under
+    # ex42_actor_mirror.KEY before each update.
+    actor_mirror_weight = 0.0
 
     def act(self, obs):
         if self.kl_audit is not None:
@@ -287,6 +291,8 @@ class CriticMirrorPPO(PPO):
         if not self.mirror_enabled:
             if self.bc_prior is not None:
                 raise ValueError("EX-42 BC prior needs the critic-mirror update loop (the installed PPO.update path has no place for it)")
+            if self.actor_mirror_weight:
+                raise ValueError("EX-42 actor mirror loss needs the critic-mirror update loop (the installed PPO.update path has no place for it)")
             safe_norm = self.normalize_advantage_per_mini_batch
             if safe_norm:
                 # Installed PPO normalizes after sampling.  Move the same
@@ -309,6 +315,7 @@ class CriticMirrorPPO(PPO):
             raise ValueError("EX-41 critic mirror supports feed-forward PPO without symmetry or RND")
         total_v = total_m = total_combined = total_s = total_e = total_b = total_over = mu_max = 0.0
         total_bc, total_bc_n, bc_batches = 0.0, 0, 0
+        total_am, am_batches = 0.0, 0
         ratio_sum, ratio_n = 0.0, 0
         measure_ratio = self.bc_prior is not None and self._bc_updates_seen < self.bc_ratio_updates
         self.storage.yield_skipped = self.is_multi_gpu
@@ -379,6 +386,14 @@ class CriticMirrorPPO(PPO):
                         ratio_sum += float(norm(g_bc)) / n_s; ratio_n += 1
                 base_loss = base_loss + self.bc_beta * bc
                 total_bc += float(bc.detach()); total_bc_n += bc_n; bc_batches += 1
+            if self.actor_mirror_weight:
+                from foothold_s2.runners.ex42_actor_mirror import KEY as AM_KEY, mirror_loss as actor_mirror_loss
+                if AM_KEY not in obs.keys():
+                    raise ValueError("EX-42 actor mirror on but the storage has no mirrored actor input (runner did not prepare it)")
+                mu_m = self.policy.act_inference({ACTOR_KEY: obs[AM_KEY]})
+                am = actor_mirror_loss(mu, mu_m)
+                base_loss = base_loss + self.actor_mirror_weight * am
+                total_am += float(am.detach()); am_batches += 1
             self.optimizer.zero_grad()
             base_loss.backward(retain_graph=True)
             self._average_gradients(self.policy.parameters())
@@ -413,6 +428,10 @@ class CriticMirrorPPO(PPO):
                           small_noise_sigma_scale=float(shown.min()))
         if self.bounds_loss_limit is not None and self.bounds_loss_coef:
             result.update(bounds_loss=total_b / count, mu_over_limit_frac=total_over / count, mu_abs_max=mu_max)
+        if self.actor_mirror_weight:
+            result.update(actor_mirror_loss=total_am / max(am_batches, 1))
+            if getattr(self, "gpu_global_rank", 0) == 0:
+                print(f"EX42_ACTOR_MIRROR weight={self.actor_mirror_weight} loss={total_am / max(am_batches, 1):.6g} batches={am_batches}", flush=True)
         if self.bc_prior is not None:
             result.update(bc_prior_loss=total_bc / max(bc_batches, 1), bc_prior_samples=float(total_bc_n))
             ratio = f" grad_ratio_raw={ratio_sum / ratio_n:.6g} grad_ratio_weighted={self.bc_beta * ratio_sum / ratio_n:.6g}" if ratio_n else ""

@@ -429,6 +429,7 @@ class StartRunner(OnPolicyRunner):
         else:
             alg = PPO(policy, device=self.device, **alg_cfg, multi_gpu_cfg=self.multi_gpu_cfg)
         self._attach_bc_prior(alg, policy)
+        self._attach_actor_mirror(alg)
         alg.init_storage("rl", self.env.num_envs, self.num_steps_per_env, obs, [self.env.num_actions])
         self._small_noise_target = alg
         self._apply_small_noise()
@@ -452,6 +453,48 @@ class StartRunner(OnPolicyRunner):
         sha = hashlib.sha256(Path(cfg["ckpt"]).read_bytes()).hexdigest()
         print(f"{bcp.LOG} where=start beta={cfg['beta']} ckpt={cfg['ckpt']} sha256={sha} band=[{bcp.SPEED_MIN}, {bcp.SPEED_MAX})",
               flush=True)
+
+    def _attach_actor_mirror(self, alg) -> None:
+        """EX42_ACTOR_MIRROR_WEIGHT (lead 2026-11-22 04:34 / 04:35, path B): actor left-right mirror loss. 0 or unset = off (nothing
+        changes). It needs the critic-mirror update loop (CriticMirrorPPO) and the perception replay (the mirrored latents are
+        re-estimated from the mirrored replay, ex42_actor_mirror)."""
+        from foothold_s2.runners import ex42_actor_mirror as am
+        from foothold_s2.runners.ex41_critic_mirror import CriticMirrorPPO
+
+        w = am.weight()
+        if not w:
+            return
+        if not isinstance(alg, CriticMirrorPPO):
+            raise ValueError("EX-42 actor mirror needs the EX-41 critic-mirror update loop (CriticMirrorPPO, pose commands)")
+        if self.replay is None:
+            raise ValueError("EX-42 actor mirror needs the perception replay (fast_gt_only has none)")
+        alg.actor_mirror_weight = w
+        print(f"{am.LOG} where=start weight={w} latents=re-estimated_from_mirrored_replay z=mean chunk={self._actor_mirror_chunk()}", flush=True)
+
+    def _actor_mirror_chunk(self) -> int:
+        return max(1, self.env.num_envs // max(1, int(self.pcfg["num_mini_batches"])))
+
+    def _actor_mirror_prepare(self) -> None:
+        """Before the PPO update: the mirrored actor input of every rollout row, stored next to actor_in (same [step, env] rows)."""
+        from foothold_s2.runners import ex42_actor_mirror as am
+
+        if not getattr(self.alg, "actor_mirror_weight", 0.0):
+            return
+        obs = self.alg.storage.observations
+        actor = obs[ACTOR_KEY]
+        pose = actor[..., am.OBS_DIM + am.EST_DIM:] if actor.shape[-1] > am.OBS_DIM + am.EST_DIM else None
+        with torch.no_grad():
+            mirrored = am.mirrored_actor_inputs(self.perception, self.replay, self._est_in, pose, self._actor_mirror_chunk())
+        if mirrored.shape != actor.shape:
+            raise ValueError(f"EX-42 actor mirror input shape {tuple(mirrored.shape)} differs from actor_in {tuple(actor.shape)}")
+        obs[am.KEY] = mirrored
+
+    def _actor_mirror_clear(self) -> None:
+        from foothold_s2.runners import ex42_actor_mirror as am
+
+        obs = getattr(getattr(self.alg, "storage", None), "observations", None)
+        if obs is not None and am.KEY in obs.keys():
+            del obs[am.KEY]
 
     def _pin_perception_lr(self, where: str) -> None:
         """Set the perception optimizer lr to PERCEPTION_LR_OVERRIDE (every param group; the PPO optimizer is not touched) and log the
@@ -1037,7 +1080,11 @@ class StartRunner(OnPolicyRunner):
             # ② PPO update
             self._phase_start()
             klp = self._kl_ppo_before(it) if self.pcfg["log_kl"] else None
-            loss_dict = self.alg.update()
+            self._actor_mirror_prepare()
+            try:
+                loss_dict = self.alg.update()
+            finally:
+                self._actor_mirror_clear()
             kl_info = {}
             if klp is not None:
                 kl_info["ppo"] = self._kl_ppo_after(klp)
