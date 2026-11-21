@@ -88,6 +88,13 @@ def prepare_rooms(cfg: dict) -> dict:
     if (out / "terrain_mesh.npz").exists():
         raise FileExistsError(f"{out}/terrain_mesh.npz exists (never overwritten)")
     table = gm.load_grade_table(cfg["grade_table"])
+    if cfg.get("bench_tasks_dir"):                # HiPAN 원문 시험 (hl_bench): 방 = 네 유형 시험 방 · 시작점 = 과제 시작 (room_count · n_starts · room_seed 는 쓰지 않음)
+        from foothold_s2.nav import hl_bench
+
+        docs = hl_bench.load_docs(cfg["bench_tasks_dir"])
+        rooms, starts = hl_bench.bench_rooms(docs)
+        manifest = rg.write_rooms(rooms, out, starts_by_room=starts)
+        return {"manifest": manifest, "mesh": out / "terrain_mesh.npz", "assets": [nav_task.make_asset(r, table) for r in rooms], "bench_docs": docs}
     rooms = [rg.make_room(int(cfg["room_seed"]) + i)[1] for i in range(int(cfg["room_count"]))]
     manifest = rg.write_rooms(rooms, out, n_starts=int(cfg["n_starts"]), start_seed=int(cfg["room_seed"]))
     return {"manifest": manifest, "mesh": out / "terrain_mesh.npz", "assets": [nav_task.make_asset(r, table) for r in rooms]}
@@ -126,11 +133,21 @@ def _build(cfg: dict, with_camera: bool):
                                   room_mesh_sha256=prepared["manifest"]["mesh_sha256"], num_envs=int(cfg["num_envs"]), device=cfg["device"],
                                   seed=int(cfg["seed"]), prep_path=cfg.get("prep_path"), extra_scene=extra)
     raw = nav.raw
+    if prepared.get("bench_docs") is not None:
+        from foothold_s2.nav import hl_bench
+
+        print("BENCH_ASSIGN " + json.dumps(hl_bench.assign_bench_envs(raw.scene.terrain, int(cfg["num_envs"]))), flush=True)
     rows = raw.scene.terrain.terrain_levels.cpu().numpy()
     from foothold_s2.nav import room_generator as rg
 
-    starts = None if not int(cfg.get("task_table_per_start", 32)) else [rg.start_points(a.room, int(cfg["n_starts"]), seed=int(cfg["room_seed"]) + row)[:, :2] for row, a in enumerate(prepared["assets"])]
+    bench = prepared.get("bench_docs")
+    starts = None if (bench is not None or not int(cfg.get("task_table_per_start", 32))) else [rg.start_points(a.room, int(cfg["n_starts"]), seed=int(cfg["room_seed"]) + row)[:, :2] for row, a in enumerate(prepared["assets"])]
     task = make_task(prepared["assets"], int(cfg["num_envs"]), int(cfg["seed"]), rows, raw.scene.env_origins[:, :2].cpu().numpy(), starts, int(cfg.get("task_table_per_start", 32)), reach_m=float(cfg["reach_m"]) if "reach_m" in cfg else None)
+    task.bench_docs = bench
+    if bench is not None:
+        from foothold_s2.nav import hl_bench
+
+        print(f"BENCH_TABLE sha256 {hl_bench.install_bench_table(task, bench)} types {[d['type'] for d in bench]} tasks {len(bench[0]['tasks'])}", flush=True)
     if task.reach_m <= 0:
         raise ValueError(f"reach_m must be > 0, got {task.reach_m}")
     from foothold_s2.nav import pgcl as _pgcl

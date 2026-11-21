@@ -570,8 +570,9 @@ def write_room(room: Room, out_dir, n_starts: int = 0, start_seed: int = 0) -> d
 
 
 def write_rooms(rooms, out_dir, n_starts: int = 0, start_seed: int = 0,
-                room_gap_m: float = ROOM_GAP_M) -> dict:
-    """여러 방을 x 방향 한 메시로 저장한다. origins 의 각 행은 한 방, 열은 그 방 시작점이다."""
+                room_gap_m: float = ROOM_GAP_M, starts_by_room=None) -> dict:
+    """여러 방을 x 방향 한 메시로 저장한다. origins 의 각 행은 한 방, 열은 그 방 시작점이다.
+    starts_by_room (선택 · 방마다 (K, 3) 방 틀 x y z · K 는 모든 방이 같아야 함): 시작점을 뽑지 않고 그대로 쓴다 (HiPAN 원문 시험 과제의 시작점 · bench_tasks)."""
     rooms = list(rooms)
     if not rooms:
         raise ValueError("at least one room is required")
@@ -580,6 +581,10 @@ def write_rooms(rooms, out_dir, n_starts: int = 0, start_seed: int = 0,
         raise ValueError("room_gap_m must be finite and positive")
     if n_starts < 0:
         raise ValueError("n_starts must be >= 0")
+    if starts_by_room is not None:
+        starts_by_room = [np.asarray(x, dtype=np.float64).reshape(-1, 3) for x in starts_by_room]
+        if len(starts_by_room) != len(rooms) or len({len(x) for x in starts_by_room}) != 1 or not len(starts_by_room[0]):
+            raise ValueError("starts_by_room needs one (K, 3) array per room with the same K >= 1")
 
     pitch = ROOM_M + gap
     vertices, faces, origin_rows, room_rows = [], [], [], []
@@ -592,7 +597,9 @@ def write_rooms(rooms, out_dir, n_starts: int = 0, start_seed: int = 0,
         vertices.append(v)
         vertex_offset += len(v)
 
-        if n_starts:
+        if starts_by_room is not None:
+            starts = starts_by_room[row].copy()
+        elif n_starts:
             starts = start_points(room, n_starts, seed=int(start_seed) + row)
         else:
             starts = np.array([[ROOM_M / 2, ROOM_M / 2, 0.0]], dtype=np.float64)
@@ -604,7 +611,7 @@ def write_rooms(rooms, out_dir, n_starts: int = 0, start_seed: int = 0,
             "x_offset_m": x_offset,
             "mesh_vertices": int(len(v)),
             "mesh_faces": int(len(f)),
-            "starts_seed": int(start_seed) + row if n_starts else None,
+            "starts_seed": None if starts_by_room is not None else (int(start_seed) + row if n_starts else None),
             "starts_local_xyz": (starts - np.array([x_offset, 0.0, 0.0])).round(4).tolist(),
             "patches": [o for o in room.objects if o["kind"] == "patch"],
             "primitives": room.spec["primitives"],

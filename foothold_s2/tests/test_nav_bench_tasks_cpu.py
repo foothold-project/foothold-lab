@@ -17,3 +17,11 @@ def test_tasks_fall_in_their_band_and_record_both_distances():
         lo, hi = bt.PAPER_BANDS_M[r["band"]]
         assert lo <= r["shortest_m"] < hi and r["euclid_m"] <= r["shortest_m"] + 0.2
     assert doc["room_spec_sha256"] and doc["distance"].startswith("shortest path")
+
+
+def test_each_task_has_its_own_start():
+    import numpy as np
+    doc = bt.make_type_tasks("room", task_seed=0, per_band=3)
+    xy = np.array([r["start_xy"] for r in doc["tasks"]])
+    d = np.linalg.norm(xy[:, None] - xy[None], axis=-1) + np.eye(len(xy)) * 99
+    assert d.min() >= bt.START_SEP_M

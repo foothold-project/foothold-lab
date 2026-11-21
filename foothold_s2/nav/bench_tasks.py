@@ -5,7 +5,7 @@
 
 원문에 없는 것 (지어내지 않고 가정으로 적음):
   - 시험 환경의 치수 (학습 환경만 20 x 20 m 로 적힘, 535 행) -> 여기서는 20 x 20 m.
-  - 거리를 최단 경로로 재는지 직선으로 재는지 -> 최단 경로 길이 (nav_score.make_tasks) · 직선 거리도 같이 적는다.
+  - 거리를 최단 경로로 재는지 직선으로 재는지 -> 최단 경로 길이 (nav_score.make_tasks 와 같은 규칙) · 직선 거리도 같이 적는다.\n  - 시작점을 과제끼리 나눠 쓰는지 -> 과제마다 다른 시작점 (0.3 m 이상 떨어짐 · 평가가 시작 자리로 과제를 가른다).
   - 시드 10 개가 방을 바꾸는지 시뮬레이션 · 정책 잡음만 바꾸는지 -> 과제 목록은 유형마다 하나 (task_seed), 시드 10 개는 평가 쪽.
   - 네 유형의 배치 치수 -> 지금은 nav/rooms/bench_*.yaml (손으로 적은 임시 배치). WFC 판은 아직 없음.
 
@@ -37,13 +37,46 @@ def room_path(kind: str) -> Path:
     return NAV / "rooms" / f"bench_{kind}.yaml"
 
 
+START_SEP_M = 0.3            # 과제마다 다른 시작점 (평가가 몸이 선 자리로 과제를 가른다 · hl_bench.BENCH_TOL_M 의 여섯 배)
+
+
+def unique_start_tasks(g, rng, *, per_band: int, bands, max_tries: int = 40000) -> list:
+    """nav_score.make_tasks 와 같은 규칙 (시작 = 무충돌 표본 · 목표 = 그 시작에서 최단 길이가 구간 안인 평지 셀) 이되 시작점 하나에 과제 하나.
+    (make_tasks 는 한 시작점에서 구간마다 과제를 뽑아 같은 시작이 셋까지 겹친다: 평가에서 시작으로 과제를 가를 수 없다.)"""
+    need = [per_band] * len(bands)
+    used: list = []
+    tasks: list = []
+    for start in gm.sample_free_points(g, rng, max_tries):
+        if not any(need):
+            break
+        if used and np.min(np.linalg.norm(np.asarray(used) - start, axis=1)) < START_SEP_M:
+            continue
+        d = ns.geodesic_map(g, start)
+        d_free = ns.geodesic_map(g, start, allow_sparse=False)
+        order = sorted((b for b in range(len(bands)) if need[b] > 0), key=lambda b: -need[b])
+        for b in order:
+            lo, hi = bands[b]
+            cand = np.argwhere((d >= lo) & (d < hi) & np.isin(g.grade, (gm.FREE, gm.CONNECTED_ROUGH)))
+            if not len(cand):
+                continue
+            cell = cand[rng.integers(0, len(cand))]
+            tasks.append(ns.Task(tuple(map(float, start)), tuple(map((lambda v: float((v + 0.5) * g.res)), cell)),
+                                 float(d[tuple(cell)]), b, bool(np.isinf(d_free[tuple(cell)]))))
+            need[b] -= 1
+            used.append(np.asarray(start, float))
+            break
+    if any(need):
+        raise RuntimeError(f"could not make {need} more tasks with distinct starts (the room is too small or blocked)")
+    return sorted(tasks, key=lambda t: t.band)
+
+
 def make_type_tasks(kind: str, *, task_seed: int = 0, pose_active: bool = False, table=None, per_band: int = PER_BAND) -> dict:
     spec_path = room_path(kind)
     spec = rg.load_spec(spec_path)
     room = rg.build_room(spec)
     table = table or gm.load_grade_table(NAV / "grade_table_draft.yaml")
     g = gm.make_grade_map(room, table, pose_active=pose_active)
-    tasks = ns.make_tasks(g, np.random.default_rng(task_seed), per_band=per_band, bands=PAPER_BANDS_M)
+    tasks = unique_start_tasks(g, np.random.default_rng(task_seed), per_band=per_band, bands=PAPER_BANDS_M)
     rows = []
     for i, t in enumerate(tasks):
         euclid = float(np.hypot(t.goal[0] - t.start[0], t.goal[1] - t.start[1]))
@@ -51,7 +84,7 @@ def make_type_tasks(kind: str, *, task_seed: int = 0, pose_active: bool = False,
                      "shortest_m": round(float(t.shortest_m), 4), "euclid_m": round(euclid, 4),
                      "needs_sparse": bool(t.needs_sparse)})
     return {"format": "foothold-hipan-bench-tasks/1", "type": kind, "title": TITLES[kind],
-            "room_spec": str(spec_path), "room_spec_sha256": hashlib.sha256(spec_path.read_bytes()).hexdigest(),
+            "room_spec": spec_path.relative_to(NAV).as_posix(), "room_spec_sha256": hashlib.sha256(spec_path.read_bytes()).hexdigest(),   # room_spec: nav/ 기준 상대 경로 (Runpod 사본에서도 같은 파일)
             "size_m": float(spec.get("size_m", rg.ROOM_M)), "task_seed": int(task_seed), "pose_active": bool(pose_active),
             "bands_m": [list(b) for b in PAPER_BANDS_M], "per_band": per_band, "eval_seeds": list(SEEDS),
             "success_m": ns.SUCCESS_M, "distance": "shortest path on the grade map (assumption; paper does not say)",
