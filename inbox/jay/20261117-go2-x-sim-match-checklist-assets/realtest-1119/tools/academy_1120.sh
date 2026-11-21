@@ -11,13 +11,18 @@ N=$(date +%Y%m%d-%H%M)-academy-full
 R=~/go2_diag/records/$N
 mkdir -p $R
 exec 3>&1 4>&2
-exec > >(tee -a $R/run.log) 2>&1
+exec > >(trap '' INT; exec tee -a $R/run.log) 2>&1   # tee 는 Ctrl+C 를 무시 (죽으면 뒤 정리 줄이 SIGPIPE 로 끊김)
+# 11/21 app-lx: Ctrl+C 로 끝내도 bag · 카메라 · SDK 감시를 닫고 sha256 까지 적는다.
+#   카메라 (setsid) 와 bag (jrec 가 새 세션으로 띄움) 에는 터미널의 Ctrl+C 가 닿지 않아 11/20 에 남아 돌았다.
+INTR=""
+trap 'INTR=1' INT
 source /opt/ros/humble/setup.bash
 export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
 GO2_IFACE=${GO2_IFACE:-enP8p1s0}
 export CYCLONEDDS_URI=${CYCLONEDDS_URI:-"<CycloneDDS><Domain><General><Interfaces><NetworkInterface name=\"$GO2_IFACE\" priority=\"default\" multicast=\"default\"/></Interfaces></General></Domain></CycloneDDS>"}
 MON=~/go2_diag/20261118-go2-readonly-boot-gate/build/go2_readonly_monitor
 cd ~/go2_diag/jetson_storage
+grep -q ctrl_c jrec.py || echo "!! jrec.py 가 옛 판 (Ctrl+C 로 bag 이 안 멈춤) · lab 가지 fix/jrec-ctrlc-1121-app-lx 판으로 바꿀 것"
 echo "== $N · cyclonedds $GO2_IFACE · start $(date +%T)"
 cam_down() { [ -n "$STARTED_CAM" ] && { pkill -INT -f realsense2_camera_node; sleep 3; pkill -f rs_launch.py; sleep 2; pkill -KILL -f realsense2_camera_node; } ; true; }
 if pgrep -f relative_pitch_ >/dev/null; then echo "!! 각도 창이 D435i 를 쥐고 있음 · 창에서 q 로 끄고 다시"; exit 2; fi
@@ -34,6 +39,7 @@ for t in $T; do ( echo "## $t"; timeout -k 3 10 ros2 topic hz $t 2>&1 | tail -3 
 timeout -k 3 12 ros2 topic echo --once --qos-durability transient_local /tf_static > $R/.probe-tf_static.txt 2>&1 & P="$P $!"
 $MON $GO2_IFACE 5 $R/gate_monitor.csv > $R/gate_monitor.log 2>&1 & P="$P $!"
 wait $P
+if [ -n "$INTR" ]; then echo; echo "Ctrl+C · 관문 중 멈춤 · 기록 안 함 · 카메라 끔 ($(date +%T))"; cam_down; exec 1>&3 2>&4; exit 130; fi
 ZERO=""
 for t in $T; do grep -q "average rate" $R/.probe-$(echo $t | tr / _).txt || ZERO="$ZERO $t"; done
 grep -q "child_frame_id" $R/.probe-tf_static.txt || ZERO="$ZERO /tf_static"
@@ -46,13 +52,16 @@ if [ -n "$ZERO" ]; then
   echo; echo "!!!!! 관문 실패 · 0 Hz:$ZERO · 기록 안 함 · 카메라 끔 ($(date +%T))"
   cam_down; exec 1>&3 2>&4; exit 2
 fi
-echo; echo "===== 관문 통과 (9 개 모두 들어옴) · 로봇은 앉은 채 · 준비되면 Enter (끝내려면 Ctrl+C) ====="
-read -r _
+echo; echo "===== 관문 통과 (9 개 모두 들어옴) · 로봇은 앉은 채 · 준비되면 Enter (안 하려면 Ctrl+C · 기록 중 Ctrl+C 도 정리하고 끝남) ====="
+read -r _ || INTR=1
+if [ -n "$INTR" ]; then echo; echo "Ctrl+C · 기록 안 함 · 카메라 끔 ($(date +%T))"; cam_down; exec 1>&3 2>&4; exit 130; fi
 echo "== 기록 시작 $(date +%T) · ${SEC} 초 · 순서: 앉아 30 초 → 서서 60 초 → 한 바퀴 돌아 같은 자리 → 서서 60 초 → 앉기"
 $MON $GO2_IFACE $SEC $R/monitor.csv > $R/console.log 2>&1 & M=$!
 vmstat 5 > $R/vmstat-main.txt & V=$!
 python3 jrec.py full $N --seconds $SEC
-kill $V 2>/dev/null; wait $M 2>/dev/null
+kill $V 2>/dev/null
+if [ -n "$INTR" ]; then echo "Ctrl+C · 녹화 멈춤 ($(date +%T)) · SDK 감시 · 카메라 끄는 중"; kill -TERM $M 2>/dev/null; fi
+wait $M 2>/dev/null
 cam_down
 echo "== 끝 $(date +%T) · $R"
 exec 1>&3 2>&4; sleep 1   # run.log 를 닫은 뒤 sha256 (1119 와 같은 까닭)
