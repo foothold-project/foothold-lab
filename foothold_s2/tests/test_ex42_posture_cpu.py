@@ -324,3 +324,35 @@ def test_pen_mask_off_leaves_the_terms(monkeypatch, clean_sigma):
     f = lambda e: 1  # noqa: E731
     rew = SimpleNamespace(basic_hip_pos_penalty_l1=_Cfg(f, -0.05), ex39_thigh_calf_pos_l1=_Cfg(f, -0.01))
     assert not ps.register_pen_mask(SimpleNamespace(rewards=rew)) and rew.basic_hip_pos_penalty_l1.func is f
+
+
+def test_sigma_does_not_halve_while_the_median_error_is_above_sigma(monkeypatch, clean_sigma, capsys):
+    """planner 06:39: slope > 0.5 alone is not enough; the median error must also be under the current sigma."""
+    monkeypatch.setenv("EX42_POSTURE", "1"); monkeypatch.setenv("EX42_POSTURE_SIGMA_ANNEAL", "1"); monkeypatch.setenv("EX42_POSTURE_CHECK_STEPS", "24")
+    n = 64
+    env = _env(n, z=ps.H0_DEFAULT); ps.posture_command_obs(env); st = ps._state(env)
+    st.target[:, 0] = ps.H0_DEFAULT + torch.linspace(-0.09, 0.09, n)
+    env.scene["robot"].data.root_pos_w[:, 2] = ps.H0_DEFAULT + 0.5 + 1.0 * (st.target[:, 0] - ps.H0_DEFAULT)   # slope 1 · offset 0.5 m
+    for _ in range(24):
+        ps.height_tracking(env)
+    c = _checks(capsys)[-1]
+    assert c["judged_slope_h"] == pytest.approx(1.0, abs=1e-3) and c["judged_med_h_err"] > 0.10
+    assert "h" not in c["sigma_halved"] and st.sigma[0] == 0.10
+
+
+def _ranks_worker(rank, port, out):
+    import torch.distributed as dist
+    dist.init_process_group("gloo", init_method=f"tcp://127.0.0.1:{port}", rank=rank, world_size=2)
+    vals = [[0.8, float("nan"), 0.01, None], [0.4, 0.6, 0.03, None]][rank]
+    out[rank] = ps._ranks_mean(vals, "cpu")
+    dist.destroy_process_group()
+
+
+def test_two_ranks_judge_on_the_mean():
+    import socket
+    import torch.multiprocessing as mp
+    s = socket.socket(); s.bind(("127.0.0.1", 0)); port = s.getsockname()[1]; s.close()
+    with mp.Manager() as m:
+        out = m.dict()
+        mp.spawn(_ranks_worker, args=(port, out), nprocs=2, join=True)
+        assert out[0] == out[1] == [0.6, 0.6, 0.02, None]           # nan / None on a rank = that rank does not count for that value

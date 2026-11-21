@@ -24,8 +24,8 @@ rx2pz (lead 2026-11-21 20:24 · 원장 20:23 「자세 하위 따로 판」) 에
     명령 대 실제 기울기 (높이 · roll) · 넓힘 여부. 50 회 탐침 (꼬리표 rx2pz) 이 이 줄을 읽는다.
 σ 풀림 (EX42_POSTURE_SIGMA_ANNEAL=1 · lead 11/22 06:28 · 원장 3a06f0724 · planner 06:25 rx2pf2 +250 slope_h · slope_roll 0.00): 원문 폭
 exp(-|e|/0.0025) · exp(-|e|/0.05) 는 처음에 신호가 없음 → 높이 σ 0.05 m · roll σ 0.5 rad 로 넓게 시작하고 EX42_POSTURE_CHECK 의 slope 가 0.5 를
-넘을 때마다 그 축의 σ 를 절반 (06:31: 높이 시작 0.10 m) (끝값 = 원문 0.0025 · 0.05 에서 멈춤). 점검 줄 · 시작 줄에 σ 와 절반 사건. 켜면 EX42_POSTURE_CHECK_STEPS 를 커리큘럼 없이도
-받는다 (짧은 Kit 기동용). 끔 (기본) = 원문 폭 고정 · 옛 동작 그대로. 단서: rank 마다 자기 표본의 slope 로 판정한다 (두 rank 의 절반 시점이 다를 수 있음 · 점검 줄에 rank).
+넘고 중앙 오차가 지금 σ 보다 작을 때마다 (planner 06:39 · 두 rank all-reduce 평균으로 판정) 그 축의 σ 를 절반 (06:31: 높이 시작 0.10 m) (끝값 = 원문 0.0025 · 0.05 에서 멈춤). 점검 줄 · 시작 줄에 σ 와 절반 사건. 켜면 EX42_POSTURE_CHECK_STEPS 를 커리큘럼 없이도
+받는다 (짧은 Kit 기동용). 끔 (기본) = 원문 폭 고정 · 옛 동작 그대로. 두 rank 는 slope · 중앙 오차를 all-reduce 평균으로 같이 판정해 σ 가 같게 움직인다 (점검 줄의 judged_* = 판정에 쓴 평균).
 No Kit import at module level.
 """
 from __future__ import annotations
@@ -155,6 +155,21 @@ def _slope(x, y):
     return float(((x - x.mean()) * (y - y.mean())).sum() / vx) if vx > 1e-12 else float("nan")
 
 
+def _ranks_mean(values, device):
+    """Mean over ranks of each value (None or nan = that rank has no value for it); single process = the values themselves.
+    Every rank calls check at the same step (the reward manager calls height_tracking once per env step on each rank)."""
+    import torch.distributed as dist
+
+    vals = [None if (v is None or (isinstance(v, float) and math.isnan(v))) else float(v) for v in values]
+    if not (dist.is_available() and dist.is_initialized()) or dist.get_world_size() == 1:
+        return vals
+    t = torch.tensor([[0.0 if v is None else v for v in vals], [0.0 if v is None else 1.0 for v in vals]], dtype=torch.float64,
+                     device=device if torch.device(device).type == "cuda" else "cpu")
+    dist.all_reduce(t, op=dist.ReduceOp.SUM)
+    t = t.cpu()
+    return [None if float(t[1, k]) == 0 else round(float(t[0, k] / t[1, k]), 6) for k in range(len(vals))]
+
+
 class PostureState:
     def __init__(self, n, device, cfg, seed=0):
         self.cfg = cfg
@@ -233,10 +248,12 @@ class PostureState:
             self.pen_sum, self.pen_n = {}, {}
         if self.cfg.get("sigma_anneal"):
             line["sigma_h"], line["sigma_roll"] = self.sigma[0], self.sigma[1]
+            judged = _ranks_mean([line.get("slope_h"), line.get("slope_roll"), line.get("med_h_err"), line.get("med_roll_err")], self.target.device)
+            line["judged_slope_h"], line["judged_slope_roll"], line["judged_med_h_err"], line["judged_med_roll_err"] = judged
             halve = []
-            for ax, key in ((0, "slope_h"), (1, "slope_roll")):
-                v = line.get(key)
-                if v is not None and not math.isnan(v) and v > SIGMA_SLOPE and self.sigma[ax] > SIGMA_PAPER[ax]:
+            for ax, slope, err in ((0, judged[0], judged[2]), (1, judged[1], judged[3])):
+                # planner 06:39 · lead 06:40 (ledger b148fd9b2): slope > 0.5 AND median error < the current sigma, both as the two-rank mean
+                if slope is not None and err is not None and slope > SIGMA_SLOPE and err < self.sigma[ax] and self.sigma[ax] > SIGMA_PAPER[ax]:
                     self.sigma[ax] = max(self.sigma[ax] / 2.0, SIGMA_PAPER[ax])
                     halve.append(("h", "roll")[ax])
             line["sigma_halved"] = halve
