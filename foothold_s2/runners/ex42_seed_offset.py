@@ -5,7 +5,7 @@ Why: an EX-42 stage start takes the parent checkpoint's env_seed (train_start: a
 restores the parent's RNG state, so --seed / EX42_SEED changed nothing (rx2qcmd2 08:24 printed the same Environment seed as a 42 run).
 
 On (offset N > 0): train_start adds N to the parent env_seed (so the env seed, and through it the env's own draws, differ), and at the start of
-learn() the runner reseeds, after every restore, torch (CPU and CUDA), numpy, python random and the command generator with that seed
+learn() the runner reseeds, after every restore, torch (CPU and CUDA), numpy, python random, the command generator and the map-switch generator with that seed
 (env_seed + N + rank, the value Isaac prints as Environment seed). Start line: EX42_SEED_OFFSET where=start.
 """
 from __future__ import annotations
@@ -25,7 +25,7 @@ def offset() -> int:
     return int(raw)
 
 
-def reseed(seed: int, command_term=None) -> dict:
+def reseed(seed: int, command_term=None, map_switch_gen=None) -> dict:
     """Reseed every RNG the rollout draws from. Returns what was reseeded (for the start line)."""
     import numpy as np
     import torch
@@ -39,4 +39,7 @@ def reseed(seed: int, command_term=None) -> dict:
     if gen is not None:
         gen.manual_seed(seed)
         done.append("command_gen")
+    if map_switch_gen is not None:                       # lead 08:39: the map switch-off draws too
+        map_switch_gen.manual_seed(seed)
+        done.append("map_switch")
     return {"seed": int(seed), "reseeded": done}

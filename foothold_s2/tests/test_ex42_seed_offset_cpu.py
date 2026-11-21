@@ -49,4 +49,12 @@ def test_the_real_entry_and_runner_use_it():
     ts = (root / "scripts" / "train_start.py").read_text()
     assert ts.count("+ ex42_seed_offset.offset()") == 2               # both stage-start seed lines
     sr = (root / "runners" / "start_runner.py").read_text()
-    assert "if ex42_seed_offset.offset():" in sr and "ex42_seed_offset.reseed(env_seed, self._command_term())" in sr
+    assert "if ex42_seed_offset.offset():" in sr and "ex42_seed_offset.reseed(env_seed, self._command_term(), getattr(self, \"map_switch_gen\", None))" in sr
+
+
+def test_map_switch_generator_is_reseeded():
+    from foothold_s2.runners.map_switch import make_generator
+    g0, g1 = make_generator("cpu", 20251025), make_generator("cpu", 20251025)
+    rec = so.reseed(143, None, g1)
+    assert "map_switch" in rec["reseeded"]
+    assert not torch.equal(torch.rand(8, generator=g0), torch.rand(8, generator=g1))
