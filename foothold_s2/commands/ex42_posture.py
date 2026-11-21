@@ -10,12 +10,26 @@
   - runner: 자세 칸이 0 이 아니어도 받는다 (범위 · 유한성만 확인).
 범위 · 가중은 env 값으로 바꿀 수 있다 (EX42_POSTURE_H_RANGE "lo,hi" · EX42_POSTURE_ROLL_RANGE · EX42_POSTURE_HEIGHT_W · EX42_POSTURE_ROLL_W).
 CG C8a~C8c 의 단계 (높이 좁게 → 넓게 → roll) 를 따르려면 범위 env 값을 단계마다 바꿔 새 판을 띄운다 (실시간 칸은 둘째 단계).
+
+rx2pz (lead 2026-11-21 20:24 · 원장 20:23 「자세 하위 따로 판」) 에서 더한 것 (둘 다 EX42_POSTURE=1 안에서만):
+  - 적용 env: 평지 · 연속 지형 env 만 자세 명령을 받는다. 듬성 열 (A 의 듬성 종류 · A 가 아닌 족 B~E) 과 깃발 env 는 자세 0
+    (관측 [0, 0] · 보상 목표 [H0, 0]). 열 표 (env._ex42_column_table) 가 없으면 열로는 가르지 않는다 (시작 줄에 적음).
+  - 범위 커리큘럼 (EX42_POSTURE_CURRICULUM=1): 높이는 H0 ± EX42_POSTURE_H_START (기본 0.02 m) 에서, roll 은 ± EX42_POSTURE_ROLL_START
+    (기본 0.1 rad) 에서 시작한다. EX42_POSTURE_CHECK_STEPS (기본 1200 step = 50 update x 24) 마다 그 사이의 적용 env 표본으로
+    중앙 오차를 재고, 높이 중앙 오차 < min(EX42_POSTURE_H_TOL 0.02, 0.4 x 반폭) 이면 반폭을 EX42_POSTURE_H_STEP (0.02) 넓히고
+    roll 중앙 오차 < min(EX42_POSTURE_ROLL_TOL 0.1, 0.4 x 반폭) 이면 EX42_POSTURE_ROLL_STEP (0.1) 넓힌다 (원문 범위에서 멈춤).
+    0.4 x 반폭: 띠 안에서 늘 H0 로만 서 있으면 중앙 오차가 반폭의 0.5 쯤이라, 그보다 낫게 따라가야 넓힌다.
+    상태는 EX42_POSTURE_STATE (json · rank 마다 .rank<r>) 에 쓰고 시작할 때 있으면 읽는다 (같은 OUT 이어 가기에서 띠가 처음으로 돌아가지 않게).
+  - 점검 줄 (커리큘럼과 무관하게 켜짐이면 늘): EX42_POSTURE_CHECK step · 띠 · 표본 수 · 높이 추종 보상 평균 · 중앙 오차 (높이 · roll) ·
+    명령 대 실제 기울기 (높이 · roll) · 넓힘 여부. 50 회 탐침 (꼬리표 rx2pz) 이 이 줄을 읽는다.
 No Kit import at module level.
 """
 from __future__ import annotations
 
+import json
 import math
 import os
+from pathlib import Path
 
 import torch
 
@@ -26,13 +40,17 @@ PAPER_W = (0.2, 0.2)                 # 2604.26504.txt:627 w3L · w4L
 H0_DEFAULT = 0.31                    # 공칭 몸 높이 (가정 · CG C8a 의 공칭 근처 U[0.28, 0.34] 의 가운데)
 HEIGHT_TERM, ROLL_TERM = "ex42_posture_height", "ex42_posture_roll"
 STATE = "_ex42_posture_state"
+CURRICULUM_KEYS = ("EX42_POSTURE_CURRICULUM", "EX42_POSTURE_H_START", "EX42_POSTURE_ROLL_START", "EX42_POSTURE_H_STEP", "EX42_POSTURE_ROLL_STEP",
+                   "EX42_POSTURE_H_TOL", "EX42_POSTURE_ROLL_TOL", "EX42_POSTURE_CHECK_STEPS", "EX42_POSTURE_STATE")
+SAMPLE_EVERY = 24                    # 표본은 24 step (update 1 회) 마다 한 번
+BEAT_FRACTION = 0.4                  # 넓힘 문턱 = min(tol, 0.4 x 반폭)
 
 
 def enabled() -> bool:
     value = os.environ.get(ENV_SWITCH, "")
     if value not in ("", "0", "1"):
         raise ValueError(f"{ENV_SWITCH} must be 0 or 1 (got {value!r})")
-    extra = [k for k in ("EX42_POSTURE_H_RANGE", "EX42_POSTURE_ROLL_RANGE", "EX42_POSTURE_H0", "EX42_POSTURE_HEIGHT_W", "EX42_POSTURE_ROLL_W")
+    extra = [k for k in ("EX42_POSTURE_H_RANGE", "EX42_POSTURE_ROLL_RANGE", "EX42_POSTURE_H0", "EX42_POSTURE_HEIGHT_W", "EX42_POSTURE_ROLL_W", *CURRICULUM_KEYS)
              if os.environ.get(k, "") != ""]
     if value != "1" and extra:
         raise ValueError(f"{', '.join(extra)} set but {ENV_SWITCH} is not 1")
@@ -67,43 +85,180 @@ def settings() -> dict:
     h, roll = _pair("EX42_POSTURE_H_RANGE", PAPER_H), _pair("EX42_POSTURE_ROLL_RANGE", PAPER_ROLL)
     if not (PAPER_H[0] <= h[0] and h[1] <= PAPER_H[1] and PAPER_ROLL[0] <= roll[0] and roll[1] <= PAPER_ROLL[1]):
         raise ValueError(f"posture ranges must stay inside the paper ranges h {PAPER_H} roll {PAPER_ROLL} (got {h} {roll})")
-    return {"h": h, "roll": roll, "h0": _num("EX42_POSTURE_H0", H0_DEFAULT, 0.05),
-            "height_w": _num("EX42_POSTURE_HEIGHT_W", PAPER_W[0]), "roll_w": _num("EX42_POSTURE_ROLL_W", PAPER_W[1])}
+    h0 = _num("EX42_POSTURE_H0", H0_DEFAULT, 0.05)
+    out = {"h": h, "roll": roll, "h0": h0,
+           "height_w": _num("EX42_POSTURE_HEIGHT_W", PAPER_W[0]), "roll_w": _num("EX42_POSTURE_ROLL_W", PAPER_W[1])}
+    cur = os.environ.get("EX42_POSTURE_CURRICULUM", "")
+    if cur not in ("", "0", "1"):
+        raise ValueError(f"EX42_POSTURE_CURRICULUM must be 0 or 1 (got {cur!r})")
+    loose = [k for k in CURRICULUM_KEYS[1:] if os.environ.get(k, "") != ""]
+    if cur != "1" and loose:
+        raise ValueError(f"{', '.join(loose)} set but EX42_POSTURE_CURRICULUM is not 1")
+    out["curriculum"] = cur == "1"
+    if out["curriculum"]:
+        if not h[0] <= h0 <= h[1]:
+            raise ValueError(f"EX42_POSTURE_H0 {h0} must lie inside the height range {h}")
+        out.update(h_start=_num("EX42_POSTURE_H_START", 0.02, 1e-4), roll_start=_num("EX42_POSTURE_ROLL_START", 0.1, 1e-4),
+                   h_step=_num("EX42_POSTURE_H_STEP", 0.02, 1e-4), roll_step=_num("EX42_POSTURE_ROLL_STEP", 0.1, 1e-4),
+                   h_tol=_num("EX42_POSTURE_H_TOL", 0.02, 1e-4), roll_tol=_num("EX42_POSTURE_ROLL_TOL", 0.1, 1e-4),
+                   state_path=os.environ.get("EX42_POSTURE_STATE", ""))
+        steps = _num("EX42_POSTURE_CHECK_STEPS", 1200, SAMPLE_EVERY)
+        if steps != int(steps):
+            raise ValueError("EX42_POSTURE_CHECK_STEPS must be a whole number")
+    else:
+        steps = 1200
+    out["check_steps"] = int(steps)
+    return out
+
+
+def _rank() -> int:
+    for k in ("RANK", "LOCAL_RANK"):
+        if os.environ.get(k, "").isdigit():
+            return int(os.environ[k])
+    return 0
+
+
+def band(cfg, h_half, roll_half):
+    """지금 띠 ((h_lo, h_hi), (roll_lo, roll_hi)): 커리큘럼이면 H0 ± 반폭을 범위 안으로 자른 것, 아니면 범위 그대로."""
+    if not cfg["curriculum"]:
+        return cfg["h"], cfg["roll"]
+    (hl, hh), (rl, rh) = cfg["h"], cfg["roll"]
+    return (max(hl, cfg["h0"] - h_half), min(hh, cfg["h0"] + h_half)), (max(rl, -roll_half), min(rh, roll_half))
+
+
+def _slope(x, y):
+    x, y = x.double(), y.double()
+    vx = ((x - x.mean()) ** 2).sum()
+    return float(((x - x.mean()) * (y - y.mean())).sum() / vx) if vx > 1e-12 else float("nan")
 
 
 class PostureState:
     def __init__(self, n, device, cfg, seed=0):
         self.cfg = cfg
-        self.target = torch.zeros((n, 2), device=device)        # [h (m), roll (rad)]
+        self.target = torch.zeros((n, 2), device=device)        # [h (m), roll (rad)] (뽑힌 값 · 적용 env 가 아니면 effective 가 [H0, 0])
         self.target[:, 0] = cfg["h0"]
         self.command = torch.full((n, 3), float("nan"), device=device)
+        self.active = torch.ones(n, dtype=torch.bool, device=device)
         self.gen = torch.Generator(device="cpu").manual_seed(int(seed) + 4243)
+        self.h_half = cfg.get("h_start", 0.0)
+        self.roll_half = cfg.get("roll_start", 0.0)
+        self.steps = 0                   # height_tracking 이 불린 수 (보상 관리자가 step 마다 한 번)
+        self.checks = 0
+        self.samples = []                # [(target_h, h, target_roll, roll, reward_h)] 적용 env 만
+        self.state_path = None
+        if cfg["curriculum"] and cfg.get("state_path"):
+            self.state_path = Path(f"{cfg['state_path']}.rank{_rank()}")
+            if self.state_path.is_file():
+                saved = json.loads(self.state_path.read_text(encoding="utf-8"))
+                self.h_half, self.roll_half = float(saved["h_half"]), float(saved["roll_half"])
+                self.steps, self.checks = int(saved.get("steps", 0)), int(saved.get("checks", 0))
+                print(f"EX42_POSTURE_CURRICULUM resumed {self.state_path} h_half={self.h_half} roll_half={self.roll_half} checks={self.checks}", flush=True)
 
     def update(self, command, new_episode):
         changed = ~(command == self.command).all(-1) | new_episode.bool()
         k = int(changed.sum())
         if k:
             u = torch.rand((k, 2), generator=self.gen).to(self.target.device)
-            (hl, hh), (rl, rh) = self.cfg["h"], self.cfg["roll"]
-            self.target[changed] = torch.stack([hl + (hh - hl) * u[:, 0], rl + (rh - rl) * u[:, 1]], 1)
+            (hl, hh), (rl, rh) = band(self.cfg, self.h_half, self.roll_half)
+            self.target[changed] = torch.stack([hl + (hh - hl) * u[:, 0], rl + (rh - rl) * u[:, 1]], 1).to(self.target.dtype)
             self.command[changed] = command[changed]
         return changed
+
+    def effective(self):
+        """보상 · 관측이 쓰는 목표: 적용 env 는 뽑힌 값, 아니면 [H0, 0] (자세 0)."""
+        zero = torch.tensor([self.cfg["h0"], 0.0], device=self.target.device, dtype=self.target.dtype)
+        return torch.where(self.active[:, None], self.target, zero)
+
+    def record(self, h, roll, reward_h):
+        self.steps += 1
+        if self.steps % SAMPLE_EVERY == 0:
+            a = self.active
+            if bool(a.any()):
+                self.samples.append(torch.stack([self.target[a, 0], h[a], self.target[a, 1], roll[a], reward_h[a]], 1).detach().float().cpu())
+        if self.steps % self.cfg["check_steps"] == 0:
+            return self.check()
+        return None
+
+    def check(self):
+        self.checks += 1
+        (hl, hh), (rl, rh) = band(self.cfg, self.h_half, self.roll_half)
+        line = {"step": self.steps, "rank": _rank(), "h": [round(hl, 4), round(hh, 4)], "roll": [round(rl, 4), round(rh, 4)],
+                "n": 0, "reward_h": None, "med_h_err": None, "med_roll_err": None, "slope_h": None, "slope_roll": None,
+                "widen_h": False, "widen_roll": False}
+        if self.samples:
+            s = torch.cat(self.samples)
+            self.samples = []
+            eh, er = (s[:, 0] - s[:, 1]).abs(), (s[:, 2] - s[:, 3]).abs()
+            line.update(n=int(len(s)), reward_h=round(float(s[:, 4].mean()), 5), med_h_err=round(float(eh.median()), 5),
+                        med_roll_err=round(float(er.median()), 5), slope_h=round(_slope(s[:, 0], s[:, 1]), 4), slope_roll=round(_slope(s[:, 2], s[:, 3]), 4))
+            if self.cfg["curriculum"]:
+                (phl, phh), (prl, prh) = self.cfg["h"], self.cfg["roll"]
+                h_full = self.cfg["h0"] - self.h_half <= phl and self.cfg["h0"] + self.h_half >= phh
+                roll_full = -self.roll_half <= prl and self.roll_half >= prh
+                if not h_full and line["med_h_err"] < min(self.cfg["h_tol"], BEAT_FRACTION * self.h_half):
+                    self.h_half += self.cfg["h_step"]
+                    line["widen_h"] = True
+                if not roll_full and line["med_roll_err"] < min(self.cfg["roll_tol"], BEAT_FRACTION * self.roll_half):
+                    self.roll_half += self.cfg["roll_step"]
+                    line["widen_roll"] = True
+        if self.cfg["curriculum"]:
+            (nhl, nhh), (nrl, nrh) = band(self.cfg, self.h_half, self.roll_half)
+            line["next_h"], line["next_roll"] = [round(nhl, 4), round(nhh, 4)], [round(nrl, 4), round(nrh, 4)]
+            if self.state_path is not None:
+                tmp = self.state_path.with_suffix(self.state_path.suffix + ".tmp")
+                tmp.write_text(json.dumps({"h_half": self.h_half, "roll_half": self.roll_half, "steps": self.steps, "checks": self.checks,
+                                           "last": line}), encoding="utf-8")
+                os.replace(tmp, self.state_path)
+        print("EX42_POSTURE_CHECK " + json.dumps(line), flush=True)
+        return line
 
 
 def _state(env):
     st = getattr(env, STATE, None)
     if st is None:
-        st = PostureState(env.num_envs, env.device, settings())
+        cfg = settings()
+        st = PostureState(env.num_envs, env.device, cfg)
         setattr(env, STATE, st)
+        st.column_ok = _posture_columns(env)
+        print(f"EX42_POSTURE_SCOPE columns={'all (no column table)' if st.column_ok is None else int(st.column_ok.sum())}"
+              f" curriculum={cfg['curriculum']} band={band(cfg, st.h_half, st.roll_half)} check_steps={cfg['check_steps']}", flush=True)
     return st
 
 
+def _posture_columns(env):
+    """(columns,) bool: 자세 명령을 받는 열 = A 족의 연속 종류와 평지. 열 표가 없으면 None (열로는 가르지 않음)."""
+    from foothold_s2.terrains import columns as cols
+    table = getattr(getattr(env, "unwrapped", env), "_ex42_column_table", None)
+    if table is None:
+        return None
+    ok = [row["family"] == "A" and (row["kind"] in cols.CONTINUOUS or row["kind"] == "flat") for row in table]
+    return torch.tensor(ok, dtype=torch.bool, device=env.device)
+
+
+def active_envs(env, st, command_name="base_velocity"):
+    """(N,) bool: 평지 · 연속 열이고 깃발 env 가 아닌 env."""
+    active = torch.ones(env.num_envs, dtype=torch.bool, device=env.device)
+    if st.column_ok is not None:
+        columns = env.scene.terrain.terrain_types.long().to(env.device)
+        if bool(((columns < 0) | (columns >= len(st.column_ok))).any()):
+            raise ValueError("EX-42 posture: a terrain column is outside the column table")
+        active &= st.column_ok[columns]
+    try:
+        flag = env.command_manager.get_term(command_name).is_flag_env
+    except (AttributeError, KeyError):
+        flag = None
+    if flag is not None:
+        active &= ~flag.bool().to(env.device)
+    return active
+
+
 def posture_command_obs(env, command_name: str = "base_velocity"):
-    """관측 칸 (N, 2) = [h - H0, roll]. 매 스텝 불리며 명령이 바뀐 env · 새 에피소드 env 의 목표를 다시 뽑는다."""
+    """관측 칸 (N, 2) = [h - H0, roll]. 매 스텝 불리며 명령이 바뀐 env · 새 에피소드 env 의 목표를 다시 뽑는다. 적용 env 가 아니면 [0, 0]."""
     st = _state(env)
     command = env.command_manager.get_command(command_name)[:, :3]
     st.update(command, env.episode_length_buf <= 1)
-    out = st.target.clone()
+    st.active = active_envs(env, st, command_name)
+    out = st.effective()
     out[:, 0] -= st.cfg["h0"]
     return out
 
@@ -125,13 +280,18 @@ def body_height(env):
 
 
 def height_tracking(env):
+    """높이 보상 · 표본 · 점검 (보상 관리자가 step 마다 한 번 부른다). 목표는 effective (적용 env 가 아니면 H0)."""
     st = _state(env)
-    return torch.exp(-(st.target[:, 0] - body_height(env)).abs() / 0.0025)
+    target = st.effective()
+    h = body_height(env)
+    r = torch.exp(-(target[:, 0] - h).abs() / 0.0025)
+    st.record(h, body_roll(env.scene["robot"].data.root_quat_w), r)
+    return r
 
 
 def roll_tracking(env):
     st = _state(env)
-    return torch.exp(-(st.target[:, 1] - body_roll(env.scene["robot"].data.root_quat_w)).abs() / 0.05)
+    return torch.exp(-(st.effective()[:, 1] - body_roll(env.scene["robot"].data.root_quat_w)).abs() / 0.05)
 
 
 def register_observation(obs_group) -> bool:
@@ -151,7 +311,10 @@ def register_rewards(env_cfg, term_cfg_class=None) -> bool:
         from isaaclab.managers import RewardTermCfg as term_cfg_class
     setattr(env_cfg.rewards, HEIGHT_TERM, term_cfg_class(func=height_tracking, weight=cfg["height_w"], params={}))
     setattr(env_cfg.rewards, ROLL_TERM, term_cfg_class(func=roll_tracking, weight=cfg["roll_w"], params={}))
-    print(f"EX42_POSTURE where=start h={list(cfg['h'])} roll={list(cfg['roll'])} h0={cfg['h0']} height_w={cfg['height_w']} roll_w={cfg['roll_w']}", flush=True)
+    print(f"EX42_POSTURE where=start h={list(cfg['h'])} roll={list(cfg['roll'])} h0={cfg['h0']} height_w={cfg['height_w']} roll_w={cfg['roll_w']}"
+          f" curriculum={cfg['curriculum']} check_steps={cfg['check_steps']}"
+          + (f" h_start={cfg['h_start']} roll_start={cfg['roll_start']} h_step={cfg['h_step']} roll_step={cfg['roll_step']}"
+             f" h_tol={cfg['h_tol']} roll_tol={cfg['roll_tol']} state={cfg['state_path'] or '-'}" if cfg["curriculum"] else ""), flush=True)
     return True
 
 

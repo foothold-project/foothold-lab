@@ -119,3 +119,75 @@ def test_the_real_wiring_points_call_the_module():
     assert "ex42_posture.register_observation(obs.pose_cmd)" in src[i:i + 900]
     seg = (ROOT / "foothold_s2/commands/ex42_segment_adjust.py").read_text(encoding="utf-8")
     assert "ex42_posture.register_rewards(env_cfg, term_cfg_class)" in seg
+
+
+CUR_KEYS = ps.CURRICULUM_KEYS
+
+
+@pytest.fixture
+def clean_cur(monkeypatch):
+    for k in CUR_KEYS:
+        monkeypatch.delenv(k, raising=False)
+
+
+def test_only_flat_and_continuous_non_flag_envs_get_a_posture(monkeypatch, clean_cur):
+    monkeypatch.setenv("EX42_POSTURE", "1")
+    env = _env(4)
+    table = [{"family": "A", "kind": "flat"}, {"family": "A", "kind": "boxes"}, {"family": "A", "kind": "gaps"}, {"family": "B", "kind": "beam"}]
+    env._ex42_column_table = table
+    env.scene.terrain = SimpleNamespace(terrain_types=torch.tensor([0, 1, 2, 3]))
+    flag = torch.tensor([False, True, False, False])
+    env.command_manager.get_term = lambda name: SimpleNamespace(is_flag_env=flag)
+    out = ps.posture_command_obs(env)
+    st = ps._state(env)
+    assert st.active.tolist() == [True, False, False, False]                # flag env 1 · sparse A/gaps 2 · B family 3 get posture 0
+    assert torch.equal(out[1:], torch.zeros(3, 2)) and torch.equal(st.effective()[1:, 0], torch.full((3,), ps.H0_DEFAULT))
+
+
+def test_curriculum_starts_narrow_widens_on_tracking_and_survives_a_resume(monkeypatch, clean_cur, tmp_path, capsys):
+    monkeypatch.setenv("EX42_POSTURE", "1"); monkeypatch.setenv("EX42_POSTURE_CURRICULUM", "1")
+    monkeypatch.setenv("EX42_POSTURE_CHECK_STEPS", "48"); monkeypatch.setenv("EX42_POSTURE_STATE", str(tmp_path / "pz.json"))
+    n = 64
+    env = _env(n, z=ps.H0_DEFAULT)
+    a = ps.posture_command_obs(env)
+    h = a[:, 0] + ps.H0_DEFAULT
+    assert h.min() >= ps.H0_DEFAULT - 0.02 - 1e-6 and h.max() <= ps.H0_DEFAULT + 0.02 + 1e-6 and a[:, 1].abs().max() <= 0.1 + 1e-6
+    st = ps._state(env)
+    # the body follows the target exactly: errors 0 -> both bands widen at the first check
+    env.scene["robot"].data.root_pos_w[:, 2] = st.target[:, 0]
+    roll = st.target[:, 1]
+    env.scene["robot"].data.root_quat_w = torch.stack([torch.cos(roll / 2), torch.sin(roll / 2), torch.zeros(n), torch.zeros(n)], 1)
+    for _ in range(48):
+        ps.height_tracking(env)
+    line = [l for l in capsys.readouterr().out.splitlines() if l.startswith("EX42_POSTURE_CHECK")][-1]
+    got = __import__("json").loads(line.split(" ", 1)[1])
+    assert got["widen_h"] and got["widen_roll"] and got["med_h_err"] < 1e-4 and got["slope_h"] == pytest.approx(1.0, abs=1e-3)
+    assert st.h_half == pytest.approx(0.04) and st.roll_half == pytest.approx(0.2)
+    # standing at H0 whatever the target: median error ~ half of the half-width -> no widening
+    env.scene["robot"].data.root_pos_w[:, 2] = ps.H0_DEFAULT
+    env.episode_length_buf[:] = 1
+    ps.posture_command_obs(env)
+    env.episode_length_buf[:] = 5
+    for _ in range(48):
+        ps.height_tracking(env)
+    got = __import__("json").loads([l for l in capsys.readouterr().out.splitlines() if l.startswith("EX42_POSTURE_CHECK")][-1].split(" ", 1)[1])
+    assert not got["widen_h"] and st.h_half == pytest.approx(0.04)
+    # a new env object (same OUT resume) reads the band back
+    env2 = _env(n)
+    ps.posture_command_obs(env2)
+    assert ps._state(env2).h_half == pytest.approx(0.04) and ps._state(env2).roll_half == pytest.approx(0.2)
+
+
+def test_curriculum_values_need_the_switch(monkeypatch, clean_cur):
+    monkeypatch.setenv("EX42_POSTURE", "1"); monkeypatch.setenv("EX42_POSTURE_H_START", "0.02")
+    with pytest.raises(ValueError, match="EX42_POSTURE_CURRICULUM is not 1"):
+        ps.settings()
+    monkeypatch.delenv("EX42_POSTURE"); monkeypatch.delenv("EX42_POSTURE_H_START"); monkeypatch.setenv("EX42_POSTURE_CURRICULUM", "1")
+    with pytest.raises(ValueError, match="EX42_POSTURE is not 1"):
+        ps.enabled()
+
+
+def test_band_stops_at_the_paper_ranges():
+    cfg = {"curriculum": True, "h": (0.1, 0.4), "roll": (-1.0, 1.0), "h0": 0.33}
+    assert ps.band(cfg, 0.02, 0.1) == ((pytest.approx(0.31), pytest.approx(0.35)), (-0.1, 0.1))
+    assert ps.band(cfg, 0.5, 2.0) == ((0.1, 0.4), (-1.0, 1.0))
