@@ -1,0 +1,10 @@
+[Unit]
+Description=Go2 X Jetson recording backup every 10 min
+
+[Timer]
+OnBootSec=5min
+OnUnitInactiveSec=10min
+Persistent=false
+
+[Install]
+WantedBy=timers.target
