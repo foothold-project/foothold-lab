@@ -223,3 +223,71 @@ def test_register_swaps_orientation_only_when_on(monkeypatch):
     monkeypatch.setenv("EX42_POSTURE", "1")
     assert ps.register_rewards(cfg, _Cfg) is True
     assert cfg.rewards.flat_orientation.func is ps.posture_orientation and cfg.rewards.flat_orientation.weight == -1.0
+
+
+# ---- σ 풀림 (EX42_POSTURE_SIGMA_ANNEAL · lead 11/22 06:28 · 원장 3a06f0724) ----
+@pytest.fixture
+def clean_sigma(monkeypatch, clean_cur):
+    monkeypatch.delenv("EX42_POSTURE_SIGMA_ANNEAL", raising=False)
+
+
+def _follow(env, st, n, frac=1.0):
+    """몸이 목표를 frac 만큼 따라감 (frac 1 = 그대로 · 0 = H0 에 서 있음)."""
+    env.scene["robot"].data.root_pos_w[:, 2] = ps.H0_DEFAULT + frac * (st.target[:, 0] - ps.H0_DEFAULT)
+    roll = frac * st.target[:, 1]
+    env.scene["robot"].data.root_quat_w = torch.stack([torch.cos(roll / 2), torch.sin(roll / 2), torch.zeros(n), torch.zeros(n)], 1)
+
+
+def _checks(capsys):
+    return [__import__("json").loads(l.split(" ", 1)[1]) for l in capsys.readouterr().out.splitlines() if l.startswith("EX42_POSTURE_CHECK")]
+
+
+def test_sigma_off_keeps_the_paper_widths(monkeypatch, clean_sigma, capsys):
+    monkeypatch.setenv("EX42_POSTURE", "1")
+    env = _env(2, z=0.36, hits_z=0.05); st = ps._state(env)
+    assert st.sigma == list(ps.SIGMA_PAPER) and not ps.settings()["sigma_anneal"]
+    st.target[:] = torch.tensor([[0.31, 0.0], [0.3125, 0.0]])
+    r = ps.height_tracking(env)
+    assert r[1] == pytest.approx(math.exp(-0.0025 / 0.0025))                 # 원문 폭 그대로 (test_paper_rewards 와 같은 값)
+    with pytest.raises(ValueError, match="EX42_POSTURE_CURRICULUM is not 1"):
+        monkeypatch.setenv("EX42_POSTURE_CHECK_STEPS", "48"); ps.settings()  # 풀림 끔이면 CHECK_STEPS 는 여전히 커리큘럼 필요
+
+
+def test_sigma_starts_wide_halves_on_slope_and_stops_at_the_paper_width(monkeypatch, clean_sigma, capsys):
+    monkeypatch.setenv("EX42_POSTURE", "1"); monkeypatch.setenv("EX42_POSTURE_SIGMA_ANNEAL", "1"); monkeypatch.setenv("EX42_POSTURE_CHECK_STEPS", "48")
+    n = 64
+    env = _env(n, z=ps.H0_DEFAULT); ps.posture_command_obs(env); st = ps._state(env)
+    assert st.sigma == [0.05, 0.5]
+    # 넓은 σ 에서 높이 보상이 오차를 가른다 (원문 폭이면 0.01 m 오차가 0.018 · 넓으면 0.82)
+    st.target[:, 0] = ps.H0_DEFAULT + 0.01; env.scene["robot"].data.root_pos_w[:, 2] = ps.H0_DEFAULT
+    assert float(ps.height_tracking(env)[0]) == pytest.approx(math.exp(-0.01 / 0.05), rel=1e-4)
+    # 따라가지 않음 (H0 에 서 있음): slope 0 → 절반 없음
+    for _ in range(47):
+        ps.height_tracking(env)
+    c = _checks(capsys)[-1]
+    assert c["sigma_halved"] == [] and c["sigma_h"] == 0.05 and c["next_sigma_roll"] == 0.5
+    # 그대로 따라감: slope 1 > 0.5 → 두 축 절반 · 다섯 번 더면 높이는 0.0025 에서 멈춤 (0.05/2^5 = 0.0016 → 0.0025)
+    seen = []
+    for k in range(6):
+        env.episode_length_buf[:] = 1; ps.posture_command_obs(env); env.episode_length_buf[:] = 5
+        _follow(env, st, n, 1.0)
+        for _ in range(48):
+            ps.height_tracking(env)
+        c = _checks(capsys)[-1]; seen.append((c["sigma_halved"], c["next_sigma_h"], c["next_sigma_roll"]))
+    assert seen[0] == (["h", "roll"], 0.025, 0.25)
+    assert seen[1][1:] == (0.0125, 0.125) and seen[2][1:] == (0.00625, 0.0625)
+    assert seen[3][1:] == (0.003125, 0.05) and seen[3][0] == ["h", "roll"]   # roll 은 0.0625 → 0.05 (끝값에서 멈춤)
+    assert seen[4] == (["h"], 0.0025, 0.05) and seen[5] == ([], 0.0025, 0.05)
+    assert st.sigma == list(ps.SIGMA_PAPER)
+
+
+def test_sigma_start_line(monkeypatch, clean_sigma, capsys):
+    monkeypatch.setenv("EX42_POSTURE", "1"); monkeypatch.setenv("EX42_POSTURE_SIGMA_ANNEAL", "1")
+    cfg = SimpleNamespace(rewards=SimpleNamespace(flat_orientation_l2=_Cfg(None, -2.5)))
+    if hasattr(ps, "register_rewards"):
+        try:
+            ps.register_rewards(cfg, _Cfg)
+        except Exception:
+            pass
+    out = capsys.readouterr().out
+    assert "sigma_anneal=1 sigma_start=[0.05, 0.5] sigma_end=[0.0025, 0.05] halve_when_slope>0.5" in out

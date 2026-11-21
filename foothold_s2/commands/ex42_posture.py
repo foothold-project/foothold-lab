@@ -22,6 +22,10 @@ rx2pz (lead 2026-11-21 20:24 · 원장 20:23 「자세 하위 따로 판」) 에
     상태는 EX42_POSTURE_STATE (json · rank 마다 .rank<r>) 에 쓰고 시작할 때 있으면 읽는다 (같은 OUT 이어 가기에서 띠가 처음으로 돌아가지 않게).
   - 점검 줄 (커리큘럼과 무관하게 켜짐이면 늘): EX42_POSTURE_CHECK step · 띠 · 표본 수 · 높이 추종 보상 평균 · 중앙 오차 (높이 · roll) ·
     명령 대 실제 기울기 (높이 · roll) · 넓힘 여부. 50 회 탐침 (꼬리표 rx2pz) 이 이 줄을 읽는다.
+σ 풀림 (EX42_POSTURE_SIGMA_ANNEAL=1 · lead 11/22 06:28 · 원장 3a06f0724 · planner 06:25 rx2pf2 +250 slope_h · slope_roll 0.00): 원문 폭
+exp(-|e|/0.0025) · exp(-|e|/0.05) 는 처음에 신호가 없음 → 높이 σ 0.05 m · roll σ 0.5 rad 로 넓게 시작하고 EX42_POSTURE_CHECK 의 slope 가 0.5 를
+넘을 때마다 그 축의 σ 를 절반 (끝값 = 원문 0.0025 · 0.05 에서 멈춤). 점검 줄 · 시작 줄에 σ 와 절반 사건. 켜면 EX42_POSTURE_CHECK_STEPS 를 커리큘럼 없이도
+받는다 (짧은 Kit 기동용). 끔 (기본) = 원문 폭 고정 · 옛 동작 그대로. 단서: rank 마다 자기 표본의 slope 로 판정한다 (두 rank 의 절반 시점이 다를 수 있음 · 점검 줄에 rank).
 No Kit import at module level.
 """
 from __future__ import annotations
@@ -42,6 +46,9 @@ HEIGHT_TERM, ROLL_TERM = "ex42_posture_height", "ex42_posture_roll"
 STATE = "_ex42_posture_state"
 CURRICULUM_KEYS = ("EX42_POSTURE_CURRICULUM", "EX42_POSTURE_H_START", "EX42_POSTURE_ROLL_START", "EX42_POSTURE_H_STEP", "EX42_POSTURE_ROLL_STEP",
                    "EX42_POSTURE_H_TOL", "EX42_POSTURE_ROLL_TOL", "EX42_POSTURE_CHECK_STEPS", "EX42_POSTURE_STATE")
+SIGMA_PAPER = (0.0025, 0.05)        # 원문 높이 · roll 폭 (2604.26504.txt:597-605)
+SIGMA_START = (0.05, 0.5)            # σ 풀림 시작값 (lead 06:28)
+SIGMA_SLOPE = 0.5                    # 이 slope 를 넘으면 그 축 σ 절반
 SAMPLE_EVERY = 24                    # 표본은 24 step (update 1 회) 마다 한 번
 BEAT_FRACTION = 0.4                  # 넓힘 문턱 = min(tol, 0.4 x 반폭)
 
@@ -91,7 +98,11 @@ def settings() -> dict:
     cur = os.environ.get("EX42_POSTURE_CURRICULUM", "")
     if cur not in ("", "0", "1"):
         raise ValueError(f"EX42_POSTURE_CURRICULUM must be 0 or 1 (got {cur!r})")
-    loose = [k for k in CURRICULUM_KEYS[1:] if os.environ.get(k, "") != ""]
+    anneal = os.environ.get("EX42_POSTURE_SIGMA_ANNEAL", "")
+    if anneal not in ("", "0", "1"):
+        raise ValueError(f"EX42_POSTURE_SIGMA_ANNEAL must be 0 or 1 (got {anneal!r})")
+    out["sigma_anneal"] = anneal == "1"
+    loose = [k for k in CURRICULUM_KEYS[1:] if os.environ.get(k, "") != "" and not (out["sigma_anneal"] and k == "EX42_POSTURE_CHECK_STEPS")]
     if cur != "1" and loose:
         raise ValueError(f"{', '.join(loose)} set but EX42_POSTURE_CURRICULUM is not 1")
     out["curriculum"] = cur == "1"
@@ -102,6 +113,10 @@ def settings() -> dict:
                    h_step=_num("EX42_POSTURE_H_STEP", 0.02, 1e-4), roll_step=_num("EX42_POSTURE_ROLL_STEP", 0.1, 1e-4),
                    h_tol=_num("EX42_POSTURE_H_TOL", 0.02, 1e-4), roll_tol=_num("EX42_POSTURE_ROLL_TOL", 0.1, 1e-4),
                    state_path=os.environ.get("EX42_POSTURE_STATE", ""))
+        steps = _num("EX42_POSTURE_CHECK_STEPS", 1200, SAMPLE_EVERY)
+        if steps != int(steps):
+            raise ValueError("EX42_POSTURE_CHECK_STEPS must be a whole number")
+    elif out["sigma_anneal"] and os.environ.get("EX42_POSTURE_CHECK_STEPS", "") != "":
         steps = _num("EX42_POSTURE_CHECK_STEPS", 1200, SAMPLE_EVERY)
         if steps != int(steps):
             raise ValueError("EX42_POSTURE_CHECK_STEPS must be a whole number")
@@ -145,6 +160,7 @@ class PostureState:
         self.steps = 0                   # height_tracking 이 불린 수 (보상 관리자가 step 마다 한 번)
         self.checks = 0
         self.samples = []                # [(target_h, h, target_roll, roll, reward_h)] 적용 env 만
+        self.sigma = list(SIGMA_START) if cfg.get("sigma_anneal") else list(SIGMA_PAPER)   # [높이 m, roll rad]
         self.state_path = None
         if cfg["curriculum"] and cfg.get("state_path"):
             self.state_path = Path(f"{cfg['state_path']}.rank{_rank()}")
@@ -152,6 +168,8 @@ class PostureState:
                 saved = json.loads(self.state_path.read_text(encoding="utf-8"))
                 self.h_half, self.roll_half = float(saved["h_half"]), float(saved["roll_half"])
                 self.steps, self.checks = int(saved.get("steps", 0)), int(saved.get("checks", 0))
+                if cfg.get("sigma_anneal") and "sigma" in saved:
+                    self.sigma = [float(v) for v in saved["sigma"]]
                 print(f"EX42_POSTURE_CURRICULUM resumed {self.state_path} h_half={self.h_half} roll_half={self.roll_half} checks={self.checks}", flush=True)
 
     def update(self, command, new_episode):
@@ -201,13 +219,23 @@ class PostureState:
                 if not roll_full and line["med_roll_err"] < min(self.cfg["roll_tol"], BEAT_FRACTION * self.roll_half):
                     self.roll_half += self.cfg["roll_step"]
                     line["widen_roll"] = True
+        if self.cfg.get("sigma_anneal"):
+            line["sigma_h"], line["sigma_roll"] = self.sigma[0], self.sigma[1]
+            halve = []
+            for ax, key in ((0, "slope_h"), (1, "slope_roll")):
+                v = line.get(key)
+                if v is not None and not math.isnan(v) and v > SIGMA_SLOPE and self.sigma[ax] > SIGMA_PAPER[ax]:
+                    self.sigma[ax] = max(self.sigma[ax] / 2.0, SIGMA_PAPER[ax])
+                    halve.append(("h", "roll")[ax])
+            line["sigma_halved"] = halve
+            line["next_sigma_h"], line["next_sigma_roll"] = self.sigma[0], self.sigma[1]
         if self.cfg["curriculum"]:
             (nhl, nhh), (nrl, nrh) = band(self.cfg, self.h_half, self.roll_half)
             line["next_h"], line["next_roll"] = [round(nhl, 4), round(nhh, 4)], [round(nrl, 4), round(nrh, 4)]
             if self.state_path is not None:
                 tmp = self.state_path.with_suffix(self.state_path.suffix + ".tmp")
                 tmp.write_text(json.dumps({"h_half": self.h_half, "roll_half": self.roll_half, "steps": self.steps, "checks": self.checks,
-                                           "last": line}), encoding="utf-8")
+                                           "sigma": self.sigma, "last": line}), encoding="utf-8")
                 os.replace(tmp, self.state_path)
         print("EX42_POSTURE_CHECK " + json.dumps(line), flush=True)
         return line
@@ -284,14 +312,14 @@ def height_tracking(env):
     st = _state(env)
     target = st.effective()
     h = body_height(env)
-    r = torch.exp(-(target[:, 0] - h).abs() / 0.0025)
+    r = torch.exp(-(target[:, 0] - h).abs() / st.sigma[0])           # σ 풀림 끔이면 원문 0.0025 그대로
     st.record(h, body_roll(env.scene["robot"].data.root_quat_w), r)
     return r
 
 
 def roll_tracking(env):
     st = _state(env)
-    return torch.exp(-(st.effective()[:, 1] - body_roll(env.scene["robot"].data.root_quat_w)).abs() / 0.05)
+    return torch.exp(-(st.effective()[:, 1] - body_roll(env.scene["robot"].data.root_quat_w)).abs() / st.sigma[1])   # 끔이면 0.05
 
 
 def register_observation(obs_group) -> bool:
@@ -318,7 +346,8 @@ def register_rewards(env_cfg, term_cfg_class=None) -> bool:
     print(f"EX42_POSTURE where=start h={list(cfg['h'])} roll={list(cfg['roll'])} h0={cfg['h0']} height_w={cfg['height_w']} roll_w={cfg['roll_w']}"
           f" curriculum={cfg['curriculum']} check_steps={cfg['check_steps']}"
           + (f" h_start={cfg['h_start']} roll_start={cfg['roll_start']} h_step={cfg['h_step']} roll_step={cfg['roll_step']}"
-             f" h_tol={cfg['h_tol']} roll_tol={cfg['roll_tol']} state={cfg['state_path'] or '-'}" if cfg["curriculum"] else ""), flush=True)
+             f" h_tol={cfg['h_tol']} roll_tol={cfg['roll_tol']} state={cfg['state_path'] or '-'}" if cfg["curriculum"] else "")
+          + (f" sigma_anneal=1 sigma_start={list(SIGMA_START)} sigma_end={list(SIGMA_PAPER)} halve_when_slope>{SIGMA_SLOPE}" if cfg.get("sigma_anneal") else f" sigma={list(SIGMA_PAPER)}"), flush=True)
     return True
 
 
