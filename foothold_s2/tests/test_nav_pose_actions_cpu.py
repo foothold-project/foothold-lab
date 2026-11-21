@@ -113,3 +113,17 @@ def test_the_real_wiring_points():
     cfg = (root / "tasks/nav_env_cfg.py").read_text(encoding="utf-8")
     assert "env_cfg.observations.pose_cmd.pose_cmd.func = pose_actions.pose_obs" in cfg and "pose_receipt=pose_receipt)" in cfg
     assert 'cfg.get("lower_pose_receipt")' in (root / "nav/kit_factories.py").read_text(encoding="utf-8")
+
+
+def test_hl5d_paper_knobs_are_wired_and_default_off():
+    """factory v_des_max · vx_max · lower_map_mode (lead 11/21 22:01 · 원문 값 판): 없으면 옛 값 그대로 (0.3~1.0 · 1.0 · eval_gt)."""
+    from pathlib import Path
+    from foothold_s2.nav import command_space as cs, kit_factories as kf, rewards_hl
+    root = Path(__file__).resolve().parents[1]
+    src = (root / "nav/kit_factories.py").read_text(encoding="utf-8")
+    assert 'v_des_range=(0.3, float(cfg["v_des_max"])) if "v_des_max" in cfg else None' in src
+    assert 'map_mode=str(cfg.get("lower_map_mode", "eval_gt"))' in src and 'vx_max=float(cfg["vx_max"]) if "vx_max" in cfg else None' in src
+    assert rewards_hl.V_DES_RANGE == (0.3, 1.0) and cs.VX_MAX == 1.0
+    import inspect
+    assert inspect.signature(kf.make_task).parameters["v_des_range"].default is None
+    assert "vx_max" in (root / "tasks/nav_env_cfg.py").read_text(encoding="utf-8")

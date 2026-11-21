@@ -96,7 +96,8 @@ def configure_lower_env_cfg(env_cfg, agent_cfg, *, num_envs: int, device: str, s
 
 
 def build_nav_env(*, checkpoint, expected_sha256: str, room_mesh_npz, room_mesh_sha256: str, num_envs: int, device: str,
-                  seed: int, map_mode: str = "eval_gt", command_mode: str = "clip", prep_path=None, extra_scene=None, pose_receipt=None):
+                  seed: int, map_mode: str = "eval_gt", command_mode: str = "clip", prep_path=None, extra_scene=None, pose_receipt=None,
+                  vx_max=None):
     """Kit python 에서만. 하위 env 를 만들고 하위 정책을 올려 `NavEnv` 를 돌려준다 (Kit 에서 돌려 본 적 없음: 미확인).
     순서는 D44 평가기와 같다: cfg -> 저장본 sha · 입력 폭 검사 (gym.make 전) -> gym.make -> 러너 -> 명령 항 heading 끄기."""
     import gymnasium as gym
@@ -130,5 +131,7 @@ def build_nav_env(*, checkpoint, expected_sha256: str, room_mesh_npz, room_mesh_
         from pathlib import Path
         prep_path = Path(__file__).resolve().parents[1] / "curriculum" / "ex42-prep.yaml"
     space = command_space.CommandSpace(command_space.slots_from_stage_row(prep_path, "E1F"), command_mode,
-                                       pose_active=lower.pose_active)
+                                       pose_active=lower.pose_active, **({} if vx_max is None else {"vx_max": vx_max}))
+    if vx_max is not None or map_mode != "eval_gt":
+        print(f"HIPAN_LOWER_LINK vx_max={space.vx_max if hasattr(space, 'vx_max') else vx_max} lower_map_mode={map_mode}", flush=True)
     return NavEnv(env, lower, space), dict(summary, lower=lower.capabilities, preparation=prep)

@@ -100,11 +100,15 @@ def prepare_rooms(cfg: dict) -> dict:
     return {"manifest": manifest, "mesh": out / "terrain_mesh.npz", "assets": [nav_task.make_asset(r, table) for r in rooms]}
 
 
-def make_task(assets, num_envs: int, seed: int, rows, env_origins_xy, table_starts=None, per_start: int = 32, reach_m: float | None = None):
+def make_task(assets, num_envs: int, seed: int, rows, env_origins_xy, table_starts=None, per_start: int = 32, reach_m: float | None = None,
+              v_des_range=None):
     """table_starts = 방마다 시작점 (K, 2) 목록이면 시작 · 목표 · 경로 표를 미리 만든다 (학습 중 새 과제는 표에서 뽑기만). None 이면 옛 꼴 (뽑을 때마다 길을 냄)."""
     from foothold_s2.nav import nav_task
 
-    task = nav_task.NavTask(assets, num_envs, np.random.default_rng(seed)) if reach_m is None else nav_task.NavTask(assets, num_envs, np.random.default_rng(seed), reach_m=reach_m)
+    kw = {} if reach_m is None else {"reach_m": reach_m}
+    if v_des_range is not None:          # 원문 U[0.3, 1.2] (2604.26504.txt:551 · factory v_des_max · hl5d 11/21)
+        kw["v_des_range"] = tuple(v_des_range)
+    task = nav_task.NavTask(assets, num_envs, np.random.default_rng(seed), **kw)
     task.set_rooms_from_rows(rows, env_origins_xy)
     if table_starts is not None:
         import time
@@ -132,6 +136,7 @@ def _build(cfg: dict, with_camera: bool):
     nav, _summary = build_nav_env(checkpoint=cfg["lower_checkpoint"], expected_sha256=cfg["lower_sha256"], room_mesh_npz=prepared["mesh"],
                                   room_mesh_sha256=prepared["manifest"]["mesh_sha256"], num_envs=int(cfg["num_envs"]), device=cfg["device"],
                                   seed=int(cfg["seed"]), prep_path=cfg.get("prep_path"), extra_scene=extra,
+                                  map_mode=str(cfg.get("lower_map_mode", "eval_gt")), vx_max=float(cfg["vx_max"]) if "vx_max" in cfg else None,
                                   pose_receipt=json.loads(Path(cfg["lower_pose_receipt"]).read_text(encoding="utf-8")) if cfg.get("lower_pose_receipt") else None)
     raw = nav.raw
     if prepared.get("bench_docs") is not None:
@@ -143,7 +148,7 @@ def _build(cfg: dict, with_camera: bool):
 
     bench = prepared.get("bench_docs")
     starts = None if (bench is not None or not int(cfg.get("task_table_per_start", 32))) else [rg.start_points(a.room, int(cfg["n_starts"]), seed=int(cfg["room_seed"]) + row)[:, :2] for row, a in enumerate(prepared["assets"])]
-    task = make_task(prepared["assets"], int(cfg["num_envs"]), int(cfg["seed"]), rows, raw.scene.env_origins[:, :2].cpu().numpy(), starts, int(cfg.get("task_table_per_start", 32)), reach_m=float(cfg["reach_m"]) if "reach_m" in cfg else None)
+    task = make_task(prepared["assets"], int(cfg["num_envs"]), int(cfg["seed"]), rows, raw.scene.env_origins[:, :2].cpu().numpy(), starts, int(cfg.get("task_table_per_start", 32)), reach_m=float(cfg["reach_m"]) if "reach_m" in cfg else None, v_des_range=(0.3, float(cfg["v_des_max"])) if "v_des_max" in cfg else None)
     task.bench_docs = bench
     if bench is not None:
         from foothold_s2.nav import hl_bench
