@@ -54,6 +54,33 @@ def final_successes(environ=None) -> int:
     return int(v)
 
 
+def path_clear_m(environ=None) -> float:
+    """P3 스위치 HIPAN_PATH_CLEAR_M (lead 11/22 02:42 · 기본 꺼짐 = 0): 길 계획을 몸 폭 지도 (grade_map.body_clear_grade) 에서. 값 = 벽 · 막힌 칸 중심과의 최소 거리 (m).
+    Go2 몸 폭 약 0.31 m (반폭 0.155) + 여유. 0 또는 비어 있으면 끔."""
+    env = os.environ if environ is None else environ
+    v = str(env.get("HIPAN_PATH_CLEAR_M", "")).strip()
+    if v in ("", "0"):
+        return 0.0
+    try:
+        c = float(v)
+    except ValueError:
+        raise ValueError(f"HIPAN_PATH_CLEAR_M must be a number in (0, 0.6], got {v!r}") from None
+    if not 0.0 < c <= 0.6:
+        raise ValueError(f"HIPAN_PATH_CLEAR_M must be in (0, 0.6], got {c}")
+    return c
+
+
+def apply_path_clear(task, assets, clear_m: float) -> dict:
+    """P3 켜짐: 방마다 몸 폭 지도를 만들어 task.plan_grades 에. 돌려주는 값 = 방마다 막힌 칸이 는 몫 (시작 줄 · 시험용)."""
+    from foothold_s2.nav import grade_map as gm
+
+    if not clear_m:
+        return {}
+    task.plan_grades = [gm.body_clear_grade(a.grade, a.room, clear_m) for a in assets]
+    task.plan_clear_m = float(clear_m)
+    return {r: round(float(((pg.grade == gm.BLOCKED) & (a.grade.grade != gm.BLOCKED)).mean()), 4) for r, (pg, a) in enumerate(zip(task.plan_grades, assets))}
+
+
 def new_task_after_fails(cfg: dict, environ=None) -> int:
     """처방 A 스위치 (planner HIPAN-STICKY-TASK-1120 · 논문 밖): factory 설정 task_new_after_fails 또는 환경 변수 HIPAN_NEW_TASK_AFTER_FAILS (Pod 은 --remote-env). 0 (기본) = 끔 = 옛 동작. N >= 1 = 같은 과제 연속 N 번 실패하면 표에서 새 과제."""
     env = os.environ if environ is None else environ
@@ -173,6 +200,12 @@ def _build(cfg: dict, with_camera: bool):
     task = make_task(prepared["assets"], int(cfg["num_envs"]), int(cfg["seed"]), rows, raw.scene.env_origins[:, :2].cpu().numpy(), starts, per_start, reach_m=float(cfg["reach_m"]) if "reach_m" in cfg else None)
     if fresh:
         task.path_range_m, task.strict_winding = FRESH_PATH_RANGE_M, True
+    pc = path_clear_m()
+    if pc and per_start:
+        raise ValueError("HIPAN_PATH_CLEAR_M (P3) needs HIPAN_FRESH_TASKS=1: the start/goal table is built before the body-clearance grade exists")
+    if pc:
+        shut = apply_path_clear(task, prepared["assets"], pc)
+        print(f"HIPAN_PATH_CLEAR_M {pc:g} (P3: 길 계획 몸 폭 지도 · 막힌 칸이 는 몫 방별 {shut})", flush=True)
     fs = final_successes()
     for _p in task.pgcl:
         _p.final_successes = fs

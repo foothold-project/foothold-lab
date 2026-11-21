@@ -94,6 +94,7 @@ class NavTask:
         # 방 설계 (DESIGN-HIPAN-ROOMS-1117 3.3): 목표는 경로 길이로 뽑고 (path_range_m) 과제의 winding_frac 는 굴곡 비 (경로 / 직선) winding_min 이상인 쌍에서 뽑는다.
         # goal_candidates 개를 뽑아 길을 내 보고 조건에 맞는 것을 고른다. 맞는 것이 없으면 (좁은 방 · 시작이 구석) 길이만 맞는 것 · 그것도 없으면 옛 꼴 (직선 min_task_m 이상) 로 물러선다.
         self.straighten, self.path_range_m = bool(straighten), tuple(path_range_m)
+        self.plan_grades = None; self.plan_clear_m = 0.0; self.task_body_snap = 0; self.task_body_raw = 0   # P3 (HIPAN_PATH_CLEAR_M): 길 계획 전용 몸 폭 등급 지도 (방마다) · 없으면 옛 꼴
         self.table = None; self.table_tol_m = 0.75; self.table_sha256 = None; self.task_table_hits = 0; self.task_table_miss = 0; self.task_redraw_on_reset = 0   # 시작 · 목표 · 경로 표 (build_table): 학습 중에는 표에서 뽑는다
         self.winding_frac, self.winding_min, self.goal_candidates = float(winding_frac), float(winding_min), int(goal_candidates)
         self.strict_winding = False       # P2 스위치 (kit_factories.fresh_tasks): True 면 _pick_goal 의 굴곡 몫을 winding_frac 로 지킴
@@ -141,10 +142,43 @@ class NavTask:
             self.origin_xy = room_frame_origin_xy(env_origins_xy, rows, pitch_m)
 
     # ---- 과제
+    def _pg(self, i: int):
+        """길 계획 등급 지도: P3 가 켜져 있으면 몸 폭 지도, 아니면 방 등급 지도 (옛 꼴)."""
+        return self.plan_grades[self.room_id[i]] if self.plan_grades is not None else self.assets[self.room_id[i]].grade
+
+    def _snap(self, g, s, max_m: float = 1.0):
+        """s 가 g 에서 막힌 칸이면 max_m 안의 가장 가까운 통과 칸 중심 (없으면 None). 통과 칸이면 s 그대로."""
+        c = (np.asarray(s, float) / g.res).astype(int)
+        h, w = g.grade.shape
+        if 0 <= c[0] < h and 0 <= c[1] < w and g.grade[c[0], c[1]] != gm.BLOCKED:
+            return np.asarray(s, float)
+        free = np.argwhere(gm.largest_component_mask(gm.passable(g)))
+        if not len(free):
+            return None
+        d = np.linalg.norm((free + 0.5) * g.res - np.asarray(s, float), axis=1)
+        k = int(np.argmin(d))
+        return (free[k] + 0.5) * g.res if d[k] <= max_m else None
+
     def _plan(self, i: int, s, t):
-        """s -> t 길 (없거나 s · t 가 막힌 칸이면 None)."""
+        """s -> t 길 (없거나 s · t 가 막힌 칸이면 None). P3 켜짐: 몸 폭 지도에서 내고, 시작이 몸 폭 지도에서 막힌 칸이면 1 m 안의 가장 가까운 통과 칸으로 붙여
+        (길 = 실제 시작 → 붙인 칸 → ...) · 그래도 없으면 옛 등급 지도로 (task_body_raw 로 셈)."""
+        g = self._pg(i)
+        if self.plan_grades is not None:
+            s2 = self._snap(g, s)
+            if s2 is not None:
+                try:
+                    p = gvd_astar.find_path(g, s2, t, straighten=self.straighten)
+                except ValueError:
+                    p = None
+                if p is not None and p.found:
+                    if np.linalg.norm(s2 - np.asarray(s, float)) > 1e-9:
+                        self.task_body_snap += 1
+                        return np.vstack([np.asarray(s, float), p.points])
+                    return p.points
+            self.task_body_raw += 1
+            g = self.assets[self.room_id[i]].grade
         try:
-            p = gvd_astar.find_path(self.assets[self.room_id[i]].grade, s, t, straighten=self.straighten)
+            p = gvd_astar.find_path(g, s, t, straighten=self.straighten)
         except ValueError:
             return None
         return p.points if p.found else None
@@ -407,7 +441,7 @@ class NavTask:
 
     def _new_task(self, i: int, start=None) -> None:
         """start 가 주어지면 (실제 몸 위치) 그것이 시작이고 목표만 뽑는다. 없으면 시작 · 목표를 둘 다 뽑는다 (옛 꼴 · 시험용)."""
-        g = self.assets[self.room_id[i]].grade
+        g = self._pg(i)                                                    # P3: 목표도 몸 폭 지도의 통과 칸에서
         if start is not None:
             got = self._table_pick(i, np.asarray(start, float))
             if got is not None:
