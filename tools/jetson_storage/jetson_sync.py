@@ -23,11 +23,30 @@ import re
 import subprocess
 import sys
 
-JET = 'nvidia@100.107.113.1'   # go2x-jetson; only the tailnet IP is in known_hosts
+HOSTS = os.path.expanduser('~/.mai/jetson-storage/hosts.env')   # local only, never committed (public repo)
+
+
+def hosts(path=HOSTS):
+    """JETSON=user@addr, NAS=user@addr, NAS_KEY=key path, one KEY=VALUE per line."""
+    out = {}
+    try:
+        with open(path) as f:
+            for line in f:
+                k, sep, v = line.strip().partition('=')
+                if sep and not k.startswith('#'):
+                    out[k.strip()] = v.strip()
+    except FileNotFoundError:
+        pass
+    return out
+
+
+_H = hosts()
+MISSING = [k for k in ('JETSON', 'NAS', 'NAS_KEY') if not _H.get(k)]
+JET = _H.get('JETSON', 'unset')
 JROOT = 'go2_diag/records'      # relative to the Jetson home
 LOCAL = '/mnt/win-d/mai/data/go2x_raw/jetson_go2_diag/records'   # D drive (owner 11/19 17:12)
-NAS = 'VFXPEDIA@100.80.160.84'
-NAS_KEY = os.path.expanduser('~/.ssh/ai-nas01-backup-admin-20260912')
+NAS = _H.get('NAS', 'unset')
+NAS_KEY = os.path.expanduser(_H.get('NAS_KEY', 'unset'))
 NROOT = '/volume1/foothold/go2x-raw/jetson_go2_diag/records'
 STATE = os.path.expanduser('~/.mai/jetson-storage')
 SUMS, MARK = 'SHA256SUMS', '.backup.json'
@@ -223,6 +242,8 @@ def delete(name, yes):
 
 
 def main(argv=None):
+    if MISSING:
+        sys.exit('jetson_sync: %s missing in %s' % (', '.join(MISSING), HOSTS))
     ap = argparse.ArgumentParser()
     sub = ap.add_subparsers(dest='cmd', required=True)
     sub.add_parser('sync')

@@ -7,7 +7,8 @@ set -u
 N=${1:?marker}
 cd "$(dirname "$0")"
 O="-o BatchMode=yes -o StrictHostKeyChecking=yes -o ConnectTimeout=8"
-J=nvidia@100.107.113.1
+H=~/.mai/jetson-storage/hosts.env   # local only (public repo): JETSON=user@addr
+J=$(sed -n 's/^JETSON=//p' $H 2>/dev/null); [ -n "$J" ] || { echo "JETSON= missing in $H"; exit 1; }
 RUN=run_5283fa2c059b
 snd() { T=$(date +%H:%M); "$ORCA_CLI_COMMAND" orchestration send --run $RUN --subject "($T) $1" --body "($T) $2" >/dev/null 2>&1; echo "$(date +%T) $1"; }
 log() { timeout -k 2 15 ssh $O $J "cat ~/go2_diag/records/$N/run.log" 2>/dev/null; }
