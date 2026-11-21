@@ -280,3 +280,42 @@ def test_shrink_with_add_kind_opens_a_small_new_row_in_one_call():
         rd.set_kind_shares(base, {"D/crawl": 0.31}, {"D/crawl": 2}, shrink=True)
     with pytest.raises(ValueError, match="bundle is"):
         rd.set_kind_shares(base, {"D/crawl": 0.04}, {"D/crawl": 2})                           # without the flag: the strict rule as before
+
+
+E1F_RUN = Path("/mnt/win-d/mai/data/foothold/s2_lab/ex42_main_20261116_190816/main/EX-42-B-E1F_20261116_190817")
+FIRST_E2 = Path("/mnt/win-d/mai/data/foothold/s2_lab/ex42_record/e2_handoff_20261120_193344_r2/materialized_E2")
+
+
+def test_no_flags_takes_the_flag_slot_out_and_keeps_the_sum_at_1():
+    shares = {"forward": 0.17, "stand": 0.1, "side_left": 0.63, "flag": 0.1}
+    out, report = rd.drop_flag_share(shares)
+    assert out["flag"] == 0.0 and abs(sum(out.values()) - 1.0) < 1e-8 and out["forward"] == pytest.approx(0.17 / 0.9) and report["flag_before"] == 0.1
+    with pytest.raises(ValueError, match="nothing to take out"):
+        rd.drop_flag_share({**shares, "flag": 0.0})
+
+
+def test_parent_from_source_refuses_a_self_parent_or_another_file(tmp_path):
+    row = {"parent": {"source_stage_id": "E2", "manifest_local_update": 250, "checkpoint_key": "model_250.pt", "sha256": "0" * 64, "cumulative_update": 15750}}
+    with pytest.raises(ValueError, match="another stage"):
+        rd.source_parent_pin(row, tmp_path, 250)
+    row["parent"]["source_stage_id"] = "E1F"
+    with pytest.raises(ValueError, match="not model_300.pt"):
+        rd.source_parent_pin(row, tmp_path, 300)
+    run, _ = _fake_run(tmp_path)                       # a run whose model_250 is not the pinned file
+    with pytest.raises(ValueError, match="has not published|is not the source parent pin"):
+        rd.source_parent_pin(row, run, 250)
+
+
+@pytest.mark.skipif(not (E1F_RUN / "model_250.pt").is_file() or not (FIRST_E2 / "ex42-prep.yaml").is_file(), reason="canonical 3 run not here")
+def test_rx2pz_draft_keeps_the_canonical_parent_drops_every_sparse_row_and_the_flags(tmp_path):
+    from foothold_s2.curriculum.ex42_prep import EX42Plan, authorization_validators
+    out = tmp_path / "pz"
+    rec = rd.draft(FIRST_E2, E1F_RUN, 250, MESH, out, keep_mesh=True, parent_from_source=True, no_flags=True,
+                   drop_kinds=["A/gaps", "B/gap", "C/gap", "B/beam", "A/balance_beams"])
+    plan = EX42Plan.load(out / "ex42-prep.yaml")
+    row = next(r for r in plan.document["stages"] if r["id"] == "E2")
+    assert row["parent"]["source_stage_id"] == "E1F" and row["parent"]["sha256"].startswith("13caeb4ae52d") and row["parent"]["cumulative_update"] == 15500
+    assert [r.get("kinds_of") for r in row["terrain"]["exposure_at_E2"]["positive"]] == ["continuous"]
+    assert row["shares"]["flag"] == 0.0 and rec["command_shares"]["flag_before"] == 0.1
+    assert e_stage_table(plan.document["stages"])["E2"]["previous"] == "E1F"
+    assert authorization_validators(plan)["E2"](out / "ex42-approvals.yaml", row["parent"]["sha256"])["scope"]["parent_sha256"] == row["parent"]["sha256"]

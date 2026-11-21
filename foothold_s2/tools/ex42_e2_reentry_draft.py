@@ -25,6 +25,10 @@ materialized plan folder and changes only:
                           is checked like the cap handoff approval (commit is an ancestor of the published ledger ref, the line is in the ledger at that commit, its sha
                           matches) and the line has to carry EXIT_JUDGE_LINE_TAG, the decision id and the adapter name. mapgain_two_boundary_e2 = graduation by map gain in two boundaries;
   * the approval cell's scope.parent_sha256 and the plan's stage_zero.approval_sha256 (the approvals file bytes changed).
+  * --parent-from-source (lead 11/21 20:24, rx2pz: a new E2-stage OUT from the canonical lower 3 = E1F m250): the source row's own parent pin is kept
+                          (it must name another stage, E1F); --run-dir is that parent's run and --iteration its local update, and the file must have the
+                          pinned sha256. The training entry then reads the run as a first E2 (previous stage E1F), as the first E2 did;
+  * --no-flags (same order, "깃발 env 0"): stages[E2].shares.flag -> 0 and the free command slots scaled by 1 / (1 - flag) (the sum stays 1).
 The `materialization` declaration and transition.json are NOT carried over: they describe E1F -> E2 with a gate receipt, and a plan
 that still carried them would be re-derived from that gate (validate_materialized_transition) and refused. The draft writes its own
 `reentry.json` (what was changed, the old and new plan sha256, the parent pin) instead. Nothing here starts training.
@@ -80,6 +84,37 @@ def parent_pin(source_row: dict, run_dir: Path, iteration: int) -> dict:
         raise ValueError("the source E2 row has no parent cumulative_update")
     return {"source_stage_id": STAGE, "manifest_local_update": iteration, "checkpoint_key": key, "sha256": sha,
             "cumulative_update": base + iteration}
+
+
+def source_parent_pin(source_row: dict, run_dir: Path, iteration: int) -> dict:
+    """--parent-from-source: keep the source row's parent pin (another stage's checkpoint, the canonical E1F m250), after checking that
+    run_dir/model_<iteration>.pt is that file (manifest inventory and sha256)."""
+    pin = dict(source_row.get("parent") or {})
+    if pin.get("source_stage_id") in (None, STAGE):
+        raise ValueError("--parent-from-source needs a source row whose parent is another stage (the first E2 plan, parent E1F)")
+    if pin.get("manifest_local_update") != iteration or pin.get("checkpoint_key") != f"model_{iteration}.pt":
+        raise ValueError(f"--parent-from-source: the source parent is {pin.get('checkpoint_key')}, not model_{iteration}.pt")
+    run_dir = Path(run_dir).resolve(strict=True)
+    manifest = json.loads((run_dir / "manifest.json").read_text(encoding="utf-8-sig"))
+    key = pin["checkpoint_key"]
+    if key not in (manifest.get("checkpoints") or {}):
+        raise ValueError(f"the run manifest has not published {key}")
+    sha = _sha(run_dir / key)
+    if sha != pin.get("sha256"):
+        raise ValueError(f"{run_dir / key} sha256 {sha[:12]} is not the source parent pin {str(pin.get('sha256'))[:12]}")
+    return pin
+
+
+def drop_flag_share(shares: dict) -> tuple[dict, dict]:
+    """--no-flags: the flag slot to 0 and the free slots scaled so the command shares still add up to 1."""
+    flag = float(shares.get("flag", 0.0))
+    if not 0.0 < flag < 1.0:
+        raise ValueError(f"--no-flags: the source flag share is {flag} (nothing to take out)")
+    out = {k: (0.0 if k == "flag" else round(float(v) / (1.0 - flag), 10)) for k, v in shares.items()}
+    total = sum(out.values())
+    if abs(total - 1.0) > 1e-8:
+        raise ValueError(f"--no-flags: the scaled shares add up to {total}")
+    return out, {"flag_before": flag, "before": dict(shares), "after": out}
 
 
 def rule_caps(terrain: dict) -> dict:
@@ -233,7 +268,8 @@ def check_ledger_pin(pin: dict, repo, adapter: str) -> dict:
 def draft(source_dir: Path, run_dir: Path, iteration: int, mesh_dir: Path, out: Path, *, profile: str = "e2_easy10_beam_edge",
           promotion: dict | None = None, adjust_from: Path | None = None, keep_mesh: bool = False,
           bake_caps_run: Path | None = None, bake_boundaries: int = 0, kind_caps: dict | None = None,
-          kind_shares: dict | None = None, add_kinds: dict | None = None, drop_kinds: list | None = None, shrink_to_continuous: bool = False, exit_judge: str | None = None, ledger_pin: dict | None = None, ledger_repo=None) -> dict:
+          kind_shares: dict | None = None, add_kinds: dict | None = None, drop_kinds: list | None = None, shrink_to_continuous: bool = False, exit_judge: str | None = None, ledger_pin: dict | None = None, ledger_repo=None,
+          parent_from_source: bool = False, no_flags: bool = False) -> dict:
     source_dir, out = Path(source_dir).resolve(strict=True), Path(out).absolute()
     if out.exists():
         raise FileExistsError(f"{out} exists (a draft folder is never reused)")
@@ -243,8 +279,11 @@ def draft(source_dir: Path, run_dir: Path, iteration: int, mesh_dir: Path, out: 
     if profile in plan["training_mesh_profiles"] and not keep_mesh:
         raise ValueError(f"profile {profile} already exists in the plan")
     row = next(r for r in plan["stages"] if r["id"] == STAGE)
-    pin = parent_pin(row, run_dir, iteration)
+    pin = source_parent_pin(row, run_dir, iteration) if parent_from_source else parent_pin(row, run_dir, iteration)
     row["parent"] = pin
+    flags_report = None
+    if no_flags:
+        row["shares"], flags_report = drop_flag_share(row["shares"])
     moved = []
     if not keep_mesh:       # keep_mesh: the same weights on the plan's own mesh (the way back when the new mesh or rule fails its first-update check)
         moved = [r["id"] for r in plan["stages"] if r.get("training_mesh_profile") == OLD_PROFILE]
@@ -292,7 +331,8 @@ def draft(source_dir: Path, run_dir: Path, iteration: int, mesh_dir: Path, out: 
     record = {"format": REENTRY_FORMAT, "stage": STAGE, "source_dir": str(source_dir), "source_plan_sha256": old_plan_sha,
               "new_plan_sha256": hashlib.sha256(plan_bytes).hexdigest(), "approval_sha256": plan["stage_zero"]["approval_sha256"],
               "parent": pin, "run_dir": str(Path(run_dir).resolve()), "mesh_profile": None if keep_mesh else profile, "mesh_stages": moved, "keep_mesh": keep_mesh,
-              "terrain_promotion": promotion, "kind_caps": caps_report, "kind_shares": shares_report, "exit_judge": judge_report, "training_started": False}
+              "terrain_promotion": promotion, "kind_caps": caps_report, "kind_shares": shares_report, "exit_judge": judge_report,
+              "parent_from_source": parent_from_source, "command_shares": flags_report, "training_started": False}
     if adjust_from is not None:
         # the live (per update) adjustment file binds the plan sha256: the same decisions, re-bound to the new plan. Nothing is added or decided here.
         adjust = json.loads(Path(adjust_from).read_text(encoding="utf-8-sig"))
@@ -329,6 +369,8 @@ def main(argv=None):
     p.add_argument("--exit-judge", default=None, help="E2 stage exit adapter for the new OUT (and the E3 entry gate that names it), e.g. mapgain_two_boundary_e2")
     p.add_argument("--ledger-pin", type=Path, help="json file with the ledger line that approves the --exit-judge swap (required with it)")
     p.add_argument("--ledger-repo", type=Path, help="the ledger checkout (default: EX42_LEDGER_REPO)")
+    p.add_argument("--parent-from-source", action="store_true", help="keep the source row's parent pin (another stage, E1F m250); --run-dir / --iteration name that file")
+    p.add_argument("--no-flags", action="store_true", help="stages[E2].shares.flag -> 0, the free slots scaled to add up to 1")
     a = p.parse_args(argv)
     caps = {k: int(v) for k, v in (item.split("=", 1) for item in a.kind_cap)}
     shares = {k: float(v) for k, v in (item.split("=", 1) for item in a.kind_share)}
@@ -338,7 +380,8 @@ def main(argv=None):
                                           adjust_from=a.adjust_from, keep_mesh=a.keep_mesh,
                                           bake_caps_run=a.bake_caps_run, bake_boundaries=a.bake_boundaries, kind_caps=caps or None,
                                           kind_shares=shares or None, add_kinds=adds or None, drop_kinds=a.drop_kind or None, shrink_to_continuous=a.shrink_to_continuous, exit_judge=a.exit_judge,
-                                          ledger_pin=json.loads(a.ledger_pin.read_text(encoding="utf-8")) if a.ledger_pin else None, ledger_repo=a.ledger_repo), indent=1))
+                                          ledger_pin=json.loads(a.ledger_pin.read_text(encoding="utf-8")) if a.ledger_pin else None, ledger_repo=a.ledger_repo,
+                                          parent_from_source=a.parent_from_source, no_flags=a.no_flags), indent=1))
 
 
 if __name__ == "__main__":
