@@ -23,11 +23,11 @@ import re
 import subprocess
 import sys
 
-HOSTS = os.path.expanduser('~/.mai/jetson-storage/hosts.env')   # local only, never committed (public repo)
+HOSTS = os.path.expanduser('~/.mai/foothold-env/foothold.env')   # the team env file, local only, never committed (public repo)
 
 
 def hosts(path=HOSTS):
-    """JETSON=user@addr, NAS=user@addr, NAS_KEY=key path, one KEY=VALUE per line."""
+    """GO2X_SYNC_JETSON=user@addr, GO2X_SYNC_NAS=user@addr, GO2X_SYNC_NAS_KEY=key path, among the other KEY=VALUE lines."""
     out = {}
     try:
         with open(path) as f:
@@ -41,12 +41,12 @@ def hosts(path=HOSTS):
 
 
 _H = hosts()
-MISSING = [k for k in ('JETSON', 'NAS', 'NAS_KEY') if not _H.get(k)]
-JET = _H.get('JETSON', 'unset')
+MISSING = [k for k in ('GO2X_SYNC_JETSON', 'GO2X_SYNC_NAS', 'GO2X_SYNC_NAS_KEY') if not _H.get(k)]
+JET = _H.get('GO2X_SYNC_JETSON', 'unset')
 JROOT = 'go2_diag/records'      # relative to the Jetson home
 LOCAL = '/mnt/win-d/mai/data/go2x_raw/jetson_go2_diag/records'   # D drive (owner 11/19 17:12)
-NAS = _H.get('NAS', 'unset')
-NAS_KEY = os.path.expanduser(_H.get('NAS_KEY', 'unset'))
+NAS = _H.get('GO2X_SYNC_NAS', 'unset')
+NAS_KEY = os.path.expanduser(_H.get('GO2X_SYNC_NAS_KEY', 'unset'))
 NROOT = '/volume1/foothold/go2x-raw/jetson_go2_diag/records'
 STATE = os.path.expanduser('~/.mai/jetson-storage')
 SUMS, MARK = 'SHA256SUMS', '.backup.json'
