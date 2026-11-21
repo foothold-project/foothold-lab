@@ -245,3 +245,19 @@ def test_drop_kind_from_a_source_that_already_dropped_rows_keeps_its_own_total_a
         rd.set_kind_shares(base, {"A/gaps": 0.14}, None)                                      # no drop: still the strict 0.44 rule on a 0.28 source
     with pytest.raises(ValueError, match="no such single-kind share row"):
         rd.set_kind_shares(out, None, None, ["A/balance_beams"])                              # already gone
+
+
+def test_shrink_to_continuous_lowers_shares_only_when_asked_and_gives_the_rest_to_the_continuous_columns():
+    """rv (lead 2026-11-21 13:28): from the 0.28 plan, A/gaps 0.01 + A/balance_beams 0.01 with --shrink-to-continuous; without the flag the strict rule holds."""
+    base, _ = rd.set_kind_shares(_v1_terrain(), None, None, ["B/gap", "C/gap", "B/beam"])
+    small = {"A/gaps": 0.01, "A/balance_beams": 0.01}
+    with pytest.raises(ValueError, match="bundle is 0.440000"):
+        rd.set_kind_shares(base, small, None)                                                 # no flag: refused as before
+    out, report = rd.set_kind_shares(base, small, None, shrink=True)
+    assert rd.rule_shares(out) == small and report["total"] == pytest.approx(0.02) and report["shrunk_to_continuous"] == pytest.approx(0.26)
+    assert rd.rule_caps(out) == rd.rule_caps(base) and [r for r in out["exposure_at_E2"]["positive"] if "kinds_of" in r]      # caps and the continuous rule kept
+    for bad in ({"A/gaps": 0.2, "A/balance_beams": 0.01}, {"A/gaps": 0.14, "A/balance_beams": 0.14}):
+        with pytest.raises(ValueError, match="only lowers"):
+            rd.set_kind_shares(base, bad, None, shrink=True)                                  # raising or keeping the total is not a shrink
+    with pytest.raises(ValueError, match="cannot also be added|needs --kind-share values only"):
+        rd.set_kind_shares(base, small, None, ["A/gaps"], shrink=True)
