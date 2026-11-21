@@ -434,6 +434,8 @@ class StartRunner(OnPolicyRunner):
         else:
             alg = PPO(policy, device=self.device, **alg_cfg, multi_gpu_cfg=self.multi_gpu_cfg)
         self._attach_bc_prior(alg, policy)
+        from foothold_s2.runners import ex42_posture_cols
+        self._ex42_posture_cols = ex42_posture_cols.attach(alg, policy)   # rx2ps2 (lead 07:41): posture input columns · both switches off = None
         alg.init_storage("rl", self.env.num_envs, self.num_steps_per_env, obs, [self.env.num_actions])
         self._small_noise_target = alg
         self._apply_small_noise()
@@ -788,6 +790,9 @@ class StartRunner(OnPolicyRunner):
             self.env.episode_length_buf = torch.randint_like(
                 self.env.episode_length_buf, high=int(self.env.max_episode_length)
             )
+        if getattr(self, "_ex42_posture_cols", None) is not None:     # rx2ps2: small random posture columns only on a fresh start from the parent
+            self._ex42_posture_cols.maybe_init(bool(getattr(self, "_ex42_parent_loaded", False)) and self.current_learning_iteration == 0,
+                                               int(os.environ.get("EX42_SEED", "42")))
         raw = self.env.get_observations().to(self.device)
         self._scatter_and_record_before_rollout()                 # EX-35: 흩기 · 영수증은 reset 이 다 끝난 뒤 첫 rollout 직전의 실제 값으로
         self.train_mode()
@@ -1043,6 +1048,8 @@ class StartRunner(OnPolicyRunner):
             self._phase_start()
             klp = self._kl_ppo_before(it) if self.pcfg["log_kl"] else None
             loss_dict = self.alg.update()
+            if getattr(self, "_ex42_posture_cols", None) is not None:
+                self._ex42_posture_cols.after_update(it)
             kl_info = {}
             if klp is not None:
                 kl_info["ppo"] = self._kl_ppo_after(klp)
