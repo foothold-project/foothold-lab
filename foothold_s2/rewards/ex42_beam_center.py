@@ -15,6 +15,11 @@ hind foot drops", unrelated to the gait width or the hip term. Today's median dr
     lead 07:39 (ledger 2b9bdc33d · planner 07:38): the body must face along the beam: |yaw| <= EX42_BEAM_CENTER_YAW (default 0.3 rad)
              from +x (a robot that starts turned walks off the beam whatever it does, so its |dy| is a penalty it cannot fix). The check
              line adds, per all / gt / recon: candidates before the yaw test (n_cand), the yaw pass share and |dy| median of the passed ones.
+    lead 08:28 (ledger 076d0f707 · planner 08:27): the body must be ON the beam: root z - tile origin z > beam top z - 0.10 m and
+             |dy| <= beam half width + 0.05 m, both from the training mesh (EX42_MESH_DIR_E2/terrain_mesh.npz: beam-top vertices at tile
+             x 0.5~6.5, per level and column). A robot that stepped off sideways, diagonally or backwards and then got a forward command
+             gets 0, not an unfixable -0.5. The check line adds the on-beam share of the yaw-passed candidates and, of the scored samples,
+             the share with |dy| >= 0.099 (at the clip).
     lead 06:40 (ledger b148fd9b2): forward-command envs only (vx > 0.1, |vy| <= 0.1, |wz| <= 0.1: side, turn and stand commands left out);
              the check line splits ground-truth-map and reconstructed-map envs (the runner publishes env._ex42_use_gt beside map-off).
     form   EX42_BEAM_CENTER_FORM = l1  : value = min(|dy|, EX42_BEAM_CENTER_CLIP)      weight must be < 0 (a penalty)
@@ -41,6 +46,31 @@ STATE = "_ex42_beam_center_state"
 BEAM_KIND = ("A", "balance_beams")
 SAMPLE_EVERY = 24
 CMD_EPS = 0.1                        # forward only: vx > 0.1 · |vy| <= 0.1 · |wz| <= 0.1 (lead 06:40)
+ON_BEAM_Z = 0.10                     # root z above beam top z - 0.10 (lead 08:28)
+ON_BEAM_DY = 0.05                    # |dy| <= half width + 0.05
+MESH_ENV = "EX42_MESH_DIR_E2"
+
+
+def beam_geometry(mesh_dir, table) -> tuple[torch.Tensor, torch.Tensor]:
+    """(top_z, half_width), each (levels, columns), NaN off the beam columns: beam-top vertices (tile x 0.5~6.5, |y| < 1, z > -0.3 from the
+    tile origin) of every A/balance_beams column and level of the training mesh."""
+    import numpy as np
+    from pathlib import Path
+    if not mesh_dir:
+        raise ValueError(f"EX-42 beam centre needs the training mesh folder ({MESH_ENV}) for the on-beam test")
+    z = np.load(Path(mesh_dir) / "terrain_mesh.npz")
+    origins, verts = z["origins"], z["vertices"]
+    top = np.full(origins.shape[:2], np.nan); half = np.full(origins.shape[:2], np.nan)
+    for col, row in enumerate(table):
+        if (row["family"], row["kind"]) != BEAM_KIND:
+            continue
+        for lv in range(origins.shape[0]):
+            loc = verts - origins[lv, col]
+            sel = loc[(loc[:, 0] > 0.45) & (loc[:, 0] < 6.55) & (np.abs(loc[:, 1]) < 1.0) & (loc[:, 2] > -0.3)]
+            if not len(sel):
+                raise ValueError(f"EX-42 beam centre: no beam-top vertex on level {lv} column {col}")
+            top[lv, col], half[lv, col] = float(sel[:, 2].max()), float(np.abs(sel[:, 1]).max())
+    return torch.tensor(top, dtype=torch.float32), torch.tensor(half, dtype=torch.float32)
 
 
 def enabled() -> bool:
@@ -107,8 +137,9 @@ def value(dy_abs: torch.Tensor, on: torch.Tensor, cfg: dict) -> torch.Tensor:
 
 
 class _State:
-    def __init__(self, cfg, beam_cols):
+    def __init__(self, cfg, beam_cols, top=None, half=None):
         self.cfg, self.beam_cols, self.calls, self.samples, self.started = cfg, beam_cols, 0, [], False
+        self.top, self.half = top, half
 
 
 def body_yaw(quat_wxyz: torch.Tensor) -> torch.Tensor:
@@ -131,7 +162,8 @@ def beam_center_term(env):
         table = getattr(raw, "_ex42_column_table", None)
         if table is None:
             raise ValueError("EX-42 beam centre needs the column table (raw._ex42_column_table) on the environment")
-        st = _State(settings(), beam_columns(table).to(env.device))
+        top, half = beam_geometry(os.environ.get(MESH_ENV, ""), table)
+        st = _State(settings(), beam_columns(table).to(env.device), top.to(env.device), half.to(env.device))
         setattr(raw, STATE, st)
     terrain = env.scene.terrain
     cols = terrain.terrain_types.long().to(st.beam_cols.device)
@@ -150,7 +182,11 @@ def beam_center_term(env):
     forward = (cmd[:, 0] > CMD_EPS) & (cmd[:, 1].abs() <= CMD_EPS) & (cmd[:, 2].abs() <= CMD_EPS)
     cand = beam_env & forward & (local[:, 0] >= x0) & (local[:, 0] <= x1) & ~map_off.to(beam_env.device).bool()
     yaw_ok = body_yaw(robot.root_quat_w.to(cand.device)).abs() <= st.cfg["yaw"]
-    on = cand & yaw_ok
+    lv = terrain.terrain_levels.long().to(cand.device)
+    top, half = st.top[lv, cols], st.half[lv, cols]
+    rz = robot.root_pos_w[:, 2].to(cand.device) - terrain.env_origins[:, 2].to(cand.device)
+    on_beam = (rz > top - ON_BEAM_Z) & (local[:, 1].abs() <= half + ON_BEAM_DY)      # NaN off the beam columns -> False
+    on = cand & yaw_ok & on_beam
     use_gt = getattr(raw, "_ex42_use_gt", None)
     gt = torch.ones_like(on) if use_gt is None else use_gt.to(on.device).bool()
     dy = local[:, 1].abs()
@@ -161,14 +197,16 @@ def beam_center_term(env):
               f" of={int(beam_env.numel())} rank={_rank()}", flush=True)
     st.calls += 1
     if st.calls % SAMPLE_EVERY == 0 and bool(cand.any()):
-        st.samples.append(torch.stack([dy[cand], value(dy, cand, st.cfg)[cand], gt[cand].float(), yaw_ok[cand].float()], 1).detach().float().cpu())
+        st.samples.append(torch.stack([dy[cand], value(dy, cand, st.cfg)[cand], gt[cand].float(), yaw_ok[cand].float(), on_beam[cand].float()], 1).detach().float().cpu())
     if st.calls % st.cfg["check_steps"] == 0:
         line = {"step": st.calls, "rank": _rank()}
-        s = torch.cat(st.samples) if st.samples else torch.zeros((0, 4)); st.samples = []
+        s = torch.cat(st.samples) if st.samples else torch.zeros((0, 5)); st.samples = []
         for name, sel in (("all", torch.ones(len(s), dtype=torch.bool)), ("gt", s[:, 2] > 0.5), ("recon", s[:, 2] <= 0.5)):
-            c = s[sel]; t = c[c[:, 3] > 0.5]                                   # c: candidates before the yaw test · t: passed (the term's samples)
-            g = {"n_cand": int(len(c)), "yaw_pass": round(float(len(t)) / len(c), 4) if len(c) else None,
-                 "median_abs_dy_m_cand": round(float(c[:, 0].median()), 5) if len(c) else None, "n": int(len(t))}
+            c = s[sel]; y = c[c[:, 3] > 0.5]; t = y[y[:, 4] > 0.5]           # c: candidates · y: yaw passed · t: also on the beam (the term's samples)
+            g = {"n_cand": int(len(c)), "yaw_pass": round(float(len(y)) / len(c), 4) if len(c) else None,
+                 "on_beam_of_yaw_pass": round(float(len(t)) / len(y), 4) if len(y) else None,
+                 "median_abs_dy_m_cand": round(float(c[:, 0].median()), 5) if len(c) else None, "n": int(len(t)),
+                 "at_clip_share": round(float((t[:, 0] >= 0.099).float().mean()), 4) if len(t) else None}
             if len(t):
                 g.update({"median_abs_dy_m": round(float(t[:, 0].median()), 5), "term_mean": round(float(t[:, 1].mean()), 6),
                           "term_mean_weighted": round(float(t[:, 1].mean()) * st.cfg["weight"], 6)})

@@ -20,9 +20,13 @@ ON = {"EX42_BEAM_CENTER": "1", "EX42_BEAM_CENTER_FORM": "l1", "EX42_BEAM_CENTER_
 
 
 @pytest.fixture(autouse=True)
-def clean(monkeypatch):
+def clean(monkeypatch, tmp_path):
     for k in (bc.ENV_SWITCH,) + bc.KEYS:
         monkeypatch.delenv(k, raising=False)
+    # a tiny training mesh: column 1 (A/balance_beams) has a beam top at z 0 from tile x 0.5 to 6.5, half width 0.30
+    verts = np.array([[0.5, -0.3, 0.0], [0.5, 0.3, 0.0], [6.5, -0.3, 0.0], [6.5, 0.3, 0.0], [3.0, 0.0, -0.8]], dtype=np.float32)
+    np.savez(tmp_path / "terrain_mesh.npz", vertices=verts, faces=np.array([[0, 1, 2]]), origins=np.zeros((1, 4, 3)))
+    monkeypatch.setenv(bc.MESH_ENV, str(tmp_path))
 
 
 def _on(monkeypatch, **extra):
@@ -35,12 +39,12 @@ def _quat_yaw(yaw):
     return torch.stack([torch.cos(yaw / 2), torch.zeros_like(yaw), torch.zeros_like(yaw), torch.sin(yaw / 2)], -1)
 
 
-def _env(cols, xy, map_off=None, origins=None, cmd=None, use_gt=None, yaw=None):
+def _env(cols, xy, map_off=None, origins=None, cmd=None, use_gt=None, yaw=None, z=None):
     n = len(cols)
     origins = torch.zeros((n, 3)) if origins is None else origins
-    pos = torch.column_stack([torch.tensor(xy, dtype=torch.float32) + origins[:, :2], torch.full((n,), 0.3)])
+    pos = torch.column_stack([torch.tensor(xy, dtype=torch.float32) + origins[:, :2], torch.full((n,), 0.3) if z is None else torch.tensor(z, dtype=torch.float32)])
     robot = SimpleNamespace(data=SimpleNamespace(root_pos_w=pos, root_quat_w=_quat_yaw([0.0] * n if yaw is None else yaw)))
-    terrain = SimpleNamespace(terrain_types=torch.tensor(cols), env_origins=origins)
+    terrain = SimpleNamespace(terrain_types=torch.tensor(cols), terrain_levels=torch.zeros(n, dtype=torch.long), env_origins=origins)
     scene = type("S", (), {"__getitem__": lambda self, k: robot, "terrain": terrain})()
     cmd = torch.tensor([[0.5, 0.0, 0.0]] * n) if cmd is None else torch.tensor(cmd)
     env = SimpleNamespace(num_envs=n, device="cpu", scene=scene, _ex42_column_table=TABLE, command_manager=SimpleNamespace(get_command=lambda name: cmd))
@@ -174,3 +178,35 @@ def test_yaw_condition_and_check_line(monkeypatch, capsys):
     monkeypatch.setenv("EX42_BEAM_CENTER_YAW", "0")
     with pytest.raises(ValueError, match="EX42_BEAM_CENTER_YAW"):
         bc.settings()
+
+
+def test_only_a_body_on_the_beam_is_scored(monkeypatch, capsys):
+    """lead 08:28 (planner 08:27): a robot that stepped off the beam and then got a forward command scores 0: root z above top - 0.10 and
+    |dy| <= half width + 0.05 (the tiny mesh: top 0, half 0.30)."""
+    _on(monkeypatch, EX42_BEAM_CENTER_CHECK_STEPS="24")
+    xy = [[3.0, 0.05], [3.0, 0.34], [3.0, 0.40], [3.0, 0.05], [3.0, 0.05]]
+    z = [0.30, 0.30, 0.30, -0.50, -0.05]                       # on · edge (0.34 <= 0.35) · off to the side · down in the pit · just above top-0.10
+    env = _env([1] * 5, xy, map_off=torch.zeros(5, dtype=torch.bool), z=z)
+    assert bc.beam_center_term(env).tolist() == pytest.approx([0.05, 0.10, 0, 0, 0.05], abs=1e-6)
+    for _ in range(23):
+        bc.beam_center_term(env)
+    a = json.loads([l for l in capsys.readouterr().out.splitlines() if l.startswith("EX42_BEAM_CENTER_CHECK")][-1].split(" ", 1)[1])["all"]
+    assert a["n_cand"] == 5 and a["n"] == 3 and a["on_beam_of_yaw_pass"] == pytest.approx(0.6) and a["at_clip_share"] == pytest.approx(1 / 3, abs=1e-4)
+
+
+@pytest.mark.skipif(not MESH.is_file(), reason="training beam mesh not on this machine")
+def test_beam_geometry_from_the_real_mesh():
+    """Half width narrows by level (0.266 m at level 0 to 0.045 m at level 9) and the top is within 6 cm of the tile origin z (the rpy-tilted beams: 0.050 m measured)."""
+    table = [{"family": "A", "kind": "x"}] * 35 + [{"family": "A", "kind": "balance_beams"}] * 5 + [{"family": "A", "kind": "x"}] * 36
+    top, half = bc.beam_geometry(str(MESH.parent), table)
+    assert half[0, 37] == pytest.approx(0.266, abs=2e-3) and half[9, 37] == pytest.approx(0.045, abs=2e-3)
+    assert bool((half[1:, 35:40] < half[:-1, 35:40]).all()) and float(top[:, 35:40].abs().max()) < 0.06
+    assert bool(torch.isnan(half[:, 0]).all())
+
+
+def test_missing_mesh_refuses(monkeypatch):
+    _on(monkeypatch)
+    monkeypatch.delenv(bc.MESH_ENV)
+    env = _env([1], [[3.0, 0.0]], map_off=torch.zeros(1, dtype=torch.bool))
+    with pytest.raises(ValueError, match=bc.MESH_ENV):
+        bc.beam_center_term(env)
