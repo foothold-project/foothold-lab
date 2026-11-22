@@ -216,3 +216,25 @@ def test_m15500_loss_is_not_zero_and_latents_are_re_estimated(capsys):
     assert loss > 1e-4                                                           # the drifting policy is not mirror-symmetric
     assert max(diff["z"], diff["zf"], diff["zb"]) > 1e-3                          # A and B give different actor inputs
     sys.stdout.flush()
+
+
+def test_loss_is_zero_for_a_symmetric_actor_and_positive_for_a_plain_one():
+    """lead 11/23 07:05: a hand-made fully symmetric actor f(x) = g(x) + M_a g(M x) gives loss 0; a plain g gives loss > 0.
+    M here is the input table on the 98 actor entries with the 48 latent entries kept (a symmetric-by-construction test, not path B)."""
+    from foothold_s2.runners import ex42_actor_mirror as am
+    g_ = torch.Generator().manual_seed(1)
+    x = torch.randn(256, 98, generator=g_, dtype=torch.float64)
+
+    def mirror_in(z):
+        y = z.clone()
+        y[..., :45] = am.mirror_o45(z[..., :45])
+        y[..., am.V_SLICE] = z[..., am.V_SLICE] * z.new_tensor((1, -1, 1))
+        y[..., 96:98] = am.mirror_pose(z[..., 96:98])
+        return y
+
+    W = torch.randn(12, 98, generator=g_, dtype=torch.float64)
+    g = lambda z: torch.tanh(z @ W.T)
+    f = lambda z: g(z) + am.mirror_action(g(mirror_in(z)))
+    assert torch.equal(mirror_in(mirror_in(x)), x)
+    assert float(am.mirror_loss(f(x), f(mirror_in(x)))) < 1e-20
+    assert float(am.mirror_loss(g(x), g(mirror_in(x)))) > 1e-2
