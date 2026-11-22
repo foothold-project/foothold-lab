@@ -44,6 +44,20 @@ def test_actor_and_critic_heads_have_the_right_widths():
     assert tuple(actor(x).shape) == (2, 3) and tuple(critic(x).shape) == (2, 1)
 
 
+@pytest.fixture(autouse=True)
+def _lower_vx_env(monkeypatch):
+    """The receipt checks --vx-corr-b against the correction the lower policy applies (lead 11/22 10:36); these tests pass 0.009."""
+    monkeypatch.setenv("EX42_PERCEPTION_VX_CORR", "1"); monkeypatch.setenv("EX42_PERCEPTION_VX_CORR_B", "0.009")
+
+
+def test_the_receipt_refuses_a_b_the_lower_policy_does_not_apply(files, monkeypatch):
+    monkeypatch.delenv("EX42_PERCEPTION_VX_CORR_B")                       # applied = code default 0.010, argument 0.009
+    with pytest.raises(ValueError):
+        tnt.build_receipt(**_args(files))
+    monkeypatch.setenv("EX42_PERCEPTION_VX_CORR_B", "0.009")
+    assert tnt.build_receipt(**_args(files))["lower_vx_corr_applied"] == {"on": True, "b": 0.009, "band": 0.3, "ramp": 0.05}
+
+
 def test_the_receipt_pins_lower_rooms_plan_b_and_names_the_assumed_values(files):
     r = tnt.build_receipt(**_args(files))
     assert r["lower"]["sha256"] == _sha(b"lower") and r["rooms"][0]["mesh_sha256"] == "ab" * 32 and r["lower_vx_corr_b"] == 0.009

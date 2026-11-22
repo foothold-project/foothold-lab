@@ -62,7 +62,13 @@ def build_receipt(*, lower_checkpoint, lower_sha256, room_manifests, plan, vx_co
     if resume:
         resume_path = Path(resume).resolve(strict=True)
         resume_row = {"path": str(resume_path), "sha256": _sha(resume_path), **({"levels": str(resume_levels)} if resume_levels else {})}     # 칸 levels 는 켰을 때만 (끄면 옛 영수증과 같다)
+    from foothold_s2.runners.start_runner import VX_CORR_RAMP, vx_corr_params
+    on, b_applied, band = vx_corr_params()               # lead 11/22 10:36: the correction the lower policy actually applies (environment)
+    if not on or float(vx_corr_b) != float(b_applied):
+        raise ValueError(f"--vx-corr-b {vx_corr_b} is not what the lower policy applies (on={on} b={b_applied}): set EX42_PERCEPTION_VX_CORR_B "
+                         f"to the lower run's value, or pass that value")
     return {"format": FORMAT, "lower": {"checkpoint": str(ckpt), "sha256": digest},
+            "lower_vx_corr_applied": {"on": bool(on), "b": float(b_applied), "band": float(band), "ramp": float(VX_CORR_RAMP)},
             "rooms": rooms, "plan": {"path": str(plan_path), "sha256": _sha(plan_path)}, "lower_vx_corr_b": float(vx_corr_b),
             "observation": {"total": layout.total, "sizes": layout.sizes, "latent": ppo.latent},
             "ppo": ppo.as_dict(), "assumed_ppo_fields": list(cfg.ASSUMED), "action_dim": cfg.ACTION_DIM,

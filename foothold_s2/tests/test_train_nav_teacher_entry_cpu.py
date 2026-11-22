@@ -16,6 +16,12 @@ D = TeacherObsLayout().total
 N = 8
 
 
+
+@pytest.fixture(autouse=True)
+def _lower_vx_env(monkeypatch):
+    """train_nav_teacher checks --vx-corr-b against the correction the lower policy applies (lead 11/22 10:36)."""
+    monkeypatch.setenv("EX42_PERCEPTION_VX_CORR", "1"); monkeypatch.setenv("EX42_PERCEPTION_VX_CORR_B", "0.009")
+
 def _factory():
     state = SimpleNamespace(done=np.zeros(N, bool), timed_out=np.zeros(N, bool), pos_local=np.zeros((N, 3)))
     rng = np.random.default_rng(0)
@@ -41,7 +47,7 @@ def files(tmp_path, monkeypatch):
                       "--plan", str(plan), "--vx-corr-b", "0.009", "--num-envs", str(N), "--save-interval", "2", "--env-factory", "fake_g3_factory:make"]
 
 
-def test_entry_trains_saves_resumes_and_refuses_a_different_receipt(files, capsys):
+def test_entry_trains_saves_resumes_and_refuses_a_different_receipt(files, capsys, monkeypatch):
     tmp, base = files
     out = tmp / "out"
     assert tnt.main(base + ["--out-dir", str(out), "--iterations", "3"]) == 0
@@ -49,6 +55,7 @@ def test_entry_trains_saves_resumes_and_refuses_a_different_receipt(files, capsy
     assert tnt.main(base + ["--out-dir", str(out), "--iterations", "2", "--resume", str(out / "model_2.pt")]) == 0
     assert (out / "resume_log.jsonl").is_file() and (out / "model_4.pt").is_file()           # 3 회째까지 · 이어서 +2 -> 5 회째 (저장 간격 2 -> 4)
     other = [("0.010" if a == "0.009" else a) for a in base]
+    monkeypatch.setenv("EX42_PERCEPTION_VX_CORR_B", "0.010")                  # the lower applies 0.010 too: the receipt differs, not the b check
     with pytest.raises(SystemExit, match="different start receipt"):
         tnt.main(other + ["--out-dir", str(out), "--iterations", "1"])
 
