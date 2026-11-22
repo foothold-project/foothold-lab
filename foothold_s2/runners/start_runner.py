@@ -157,6 +157,20 @@ def apply_checkpoint_vx_corr(saved) -> dict:
     return rec
 
 
+def check_resume_vx_corr(saved, where: str) -> dict:
+    """Training that continues a checkpoint must apply the same vx correction (lead 2026-11-22 10:54, planner (a)): an entry in the checkpoint
+    must equal what this process applies; a checkpoint without the entry (older runs, e.g. an E2 parent of E3) needs both
+    EX42_PERCEPTION_VX_CORR and EX42_PERCEPTION_VX_CORR_B named explicitly, so a launch that forgot B cannot fall back to the 0.010 default."""
+    rec = vx_corr_record()
+    if saved is None:
+        if os.environ.get(VX_CORR_ENV) is None or os.environ.get(VX_CORR_ENV_B) in (None, ""):
+            raise ValueError("%s: the checkpoint has no vx_corr entry; set %s and %s to the values the parent trained with" % (where, VX_CORR_ENV, VX_CORR_ENV_B))
+    elif {k: (bool(v) if k == "on" else float(v)) for k, v in dict(saved).items()} != rec:
+        raise ValueError("%s: checkpoint vx_corr %r differs from this process %r (set %s / %s)" % (where, saved, rec, VX_CORR_ENV, VX_CORR_ENV_B))
+    print("EX42_VX_CORR_RESUME_CHECK " + json.dumps({"where": where, "checkpoint": saved, "process": rec}, sort_keys=True), flush=True)
+    return rec
+
+
 def vx_corr_mask(vx: torch.Tensor, band: float = VX_CORR_BAND) -> torch.Tensor:
     return (vx >= 0.0) & (vx < band)
 
@@ -2101,6 +2115,7 @@ class StartRunner(OnPolicyRunner):
         for key, default in MODE_DEFAULTS.items():
             if saved.get(key, default) != self.pcfg[key]:
                 raise ValueError(f"체크포인트의 {key}={saved.get(key, default)!r} 와 이 runner 의 {self.pcfg[key]!r} 가 다르다 (처치가 다른 체크포인트를 섞지 않는다)")
+        check_resume_vx_corr(sd.get("vx_corr"), "load")
         self.alg.policy.load_state_dict(sd["model_state_dict"])
         self.perception.load_state_dict(sd["perception_state_dict"])
         self._saved_perception_ema = sd.get("perception_ema")           # v28u: continued by learn() when the average is on, ignored otherwise
@@ -2260,6 +2275,7 @@ class StartRunner(OnPolicyRunner):
                 raise ValueError(f"EX-42 stage-zero parent perception mode {key} differs")
         if float(checkpoint["map_switch"]["p_map_off"]) != self.p_map_off:
             raise ValueError("EX-42 stage-zero map-switch probability differs from parent")
+        check_resume_vx_corr(checkpoint.get("vx_corr"), "load_ex42_stage_zero_parent")
         self.alg.policy.load_state_dict(checkpoint["model_state_dict"], strict=True)
         parent_perception, perception_source = checkpoint["perception_state_dict"], "online"
         if stage_id is not None and checkpoint.get("perception_ema") is not None:
