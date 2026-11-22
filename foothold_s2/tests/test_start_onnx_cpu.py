@@ -30,6 +30,16 @@ def test_export_refuses_missing_vx_values(tmp_path):
         ex.export(CKPTS["rx2qh_m250"], tmp_path, **{**VX, "vx_corr_ramp": 0.1})
 
 
+def test_checkpoint_vx_entry_wins_and_must_match(tmp_path):
+    sd = torch.load(CKPTS["rx2qh_m250"], map_location="cpu", weights_only=False)
+    sd["vx_corr"] = {"on": True, "b": 0.009, "band": 0.3, "ramp": 0.05}
+    ck = tmp_path / "model_250.pt"; torch.save(sd, ck)
+    assert ex.checkpoint_vx(ck) == ((True, 0.009, 0.3, 0.05), "checkpoint")
+    with pytest.raises(ValueError):
+        ex.checkpoint_vx(ck, True, 0.010, 0.3, 0.05)
+    assert ex.checkpoint_vx(ck, True, 0.009, 0.3, 0.05)[1] == "checkpoint"
+
+
 @pytest.mark.parametrize("name", list(CKPTS))
 def test_episode_matches_the_deployment_path(name, tmp_path):
     if not Path(CKPTS[name]).is_file() or not OBS.is_file():

@@ -8,8 +8,9 @@ What runs on the robot each 50 Hz step (the evaluation / deployment path: eval/a
   inside the graph (StepNet): prop GRU step -> on a depth tick the TR-Net step -> rough 32 x 16 -> U-Net -> refined map -> I-E estimate
   (z mean 16 · v 3 · zf 16 · zb 16 = est 51) -> the vx correction of the actor input (start_runner.correct_est_vx, v29-14: column 16 only;
   part of the policy: training and evaluation pass every actor input through it) -> actor (o 45 + est_in 51 + pose 2 = 98) -> action mean 12.
-  The correction values are required arguments (lead 2026-11-22 10:32: never a hidden default): --vx-corr on|off, --vx-corr-b, --vx-corr-band,
-  --vx-corr-ramp; the ramp is the code constant VX_CORR_RAMP (another value is refused). The est output is the perception estimate before it.
+  The correction values come from the checkpoint's vx_corr entry (written by training since lead 10:36); a checkpoint without it needs
+  all of --vx-corr on|off, --vx-corr-b, --vx-corr-band, --vx-corr-ramp (never a hidden default, lead 10:32); given arguments must match the
+  entry; the ramp is the code constant VX_CORR_RAMP (another value is refused). The est output is the perception estimate before it.
 The graph follows StartPerception._advance with use_gt false and no map switch-off (the robot has no ground-truth map); tick and first are
 0/1 float inputs (the blend tick * new + (1 - tick) * old is exact for 0/1).
 
@@ -105,7 +106,21 @@ def example_inputs(b: int = 2):
             torch.zeros(b, 128), torch.zeros(b, 128), torch.ones(b, 1), torch.ones(b, 1), torch.zeros(b, POSE_DIM))
 
 
+def checkpoint_vx(checkpoint, on=None, b=None, band=None, ramp=None) -> tuple:
+    """The vx values to export: the checkpoint's vx_corr entry when it has one (given arguments must then match it), else the arguments
+    (all four required: lead 10:32 / 10:36, no hidden default)."""
+    saved = torch.load(checkpoint, map_location="cpu", weights_only=False).get("vx_corr")
+    given = [x is not None for x in (on, b, band, ramp)]
+    if saved is None:
+        return (on, b, band, ramp), "arguments"
+    rec = (bool(saved["on"]), float(saved["b"]), float(saved["band"]), float(saved["ramp"]))
+    if any(given) and (not all(given) or (bool(on), float(b), float(band), float(ramp)) != rec):
+        raise ValueError(f"vx arguments {(on, b, band, ramp)} differ from the checkpoint vx_corr {rec}")
+    return rec, "checkpoint"
+
+
 def export(checkpoint, out_dir, opset: int = 17, *, vx_corr_on=None, vx_corr_b=None, vx_corr_band=None, vx_corr_ramp=None) -> dict:
+    (vx_corr_on, vx_corr_b, vx_corr_band, vx_corr_ramp), vx_source = checkpoint_vx(checkpoint, vx_corr_on, vx_corr_b, vx_corr_band, vx_corr_ramp)
     vx = vx_params(vx_corr_on, vx_corr_b, vx_corr_band, vx_corr_ramp)
     out = Path(out_dir); out.mkdir(parents=True, exist_ok=True)
     perc, actor, info = load(checkpoint)
@@ -136,7 +151,7 @@ def export(checkpoint, out_dir, opset: int = 17, *, vx_corr_on=None, vx_corr_b=N
             {"name": "refined_map", "shape": ["batch", MAP_X, MAP_Y], "what": "reconstructed height map, m relative to the base, x 32 (rear -0.475 .. front 1.075, 0.05) x y 16"},
             {"name": "est", "shape": ["batch", EST_DIM], "what": "z mean 16 · v 3 · zf 16 · zb 16"}],
         "actor_only": {"input": "actor_in [batch, 98] = o 45 + est_in 51 + pose 2 (est_in = est after the vx correction)", "output": "action [batch, 12]"},
-        "vx_correction": {"on": vx[0], "b": vx[1], "band": vx[2], "ramp": float(vx_corr_ramp), "column": 16,
+        "vx_correction": {"on": vx[0], "b": vx[1], "band": vx[2], "ramp": float(vx_corr_ramp), "column": 16, "source": vx_source,
                           "rule": "where 0 <= est[16] < band: est_in[16] = est[16] - b * min(est[16] / ramp, 1) * (1 - est[16] / band); other columns unchanged",
                           "note": "part of the policy (training and evaluation apply it to every actor input); the robot uses the same values; start_step.onnx applies it inside, start_actor.onnx expects est_in"},
         "robot_side_rules": {
@@ -157,12 +172,12 @@ def main(argv=None) -> int:
     ap.add_argument("--checkpoint", required=True)
     ap.add_argument("--out", required=True)
     ap.add_argument("--opset", type=int, default=17)
-    ap.add_argument("--vx-corr", choices=("on", "off"), required=True)
-    ap.add_argument("--vx-corr-b", type=float, required=True)
-    ap.add_argument("--vx-corr-band", type=float, required=True)
-    ap.add_argument("--vx-corr-ramp", type=float, required=True)
+    ap.add_argument("--vx-corr", choices=("on", "off"), default=None)
+    ap.add_argument("--vx-corr-b", type=float, default=None)
+    ap.add_argument("--vx-corr-band", type=float, default=None)
+    ap.add_argument("--vx-corr-ramp", type=float, default=None)
     a = ap.parse_args(argv)
-    spec = export(a.checkpoint, a.out, a.opset, vx_corr_on=a.vx_corr == "on", vx_corr_b=a.vx_corr_b, vx_corr_band=a.vx_corr_band,
+    spec = export(a.checkpoint, a.out, a.opset, vx_corr_on=None if a.vx_corr is None else a.vx_corr == "on", vx_corr_b=a.vx_corr_b, vx_corr_band=a.vx_corr_band,
                   vx_corr_ramp=a.vx_corr_ramp)
     print(json.dumps({k: spec[k] for k in ("checkpoint_sha256", "perception_source", "files")}))
     return 0
