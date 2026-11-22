@@ -6,11 +6,14 @@ What runs on the robot each 50 Hz step (the evaluation / deployment path: eval/a
   frame ring (10 Hz: every 5th step; a delay of depth_delay_ticks frames; 2 frames go in), the step counter since reset (first step fills the
   history and the frames with the current values), the two GRU states (zeroed on reset) and the depth preprocessing (60 x 60, 0..1).
   inside the graph (StepNet): prop GRU step -> on a depth tick the TR-Net step -> rough 32 x 16 -> U-Net -> refined map -> I-E estimate
-  (z mean 16 · v 3 · zf 16 · zb 16 = est 51) -> actor (o 45 + est 51 + pose 2 = 98) -> action mean 12.
+  (z mean 16 · v 3 · zf 16 · zb 16 = est 51) -> the vx correction of the actor input (start_runner.correct_est_vx, v29-14: column 16 only;
+  part of the policy: training and evaluation pass every actor input through it) -> actor (o 45 + est_in 51 + pose 2 = 98) -> action mean 12.
+  The correction values are required arguments (lead 2026-11-22 10:32: never a hidden default): --vx-corr on|off, --vx-corr-b, --vx-corr-band,
+  --vx-corr-ramp; the ramp is the code constant VX_CORR_RAMP (another value is refused). The est output is the perception estimate before it.
 The graph follows StartPerception._advance with use_gt false and no map switch-off (the robot has no ground-truth map); tick and first are
 0/1 float inputs (the blend tick * new + (1 - tick) * old is exact for 0/1).
 
-  python -m foothold_s2.deploy.export_start_onnx --checkpoint <model_N.pt> --out <folder>
+  python -m foothold_s2.deploy.export_start_onnx --checkpoint <model_N.pt> --out <folder> --vx-corr on --vx-corr-b 0.009 --vx-corr-band 0.3 --vx-corr-ramp 0.05
 writes <folder>/start_step.onnx, start_actor.onnx, start_onnx.json (input / output names, shapes, order, the ring rules, checkpoint sha256).
 """
 from __future__ import annotations
@@ -66,10 +69,22 @@ def load(checkpoint) -> tuple[StartPerception, nn.Sequential, dict]:
                          "depth_tick": perc.cfg.depth_tick}
 
 
+def vx_params(on, b, band, ramp) -> tuple:
+    """The (on, b, band) tuple of start_runner.correct_est_vx, checked; every value must be given (no default)."""
+    from foothold_s2.runners import start_runner as sr
+    if on not in (True, False) or b is None or band is None or ramp is None:
+        raise ValueError("the vx correction needs on, b, band and ramp given explicitly")
+    if float(ramp) != sr.VX_CORR_RAMP:
+        raise ValueError(f"vx correction ramp {ramp} differs from the code constant {sr.VX_CORR_RAMP}")
+    if not (abs(float(b)) <= 0.05 and float(band) > 0):
+        raise ValueError("vx correction b must be within +-0.05 and band > 0")
+    return (bool(on), float(b), float(band))
+
+
 class StepNet(nn.Module):
-    def __init__(self, perc: StartPerception, actor: nn.Sequential):
+    def __init__(self, perc: StartPerception, actor: nn.Sequential, vx: tuple):
         super().__init__()
-        self.p, self.actor = perc, actor
+        self.p, self.actor, self.vx = perc, actor, vx
 
     def forward(self, o, hist, depth2, h_prop, h_terr, tick, first, pose):
         keep = 1.0 - first
@@ -80,7 +95,8 @@ class StepNet(nn.Module):
         _rough, refined = self.p.trnet.decode(h_terr2)
         e = self.p.ie.estimate(h_prop2, refined)
         est = torch.cat([e["mu"], e["v"], e["zf"], e["zb"]], -1)
-        action = self.actor(torch.cat([o, est, pose], -1))
+        from foothold_s2.runners.start_runner import correct_est_vx
+        action = self.actor(torch.cat([o, correct_est_vx(est, self.vx), pose], -1))
         return action, h_prop2, h_terr2, refined, est
 
 
@@ -89,10 +105,11 @@ def example_inputs(b: int = 2):
             torch.zeros(b, 128), torch.zeros(b, 128), torch.ones(b, 1), torch.ones(b, 1), torch.zeros(b, POSE_DIM))
 
 
-def export(checkpoint, out_dir, opset: int = 17) -> dict:
+def export(checkpoint, out_dir, opset: int = 17, *, vx_corr_on=None, vx_corr_b=None, vx_corr_band=None, vx_corr_ramp=None) -> dict:
+    vx = vx_params(vx_corr_on, vx_corr_b, vx_corr_band, vx_corr_ramp)
     out = Path(out_dir); out.mkdir(parents=True, exist_ok=True)
     perc, actor, info = load(checkpoint)
-    net = StepNet(perc, actor).eval()
+    net = StepNet(perc, actor, vx).eval()
     dyn = {n: {0: "batch"} for n in STEP_INPUTS + STEP_OUTPUTS}
     with torch.no_grad():
         torch.onnx.export(net, example_inputs(), out / "start_step.onnx", input_names=list(STEP_INPUTS), output_names=list(STEP_OUTPUTS),
@@ -118,7 +135,10 @@ def export(checkpoint, out_dir, opset: int = 17) -> dict:
             {"name": "h_prop_out", "shape": ["batch", 128]}, {"name": "h_terr_out", "shape": ["batch", 128]},
             {"name": "refined_map", "shape": ["batch", MAP_X, MAP_Y], "what": "reconstructed height map, m relative to the base, x 32 (rear -0.475 .. front 1.075, 0.05) x y 16"},
             {"name": "est", "shape": ["batch", EST_DIM], "what": "z mean 16 · v 3 · zf 16 · zb 16"}],
-        "actor_only": {"input": "actor_in [batch, 98] = o 45 + est 51 + pose 2", "output": "action [batch, 12]"},
+        "actor_only": {"input": "actor_in [batch, 98] = o 45 + est_in 51 + pose 2 (est_in = est after the vx correction)", "output": "action [batch, 12]"},
+        "vx_correction": {"on": vx[0], "b": vx[1], "band": vx[2], "ramp": float(vx_corr_ramp), "column": 16,
+                          "rule": "where 0 <= est[16] < band: est_in[16] = est[16] - b * min(est[16] / ramp, 1) * (1 - est[16] / band); other columns unchanged",
+                          "note": "part of the policy (training and evaluation apply it to every actor input); the robot uses the same values; start_step.onnx applies it inside, start_actor.onnx expects est_in"},
         "robot_side_rules": {
             "history": "each step: hist = roll(hist, 1) and hist[0] = o; on the first step after a reset every row = o",
             "depth": f"10 Hz: on a tick (steps_since_reset % {info['depth_tick']} == 0) push the new frame into a ring of {DEPTH_FRAMES + info['depth_delay_ticks']} "
@@ -137,8 +157,13 @@ def main(argv=None) -> int:
     ap.add_argument("--checkpoint", required=True)
     ap.add_argument("--out", required=True)
     ap.add_argument("--opset", type=int, default=17)
+    ap.add_argument("--vx-corr", choices=("on", "off"), required=True)
+    ap.add_argument("--vx-corr-b", type=float, required=True)
+    ap.add_argument("--vx-corr-band", type=float, required=True)
+    ap.add_argument("--vx-corr-ramp", type=float, required=True)
     a = ap.parse_args(argv)
-    spec = export(a.checkpoint, a.out, a.opset)
+    spec = export(a.checkpoint, a.out, a.opset, vx_corr_on=a.vx_corr == "on", vx_corr_b=a.vx_corr_b, vx_corr_band=a.vx_corr_band,
+                  vx_corr_ramp=a.vx_corr_ramp)
     print(json.dumps({k: spec[k] for k in ("checkpoint_sha256", "perception_source", "files")}))
     return 0
 
