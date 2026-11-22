@@ -127,6 +127,36 @@ def vx_corr_params() -> tuple:
     return switch == "1", b, VX_CORR_BAND
 
 
+def vx_corr_record() -> dict:
+    """The vx correction this process applies, as written into every checkpoint (lead 2026-11-22 10:36: evaluation and ONNX export read it)."""
+    on, b, band = vx_corr_params()
+    return {"on": bool(on), "b": float(b), "band": float(band), "ramp": float(VX_CORR_RAMP)}
+
+
+def apply_checkpoint_vx_corr(saved) -> dict:
+    """Make this process apply the checkpoint's vx correction. A checkpoint with a vx_corr entry: the environment is set to it, and an
+    environment that already names other values is refused. A checkpoint without the entry (older runs): the values must be given in the
+    environment explicitly (EX42_PERCEPTION_VX_CORR and EX42_PERCEPTION_VX_CORR_B), otherwise refused (no hidden default). Returns the record."""
+    if saved is None:
+        if os.environ.get(VX_CORR_ENV) is None or os.environ.get(VX_CORR_ENV_B) in (None, ""):
+            raise ValueError("checkpoint has no vx_corr entry: set %s and %s to the values the run trained with" % (VX_CORR_ENV, VX_CORR_ENV_B))
+        return vx_corr_record()
+    if not isinstance(saved, dict) or set(saved) != {"on", "b", "band", "ramp"}:
+        raise ValueError("checkpoint vx_corr must hold on, b, band, ramp: %r" % (saved,))
+    if float(saved["band"]) != VX_CORR_BAND or float(saved["ramp"]) != VX_CORR_RAMP:
+        raise ValueError("checkpoint vx_corr band/ramp %r differ from this code (%s, %s)" % (saved, VX_CORR_BAND, VX_CORR_RAMP))
+    want = {VX_CORR_ENV: "1" if saved["on"] else "0", VX_CORR_ENV_B: repr(float(saved["b"]))}
+    for key, value in want.items():
+        have = os.environ.get(key)
+        if have not in (None, "") and (have != value if key == VX_CORR_ENV else float(have) != float(value)):
+            raise ValueError("environment %s=%s differs from the checkpoint vx_corr %r" % (key, have, saved))
+    os.environ.update(want)
+    rec = vx_corr_record()
+    if rec != {k: (bool(v) if k == "on" else float(v)) for k, v in saved.items()}:
+        raise ValueError("vx correction after applying the checkpoint %r is %r" % (saved, rec))
+    return rec
+
+
 def vx_corr_mask(vx: torch.Tensor, band: float = VX_CORR_BAND) -> torch.Tensor:
     return (vx >= 0.0) & (vx < band)
 
@@ -1834,6 +1864,7 @@ class StartRunner(OnPolicyRunner):
             "optimizer_state_dict": self.alg.optimizer.state_dict(),
             "ppo_learning_rate": self.alg.learning_rate,  # adaptive 학습률은 optimizer 밖 속성에도 있다
             "perception_state_dict": perception_state,
+            "vx_corr": vx_corr_record(),  # lead 11/22 10:36: the actor-input vx correction of this run (evaluation and ONNX export read it)
             **({"perception_ema": self.perception_wema.save_state()} if getattr(self, "perception_wema", None) is not None else {}),   # v28u: only when the average is on
             "perception_optimizer_state_dict": self.perception_optimizer.state_dict(),
             "perception_cfg": dict(self.pcfg),
