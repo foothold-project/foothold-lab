@@ -3,17 +3,13 @@ evaluation policy (S2Policy, eval_pred, camera A, rx2qh m250) on three scenes (b
 recorded on a Pod by onnx_rec/run_child_onnxrec.py. Replayed on CPU through the deployment path (StartPerception.ingest + step, deterministic,
 reconstructed map, resets as recorded) and through start_step.onnx with the GRU states carried by the ONNX outputs.
 
-Judgement (lead 10:06, registered before the record came): (1) main: for action, est and the refined map, max |ONNX - float64| <= 5 x
-max |torch float32 - float64| (same inputs, same scene); (2) beside it, absolute: action < 5e-5, est < 5e-5, refined map < 3e-4 (1e-5 is the
-float32 floor itself: a synthetic-record rehearsal gave torch float32 1.01e-5 off float64 on the action) reported as flags beside the main
-judgement; outer limits (lead 10:08 with the planner): action > 1e-4, est > 1e-4 or refined map > 1e-3 fails whatever the ratio (est outer 1e-4: lead 10:11); (3) no drift (registered by lead 10:22 with the planner; all
-three must pass): A' per step the relative error max|diff| / max(max|torch value|, 1) has a 50-step block median <= 3 x the first block
-median (action, est and map each); B (final form, lead 10:23 with the planner) for action, est and map: the 95 %
-upper end of the least-squares slope of the relative error, times the record length in steps, <= the first 50-step block median of the
-relative error (to the end the error does not pass twice its start); the significance (interval holds 0) is written, not judged; C the est per-step worst error has a 50-step block median <= 3 x the first block median. The 50-step block
-maxima are written, not judged; (4) the record-off run (byte check of env_arrays, done beside this
-test) decides whether the record is usable at all. The ground-truth map path is not compared (the robot has only the reconstructed map).
-Envs with a reset inside the record are reported before and after the reset separately. Written beside the record (onnx_record_check.json): those numbers per scene and
+Judgement (lead 10:26, the third registered form, before the second record was opened): per step r = max|ONNX - float64| / max(max|torch
+float32 - float64|, floor 1e-7) for action, est and map each: (a) every 50-step block median of r <= 5, (b) the last block median <= 2 x the
+first block median; outer limits: action and actor-only 1e-4, est 1e-4, map 1e-3; device baseline: max |GPU record action - CPU torch| < 1e-4
+(the record must come from a copy that reads perception_ema). Written, not judged: the whole-record max ratio, A' (relative block medians),
+B (rise), the 5e-5 / 3e-4 beside flags, the 50-step block maxima, and the reference "state fed in" comparison (ONNX given the torch GRU
+states each step against ONNX carrying its own). The record-off run (byte check of env_arrays, beside this test) decides whether the record
+is usable. The ground-truth map path is not compared (the robot has only the reconstructed map). Envs with a reset inside the record are reported before and after the reset separately. Written beside the record (onnx_record_check.json): those numbers per scene and
 block, the float64 reference (ONNX and torch float32 against the same net in float64, and their ratio) and, as the device baseline, CPU torch
 against the action / est recorded on the GPU (not judged). Set ONNXREC_DIR to the fetched folder (out_cam/onnxrec_*/onnxrec.npz)."""
 from __future__ import annotations
@@ -35,6 +31,7 @@ CKPT = "/mnt/win-d/mai/data/foothold/s2_lab/ex42_main_20261120_193344_r2/main/EX
 REC_DIR = os.environ.get("ONNXREC_DIR", "")
 RECORDS = sorted(glob.glob(os.path.join(REC_DIR, "*", "onnxrec.npz"))) if REC_DIR else []
 BLOCK = 50
+R_FLOOR = 1e-7       # floor of the torch32 vs float64 error in r (lead 10:26): below it float64 and float32 agree to the printed digits
 
 
 def _state64(st):
@@ -51,7 +48,7 @@ def _replay(perc, actor, rec, dtype):
         st = _state64(st)
     no_gt = torch.zeros(K, dtype=torch.bool)
     gt = torch.zeros(K, 32, 16, dtype=dtype)
-    out = {"action": [], "est": [], "map": [], "inp": []}
+    out = {"action": [], "est": [], "map": [], "inp": [], "h": []}
     for t in range(T):
         reset = torch.tensor(rec["reset_before"][t] > 0)
         if reset.any():
@@ -65,6 +62,7 @@ def _replay(perc, actor, rec, dtype):
             act = actor(torch.cat([o, est, pose], -1))
         out["action"].append(act.numpy().astype(np.float64)); out["est"].append(est.numpy().astype(np.float64))
         out["map"].append(refined.numpy().astype(np.float64)); out["inp"].append({k: v.clone() for k, v in inp.items()} | {"pose": pose})
+        out["h"].append((st.h_prop.float().numpy().copy(), st.h_terr.float().numpy().copy()))     # torch state after this step
     return out
 
 
@@ -114,6 +112,8 @@ def test_record_replay_matches(tmp_path):
         err = {"action": np.zeros(T), "est": np.zeros(T), "refined_map": np.zeros(T), "actor_only": np.zeros(T)}
         f64 = {f"{w}_{k}": 0.0 for w in ("onnx", "torch") for k in ("action", "est", "map")}
         per_env = np.zeros((T, K)); rel = {k: np.zeros(T) for k in ("action", "est", "refined_map")}
+        d_onnx = {k: np.zeros(T) for k in ("action", "est", "refined_map")}; d_t32 = {k: np.zeros(T) for k in ("action", "est", "refined_map")}
+        injected = {k: np.zeros(T) for k in ("action", "est", "refined_map")}
         ticks = 0
         for t in range(T):
             inp = ref["inp"][t]
@@ -131,6 +131,13 @@ def test_record_replay_matches(tmp_path):
             per_env[t] = np.abs(action - ref["action"][t]).max(-1)
             for k, (x, y) in {"action": (action, ref["action"][t]), "est": (est, ref["est"][t]), "refined_map": (refined, ref["map"][t])}.items():
                 rel[k][t] = float(np.abs(x - y).max() / max(float(np.abs(y).max()), 1.0))
+            for k, (x, y, z) in {"action": (action - brk, ref["action"][t], r64["action"][t]), "est": (est, ref["est"][t], r64["est"][t]),
+                                 "refined_map": (refined, ref["map"][t], r64["map"][t])}.items():
+                d_onnx[k][t] = float(np.abs((x + (brk if k == "action" else 0.0)) - z).max()); d_t32[k][t] = float(np.abs(y - z).max())
+            hp0, ht0 = (np.zeros((K, 128), np.float32),) * 2 if t == 0 else ref["h"][t - 1]       # reference only: torch state fed in each step
+            a_i, _hp, _ht, m_i, e_i = sess.run(list(ex.STEP_OUTPUTS), feed | {"h_prop": hp0, "h_terr": ht0})
+            injected["action"][t] = float(np.abs(a_i - ref["action"][t]).max()); injected["est"][t] = float(np.abs(e_i - ref["est"][t]).max())
+            injected["refined_map"][t] = float(np.abs(m_i - ref["map"][t]).max())
             f64["onnx_est"] = max(f64["onnx_est"], float(np.abs(est - r64["est"][t]).max()))
             f64["torch_est"] = max(f64["torch_est"], float(np.abs(ref["est"][t] - r64["est"][t]).max()))
             f64["onnx_action"] = max(f64["onnx_action"], float(np.abs(action - r64["action"][t]).max()))
@@ -147,6 +154,9 @@ def test_record_replay_matches(tmp_path):
                                                                   "after": float(per_env[int(np.argmax(rec["reset_before"][:, e] > 0)):, e].max())}
                                                          for e in range(K) if (rec["reset_before"][1:, e] > 0).any()},
                                    "device_baseline_cpu_torch_vs_gpu_record": device,
+                                   "r_floor": R_FLOOR,
+                                   "r_block_median": {k: _medians(d_onnx[k] / np.maximum(d_t32[k], R_FLOOR)) for k in d_onnx},
+                                   "state_injected_onnx_vs_torch_max": {k: float(v.max()) for k, v in injected.items()},
                                    "rel_block_median": {k: _medians(v) for k, v in rel.items()},
                                    "est_block_median": _medians(err["est"]),
                                    "rise_B": {k: _rise(v) for k, v in rel.items()},
@@ -156,10 +166,9 @@ def test_record_replay_matches(tmp_path):
     for scene, r in report["scenes"].items():
         w = r["worst"]
         f = r["float64"]
-        failed = [k for k in ("action", "est", "map") if f[f"ratio_{k}"] > 5.0] + \
-                 [f"outer_{k}" for k, lim in (("action", 1e-4), ("actor_only", 1e-4), ("est", 1e-4), ("refined_map", 1e-3)) if w[k] > lim]
-        grow = lambda m: max(m[1:], default=0.0) > 3.0 * max(m[0], 1e-12)
-        failed += [f"drift_A_rel_{k}" for k, m in r["rel_block_median"].items() if grow(m)]
-        failed += [f"drift_B_rise_{k}" for k in ("action", "est", "refined_map") if not r["rise_B"][k]["pass"]]
-        failed += ["drift_C_est_median"] if grow(r["est_block_median"]) else []
-        assert not failed, (scene, failed, {k: (r["rise_B"][k]["upper_95_x_length"], r["rise_B"][k]["first_block_median"]) for k in r["rise_B"]})
+        failed = [f"outer_{k}" for k, lim in (("action", 1e-4), ("actor_only", 1e-4), ("est", 1e-4), ("refined_map", 1e-3)) if w[k] > lim]
+        for k, m in r["r_block_median"].items():                                   # lead 10:26: (가) every block median r <= 5 (나) last <= 2 x first
+            failed += [f"r_block_{k}"] if max(m) > 5.0 else []
+            failed += [f"r_last_vs_first_{k}"] if m[-1] > 2.0 * m[0] else []
+        failed += ["device_baseline_action"] if r["device_baseline_cpu_torch_vs_gpu_record"]["action"] >= 1e-4 else []
+        assert not failed, (scene, failed, r["r_block_median"], r["device_baseline_cpu_torch_vs_gpu_record"])     # A' · B · max ratio: values only
