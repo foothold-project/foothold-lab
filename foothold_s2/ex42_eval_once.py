@@ -538,6 +538,18 @@ def run_sequential_pool(checkpoint, output, devices, cfg, *, seed, mesh_dir, pol
     return SequentialPool(children, errors)
 
 
+def exported_ema_folder(checkpoint) -> bool:
+    """True when manifest.json beside the checkpoint carries an ema_export entry (lead 2026-11-22 09:36: such a folder is scored, never
+    handed off: the hand-off launcher would start a stage from it). An unreadable manifest counts as an export (fail closed)."""
+    manifest = Path(checkpoint).parent / "manifest.json"
+    if not manifest.is_file():
+        return False
+    try:
+        return "ema_export" in json.loads(manifest.read_text(encoding="utf-8-sig"))
+    except (OSError, ValueError):
+        return True
+
+
 def manifest_checkpoint_sha(checkpoint):
     checkpoint = Path(checkpoint).resolve(strict=True)
     match = re.fullmatch(r"model_(\d+)\.pt", checkpoint.name)
@@ -1064,6 +1076,9 @@ def main(argv=None):
     if args.next_stage_launcher is not None and (args.p1_plan is None or not args.next_stage_launcher.is_absolute()
                                                   or not args.next_stage_launcher.is_file()):
         parser.error("--next-stage-launcher needs P1 and an absolute path to an existing file")
+    if args.next_stage_launcher is not None and exported_ema_folder(args.checkpoint):
+        parser.error("--next-stage-launcher refused: the checkpoint folder is an EMA export (manifest ema_export, "
+                     "foothold_s2/deploy/ema_to_checkpoint.py); score it without the hand-off launcher")
     if (args.next_stage_queue is None) != (args.next_stage_dispatch is None) or (
             args.next_stage_queue is not None and args.next_stage_launcher is None):
         parser.error("--next-stage-queue and --next-stage-dispatch go together and need --next-stage-launcher")
