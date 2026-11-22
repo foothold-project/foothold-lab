@@ -27,11 +27,14 @@ import torch
 
 ort = pytest.importorskip("onnxruntime")
 from foothold_s2.deploy import export_start_onnx as ex  # noqa: E402
+from foothold_s2.runners.start_runner import correct_est_vx  # noqa: E402
 
 CKPT = "/mnt/win-d/mai/data/foothold/s2_lab/ex42_main_20261120_193344_r2/main/EX-42-B-E2_20261122_033431/model_250.pt"
 REC_DIR = os.environ.get("ONNXREC_DIR", "")
 RECORDS = sorted(glob.glob(os.path.join(REC_DIR, "*", "onnxrec.npz"))) if REC_DIR else []
 BLOCK = 50
+_VX = os.environ.get("ONNXREC_VX", "")                 # "on,b,band,ramp" of the run that made the record (lead 10:33: CPU check = the record's values)
+VX = (lambda v: (v[0] == "on", float(v[1]), float(v[2]), float(v[3])))(_VX.split(",")) if _VX else None
 R_FLOOR = 1e-7       # floor of the torch32 vs float64 error in r (lead 10:26): below it float64 and float32 agree to the printed digits
 
 
@@ -60,7 +63,7 @@ def _replay(perc, actor, rec, dtype):
             inp = perc.ingest(st, o, d)
             est = perc.step(st, inp, gt, deterministic=True)
             _r, refined = perc.trnet.decode(st.h_terr)
-            act = actor(torch.cat([o, est, pose], -1))
+            act = actor(torch.cat([o, correct_est_vx(est, VX[:3]), pose], -1))
         out["action"].append(act.numpy().astype(np.float64)); out["est"].append(est.numpy().astype(np.float64))
         out["map"].append(refined.numpy().astype(np.float64)); out["inp"].append({k: v.clone() for k, v in inp.items()} | {"pose": pose})
         out["h"].append((st.h_prop.float().numpy().copy(), st.h_terr.float().numpy().copy()))     # torch state after this step
@@ -93,16 +96,17 @@ def _blocks(err):
     return [float(err[i:i + BLOCK].max()) for i in range(0, len(err), BLOCK)]
 
 
-@pytest.mark.skipif(not RECORDS, reason="no ONNX record (set ONNXREC_DIR)")
+@pytest.mark.skipif(not RECORDS or VX is None, reason="no ONNX record (set ONNXREC_DIR and ONNXREC_VX=on,b,band,ramp of the recorded run)")
 def test_record_replay_matches(tmp_path):
-    spec = ex.export(CKPT, tmp_path)
+    spec = ex.export(CKPT, tmp_path, vx_corr_on=VX[0], vx_corr_b=VX[1], vx_corr_band=VX[2], vx_corr_ramp=VX[3])
     perc, actor, _ = ex.load(CKPT)
     perc64, actor64 = copy.deepcopy(perc).double(), copy.deepcopy(actor).double()
     sess = ort.InferenceSession(str(tmp_path / "start_step.onnx"), providers=["CPUExecutionProvider"])
     sess_a = ort.InferenceSession(str(tmp_path / "start_actor.onnx"), providers=["CPUExecutionProvider"])
     brk = float(os.environ.get("ONNXREC_BREAK_ACTION", "0"))                # break test only: offset added to the ONNX action
     report = {"checkpoint_sha256": spec["checkpoint_sha256"], "perception_source": spec["perception_source"],
-              "judgement": {"main_ratio_vs_float32": 5.0, "abs_beside": {"action": 5e-5, "est": 5e-5, "refined_map": 3e-4}, "outer_fail": {"action": 1e-4, "est": 1e-4, "refined_map": 1e-3}, "block_growth": 3.0, "gt_map_path": "not compared (the robot has the reconstructed map only)", "eval_copy_note": os.environ.get("ONNXREC_COPY_NOTE", "")}, "scenes": {}}
+              "judgement": {"main_ratio_vs_float32": 5.0, "abs_beside": {"action": 5e-5, "est": 5e-5, "refined_map": 3e-4}, "outer_fail": {"action": 1e-4, "est": 1e-4, "refined_map": 1e-3}, "block_growth": 3.0, "gt_map_path": "not compared (the robot has the reconstructed map only)", "eval_copy_note": os.environ.get("ONNXREC_COPY_NOTE", ""),
+                                "vx_correction_cpu_check": {"on": VX[0], "b": VX[1], "band": VX[2], "ramp": VX[3], "why": "the values the recorded run applied (start line), not the deployment values"}}, "scenes": {}}
     for path in RECORDS:
         rec = dict(np.load(path))
         assert rec["o"].shape[0] >= 200 and float(rec["use_gt"].max()) == 0.0, "record must be 200+ eval_pred steps"
@@ -124,7 +128,7 @@ def test_record_replay_matches(tmp_path):
                     "pose": inp["pose"].numpy().astype(np.float32)}
             action, h_prop, h_terr, refined, est = sess.run(list(ex.STEP_OUTPUTS), feed)
             action = action + brk
-            (a_only,) = sess_a.run(["action"], {"actor_in": np.concatenate([feed["o"], ref["est"][t].astype(np.float32), feed["pose"]], -1)})
+            (a_only,) = sess_a.run(["action"], {"actor_in": np.concatenate([feed["o"], correct_est_vx(torch.tensor(ref["est"][t], dtype=torch.float32), VX[:3]).numpy(), feed["pose"]], -1)})
             err["actor_only"][t] = np.abs(a_only - ref["action"][t]).max()
             ticks += int(inp["tick"].any())
             err["action"][t] = np.abs(action - ref["action"][t]).max()

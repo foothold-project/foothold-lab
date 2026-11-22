@@ -14,18 +14,27 @@ import torch
 ort = pytest.importorskip("onnxruntime")
 from foothold_s2.deploy import export_start_onnx as ex  # noqa: E402
 from foothold_s2.models.start_perception import DEPTH_HW  # noqa: E402
+from foothold_s2.runners.start_runner import correct_est_vx  # noqa: E402
 
 CKPTS = {"canon3_m250": "/mnt/win-d/mai/data/foothold/s2_lab/ex42_main_20261116_190816/main/EX-42-B-E1F_20261116_190817/model_250.pt",
          "rx2qh_m250": "/mnt/win-d/mai/data/foothold/s2_lab/ex42_main_20261120_193344_r2/main/EX-42-B-E2_20261122_033431/model_250.pt"}
 OBS = Path("/home/jay/mai/tmp/planner/again/noise_probe/out_est/aed100/extra_1.npz")
 B = 4
+VX = dict(vx_corr_on=True, vx_corr_b=0.009, vx_corr_band=0.3, vx_corr_ramp=0.05)      # deployment values of rx2qh (training start line b=0.009)
+
+
+def test_export_refuses_missing_vx_values(tmp_path):
+    with pytest.raises(ValueError):
+        ex.export(CKPTS["rx2qh_m250"], tmp_path)
+    with pytest.raises(ValueError):
+        ex.export(CKPTS["rx2qh_m250"], tmp_path, **{**VX, "vx_corr_ramp": 0.1})
 
 
 @pytest.mark.parametrize("name", list(CKPTS))
 def test_episode_matches_the_deployment_path(name, tmp_path):
     if not Path(CKPTS[name]).is_file() or not OBS.is_file():
         pytest.skip("checkpoint or probe record not on this machine")
-    spec = ex.export(CKPTS[name], tmp_path)
+    spec = ex.export(CKPTS[name], tmp_path, **VX)
     perc, actor, _ = ex.load(CKPTS[name])
     sess = ort.InferenceSession(str(tmp_path / "start_step.onnx"), providers=["CPUExecutionProvider"])
     sess_a = ort.InferenceSession(str(tmp_path / "start_actor.onnx"), providers=["CPUExecutionProvider"])
@@ -45,7 +54,7 @@ def test_episode_matches_the_deployment_path(name, tmp_path):
             h0 = st.h_terr.clone()
             est_ref = perc.step(st, inp, gt_dummy, deterministic=True)
             _r, refined_ref = perc.trnet.decode(st.h_terr)
-            act_ref = actor(torch.cat([o, est_ref, pose], -1))
+            act_ref = actor(torch.cat([o, correct_est_vx(est_ref, (True, 0.009, 0.3)), pose], -1))
         feed = {"o": o.numpy(), "hist": inp["hist"].numpy(), "depth2": inp["depth2"].numpy(), "h_prop": h_prop, "h_terr": h_terr,
                 "tick": inp["tick"].float()[:, None].numpy(), "first": inp["first"].float()[:, None].numpy(), "pose": pose.numpy()}
         action, h_prop, h_terr, refined, est = sess.run(list(ex.STEP_OUTPUTS), feed)
@@ -53,7 +62,7 @@ def test_episode_matches_the_deployment_path(name, tmp_path):
         worst["action"] = max(worst["action"], float(np.abs(action - act_ref.numpy()).max()))
         worst["est"] = max(worst["est"], float(np.abs(est - est_ref.numpy()).max()))
         worst["refined_map"] = max(worst["refined_map"], float(np.abs(refined - refined_ref.numpy()).max()))
-        (a_only,) = sess_a.run(["action"], {"actor_in": torch.cat([o, est_ref, pose], -1).numpy()})
+        (a_only,) = sess_a.run(["action"], {"actor_in": torch.cat([o, correct_est_vx(est_ref, (True, 0.009, 0.3)), pose], -1).numpy()})
         worst["actor_only"] = max(worst["actor_only"], float(np.abs(a_only - act_ref.numpy()).max()))
         del h0
     print(f"\n{name}: steps {o_all.shape[0]} ticks {ticks} perception {spec['perception_source']} worst {worst}")
