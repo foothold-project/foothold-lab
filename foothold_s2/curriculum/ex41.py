@@ -1,6 +1,7 @@
 """EX-41 local-update state machine and boundary-only W72 application."""
 from pathlib import Path
 import copy
+import os
 import hashlib
 import json
 import math
@@ -834,8 +835,24 @@ def x_progress_rule(env,terrain,term,ids,kinds,fraction,forward_only,fall_down=F
     if fall_down:        # plan x_fall_down: an episode that ended in a termination (not a time-out) short of the x fraction steps down (rules.judge_free fell)
         manager=getattr(env,'termination_manager',None)
         if manager is None or not hasattr(manager,'terminated'): raise ValueError('EX-41 x_fall_down needs the termination manager')
-        rule['fell']=manager.terminated[ids].to(term.max_x.device)
+        fell=manager.terminated[ids].to(term.max_x.device)
+        off=x_fall_down_off_kinds()
+        if off:          # lead 2026-11-22 22:13: EX42_X_FALL_DOWN_OFF_KINDS takes the fall step-down off the named columns only (legged_gym has no fall rule); unset = as before
+            bad=sorted(set(off)-set(kinds))
+            if bad: raise ValueError(f'EX42_X_FALL_DOWN_OFF_KINDS names kinds outside terrain_promotion x_progress_kinds: {bad}')
+            no_fall=torch.as_tensor([name in off for name in names],dtype=torch.bool,device=terrain.terrain_types.device)
+            if not getattr(x_progress_rule,'_fall_off_announced',False):
+                x_progress_rule._fall_off_announced=True
+                print(f"EX42_X_FALL_DOWN_OFF where=start kinds={','.join(off)} columns={int(no_fall.sum())}/{len(names)}",flush=True)
+            fell=fell&~no_fall[terrain.terrain_types[ids].long()].to(fell.device)
+        rule['fell']=fell
     return rule
+
+
+def x_fall_down_off_kinds():
+    """family/kind list from EX42_X_FALL_DOWN_OFF_KINDS (comma separated); empty or unset = no column is exempt."""
+    raw=os.environ.get('EX42_X_FALL_DOWN_OFF_KINDS','')
+    return tuple(k.strip() for k in raw.split(',') if k.strip())
 
 
 def capped_moves(levels,moves,cap):
