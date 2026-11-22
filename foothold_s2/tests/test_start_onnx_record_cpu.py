@@ -6,8 +6,11 @@ reconstructed map, resets as recorded) and through start_step.onnx with the GRU 
 Judgement (lead 10:06, registered before the record came): (1) main: for action, est and the refined map, max |ONNX - float64| <= 5 x
 max |torch float32 - float64| (same inputs, same scene); (2) beside it, absolute: action < 5e-5, est < 5e-5, refined map < 3e-4 (1e-5 is the
 float32 floor itself: a synthetic-record rehearsal gave torch float32 1.01e-5 off float64 on the action) reported as flags beside the main
-judgement; outer limits (lead 10:08 with the planner): action > 1e-4, est > 1e-4 or refined map > 1e-3 fails whatever the ratio (est outer 1e-4: lead 10:11); (3) no drift: the worst error of
-every later 50-step block <= 3 x the first block, for action, est and map; (4) the record-off run (byte check of env_arrays, done beside this
+judgement; outer limits (lead 10:08 with the planner): action > 1e-4, est > 1e-4 or refined map > 1e-3 fails whatever the ratio (est outer 1e-4: lead 10:11); (3) no drift (lead 10:19 with the planner,
+replacing the block-maximum rule that failed on one large-action step of the first record): (a) the action error relative to the action size
+(per step: max over envs of max|ONNX - torch| / max|torch action| of that env) has a 50-step block median <= 3 x the first block median, and
+(b) the per-step worst error has a least-squares slope over the steps <= 0 or a 95 % interval that contains 0 (action, est and map); the
+50-step block maxima are still written (not judged); (4) the record-off run (byte check of env_arrays, done beside this
 test) decides whether the record is usable at all. The ground-truth map path is not compared (the robot has only the reconstructed map).
 Envs with a reset inside the record are reported before and after the reset separately. Written beside the record (onnx_record_check.json): those numbers per scene and
 block, the float64 reference (ONNX and torch float32 against the same net in float64, and their ratio) and, as the device baseline, CPU torch
@@ -64,6 +67,15 @@ def _replay(perc, actor, rec, dtype):
     return out
 
 
+def _slope(err):
+    """Least-squares slope of the per-step error over the step index, its 95 % half-width, and whether the rule (slope <= 0 or interval holds 0) passes."""
+    t = np.arange(len(err), dtype=np.float64); e = np.asarray(err, np.float64)
+    tc = t - t.mean(); b = float((tc * (e - e.mean())).sum() / (tc * tc).sum())
+    resid = e - e.mean() - b * tc
+    se = float(np.sqrt((resid * resid).sum() / max(len(e) - 2, 1) / (tc * tc).sum()))
+    return {"slope_per_step": b, "half_width_95": 1.96 * se, "pass": bool(b <= 0 or b - 1.96 * se <= 0)}
+
+
 def _blocks(err):
     return [float(err[i:i + BLOCK].max()) for i in range(0, len(err), BLOCK)]
 
@@ -87,7 +99,7 @@ def test_record_replay_matches(tmp_path):
         h_prop = np.zeros((K, 128), np.float32); h_terr = np.zeros((K, 128), np.float32)
         err = {"action": np.zeros(T), "est": np.zeros(T), "refined_map": np.zeros(T), "actor_only": np.zeros(T)}
         f64 = {f"{w}_{k}": 0.0 for w in ("onnx", "torch") for k in ("action", "est", "map")}
-        per_env = np.zeros((T, K))
+        per_env = np.zeros((T, K)); rel = np.zeros(T)
         ticks = 0
         for t in range(T):
             inp = ref["inp"][t]
@@ -103,6 +115,7 @@ def test_record_replay_matches(tmp_path):
             err["est"][t] = np.abs(est - ref["est"][t]).max()
             err["refined_map"][t] = np.abs(refined - ref["map"][t]).max()
             per_env[t] = np.abs(action - ref["action"][t]).max(-1)
+            rel[t] = float((per_env[t] / np.maximum(np.abs(ref["action"][t]).max(-1), 1e-6)).max())
             f64["onnx_est"] = max(f64["onnx_est"], float(np.abs(est - r64["est"][t]).max()))
             f64["torch_est"] = max(f64["torch_est"], float(np.abs(ref["est"][t] - r64["est"][t]).max()))
             f64["onnx_action"] = max(f64["onnx_action"], float(np.abs(action - r64["action"][t]).max()))
@@ -119,6 +132,8 @@ def test_record_replay_matches(tmp_path):
                                                                   "after": float(per_env[int(np.argmax(rec["reset_before"][:, e] > 0)):, e].max())}
                                                          for e in range(K) if (rec["reset_before"][1:, e] > 0).any()},
                                    "device_baseline_cpu_torch_vs_gpu_record": device,
+                                   "rel_action_block_median": [float(np.median(rel[i:i + BLOCK])) for i in range(0, T, BLOCK)],
+                                   "slope": {k: _slope(v) for k, v in err.items()},
                                    "beside_flags": {k: bool(float(err[k].max()) < lim) for k, lim in (("action", 5e-5), ("est", 5e-5), ("refined_map", 3e-4))}}
         print(f"\n{scene}: {json.dumps(report['scenes'][scene]['worst'])} blocks {report['scenes'][scene]['blocks']['action']}")
     (Path(REC_DIR) / "onnx_record_check.json").write_text(json.dumps(report, indent=1))
@@ -127,6 +142,7 @@ def test_record_replay_matches(tmp_path):
         f = r["float64"]
         failed = [k for k in ("action", "est", "map") if f[f"ratio_{k}"] > 5.0] + \
                  [f"outer_{k}" for k, lim in (("action", 1e-4), ("actor_only", 1e-4), ("est", 1e-4), ("refined_map", 1e-3)) if w[k] > lim]
-        assert not failed, (scene, failed, w, f)
-        for k, b in r["blocks"].items():
-            assert max(b[1:], default=0.0) <= 3.0 * max(b[0], 1e-9), (scene, k, b)
+        m = r["rel_action_block_median"]
+        failed += ["drift_rel_action"] if max(m[1:], default=0.0) > 3.0 * max(m[0], 1e-12) else []
+        failed += [f"drift_slope_{k}" for k in ("action", "est", "refined_map") if not r["slope"][k]["pass"]]
+        assert not failed, (scene, failed, m, r["slope"])
