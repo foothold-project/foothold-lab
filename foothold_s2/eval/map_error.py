@@ -18,7 +18,29 @@ DEFINITION = ("(a) inrange = 정답 지도가 -1.0 이 아닌 칸만의 nanmean(
               "(c) gt_sat_frac = 정답이 -1.0 인 칸의 비율, 그것을 ray_miss_frac(광선 못 맞힘, 센서 원자료가 비유한)과 clip_low_frac(원자료가 유한하고 <= -1 m)로 가른 비율; "
               "(d) nonfinite_cells = |refined - gt_map| 가 비유한(NaN · ±Inf)인 칸 수. 비유한 칸은 (a) (b) 의 평균 · 최대에서 빼되 조용히 버리지 않고 (d) 로 세어 남긴다; "
               "env 별 값은 살아 있는 step 에서만(mean = step 값의 평균, cellmax = step 칸 최대의 최댓값). 표의 머리는 (a); (b) 는 -1.0 칸 하나가 100 cm 안팎으로 평균을 끌어올려 «복원이 나쁨» 과 «정답이 포화» 가 섞인다")
-SERIES = ("inrange_mean", "inrange_cellmax", "all_mean", "all_cellmax", "gt_sat_frac", "nonfinite_cells", "ray_miss_frac", "clip_low_frac")                     # step_error 가 돌려주는 순서
+SERIES = ("inrange_mean", "inrange_cellmax", "all_mean", "all_cellmax", "gt_sat_frac", "nonfinite_cells", "ray_miss_frac", "clip_low_frac",
+          "corner_mean", "corner_cellmax", "corner_frac")                                                                                                       # step_error 가 돌려주는 순서 (앞 여덟은 그대로, 뒤 셋은 모서리 칸 선택 칸)
+EDGE_DROP_M = 0.2                  # sparse_terrains.EDGE_DROP_M 과 같은 문턱 (낙하 0.2 m)
+DEFINITION_CORNER = ("(e) 모서리 칸 = 정답 지도에서 위 · 아래 · 왼 · 오른쪽 이웃 중 높이차가 EDGE_DROP_M (0.2 m) 이상인 이웃이 있는 칸 (그 모서리의 양쪽 한 칸씩: "
+                     "발 가장자리 마스크 terrains.sparse_terrains.edge_masks 의 안쪽 띠와 같은 정의). corner_mean / corner_cellmax = 그 칸들 가운데 정답이 -1.0 이 아닌 칸만의 "
+                     "|refined - gt_map| 평균 / 최대 [cm] ((a) 와 같은 결측 제외), corner_frac = 512 칸 중 모서리 칸의 비율. 모서리 칸이 없는 step 은 NaN. 기록 전용 선택 칸이고 위 (a)~(d) 값은 이 칸이 있어도 그대로")
+
+
+def edge_cell_mask(gt_map, drop: float = EDGE_DROP_M):
+    """(N,32,16) 정답 지도 -> (N,32,16) bool: 4 방향 이웃과 높이차 >= drop 인 칸 (sparse_terrains.edge_masks 의 안쪽 띠와 같은 정의). NaN 이웃은 모서리를 만들지 않는다."""
+    import torch
+
+    g = gt_map.detach().float()
+    edge = torch.zeros_like(g, dtype=torch.bool)
+    for axis in (1, 2):
+        hit = (g.diff(dim=axis).abs() >= drop)
+        pad = [slice(None)] * 3
+        lo, hi = list(pad), list(pad)
+        lo[axis], hi[axis] = slice(0, -1), slice(1, None)
+        edge[tuple(lo)] |= hit
+        edge[tuple(hi)] |= hit
+
+    return edge
 
 
 def step_error(refined, gt_map, rel=None):
@@ -49,7 +71,11 @@ def step_error(refined, gt_map, rel=None):
         ray = (~torch.isfinite(r)).float().mean(dim=1)                                          # 광선이 못 맞힘(NaN · ±Inf): start_obs 가 -1.0 으로 바꾼다
         clip = (torch.isfinite(r) & (r <= -1.0)).float().mean(dim=1)                            # 맞혔지만 기준 높이보다 1 m 이상 아래: clamp 로 -1.0
 
-    return nmean(dv), nmax(dv), nmean(d), nmax(d), miss.float().mean(dim=1), (~fin).float().sum(dim=1), ray, clip
+    corner = edge_cell_mask(gt_map).reshape(n, -1)
+    dc = torch.where(corner, dv, full_nan)                                                    # 모서리 칸 (정답 -1.0 칸 제외) 의 오차만
+
+    return (nmean(dv), nmax(dv), nmean(d), nmax(d), miss.float().mean(dim=1), (~fin).float().sum(dim=1), ray, clip,
+            nmean(dc), nmax(dc), corner.float().mean(dim=1))
 
 
 def record(last: dict, result, gt_map, rel=None) -> None:
@@ -93,6 +119,10 @@ def env_aggregate(series: dict, alive) -> dict:
     out["map_err_gt_sat_frac_mean"], _n = _mean_alive(series["gt_sat_frac"], alive)
     out["map_err_ray_miss_frac_mean"], _n = _mean_alive(series["ray_miss_frac"], alive)
     out["map_err_clip_low_frac_mean"], _n = _mean_alive(series["clip_low_frac"], alive)
+    if "corner_mean" in series:                                                                  # 선택 칸 (옛 호출자의 여덟 계열 사전은 그대로 받는다)
+        out["map_err_corner_mean_cm"], out["map_err_corner_steps"] = _mean_alive(series["corner_mean"], alive)
+        out["map_err_corner_cellmax_cm"] = _max_alive(series["corner_cellmax"], alive)
+        out["map_err_corner_frac_mean"], _n = _mean_alive(series["corner_frac"], alive)
     nf, al = np.asarray(series["nonfinite_cells"], dtype=np.float64), np.asarray(alive, dtype=bool)
     nf = np.where(al, np.nan_to_num(nf, nan=0.0), 0.0)                                           # 살아 있는 step 의 비유한 칸 수(계열이 비어 있는 NaN 은 0)
     out["map_err_nonfinite_cells_total"] = nf.sum(0).astype(np.int64)
@@ -152,6 +182,10 @@ def group_stats(z, kinds=None) -> dict:
                   "c_gt_sat_frac_mean": float(mf.mean()) if mf.size else None,
                   "c_ray_miss_frac_mean": float(rm.mean()) if rm.size else None, "c_clip_low_frac_mean": float(cl.mean()) if cl.size else None,
                   "d_nonfinite_cells_total": int(nfc.sum()), "d_nonfinite_steps_total": int(nfs.sum()), "d_nonfinite_envs": int((nfc > 0).sum())}
+        if "map_err_corner_mean_cm" in (z.files if hasattr(z, "files") else z):                                                   # (e) 모서리 칸만 (선택 칸 · 옛 npz 에는 없다)
+            cm, cx, cf = _fin(z["map_err_corner_mean_cm"][m]), _fin(z["map_err_corner_cellmax_cm"][m]), _fin(z["map_err_corner_frac_mean"][m])
+            out[k].update({"e_corner_envs": int(cm.size), "e_corner_mean_of_mean_cm": float(cm.mean()) if cm.size else None,
+                           "e_corner_max_of_cellmax_cm": float(cx.max()) if cx.size else None, "e_corner_frac_mean": float(cf.mean()) if cf.size else None})
 
     return out
 
@@ -176,7 +210,7 @@ def report(folders: dict, modes=("eval_gt", "eval_pred", "probe_prop_only"), cmd
 
 
 def to_md(res: dict) -> str:
-    lines = ["# 복원 지도 오차 (cm), 종류 x 레벨 x 모드. 머리 = (a) 정답이 -1.0 이 아닌 칸만의 값", "", DEFINITION, ""]
+    lines = ["# 복원 지도 오차 (cm), 종류 x 레벨 x 모드. 머리 = (a) 정답이 -1.0 이 아닌 칸만의 값", "", DEFINITION, "", DEFINITION_CORNER, ""]
     f = lambda v: "-" if v is None else "%.2f" % v                                               # noqa: E731
     fr = lambda v: "-" if v is None else "%.3f" % v                                              # noqa: E731
 
@@ -189,6 +223,11 @@ def to_md(res: dict) -> str:
                 for k, v in kinds.items():
                     lines.append("| %s | %d | %d | %s | %s | %s | %s | %s | %s |" % (k, v["envs"], v["inrange_envs"], f(v["a_mean_of_mean_cm"]), f(v["a_median_of_mean_cm"]), f(v["a_max_of_cellmax_cm"]),
                                                                                        f(v["b_mean_of_mean_cm"]), f(v["b_max_of_cellmax_cm"]), "-" if v["c_gt_sat_frac_mean"] is None else "%.3f" % v["c_gt_sat_frac_mean"]) + " %s | %s | %d · %d · %d |" % (fr(v["c_ray_miss_frac_mean"]), fr(v["c_clip_low_frac_mean"]), v["d_nonfinite_cells_total"], v["d_nonfinite_steps_total"], v["d_nonfinite_envs"]))
+
+                if any("e_corner_mean_of_mean_cm" in v for v in kinds.values()):                       # (e) 모서리 칸만의 오차 (선택 칸이 있는 npz 만)
+                    lines += ["", "(e) 모서리 칸만 · %s · %s · %s" % (g, mode, c), "", "| 종류 | 모서리 유효 env | (e) env 평균의 평균 | (e) 칸 최대의 최댓값 | 모서리 칸 비율 |", "|---|---|---|---|---|"]
+                    lines += ["| %s | %d | %s | %s | %s |" % (k, v.get("e_corner_envs", 0), f(v.get("e_corner_mean_of_mean_cm")), f(v.get("e_corner_max_of_cellmax_cm")), fr(v.get("e_corner_frac_mean")))
+                              for k, v in kinds.items()]
 
                 lines.append("")
 
