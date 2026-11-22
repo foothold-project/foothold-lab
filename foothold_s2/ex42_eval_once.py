@@ -622,6 +622,9 @@ def next_stage_notice(plan_path, stage_id, iteration, p1):
                     "the next stage approval cell."}
 
 
+HANDOFF_DISABLED = "HANDOFF_DISABLED"   # a file of this name beside the checkpoint stops the automatic next-stage launch (lead 11/22 11:44)
+
+
 def _hand_off(plan_path, approvals_path, stage_id, iteration, p1, checkpoint, output, launcher, gpu_wait=None,
               register=None):
     """Every boundary writes a notice. The gate passed (at or after the stage minimum) and the next stage has its
@@ -647,6 +650,11 @@ def _hand_off(plan_path, approvals_path, stage_id, iteration, p1, checkpoint, ou
         return notice
     if launcher is None:
         notice.update(state=decision["state"] + "_no_launcher", reason="no --next-stage-launcher was given")
+        return notice
+    marker = Path(checkpoint).parent / HANDOFF_DISABLED
+    if marker.exists():                            # lead 11/22 11:44: the run folder says no automatic next stage (whoever queued this evaluation)
+        notice.update(state=decision["state"] + "_disabled", reason=f"{marker} exists: the hand-off launcher was not started")
+        print("EX42_HANDOFF_DISABLED " + json.dumps({"marker": str(marker), "decision": decision["action"]}), flush=True)
         return notice
     try:
         if gpu_wait is not None:
