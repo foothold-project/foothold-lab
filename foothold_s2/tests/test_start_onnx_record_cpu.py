@@ -5,7 +5,8 @@ reconstructed map, resets as recorded) and through start_step.onnx with the GRU 
 
 Judgement (lead 10:06, registered before the record came): (1) main: for action, est and the refined map, max |ONNX - float64| <= 5 x
 max |torch float32 - float64| (same inputs, same scene); (2) beside it, absolute: action < 5e-5, est < 5e-5, refined map < 3e-4 (1e-5 is the
-float32 floor itself: a synthetic-record rehearsal gave torch float32 1.01e-5 off float64 on the action); (3) no drift: the worst error of
+float32 floor itself: a synthetic-record rehearsal gave torch float32 1.01e-5 off float64 on the action) reported as flags beside the main
+judgement; outer limits (lead 10:08 with the planner): action > 1e-4, est > 5e-5 or refined map > 1e-3 fails whatever the ratio; (3) no drift: the worst error of
 every later 50-step block <= 3 x the first block, for action, est and map; (4) the record-off run (byte check of env_arrays, done beside this
 test) decides whether the record is usable at all. The ground-truth map path is not compared (the robot has only the reconstructed map).
 Envs with a reset inside the record are reported before and after the reset separately. Written beside the record (onnx_record_check.json): those numbers per scene and
@@ -73,8 +74,10 @@ def test_record_replay_matches(tmp_path):
     perc, actor, _ = ex.load(CKPT)
     perc64, actor64 = copy.deepcopy(perc).double(), copy.deepcopy(actor).double()
     sess = ort.InferenceSession(str(tmp_path / "start_step.onnx"), providers=["CPUExecutionProvider"])
+    sess_a = ort.InferenceSession(str(tmp_path / "start_actor.onnx"), providers=["CPUExecutionProvider"])
+    brk = float(os.environ.get("ONNXREC_BREAK_ACTION", "0"))                # break test only: offset added to the ONNX action
     report = {"checkpoint_sha256": spec["checkpoint_sha256"], "perception_source": spec["perception_source"],
-              "judgement": {"main_ratio_vs_float32": 5.0, "abs": {"action": 5e-5, "est": 5e-5, "refined_map": 3e-4}, "block_growth": 3.0, "gt_map_path": "not compared (the robot has the reconstructed map only)"}, "scenes": {}}
+              "judgement": {"main_ratio_vs_float32": 5.0, "abs_beside": {"action": 5e-5, "est": 5e-5, "refined_map": 3e-4}, "outer_fail": {"action": 1e-4, "est": 5e-5, "refined_map": 1e-3}, "block_growth": 3.0, "gt_map_path": "not compared (the robot has the reconstructed map only)"}, "scenes": {}}
     for path in RECORDS:
         rec = dict(np.load(path))
         assert rec["o"].shape[0] >= 200 and float(rec["use_gt"].max()) == 0.0, "record must be 200+ eval_pred steps"
@@ -82,7 +85,7 @@ def test_record_replay_matches(tmp_path):
         r64 = _replay(perc64, actor64, rec, torch.float64)
         T, K = rec["o"].shape[:2]
         h_prop = np.zeros((K, 128), np.float32); h_terr = np.zeros((K, 128), np.float32)
-        err = {"action": np.zeros(T), "est": np.zeros(T), "refined_map": np.zeros(T)}
+        err = {"action": np.zeros(T), "est": np.zeros(T), "refined_map": np.zeros(T), "actor_only": np.zeros(T)}
         f64 = {f"{w}_{k}": 0.0 for w in ("onnx", "torch") for k in ("action", "est", "map")}
         per_env = np.zeros((T, K))
         ticks = 0
@@ -92,6 +95,9 @@ def test_record_replay_matches(tmp_path):
                     "h_terr": h_terr, "tick": inp["tick"].float()[:, None].numpy(), "first": inp["first"].float()[:, None].numpy(),
                     "pose": inp["pose"].numpy().astype(np.float32)}
             action, h_prop, h_terr, refined, est = sess.run(list(ex.STEP_OUTPUTS), feed)
+            action = action + brk
+            (a_only,) = sess_a.run(["action"], {"actor_in": np.concatenate([feed["o"], ref["est"][t].astype(np.float32), feed["pose"]], -1)})
+            err["actor_only"][t] = np.abs(a_only - ref["action"][t]).max()
             ticks += int(inp["tick"].any())
             err["action"][t] = np.abs(action - ref["action"][t]).max()
             err["est"][t] = np.abs(est - ref["est"][t]).max()
@@ -112,13 +118,15 @@ def test_record_replay_matches(tmp_path):
                                                                   "before": float(per_env[:int(np.argmax(rec["reset_before"][:, e] > 0)), e].max(initial=0.0)),
                                                                   "after": float(per_env[int(np.argmax(rec["reset_before"][:, e] > 0)):, e].max())}
                                                          for e in range(K) if (rec["reset_before"][1:, e] > 0).any()},
-                                   "device_baseline_cpu_torch_vs_gpu_record": device}
+                                   "device_baseline_cpu_torch_vs_gpu_record": device,
+                                   "beside_flags": {k: bool(float(err[k].max()) < lim) for k, lim in (("action", 5e-5), ("est", 5e-5), ("refined_map", 3e-4))}}
         print(f"\n{scene}: {json.dumps(report['scenes'][scene]['worst'])} blocks {report['scenes'][scene]['blocks']['action']}")
     (Path(REC_DIR) / "onnx_record_check.json").write_text(json.dumps(report, indent=1))
     for scene, r in report["scenes"].items():
         w = r["worst"]
         f = r["float64"]
-        assert f["ratio_action"] <= 5.0 and f["ratio_est"] <= 5.0 and f["ratio_map"] <= 5.0, (scene, f)
-        assert w["action"] < 5e-5 and w["est"] < 5e-5 and w["refined_map"] < 3e-4, (scene, w)
+        failed = [k for k in ("action", "est", "map") if f[f"ratio_{k}"] > 5.0] + \
+                 [f"outer_{k}" for k, lim in (("action", 1e-4), ("actor_only", 1e-4), ("est", 5e-5), ("refined_map", 1e-3)) if w[k] > lim]
+        assert not failed, (scene, failed, w, f)
         for k, b in r["blocks"].items():
             assert max(b[1:], default=0.0) <= 3.0 * max(b[0], 1e-9), (scene, k, b)
