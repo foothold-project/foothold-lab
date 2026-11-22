@@ -466,7 +466,7 @@ class StartRunner(OnPolicyRunner):
             return
         if not isinstance(alg, CriticMirrorPPO):
             raise ValueError("EX-42 actor mirror needs the EX-41 critic-mirror update loop (CriticMirrorPPO, pose commands)")
-        if self.replay is None:
+        if self.pcfg["fast_gt_only"]:      # the replay is built right after _construct_algorithm from this same flag (__init__): self.replay does not exist yet here (11/23 Pod smoke AttributeError)
             raise ValueError("EX-42 actor mirror needs the perception replay (fast_gt_only has none)")
         alg.actor_mirror_weight = w
         print(f"{am.LOG} where=start weight={w} latents=re-estimated_from_mirrored_replay z=mean chunk={self._actor_mirror_chunk()}", flush=True)
