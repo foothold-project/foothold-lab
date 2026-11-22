@@ -2386,3 +2386,5 @@ opus Pod XC 묶음 → planner diff → 기동 · NA 로컬 기동 3b
 planner Pod XC 묶음 막음 판정 · NA 시작 영수증			
 2026-11-23 08:34	Pod XC 기동 08:33:49 (planner 08:33 msg_a7ed5ebf7731 막음 0 · 기동 전 대조 있음) · RTX 4090 x2 · 상한 2.5 h · 늦게 끊음 10:51:33	[opus 08:34 msg_c4b0d034c5af] Pod iyeyi34u6wi6pe · 묶음 ebe0f952f164 (planner 본 판 그대로) · 단위 pod-rx2qcmdbXC-cut-if-late-XC · pod-rx2qcmdbXC-watch-start · 끝나면 받고 sha 대조 뒤 지움	짝 = 로컬 NA 083145 m250 (누적 1750) · 등록 줄 5bd56eed1 · 비용 약 2.5 USD 위 (추정)
 Pod 첫 증거 · NA 3b			
+2026-11-23 08:35	planner 사고: gh --edit-last 로 #555 10/21 남의 댓글 약 40 초 덮음 · 이력으로 되돌림 (794 자 일치) · FAILURE-LOG M136 (NA 기동 전 대조 빠짐) · M137 (edit-last) 올림	[planner 08:34 msg_d56641f33fc1] 덮인 댓글 issuecomment-6320261581 · 되돌림 PATCH · planner 인계 issuecomment-7087664920	막는 법: --edit-last 금지 · 댓글 번호로 PATCH
+			
