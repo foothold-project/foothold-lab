@@ -228,6 +228,28 @@ def test_actual_eval_handoff_reaches_launcher_once_and_registers(e1f_exit, tmp_p
     assert len([c for c in calls if c[0] == 'launch']) == before
 
 
+def test_handoff_disabled_marker_stops_the_launcher(e1f_exit, tmp_path, monkeypatch):
+    """lead 11/22 11:44: HANDOFF_DISABLED beside the checkpoint stops the launch even when --next-stage-launcher was given (the
+    11:35 case: the training queued the boundary evaluation with the launcher arguments). Without the marker the test above launches."""
+    from types import SimpleNamespace
+    from foothold_s2.ex42_eval_once import HANDOFF_DISABLED, _hand_off
+    source, approval, manifest, gate, bindings = e1f_exit
+    settings = {'TEMPLATE_PLAN': source.path, 'TEMPLATE_APPROVALS': approval,
+                'EVIDENCE_DIR': tmp_path / 'generated', 'OUT_ROOT': tmp_path / 'transitions',
+                'BINDINGS_FILE': bindings}
+    for key, value in settings.items():
+        monkeypatch.setenv('EX42_MATERIALIZE_' + key, str(value))
+    calls = []
+    real_start = handoff.start_launcher
+    monkeypatch.setattr(handoff, 'start_launcher', lambda *a, **k: real_start(*a, **k, popen=lambda argv, **kw: calls.append(argv) or SimpleNamespace(pid=1)))
+    (manifest.parent / HANDOFF_DISABLED).write_text('lead 11:44\n')
+    notice = _hand_off(source.path, approval, 'E1F', 500, json.loads(gate.read_text()),
+                       manifest.parent / 'model_500.pt', gate.parent, Path(launcher.__file__).with_suffix('.sh'),
+                       gpu_wait=lambda: calls.append('wait'), register=lambda *a: calls.append('register'))
+    assert notice['automatic_launch_started'] is False and notice['state'].endswith('_disabled'), notice
+    assert HANDOFF_DISABLED in notice['reason'] and calls == []
+
+
 @pytest.mark.parametrize('bad', ['HOLD', 'missing_check', 'changed_raw', 'wrong_mesh'])
 def test_m0_m3_sha_alone_does_not_authorize_unmeasured_probe(e1f_exit, tmp_path, bad):
     from foothold_s2.ex42_stage_evidence import produce
