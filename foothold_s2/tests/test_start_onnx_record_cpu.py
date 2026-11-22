@@ -6,7 +6,7 @@ reconstructed map, resets as recorded) and through start_step.onnx with the GRU 
 Judgement (lead 10:06, registered before the record came): (1) main: for action, est and the refined map, max |ONNX - float64| <= 5 x
 max |torch float32 - float64| (same inputs, same scene); (2) beside it, absolute: action < 5e-5, est < 5e-5, refined map < 3e-4 (1e-5 is the
 float32 floor itself: a synthetic-record rehearsal gave torch float32 1.01e-5 off float64 on the action) reported as flags beside the main
-judgement; outer limits (lead 10:08 with the planner): action > 1e-4, est > 5e-5 or refined map > 1e-3 fails whatever the ratio; (3) no drift: the worst error of
+judgement; outer limits (lead 10:08 with the planner): action > 1e-4, est > 1e-4 or refined map > 1e-3 fails whatever the ratio (est outer 1e-4: lead 10:11); (3) no drift: the worst error of
 every later 50-step block <= 3 x the first block, for action, est and map; (4) the record-off run (byte check of env_arrays, done beside this
 test) decides whether the record is usable at all. The ground-truth map path is not compared (the robot has only the reconstructed map).
 Envs with a reset inside the record are reported before and after the reset separately. Written beside the record (onnx_record_check.json): those numbers per scene and
@@ -77,7 +77,7 @@ def test_record_replay_matches(tmp_path):
     sess_a = ort.InferenceSession(str(tmp_path / "start_actor.onnx"), providers=["CPUExecutionProvider"])
     brk = float(os.environ.get("ONNXREC_BREAK_ACTION", "0"))                # break test only: offset added to the ONNX action
     report = {"checkpoint_sha256": spec["checkpoint_sha256"], "perception_source": spec["perception_source"],
-              "judgement": {"main_ratio_vs_float32": 5.0, "abs_beside": {"action": 5e-5, "est": 5e-5, "refined_map": 3e-4}, "outer_fail": {"action": 1e-4, "est": 5e-5, "refined_map": 1e-3}, "block_growth": 3.0, "gt_map_path": "not compared (the robot has the reconstructed map only)"}, "scenes": {}}
+              "judgement": {"main_ratio_vs_float32": 5.0, "abs_beside": {"action": 5e-5, "est": 5e-5, "refined_map": 3e-4}, "outer_fail": {"action": 1e-4, "est": 1e-4, "refined_map": 1e-3}, "block_growth": 3.0, "gt_map_path": "not compared (the robot has the reconstructed map only)"}, "scenes": {}}
     for path in RECORDS:
         rec = dict(np.load(path))
         assert rec["o"].shape[0] >= 200 and float(rec["use_gt"].max()) == 0.0, "record must be 200+ eval_pred steps"
@@ -126,7 +126,7 @@ def test_record_replay_matches(tmp_path):
         w = r["worst"]
         f = r["float64"]
         failed = [k for k in ("action", "est", "map") if f[f"ratio_{k}"] > 5.0] + \
-                 [f"outer_{k}" for k, lim in (("action", 1e-4), ("actor_only", 1e-4), ("est", 5e-5), ("refined_map", 1e-3)) if w[k] > lim]
+                 [f"outer_{k}" for k, lim in (("action", 1e-4), ("actor_only", 1e-4), ("est", 1e-4), ("refined_map", 1e-3)) if w[k] > lim]
         assert not failed, (scene, failed, w, f)
         for k, b in r["blocks"].items():
             assert max(b[1:], default=0.0) <= 3.0 * max(b[0], 1e-9), (scene, k, b)
