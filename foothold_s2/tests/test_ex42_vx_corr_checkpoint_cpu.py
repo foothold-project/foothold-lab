@@ -67,3 +67,24 @@ def test_state_dict_carries_the_entry():
     src = open(sr.__file__, encoding="utf-8").read()
     i = src.index("    def state_dict(self")
     assert '"vx_corr": vx_corr_record(),' in src[i:i + 4000]
+
+
+def test_resume_needs_the_same_correction(monkeypatch):
+    saved = {"on": True, "b": 0.009, "band": 0.3, "ramp": 0.05}
+    with pytest.raises(ValueError):                                           # B forgotten: the process would apply 0.010
+        sr.check_resume_vx_corr(saved, "load")
+    monkeypatch.setenv(sr.VX_CORR_ENV_B, "0.009")
+    assert sr.check_resume_vx_corr(saved, "load")["b"] == 0.009
+
+
+def test_resume_of_an_old_checkpoint_needs_explicit_values(monkeypatch):
+    with pytest.raises(ValueError):
+        sr.check_resume_vx_corr(None, "load_ex42_stage_zero_parent")
+    monkeypatch.setenv(sr.VX_CORR_ENV, "1"); monkeypatch.setenv(sr.VX_CORR_ENV_B, "0.009")
+    assert sr.check_resume_vx_corr(None, "load_ex42_stage_zero_parent")["b"] == 0.009
+
+
+def test_both_loaders_call_the_check():
+    src = open(sr.__file__, encoding="utf-8").read()
+    assert 'check_resume_vx_corr(sd.get("vx_corr"), "load")' in src
+    assert 'check_resume_vx_corr(checkpoint.get("vx_corr"), "load_ex42_stage_zero_parent")' in src
