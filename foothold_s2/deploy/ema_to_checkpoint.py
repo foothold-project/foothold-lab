@@ -18,7 +18,10 @@ beside the original model_N.pt), and <out>/manifest.json = the source manifest w
 and an "ema_export" record per file (source EMA sha256, source model_N.pt sha256, this tool's sha256). Optimizer entries stay the
 originals (the parent loader calls optimizer.load_state_dict on them; an empty one would be refused).
 
-  python -m foothold_s2.deploy.ema_to_checkpoint --run <run folder> --iter 250 [--iter 200 ...] --out <new folder>
+  python -m foothold_s2.deploy.ema_to_checkpoint --run <run folder> --iter 250 [--iter 200 ...] --out <new folder> [--manifest <file>]
+
+Pod mirror (no manifest.json beside the models): fetch the Pod run manifest (scp <pod>:/tmp/ex42pod/main/<run>/manifest.json) to
+<mirror>/manifest.json.pod and pass --manifest; the source model_N.pt sha must match its checkpoints entry (checked below).
 
 Caution: evaluate the exported folder without --next-stage-launcher (the hand-off would otherwise start a stage from it).
 """
@@ -44,14 +47,15 @@ def sha256(path) -> str:
     return h.hexdigest()
 
 
-def export(run_dir, iterations, out_dir) -> dict:
+def export(run_dir, iterations, out_dir, manifest_path=None) -> dict:
     run, out = Path(run_dir).resolve(strict=True), Path(out_dir).resolve()
     if out == run:
         raise ValueError("the output folder must not be the run folder (the export would sit beside the original model_N.pt)")
     out.mkdir(parents=True, exist_ok=True)
     if (out / "manifest.json").exists():
         raise ValueError(f"{out / 'manifest.json'} exists: use a new folder")
-    manifest = json.loads((run / "manifest.json").read_text(encoding="utf-8-sig"))
+    manifest_path = Path(manifest_path).resolve(strict=True) if manifest_path else run / "manifest.json"
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8-sig"))
     tool_sha = sha256(__file__)
     checkpoints, records = {}, {}
     for n in sorted({int(i) for i in iterations}):
@@ -76,7 +80,7 @@ def export(run_dir, iterations, out_dir) -> dict:
         checkpoints[name] = sha256(out / name)
         records[name] = {**record, "sha256": checkpoints[name]}
     manifest["checkpoints"] = checkpoints
-    manifest["ema_export"] = {"format": FORMAT, "source_run": str(run), "source_manifest_sha256": sha256(run / "manifest.json"),
+    manifest["ema_export"] = {"format": FORMAT, "source_run": str(run), "source_manifest": str(manifest_path), "source_manifest_sha256": sha256(manifest_path),
                               "files": records}
     (out / "manifest.json").write_text(json.dumps(manifest, indent=1, sort_keys=True, allow_nan=False), encoding="utf-8")
     return manifest["ema_export"]
@@ -87,8 +91,9 @@ def main(argv=None) -> int:
     ap.add_argument("--run", required=True)
     ap.add_argument("--iter", type=int, action="append", required=True)
     ap.add_argument("--out", required=True)
+    ap.add_argument("--manifest", help="the run manifest when it is not <run>/manifest.json (a Pod mirror: the manifest fetched from the Pod)")
     a = ap.parse_args(argv)
-    print(json.dumps(export(a.run, a.iter, a.out), indent=1))
+    print(json.dumps(export(a.run, a.iter, a.out, a.manifest), indent=1))
     return 0
 
 
