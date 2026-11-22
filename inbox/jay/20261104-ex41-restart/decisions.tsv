@@ -2388,3 +2388,5 @@ planner Pod XC 묶음 막음 판정 · NA 시작 영수증
 Pod 첫 증거 · NA 3b			
 2026-11-23 08:35	planner 사고: gh --edit-last 로 #555 10/21 남의 댓글 약 40 초 덮음 · 이력으로 되돌림 (794 자 일치) · FAILURE-LOG M136 (NA 기동 전 대조 빠짐) · M137 (edit-last) 올림	[planner 08:34 msg_d56641f33fc1] 덮인 댓글 issuecomment-6320261581 · 되돌림 PATCH · planner 인계 issuecomment-7087664920	막는 법: --edit-last 금지 · 댓글 번호로 PATCH
 			
+2026-11-23 08:36	NA 3b 확인 (opus 줄 · lead 로그 Traceback 0) · 넘어짐 내림 끔 줄 없음 · 평균대 상한 [4] · 수준 몫 L0~L4 0.330 · 0.277 · 0.216 · 0.116 · 0.060 · 첫 10 회 학습률 중앙 1.14e-04 · 표식 pid 일치	[opus 08:36 msg_0d787f018ca1] 로그 e2_launch_083144.log · env 430 · seeded_from model_1500.pt 3ca1a352851e · 노출 영수증 사본 sha 같음 (0318fc15f486 · 2d8a90f2405c)	카드 3b 칸 1~6 통과 (지금 꼴) · 다음 +50 기록 (m50 · 약 08:53 셈)
+NA +50 · Pod XC 첫 증거			
