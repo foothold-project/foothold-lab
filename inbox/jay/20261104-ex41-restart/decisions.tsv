@@ -2390,3 +2390,5 @@ Pod 첫 증거 · NA 3b
 			
 2026-11-23 08:36	NA 3b 확인 (opus 줄 · lead 로그 Traceback 0) · 넘어짐 내림 끔 줄 없음 · 평균대 상한 [4] · 수준 몫 L0~L4 0.330 · 0.277 · 0.216 · 0.116 · 0.060 · 첫 10 회 학습률 중앙 1.14e-04 · 표식 pid 일치	[opus 08:36 msg_0d787f018ca1] 로그 e2_launch_083144.log · env 430 · seeded_from model_1500.pt 3ca1a352851e · 노출 영수증 사본 sha 같음 (0318fc15f486 · 2d8a90f2405c)	카드 3b 칸 1~6 통과 (지금 꼴) · 다음 +50 기록 (m50 · 약 08:53 셈)
 NA +50 · Pod XC 첫 증거			
+2026-11-23 08:52	Pod XC 첫 증거 (lead journalctl 직접) · 넘어짐 내림 끔 5/76 · 평균대 opened 4 · 수준 몫 두 rank 같음 0.060 · 0.123 · 0.240 · 0.181 · 0.395 (XP2 m250 끝 0.051 · 0.130 · 0.236 · 0.176 · 0.407 근처) · NA m50 EMA 27aa8d5a7128 (+50 기록)	[pod-rx2qcmdbXC-watch-start 08:41:41] EX42_X_FALL_DOWN_OFF where=start kinds=A/balance_beams columns=5/76 · start parent_env_state · k_ladder_moves [] · env 430 / [opus 08:51] NA model_50 manifest sha 일치	planner 볼 줄 셋 충족 · 짝 둘 다 돔 · 다음: +100 원인 가설 칸 (NA m100 약 09:12 셈)
+planner m1500 통째 (09:20) · NA +100			
