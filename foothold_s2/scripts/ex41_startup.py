@@ -1113,6 +1113,16 @@ def prepare_ex41_env_cfg(env_cfg: Any, plan, *,
 
     dr = plan.domain_randomization
     ranges = dr["full_ranges"]
+    plan_delay_max_s = float(ranges["delay_s"][1])
+    delay_max_s = plan_delay_max_s
+    delay_gate = os.environ.get("EX42_DELAY_MAX_S")
+    if delay_gate is not None and delay_gate != "":
+        try:
+            delay_max_s = float(delay_gate)
+        except ValueError as exc:
+            raise ValueError("EX42_DELAY_MAX_S must be in (0, 0.020]") from exc
+        if not math.isfinite(delay_max_s) or not 0.0 < delay_max_s <= 0.020:
+            raise ValueError("EX42_DELAY_MAX_S must be in (0, 0.020]")
     first_rewards = dict(plan.stages[0].rewards)
     reward_settings = validate_settings(
         {key: first_rewards[key] for key in ("track_ang_vel", "track_lin_vel", "joint_acc", "hip_pos_penalty")},
@@ -1123,7 +1133,10 @@ def prepare_ex41_env_cfg(env_cfg: Any, plan, *,
     pose_receipt = prepare_pose_env_cfg(env_cfg)
     event_receipt = install_runtime_events(
         env_cfg, ranges, tuple(dr["push_interval_s"]),
-        delay_max_s=float(ranges["delay_s"][1]))
+        delay_max_s=delay_max_s)
+    if delay_gate is not None and delay_gate != "" and os.environ.get("RANK", "0") == "0":
+        print(f"EX42_DELAY_DR where=start max_s={delay_max_s:g} plan_max_s={plan_delay_max_s:g}"
+              f" substeps=0..{int(math.floor(delay_max_s / 0.005 + 1e-9))}", flush=True)
     dr_receipt = install_initial_dr_scale(
         env_cfg, plan.initial_dr_scale, scoped_approval=stage_zero_approval)
     terrain_receipt = prepare_terrain_cfg(
