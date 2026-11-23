@@ -32,6 +32,8 @@ class ValidRolloutStorage(RolloutStorage):
         self.noise_scale_env = None   # [num_envs, 1] per-env action std multiplier (None = off)
         self.batch_noise_scale = None  # the same multiplier for the rows of the minibatch being yielded
         self.noise_scale_steps = None  # [steps, num_envs, 1] the multiplier each step really used (low-speed rule); None = per env only
+        self.actor_mirror_steps = None  # optional [steps, envs] terrain selection, captured with each rollout observation
+        self.batch_actor_mirror_mask = None
 
     def clear(self) -> None:
         super().clear()
@@ -83,6 +85,8 @@ class ValidRolloutStorage(RolloutStorage):
                 if self.noise_scale_env is not None:      # rows are flatten(0, 1) of [step, env]: env = row % num_envs
                     self.batch_noise_scale = (self.noise_scale_env[batch_idx % self.num_envs] if self.noise_scale_steps is None
                                               else self.noise_scale_steps.flatten(0, 1)[batch_idx])
+                if self.actor_mirror_steps is not None:
+                    self.batch_actor_mirror_mask = self.actor_mirror_steps.flatten()[batch_idx]
                 yield (observations[batch_idx], actions[batch_idx], values[batch_idx], batch_advantage,
                        returns[batch_idx], old_log_prob[batch_idx], old_mu[batch_idx], old_sigma[batch_idx],
                        (None, None), None)
