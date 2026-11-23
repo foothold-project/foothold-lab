@@ -2,6 +2,8 @@
 
 The foot-x reference is the per-env default joint pose through the Go2 URDF FK, rather than
 the random reset joint pose. This is the brief's ``reset default-pose FK`` alternative.
+EX42_STOP_WINDOW_SHAPE_PARAMS may set ref_x_front and ref_x_rear together to override the
+front and rear body-frame x references in meters; omitting both keeps the FK path.
 Only continuous-column, moving-to-stand transitions enter the window. No RNG is used here.
 """
 from __future__ import annotations
@@ -16,7 +18,8 @@ from foothold_s2.rewards.ex42_hip_sparse import sparse_envs
 
 ENV_SWITCH = "EX42_STOP_WINDOW_SHAPE"
 PARAMS_ENV = "EX42_STOP_WINDOW_SHAPE_PARAMS"
-DEFAULTS = {"window": 1.0, "x_weight": 0.1, "x_width": 0.08, "stand_share": 0.15}
+DEFAULTS = {"window": 1.0, "x_weight": 0.1, "x_width": 0.08, "stand_share": 0.15,
+            "ref_x_front": None, "ref_x_rear": None}
 PENALTIES = ("ex39_four_foot_stop", "ex40_stand_gap", "ex40_stand_load")
 HIP_X, LINK, FOOT_X = 0.1934, 0.213, -0.002
 _COUNTS: dict[str, torch.Tensor] = {}
@@ -41,7 +44,9 @@ def params() -> dict:
             out[key] = float(raw)
         except ValueError:
             raise ValueError(f"{PARAMS_ENV} invalid number {item!r}") from None
-    if (any(not math.isfinite(v) for v in out.values()) or out["window"] <= 0 or out["x_weight"] <= 0
+    if ((out["ref_x_front"] is None) != (out["ref_x_rear"] is None)):
+        raise ValueError(f"{PARAMS_ENV} needs ref_x_front and ref_x_rear together")
+    if (any(not math.isfinite(v) for v in out.values() if v is not None) or out["window"] <= 0 or out["x_weight"] <= 0
             or out["x_width"] <= 0 or not 0 < out["stand_share"] < 0.9):
         raise ValueError(f"{PARAMS_ENV} needs finite window/width/weight > 0, share in (0, 0.9)")
     return out
@@ -77,14 +82,23 @@ def _add(key: str, value: torch.Tensor) -> None:
     _COUNTS[key] += value.double().sum()
 
 
-def ex42_stop_window_x(env, command_name, asset_cfg, window_s: float, width: float):
+def ex42_stop_window_x(env, command_name, asset_cfg, window_s: float, width: float,
+                       ref_x_front: float | None = None, ref_x_rear: float | None = None):
+    if (ref_x_front is None) != (ref_x_rear is None):
+        raise ValueError("EX42_STOP_WINDOW_SHAPE needs both foot-x reference values")
     active = window_mask(env, command_name, window_s)
     robot = env.scene[asset_cfg.name]
     raw = getattr(env, "unwrapped", env)
     ref = getattr(raw, "_ex42_stop_window_ref_x", None)
-    if ref is None:
-        ref = default_foot_x(robot.joint_names, robot.data.default_joint_pos).to(active.device)
+    key = (ref_x_front, ref_x_rear)
+    if ref is None or getattr(raw, "_ex42_stop_window_ref_x_key", None) != key:
+        if ref_x_front is None:
+            ref = default_foot_x(robot.joint_names, robot.data.default_joint_pos).to(active.device)
+        else:
+            ref = robot.data.default_joint_pos.new_tensor((ref_x_front, ref_x_front, ref_x_rear, ref_x_rear))
+            ref = ref.unsqueeze(0).expand(active.shape[0], 4)
         raw._ex42_stop_window_ref_x = ref
+        raw._ex42_stop_window_ref_x_key = key
     x, _ = foot_xy(env, asset_cfg)
     value = torch.where(active, x_reward(x, ref, width), torch.zeros_like(x[:, 0]))
     term = env.command_manager.get_term(command_name)
@@ -135,9 +149,18 @@ def register(env_cfg, term_cfg_class=None, entity_cfg_class=None, *, stage_id=No
     rewards.ex42_stop_window_x = term_cfg_class(
         func=ex42_stop_window_x, weight=p["x_weight"],
         params={"command_name": "base_velocity", "asset_cfg": entity,
-                "window_s": p["window"], "width": p["x_width"]})
-    print("EX42_STOP_WINDOW_SHAPE where=start window_s=%g x_weight=%g x_width=%g stand_share=%g" % (
-        p["window"], p["x_weight"], p["x_width"], p["stand_share"]), flush=True)
+                "window_s": p["window"], "width": p["x_width"],
+                "ref_x_front": p["ref_x_front"], "ref_x_rear": p["ref_x_rear"]})
+    if p["ref_x_front"] is None:
+        from foothold_s2.robots.go2_kinematics import foot_centers
+        ref_x = foot_centers()[:, 0].tolist()
+        ref_source = "default_fk"
+    else:
+        ref_x = [p["ref_x_front"], p["ref_x_front"], p["ref_x_rear"], p["ref_x_rear"]]
+        ref_source = "override"
+    print("EX42_STOP_WINDOW_SHAPE where=start window_s=%g x_weight=%g x_width=%g stand_share=%g ref_x=%s ref_source=%s" % (
+        p["window"], p["x_weight"], p["x_width"], p["stand_share"],
+        ",".join("%.6f" % value for value in ref_x), ref_source), flush=True)
     return True
 
 
