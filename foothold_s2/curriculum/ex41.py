@@ -894,6 +894,11 @@ def rule2_random_at_cap(env, terrain, term, ids, before, moves, level_cap):
         if count:
             kind = f"{table[col]['family']}/{table[col]['kind']}"
             receipt['by_kind'][kind] = receipt['by_kind'].get(kind, 0) + count
+    last_logged = getattr(env, '_ex42_rule2_last_logged', 0)
+    if last_logged == 0 or receipt['resent'] - last_logged >= 200:
+        print(f"EX42_RULE2_RANDOM_AT_CAP resent={receipt['resent']} "
+              f"by_kind={json.dumps(receipt['by_kind'], sort_keys=True)}", flush=True)
+        env._ex42_rule2_last_logged = receipt['resent']
     return picked, targets
 
 

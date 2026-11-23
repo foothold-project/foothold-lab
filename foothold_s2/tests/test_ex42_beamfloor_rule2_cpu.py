@@ -107,7 +107,13 @@ def test_rule2_redistributes_only_solved_cap_envs(monkeypatch, capsys):
     assert row['resent'] == N // 2 and sum(row['by_kind'].values()) == N // 2
     assert 'A/balance_beams' in row['by_kind'] and len(row['by_kind']) > 2
     assert torch.equal(terrain.env_origins, terrain.terrain_origins[result, terrain.terrain_types])
-    assert 'EX42_RULE2_RANDOM_AT_CAP where=start columns=76' in capsys.readouterr().out
+    lines = capsys.readouterr().out
+    assert 'EX42_RULE2_RANDOM_AT_CAP where=start columns=76' in lines
+    assert f'EX42_RULE2_RANDOM_AT_CAP resent={N // 2} by_kind=' in lines
+    ex41.ex41_terrain_levels(raw, torch.arange(0, 200, 2))
+    assert 'EX42_RULE2_RANDOM_AT_CAP resent=' not in capsys.readouterr().out
+    ex41.ex41_terrain_levels(raw, torch.arange(200, 400, 2))
+    assert 'EX42_RULE2_RANDOM_AT_CAP resent=580 by_kind=' in capsys.readouterr().out
 
 
 def test_both_gates_share_the_real_reset_and_keep_origins_consistent(monkeypatch):
