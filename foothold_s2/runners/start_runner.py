@@ -421,6 +421,10 @@ class StartRunner(OnPolicyRunner):
         )
 
     def _construct_algorithm(self, obs: TensorDict) -> PPO:
+        from foothold_s2.runners.ex42_actor_mirror import weight_from_env
+        actor_mirror_weight = weight_from_env()
+        if actor_mirror_weight and not self.ex41_pose_commands:
+            raise ValueError("EX42_ACTOR_MIRROR_W needs EX-41 pose commands")
         self.policy_cfg.pop("class_name", None)
         policy = StartActorCritic(obs, self.cfg["obs_groups"], self.env.num_actions,
                                   pose_command_dim=2 if self.ex41_pose_commands else 0, **self.policy_cfg).to(self.device)
@@ -428,16 +432,27 @@ class StartRunner(OnPolicyRunner):
         alg_cfg.pop("class_name", None)
         if self.ex41_pose_commands:
             from foothold_s2.runners.ex41_critic_mirror import CriticMirrorPPO
-            if self.ex41_critic_mirror:
+            if self.ex41_critic_mirror or actor_mirror_weight:
                 self._assert_ex41_joint_order()
             alg = CriticMirrorPPO(policy, device=self.device, **alg_cfg, multi_gpu_cfg=self.multi_gpu_cfg)
             alg.mirror_enabled = self.ex41_critic_mirror
+            if actor_mirror_weight:
+                alg.actor_mirror_weight = actor_mirror_weight
+                # EX-42 constructs the runner with critic mirror off, loads the
+                # parent, then enables D174 via set_ex41_critic_mirror(). The
+                # update itself refuses to run until that authorization lands.
+                if not (self.is_distributed and self.gpu_global_rank != 0):
+                    print(f"EX42_ACTOR_MIRROR where=start w={actor_mirror_weight:g} mask=gt_map_range_lt_0.02m "
+                          "latent=held_not_reflected", flush=True)
             clip = self.cfg.get("clip_actions")      # the env clip: a mean past it only moves the log-prob (bounds loss)
             alg.bounds_loss_limit = float(clip) if clip else None
         else:
             alg = PPO(policy, device=self.device, **alg_cfg, multi_gpu_cfg=self.multi_gpu_cfg)
         self._attach_bc_prior(alg, policy)
         alg.init_storage("rl", self.env.num_envs, self.num_steps_per_env, obs, [self.env.num_actions])
+        if actor_mirror_weight:
+            alg.storage.actor_mirror_steps = torch.empty(
+                self.num_steps_per_env, self.env.num_envs, dtype=torch.bool, device=self.device)
         self._small_noise_target = alg
         self._apply_small_noise()
         return alg
@@ -947,6 +962,9 @@ class StartRunner(OnPolicyRunner):
                     else:
                         est = self.perception.step(self.pstate, inp, gmap)
                     ppo_obs = self._ppo_obs(raw, est)
+                    if getattr(self.alg, "actor_mirror_weight", 0.0):
+                        from foothold_s2.runners.ex42_actor_mirror import flat_map_mask
+                        self.alg.storage.actor_mirror_steps[step_k] = flat_map_mask(gmap)
                     self._vxcorr_collect(o, est, ppo_obs, vel)
                     self._vflag_collect(est, vel)
                     self._vbias_collect(o, ppo_obs, vel)

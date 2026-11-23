@@ -32,17 +32,26 @@ def assert_joint_order(joint_names) -> None:
         raise ValueError("EX-41 critic mirror joint_names differ from EX-40 coordinate metadata")
 
 
-def mirror_critic(x: torch.Tensor) -> torch.Tensor:
-    if x.shape[-1] != 666:
-        raise ValueError("EX-41 mirror needs 666 critic entries")
+def mirror_policy45(x: torch.Tensor) -> torch.Tensor:
+    """The shared Go2 o45 coordinate reflection used by critic and actor."""
+    if x.shape[-1] != 45:
+        raise ValueError("EX-41 mirror needs 45 policy entries")
     y = x.clone()
-    # Angular velocity is an axial vector under left-right reflection.
     y[..., 0:3] = x[..., 0:3] * x.new_tensor((-1, 1, -1))
     y[..., 3:6] = x[..., 3:6] * x.new_tensor((1, -1, 1))
     y[..., 6:9] = x[..., 6:9] * x.new_tensor((1, -1, -1))
     joint_signs = x.new_tensor(JOINT_SIGNS)
     for lo in (9, 21, 33):
         y[..., lo:lo + 12] = x[..., lo:lo + 12][..., JOINT_IDS] * joint_signs
+    return y
+
+
+def mirror_critic(x: torch.Tensor) -> torch.Tensor:
+    if x.shape[-1] != 666:
+        raise ValueError("EX-41 mirror needs 666 critic entries")
+    y = x.clone()
+    # Angular velocity is an axial vector under left-right reflection.
+    y[..., 0:45] = mirror_policy45(x[..., 0:45])
     y[..., 45:48] = x[..., 45:48] * x.new_tensor((1, -1, 1))
     y[..., 48:52] = x[..., 48:52][..., list(LEG_SWAP)]
     y[..., 52:564] = x[..., 52:564].reshape(*x.shape[:-1], 32, 16).flip(-1).flatten(-2)
@@ -141,6 +150,7 @@ class CriticMirrorPPO(PPO):
     """
 
     mirror_enabled = False
+    actor_mirror_weight = 0.0
     kl_audit = None
     # Per-sample KL cap for the adaptive learning rate only (PPO loss, ratio clip and the audited KL stay raw).
     # None restores the installed uncapped mean.
@@ -287,6 +297,8 @@ class CriticMirrorPPO(PPO):
         if not self.mirror_enabled:
             if self.bc_prior is not None:
                 raise ValueError("EX-42 BC prior needs the critic-mirror update loop (the installed PPO.update path has no place for it)")
+            if self.actor_mirror_weight:
+                raise ValueError("EX-42 actor mirror needs the critic-mirror update loop")
             safe_norm = self.normalize_advantage_per_mini_batch
             if safe_norm:
                 # Installed PPO normalizes after sampling.  Move the same
@@ -309,15 +321,36 @@ class CriticMirrorPPO(PPO):
             raise ValueError("EX-41 critic mirror supports feed-forward PPO without symmetry or RND")
         total_v = total_m = total_combined = total_s = total_e = total_b = total_over = mu_max = 0.0
         total_bc, total_bc_n, bc_batches = 0.0, 0, 0
+        total_actor_mirror = 0.0
+        actor_mirror_rows = actor_mirror_all_rows = 0
+        mirror_grad_ratio_sum = mirror_grad_ratio_n = 0.0
         ratio_sum, ratio_n = 0.0, 0
         measure_ratio = self.bc_prior is not None and self._bc_updates_seen < self.bc_ratio_updates
         self.storage.yield_skipped = self.is_multi_gpu
         batches = self.storage.mini_batch_generator(self.num_mini_batches, self.num_learning_epochs)
         for batch in batches:
             if batch is None:
+                if self.actor_mirror_weight and self.is_multi_gpu:
+                    # Match the extra selected-row count collective on every
+                    # rank, including a rank whose valid minibatch is empty.
+                    selected_global = torch.zeros((), device=self.device)
+                    torch.distributed.all_reduce(selected_global)
                 self._exchange_empty_batch()
                 continue
             (obs, actions, old_value, advantage, returns, old_logp, old_mu, old_sigma, hidden, masks) = batch
+            if self.actor_mirror_weight:
+                selected = self.storage.batch_actor_mirror_mask
+                if selected is None:
+                    raise ValueError("EX-42 actor mirror rollout mask was not stored")
+                selected_n = int(selected.sum())
+                actor_mirror_rows += selected_n
+                actor_mirror_all_rows += selected.numel()
+                if self.is_multi_gpu:
+                    selected_global = torch.tensor(float(selected_n), device=self.device)
+                    torch.distributed.all_reduce(selected_global)
+                    actor_mirror_scale = self.gpu_world_size * selected_n / max(float(selected_global), 1.0)
+                else:
+                    actor_mirror_scale = 1.0
             if self.normalize_advantage_per_mini_batch:
                 with torch.no_grad():
                     advantage = safe_minibatch_advantage(advantage)
@@ -357,6 +390,20 @@ class CriticMirrorPPO(PPO):
             mirror_loss = (mirror_value - returns).square().mean()
             combined_value = 0.5 * (original_value + mirror_loss)
             base_loss = surrogate + self.value_loss_coef * original_value - self.entropy_coef * entropy.mean()
+            if self.actor_mirror_weight:
+                from foothold_s2.runners.ex42_actor_mirror import actor_mirror_loss
+                actor_sym = actor_mirror_loss(self.policy, obs, mu, selected)
+                if selected_n and getattr(self, "_actor_mirror_updates_seen", 0) < 10:
+                    actor_params = tuple(q for q in self.policy.actor.parameters() if q.requires_grad)
+                    sym_grad = torch.autograd.grad(actor_sym, actor_params, retain_graph=True, allow_unused=True)
+                    sur_grad = torch.autograd.grad(surrogate, actor_params, retain_graph=True, allow_unused=True)
+                    norm = lambda grads: torch.sqrt(sum((g.square().sum() for g in grads if g is not None), torch.zeros((), device=mu.device)))
+                    denominator = float(norm(sur_grad))
+                    if denominator > 0:
+                        mirror_grad_ratio_sum += self.actor_mirror_weight * actor_mirror_scale * float(norm(sym_grad)) / denominator
+                        mirror_grad_ratio_n += 1
+                base_loss = base_loss + self.actor_mirror_weight * actor_mirror_scale * actor_sym
+                total_actor_mirror += float(actor_sym.detach()) * selected_n
             if self.bounds_loss_limit is not None and self.bounds_loss_coef:
                 excess = torch.relu(mu.abs() - self.bounds_loss_limit)
                 bounds = excess.square().sum(dim=-1).mean()      # sum over action dims, mean over samples (rl_games shape)
@@ -422,4 +469,23 @@ class CriticMirrorPPO(PPO):
             if getattr(self, "gpu_global_rank", 0) == 0:
                 print(f"EX42_BC_PRIOR beta={self.bc_beta} loss={total_bc / max(bc_batches, 1):.6g} samples={total_bc_n} "
                       f"batches={bc_batches}{ratio}", flush=True)
+        if self.actor_mirror_weight:
+            if self.is_multi_gpu:
+                totals = torch.tensor((total_actor_mirror, actor_mirror_rows, actor_mirror_all_rows,
+                                       mirror_grad_ratio_sum, mirror_grad_ratio_n),
+                                      dtype=torch.float64, device=self.device)
+                torch.distributed.all_reduce(totals)
+                (total_actor_mirror, actor_mirror_rows, actor_mirror_all_rows,
+                 mirror_grad_ratio_sum, mirror_grad_ratio_n) = totals.tolist()
+            result["actor_mirror"] = total_actor_mirror / max(actor_mirror_rows, 1)
+            result["actor_mirror_mask_fraction"] = actor_mirror_rows / max(actor_mirror_all_rows, 1)
+            ratio = mirror_grad_ratio_sum / mirror_grad_ratio_n if mirror_grad_ratio_n else float("nan")
+            if mirror_grad_ratio_n:
+                result["actor_mirror_grad_ratio_weighted"] = ratio
+            self._actor_mirror_updates_seen = getattr(self, "_actor_mirror_updates_seen", 0) + 1
+            if getattr(self, "gpu_global_rank", 0) == 0:
+                print(f"Mean actor_mirror loss {result['actor_mirror']:.6g} mask_fraction={result['actor_mirror_mask_fraction']:.6g} "
+                      f"grad_ratio_weighted={ratio:.6g}", flush=True)
+                if result["actor_mirror_mask_fraction"] < 0.05:
+                    print("EX42_ACTOR_MIRROR warning=mask_fraction_below_0.05", flush=True)
         return result
