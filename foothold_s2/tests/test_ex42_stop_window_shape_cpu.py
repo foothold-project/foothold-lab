@@ -54,7 +54,31 @@ def test_foot_x_reward_uses_default_pose_and_only_the_transition_window(monkeypa
     assert row["x_reward_mean"] == pytest.approx((1 + 0.36787944) / 2, abs=1e-6)
 
 
-def test_three_real_stand_only_terms_are_zero_only_inside_window(monkeypatch):
+def test_explicit_front_rear_reference_changes_real_e2_reward_and_default_is_bit_identical(monkeypatch, capsys):
+    command, raw, data, active = _transition(monkeypatch)
+    data.body_pos_w[:, :, 0] = torch.tensor([0.25, 0.25, -0.30, -0.30])
+    rng = command.gen.get_state().clone()
+    baseline = shape.ex42_stop_window_x(raw, "base_velocity", ROBOT, 1.0, 0.08)
+    x, _ = shape.foot_xy(raw, ROBOT)
+    default_expected = torch.where(active, shape.x_reward(
+        x, shape.default_foot_x(raw.scene.robot.joint_names, data.default_joint_pos), 0.08), torch.zeros(N))
+    assert torch.equal(baseline, default_expected)
+    monkeypatch.setenv(shape.PARAMS_ENV, "ref_x_front=0.25,ref_x_rear=-0.30")
+    p = shape.params()
+    cfg = NS(rewards=NS(**{name: NS(func=four_foot_contact_at_stop, weight=0.1) for name in shape.PENALTIES}))
+    ctor = lambda **kw: NS(**kw)
+    entity = lambda name, **kw: NS(name=name, body_ids=[0, 1, 2, 3], **kw)
+    assert shape.register(cfg, ctor, entity, stage_id="E2")
+    reward_term = cfg.rewards.ex42_stop_window_x
+    override = reward_term.func(raw, **reward_term.params)
+    assert bool((override[active] == 1).all()) and bool((override[~active] == 0).all())
+    assert not torch.equal(override, baseline)
+    assert torch.equal(command.gen.get_state(), rng)
+    assert "ref_x=0.250000,0.250000,-0.300000,-0.300000 ref_source=override" in capsys.readouterr().out
+    assert torch.equal(shape.ex42_stop_window_x(raw, "base_velocity", ROBOT, 1.0, 0.08), baseline)
+
+
+def test_three_real_stand_only_terms_are_zero_only_inside_window(monkeypatch, capsys):
     command, raw, data, active = _transition(monkeypatch)
     command.stop_elapsed_s[:] = 0.6
     config = {"gap_weight": -0.2, "load_weight": -0.1, "load_fraction": 0.05, "ramp_s": 0.5}
@@ -77,6 +101,9 @@ def test_three_real_stand_only_terms_are_zero_only_inside_window(monkeypatch):
     ctor = lambda **kw: NS(**kw)  # RewardTermCfg constructor stand-in; functions and command term are real
     entity = lambda name, **kw: NS(name=name, body_ids=[0, 1, 2, 3], **kw)
     assert shape.register(cfg, ctor, entity, stage_id="E2")
+    from foothold_s2.robots.go2_kinematics import foot_centers
+    default_x = ",".join("%.6f" % value for value in foot_centers()[:, 0])
+    assert f"ref_x={default_x} ref_source=default_fk" in capsys.readouterr().out
     for name in shape.PENALTIES:
         term = getattr(cfg.rewards, name)
         assert getattr(term.func, "ex42_stop_window_shape", False)
@@ -159,7 +186,8 @@ def test_off_gate_preserves_sampler_bytes_and_generator(monkeypatch):
     assert shape.register(cfg, stage_id="E2") is False and vars(cfg.rewards) == {}
 
 
-@pytest.mark.parametrize("value", ["window=0", "x_width=0", "x_weight=0", "stand_share=0.95", "bad=1", "window=nan"])
+@pytest.mark.parametrize("value", ["window=0", "x_width=0", "x_weight=0", "stand_share=0.95", "bad=1", "window=nan",
+                                   "ref_x_front=0.2", "ref_x_rear=-0.3", "ref_x_front=inf,ref_x_rear=-0.3"])
 def test_bad_params_fail(monkeypatch, value):
     monkeypatch.setenv(shape.PARAMS_ENV, value)
     with pytest.raises(ValueError):
