@@ -13,8 +13,13 @@ from foothold_s2.tools import ex42_e2_reentry_draft as rd
 
 SOURCE = Path("/mnt/win-d/mai/data/foothold/s2_lab/ex42_record/e2_handoff_20261119_013854/materialized_E2")
 MESH = Path("/mnt/win-d/mai/data/foothold/sonnet_beam_mesh_1119/b2m_rpy_lv")
+SOURCE_E2B = Path("/home/jay/data/foothold/sonnet_beam_mesh_1119/rx2qcmdbE2b_m1250")
+RUN_E2B = Path("/home/jay/data/foothold/s2_lab/ex42_main_20261120_193344_r2/main/EX-42-B-E2_20261123_104718")
 needs_real = pytest.mark.skipif(not (SOURCE / "ex42-prep.yaml").is_file() or not (MESH / "terrain_manifest.json").is_file(),
                                 reason="the materialized E2 folder or the beam mesh is not on this machine")
+needs_e2b = pytest.mark.skipif(not (SOURCE_E2B / "ex42-prep.yaml").is_file() or
+                               not (RUN_E2B / "model_1250.pt").is_file(),
+                               reason="the running E2b plan or parent checkpoint is not on this machine")
 
 
 def _rows(parent_source):
@@ -232,3 +237,49 @@ def test_drop_kind_refuses_a_kind_that_is_not_a_row_or_is_also_given_a_share_and
         rd.set_kind_shares(_v1_terrain(), {"B/gap": 0.05}, None, ["B/gap"])
     with pytest.raises(ValueError, match="name the receiving kind"):
         rd.set_kind_shares(_v1_terrain(), {"A/gaps": 0.20}, None, ["B/gap"])          # one dropped, the rest not summing to 0.44 - 0.0533
+
+
+@needs_e2b
+def test_explicit_bundle_total_accepts_real_e2b_plan_and_cli_then_rejects_wrong_sum(tmp_path, capsys):
+    source = yaml.safe_load((SOURCE_E2B / "ex42-prep.yaml").read_text(encoding="utf-8-sig"))
+    original = next(r for r in source["stages"] if r["id"] == "E2")["terrain"]
+    assert rd.rule_shares(original) == {"A/balance_beams": .14}
+    argv = ["--source-dir", str(SOURCE_E2B), "--run-dir", str(RUN_E2B), "--iteration", "1250",
+            "--mesh-dir", str(MESH), "--keep-mesh", "--no-promotion", "--out", str(tmp_path / "draft"),
+            "--add-kind", "C/box=4", "--add-kind", "B/beam=2",
+            "--kind-share", "A/balance_beams=0.03", "--kind-share", "C/box=0.05",
+            "--kind-share", "B/beam=0.05"]
+    rd.main([*argv, "--bundle-total", "0.13"])
+    printed = json.loads(capsys.readouterr().out)
+    record = json.loads((tmp_path / "draft" / "reentry.json").read_text(encoding="utf-8"))
+    assert printed == record and record["bundle_total"] == .13
+    assert record["kind_shares"]["source_total"] == .14
+    assert record["kind_shares"]["new_total"] == record["kind_shares"]["bundle_total"] == .13
+    plan = yaml.safe_load((tmp_path / "draft" / "ex42-prep.yaml").read_text(encoding="utf-8"))
+    row = next(r for r in plan["stages"] if r["id"] == "E2")
+    assert rd.rule_shares(row["terrain"]) == {"A/balance_beams": .03, "C/box": .05, "B/beam": .05}
+    assert rd.rule_caps(row["terrain"])["C/box"] == 4 and rd.rule_caps(row["terrain"])["B/beam"] == 2
+    assert rd.rule_shares(original) == {"A/balance_beams": .14}
+    without = argv.copy()
+    without[without.index(str(tmp_path / "draft"))] = str(tmp_path / "without")
+    with pytest.raises(ValueError, match="bundle is 0.440000"):
+        rd.main(without)
+    assert not (tmp_path / "without").exists()
+    wrong = argv.copy()
+    wrong[wrong.index(str(tmp_path / "draft"))] = str(tmp_path / "wrong")
+    wrong[wrong.index("A/balance_beams=0.03")] = "A/balance_beams=0.04"
+    with pytest.raises(ValueError, match="bundle is 0.130000"):
+        rd.main([*wrong, "--bundle-total", "0.13"])
+    assert not (tmp_path / "wrong").exists()
+
+
+def test_bundle_total_rejects_zero_and_above_old_ceiling_without_changing_default_report():
+    terrain = _v1_terrain()
+    _out, old_report = rd.set_kind_shares(terrain, None, None)
+    assert set(old_report) == {"before", "added", "set", "dropped", "after", "total"}
+    assert old_report["total"] == pytest.approx(.44)
+    for bad in (0, -.01, .440001, float("nan"), float("inf")):
+        with pytest.raises(ValueError, match="--bundle-total"):
+            rd.set_kind_shares(terrain, None, None, bundle_total=bad)
+    with pytest.raises(ValueError, match="share 0"):
+        rd.set_kind_shares(terrain, None, {"C/box": 4}, bundle_total=.44)
