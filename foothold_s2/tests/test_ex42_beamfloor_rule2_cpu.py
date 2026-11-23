@@ -18,10 +18,10 @@ MESH = '/mnt/win-d/mai/data/foothold/s2_lab/ex42_mesh_1111/seed42_ABCDE_b613/ter
 N = 760
 
 
-def _real_path(monkeypatch, *, floor='', rule2='', levels=5, existing_floor=True):
+def _real_path(monkeypatch, *, floor='', rule2='', levels=5, existing_floor=True, stage_id='E1F'):
     monkeypatch.setenv('EX42_BEAM_LEVEL_FLOOR', floor)
     monkeypatch.setenv('EX42_RULE2_RANDOM_AT_CAP', rule2)
-    command, runtime, _ = e1f_term(monkeypatch, {}, n=N)
+    command, runtime, _ = e1f_term(monkeypatch, {}, n=N, stage_id=stage_id)
     raw = command._env
     family = np.load(MESH, allow_pickle=False)['column_family'].tolist()
     table = build_column_table(family)
@@ -164,3 +164,59 @@ def test_rule2_refuses_an_invalid_switch(monkeypatch):
     monkeypatch.setenv('EX42_RULE2_RANDOM_AT_CAP', 'maybe')
     with pytest.raises(ValueError, match='EX42_RULE2_RANDOM_AT_CAP'):
         ex41.ex41_terrain_levels(raw, torch.arange(N))
+
+
+def test_e2_wide_commands_and_rule2_both_reach_the_real_term_and_reset(monkeypatch, capsys):
+    from foothold_s2.commands import ex42_cmd_wide as wide
+    from foothold_s2.curriculum.continuous import command_bad
+
+    monkeypatch.setenv(wide.ENV_SWITCH, '1')
+    monkeypatch.setenv(wide.SHARE_ENV, '0.5')
+    raw, terrain, command, _ = _real_path(monkeypatch, rule2='1', existing_floor=False, stage_id='E2')
+    command.reset(torch.arange(N))
+    command.time_left[:] = 4.0
+    command._resample_command(torch.arange(N))
+    free = ~command.is_flag_env
+    assert command.stage_runtime.stage_id == 'E2'
+    assert wide.summary()['diag_above_old_max'] > 0
+    assert wide.summary()['turned_forward'] > 0
+    assert not bool(command_bad(command.command, command.slot_current, command.heading,
+                                command.stage_runtime.env_stage, command.stage_runtime.plan,
+                                ex42_stage_id='E2')[free].any())
+    command.max_dist[:] = 8.0
+    command.cmd_sum_w[:] = torch.tensor([1.0, 0.0]) / raw.step_dt
+    command.ep_steps[:] = 100
+    terrain.terrain_levels[:] = 5
+    terrain.env_origins[:] = terrain.terrain_origins[terrain.terrain_levels, terrain.terrain_types]
+    ex41.ex41_terrain_levels(raw, torch.arange(N))
+    assert raw._ex42_rule2_random_at_cap['resent'] > 0
+    lines = capsys.readouterr().out
+    assert 'EX42_CMD_WIDE where=start stage=E2' in lines
+    assert 'EX42_RULE2_RANDOM_AT_CAP resent=' in lines
+
+
+def test_both_off_gates_keep_e2_commands_levels_and_rng_byte_equal(monkeypatch):
+    from foothold_s2.commands import ex42_cmd_wide as wide
+
+    monkeypatch.delenv(wide.ENV_SWITCH, raising=False)
+    raw, terrain, command, _ = _real_path(monkeypatch, rule2='', existing_floor=False, stage_id='E2')
+    command.reset(torch.arange(N))
+    command._resample_command(torch.arange(N))
+    command.max_dist[:] = 8.0
+    command.cmd_sum_w[:] = torch.tensor([1.0, 0.0]) / raw.step_dt
+    command.ep_steps[:] = 100
+    terrain.terrain_levels[:] = 5
+    ex41.ex41_terrain_levels(raw, torch.arange(N))
+    cmd, slot, level, rng = (command.command.clone(), command.slot_current.clone(),
+                             terrain.terrain_levels.clone(), command.gen.get_state().clone())
+    monkeypatch.setenv(wide.ENV_SWITCH, '0')
+    raw2, terrain2, command2, _ = _real_path(monkeypatch, rule2='0', existing_floor=False, stage_id='E2')
+    command2.reset(torch.arange(N))
+    command2._resample_command(torch.arange(N))
+    command2.max_dist[:] = 8.0
+    command2.cmd_sum_w[:] = torch.tensor([1.0, 0.0]) / raw2.step_dt
+    command2.ep_steps[:] = 100
+    terrain2.terrain_levels[:] = 5
+    ex41.ex41_terrain_levels(raw2, torch.arange(N))
+    assert torch.equal(command2.command, cmd) and torch.equal(command2.slot_current, slot)
+    assert torch.equal(terrain2.terrain_levels, level) and torch.equal(command2.gen.get_state(), rng)
