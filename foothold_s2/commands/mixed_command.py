@@ -233,10 +233,11 @@ class MixedVelocityCommand(CommandTerm):
                                               yaw=self._yaw(group)))
                 sparse_on = runtime is not None and ex42_sparse_cmd.enabled()
                 sparse = self._sparse_paper_mask(group) if sparse_on else None
-                if runtime is not None and ex42_cmd_wide.active(runtime.plan.stages[index]):
+                if runtime is not None and ex42_cmd_wide.active(getattr(runtime, "stage_id", None)):
                     out = ex42_cmd_wide.apply(out, runtime.plan.stages[index],
                                               lambda k, lo, hi: mc._u(self.gen, (k,), lo, hi), self.slot_names,
-                                              eligible=None if sparse is None else ~sparse)
+                                              eligible=None if sparse is None else ~sparse,
+                                              stage_id=runtime.stage_id)
                 if sparse_on:   # lead 07:44: A sparse columns take START's command form (off = no draw)
                     out = ex42_sparse_cmd.apply(out, sparse,
                                                 lambda k, lo, hi: mc._u(self.gen, (k,), lo, hi), self.slot_names,

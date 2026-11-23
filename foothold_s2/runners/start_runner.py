@@ -959,7 +959,8 @@ class StartRunner(OnPolicyRunner):
                             term = self._command_term()
                             bad_now = command_bad(consumed, term.slot_current.to(self.device),
                                                   term.heading.to(self.device),
-                                                  continuous.env_stage.to(self.device), continuous.plan)
+                                                  continuous.env_stage.to(self.device), continuous.plan,
+                                                  ex42_stage_id=getattr(continuous, "stage_id", None))
                             bad_now = flag_env_command_bad(term, consumed, bad_now)   # flag envs: the flag command, not a slot
                         elif self.pcfg["contract"] == "basic_gait_ex39":
                             heading = self._command_term().heading.detach().clone().to(self.device)

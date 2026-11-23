@@ -1314,6 +1314,7 @@ class EX42StageZeroRuntime:
                                                # than 0 logs to a private directory the judges never read)
         from foothold_s2.commands.ex42_command_stats import CommandStats
         self.command_stats = CommandStats(self.stage_config)          # what the sampler actually drew (train_extra, record only)
+        self.command_stats.stage_id = self.stage_id
         self.level_cap = STAGE_ZERO_LEVEL_CAP        # attach_environment replaces it with the segment's L+ cap
         self.policy_std_cap = 0.0                    # v28 live cell: 0 = off; the live adjustment sets and enforces it
         self.effective = {"stage_id": self.stage_id, "dr_scale": 1.0,

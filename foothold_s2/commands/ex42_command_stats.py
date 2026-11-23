@@ -47,7 +47,8 @@ class CommandStats:
         self._low.scatter_reduce_(0, index, values, "amin")
         self._high.scatter_reduce_(0, index, values, "amax")
         moving = torch.isin(slot, self._moving_ids)
-        bad = command_bad(command, slot, heading.detach().bool(), torch.zeros_like(slot), self.plan)
+        bad = command_bad(command, slot, heading.detach().bool(), torch.zeros_like(slot), self.plan,
+                          ex42_stage_id=getattr(self, "stage_id", None))
         self._counts += torch.stack((moving.sum(), (moving & (values[:, 2] > 1e-6)).sum(), bad.sum()))
 
     def take(self) -> dict | None:

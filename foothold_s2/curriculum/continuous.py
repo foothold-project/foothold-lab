@@ -784,7 +784,8 @@ class Runtime:
 
 
 def command_bad(command: torch.Tensor, slot: torch.Tensor, heading: torch.Tensor,
-                stage_ids: torch.Tensor, plan: Plan, tol: float = 1e-5) -> torch.Tensor:
+                stage_ids: torch.Tensor, plan: Plan, tol: float = 1e-5,
+                *, ex42_stage_id: str | None = None) -> torch.Tensor:
     """Validate each consumed command against that env's current episode stage."""
     if command.ndim != 2 or command.shape[1] != 3 or any(
             x.shape != command.shape[:1] for x in (slot, heading, stage_ids)):
@@ -809,7 +810,7 @@ def command_bad(command: torch.Tensor, slot: torch.Tensor, heading: torch.Tensor
             overlay = getattr(stage, "turn_overlay", None)      # a registered share of these slots also turns
             turned = (lambda z: zero(z) | ((z.abs() >= overlay[1] - tol) & (z.abs() <= overlay[2] + tol))) if overlay else zero
             h = heading[ids]
-            wide = ex42_cmd_wide.active(stage)
+            wide = ex42_cmd_wide.active(ex42_stage_id)
             if name == "forward":
                 good = bounded(x, "forward_vx") & zero(y) & torch.where(
                     h, w.abs() <= stage.heading_cfg["forward_wz_limit"] + tol,
