@@ -20,15 +20,43 @@ class DelayedJointPositionAction(JointPositionAction):
         self._prev = self._offset.clone() if torch.is_tensor(self._offset) else torch.zeros_like(self.processed_actions)
         self._sub = 0
         self._ex40_sample_counts = None
+        self._hold_p = float(getattr(cfg, "ex42_hold_p", 0.0))
+        if self._hold_p:
+            self._hold_steps = getattr(cfg, "ex42_hold_steps")
+            self._hold_left = torch.zeros(env.num_envs, dtype=torch.long, device=self.device)
+            self._hold_active = torch.zeros(env.num_envs, dtype=torch.bool, device=self.device)
+            self._hold_just_finished = torch.zeros(env.num_envs, dtype=torch.bool, device=self.device)
+            self._last_applied = self.processed_actions.clone()
+            self._hold_target = self._last_applied.clone()
+            self._ex42_hold_env_steps = torch.zeros((), dtype=torch.long, device=self.device)
+            self._ex42_total_env_steps = 0
 
     def process_actions(self, actions):
         self._prev = self.processed_actions.clone()
         super().process_actions(actions)
         self._sub = 0
+        if self._hold_p:
+            active = self._hold_left > 0
+            # Leave one control step for a fresh target after a hold expires.
+            available = ~active & ~self._hold_just_finished
+            triggered = available & (torch.rand(self.num_envs, device=self.device) < self._hold_p)
+            self._hold_active = active | triggered
+            self._hold_just_finished = active & (self._hold_left == 1)
+            if self._hold_steps == "2-4":
+                durations = torch.randint(2, 5, (self.num_envs,), device=self.device)
+            else:
+                durations = torch.full_like(self._hold_left, self._hold_steps)
+            self._hold_left = torch.where(triggered, durations - 1, torch.clamp(self._hold_left - 1, min=0))
+            self._hold_target = torch.where(triggered[:, None], self._last_applied, self._hold_target)
+            self._ex42_hold_env_steps += self._hold_active.sum()
+            self._ex42_total_env_steps += self.num_envs
 
     def apply_actions(self):
         use_prev = (self._sub < self.delay)[:, None]
         target = torch.where(use_prev, self._prev, self.processed_actions)
+        if self._hold_p:
+            target = torch.where(self._hold_active[:, None], self._hold_target, target)
+            self._last_applied = target.clone()
         self._asset.set_joint_position_target(target, joint_ids=self._joint_ids)
         self._sub += 1
 
@@ -44,6 +72,12 @@ class DelayedJointPositionAction(JointPositionAction):
                 float(scale) * self.cfg.max_delay_s / self._env.physics_dt + 1e-9))
         self.delay[ids] = torch.randint(0, self.max_delay_substeps + 1, (n,), device=self.device)
         self._prev[ids] = self._asset.data.joint_pos[ids][:, self._joint_ids]
+        if self._hold_p:
+            self._hold_left[ids] = 0
+            self._hold_active[ids] = False
+            self._hold_just_finished[ids] = False
+            self._last_applied[ids] = self._prev[ids]
+            self._hold_target[ids] = self._prev[ids]
         if getattr(self.cfg, "dr_scale_from_env", False):
             histogram = torch.bincount(self.delay[ids].flatten(), minlength=self.max_delay_substeps + 1)
             if self._ex40_sample_counts is None or self._ex40_sample_counts.numel() < histogram.numel():

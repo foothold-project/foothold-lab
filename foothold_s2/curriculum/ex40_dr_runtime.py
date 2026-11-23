@@ -7,6 +7,7 @@ module contains no guessed ranges and is imported only after Kit starts.
 from __future__ import annotations
 
 import math
+import os
 from pathlib import Path
 from typing import Any
 
@@ -243,7 +244,8 @@ def interval_push(env, env_ids, asset_cfg, target_range):
 
 
 def install_runtime_events(env_cfg, ranges: dict, push_interval_s: tuple[float, float] | None,
-                           delay_max_s: float = 0.015) -> dict:
+                           delay_max_s: float = 0.015,
+                           hold_p: float = 0.0, hold_steps: int | str | None = None) -> dict:
     """Install EX-40 reset/interval terms and the delayed action before gym.make."""
     from isaaclab.managers import EventTermCfg, SceneEntityCfg
     from foothold_s2.tasks.delayed_action import DelayedJointPositionAction, DelayedJointPositionActionCfg
@@ -277,9 +279,15 @@ def install_runtime_events(env_cfg, ranges: dict, push_interval_s: tuple[float, 
         env_cfg.actions.joint_pos = action
     action.max_delay_s = float(delay_max_s)
     action.dr_scale_from_env = True
-    return {"reset_terms": ["ex40_base_com", "ex40_actuator_gains", "ex40_motor_strength"],
+    if hold_p:
+        action.ex42_hold_p = float(hold_p)
+        action.ex42_hold_steps = hold_steps
+    receipt = {"reset_terms": ["ex40_base_com", "ex40_actuator_gains", "ex40_motor_strength"],
             "interval_terms": ["ex40_push"], "action": "DelayedJointPositionAction",
             "delay_max_s": float(delay_max_s)}
+    if hold_p:
+        receipt["hold"] = {"p": float(hold_p), "steps": hold_steps}
+    return receipt
 
 
 class RuntimeReadback:
@@ -311,6 +319,9 @@ class RuntimeReadback:
             action = self.env.action_manager.get_term("joint_pos")
             if hasattr(action, "_ex40_sample_counts"):
                 action._ex40_sample_counts = None
+            if getattr(action, "_hold_p", 0.0):
+                action._ex42_hold_env_steps = 0
+                action._ex42_total_env_steps = 0
         self._first_update = False
 
     def summary(self) -> dict:
@@ -370,7 +381,7 @@ class RuntimeReadback:
                              "physics_dt_seconds": dt}
             realized["delay_substeps"] = _stats(d)
         self.env._ex40_dr_samples = {}
-        return {"update": self.update, "schedule_update": self.schedule_update,
+        result = {"update": self.update, "schedule_update": self.schedule_update,
                 "smoke_schedule": self.smoke, "scale": self.scale,
                 "config_sha256": self.config_sha256,
                 "target_ranges": {"base_com": self.ranges.get("base_com"),
@@ -383,6 +394,17 @@ class RuntimeReadback:
                 "observation_noise": {"mode": "fixed", "multiplier": 1.0},
                 "pending_values": [name for name in ("push_velocity",)
                                    if self.ranges.get(name) is None]}
+        if getattr(action, "_hold_p", 0.0):
+            total = int(action._ex42_total_env_steps)
+            held = int(action._ex42_hold_env_steps)
+            result["delay_hold"] = {"held_env_steps": held, "total_env_steps": total,
+                                     "held_env_fraction": held / total if total else None}
+            if self.update is not None and self.update % 50 == 0:
+                print("EX42_DELAY_HOLD where=update update={} rank={} held_env_fraction={:.6f}"
+                      " held_env_steps={} total_env_steps={}".format(
+                          self.update, os.environ.get("RANK", "0"),
+                          held / total if total else 0.0, held, total), flush=True)
+        return result
 
     def per_env_actual(self) -> dict:
         """Return exact CPU-readable physical/action values, retaining env/body/joint axes.
