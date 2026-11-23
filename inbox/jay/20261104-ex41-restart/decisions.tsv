@@ -2518,3 +2518,5 @@ opus L4 모서리 덤프 · planner XP2 복원 L4 다시 봄
 NAXF m250 통째 · opus L4 모서리 덤프			
 2026-11-23 12:21	NAXF m250 학습 끝 (model_250.pt e7825abc57ee) · 경계 평가 12:21:30 기동 · NAXF m500 자동 기동 (HOLD 없음 · planner 막음 0) 은 3b 뒤	[sonnet 사슬 · pgrep 3587688 ex42_eval_once] P1 항목 202	판정 줄 c503040da · 14b057fe6 (복원 L4) · 평지 0.1 바닥 0.090 · planner 통째 채점 · opus L4 모서리 덤프 사슬
 NAXF m250 P1 · 지도 이득			
+2026-11-23 12:22	XC m250 평균대 테두리 위치 오차 (카메라 A · 64 대): 복원 L2 · L3 · L4 중앙 0.06 · 0.06 · 0.08 cm · p90 4.95 · 4.91 · 4.98 cm · 10 cm 안 0.990 · 0.992 · 0.985 · 못 찾음 0.017 · 0.013 · 0.022 (정답 판 0.992 · 0.992 · 0.989) → L4 복원 오차가 L2 · L3 보다 크지 않음 · 가설 (14b057fe6 · L4 모서리 오차가 여유를 먹음) 약함 쪽	[opus 12:21 msg_a2ff102caa6c · mapdump_edge_L234_1123/XCm250ema · edge_pos_err.py 정답 높이차 0.2 m 테두리 · 5 cm 칸] 실행 rc 0 · EVAL_PERCEPTION_SOURCE=ema	남은 후보 (안 잼): 복원 지도의 대 높이 · 구덩이 깊이 (테두리 위치 말고) · 지도 지연 (빠른 걸음에서 앞쪽 칸이 늦게 채워짐) · planner 판단 의뢰 · NAXF 판 덤프는 m250 EMA 옮긴 뒤 자동
+planner · NAXF m250 P1			
