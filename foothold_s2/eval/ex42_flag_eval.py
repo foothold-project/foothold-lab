@@ -38,6 +38,8 @@ parser.add_argument("--envs", type=int, default=64)
 parser.add_argument("--flag-turn-first", choices=("off", "plan"), default="off",
                     help="off (default, the judged path) or plan: turn first toward the first flag as the plan row says (flag_turn_first_rad + flag_turn_first_scope)")
 parser.add_argument("--flag-turn-first-row", default="E2")
+parser.add_argument("--flag-turn-first-rad", type=float,
+                    help="evaluation-only radian threshold override; requires --flag-turn-first plan")
 parser.add_argument("--first-flag-bearing-deg", type=float,
                     help="optional first flag bearing relative to the robot's actual spawn yaw")
 parser.add_argument("--out", type=Path, required=True)
@@ -55,6 +57,13 @@ if args.envs != 64 or args.seed < 0 or not args.checkpoint.is_file() or args.out
 plan_bytes = args.plan.read_bytes()
 plan = yaml.safe_load(plan_bytes.decode("utf-8-sig"))
 settings = contract(plan)
+turn_first = ex42_flag_turn_first.resolve(args.flag_turn_first, plan, args.flag_turn_first_row)
+if args.flag_turn_first_rad is not None:
+    try:
+        turn_first = ex42_flag_turn_first.resolve(args.flag_turn_first, plan, args.flag_turn_first_row,
+                                                   args.flag_turn_first_rad)
+    except ValueError as exc:
+        parser.error(str(exc))
 from foothold_s2.eval import ex42_friction
 friction_policy = ex42_friction.load_policy(args.plan)
 mesh = preflight(args.mesh_dir)
@@ -238,7 +247,6 @@ def main():
         ex42_friction.install_and_verify(raw, friction_policy)
         robot = raw.scene["robot"]
         term = raw.command_manager.get_term("base_velocity")
-        turn_first = ex42_flag_turn_first.resolve(args.flag_turn_first, plan, args.flag_turn_first_row)
         term.flag_turn_first_override = turn_first           # None = off (the term reads the plan row only in training)
         dt = float(raw.step_dt)
         runner, _saved = adapters.load_s2_runner(env, agent_cfg.to_dict(), args.checkpoint,

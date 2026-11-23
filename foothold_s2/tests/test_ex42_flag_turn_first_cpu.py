@@ -266,3 +266,41 @@ def test_the_eval_script_wires_the_flag_turn_first_option_into_the_term_and_the_
     for needle in ('"--flag-turn-first"', 'default="off"', "ex42_flag_turn_first.resolve(args.flag_turn_first, plan, args.flag_turn_first_row)",
                    "term.flag_turn_first_override = turn_first", '"flag_turn_first": turn_first'):
         assert needle in src, needle
+
+
+def test_eval_only_rad_override_changes_real_flag_step_and_stays_inside_contract():
+    from foothold_s2.eval import ex42_flag_turn_first as ft
+    plan = EX42Plan.load(PLAN).document
+    default = ft.resolve("plan", plan, "E2")
+    assert default == ft.resolve("plan", plan, "E2", None) == {"rad": 0.5, "scope": "first"}
+    sharp = ft.resolve("plan", plan, "E2", 0.25)
+    assert sharp == {"rad": 0.25, "scope": "first"}
+    angle = math.radians(20)
+    state, pos, yaw = _state([angle], v=0.8)
+    turned = mc.flag_step(state, pos, yaw, 0.02, mc.CommandParams(), sharp["rad"], sharp["scope"])
+    state, pos, yaw = _state([angle], v=0.8)
+    walked = mc.flag_step(state, pos, yaw, 0.02, mc.CommandParams(), default["rad"], default["scope"])
+    assert torch.equal(turned[0, :2], torch.zeros(2)) and turned[0, 2] > 0
+    assert torch.linalg.norm(walked[0, :2]) == pytest.approx(0.8, abs=1e-6)
+    p = mc.CommandParams()
+    kwargs = dict(vmax=p.flag_vmax, spin_threshold=p.flag_spin_threshold,
+                  spin_wz=p.flag_spin_wz, wz_clip=p.flag_wz_clip, turn_first=bool(sharp["rad"]))
+    assert not bool(flag_contract_bad(turned, **kwargs).any())
+    assert not bool(flag_contract_bad(walked, **kwargs).any())
+    source = (Path(__file__).resolve().parents[1] / "eval/ex42_flag_eval.py").read_text(encoding="utf-8")
+    assert '"--flag-turn-first-rad"' in source
+    assert '"flag_turn_first": turn_first' in source
+    command_source = (Path(__file__).resolve().parents[1] / "commands/mixed_command.py").read_text(encoding="utf-8")
+    contract_source = (Path(__file__).resolve().parents[1] / "runners/contracts.py").read_text(encoding="utf-8")
+    assert "self.flag_turn_first_rad = self._flag_turn_first_rad()" in command_source
+    assert 'turn_first=bool(getattr(term, "flag_turn_first_rad", None))' in contract_source
+
+
+@pytest.mark.parametrize("bad", [0.0, -0.1, 3.1, True, "0.25", float("nan"), float("inf")])
+def test_eval_only_rad_override_rejects_out_of_range_or_wrong_type(bad):
+    from foothold_s2.eval import ex42_flag_turn_first as ft
+    plan = EX42Plan.load(PLAN).document
+    with pytest.raises(ValueError, match="flag-turn-first-rad"):
+        ft.resolve("plan", plan, "E2", bad)
+    with pytest.raises(ValueError, match="requires --flag-turn-first plan"):
+        ft.resolve("off", plan, "E2", 0.25)
