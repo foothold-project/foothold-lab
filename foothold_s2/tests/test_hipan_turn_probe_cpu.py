@@ -1,6 +1,8 @@
 """First-turn probe through the actual goal and command-space functions, without Kit."""
 from pathlib import Path
 from types import SimpleNamespace as NS
+import subprocess
+import sys
 
 import numpy as np
 import pytest
@@ -85,3 +87,50 @@ def test_median_distance_comes_from_task_rows():
                       "rows": [{"ok": [(np.array([2., 0.]), None), (np.array([4., 0.]), None)],
                                 "wound": [(np.array([6., 0.]), None)]}]}])
     assert probe.table_median_distance(task) == 4.0
+
+
+def test_kit_launcher_precedes_torch_checkpoint_loading_in_fresh_python():
+    script = r'''
+import sys
+import tempfile
+from pathlib import Path
+from foothold_s2.scripts import hipan_turn_probe as probe
+from foothold_s2.nav import kit_factories
+assert "torch" not in sys.modules
+order = []
+class StopBeforeKitWork(Exception):
+    pass
+with tempfile.TemporaryDirectory() as root:
+    lower = Path(root) / "lower.pt"
+    lower.write_bytes(b"test lower")
+    kit_factories.load_config = lambda: {"device": "cpu", "lower_sha256": "0" * 64,
+                                         "num_envs": 192}
+    def launch(cfg, with_camera):
+        assert "torch" not in sys.modules
+        assert cfg["device"] == "cuda:1" and with_camera is False
+        order.append("launch")
+    kit_factories.launch_app = launch
+    kit_factories.finish = lambda rc: order.append("finish")
+    def preflight(path, expected_sha):
+        assert order == ["launch"]
+        import torch
+        order.append("torch_load")
+        return {"sha256": "1" * 64}
+    probe.lower_preflight = preflight
+    def stop(*args):
+        assert order == ["launch", "torch_load"]
+        order.append("env")
+        raise StopBeforeKitWork()
+    probe._flat_teacher_env = stop
+    try:
+        probe.main(["--hl-checkpoint", str(lower), "--lower-checkpoint", str(lower),
+                    "--out", str(Path(root) / "probe.npz"), "--device", "cuda:1"])
+    except StopBeforeKitWork:
+        pass
+    assert order == ["launch", "torch_load", "env", "finish"], order
+print("ORDER PASS", order)
+'''
+    result = subprocess.run([sys.executable, "-c", script], text=True, capture_output=True,
+                            check=False, cwd=Path(__file__).resolve().parents[2])
+    assert result.returncode == 0, result.stderr
+    assert "ORDER PASS" in result.stdout

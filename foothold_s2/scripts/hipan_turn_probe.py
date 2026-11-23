@@ -268,17 +268,19 @@ def main(argv=None):
     from foothold_s2.nav import hl_eval, hl_train, kit_factories
 
     cfg = kit_factories.load_config()
-    grade_table = Path(__file__).resolve().parents[1] / "nav" / "grade_table_draft.yaml"
-    if _sha(grade_table) != "47cc43c84acc39b863873a1f2fa50c7a95d3d96ed9a24fbf138acaedb332ecc1":
-        raise ValueError("local grade table differs from the m2000 training code")
-    cfg["grade_table"] = str(grade_table)
-    canonical_sha = cfg["lower_sha256"] if _sha(args.lower_checkpoint) == cfg["lower_sha256"] else None
-    lower = lower_preflight(args.lower_checkpoint, canonical_sha)
-    cfg.update(lower_checkpoint=str(Path(args.lower_checkpoint).resolve()), lower_sha256=lower["sha256"],
-               num_envs=max(int(cfg["num_envs"]), args.episodes_per_bearing * len(bearings) * 4),
-               device=args.device, room_count=1, room_dir=str(out.parent / (out.stem + "_flat_room")))
+    cfg["device"] = args.device
     rc = 1
     try:
+        kit_factories.launch_app(cfg, False)
+        grade_table = Path(__file__).resolve().parents[1] / "nav" / "grade_table_draft.yaml"
+        if _sha(grade_table) != "47cc43c84acc39b863873a1f2fa50c7a95d3d96ed9a24fbf138acaedb332ecc1":
+            raise ValueError("local grade table differs from the m2000 training code")
+        cfg["grade_table"] = str(grade_table)
+        canonical_sha = cfg["lower_sha256"] if _sha(args.lower_checkpoint) == cfg["lower_sha256"] else None
+        lower = lower_preflight(args.lower_checkpoint, canonical_sha)
+        cfg.update(lower_checkpoint=str(Path(args.lower_checkpoint).resolve()), lower_sha256=lower["sha256"],
+                   num_envs=max(int(cfg["num_envs"]), args.episodes_per_bearing * len(bearings) * 4),
+                   room_count=1, room_dir=str(out.parent / (out.stem + "_flat_room")))
         nav, task, room_manifest = _flat_teacher_env(cfg, args.lower_checkpoint, lower["sha256"], cfg["num_envs"])
         env = hl_train.TeacherVecEnv(nav, task, device=args.device)
         actor, _std, iteration = hl_eval.load_actor(args.hl_checkpoint, device=args.device)
