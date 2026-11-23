@@ -19,6 +19,7 @@ from isaaclab.app import AppLauncher
 
 from foothold_s2.eval.ex42_flag_cells import COUNTS, MODES, contract, score_trace
 from foothold_s2.eval import ex42_flag_turn_first
+from foothold_s2.eval.ex42_flag_bearing import bearing_degrees, rotate_flags, score_turn_before_walk
 from foothold_s2.eval.ex42_mesh_eval import preflight
 
 
@@ -37,9 +38,15 @@ parser.add_argument("--envs", type=int, default=64)
 parser.add_argument("--flag-turn-first", choices=("off", "plan"), default="off",
                     help="off (default, the judged path) or plan: turn first toward the first flag as the plan row says (flag_turn_first_rad + flag_turn_first_scope)")
 parser.add_argument("--flag-turn-first-row", default="E2")
+parser.add_argument("--first-flag-bearing-deg", type=float,
+                    help="optional first flag bearing relative to the robot's actual spawn yaw")
 parser.add_argument("--out", type=Path, required=True)
 AppLauncher.add_app_launcher_args(parser)
 args = parser.parse_args()
+try:
+    args.first_flag_bearing_deg = bearing_degrees(args.first_flag_bearing_deg)
+except ValueError as exc:
+    parser.error(str(exc))
 kind_cell = any(value is not None for value in (args.kind_family, args.kind_name, args.kind_level))
 if kind_cell and (not args.kind_family or not args.kind_name or args.kind_level is None):
     parser.error("EX-42 kind flag evaluation needs family, kind and level together")
@@ -152,6 +159,20 @@ def _run_case(env, raw, robot, term, runner, mode, dt):
     actual_flags = term.flag_state.flags.detach().cpu().numpy()
     if not np.allclose(actual_flags, expected_flags, atol=1e-5, rtol=0):
         raise RuntimeError("EX-42 flag targets differ from the pinned mesh or A23 line")
+    start_pos_xy = robot.data.root_pos_w[:, :2].detach().clone()
+    if args.first_flag_bearing_deg is not None:
+        start_yaw = term._yaw().detach().clone()
+        rotated = rotate_flags(term.flag_state.flags, start_pos_xy, start_yaw,
+                               args.first_flag_bearing_deg)
+        # The pinned row is checked above. Rotate that expected row independently
+        # of the term's current tensor, then check the installed row again.
+        expected_flags = rotate_flags(torch.as_tensor(expected_flags, device=rotated.device,
+                                                       dtype=rotated.dtype), start_pos_xy, start_yaw,
+                                      args.first_flag_bearing_deg).detach().cpu().numpy()
+        term.flag_state.flags.copy_(rotated)
+        actual_flags = term.flag_state.flags.detach().cpu().numpy().copy()
+        if not np.allclose(actual_flags, expected_flags, atol=1e-5, rtol=0):
+            raise RuntimeError("EX-42 rotated first flag differs from the pinned row")
     term.flag_state.v.fill_(settings["flag_speed_mps"])
     term._update_command()
     map_mode_cells.disable_heading_for_fixed_eval(term)
@@ -167,6 +188,8 @@ def _run_case(env, raw, robot, term, runner, mode, dt):
         raise RuntimeError("E1F flag evaluation seconds do not align with policy dt")
     rows = {"root_pos_w": [], "root_vel_w": [], "alive": [],
             "cmd_policy_input": [], "cmd_after_step": []}
+    if args.first_flag_bearing_deg is not None:
+        rows["root_quat_w"] = []
     alive = torch.ones(n, dtype=torch.bool, device=raw.device)
     for _ in range(steps):
         if not bool(term.is_flag_env.all()) or not torch.allclose(
@@ -188,6 +211,8 @@ def _run_case(env, raw, robot, term, runner, mode, dt):
             ex41_eval_loader.verify_ex41_pose_observation(obs)
         rows["root_pos_w"].append(robot.data.root_pos_w.detach().cpu().numpy().copy())
         rows["root_vel_w"].append(robot.data.root_lin_vel_w.detach().cpu().numpy().copy())
+        if args.first_flag_bearing_deg is not None:
+            rows["root_quat_w"].append(robot.data.root_quat_w.detach().cpu().numpy().copy())
         rows["alive"].append(alive.detach().cpu().numpy().copy())
         rows["cmd_policy_input"].append(requested.detach().cpu().numpy().copy())
         rows["cmd_after_step"].append(term.vel_command_b[:, :3].detach().cpu().numpy().copy())
@@ -196,6 +221,8 @@ def _run_case(env, raw, robot, term, runner, mode, dt):
                  env_origins_w=terrain.env_origins.detach().cpu().numpy().copy(),
                  terrain_levels=terrain.terrain_levels.detach().cpu().numpy().copy(),
                  terrain_types=terrain.terrain_types.detach().cpu().numpy().copy())
+    if args.first_flag_bearing_deg is not None:
+        trace["start_pos_xy_w"] = start_pos_xy.detach().cpu().numpy().copy()
     return trace, assignment
 
 
@@ -227,6 +254,8 @@ def main():
                    "dr_disabled": disabled, "checkpoint_preparation": checkpoint_preparation,
                    "run_identity": run_identity.safe_collect(args.device, _sha(args.checkpoint), eval_seed=args.seed),
                    "cases": {}}
+        if args.first_flag_bearing_deg is not None:
+            receipt["first_flag_bearing_deg"] = args.first_flag_bearing_deg
         for mode in MODES:
             case = f"{args.count}_{mode}"
             trace, assignment = _run_case(env, raw, robot, term, runner, mode, dt)
@@ -236,6 +265,8 @@ def main():
                        **score_trace(trace, settings["case_specs"][case], settings),
                        "trace_file": str(path), "trace_sha256": _sha(path),
                        "fixed_terrain": assignment}
+            if args.first_flag_bearing_deg is not None:
+                raw_row["first_flag_bearing"] = score_turn_before_walk(trace)
             raw_file = args.out / f"{case}.json"
             raw_file.write_text(json.dumps(raw_row, ensure_ascii=False, allow_nan=False) + "\n", encoding="utf-8")
             receipt["cases"][case] = {"trace_file": str(path), "trace_sha256": _sha(path),
