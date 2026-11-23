@@ -505,6 +505,9 @@ def load_s2_runner(env, train_cfg, checkpoint, device, expect=None, *, checkpoin
     pose_commands = sd.get("ex41_pose_commands", False)
     if not isinstance(pose_commands, bool):
         raise ValueError("checkpoint ex41_pose_commands must be bool")
+    from foothold_s2.runners.start_runner import apply_checkpoint_vx_corr
+    vx = apply_checkpoint_vx_corr(sd.get("vx_corr"))        # lead 11/22 10:36: evaluate with the run's vx correction (old checkpoint: env must name it)
+    print("EVAL_VX_CORR_SOURCE=%s %s" % ("checkpoint" if sd.get("vx_corr") is not None else "environment", vx), flush=True)
     saved = sd.get("perception_cfg") or {}
     pc = dict(train_cfg.get("perception", {}) or {})
     pc["map_input"] = saved.get("map_input", "none")
