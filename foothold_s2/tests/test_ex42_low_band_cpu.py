@@ -35,32 +35,39 @@ def _draw(command, seed=7):
     return command.vel_command_b.clone(), command.slot_current.clone(), command.is_flag_env.clone(), command.heading.clone()
 
 
-def test_on_fills_each_band_and_passes_the_contract(monkeypatch, capsys):
+def test_on_fills_each_band_from_fast_rows_only_and_passes_the_contract(monkeypatch, capsys):
+    """Lead 2026-11-23 revision: every band is 0 ~ 0.10, the share comes only from rows above their range midpoint, slow rows are kept."""
+    off, _ = _term(monkeypatch, 0)
+    cmd_off, slot_off, flag_off, _ = _draw(off)
     command, runtime = _term(monkeypatch, 0.5)
     stage = runtime.plan.stages[int(runtime.env_stage[0])]
-    b = lb.bands(stage.ranges)
+    b, mid = lb.bands(stage.ranges), lb.midpoints(stage.ranges)
+    assert set(b.values()) == {0.10}
     cmd, slot, flag, heading = _draw(command)
+    assert torch.equal(slot, slot_off) and torch.equal(flag, flag_off)
     names = command.slot_names
     free = ~flag
     sel = lambda pred: free & torch.tensor([pred(names[int(i)]) if 0 <= int(i) < len(names) else False for i in slot.tolist()])
-    fwd, rev = sel(lambda s: s == "forward") & ~heading, sel(lambda s: s == "reverse")
-    side, spin = sel(lambda s: s.startswith("side_")), sel(lambda s: s.startswith("spin_")) & ~heading
-    in_band = {"forward": fwd & (cmd[:, 0] < b["forward"]), "reverse": rev & (cmd[:, 0] > -b["reverse"]),
-               "side": side & (cmd[:, 1].abs() < b["side"]), "spin": spin & (cmd[:, 2].abs() < b["spin"])}
-    for key, mask in in_band.items():
-        total = {"forward": fwd, "reverse": rev, "side": side, "spin": spin}[key]
-        assert int(total.sum()) > 50, key
-        frac = float(mask.sum()) / float(total.sum())
-        assert 0.35 < frac < 0.65, (key, frac)                       # about SHARE (0.5) of each slot moved into its band
-    assert float(cmd[in_band["forward"], 0].min()) >= 0.0 and float(cmd[in_band["reverse"], 0].max()) <= 0.0
-    lo, hi = float(cmd[in_band["forward"], 0].min()), float(cmd[in_band["forward"], 0].max())
-    assert lo < 0.2 * b["forward"] and hi > 0.8 * b["forward"]           # the band is covered, not one value
+    axis = {"forward": (sel(lambda s: s == "forward"), 0), "reverse": (sel(lambda s: s == "reverse"), 0),
+            "side": (sel(lambda s: s.startswith("side_")), 1), "spin": (sel(lambda s: s.startswith("spin_")) & ~heading, 2)}
+    changed = (cmd != cmd_off).any(dim=1)
+    for key, (rows, i) in axis.items():
+        fast = rows & (cmd_off[:, i].abs() > mid[key])
+        slow = rows & ~fast
+        assert int(fast.sum()) > 50 and int(slow.sum()) > 50, key
+        assert not bool(changed[slow].any()), key                       # rows at or below the midpoint are never moved
+        moved = fast & changed
+        frac = float(moved.sum()) / float(fast.sum())
+        assert 0.35 < frac < 0.65, (key, frac)                          # about SHARE (0.5) of the fast rows
+        v = cmd[moved, i]
+        assert float(v.abs().max()) <= 0.10 and float(v.abs().max()) > 0.08 and float(v.abs().min()) < 0.02, key   # 0 ~ 0.10 covered
+        assert bool((torch.sign(v) == torch.sign(cmd_off[moved, i])).all() | (v == 0).all()), key                  # sign kept
+    assert not bool(changed[free & ~(axis["forward"][0] | axis["reverse"][0] | axis["side"][0] | sel(lambda s: s.startswith("spin_")))].any())
     bad = command_bad(cmd, slot, heading, runtime.env_stage, runtime.plan)
     assert not bool(bad[free].any())                                     # the run's contract accepts the band while on
     assert "EX42_LOW_BAND where=start share=0.5" in capsys.readouterr().out
     s = lb.summary()
-    fwd_all = sel(lambda s: s == "forward")                              # forward rows with a heading target also move (their wz is the heading's)
-    assert s["forward"] == int((fwd_all & (cmd[:, 0] < b["forward"])).sum()) and s["spin"] == int(in_band["spin"].sum())
+    assert s["spin"] == int((axis["spin"][0] & changed).sum()) and s["side"] == int((axis["side"][0] & changed).sum())
 
 
 def test_off_is_bit_for_bit_and_contract_still_rejects_the_band(monkeypatch):

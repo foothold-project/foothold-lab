@@ -4,12 +4,15 @@ EX42_LOW_BAND_SHARE set to a share in (0, 1]. Off, the sampler draws nothing mor
 Why: the E2 stage ranges start each moving slot at a minimum magnitude (forward_vx 0.1 · reverse_vx up to -0.2 · side_vy_abs 0.1 ·
 spin_wz_abs 0.15), so a command between 0 and that minimum is never trained (a dead band). A real stick passes through it.
 
-On: after the stage draw (before the sparse-column paper form, which still overrides its own columns), a row whose slot is forward ·
-reverse · side_* · spin_* is, with probability SHARE, moved into the band of its own axis, keeping the slot and the sign:
-    forward : vx ~ U[0, forward_vx low]            reverse : vx ~ -U[0, |reverse_vx high|]
-    side_*  : |vy| ~ U[0, side_vy_abs low]          spin_*  : |wz| ~ U[0, spin_wz_abs low]
-The band edges are read from the env's stage ranges (no constant here). Two extra draws for every row (pick · magnitude), so the stream does
-not depend on which rows move. The run's command contract (curriculum.continuous.command_bad) accepts these band values only while this is on.
+On (lead 2026-11-23 13:0x revision): after the stage draw (before the sparse-column paper form, which still overrides its own columns), a
+row whose slot is forward · reverse · side_* · spin_* AND whose magnitude on its own axis is above the midpoint of that slot's stage range
+(a fast row) is, with probability SHARE, moved into the band of its axis, keeping the slot and the sign. Every band is 0 ~ BAND (0.10):
+    forward : vx ~ U[0, 0.10]                      reverse : vx ~ -U[0, 0.10]
+    side_*  : |vy| ~ U[0, 0.10]                     spin_*  : |wz| ~ U[0, 0.10]
+Rows at or below the midpoint (the slow rows, e.g. the flat 0.1 keep cell) are never moved, so the share comes only out of the fast part of
+each range. Midpoints from the env's stage ranges: (lo + hi) / 2 of forward_vx, reverse_vx (compared by magnitude), side_vy_abs, spin_wz_abs.
+Two extra draws for every row (pick · magnitude), so the stream does not depend on which rows move. The run's command contract
+(curriculum.continuous.command_bad) accepts these band values only while this is on.
 Line: EX42_LOW_BAND where=start share=... bands=... ; counts since start in summary(). No Kit import at module level.
 """
 from __future__ import annotations
@@ -19,6 +22,7 @@ import os
 import torch
 
 ENV_SWITCH = "EX42_LOW_BAND_SHARE"
+BAND = 0.10
 _COUNTS = {"draws": 0, "moved": 0, "forward": 0, "reverse": 0, "side": 0, "spin": 0}
 _STARTED = {"done": False}
 
@@ -41,11 +45,19 @@ def enabled() -> bool:
 
 
 def bands(ranges) -> dict:
-    """Band upper magnitudes from the stage ranges (refuse a range that has no dead band to fill)."""
-    out = {"forward": float(ranges["forward_vx"][0]), "reverse": float(-ranges["reverse_vx"][1]),
-           "side": float(ranges["side_vy_abs"][0]), "spin": float(ranges["spin_wz_abs"][0])}
-    if any(v <= 0.0 for v in out.values()):
-        raise ValueError(f"EX-42 low band needs a positive minimum on every axis (got {out})")
+    """Band upper magnitude of every axis (BAND); `ranges` is read only to refuse a stage without the four slot ranges."""
+    for key in ("forward_vx", "reverse_vx", "side_vy_abs", "spin_wz_abs"):
+        if key not in ranges:
+            raise ValueError(f"EX-42 low band: stage ranges lack {key}")
+    return {"forward": BAND, "reverse": BAND, "side": BAND, "spin": BAND}
+
+
+def midpoints(ranges) -> dict:
+    """Magnitude above which a row counts as fast: the midpoint of the slot's own stage range."""
+    mid = lambda key: abs(0.5 * (float(ranges[key][0]) + float(ranges[key][1])))      # noqa: E731
+    out = {"forward": mid("forward_vx"), "reverse": mid("reverse_vx"), "side": mid("side_vy_abs"), "spin": mid("spin_wz_abs")}
+    if any(v <= BAND for v in out.values()):
+        raise ValueError(f"EX-42 low band: a range midpoint is not above the band {BAND} (got {out})")
     return out
 
 
@@ -54,8 +66,10 @@ def start_line(ranges) -> None:
         return
     _STARTED["done"] = True
     b = bands(ranges)
+    m = midpoints(ranges)
     print(f"EX42_LOW_BAND where=start share={share()} forward=[0, {b['forward']}] reverse=[-{b['reverse']}, 0] "
-          f"side_abs=[0, {b['side']}] spin_abs=[0, {b['spin']}] outside_stage_ranges=1", flush=True)
+          f"side_abs=[0, {b['side']}] spin_abs=[0, {b['spin']}] from_rows_above_mid forward>{m['forward']} reverse<-{m['reverse']} "
+          f"side_abs>{m['side']} spin_abs>{m['spin']} outside_stage_ranges=1", flush=True)
 
 
 def apply(out: dict, ranges, draw, slots) -> dict:
@@ -69,6 +83,12 @@ def apply(out: dict, ranges, draw, slots) -> dict:
     names = [slots[int(i)] if 0 <= int(i) < len(slots) else "" for i in slot.tolist()]
     is_ = lambda pred: torch.tensor([pred(s) for s in names], dtype=torch.bool, device=slot.device)
     fwd, rev, side, spin = is_(lambda s: s == "forward"), is_(lambda s: s == "reverse"), is_(lambda s: s.startswith("side_")), is_(lambda s: s.startswith("spin_"))
+    mid = midpoints(ranges)
+    c0 = out["cmd"].to(slot.device)
+    fwd = fwd & (c0[:, 0] > mid["forward"])                   # only fast rows give the share (slow rows, e.g. flat 0.1, are kept)
+    rev = rev & (c0[:, 0] < -mid["reverse"])
+    side = side & (c0[:, 1].abs() > mid["side"])
+    spin = spin & (c0[:, 2].abs() > mid["spin"])
     pick = pick.to(slot.device)
     cmd = out["cmd"].clone()
     m = mag.to(cmd.device)
