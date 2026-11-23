@@ -38,7 +38,12 @@ def read_contract(plan, stage_id):
     families = {r['family'] for r in e0['exposure_at_E0']['positive'] if r.get('kinds_of') == 'continuous'}
     if not kinds or not families:
         raise ValueError('EX-42 continuous command columns are not declared')
-    return {'stage_id': stage_id, 'shares': dict(shares), 'families': sorted(families),
+    effective_shares = dict(shares)
+    if stage_id == 'E2':
+        from foothold_s2.rewards import ex42_stop_window_shape as shape
+        if shape.enabled():
+            effective_shares = shape.override_shares(effective_shares, shape.params()['stand_share'])
+    return {'stage_id': stage_id, 'shares': effective_shares, 'families': sorted(families),
             'continuous_kinds': sorted(kinds), 'conditional_denominator': 'continuous_environments',
             'mode_selection': 'episode_reset', 'other_columns': 'unchanged_source_stage'}
 
@@ -240,6 +245,10 @@ class CommandShares:
         stop = ex42_stop_bundle.summary()            # lead 2026-11-23: stop-slot bundle counts (only when EX42_STOP_BUNDLE=1)
         if stop is not None:
             doc['stop_bundle'] = stop
+        from foothold_s2.rewards import ex42_stop_window_shape
+        shape = ex42_stop_window_shape.summary()
+        if shape is not None:
+            doc['stop_window_shape'] = shape
         target = Path(folder)/f'command_shares_{iteration}_rank{rank}.json'
         if target.exists():
             # A process that died between this record and its save left the name behind; the run came back to the
