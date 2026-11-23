@@ -935,6 +935,9 @@ class StartRunner(OnPolicyRunner):
                            if continuous is not None else contract_bad_fn(self.pcfg["contract"]))
             contract_bad = torch.zeros(n, dtype=torch.bool, device=self.device) if contract_fn is not None else None
             contract_example = torch.zeros(n, 3, device=self.device)
+            mirror_probe_rows = ([] if getattr(self.alg, "actor_mirror_weight", 0.0) and it > 0 and it % 200 == 0
+                                 else None)
+            mirror_probe_count = 0
             # ① 수집
             with torch.inference_mode():
                 for step_k in range(self.num_steps_per_env):
@@ -947,8 +950,17 @@ class StartRunner(OnPolicyRunner):
                         est = self.perception.step(self.pstate, inp, gmap)
                     ppo_obs = self._ppo_obs(raw, est)
                     if getattr(self.alg, "actor_mirror_weight", 0.0):
-                        from foothold_s2.runners.ex42_actor_mirror import flat_map_mask
-                        self.alg.storage.actor_mirror_steps[step_k] = flat_map_mask(gmap)
+                        from foothold_s2.runners.ex42_actor_mirror import capture_encoder_probe_rows, flat_map_mask
+                        selected = flat_map_mask(gmap)
+                        self.alg.storage.actor_mirror_steps[step_k] = selected
+                        if mirror_probe_rows is not None and mirror_probe_count < 32:
+                            probe_perception = self.perception_ema if self.perception_ema is not None else self.perception
+                            probe_state = self.pstate_ema if self.pstate_ema is not None else self.pstate
+                            row = capture_encoder_probe_rows(probe_perception, probe_state, gmap, selected,
+                                                             32 - mirror_probe_count)
+                            if row is not None:
+                                mirror_probe_rows.append(row)
+                                mirror_probe_count += row[0].shape[0]
                     self._vxcorr_collect(o, est, ppo_obs, vel)
                     self._vflag_collect(est, vel)
                     self._vbias_collect(o, ppo_obs, vel)
@@ -1055,6 +1067,12 @@ class StartRunner(OnPolicyRunner):
                 self._slow_hold_log(it)
                 self._command_cells_log(it)
                 self._flag_turn_log(it)
+            if mirror_probe_rows is not None:
+                from foothold_s2.runners.ex42_actor_mirror import report_encoder_probe
+                probe_perception = self.perception_ema if self.perception_ema is not None else self.perception
+                report_encoder_probe(it, mirror_probe_rows, probe_perception,
+                                     multi_gpu=self.is_distributed, rank=getattr(self, "gpu_global_rank", 0),
+                                     device=self.device)
             if trace is not None:
                 trace.end_update()
             if contract_bad is not None and bool(contract_bad.any()):

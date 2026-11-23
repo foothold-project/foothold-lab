@@ -15,7 +15,8 @@ from foothold_s2.runners.ex41_critic_mirror import EXPECTED_JOINT_NAMES, mirror_
 from foothold_s2.runners import ex41_critic_mirror as critic_mirror_module
 from foothold_s2.runners import ex42_actor_mirror as mirror_module
 from foothold_s2.runners.ex42_actor_mirror import (
-    actor_mirror_loss, flat_map_mask, mirror_action, mirror_actor_observation, weight_from_env,
+    actor_mirror_loss, capture_encoder_probe_rows, encoder_probe_line, flat_map_mask,
+    mirror_action, mirror_actor_observation, weight_from_env,
 )
 from foothold_s2.tests.ex41_authorization_fixture import real_authorization
 from foothold_s2.tests.test_ex41_b345 import PoseEnv
@@ -69,10 +70,51 @@ def test_real_runner_rollout_stores_the_flat_mask_and_reports_loss(monkeypatch, 
     cfg["ex41_critic_mirror"] = True
     cfg["ex41_mirror_approval"] = real_authorization(tmp_path / "w72_run")
     runner = StartRunner(FlatPoseEnv(num_envs=4), cfg, log_dir=None, device="cpu")
+    runner.current_learning_iteration = 200
     runner.learn(1)
     out = capsys.readouterr().out
     assert "Mean actor_mirror loss" in out and "mask_fraction=1" in out
     assert "EX42_ACTOR_MIRROR warning" not in out
+    assert "EX42_ACTOR_MIRROR_ENCODER it=200 samples=" in out
+    assert "EX42_ACTOR_MIRROR_ENCODER it=200" in out and "ALERT" not in out
+
+
+def test_encoder_probe_uses_actual_gt_or_reconstruction_and_alert_boundary(monkeypatch, tmp_path, capsys):
+    model = StartPerception(PerceptionCfg()).eval()
+    state = model.init_state(2, "cpu")
+    state.h_terr = torch.randn(2, 128)
+    state.use_gt = torch.tensor([True, False])
+    selected = torch.tensor([True, True])
+    ground = torch.zeros(2, 32, 16)
+    captured = capture_encoder_probe_rows(model, state, ground, selected, 2)
+    assert captured is not None
+    with torch.inference_mode():
+        _, refined = model.trnet.decode(state.h_terr)
+    assert torch.equal(captured[1][0], ground[0])
+    assert torch.equal(captured[1][1], refined[1])
+    assert "ALERT" not in encoder_probe_line(200, 4, (0.1, 0.0, 0.0))
+    assert "ALERT" in encoder_probe_line(200, 4, (0.1001, 0.0, 0.0))
+    assert "ALERT" in encoder_probe_line(200, 0, (0.0, 0.0, 0.0))
+
+    class FlatPoseEnv(PoseEnv):
+        def _make(self):
+            raw = super()._make()
+            raw["gt_map"].zero_()
+            return raw
+
+    monkeypatch.setenv("EX42_ACTOR_MIRROR_W", "0.1")
+    cfg = train_cfg(2, {"microbatch_envs": 2})
+    cfg["ex41_pose_commands"] = True
+    cfg["ex41_critic_mirror"] = True
+    cfg["ex41_mirror_approval"] = real_authorization(tmp_path / "w72_alert")
+    runner = StartRunner(FlatPoseEnv(num_envs=4), cfg, log_dir=None, device="cpu")
+    runner.current_learning_iteration = 400
+    monkeypatch.setattr(mirror_module, "encoder_flip_statistics",
+                        lambda *_: (torch.tensor([0.11, 0.0, 0.0]), torch.ones(3), torch.ones(3)))
+    runner.learn(1)
+    out = capsys.readouterr().out
+    assert "EX42_ACTOR_MIRROR_ENCODER it=400 samples=" in out
+    assert "ALERT" in out
 
 
 def test_ex42_parent_load_path_can_enable_critic_mirror_after_runner_init(monkeypatch, tmp_path):
