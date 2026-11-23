@@ -81,6 +81,15 @@ def test_off_is_identical_and_does_not_touch_command_rng(monkeypatch):
     assert "stop_window_envs" not in runner._small_noise_finish(1)
 
 
+def test_enabled_window_refuses_missing_noise_install(monkeypatch):
+    monkeypatch.setenv("EX42_STOP_NOISE_WINDOW_S", "1.0")
+    alg, _ = _alg(None)
+    runner = _runner(alg)
+    runner._lowspeed_noise = False
+    with pytest.raises(ValueError, match="low-speed noise path is not installed"):
+        runner._step_small_noise(_o([0.0] * N))
+
+
 @pytest.mark.parametrize("value", ["bad", "-0.1", "nan", "inf"])
 def test_bad_window_refused(monkeypatch, value):
     monkeypatch.setenv("EX42_STOP_NOISE_WINDOW_S", value)

@@ -530,12 +530,14 @@ class StartRunner(OnPolicyRunner):
         """v28m: before the action of this step, the envs whose command (o[:, 6:8], as in _vbias_collect) is below
         SMALL_NOISE_LOWSPEED_CMD join the fixed-share small-noise envs for this step. Counts are kept for the per-update line."""
         storage = getattr(getattr(self, "alg", None), "storage", None)
+        window_s = self._stop_noise_window_s()
+        if window_s and (not getattr(self, "_lowspeed_noise", False) or storage is None or storage.noise_scale_steps is None):
+            raise ValueError("EX42_STOP_NOISE_WINDOW_S is on but the low-speed noise path is not installed")
         if not getattr(self, "_lowspeed_noise", False) or storage is None or storage.noise_scale_steps is None:
             return
         from foothold_s2.runners import ex41_critic_mirror as mirror
         low = mirror.lowspeed_noise_mask(o[:, 6:8], mirror.SMALL_NOISE_LOWSPEED_CMD)
         scale = torch.where(low[:, None], torch.full_like(self._noise_static, mirror.SMALL_NOISE_SIGMA_SCALE), self._noise_static)
-        window_s = self._stop_noise_window_s()
         if window_s:
             if not getattr(self, "_stop_noise_started", False):
                 print(f"EX42_STOP_NOISE_WINDOW where=start window_s={window_s:g}", flush=True)
