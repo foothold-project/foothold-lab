@@ -1,0 +1,6 @@
+rc 0
+wall_s 69.962513199
+	User time (seconds): 328.39
+	System time (seconds): 2.45
+	Percent of CPU this job got: 472%
+	Maximum resident set size (kbytes): 364092
