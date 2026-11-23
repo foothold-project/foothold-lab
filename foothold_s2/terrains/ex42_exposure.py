@@ -162,8 +162,23 @@ def column_shares(plan_terrain: dict[str, Any], table: list[dict[str, Any]], sta
 def low_level_floor(plan_terrain: dict[str, Any], table: list[dict[str, Any]], stage_id: str):
     """The stage's CG:380 floor (continuous envs kept at levels lo..hi: at least `fraction` of the continuous envs),
     or None when the stage row has none (E0 / E1 run without it). Continuous = the family A columns."""
+    import math
+    import os
+
+    raw = os.environ.get("EX42_BEAM_LEVEL_FLOOR", "").strip() if stage_id == "E2" else ""
+    if raw:
+        try:
+            beam_fraction = float(raw)
+        except ValueError:
+            raise ValueError("EX42_BEAM_LEVEL_FLOOR must be in [0, 1]") from None
+        if not math.isfinite(beam_fraction) or not 0 <= beam_fraction <= 1:
+            raise ValueError("EX42_BEAM_LEVEL_FLOOR must be in [0, 1]")
+    else:
+        beam_fraction = 0.0
     spec = (plan_terrain.get("floors") or {}).get("continuous_low_level_floor")
     if spec is None:
+        if beam_fraction:
+            raise ValueError("EX42_BEAM_LEVEL_FLOOR requires the E2 continuous low-level floor")
         return None
     levels, fraction = spec.get("levels"), spec.get("fraction_of_continuous")
     if (not isinstance(levels, list) or len(levels) != 2 or any(type(v) is not int for v in levels)
@@ -173,7 +188,17 @@ def low_level_floor(plan_terrain: dict[str, Any], table: list[dict[str, Any]], s
     continuous = [row["family"] == "A" for row in table]
     if not any(continuous):
         raise ValueError(f"EX-42 {stage_id} continuous low-level floor needs continuous (family A) columns")
-    return {"levels": [int(levels[0]), int(levels[1])], "fraction": float(fraction), "continuous": continuous}
+    result = {"levels": [int(levels[0]), int(levels[1])], "fraction": float(fraction), "continuous": continuous}
+    if beam_fraction:
+        raw_max = os.environ.get("EX42_BEAM_LEVEL_FLOOR_MAX", "2")
+        if not raw_max.isdecimal():
+            raise ValueError("EX42_BEAM_LEVEL_FLOOR_MAX must be a nonnegative integer")
+        beam_max = int(raw_max)
+        beam = [row["family"] == "A" and row["kind"] == "balance_beams" for row in table]
+        if not any(beam):
+            raise ValueError("EX42_BEAM_LEVEL_FLOOR has no A/balance_beams column")
+        result["beam"] = {"fraction": beam_fraction, "max_level": beam_max, "columns": beam}
+    return result
 
 
 def rebalance_to_shares(types, levels, exposure, shares, generator=None):
@@ -310,6 +335,24 @@ class LowLevelFloor:
         self.reassigned = 0
         self.checks = 0
         self.last_deficit = 0
+        beam = spec.get("beam")
+        self.beam = (torch.as_tensor(beam["columns"], dtype=torch.bool, device=device) if beam else None)
+        self.beam_fraction = beam["fraction"] if beam else None
+        self.beam_max_level = beam["max_level"] if beam else None
+        if self.beam_max_level is not None and self.beam_max_level >= terrain.terrain_origins.shape[0]:
+            raise ValueError("EX42_BEAM_LEVEL_FLOOR_MAX exceeds the terrain rows")
+        self.beam_demoted = 0
+        self.beam_share_before = self.beam_share_after = None
+        if self.beam is not None:
+            print(f"EX42_BEAM_LEVEL_FLOOR where=start floor={self.beam_fraction:g} "
+                  f"max_level={self.beam_max_level} columns={int(self.beam.sum())}/{len(self.beam)}", flush=True)
+
+    def beam_counts(self):
+        import math
+        member = self.beam[self.terrain.terrain_types]
+        total = int(member.sum())
+        low = int((member & (self.terrain.terrain_levels <= self.beam_max_level)).sum())
+        return total, low, math.ceil(self.beam_fraction * total)
 
     def counts(self) -> dict[str, int]:
         import math
@@ -348,26 +391,45 @@ class LowLevelFloor:
         deficit = have["required"] - have["low_level_envs"]
         self.checks += 1
         self.last_deficit = max(deficit, 0)
-        if deficit <= 0:
-            return 0
         levels, types = self.terrain.terrain_levels, self.terrain.terrain_types
-        ids = env_ids[self.continuous[types[env_ids]] & (levels[env_ids] > self.hi)]
-        if not ids.numel():
-            return 0
-        order = torch.randperm(int(ids.numel()), generator=self.generator)[:deficit].to(ids.device)
-        picked = ids[order]
-        span = self.hi - self.lo + 1
-        draw = torch.randint(0, span, (int(picked.numel()),), generator=self.generator).to(picked.device)
-        levels[picked] = self.lo + draw
-        self.refresh(picked)
-        self.reassigned += int(picked.numel())
-        self.last_deficit = max(deficit - int(picked.numel()), 0)
-        return int(picked.numel())
+        moved = 0
+        if deficit > 0:
+            ids = env_ids[self.continuous[types[env_ids]] & (levels[env_ids] > self.hi)]
+            if ids.numel():
+                order = torch.randperm(int(ids.numel()), generator=self.generator)[:deficit].to(ids.device)
+                picked = ids[order]
+                span = self.hi - self.lo + 1
+                draw = torch.randint(0, span, (int(picked.numel()),), generator=self.generator).to(picked.device)
+                levels[picked] = self.lo + draw
+                self.refresh(picked)
+                moved = int(picked.numel())
+                self.reassigned += moved
+                self.last_deficit = max(deficit - moved, 0)
+        if self.beam is not None:
+            total, low, required = self.beam_counts()
+            self.beam_share_before = low / total if total else None
+            if low < required:
+                # Stable env-id order, no extra RNG draw. Only resetting beam envs move.
+                ids = env_ids[self.beam[types[env_ids]] & (levels[env_ids] > self.beam_max_level)]
+                picked = ids.sort().values[:required - low]
+                if picked.numel():
+                    levels[picked] = self.beam_max_level
+                    self.refresh(picked)
+                    self.beam_demoted += int(picked.numel())
+            total, low, _ = self.beam_counts()
+            self.beam_share_after = low / total if total else None
+        return moved
 
     def receipt(self) -> dict[str, Any]:
-        return {"format": "foothold-ex42-low-level-floor/1", "source": "CG:380", "levels": [self.lo, self.hi],
+        result = {"format": "foothold-ex42-low-level-floor/1", "source": "CG:380", "levels": [self.lo, self.hi],
                 "fraction_of_continuous": self.fraction, **self.counts(), **self.origin_counts(), "reassigned_total": self.reassigned,
                 "checks": self.checks, "last_deficit": self.last_deficit}
+        if self.beam is not None:
+            total, _, _ = self.beam_counts()
+            result["beam_level_floor"] = {"low_share_before": self.beam_share_before,
+                                          "low_share_after": self.beam_share_after,
+                                          "demoted": self.beam_demoted, "beam_envs": total}
+        return result
 
 
 def apply_exposure(terrain, exposure, caps, generator=None, parent_env_state=None, table=None,

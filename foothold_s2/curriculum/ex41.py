@@ -860,6 +860,43 @@ def capped_moves(levels,moves,cap):
     return torch.where(((moves>0)&(levels>=cap))|((moves<0)&(levels<=0)),torch.zeros_like(moves),moves)
 
 
+def rule2_random_at_cap(env, terrain, term, ids, before, moves, level_cap):
+    """Optional E2 rule 2: a solved top tile restarts on U{0..its current column cap}."""
+    raw = os.environ.get('EX42_RULE2_RANDOM_AT_CAP', '').strip()
+    if raw not in ('', '0', '1'):
+        raise ValueError('EX42_RULE2_RANDOM_AT_CAP must be 0 or 1')
+    if raw != '1':
+        return torch.empty(0, device=ids.device, dtype=torch.long), None
+    table = getattr(env, '_ex42_column_table', None)
+    if table is None or len(table) != terrain.terrain_origins.shape[1]:
+        raise ValueError('EX42_RULE2_RANDOM_AT_CAP needs the actual mesh column table')
+    caps = getattr(terrain, 'exposure_level_caps', None)
+    top = (caps[terrain.terrain_types[ids]].to(ids.device).clamp(max=level_cap) if caps is not None
+           else torch.full_like(before, level_cap))
+    picked = ids[(moves > 0) & (before == top)]
+    picked_caps = top[(moves > 0) & (before == top)]
+    if not getattr(env, '_ex42_rule2_announced', False):
+        env._ex42_rule2_announced = True
+        print(f'EX42_RULE2_RANDOM_AT_CAP where=start columns={len(table)}', flush=True)
+    if not hasattr(env, '_ex42_rule2_random_at_cap'):
+        env._ex42_rule2_random_at_cap = {'resent': 0, 'by_kind': {}}
+    if not picked.numel():
+        return picked, None
+    gen = getattr(term, 'gen', None)
+    if gen is None:
+        raise ValueError('EX42_RULE2_RANDOM_AT_CAP needs the command generator')
+    draws = torch.rand(len(picked), generator=gen, device=gen.device).to(ids.device)
+    targets = torch.floor(draws * (picked_caps + 1)).long()
+    column_counts = torch.bincount(terrain.terrain_types[picked].long(), minlength=len(table)).cpu().tolist()
+    receipt = env._ex42_rule2_random_at_cap
+    receipt['resent'] += len(picked)
+    for col, count in enumerate(column_counts):
+        if count:
+            kind = f"{table[col]['family']}/{table[col]['kind']}"
+            receipt['by_kind'][kind] = receipt['by_kind'].get(kind, 0) + count
+    return picked, targets
+
+
 def ex41_terrain_levels(env,env_ids,command_name='base_velocity',resample_s=4.,world_frame=True,
                         initial_policy=None,initial_level_cap=None,
                         x_progress_kinds=(),x_progress_fraction=0.5,x_progress_forward_only=False,x_progress_fall_down=False):
@@ -902,8 +939,15 @@ def ex41_terrain_levels(env,env_ids,command_name='base_velocity',resample_s=4.,w
         reached=torch.where(term.ep_steps[ids]>0,reached,torch.zeros_like(reached))
         moves=torch.where(flags,reached.to(moves.device),moves)
     before=terrain.terrain_levels[ids].clone()
+    resent, targets = rule2_random_at_cap(env, terrain, term, ids, before, moves, settings['level_cap'])
     moves=capped_moves(before,moves,settings['level_cap'])
     terrain.update_env_origins(ids,moves>0,moves<0)
+    if targets is not None:
+        terrain.terrain_levels[resent] = targets
+        terrain.env_origins[resent] = terrain.terrain_origins[targets, terrain.terrain_types[resent]]
+        floor = getattr(terrain, 'low_level_floor', None)
+        if floor is not None:
+            floor.enforce(resent)
     actual=terrain.terrain_levels[ids]-before
     counts[1:]+=torch.stack((torch.ones_like(actual).sum(),(actual>0).sum(),(actual<0).sum(),
                              (actual==0).sum(),(actual!=moves).sum()))
@@ -944,6 +988,10 @@ def terrain_distribution(env):
     return {'columns':columns,'by_terrain':per_kind,'mean_level':float(levels.float().mean()),
             'stair_start_angle_hist':snapshot(env),
             'promotion_readback':progress,
+            **({'rule2_random_at_cap':copy.deepcopy(env._ex42_rule2_random_at_cap)}
+               if hasattr(env,'_ex42_rule2_random_at_cap') else {}),
+            **({'beam_level_floor':terrain.low_level_floor.receipt()['beam_level_floor']}
+               if getattr(terrain,'low_level_floor',None) is not None and terrain.low_level_floor.beam is not None else {}),
             'labels_sha256':hashlib.sha256(levels.numpy().tobytes()+types.numpy().tobytes()).hexdigest()}
 
 
