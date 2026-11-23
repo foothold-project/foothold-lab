@@ -28,8 +28,8 @@ def enabled() -> bool:
     return raw == "1"
 
 
-def active(stage) -> bool:
-    return enabled() and stage.id == "E2"
+def active(stage_id: str | None) -> bool:
+    return enabled() and stage_id == "E2"
 
 
 def share() -> float:
@@ -51,9 +51,10 @@ def _start_line(value: float) -> None:
               f"forward_wz_abs={list(FORWARD_WZ_ABS)}", flush=True)
 
 
-def apply(out: dict, stage, draw, slots, eligible: torch.Tensor | None = None) -> dict:
-    """`draw(n,lo,hi)` uses the caller's command RNG. Call only when active(stage)."""
-    if not active(stage):
+def apply(out: dict, stage, draw, slots, eligible: torch.Tensor | None = None,
+          *, stage_id: str | None = None) -> dict:
+    """`draw(n,lo,hi)` uses the caller's command RNG. The EX-42 runtime owns stage_id."""
+    if not active(stage_id):
         return out
     value = share()
     _start_line(value)
