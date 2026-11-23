@@ -18,6 +18,7 @@ import torch
 import yaml
 
 from foothold_s2.commands.mixed_core import EX39_SLOTS
+from foothold_s2.commands import ex42_cmd_wide
 from foothold_s2.runners.contracts import start_contract_bad
 
 
@@ -808,9 +809,13 @@ def command_bad(command: torch.Tensor, slot: torch.Tensor, heading: torch.Tensor
             overlay = getattr(stage, "turn_overlay", None)      # a registered share of these slots also turns
             turned = (lambda z: zero(z) | ((z.abs() >= overlay[1] - tol) & (z.abs() <= overlay[2] + tol))) if overlay else zero
             h = heading[ids]
+            wide = ex42_cmd_wide.active(stage)
             if name == "forward":
                 good = bounded(x, "forward_vx") & zero(y) & torch.where(
-                    h, w.abs() <= stage.heading_cfg["forward_wz_limit"] + tol, zero(w))
+                    h, w.abs() <= stage.heading_cfg["forward_wz_limit"] + tol,
+                    zero(w) | (wide & (x > ex42_cmd_wide.FAST_FORWARD_VX) &
+                               (w.abs() >= ex42_cmd_wide.FORWARD_WZ_ABS[0] - tol) &
+                               (w.abs() <= ex42_cmd_wide.FORWARD_WZ_ABS[1] + tol)))
             elif name.startswith("walk_"):
                 good = bounded(x, "walk_vx") & zero(y) & absolute(w, "walk_wz_abs") & ~h
                 good &= w > 0 if name.endswith("left") else w < 0
@@ -828,7 +833,8 @@ def command_bad(command: torch.Tensor, slot: torch.Tensor, heading: torch.Tensor
                 good = zero(x) & absolute(y, "side_vy_abs") & turned(w) & ~h
                 good &= y > 0 if name.endswith("left") else y < 0
             else:
-                good = absolute(x, "diag_vx_abs") & absolute(y, "diag_vy_abs") & turned(w) & ~h
+                wide_diag = (x.abs() >= ex42_cmd_wide.DIAG_VX_ABS[0] - tol) & (x.abs() <= ex42_cmd_wide.DIAG_VX_ABS[1] + tol)
+                good = (absolute(x, "diag_vx_abs") | (wide & wide_diag)) & absolute(y, "diag_vy_abs") & turned(w) & ~h
                 good &= x > 0 if name.startswith("diag_fwd") else x < 0
                 good &= y > 0 if name.endswith("left") else y < 0
             bad[ids] = bad[ids] | ~good
