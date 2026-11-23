@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>FOOTHOLD 데이터 산출물 명세서</title>
+<style>
+/* =====================================================================
+   조정 칸 · 여기 숫자만 바꾸고 render.sh 를 다시 돌리면 PDF 가 바뀐다
+   ===================================================================== */
+:root {
+  /* 글씨 */
+  --font-body: 8.5pt;        /* 본문 */
+  --font-table: 7.9pt;       /* 표 안 */
+  --font-small: 7.9pt;       /* 주석 · 부제 */
+  --font-h1: 16.5pt;         /* 제목 */
+  --font-h2: 11.2pt;         /* 절 제목 */
+  --font-h3: 9.4pt;          /* 소제목 */
+  --line-height: 1.38;       /* 줄 간격 */
+  /* 표 */
+  --table-line: 0.5pt;       /* 표 선 굵기 */
+  --cell-pad-y: 0.85mm;      /* 칸 안 위아래 여백 */
+  --cell-pad-x: 1mm;       /* 칸 안 좌우 여백 */
+  --key-col: 22mm;           /* 표 왼쪽 이름 칸 폭 */
+  /* 팀 표 열 폭 */
+  --team-name-col: 16mm;     /* 이름 */
+  --team-pos-col: 50mm;      /* 포지션 */
+  /* 산출물 1 성능 표 열 폭 */
+  --perf-axis-col: 32mm;     /* 축 */
+  --perf-result-col: 68mm;   /* 결과 */
+  /* 간격 */
+  --cover-gap: 5.5mm;        /* 제목 묶음과 목차 사이 */
+  --toc-gap: 5.5mm;          /* 목차와 1. 팀 소개 사이 */
+  --section-gap: 4.9mm;      /* 절 사이 */
+  --table-gap: 3.2mm;        /* 표와 표 사이 */
+  --h3-gap: 6mm;           /* 소제목 위 간격 */
+  --page-margin: 11mm 12mm 12mm 12mm;  /* 쪽 여백 (위 오른쪽 아래 왼쪽) · @page 줄도 같이 고칠 것 */
+  /* 색 */
+  --ink: #1c2329; --sub: #56616b; --line: #c9d0d6; --soft: #eef2f4; --key: #f6f8f9; --accent: #1f5a6e; --warn: #a3412c;
+}
+@page { size: A4; margin: 11mm 12mm 12mm 12mm;
+  @bottom-left { content: "FOOTHOLD · 데이터 산출물 명세서"; font-family: Pretendard; font-size: 7.2pt; color: #56616b; }
+  @bottom-right { content: counter(page) " / " counter(pages); font-family: Pretendard; font-size: 7.2pt; color: #56616b; } }
+/* ===================================================================== */
+
+@font-face { font-family: "Pretendard"; src: url("PretendardVariable.woff2") format("woff2"); font-weight: 100 900; }
+* { box-sizing: border-box; }
+html { background: #fff; }
+body { margin: 0; font-family: "Pretendard", "Noto Sans CJK KR", sans-serif; color: var(--ink); font-size: var(--font-body); line-height: var(--line-height); font-variant-numeric: tabular-nums; }
+a { color: var(--accent); text-decoration: none; border-bottom: 0.4pt solid var(--accent); }
+.page { break-after: page; }
+.page:last-child { break-after: auto; }
+h1 { font-size: var(--font-h1); font-weight: 760; margin: 0 0 1.2mm; letter-spacing: -0.01em; line-height: 1.28; }
+.kicker { font-size: 8pt; color: var(--accent); font-weight: 680; letter-spacing: 0.08em; margin-bottom: 1mm; }
+.cover { border-top: 2.4pt solid var(--accent); padding-top: 3.2mm; margin-bottom: var(--cover-gap); }
+.toc-title { font-size: var(--font-h2); font-weight: 730; margin: 0 0 1.2mm; padding-bottom: 1.1mm; border-bottom: 0.7pt solid var(--accent); }
+.lede { color: var(--sub); font-size: var(--font-body); margin: 0; }
+h2 { font-size: var(--font-h2); font-weight: 730; margin: 0 0 2mm; padding-bottom: 1.1mm; border-bottom: 0.7pt solid var(--accent); }
+h2 .no { color: var(--accent); margin-right: 2mm; }
+.sec { break-inside: avoid; }
+.sec + .sec { margin-top: var(--section-gap); }
+h3 { font-size: var(--font-h3); font-weight: 690; margin: var(--h3-gap) 0 1.2mm; }
+p { margin: 0 0 1.5mm; }
+table { width: 100%; border-collapse: collapse; margin: 0 0 var(--table-gap); font-size: var(--font-table); }
+
+/* ---------- 화면 미리보기 (인쇄 · PDF 에는 안 나옴) ---------- */
+@media screen {
+  html { background: #8f979e; }
+  body { padding: 8mm 360px 8mm 8mm; }
+  .page { width: 210mm; height: 297mm; padding: 11mm 12mm 12mm 12mm; margin: 0 auto 8mm; background: #fff; box-shadow: 0 2px 10px rgba(0,0,0,.35); position: relative; overflow: hidden; }
+  .page::after { content: attr(data-label); position: absolute; right: 12mm; bottom: 5mm; font-size: 7.2pt; color: #56616b; }
+  .page.over { outline: 2.5pt solid #d1342f; }
+  .page.over::before { content: "이 쪽 넘침 · 아래가 다음 쪽으로 밀림"; position: absolute; left: 12mm; bottom: 4.5mm; color: #fff; background: #d1342f; font-size: 8pt; padding: 0.6mm 2mm; z-index: 2; }
+  .fill { position: absolute; left: 0; top: 0; width: 4px; background: #1f5a6e; opacity: .55; }
+  #panel { position: fixed; top: 10px; right: 10px; width: 330px; max-height: calc(100vh - 20px); overflow: auto; background: #fff; border: 1px solid #c9d0d6; border-radius: 6px; padding: 10px 12px; font: 12px/1.4 Pretendard, sans-serif; box-shadow: 0 2px 12px rgba(0,0,0,.3); z-index: 10; }
+  #panel h4 { margin: 8px 0 4px; font-size: 12px; color: #1f5a6e; }
+  #panel label { display: grid; grid-template-columns: 112px 1fr 58px; gap: 6px; align-items: center; margin: 2px 0; }
+  #panel input[type=range] { width: 100%; }
+  #panel .v { text-align: right; font-variant-numeric: tabular-nums; color: #1c2329; }
+  #panel button { margin: 6px 4px 0 0; padding: 4px 8px; font: inherit; border: 1px solid #1f5a6e; background: #1f5a6e; color: #fff; border-radius: 4px; cursor: pointer; }
+  #panel button.alt { background: #fff; color: #1f5a6e; }
+  #panel .hint { color: #56616b; font-size: 11px; margin-top: 6px; }
+  #pages { font-weight: 700; }
+}
+@media print { #panel { display: none; } .fill { display: none; } }
+th, td { border: var(--table-line) solid var(--line); padding: var(--cell-pad-y) var(--cell-pad-x); vertical-align: top; text-align: left; }
+thead th { background: var(--soft); font-weight: 660; }
+td.k { width: var(--key-col); background: var(--key); color: var(--sub); font-weight: 620; }
+code, .mono { font-family: "DejaVu Sans Mono", "Pretendard", monospace; font-size: 7.6pt; }
+.hash { font-family: "DejaVu Sans Mono", monospace; font-size: 7.3pt; word-break: break-all; }
+pre { background: var(--soft); border: var(--table-line) solid var(--line); padding: 1.8mm 2.6mm; font-family: "DejaVu Sans Mono", "Pretendard", monospace; font-size: 7.2pt; line-height: 1.35; margin: 1mm 0 1.4mm; white-space: pre-wrap; }
+.note { color: var(--sub); font-size: var(--font-small); margin-bottom: 0; }
+ol.steps { padding-left: 4.5mm; margin: 0; }
+ol.steps > li { margin-bottom: 1.2mm; }
+ul.tight { margin: 0; padding-left: 3.6mm; }
+ul.tight li { margin: 0; }
+.toc { width: 100%; border-collapse: collapse; margin-bottom: 0; }
+.toc td { border: none; border-bottom: var(--table-line) solid var(--line); padding: 0.55mm 1mm; }
+.toc td.n { width: 7mm; color: var(--accent); font-weight: 720; font-size: 10pt; }
+.toc td.t { width: 48mm; font-weight: 680; }
+.toc td.d { color: var(--sub); }
+.toc td.p { width: 11mm; text-align: right; color: var(--sub); }
+.team th, .team td { vertical-align: middle; }
+.team .nm { width: var(--team-name-col); font-weight: 700; white-space: nowrap; }
+.team .pos { width: var(--team-pos-col); }
+.team .pos b { display: block; }
+.team .pos span { color: var(--sub); font-size: var(--font-small); white-space: nowrap; }
+.perf td.k { width: var(--perf-axis-col); }
+.axis td { background: var(--soft); padding-top: 1.1mm; padding-bottom: 1.1mm; }
+.axis .tag { display: inline-block; min-width: 26mm; font-weight: 740; color: var(--accent); }
+.axis .desc { color: var(--ink); }
+.terr th, .terr td { text-align: center; padding: 1mm 0.6mm; }
+.terr th { font-size: 7.2pt; }
+.low { color: var(--warn); font-weight: 680; }
+</style>
+</head>

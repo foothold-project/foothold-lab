@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>FOOTHOLD · E2 결과 보고서 초안</title>
+<style>
+/* =====================================================================
+   조정 칸 · 여기 숫자만 바꾸고 render.sh 를 다시 돌리면 PDF 가 바뀐다
+   ===================================================================== */
+:root {
+  /* 글씨 */
+  --font-body: 8.5pt;        /* 본문 */
+  --font-table: 7.9pt;       /* 표 안 */
+  --font-small: 7.9pt;       /* 주석 · 부제 */
+  --font-h1: 16.5pt;         /* 제목 */
+  --font-h2: 11.2pt;         /* 절 제목 */
+  --font-h3: 9.4pt;          /* 소제목 */
+  --line-height: 1.38;       /* 줄 간격 */
+  /* 표 */
+  --table-line: 0.5pt;       /* 표 선 굵기 */
+  --cell-pad-y: 0.85mm;      /* 칸 안 위아래 여백 */
+  --cell-pad-x: 1mm;       /* 칸 안 좌우 여백 */
+  --key-col: 22mm;           /* 표 왼쪽 이름 칸 폭 */
+  /* 팀 표 열 폭 */
+  --team-name-col: 16mm;     /* 이름 */
+  --team-pos-col: 50mm;      /* 포지션 */
+  /* 산출물 1 성능 표 열 폭 */
+  --perf-axis-col: 32mm;     /* 축 */
+  --perf-result-col: 68mm;   /* 결과 */
+  /* 간격 */
+  --cover-gap: 5.5mm;        /* 제목 묶음과 목차 사이 */
+  --toc-gap: 5.5mm;          /* 목차와 1. 팀 소개 사이 */
+  --section-gap: 4.9mm;      /* 절 사이 */
+  --table-gap: 3.2mm;        /* 표와 표 사이 */
+  --h3-gap: 6mm;           /* 소제목 위 간격 */
+  --page-margin: 11mm 12mm 12mm 12mm;  /* 쪽 여백 (위 오른쪽 아래 왼쪽) · @page 줄도 같이 고칠 것 */
+  /* 색 */
+  --ink: #1c2329; --sub: #56616b; --line: #c9d0d6; --soft: #eef2f4; --key: #f6f8f9; --accent: #1f5a6e; --warn: #a3412c;
+}
+@page { size: A4; margin: 11mm 12mm 12mm 12mm;
+  @bottom-left { content: "FOOTHOLD · 데이터 산출물 명세서"; font-family: Pretendard; font-size: 7.2pt; color: #56616b; }
+  @bottom-right { content: counter(page) " / " counter(pages); font-family: Pretendard; font-size: 7.2pt; color: #56616b; } }
+/* ===================================================================== */
+
+@font-face { font-family: "Pretendard"; src: url("PretendardVariable.woff2") format("woff2"); font-weight: 100 900; }
+* { box-sizing: border-box; }
+html { background: #fff; }
+body { margin: 0; font-family: "Pretendard", "Noto Sans CJK KR", sans-serif; color: var(--ink); font-size: var(--font-body); line-height: var(--line-height); font-variant-numeric: tabular-nums; }
+a { color: var(--accent); text-decoration: none; border-bottom: 0.4pt solid var(--accent); }
+.page { break-after: page; }
+.page:last-child { break-after: auto; }
+h1 { font-size: var(--font-h1); font-weight: 760; margin: 0 0 1.2mm; letter-spacing: -0.01em; line-height: 1.28; }
+.kicker { font-size: 8pt; color: var(--accent); font-weight: 680; letter-spacing: 0.08em; margin-bottom: 1mm; }
+.cover { border-top: 2.4pt solid var(--accent); padding-top: 3.2mm; margin-bottom: var(--cover-gap); }
+.toc-title { font-size: var(--font-h2); font-weight: 730; margin: 0 0 1.2mm; padding-bottom: 1.1mm; border-bottom: 0.7pt solid var(--accent); }
+.lede { color: var(--sub); font-size: var(--font-body); margin: 0; }
+h2 { font-size: var(--font-h2); font-weight: 730; margin: 0 0 2mm; padding-bottom: 1.1mm; border-bottom: 0.7pt solid var(--accent); }
+h2 .no { color: var(--accent); margin-right: 2mm; }
+.sec { break-inside: avoid; }
+.sec + .sec { margin-top: var(--section-gap); }
+h3 { font-size: var(--font-h3); font-weight: 690; margin: var(--h3-gap) 0 1.2mm; }
+p { margin: 0 0 1.5mm; }
+table { width: 100%; border-collapse: collapse; margin: 0 0 var(--table-gap); font-size: var(--font-table); }
+
+/* ---------- 화면 미리보기 (인쇄 · PDF 에는 안 나옴) ---------- */
+@media screen {
+  html { background: #8f979e; }
+  body { padding: 8mm 360px 8mm 8mm; }
+  .page { width: 210mm; height: 297mm; padding: 11mm 12mm 12mm 12mm; margin: 0 auto 8mm; background: #fff; box-shadow: 0 2px 10px rgba(0,0,0,.35); position: relative; overflow: hidden; }
+  .page::after { content: attr(data-label); position: absolute; right: 12mm; bottom: 5mm; font-size: 7.2pt; color: #56616b; }
+  .page.over { outline: 2.5pt solid #d1342f; }
+  .page.over::before { content: "이 쪽 넘침 · 아래가 다음 쪽으로 밀림"; position: absolute; left: 12mm; bottom: 4.5mm; color: #fff; background: #d1342f; font-size: 8pt; padding: 0.6mm 2mm; z-index: 2; }
+  .fill { position: absolute; left: 0; top: 0; width: 4px; background: #1f5a6e; opacity: .55; }
+  #panel { position: fixed; top: 10px; right: 10px; width: 330px; max-height: calc(100vh - 20px); overflow: auto; background: #fff; border: 1px solid #c9d0d6; border-radius: 6px; padding: 10px 12px; font: 12px/1.4 Pretendard, sans-serif; box-shadow: 0 2px 12px rgba(0,0,0,.3); z-index: 10; }
+  #panel h4 { margin: 8px 0 4px; font-size: 12px; color: #1f5a6e; }
+  #panel label { display: grid; grid-template-columns: 112px 1fr 58px; gap: 6px; align-items: center; margin: 2px 0; }
+  #panel input[type=range] { width: 100%; }
+  #panel .v { text-align: right; font-variant-numeric: tabular-nums; color: #1c2329; }
+  #panel button { margin: 6px 4px 0 0; padding: 4px 8px; font: inherit; border: 1px solid #1f5a6e; background: #1f5a6e; color: #fff; border-radius: 4px; cursor: pointer; }
+  #panel button.alt { background: #fff; color: #1f5a6e; }
+  #panel .hint { color: #56616b; font-size: 11px; margin-top: 6px; }
+  #pages { font-weight: 700; }
+}
+@media print { #panel { display: none; } .fill { display: none; } }
+th, td { border: var(--table-line) solid var(--line); padding: var(--cell-pad-y) var(--cell-pad-x); vertical-align: top; text-align: left; }
+thead th { background: var(--soft); font-weight: 660; }
+td.k { width: var(--key-col); background: var(--key); color: var(--sub); font-weight: 620; }
+code, .mono { font-family: "DejaVu Sans Mono", "Pretendard", monospace; font-size: 7.6pt; }
+.hash { font-family: "DejaVu Sans Mono", monospace; font-size: 7.3pt; word-break: break-all; }
+pre { background: var(--soft); border: var(--table-line) solid var(--line); padding: 1.8mm 2.6mm; font-family: "DejaVu Sans Mono", "Pretendard", monospace; font-size: 7.2pt; line-height: 1.35; margin: 1mm 0 1.4mm; white-space: pre-wrap; }
+.note { color: var(--sub); font-size: var(--font-small); margin-bottom: 0; }
+ol.steps { padding-left: 4.5mm; margin: 0; }
+ol.steps > li { margin-bottom: 1.2mm; }
+ul.tight { margin: 0; padding-left: 3.6mm; }
+ul.tight li { margin: 0; }
+.toc { width: 100%; border-collapse: collapse; margin-bottom: 0; }
+.toc td { border: none; border-bottom: var(--table-line) solid var(--line); padding: 0.55mm 1mm; }
+.toc td.n { width: 7mm; color: var(--accent); font-weight: 720; font-size: 10pt; }
+.toc td.t { width: 48mm; font-weight: 680; }
+.toc td.d { color: var(--sub); }
+.toc td.p { width: 11mm; text-align: right; color: var(--sub); }
+.team th, .team td { vertical-align: middle; }
+.team .nm { width: var(--team-name-col); font-weight: 700; white-space: nowrap; }
+.team .pos { width: var(--team-pos-col); }
+.team .pos b { display: block; }
+.team .pos span { color: var(--sub); font-size: var(--font-small); white-space: nowrap; }
+.perf td.k { width: var(--perf-axis-col); }
+.axis td { background: var(--soft); padding-top: 1.1mm; padding-bottom: 1.1mm; }
+.axis .tag { display: inline-block; min-width: 26mm; font-weight: 740; color: var(--accent); }
+.axis .desc { color: var(--ink); }
+.terr th, .terr td { text-align: center; padding: 1mm 0.6mm; }
+.terr th { font-size: 7.2pt; }
+.low { color: var(--warn); font-weight: 680; }
+</style>
+
+<style>
+@page :first { @bottom-left { content: ""; } @bottom-right { content: ""; } }
+.cover-page { break-after: page; padding-top: 55mm; }
+.toc-page { break-after: page; }
+.chapter { break-before: page; }
+.compact td { max-width: 125mm; overflow-wrap: anywhere; }
+.cite { font-size: var(--font-small); color: var(--sub); }
+</style>
+</head><body>
+<section class="cover-page"><div class="kicker">FOOTHOLD · 연구 보고서 초안</div>
+<h1>EX-42 E2 결과 보고서</h1><p>시뮬레이션 평가 근거와 미확인 항목</p>
+<p>FOOTHOLD: Sim-to-Field, Terrain-Adaptive Mission Platform for Legged Robots<br>시뮬에서 현장까지, 미경험 험지 사족보행 로봇 임무 플랫폼</p>
+<p>인공지능사관학교 7기 AI 도약과정 · FOOTHOLD (실증-02)</p>
+<p>작성: Claude 세션 (오흥재 지시, scripter-lx)<br>팀원·포지션: 정식 역할 정본 대조 전, 미확인</p>
+<p>최종발표 대비 초안 · 2026-11-24 · v0.1<br>
+<a href="https://github.com/foothold-project/foothold-lab">foothold-project/foothold-lab</a></p>
+<p>발행 금지 · 수치는 원장 발췌 · 정식 평가표와 대조 전</p></section>
+<section class="toc-page"><h1>목차</h1>
+<p>1. 목표와 평가 항목 · 3쪽</p><p>2. 학습 줄기 · 4쪽</p>
+<p>3. 평균대와 지킬 칸 · 5쪽</p><p>4. 지연 처치 · 6쪽</p>
+<p>5. 카메라와 ONNX · 7쪽</p><p>6. 못 한 것과 다음 · 8쪽</p>
+<p class="cite">원장 판 fee56fb2cf79c8a3eea7ec242a1787dc70182490</p></section>
+<section class="chapter"><h2>1. 목표와 평가 항목</h2>
+<table><thead><tr><th>항</th><th>임시 평가 항목</th><th>상태</th><th>근거</th></tr></thead><tbody><tr><td>1</td><td>지킬 칸</td><td>확인된 범위만</td><td><a href="https://github.com/foothold-project/foothold-lab/blob/fee56fb2cf79c8a3eea7ec242a1787dc70182490/inbox/jay/20261104-ex41-restart/decisions.tsv#L2731">원장</a></td></tr><tr><td>2</td><td>다음 지형 묶음</td><td>계획 · 실행 대조 필요</td><td><a href="https://github.com/foothold-project/foothold-lab/blob/fee56fb2cf79c8a3eea7ec242a1787dc70182490/inbox/jay/20261104-ex41-restart/decisions.tsv#L2758">원장</a></td></tr><tr><td>3</td><td>평균대 지도 이득</td><td>두 경계 근거 있음</td><td><a href="https://github.com/foothold-project/foothold-lab/blob/fee56fb2cf79c8a3eea7ec242a1787dc70182490/inbox/jay/20261104-ex41-restart/decisions.tsv#L2766">원장</a></td></tr><tr><td>4</td><td>깃발 방향</td><td>이 초안의 E2b 근거 미확인</td><td>미확인</td></tr><tr><td>5</td><td>카메라 자리와 복원 오차</td><td>경계별 근거 일부 있음</td><td><a href="https://github.com/foothold-project/foothold-lab/blob/fee56fb2cf79c8a3eea7ec242a1787dc70182490/inbox/jay/20261104-ex41-restart/decisions.tsv#L2738">원장</a></td></tr><tr><td>6</td><td>ONNX 실기 넘김</td><td>제한 근거 있음</td><td><a href="https://github.com/foothold-project/foothold-lab/blob/fee56fb2cf79c8a3eea7ec242a1787dc70182490/inbox/jay/20261104-ex41-restart/decisions.tsv#L2743">원장</a></td></tr><tr><td>7</td><td>추가 목표 항목 가</td><td>정식 목표 문구 미확인</td><td>미확인</td></tr><tr><td>8</td><td>추가 목표 항목 나</td><td>정식 목표 문구 미확인</td><td>미확인</td></tr><tr><td>9</td><td>추가 목표 항목 다</td><td>정식 목표 문구 미확인</td><td>미확인</td></tr><tr><td>10</td><td>추가 목표 항목 라</td><td>정식 목표 문구 미확인</td><td>미확인</td></tr></tbody></table>
+<p>정식 목표 열 항의 문구와 번호는 미확인이다. 이 표는 보고서 자리 표시이며 달성 판정이 아니다.</p>
+</section>
+<section class="chapter"><h2>2. 학습 줄기</h2>
+<table><thead><tr><th>칸</th><th>원장 원문 발췌</th><th>근거</th></tr></thead><tbody><tr><td>START 기반 기준 저장본</td><td>★ 목표 1 빈칸 (planner 05:58): 정본 3 m15500 은 C/box L4 를 지도 이득 +34.7 로 넘던 저장본 (11/20 1450 행) · 지금 줄기 E2b m500 은 C/box L4 끝 생존 (공식 넘음 잣대 · ex42-prep.yaml 816) GT 4.5 | PRED 12.0 | 끔 7.0 /64 · 이득 -2.5 · L5 바닥 = E2 줄기에서 상자 능력 사라…</td><td><a href="https://github.com/foothold-project/foothold-lab/blob/fee56fb2cf79c8a3eea7ec242a1787dc70182490/inbox/jay/20261104-ex41-restart/decisions.tsv#L2758">원장 행</a></td></tr><tr><td>이전 E 경계 저장본</td><td>★ m1250 E 전진 0.5 열 (목표 3 · 기록 · 192 대 · 시드 42~44 · 64 대당): 평균대 L2 넘음 정답 63.0 · 복원 63.7 · 끔 32.3 · 평지 지도 23.3 · 이득 +39.7 · 생존 63.3 (앞 값 NAXF m250 60.3 · XC m250 62.3 · 11/22 m500 41.0) / 평균대 L4 넘음 정답 60.0 · 복원 61.0 · 끔 13…</td><td><a href="https://github.com/foothold-project/foothold-lab/blob/fee56fb2cf79c8a3eea7ec242a1787dc70182490/inbox/jay/20261104-ex41-restart/decisions.tsv#L2695">원장 행</a></td></tr><tr><td>E2b 첫 경계</td><td>★ E2b m250 지킬 칸 (eval/keep/m250 · 시드 42~44 · 192 대 · planner 직접 셈 · GT | PRED · 괄호 m1250 E): 끝 생존 192/192 · 수준 0 전진 0.1 0.101 | 0.101 (0.100) · 0.2 0.208 (0.209) · 옆 ±0.2 0.198 · -0.198 · ±0.4 0.388 · -0.388 (0.387 · -0.…</td><td><a href="https://github.com/foothold-project/foothold-lab/blob/fee56fb2cf79c8a3eea7ec242a1787dc70182490/inbox/jay/20261104-ex41-restart/decisions.tsv#L2731">원장 행</a></td></tr><tr><td>E2b 다음 경계</td><td>★ 평균대 L5 공식 지도 이득 E2b m500 (mapgain_outcomes.json · 첫 창): 0.7 GT 64 | PRED 64 · 평지 12.7 · 이득 +51.3 · GT 생존 64 대 끔 17.3 / 1.0 GT 64 | PRED 64 · 평지 13.7 · 이득 +50.3 · 네 시험 참 · 판정기 verdict graduate (need 2 = 속도 둘 · 경계 둘 아님)…</td><td><a href="https://github.com/foothold-project/foothold-lab/blob/fee56fb2cf79c8a3eea7ec242a1787dc70182490/inbox/jay/20261104-ex41-restart/decisions.tsv#L2754">원장 행</a></td></tr><tr><td>E2b 최근 경계</td><td>★ 평균대 L5 공식 지도 이득 E2b m750 (둘째 창 · eval/mapgain/m750): 0.7 GT 64 | PRED 63.7 · 평지 12.7 · 이득 +51.3 · GT 생존 64 대 끔 18.7 / 1.0 GT 64 | PRED 64 · 평지 13.3 · 이득 +50.7 · 네 시험 참 → 평균대 L5 공식 지도 이득 두 경계 연속 (m500 · m750) 통과 = 목표 3…</td><td><a href="https://github.com/foothold-project/foothold-lab/blob/fee56fb2cf79c8a3eea7ec242a1787dc70182490/inbox/jay/20261104-ex41-restart/decisions.tsv#L2766">원장 행</a></td></tr></tbody></table>
+</section>
+<section class="chapter"><h2>3. 평균대와 지킬 칸</h2>
+<table><thead><tr><th>칸</th><th>원장 원문 발췌</th><th>근거</th></tr></thead><tbody><tr><td>공식 지도 이득 첫 창</td><td>★ 평균대 L5 공식 지도 이득 E2b m500 (mapgain_outcomes.json · 첫 창): 0.7 GT 64 | PRED 64 · 평지 12.7 · 이득 +51.3 · GT 생존 64 대 끔 17.3 / 1.0 GT 64 | PRED 64 · 평지 13.7 · 이득 +50.3 · 네 시험 참 · 판정기 verdict graduate (need 2 = 속도 둘 · 경계 둘 아님)…</td><td><a href="https://github.com/foothold-project/foothold-lab/blob/fee56fb2cf79c8a3eea7ec242a1787dc70182490/inbox/jay/20261104-ex41-restart/decisions.tsv#L2754">원장 행</a></td></tr><tr><td>공식 지도 이득 다음 창</td><td>★ 평균대 L5 공식 지도 이득 E2b m750 (둘째 창 · eval/mapgain/m750): 0.7 GT 64 | PRED 63.7 · 평지 12.7 · 이득 +51.3 · GT 생존 64 대 끔 18.7 / 1.0 GT 64 | PRED 64 · 평지 13.3 · 이득 +50.7 · 네 시험 참 → 평균대 L5 공식 지도 이득 두 경계 연속 (m500 · m750) 통과 = 목표 3…</td><td><a href="https://github.com/foothold-project/foothold-lab/blob/fee56fb2cf79c8a3eea7ec242a1787dc70182490/inbox/jay/20261104-ex41-restart/decisions.tsv#L2766">원장 행</a></td></tr><tr><td>단계 평가</td><td>★ E2b m750 P1 공식 (사슬 · 게이트 6.8 · 07:41:59~08:10:39 · rc 0 · Traceback 0): 평균대 L5 GT 성공 32/32 생존 32 (끝 선 다시 분류 13) | PRED 성공 30/32 생존 30 (12) · 기준 성공 26 · 생존 30 = PASS (PRED 생존 여유 0) · first_window_pass true · 판정 HOLD (지킬…</td><td><a href="https://github.com/foothold-project/foothold-lab/blob/fee56fb2cf79c8a3eea7ec242a1787dc70182490/inbox/jay/20261104-ex41-restart/decisions.tsv#L2769">원장 행</a></td></tr><tr><td>깨끗이 건넘</td><td>E2b m500 남은 칸 (planner · EMA 76adac096eee · GT | PRED): 평균대 L4 깨끗이 (128) 0.852 [0.780, 0.903] | 0.805 (m250 0.922 · 구간 겹침) · ★ L5 깨끗이 (128 · 처음) 0.406 [0.325, 0.493] | 0.383 · 완주 0.852 · 0.867 · 발 빠짐 57 · 62 = 공식 지도 이득 (…</td><td><a href="https://github.com/foothold-project/foothold-lab/blob/fee56fb2cf79c8a3eea7ec242a1787dc70182490/inbox/jay/20261104-ex41-restart/decisions.tsv#L2760">원장 행</a></td></tr><tr><td>지킬 칸 첫 경계</td><td>★ E2b m250 지킬 칸 (eval/keep/m250 · 시드 42~44 · 192 대 · planner 직접 셈 · GT | PRED · 괄호 m1250 E): 끝 생존 192/192 · 수준 0 전진 0.1 0.101 | 0.101 (0.100) · 0.2 0.208 (0.209) · 옆 ±0.2 0.198 · -0.198 · ±0.4 0.388 · -0.388 (0.387 · -0.…</td><td><a href="https://github.com/foothold-project/foothold-lab/blob/fee56fb2cf79c8a3eea7ec242a1787dc70182490/inbox/jay/20261104-ex41-restart/decisions.tsv#L2731">원장 행</a></td></tr><tr><td>지킬 칸 최근 경계</td><td>E2b m750 지킬 칸 · 지도 이득 끝 (07:31:53~08:11:53 · rc 0 · Traceback 0) · 지킬 칸 C/box L2 (192 · 끝 생존 /64 · GT | PRED | 끔) 61.7 | 58.7 | 60.3 · x&gt;=3.3 64 | 64 | 63 (m500 훑기 L2 63 | 64 | 61.5 와 같은 자리) · 나머지 지킬 칸 채점 planner · GPU0…</td><td><a href="https://github.com/foothold-project/foothold-lab/blob/fee56fb2cf79c8a3eea7ec242a1787dc70182490/inbox/jay/20261104-ex41-restart/decisions.tsv#L2770">원장 행</a></td></tr></tbody></table>
+<p>공식 지도 이득과 깨끗이 건넘은 서로 다른 지표다. 최근 경계의 깨끗이 판정은 미확인이다.</p>
+</section>
+<section class="chapter"><h2>4. 지연 처치</h2>
+<table><thead><tr><th>칸</th><th>원장 원문 발췌</th><th>근거</th></tr></thead><tbody><tr><td>지연 없는 E2b</td><td>m1500E2 (본줄 · m1250 E raw 2e853a617eaa 에서 지연 없이 · 새 OUT EX-42-B-E2_20261124_012130 · 01:21:29 기동 · 코드 285ae63fa) 3b: 첫 update · Traceback 0 · RULE2 두 rank · CMD_WIDE 두 rank · DELAY_DR 0 줄 · X_FALL_DOWN_OFF 평균대 5/76 · 부모…</td><td><a href="https://github.com/foothold-project/foothold-lab/blob/fee56fb2cf79c8a3eea7ec242a1787dc70182490/inbox/jay/20261104-ex41-restart/decisions.tsv#L2709">원장 행</a></td></tr><tr><td>지연 유지 DP</td><td>★ fa1c66b35 · efbac4a3b 줄 (DP) 판정 = 적응 없음 (턱걸이 · 넓히지 않음): DP m250 EMA 89d70be77cab (m1500 D 에서 지연 0~20 ms 그대로 +250 · Pod) 깨끗이 0.7 (256 · GT | PRED) L2 0.848 [0.799, 0.887] | 0.852 · L3 0.770 [0.714, 0.817] | 0.754 · 완주 1…</td><td><a href="https://github.com/foothold-project/foothold-lab/blob/fee56fb2cf79c8a3eea7ec242a1787dc70182490/inbox/jay/20261104-ex41-restart/decisions.tsv#L2745">원장 행</a></td></tr></tbody></table>
+</section>
+<section class="chapter"><h2>5. 카메라와 ONNX</h2>
+<table><thead><tr><th>칸</th><th>원장 원문 발췌</th><th>근거</th></tr></thead><tbody><tr><td>카메라 자리 평가</td><td>목표 5 · 6 얼림 후보 E2b m250: 카메라 A R B 넘음 GT | PRED 384/384 | 384 · 384 | 384 · 384 | 383 · 끝 생존 1.000 · 지도 오차 A 1.22 | 1.22 · R 1.97 | 2.13 · B 1.61 | 1.65 (m1250 E 와 같음 · R 복원만 1.99 → 2.13 · 모서리 6.56 → 7.04 · 192 대 한 번이라 방…</td><td><a href="https://github.com/foothold-project/foothold-lab/blob/fee56fb2cf79c8a3eea7ec242a1787dc70182490/inbox/jay/20261104-ex41-restart/decisions.tsv#L2738">원장 행</a></td></tr><tr><td>복원 지도 테두리 사례</td><td>목표 5 B/beam L4 복원 지도 결함 덤프 (opus · E2b m500 · 카메라 A · 시드 42 · /home/jay/data/foothold/mapdump_bbeam_L4_1124/bbeam_L4_gt_vs_pred.png): (a) 몸 옆 깊게 꺼진 자리 (정답 -1.0 m · 바닥 자름) 를 복원은 -0.6 m 안팎으로 얕게 그림 = 옆 낭떠러지를 얕은 턱으로 봄 (b) 앞…</td><td><a href="https://github.com/foothold-project/foothold-lab/blob/fee56fb2cf79c8a3eea7ec242a1787dc70182490/inbox/jay/20261104-ex41-restart/decisions.tsv#L2767">원장 행</a></td></tr><tr><td>ONNX 산출</td><td>목표 6 E2b m250 ONNX 나옴: /home/jay/data/foothold/onnx/mapmask_e2b_m250_1124 start_step.onnx 46d2949b10a8 · start_actor.onnx 05b925571cff · sha256sum -c OK · 새 한 파일 대 옛 켬 · 끔 그래프 차 0.0 · torch 대 onnx (실기록 4 · 2400 틱) 켬 acti…</td><td><a href="https://github.com/foothold-project/foothold-lab/blob/fee56fb2cf79c8a3eea7ec242a1787dc70182490/inbox/jay/20261104-ex41-restart/decisions.tsv#L2739">원장 행</a></td></tr><tr><td>실기 넘김 제한</td><td>fb4c97b18 줄 판정 (opus · float64 참값 · 기록 4 x 600 스텝 x 8 대): E2b m250 = 등록 줄로 「결함」 (평지 켬 기록 하나: (b) onnx 최대 2.63e-5 = (a) torch32 1.10e-5 의 2.39 배 · p99 1.17 배 · ORT 최적화 끔도 2.23 배 · FR 종아리 한 관절만 튐) · 나머지 기록 셋 반올림 / m1250 E…</td><td><a href="https://github.com/foothold-project/foothold-lab/blob/fee56fb2cf79c8a3eea7ec242a1787dc70182490/inbox/jay/20261104-ex41-restart/decisions.tsv#L2743">원장 행</a></td></tr></tbody></table>
+<p>ONNX 산출과 실기 넘김 판정은 분리한다. 다른 카메라 자리의 모서리 오차는 미확인이다.</p>
+</section>
+<section class=chapter><h2>6. 못 한 것과 다음</h2><p>열 목표의 승인 원문, 최근 경계 깨끗이 채점, 실기 넘김 여부는 미확인이다. 정식 원자료와 평가 영수증을 대조한 뒤 표와 그림을 채운다.</p><h3>부록 A. 출처와 판 이력</h3><p>원장 판: fee56fb2cf79c8a3eea7ec242a1787dc70182490</p><p>v0.1 · 원장 근거 연결과 빈칸을 둔 보고서 뼈대.</p></section></body></html>
