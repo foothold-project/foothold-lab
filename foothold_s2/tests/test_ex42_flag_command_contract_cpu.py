@@ -178,7 +178,7 @@ def test_the_runner_applies_the_flag_domain_right_after_the_slot_validator():
 # Only Isaac's CommandTerm base class is a double. The term, its sampler, the flag state machine, the E1F plan row,
 # the share contract and the stage runtime are the real ones.
 
-def e1f_term(monkeypatch, params, n=3072):
+def e1f_term(monkeypatch, params, n=3072, stage_id="E1F"):
     import importlib.util
     import sys
 
@@ -205,13 +205,13 @@ def e1f_term(monkeypatch, params, n=3072):
 
     plan = EX42Plan.load(PLAN)
     for row in plan.document["stages"]:
-        if row["id"] == "E1F":                                  # the materialized plan carries the parent pin
+        if row["id"] == stage_id:                               # the materialized plan carries the parent pin
             row["parent"] = {"manifest_local_update": 1750, "cumulative_update": 15000, "checkpoint_key": "model_1750.pt"}
     specs = te.e_stage_table(plan.document["stages"])
     monkeypatch.setattr(te, "E_STAGE_SPECS", specs)
     monkeypatch.setattr(te, "E_STAGES", {k: (v["updates"], v["parent_local"], v["parent_cumulative"])
                                          for k, v in specs.items()})
-    contract = ex42_shares.read_contract(plan, "E1F")
+    contract = ex42_shares.read_contract(plan, stage_id)
 
     class Scene:
         def __getitem__(self, key):
@@ -232,9 +232,9 @@ def e1f_term(monkeypatch, params, n=3072):
     command = module.MixedVelocityCommand(cfg, raw)
     source = te.load_ex42_stage_zero_source(plan)
     view = te.make_ex42_stage_zero_plan_view(source[0], source[1], {"parent_sha256": "b" * 64}, ex42_plan=plan,
-                                             stage_id="E1F")
+                                             stage_id=stage_id)
     runtime = te.EX42StageZeroRuntime(stage_zero_plan=view, plan_sha256="a" * 64, approval_sha256="b" * 64,
-                                      parent_sha256="c" * 64, maximum_updates=750, push_vmax_mps=2., stage_id="E1F")
+                                      parent_sha256="c" * 64, maximum_updates=750 if stage_id == "E1F" else specs[stage_id]["updates"], push_vmax_mps=2., stage_id=stage_id)
     runtime.attach_environment(raw, command)
     return command, runtime, scene.robot.data
 

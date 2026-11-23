@@ -1066,6 +1066,9 @@ def main(env_cfg, agent_cfg):
 
             print("EX42_SEGMENT_REWARD_PARAMS " + json.dumps(
                 _apply_reward_params(env_cfg, EX42_SEGMENT_COMMANDS), sort_keys=True), flush=True)
+        from foothold_s2.rewards import ex42_stop_bundle as _ex42_stop_bundle
+
+        _ex42_stop_bundle.register(env_cfg)      # only with EX42_STOP_BUNDLE=1 (lead 2026-11-23): stop-slot penalties, four-foot delay
         if EX42_STAGE_ZERO_PLAN is not None:
             _stage_row = next((row for row in EX42_STAGE_ZERO_PLAN.document["stages"]
                                if row["id"] == EX42_STAGE_ID), {})

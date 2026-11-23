@@ -232,6 +232,10 @@ class CommandShares:
         sparse = ex42_sparse_cmd.summary()           # lead 07:44: A sparse columns in START's command form (only when EX42_SPARSE_PAPER_CMD=1)
         if sparse is not None:
             doc['sparse_paper_cmd'] = sparse
+        from foothold_s2.rewards import ex42_stop_bundle
+        stop = ex42_stop_bundle.summary()            # lead 2026-11-23: stop-slot bundle counts (only when EX42_STOP_BUNDLE=1)
+        if stop is not None:
+            doc['stop_bundle'] = stop
         target = Path(folder)/f'command_shares_{iteration}_rank{rank}.json'
         if target.exists():
             # A process that died between this record and its save left the name behind; the run came back to the
