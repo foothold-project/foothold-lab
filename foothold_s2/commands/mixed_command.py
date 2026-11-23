@@ -17,7 +17,7 @@ import torch
 from isaaclab.managers import CommandTerm, CommandTermCfg
 from isaaclab.utils import configclass
 
-from foothold_s2.commands import ex42_sparse_cmd, mixed_core as mc
+from foothold_s2.commands import ex42_cmd_wide, ex42_sparse_cmd, mixed_core as mc
 from foothold_s2.curriculum import rules as curriculum_rules
 
 if TYPE_CHECKING:
@@ -231,8 +231,14 @@ class MixedVelocityCommand(CommandTerm):
                        mc.resample_free_modes(self.gen, len(group), self.params, self.iteration,
                                               self.range_curriculum.vmax_x, self.range_curriculum.vmax_y,
                                               yaw=self._yaw(group)))
-                if runtime is not None and ex42_sparse_cmd.enabled():   # lead 07:44: A sparse columns take START's command form (off = no draw)
-                    out = ex42_sparse_cmd.apply(out, self._sparse_paper_mask(group),
+                sparse_on = runtime is not None and ex42_sparse_cmd.enabled()
+                sparse = self._sparse_paper_mask(group) if sparse_on else None
+                if runtime is not None and ex42_cmd_wide.active(runtime.plan.stages[index]):
+                    out = ex42_cmd_wide.apply(out, runtime.plan.stages[index],
+                                              lambda k, lo, hi: mc._u(self.gen, (k,), lo, hi), self.slot_names,
+                                              eligible=None if sparse is None else ~sparse)
+                if sparse_on:   # lead 07:44: A sparse columns take START's command form (off = no draw)
+                    out = ex42_sparse_cmd.apply(out, sparse,
                                                 lambda k, lo, hi: mc._u(self.gen, (k,), lo, hi), self.slot_names,
                                                 beam=self._sparse_paper_mask(group, ("balance_beams",)))
                 self.vel_command_b[group] = out["cmd"].to(self.device)

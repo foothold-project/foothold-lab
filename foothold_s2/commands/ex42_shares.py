@@ -232,6 +232,10 @@ class CommandShares:
         sparse = ex42_sparse_cmd.summary()           # lead 07:44: A sparse columns in START's command form (only when EX42_SPARSE_PAPER_CMD=1)
         if sparse is not None:
             doc['sparse_paper_cmd'] = sparse
+        from foothold_s2.commands import ex42_cmd_wide
+        wide = ex42_cmd_wide.summary()
+        if wide is not None:
+            doc['cmd_wide'] = wide
         target = Path(folder)/f'command_shares_{iteration}_rank{rank}.json'
         if target.exists():
             # A process that died between this record and its save left the name behind; the run came back to the
