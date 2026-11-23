@@ -2406,3 +2406,5 @@ opus: 평가 칸 env 배치 x 8 m 뒤가 다음 수준 타일인지 줄 번호 �
 			
 2026-11-23 09:30	[+150 칸] NA m150 EMA 23d7f757f81f · 처방 준비 상태: (가) NAXF 사본 있음 · 부모 m250 기다리는 준비 장치 (rx2qcmdbNAXF-after-NA-m250) · (나) 기본 NA m500 자동 기동 (HOLD 채) opus 의뢰 09:22 답 기다림	[opus 09:29 msg_ca0fb53a1501] model_150 manifest sha 일치 / 판정 재료 모으는 중: NA L4 몫 (m100 0.078) · Pod XC m250 (10:2x 셈) · planner 평지 · 얼림 줄 (09:40)	경계 고르기 줄 (a440fa696 · 5bd56eed1): Pod XC 가 L2 · 0.5 를 안 깎고 L4 위 통째 + NA L4 몫 0.08 아래 → (가) NAXF · 아니면 (나) · 고르기 전 planner 기동 전 대조 msg id (M136)
 opus 기본 갈래 답 · NA +200			
+2026-11-23 09:30	목표 5 (b) 카메라 A · R · B 줄인 판 18 판 끝 (m1000 EMA · 033431 m500 EMA x A R B x 시드 42~44) · rc 0 아닌 줄 0 · planner 채점 의뢰	[opus 09:30 msg_9f99551cd07d] 출력 goal5/out/{m1000,p500}/c<cam>_s<seed>/ (eval_gt · eval_pred) · 기록 cam_goal5_opus.log	결과 전 줄 (50d7bc30b) 로 채점 · 결과는 GT · PRED 둘 다
+planner 카메라 채점			
