@@ -42,8 +42,9 @@ class DelayedJointPositionAction(JointPositionAction):
             triggered = available & (torch.rand(self.num_envs, device=self.device) < self._hold_p)
             self._hold_active = active | triggered
             self._hold_just_finished = active & (self._hold_left == 1)
-            if self._hold_steps == "2-4":
-                durations = torch.randint(2, 5, (self.num_envs,), device=self.device)
+            if self._hold_steps in ("2-3", "2-4"):
+                durations = torch.randint(2, 4 if self._hold_steps == "2-3" else 5,
+                                          (self.num_envs,), device=self.device)
             else:
                 durations = torch.full_like(self._hold_left, self._hold_steps)
             self._hold_left = torch.where(triggered, durations - 1, torch.clamp(self._hold_left - 1, min=0))
