@@ -2478,3 +2478,5 @@ NAXF 기동 · XC 통째
 멈춤 사슬 나머지 · NAXF 기동			
 2026-11-23 10:47	NAXF 기동 (새 OUT EX-42-B-E2_20261123_104718 · NA m250 부모 · 넘어짐 내림 끔 · 상한 4 · 250 회) · GPU 빔 10:47:06 → 기동 약 10:47:18 (12 초) · NA m500 은 HOLD 로 대기 (기동 없음)	[pgrep 3236251 · 3236252 train_start.py (코드 e2-demote-paper-1122) · unit e2-rx2qcmdbNAXF-m250 · rx2qcmdbNAXF-3b-watch active · opus 10:47 msg_268587c4db42]	3b 볼 줄: EX42_X_FALL_DOWN_OFF columns=5/76 · start_0 상한 4 · 이동 0 · 수준 몫이 NA m250 끝을 잇는지 · 첫 10 회 학습률 중앙 · 표식 · 계보 seeded_from 85fd173e34de · 경계 m250 = 250 x 23 s 약 96 분 → 12:25 쯤 (셈) · 짝 Pod NAC
 NAXF 3b			
+2026-11-23 10:48	NAXF 기동 뒤 planner 확인 볼 곳 넷 통과 · 결과 전 줄 다시 적음 (NAXF m250)	[planner 10:48 msg_9dd6b2fec226] e2_launch_104717.log EX42_X_FALL_DOWN_OFF columns=5/76 두 rank · start_0 상한 4 · 이동 없음 · plan 2b68a0db3c2b · 부모 85fd173e34de	등록 줄 (결과 전): L4 0.7 128 대 구간이 0.029 위 통째 = 효과 · L3 256 대 0.552 아래 통째 = 해로움 · L2 0.7 0.739 아래 통째 = 해로움 · 0.5 넘음 48 아래 = 해로움 · 평지 0.1 · 0.3 명령 오차 ±0.02 · 회전 좌우 차 256 대 · 짝 NAC (Pod) 같은 회차
+첫 update 학습률			
