@@ -17,7 +17,7 @@ import torch
 from isaaclab.managers import CommandTerm, CommandTermCfg
 from isaaclab.utils import configclass
 
-from foothold_s2.commands import ex42_sparse_cmd, mixed_core as mc
+from foothold_s2.commands import ex42_low_band, ex42_sparse_cmd, mixed_core as mc
 from foothold_s2.curriculum import rules as curriculum_rules
 
 if TYPE_CHECKING:
@@ -231,6 +231,8 @@ class MixedVelocityCommand(CommandTerm):
                        mc.resample_free_modes(self.gen, len(group), self.params, self.iteration,
                                               self.range_curriculum.vmax_x, self.range_curriculum.vmax_y,
                                               yaw=self._yaw(group)))
+                if runtime is not None and ex42_low_band.enabled():     # lead 11/23 12:34: dead band between 0 and each slot's minimum (off = no draw)
+                    out = ex42_low_band.apply(out, runtime.plan.stages[index].ranges, lambda k, lo, hi: mc._u(self.gen, (k,), lo, hi), self.slot_names)
                 if runtime is not None and ex42_sparse_cmd.enabled():   # lead 07:44: A sparse columns take START's command form (off = no draw)
                     out = ex42_sparse_cmd.apply(out, self._sparse_paper_mask(group),
                                                 lambda k, lo, hi: mc._u(self.gen, (k,), lo, hi), self.slot_names,
