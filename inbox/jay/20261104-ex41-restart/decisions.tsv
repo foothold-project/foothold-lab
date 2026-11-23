@@ -2502,3 +2502,5 @@ planner score2 채점 · NAXF m100 탐침
 planner 대조 · NAXF m100 탐침			
 2026-11-23 11:40	NAXF m500 기본 갈래 사본 planner 막음 0 (msg_db01afea73e1) → lead 가 rx2qcmdbNAXF_m500/HOLD 지움 · NA m500 HOLD 는 그대로 (되돌림 길 대기)	[planner 11:39] diff OUT · env · COPY · 출력 · 단위 이름뿐 · plan 2b68a0db3c2b · 끔 줄 있음 · 상한 가지 안 탐 / 볼 곳 1: 이어 간 뒤 새 런처 로그에 EX42_X_FALL_DOWN_OFF columns=5/76 이 다시 찍히는지 (planner 읽음) · 볼 곳 2: 유지 표 PASS 여부 --print rc	M136 지킴 (대조 msg id 뒤 HOLD 지움) · NAXF m250 판정이 해로움 줄 (c503040da) 에 걸리면 lead 가 NAXF m500 HOLD 다시 만들고 판단
 NAXF m250 경계			
+2026-11-23 11:40	lead 잘못 또: 11:41 이라 적은 답 머리가 실제 11:40 (date 없이) · NAXF m500 넘어짐 끔 줄 감시 걸림 (opus)	[date 11:40:43 · opus 11:40 msg_317f8964ec51] rx2qcmdbNAXF-m500-xfall-watch2 · 252 회 이후 EX42_X_FALL_DOWN_OFF 다시 찍히는지 · 정규식 XP2 로그로 시험	막는 법: 답 쓰기 전 마지막 도구 줄에 date 를 넣고 그 값만 머리에 씀 (훅 시각과 다르면 date 값)
+			
