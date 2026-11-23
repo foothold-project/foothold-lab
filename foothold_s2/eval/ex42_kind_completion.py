@@ -16,7 +16,8 @@ import numpy as np
 
 def score_last_support(trace: dict, *, finish_x_m: float | None = None, settle_s: float, envs: int = 64,
                        travel_m: float | None = None, center_max_m: float | None = None,
-                       forward_x_m: float | None = None) -> dict:
+                       forward_x_m: float | None = None,
+                       survival_finish_x_m: float | None = None) -> dict:
     """Count first arrival followed by a continuous alive window.
 
     `root_x_local_m` is relative to the mesh origin, as recorded by the Kit
@@ -38,6 +39,8 @@ def score_last_support(trace: dict, *, finish_x_m: float | None = None, settle_s
         raise ValueError("EX-42 kind trace contains a nonfinite value")
     if dt <= 0 or settle_s <= 0:
         raise ValueError("EX-42 kind trace sample period or settle time invalid")
+    if survival_finish_x_m is not None and (not math.isfinite(survival_finish_x_m) or survival_finish_x_m <= 0):
+        raise ValueError("EX-42 kind survival finish x invalid")
     if np.any(np.diff(alive.astype(np.int8), axis=0) > 0):
         raise ValueError("EX-42 kind trace resurrects an env after reset")
     following_steps = math.ceil(settle_s / dt)
@@ -65,14 +68,23 @@ def score_last_support(trace: dict, *, finish_x_m: float | None = None, settle_s
             reason = "reset_before_settle"
         else:
             reason = "complete"
-        cases.append({"env": env, "first_reach_step": first, "success": reason == "complete",
-                      "survival": bool(alive[-1, env]), "reason": reason})
-    return {"envs": envs, "valid_count": envs,
+        case = {"env": env, "first_reach_step": first, "success": reason == "complete",
+                "survival": bool(alive[-1, env]), "reason": reason}
+        if survival_finish_x_m is not None:
+            crossed_alive = bool(np.any((x[:, env] >= survival_finish_x_m) & alive[:, env]))
+            case["survival_by_finish"] = crossed_alive and not case["survival"]
+            case["survival_for_judgement"] = case["survival"] or crossed_alive
+        cases.append(case)
+    result = {"envs": envs, "valid_count": envs,
             "success_count": sum(row["success"] for row in cases),
-            "survival_count": sum(row["survival"] for row in cases),
+            "survival_count": sum(row.get("survival_for_judgement", row["survival"]) for row in cases),
             "fell_before_reach_count": sum(r["reason"] == "not_reached" and not r["survival"] for r in cases),
             "timeout_count": sum(r["reason"] == "not_reached" and r["survival"] for r in cases),
             "per_env": cases}
+    if survival_finish_x_m is not None:
+        result["survival_finish_x_m"] = survival_finish_x_m
+        result["survival_finish_reclassified_count"] = sum(row["survival_by_finish"] for row in cases)
+    return result
 
 
 def _sha(path: Path) -> str:
@@ -116,17 +128,19 @@ def finish_anchor_for_kind(mesh: dict, *, family: str, kind: str, level: int) ->
             "method": "three_vertical_rays_footprint_width_0.8m_final_contiguous_support"}
 
 
-def score_with_anchor(trace: dict, anchor: dict, *, settle_s: float, envs: int) -> dict:
+def score_with_anchor(trace: dict, anchor: dict, *, settle_s: float, envs: int,
+                      survival_finish_x_m: float | None = None) -> dict:
     """The one arrival rule the anchor names (finish_x_m, travel_m, center_max_m or forward_x_m) applied to the trace."""
     return score_last_support(trace, finish_x_m=anchor.get("finish_x_m"), travel_m=anchor.get("travel_m"),
                               center_max_m=anchor.get("center_max_m"), forward_x_m=anchor.get("forward_x_m"),
-                              settle_s=settle_s, envs=envs)
+                              settle_s=settle_s, envs=envs, survival_finish_x_m=survival_finish_x_m)
 
 
 def read_start_kind_cell(folder: Path, *, mesh: dict, checkpoint_sha256: str,
                          seed: int, family: str, kind: str, level: int,
                          mode: str, seconds: float, settle_s: float, envs: int = 64,
-                         anchor: dict | None = None) -> dict:
+                         anchor: dict | None = None,
+                         survival_finish_x_m: float | None = None) -> dict:
     """Recount one pinned START forward cell from Kit's JSON and step arrays.
 
     This is limited to the START finish platform geometry unless the caller passes
@@ -182,7 +196,8 @@ def read_start_kind_cell(folder: Path, *, mesh: dict, checkpoint_sha256: str,
         raise ValueError("EX-42 kind step arrays differ from pinned tile or duration")
     fixed_terrain.verify_kind_foot_arrays(a["foot_contact"], a["foot_pos_local"], a["alive"])
     anchor = anchor or finish_anchor_for_kind(mesh, family=family, kind=kind, level=level)
-    counted = score_with_anchor(a, anchor, settle_s=settle_s, envs=envs)
+    counted = score_with_anchor(a, anchor, settle_s=settle_s, envs=envs,
+                                survival_finish_x_m=survival_finish_x_m)
     return {"case_id": f"{family}/{kind}/L{level}/fwd1.0/{mode}",
             "role": "record_only" if mode == "probe_prop_only" else "judge",
             "completion": "last_support_0.5s", "completion_anchor": anchor, **counted,

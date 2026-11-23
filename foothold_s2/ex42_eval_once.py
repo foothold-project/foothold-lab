@@ -102,6 +102,19 @@ def receipt_device_fields(device, physical_gpu):
     return fields
 
 
+def kind_survival_finish_receipt(score):
+    """The optional scorer rule and its measured effect in the evaluation receipt."""
+    kind_stage = score.get("kind_stage") or {}
+    if "survival_finish_x_m" not in kind_stage:
+        return None
+    beam = kind_stage.get("modes", {}).get("A/balance_beams", {})
+    return {"x_m": kind_stage["survival_finish_x_m"],
+            "reclassified_by_mode": {
+                mode: beam[mode].get("survival_finish_reclassified_count")
+                for mode in ("eval_gt", "eval_pred", "probe_prop_only") if mode in beam
+            }}
+
+
 def observed_child_identity(output, name, expected):
     """Verify Kit's own CUDA identity where its result exports one."""
     basename = ("map_modes.json" if name == "map64" else "axis_v2.json" if name == "axis_v2"
@@ -1001,6 +1014,9 @@ def run(checkpoint, expected_sha256, output, device, *, eval_seed=None, mesh_dir
                         stage_id=p1_stage_id, evaluation_plan_path=policy_path,
                         execution_plan_path=p1_plan)
         _atomic(output / "ex42_score.json", score)
+        finish_receipt = kind_survival_finish_receipt(score)
+        if finish_receipt is not None:
+            row["kind_survival_finish"] = finish_receipt
         if p1_plan is not None:
             p1 = p1_score_from_measure(
                 score, checkpoint=checkpoint, iteration=checkpoint_iteration,

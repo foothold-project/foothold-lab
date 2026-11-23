@@ -79,6 +79,53 @@ def test_a_kind_cell_is_scored_with_the_promotion_counts_scaled_to_its_valid_env
             ks.score_kind(bad, valid_min_each=24, success_min=52, survival_min=60, envs=32)
 
 
+def test_optional_balance_beam_survival_gate_is_scored_and_receipted(monkeypatch):
+    monkeypatch.delenv(ks.SURVIVAL_FINISH_ENV, raising=False)
+    assert ks.survival_finish_x_from_env() is None
+    old = _score(_cell(32, 32, 18))
+    assert old["judgement"] == "FAIL" and "survival_finish_x_m" not in old
+    monkeypatch.setenv(ks.SURVIVAL_FINISH_ENV, "6.8")
+    assert ks.survival_finish_x_from_env() == 6.8
+    cell = {**_cell(32, 32, 32), "survival_finish_x_m": 6.8,
+            "survival_finish_reclassified_count": 14}
+    scored = _score(cell)
+    assert scored["judgement"] == "PASS"
+    assert scored["survival_finish_reclassified_count"] == 14
+    assert scored["survival_finish_x_m"] == 6.8
+    for raw in ("0", "12.1", "nan", "inf", "wrong"):
+        monkeypatch.setenv(ks.SURVIVAL_FINISH_ENV, raw)
+        with pytest.raises(ValueError, match=ks.SURVIVAL_FINISH_ENV):
+            ks.survival_finish_x_from_env()
+
+
+def test_finish_survival_gate_only_reaches_balance_beams_and_never_mixes_windows(monkeypatch, tmp_path):
+    calls = []
+    def read_cell(_folder, **kwargs):
+        calls.append((kwargs["kind"], kwargs["survival_finish_x_m"]))
+        return _cell(32, 32, 32)
+    monkeypatch.setattr(ks, "read_start_kind_cell", read_cell)
+    kinds = {"A/balance_beams": 4, "B/rough": 1}
+    rows = ks.read_kind_modes(tmp_path, kinds, plan=_real_plan().document,
+                              mesh={}, checkpoint_sha256="a" * 64, seed=42,
+                              survival_finish_x_m=6.8)
+    assert len(calls) == 6
+    assert calls == [("balance_beams", 6.8)] * 3 + [("rough", None)] * 3
+    assert rows["A/balance_beams"]["eval_gt"]["judgement"] == "PASS"
+    assert ks.checked_previous({"kind_stage": {}}, evaluation=tmp_path, plan={},
+                               plan_sha256="p", mesh={}, seed=42,
+                               survival_finish_x_m=6.8) is None
+
+
+def test_optional_survival_finish_evaluation_receipt_is_explicit():
+    from foothold_s2.ex42_eval_once import kind_survival_finish_receipt
+    assert kind_survival_finish_receipt({"kind_stage": {}}) is None
+    score = {"kind_stage": {"survival_finish_x_m": 6.8, "modes": {"A/balance_beams": {
+        "eval_gt": {"survival_finish_reclassified_count": 14},
+        "eval_pred": {"survival_finish_reclassified_count": 10}}}}}
+    assert kind_survival_finish_receipt(score) == {"x_m": 6.8,
+                                                   "reclassified_by_mode": {"eval_gt": 14, "eval_pred": 10}}
+
+
 def _bundle(levels, verdicts):
     """{kind: {level, eval_gt, eval_pred, probe}} with the given judgement per kind (PASS or FAIL) for both judged modes."""
     out = {}

@@ -15,6 +15,7 @@ from __future__ import annotations
 import hashlib
 import json
 import math
+import os
 import re
 from pathlib import Path
 
@@ -26,6 +27,20 @@ from foothold_s2.ex42_stage_judges import StageJudge, aggregate, previous_window
 MODES = ("eval_gt", "eval_pred", "probe_prop_only")
 STAGES = ("E2", "E3", "E4", "E5")
 RULES = ("travel", "center_max", "forward_x")
+SURVIVAL_FINISH_ENV = "EX42_KIND_SURVIVAL_FINISH_X_M"
+
+
+def survival_finish_x_from_env() -> float | None:
+    raw = os.environ.get(SURVIVAL_FINISH_ENV, "").strip()
+    if not raw:
+        return None
+    try:
+        value = float(raw)
+    except ValueError as exc:
+        raise ValueError(f"{SURVIVAL_FINISH_ENV} must be finite and in (0, 12]") from exc
+    if not math.isfinite(value) or not 0 < value <= 12:
+        raise ValueError(f"{SURVIVAL_FINISH_ENV} must be finite and in (0, 12]")
+    return value
 
 
 def _sha(path: Path) -> str:
@@ -96,9 +111,16 @@ def score_kind(cell: dict, *, valid_min_each: int, success_min: int, survival_mi
     survival_floor = math.ceil(survival_min * valid / 64)
     state = ("HOLD" if valid < valid_min_each
              else "PASS" if cell["success_count"] >= success_floor and cell["survival_count"] >= survival_floor else "FAIL")
-    return {"judgement": state, "valid_count": valid, "success_count": cell["success_count"],
+    scored = {"judgement": state, "valid_count": valid, "success_count": cell["success_count"],
             "survival_count": cell["survival_count"], "success_min": success_floor,
             "survival_min": survival_floor, "cell": cell}
+    if "survival_finish_x_m" in cell:
+        count = cell.get("survival_finish_reclassified_count")
+        if type(count) is not int or not 0 <= count <= cell["survival_count"]:
+            raise ValueError("EX-42 kind survival finish receipt count invalid")
+        scored["survival_finish_x_m"] = cell["survival_finish_x_m"]
+        scored["survival_finish_reclassified_count"] = count
+    return scored
 
 
 def finish_anchor(mesh: dict, *, family: str, kind: str, level: int, completion: dict) -> dict | None:
@@ -123,7 +145,8 @@ def finish_anchor(mesh: dict, *, family: str, kind: str, level: int, completion:
 
 
 def read_kind_modes(folder: Path, kinds: dict[str, int], *, plan: dict, mesh: dict,
-                    checkpoint_sha256: str, seed: int) -> dict:
+                    checkpoint_sha256: str, seed: int,
+                    survival_finish_x_m: float | None = None) -> dict:
     """{kind: {mode: scored cell}} recounted from the raw Kit files, `folder/<kind_dir>/` per kind."""
     spec = _spec(plan)
     promotion = plan["evaluation"]["promotion"]
@@ -156,7 +179,8 @@ def read_kind_modes(folder: Path, kinds: dict[str, int], *, plan: dict, mesh: di
             cell = read_start_kind_cell(Path(folder) / kind_dir(kind), mesh=mesh, checkpoint_sha256=checkpoint_sha256,
                                         seed=seed, family=family, kind=name, level=level, mode=mode,
                                         seconds=spec["forward_seconds"], settle_s=spec["completion_settle_s"],
-                                        envs=spec["envs_per_kind"], anchor=anchor)
+                                        envs=spec["envs_per_kind"], anchor=anchor,
+                                        survival_finish_x_m=(survival_finish_x_m if kind == "A/balance_beams" else None))
             scored = score_kind(cell, valid_min_each=spec["valid_min_each"], success_min=promotion["success_min"],
                                 survival_min=promotion["survival_min"], envs=spec["envs_per_kind"])
             scored["role"] = "record_only" if mode == "probe_prop_only" else "judge"
@@ -165,11 +189,13 @@ def read_kind_modes(folder: Path, kinds: dict[str, int], *, plan: dict, mesh: di
 
 
 def checked_previous(prior_score: dict | None, *, evaluation: Path, plan: dict, plan_sha256: str,
-                     mesh: dict, seed: int) -> dict | None:
+                     mesh: dict, seed: int, survival_finish_x_m: float | None = None) -> dict | None:
     """Recount the prior window from its raw files; only kinds the prior window judged come back."""
     if prior_score is None or "kind_stage" not in prior_score:
         return None
     recorded = prior_score["kind_stage"]
+    if recorded.get("survival_finish_x_m") != survival_finish_x_m:
+        return None  # a changed survival definition cannot satisfy the earlier window
     expected_folder = Path(evaluation).parent / f"m{Path(prior_score['checkpoint']).stem.removeprefix('model_')}" / "kind_cells"
     if (recorded.get("evaluation") != str(expected_folder) or recorded.get("mesh_sha256") != mesh["mesh_sha256"] or
             prior_score.get("maintenance_source_sha256") != plan_sha256 or
@@ -177,7 +203,8 @@ def checked_previous(prior_score: dict | None, *, evaluation: Path, plan: dict, 
         raise ValueError("EX-42 previous named-kind window identity differs")
     kinds = {name: row["level"] for name, row in recorded.get("modes", {}).items()}
     recounted = read_kind_modes(expected_folder, kinds, plan=plan, mesh=mesh,
-                                checkpoint_sha256=prior_score["checkpoint_sha256"], seed=seed)
+                                checkpoint_sha256=prior_score["checkpoint_sha256"], seed=seed,
+                                survival_finish_x_m=survival_finish_x_m)
     if recorded.get("modes") != recounted:
         raise ValueError("EX-42 previous named-kind window differs from its raw evidence")
     return recounted
@@ -276,13 +303,17 @@ class KindStageTwoWindowJudge(StageJudge):
         opened = opened_kinds(ctx.checkpoint, stage_id=self.stage_id, plan_sha256=score["execution_plan_sha256"], plan=ctx.plan)
         required = required_kinds(ctx.plan, self.stage_id)
         kinds = {kind: opened[kind] for kind in required if kind in opened}
+        survival_finish_x_m = survival_finish_x_from_env()
         now = read_kind_modes(ctx.evaluation / "kind_cells", kinds, plan=ctx.plan, mesh=mesh,
-                              checkpoint_sha256=ctx.checkpoint_sha, seed=ctx.seed)
+                              checkpoint_sha256=ctx.checkpoint_sha, seed=ctx.seed,
+                              survival_finish_x_m=survival_finish_x_m)
         old = checked_previous(prior_score, evaluation=ctx.evaluation, plan=ctx.plan, plan_sha256=plan_sha,
-                               mesh=mesh, seed=ctx.seed)
+                               mesh=mesh, seed=ctx.seed, survival_finish_x_m=survival_finish_x_m)
         current["stage_id"] = self.stage_id
         current["kind_stage"] = {"modes": now, "previous_modes": old, "mesh_sha256": mesh["mesh_sha256"],
                                  "evaluation": str(ctx.evaluation / "kind_cells"), "opened_kinds": opened}
+        if survival_finish_x_m is not None:
+            current["kind_stage"]["survival_finish_x_m"] = survival_finish_x_m
         exchange = compare(current, prior_score, measured=measured, baseline=baseline,
                            kind_now=_by_mode(now), kind_previous=_by_mode(old) if old else None,
                            kind_key="kind_stage", subcells=tuple(sorted(kinds)))
@@ -318,6 +349,10 @@ class KindStageTwoWindowJudge(StageJudge):
         exit_row = score.get("stage_exit") or {}
         items = exit_row.get("items") or {}
         kind = score.get("kind_stage") or {}
+        survival_finish_x_m = kind.get("survival_finish_x_m")
+        if survival_finish_x_m is not None and (type(survival_finish_x_m) not in (int, float) or
+                                                not math.isfinite(survival_finish_x_m) or not 0 < survival_finish_x_m <= 12):
+            raise ValueError("EX-42 named-kind survival finish receipt invalid")
         kinds = {name: row["level"] for name, row in (kind.get("modes") or {}).items()}
         required_names = {"maintenance_current", "maintenance_previous", "learned_cells", "exchange_watch", "kind_ladder"}
         for name, level in kinds.items():
@@ -353,14 +388,16 @@ class KindStageTwoWindowJudge(StageJudge):
         if receipt_opened != opened:
             raise ValueError("EX-42 named-kind P1 opened kinds differ from the exposure receipt")
         recounted = read_kind_modes(folder, kinds, plan=plan, mesh=mesh, checkpoint_sha256=score["checkpoint_sha256"],
-                                    seed=score["conditions"]["eval_seed"])
+                                    seed=score["conditions"]["eval_seed"],
+                                    survival_finish_x_m=survival_finish_x_m)
         if kind.get("modes") != recounted:
             raise ValueError("EX-42 named-kind P1 kind score differs from raw")
         from foothold_s2.ex42_e1_judge import previous_e1_score
         previous = previous_e1_score(Path(score["checkpoint"]), folder.parent, plan["evaluation"]["interval_updates"],
                                      score["score_config_sha256"], stage_id=self.stage_id)
         old = checked_previous(previous, evaluation=folder.parent, plan=plan, plan_sha256=score["maintenance_source_sha256"],
-                               mesh=mesh, seed=score["conditions"]["eval_seed"])
+                               mesh=mesh, seed=score["conditions"]["eval_seed"],
+                               survival_finish_x_m=survival_finish_x_m)
         if kind.get("previous_modes") != old or (judgment == "PASS" and old is None):
             raise ValueError("EX-42 named-kind P1 previous window differs from raw")
         if items != {**items, **stage_items(kinds, recounted, old, items["kind_ladder"])}:

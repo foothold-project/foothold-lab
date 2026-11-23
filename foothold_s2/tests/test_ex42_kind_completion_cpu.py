@@ -34,6 +34,37 @@ def test_arrival_requires_half_second_alive_after_reach():
     assert row["per_env"][2]["reason"] == "reset_before_settle"
 
 
+def test_optional_finish_survival_counts_only_live_crossings_and_keeps_off_bytes():
+    x = np.zeros((20, 3), dtype=np.float64)
+    alive = np.ones((20, 3), dtype=bool)
+    x[5:, 0] = 6.8                    # exact threshold, then reset
+    x[8:, 0] = 9.0                    # stale reset position must not be used
+    x[5:, 1] = 6.799                  # falls before the finish line
+    x[5:, 2] = 7.0                    # reaches support and stays alive
+    alive[8:, :2] = False
+    trace = {"root_x_local_m": x, "alive": alive, "dt": np.array(.1)}
+    old = score_last_support(trace, finish_x_m=7., settle_s=.5, envs=3)
+    assert old["survival_count"] == old["success_count"] == 1
+    assert "survival_finish_x_m" not in old
+    new = score_last_support(trace, finish_x_m=7., settle_s=.5, envs=3,
+                             survival_finish_x_m=6.8)
+    assert new["success_count"] == old["success_count"] == 1
+    assert new["survival_count"] == 2
+    assert new["survival_finish_reclassified_count"] == 1
+    assert [row["survival_for_judgement"] for row in new["per_env"]] == [True, False, True]
+    assert score_last_support(trace, finish_x_m=7., settle_s=.5, envs=3,
+                              survival_finish_x_m=None) == old
+    # Exact old JSON bytes for a known two-env trace, captured before this gate.
+    sample = {"root_x_local_m": np.zeros((20, 2)), "alive": np.ones((20, 2), dtype=bool),
+              "dt": np.array(.1)}
+    sample["root_x_local_m"][5:] = 7.
+    sample["alive"][8:, 1] = False
+    original = score_last_support(sample, finish_x_m=7., settle_s=.5, envs=2)
+    serialized = json.dumps(original, sort_keys=True, separators=(",", ":"), ensure_ascii=False)
+    assert hashlib.sha256(serialized.encode()).hexdigest() == "1c985b8cf0fed2ab85dc9a68f20354410159b25e1d03d951a36028a992adc1e8"
+
+
+
 def test_reset_and_missing_trace_do_not_silently_pass():
     trace = _trace()
     trace["alive"][5, 0] = False
