@@ -60,6 +60,7 @@ class MixedVelocityCommand(CommandTerm):
             self._flag_row[self.flag_ids] = torch.arange(len(self.flag_ids), device=dev)
 
         self.stand = torch.zeros(n, dtype=torch.bool, device=dev)
+        self.stop_from_move = torch.zeros_like(self.stand)  # non-reset moving -> stand resample only
         self.slow_hold = torch.zeros_like(self.stand)         # v29-5: envs whose current command got the long hold (record only)
         self.spin = torch.zeros_like(self.stand)
         self.heading = torch.zeros_like(self.stand)
@@ -175,6 +176,7 @@ class MixedVelocityCommand(CommandTerm):
         self._reset_episode_state(ids)
 
         extras = super().reset(env_ids)
+        self.stop_from_move[ids] = False  # super().reset resamples commands; episode start is not a transition
         self._maybe_scatter_clock(ids)
         counts = torch.bincount(self.mode_ids, minlength=len(mc.MODES)).float() / self.num_envs
 
@@ -251,6 +253,8 @@ class MixedVelocityCommand(CommandTerm):
                 else:
                     self.stop_elapsed_s[group] = mc.stop_elapsed_after_resample(
                         was_stand, self.stand[group], self.stop_elapsed_s[group])
+                if was_stand is not None:
+                    self.stop_from_move[group] = self.stand[group] & (self.stop_from_move[group] | ~was_stand)
                 self.spin[group] = out["spin"].to(self.device)
                 self.heading[group] = out["heading"].to(self.device)
                 self.psi_star[group] = out["psi_star"].to(self.device)
@@ -263,6 +267,7 @@ class MixedVelocityCommand(CommandTerm):
                 if self.cfg.fixed_cmd is not None:
                     self.vel_command_b[group] = torch.tensor(self.cfg.fixed_cmd, device=self.device)
                     self.stand[group] = False
+                    self.stop_from_move[group] = False
                     self.spin[group] = False
                     self.heading[group] = False
                 if runtime is not None:
@@ -280,6 +285,7 @@ class MixedVelocityCommand(CommandTerm):
             if record_flag is not None:
                 record_flag(flag)
             self.stand[flag] = False
+            self.stop_from_move[flag] = False
             self.spin[flag] = False
             self.heading[flag] = False
             # The flag command is written by flag_step at the next compute. Until then the env must not follow

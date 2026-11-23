@@ -527,6 +527,27 @@ class StartRunner(OnPolicyRunner):
     _noise_counts = None      # [low-speed envs, small-noise envs] summed over the steps of one rollout (device tensor)
     _noise_steps = 0
     _lowspeed_noise = False
+    _stop_noise_counts = None  # [window envs, sum of effective action std] over the rollout
+
+    def _stop_noise_window_s(self) -> float:
+        raw = os.environ.get("EX42_STOP_NOISE_WINDOW_S", "")
+        try:
+            value = 0.0 if raw == "" else float(raw)
+        except ValueError:
+            raise ValueError("EX42_STOP_NOISE_WINDOW_S must be a finite nonnegative number") from None
+        if not math.isfinite(value) or value < 0:
+            raise ValueError("EX42_STOP_NOISE_WINDOW_S must be a finite nonnegative number")
+        return value
+
+    def _stop_noise_window_mask(self, window_s: float) -> torch.Tensor:
+        from foothold_s2.rewards.ex42_stop_bundle import stop_mask
+
+        raw = getattr(self.env, "unwrapped", self.env)
+        term = raw.command_manager.get_term("base_velocity")
+        if not hasattr(term, "stop_from_move") or not hasattr(term, "stop_elapsed_s"):
+            raise ValueError("EX42_STOP_NOISE_WINDOW_S needs the MixedVelocityCommand transition clock")
+        return (stop_mask(raw, "base_velocity") & term.stop_from_move
+                & (term.stop_elapsed_s < window_s))
 
     def _step_small_noise(self, o: torch.Tensor) -> None:
         """v28m: before the action of this step, the envs whose command (o[:, 6:8], as in _vbias_collect) is below
@@ -537,6 +558,17 @@ class StartRunner(OnPolicyRunner):
         from foothold_s2.runners import ex41_critic_mirror as mirror
         low = mirror.lowspeed_noise_mask(o[:, 6:8], mirror.SMALL_NOISE_LOWSPEED_CMD)
         scale = torch.where(low[:, None], torch.full_like(self._noise_static, mirror.SMALL_NOISE_SIGMA_SCALE), self._noise_static)
+        window_s = self._stop_noise_window_s()
+        if window_s:
+            if not getattr(self, "_stop_noise_started", False):
+                print(f"EX42_STOP_NOISE_WINDOW where=start window_s={window_s:g}", flush=True)
+                self._stop_noise_started = True
+            window = self._stop_noise_window_mask(window_s)
+            scale = torch.where(window[:, None], torch.ones_like(scale), scale)
+            count = window.sum().to(torch.float64)
+            std = self.alg.policy.std.detach().mean().to(torch.float64)
+            row = torch.stack((count, count * std))
+            self._stop_noise_counts = row if self._stop_noise_counts is None else self._stop_noise_counts + row
         storage.noise_scale_env = scale
         self.alg.policy.noise_scale = scale
         noisy = scale.flatten() < 1
@@ -552,6 +584,7 @@ class StartRunner(OnPolicyRunner):
         from foothold_s2.runners import ex41_critic_mirror as mirror
         steps, counts = self._noise_steps, self._noise_counts
         self._noise_counts, self._noise_steps = None, 0
+        stop_counts, self._stop_noise_counts = self._stop_noise_counts, None
         if not steps or counts is None:
             return {}
         low, noisy = counts.tolist()
@@ -560,6 +593,12 @@ class StartRunner(OnPolicyRunner):
         if not self.disable_logs:
             print("EX42_SMALL_NOISE it=%d lowspeed_envs=%.1f small_noise_envs=%.1f of=%d threshold=%.2f" % (
                 it, row["lowspeed_envs"], row["small_noise_envs"], row["num_envs"], row["lowspeed_cmd"]), flush=True)
+        if stop_counts is not None:
+            stop_envs, std_sum = stop_counts.tolist()
+            row["stop_window_envs"] = stop_envs / steps
+            row["stop_window_noise_std_mean"] = std_sum / stop_envs if stop_envs else None
+            print("EX42_STOP_NOISE_WINDOW it=%d window_envs=%.1f noise_std_mean=%s" % (
+                it, row["stop_window_envs"], "none" if not stop_envs else "%.6f" % row["stop_window_noise_std_mean"]), flush=True)
         return row
 
     def _command_cells_log(self, it: int) -> None:
