@@ -228,6 +228,21 @@ def test_random_hold_duration_is_within_two_to_four_control_steps(prepared):
     assert {1, 2, 3}.issubset(set(action._hold_left.tolist()))
 
 
+def test_random_hold_two_to_three_never_draws_four(prepared, monkeypatch):
+    run, action_module = prepared
+    monkeypatch.setenv("EX42_DELAY_HOLD_P", "0.05")
+    monkeypatch.setenv("EX42_DELAY_HOLD_STEPS", "2-3")
+    env_cfg, receipt = run()
+    assert env_cfg.actions.joint_pos.ex42_hold_steps == "2-3"
+    assert receipt["events"]["hold"] == {"p": .05, "steps": "2-3"}
+    cfg = action_module.DelayedJointPositionActionCfg()
+    cfg.ex42_hold_p, cfg.ex42_hold_steps = 1.0, "2-3"
+    action = action_module.DelayedJointPositionAction(cfg, NS(num_envs=128, physics_dt=.005))
+    torch.manual_seed(17)
+    action.process_actions(torch.ones((128, 12)))
+    assert set(action._hold_left.tolist()) == {1, 2}
+
+
 def test_off_action_never_draws_hold_random_or_changes_targets(prepared, monkeypatch):
     _, action_module = prepared
     cfg = action_module.DelayedJointPositionActionCfg()

@@ -1136,12 +1136,12 @@ def prepare_ex41_env_cfg(env_cfg: Any, plan, *,
             raise ValueError("EX42_DELAY_HOLD_P must be in (0, 0.05]") from exc
         if not math.isfinite(hold_p) or not 0.0 < hold_p <= 0.05:
             raise ValueError("EX42_DELAY_HOLD_P must be in (0, 0.05]")
-        if hold_steps_raw == "2-4":
-            hold_steps = "2-4"
+        if hold_steps_raw in ("2-3", "2-4"):
+            hold_steps = hold_steps_raw
         elif hold_steps_raw in ("2", "3", "4"):
             hold_steps = int(hold_steps_raw)
         else:
-            raise ValueError("EX42_DELAY_HOLD_STEPS must be 2, 3, 4, or 2-4")
+            raise ValueError("EX42_DELAY_HOLD_STEPS must be 2, 3, 4, 2-3, or 2-4")
     first_rewards = dict(plan.stages[0].rewards)
     reward_settings = validate_settings(
         {key: first_rewards[key] for key in ("track_ang_vel", "track_lin_vel", "joint_acc", "hip_pos_penalty")},
