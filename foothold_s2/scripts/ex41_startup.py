@@ -1123,6 +1123,25 @@ def prepare_ex41_env_cfg(env_cfg: Any, plan, *,
             raise ValueError("EX42_DELAY_MAX_S must be in (0, 0.020]") from exc
         if not math.isfinite(delay_max_s) or not 0.0 < delay_max_s <= 0.020:
             raise ValueError("EX42_DELAY_MAX_S must be in (0, 0.020]")
+    hold_p_raw = os.environ.get("EX42_DELAY_HOLD_P", "")
+    hold_steps_raw = os.environ.get("EX42_DELAY_HOLD_STEPS", "")
+    if bool(hold_p_raw) != bool(hold_steps_raw):
+        raise ValueError("EX42_DELAY_HOLD_P and EX42_DELAY_HOLD_STEPS must be set together")
+    hold_p = 0.0
+    hold_steps = None
+    if hold_p_raw:
+        try:
+            hold_p = float(hold_p_raw)
+        except ValueError as exc:
+            raise ValueError("EX42_DELAY_HOLD_P must be in (0, 0.05]") from exc
+        if not math.isfinite(hold_p) or not 0.0 < hold_p <= 0.05:
+            raise ValueError("EX42_DELAY_HOLD_P must be in (0, 0.05]")
+        if hold_steps_raw == "2-4":
+            hold_steps = "2-4"
+        elif hold_steps_raw in ("2", "3", "4"):
+            hold_steps = int(hold_steps_raw)
+        else:
+            raise ValueError("EX42_DELAY_HOLD_STEPS must be 2, 3, 4, or 2-4")
     first_rewards = dict(plan.stages[0].rewards)
     reward_settings = validate_settings(
         {key: first_rewards[key] for key in ("track_ang_vel", "track_lin_vel", "joint_acc", "hip_pos_penalty")},
@@ -1133,10 +1152,13 @@ def prepare_ex41_env_cfg(env_cfg: Any, plan, *,
     pose_receipt = prepare_pose_env_cfg(env_cfg)
     event_receipt = install_runtime_events(
         env_cfg, ranges, tuple(dr["push_interval_s"]),
-        delay_max_s=delay_max_s)
+        delay_max_s=delay_max_s, hold_p=hold_p, hold_steps=hold_steps)
     if delay_gate is not None and delay_gate != "" and os.environ.get("RANK", "0") == "0":
         print(f"EX42_DELAY_DR where=start max_s={delay_max_s:g} plan_max_s={plan_delay_max_s:g}"
               f" substeps=0..{int(math.floor(delay_max_s / 0.005 + 1e-9))}", flush=True)
+    if hold_p:
+        print(f"EX42_DELAY_HOLD where=start rank={os.environ.get('RANK', '0')}"
+              f" p={hold_p:g} steps={hold_steps}", flush=True)
     dr_receipt = install_initial_dr_scale(
         env_cfg, plan.initial_dr_scale, scoped_approval=stage_zero_approval)
     terrain_receipt = prepare_terrain_cfg(
