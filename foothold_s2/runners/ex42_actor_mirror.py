@@ -13,6 +13,7 @@ import math
 import os
 
 import torch
+import torch.distributed as dist
 
 from foothold_s2.runners.ex41_critic_mirror import JOINT_IDS, JOINT_SIGNS, mirror_policy45
 
@@ -79,3 +80,67 @@ def actor_mirror_loss(policy, observations, original_mean: torch.Tensor,
     mirrored["actor_in"] = mirror_actor_observation(observations["actor_in"])
     reflected_mean = policy.act_inference(mirrored)
     return (reflected_mean - mirror_action(original_mean)).square().sum(dim=-1).mean()
+
+
+def capture_encoder_probe_rows(perception, state, gt_map: torch.Tensor,
+                               selected: torch.Tensor, limit: int) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor] | None:
+    """Keep the exact map source the rollout encoder consumed for up to limit selected rows."""
+    ids = selected.nonzero().flatten()[:limit]
+    if ids.numel() == 0:
+        return None
+    if perception.trnet is not None:
+        _, refined = perception.trnet.decode(state.h_terr[ids])
+        used_map = torch.where(state.use_gt[ids, None, None], gt_map[ids], refined)
+    elif perception.cfg.fast_gt_only:
+        used_map = gt_map[ids]
+    else:
+        raise ValueError("EX-42 actor mirror encoder probe needs a map-consuming perception model")
+    return state.h_prop[ids].clone(), used_map.clone(), state.map_off[ids].clone()
+
+
+def encoder_flip_statistics(ie, hprop: torch.Tensor, used_map: torch.Tensor,
+                            map_off: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+    """Per component: max |flip-original|, original squared sum, value count."""
+    original = ie.estimate(hprop, used_map, map_off)
+    reflected = ie.estimate(hprop, used_map.flip(-1), map_off)
+    maxima, energy, counts = [], [], []
+    for key in ("v", "zf", "zb"):
+        a, b = original[key], reflected[key]
+        difference = (a - b).abs()
+        maxima.append(difference.max())
+        energy.append(a.square().sum())
+        counts.append(a.new_tensor(a.numel()))
+    return torch.stack(maxima), torch.stack(energy), torch.stack(counts)
+
+
+def encoder_probe_line(update: int, samples: int, ratios: tuple[float, float, float]) -> str:
+    alert = samples == 0 or any(not math.isfinite(value) or value > 0.1 for value in ratios)
+    shown = " ".join(f"{key}={value:.6g}" for key, value in zip(("v", "zf", "zb"), ratios, strict=True))
+    return f"EX42_ACTOR_MIRROR_ENCODER it={update} samples={samples} {shown}" + (" ALERT" if alert else "")
+
+
+def report_encoder_probe(update: int, rows: list[tuple[torch.Tensor, torch.Tensor, torch.Tensor]],
+                         perception, *, multi_gpu: bool, rank: int, device) -> str:
+    """Reduce the real masked rollout sample across ranks; no policy, reward or RNG mutation."""
+    maxima = torch.zeros(3, device=device)
+    energy = torch.zeros(3, device=device)
+    counts = torch.zeros(3, device=device)
+    samples = torch.zeros((), device=device)
+    if rows:
+        hprop = torch.cat([row[0] for row in rows])
+        used_map = torch.cat([row[1] for row in rows])
+        map_off = torch.cat([row[2] for row in rows])
+        with torch.inference_mode():
+            maxima, energy, counts = encoder_flip_statistics(perception.ie, hprop, used_map, map_off)
+        samples.fill_(hprop.shape[0])
+    if multi_gpu:
+        dist.all_reduce(maxima, op=dist.ReduceOp.MAX)
+        dist.all_reduce(energy, op=dist.ReduceOp.SUM)
+        dist.all_reduce(counts, op=dist.ReduceOp.SUM)
+        dist.all_reduce(samples, op=dist.ReduceOp.SUM)
+    ratios = tuple(float(maxima[i] / (energy[i] / counts[i]).sqrt()) if counts[i] > 0 and energy[i] > 0
+                   else (0.0 if counts[i] > 0 and maxima[i] == 0 else float("inf")) for i in range(3))
+    line = encoder_probe_line(update, int(samples), ratios)
+    if rank == 0:
+        print(line, flush=True)
+    return line
