@@ -805,6 +805,11 @@ def command_bad(command: torch.Tensor, slot: torch.Tensor, heading: torch.Tensor
             zero = lambda z: z.abs() <= tol
             bounded = lambda z, key: (z >= stage.ranges[key][0] - tol) & (z <= stage.ranges[key][1] + tol)
             absolute = lambda z, key: (z.abs() >= stage.ranges[key][0] - tol) & (z.abs() <= stage.ranges[key][1] + tol)
+            from foothold_s2.commands import ex42_low_band       # lead 11/23 12:34: band commands are in contract only while the switch is on
+            if ex42_low_band.enabled() and (name in ("forward", "reverse") or name.startswith(("side_", "spin_"))):
+                _b, _a, _n = bounded, absolute, name
+                bounded = lambda z, key, _b=_b, _n=_n: _b(z, key) | ex42_low_band.band_ok(_n, z, stage.ranges, tol)
+                absolute = lambda z, key, _a=_a, _n=_n: _a(z, key) | ex42_low_band.band_ok(_n, z, stage.ranges, tol)
             overlay = getattr(stage, "turn_overlay", None)      # a registered share of these slots also turns
             turned = (lambda z: zero(z) | ((z.abs() >= overlay[1] - tol) & (z.abs() <= overlay[2] + tol))) if overlay else zero
             h = heading[ids]
