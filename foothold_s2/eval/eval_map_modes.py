@@ -317,7 +317,7 @@ def _run_identity():
 
 
 def _save_env_arrays(mode, cname, vx, fw, al, dn, dt, start_xy, row, map_err=None,
-                     kind_foot_arrays=None, vy=None, wz=None):
+                     kind_foot_arrays=None, vy=None, wz=None, termination_terms=None):
     """X27j: env 별 기록 npz(env_arrays_<mode>_<cmd>.npz). 지형 종류 이름 · 열(terrain_types) · 레벨 행(terrain_levels) · 시작 위치 · 종료 사유 · 전진 거리 · 생존.
     종류 이름은 지형 생성기의 sub_terrain 비율과 열 수로 만든 열 -> 종류 표(columns.column_types)에서 계산한다(계산 근거는 map_modes.json 의 env_array_basis)."""
     terrain = raw.scene.terrain
@@ -339,12 +339,22 @@ def _save_env_arrays(mode, cname, vx, fw, al, dn, dt, start_xy, row, map_err=Non
     dist = (vx * al).sum(0) * dt
     reason = np.where(done_any, "terminated", "survived")                                # 종료 사유: 정책 종료 조건이 걸렸는가(걸리면 step 번호가 first_done_step)
     extra = {}
+    if termination_terms is not None:
+        assert all(value.shape == dn.shape for value in termination_terms.values())
+        union = np.logical_or.reduce(tuple(termination_terms.values()))
+        if not np.array_equal(union, dn):
+            raise RuntimeError("termination term union differs from done at a policy step")
+        extra.update({"termination_" + name: value for name, value in termination_terms.items()})
+        names = list(termination_terms)
+        reason = np.asarray(["survived" if step < 0 else "+".join(
+            name for name in names if termination_terms[name][step, env]) or "unclassified"
+            for env, step in enumerate(first_done)], dtype="U80")
 
     if map_err is not None:                                                            # X27m: 복원 지도 오차(cm). 지도 없는 체크포인트(G0)는 None 이라 키가 없다
         from foothold_s2.eval import map_error as _me
 
         ser = {nm: np.asarray(map_err[i], dtype=np.float32) for i, nm in enumerate(_me.SERIES)}                    # (S,N) 다섯 계열
-        extra = dict(_me.env_aggregate(ser, al), **{"map_err_series_" + nm: v for nm, v in ser.items()})
+        extra.update(_me.env_aggregate(ser, al), **{"map_err_series_" + nm: v for nm, v in ser.items()})
         row["restoration_error_record_only"] = _me.record_only_summary(
             extra["map_err_all_mean_cm"], extra["map_err_all_cellmax_cm"],
             source=f"env_arrays_{mode}_{cname}.npz:map_err_all_*_cm",
@@ -600,6 +610,8 @@ for mode in args.modes.split(","):
         POS = torch.zeros(S, env.num_envs, 3, device=dev)                              # 듬성 원자료: 칸 원점 기준 월드 위치 · yaw · 종료 여부
         YAW = torch.zeros(S, env.num_envs, device=dev)
         DN = torch.zeros(S, env.num_envs, dtype=torch.bool, device=dev)
+        TERM_NAMES = ("time_out", "bad_orientation", "foot_below_ground") if os.getenv("ONNX_TERM_REASON") == "1" else ()
+        TERM = {name: torch.zeros(S, env.num_envs, dtype=torch.bool, device=dev) for name in TERM_NAMES}
         FOOT_CONTACT = torch.zeros(S, env.num_envs, 4, dtype=torch.bool, device=dev) if kind_cell else None
         FOOT_POS = torch.zeros(S, env.num_envs, 4, 3, device=dev) if kind_cell else None
         GAIT_FORCE_XYZ = torch.zeros(S, env.num_envs, 4, 3, device=dev) if parser_gait else None
@@ -620,6 +632,8 @@ for mode in args.modes.split(","):
                 ERR[:, k] = torch.stack(last_err["e"])
 
             obs, _r, dones, _x = env.step(a)
+            for name in TERM_NAMES:
+                TERM[name][k] = raw.termination_manager.get_term(name).bool()
             map_mode_cells.assert_heading_off_for_fixed_eval(term)
             if args.ex39_heading_smoke_guard:
                 expected_command = torch.tensor(cmd, device=dev).expand(env.num_envs, 3)
@@ -731,7 +745,8 @@ for mode in args.modes.split(","):
         _save_env_arrays(mode, cname, vx, FW.cpu().numpy(), al, DN.cpu().numpy(), dt, START_XY0, row,
                          map_err=None if mode == "none" else ERR.cpu().numpy(),
                          kind_foot_arrays=(FOOT_CONTACT.cpu().numpy(), FOOT_POS.cpu().numpy())
-                         if kind_cell else None, vy=vy, wz=wz)  # EX-42 kind completion remains unjudged. vy, wz: v29-14c raw for the side-cell window MAE.
+                         if kind_cell else None, vy=vy, wz=wz,
+                         termination_terms={name: value.cpu().numpy() for name, value in TERM.items()} if TERM else None)  # EX-42 kind completion remains unjudged. vy, wz: v29-14c raw for the side-cell window MAE.
         if parser_sparse:                                                                # 새 키 · 새 파일만 더한다. 기존 키 · 기존 칸은 그대로
             from foothold_s2.eval import kind_stats
 
