@@ -310,7 +310,17 @@ def prepare_e0_env_cfg(env_cfg: Any, plan: EX42Plan, mesh_dir: str | Path, stage
             track_func = start_rewards.track_lin_vel_min_on_columns
         gap_switches.apply_cfg(env_cfg, switches, track_func)
         print("EX42_GAP_SWITCHES " + json.dumps(gap_switches.receipt(switches)["gap_switches"], sort_keys=True), flush=True)
-    return {**edge_receipt, **gap_switches.receipt(switches), "mesh_sha256": sha, "columns": len(table), "families": sorted(set(families)),
+    std_kinds = gap_switches.read_std_kinds(table)
+    std_receipt = {}
+    if std_kinds:
+        from foothold_s2.rewards import start_rewards
+        std_columns = gap_switches.std_columns_of(std_kinds, table)
+        gap_switches.apply_std_cfg(env_cfg, std_columns, start_rewards.track_lin_vel_std_on_columns,
+                                   min_columns=switches["min_columns"])
+        std_receipt = {"track_lin_std_kinds": {"kinds": std_kinds, "columns": std_columns}}
+        print(f"EX42_TRACK_LIN_STD_KINDS where=start kinds={json.dumps(std_kinds, sort_keys=True)} "
+              f"columns={len(std_columns)}/{len(table)} std={json.dumps(std_kinds, sort_keys=True)}", flush=True)
+    return {**edge_receipt, **gap_switches.receipt(switches), **std_receipt, "mesh_sha256": sha, "columns": len(table), "families": sorted(set(families)),
             "exposure": exposure, "level_caps": level_caps, "shares": shares, "low_floor": floor, "flag_table": flag_table,
             "continuous_level_cap": continuous_cap,      # None: the stage keeps the stage-zero promotion cap
             "k_ladder": {"boundary_index": boundary_index, "moves": ladder_receipt,

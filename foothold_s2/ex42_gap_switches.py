@@ -4,6 +4,7 @@
                              (메시 파일 · 메시 sha · 계획 sha 는 안 바뀐다). 가중치는 계획 행의 foot_edge_weight 그대로 (0 이면 오류).
   EX42_TRACK_LIN_MIN_KINDS   그 열 env 의 선속도 추종만 START 원문 식 exp(-|min(v, cmd) - cmd|^2 / std^2) (과속 무벌점). 나머지 열은 지금 식 (정확 추종).
   EX42_FALL_PLANE_KINDS      그 열 env 의 발 빠짐 종료를 출발 발판 평면 기준으로 (발 z < 타일 원점 z - 0.25). 나머지 열은 지금 식 (가장 가까운 스캔 점 기준).
+  EX42_TRACK_LIN_STD_KINDS   family/kind=std 목록에 있는 열만 선속도 추종 std 를 고정한다. 그 밖의 열은 실시간 term std 를 따른다.
 
 값은 family/kind 목록 (A/gaps,B/gap,C/gap 처럼). 열 표에 없는 이름 · 중복 · 모양이 틀린 값은 오류 (조용히 꺼지지 않게).
 """
@@ -11,11 +12,13 @@ from __future__ import annotations
 
 import os
 import re
+import math
 from typing import Any
 
 ENV_EDGE = "EX42_EDGE_EXTRA_KINDS"
 ENV_MIN = "EX42_TRACK_LIN_MIN_KINDS"
 ENV_PLANE = "EX42_FALL_PLANE_KINDS"
+ENV_STD = "EX42_TRACK_LIN_STD_KINDS"
 PLANE_MARGIN_M = 0.25                       # go2_params.TERMINATION["foot_below_ground_m"] 와 같은 값 (START 원문 221 행의 여유)
 _NAME = re.compile(r"[A-F]/[a-z_0-9]+")
 
@@ -39,6 +42,43 @@ def columns_of(kinds: tuple[str, ...], table: list[dict[str, Any]]) -> tuple[int
     """열 표에서 `kinds` 에 해당하는 열 번호 (오름차순)."""
     want = set(kinds)
     return tuple(c for c, r in enumerate(table) if "%s/%s" % (r["family"], r["kind"]) in want)
+
+
+def read_std_kinds(table: list[dict[str, Any]], environ=None) -> dict[str, float]:
+    """Optional family/kind=std overrides. An explicitly empty or invalid value is an error."""
+    env = environ if environ is not None else os.environ
+    if ENV_STD not in env:
+        return {}
+    raw = env[ENV_STD]
+    parts = [part.strip() for part in raw.split(",")]
+    have = {"%s/%s" % (r["family"], r["kind"]) for r in table}
+    values: dict[str, float] = {}
+    for part in parts:
+        name, sep, text = part.partition("=")
+        if sep != "=" or _NAME.fullmatch(name) is None or name not in have or name in values:
+            raise ValueError(f"{ENV_STD} invalid or unknown kind: {part!r}")
+        try:
+            value = float(text)
+        except ValueError as exc:
+            raise ValueError(f"{ENV_STD} invalid std: {part!r}") from exc
+        if not math.isfinite(value) or not 0 < value <= 1:
+            raise ValueError(f"{ENV_STD} std must be in (0, 1]: {part!r}")
+        values[name] = value
+    return values
+
+
+def std_columns_of(values: dict[str, float], table: list[dict[str, Any]]) -> dict[int, float]:
+    return {col: values[name] for col, row in enumerate(table)
+            if (name := "%s/%s" % (row["family"], row["kind"])) in values}
+
+
+def apply_std_cfg(env_cfg, columns: dict[int, float], track_func, *, min_columns: tuple[int, ...] = ()) -> None:
+    if not columns:
+        return
+    term = env_cfg.rewards.track_lin_vel
+    term.func = track_func
+    term.params = {**term.params, "std_columns": list(columns), "std_values": [columns[c] for c in columns],
+                   **({"min_columns": list(min_columns)} if min_columns else {})}
 
 
 def read_switches(table: list[dict[str, Any]], environ=None) -> dict[str, Any]:
@@ -83,6 +123,23 @@ def track_lin_mixed(vel_xy, cmd_xy, std: float, min_env):
     exact = torch.exp(-torch.sum((cmd_xy - vel_xy) ** 2, dim=-1) / std ** 2)
     low = torch.exp(-torch.sum((torch.minimum(vel_xy, cmd_xy) - cmd_xy) ** 2, dim=-1) / std ** 2)
     return torch.where(min_env, low, exact)
+
+
+def track_lin_std_mixed(vel_xy, cmd_xy, std: float, types, n_columns: int,
+                        std_columns: tuple[int, ...], std_values: tuple[float, ...], min_columns: tuple[int, ...] = ()):
+    """The same tracking expression with a fixed std on named columns and the live term std elsewhere."""
+    import torch
+    if len(std_columns) != len(std_values):
+        raise ValueError("std columns and values differ in length")
+    per_column = torch.full((n_columns,), float(std), dtype=vel_xy.dtype, device=vel_xy.device)
+    if std_columns:
+        per_column[list(std_columns)] = torch.as_tensor(std_values, dtype=vel_xy.dtype, device=vel_xy.device)
+    env_std = per_column[types.long()]
+    error = cmd_xy - vel_xy
+    if min_columns:
+        on = column_env_mask(types, min_columns, n_columns)
+        error = torch.where(on[:, None], cmd_xy - torch.minimum(vel_xy, cmd_xy), error)
+    return torch.exp(-torch.sum(error ** 2, dim=-1) / env_std ** 2)
 
 
 def column_env_mask(types, columns: tuple[int, ...], n_columns: int):

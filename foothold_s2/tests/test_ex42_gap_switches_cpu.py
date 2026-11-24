@@ -3,6 +3,7 @@
 import json
 import os
 import types
+import ast
 from pathlib import Path
 
 import numpy as np
@@ -77,6 +78,92 @@ def test_column_mask_and_cfg_wiring_keep_the_term_name_and_the_std_field():
                                       terminations=types.SimpleNamespace(foot_below_ground=types.SimpleNamespace(params={})))
     gs.apply_cfg(untouched, gs.read_switches(_table(), {}), track_func="new")
     assert untouched.rewards.track_lin_vel.func == "old" and untouched.terminations.foot_below_ground.params == {}
+
+
+def _actual_std_reward_function():
+    """Run the real reward function body on a known CPU env without importing Kit's omni modules."""
+    source = (Path(__file__).resolve().parents[1] / "rewards" / "start_rewards.py").read_text(encoding="utf-8")
+    function = next(node for node in ast.parse(source).body
+                    if isinstance(node, ast.FunctionDef) and node.name == "track_lin_vel_std_on_columns")
+    namespace = {"SceneEntityCfg": lambda name: types.SimpleNamespace(name=name)}
+    exec(compile(ast.Module(body=[function], type_ignores=[]), "start_rewards.py", "exec"), namespace)
+    return namespace[function.name]
+
+
+def test_track_std_kind_parser_uses_actual_column_table_and_rejects_bad_values():
+    table = _table()
+    values = gs.read_std_kinds(table, {gs.ENV_STD: "A/balance_beams=0.25,B/beam=0.4"})
+    assert values == {"A/balance_beams": .25, "B/beam": .4}
+    assert gs.std_columns_of(values, table) == {35: .25, 36: .25, 37: .25, 38: .25, 39: .25, 59: .4}
+    assert gs.read_std_kinds(table, {}) == {}
+    for raw in ("", "A/balance_beams", "A/balance_beams=0", "A/balance_beams=1.01", "A/balance_beams=nan",
+                "A/balance_beams=inf", "A/balance_beams=x", "A/balance_beams=0.25,A/balance_beams=0.3",
+                "A/no_such_kind=0.25", "A/balance_beams=0.25,"):
+        with pytest.raises(ValueError, match=gs.ENV_STD):
+            gs.read_std_kinds(table, {gs.ENV_STD: raw})
+
+
+def test_track_std_kind_actual_reward_only_changes_named_columns_and_live_std_elsewhere(capsys):
+    table = _table()
+    columns = gs.std_columns_of(gs.read_std_kinds(table, {gs.ENV_STD: "A/balance_beams=0.25"}), table)
+    actual = _actual_std_reward_function()
+    term = types.SimpleNamespace(func="old", params={"command_name": "base_velocity", "std": .35})
+    cfg = types.SimpleNamespace(rewards=types.SimpleNamespace(track_lin_vel=term))
+    gs.apply_std_cfg(cfg, columns, actual)
+    assert term.func is actual and term.params["std_columns"] == [35, 36, 37, 38, 39]
+    terrain = types.SimpleNamespace(terrain_types=torch.tensor([35, 34, 36]), terrain_origins=torch.zeros(10, 76, 3))
+    robot = types.SimpleNamespace(data=types.SimpleNamespace(root_lin_vel_b=torch.tensor([[1.2, 0., 0.], [1.2, 0., 0.], [.6, 0., 0.]])))
+    class Scene:
+        def __init__(self):
+            self.terrain = terrain
+
+        def __getitem__(self, key):
+            return robot
+
+    scene = Scene()
+    env = types.SimpleNamespace(scene=scene, command_manager=types.SimpleNamespace(get_command=lambda name: torch.tensor([[1., 0., 0.]] * 3)))
+    values = term.func(env, **term.params)
+    expected = torch.exp(-torch.tensor([.2 ** 2 / .25 ** 2, .2 ** 2 / .35 ** 2, .4 ** 2 / .25 ** 2]))
+    assert torch.allclose(values, expected, atol=1e-7)
+    inverted_mask = gs.track_lin_std_mixed(robot.data.root_lin_vel_b[:, :2],
+                                           env.command_manager.get_command("base_velocity")[:, :2], .35,
+                                           terrain.terrain_types, 76, (34,), (.25,))
+    ignored_value = gs.track_lin_std_mixed(robot.data.root_lin_vel_b[:, :2],
+                                           env.command_manager.get_command("base_velocity")[:, :2], .35,
+                                           terrain.terrain_types, 76, tuple(columns), tuple([.35] * len(columns)))
+    assert not torch.allclose(inverted_mask, expected)
+    assert not torch.allclose(ignored_value, expected)
+    assert float(values[0]) < float(values[1]) and float(values[2]) < float(values[0])
+    line = capsys.readouterr().out
+    assert "sample_envs=2" in line and "term_mean=" in line
+    assert float(line.split("term_mean=")[1]) > 0
+    term.params["std"] = .5
+    changed = term.func(env, **term.params)
+    assert torch.equal(changed[[0, 2]], values[[0, 2]]) and changed[1] > values[1]
+    assert capsys.readouterr().out == ""
+
+
+def test_track_std_kind_off_path_retains_term_cfg_receipt_and_exact_result():
+    old = types.SimpleNamespace(func="old", params={"command_name": "base_velocity", "std": .35})
+    cfg = types.SimpleNamespace(rewards=types.SimpleNamespace(track_lin_vel=old))
+    gs.apply_std_cfg(cfg, {}, _actual_std_reward_function())
+    assert old.func == "old" and old.params == {"command_name": "base_velocity", "std": .35}
+    vel = torch.tensor([[1.2, 0.], [.6, 0.]])
+    cmd = torch.tensor([[1., 0.], [1., 0.]])
+    types_ = torch.tensor([35, 34])
+    old_result = torch.exp(-torch.sum((cmd - vel) ** 2, dim=-1) / .35 ** 2)
+    new_result = gs.track_lin_std_mixed(vel, cmd, .35, types_, 76, (), ())
+    assert torch.equal(new_result, old_result)
+    assert gs.read_std_kinds(_table(), {}) == {}
+
+
+def test_track_std_override_keeps_the_optional_start_min_form_on_its_columns():
+    vel = torch.tensor([[1.2, 0.], [1.2, 0.]])
+    cmd = torch.tensor([[1., 0.], [1., 0.]])
+    types_ = torch.tensor([35, 34])
+    out = gs.track_lin_std_mixed(vel, cmd, .35, types_, 76, (35,), (.25,), min_columns=(34,))
+    assert float(out[0]) == pytest.approx(float(torch.exp(torch.tensor(-.2 ** 2 / .25 ** 2))))
+    assert float(out[1]) == pytest.approx(1.0)
 
 
 # ---- 후보 3: 종료 ---------------------------------------------------------------------------------------------------------------------------

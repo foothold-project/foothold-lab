@@ -112,6 +112,28 @@ def track_lin_vel_min_on_columns(env, command_name, std, min_columns, asset_cfg=
     return track_lin_mixed(asset.data.root_lin_vel_b[:, :2], env.command_manager.get_command(command_name)[:, :2], std, on)
 
 
+def track_lin_vel_std_on_columns(env, command_name, std, std_columns, std_values, min_columns=(),
+                                 asset_cfg=SceneEntityCfg("robot")):
+    """EX-42 optional fixed per-kind std. Other columns continue reading the live term's std."""
+    from foothold_s2.ex42_gap_switches import track_lin_std_mixed, column_env_mask
+
+    terrain = env.scene.terrain
+    types = terrain.terrain_types
+    n_columns = int(terrain.terrain_origins.shape[1])
+    asset = env.scene[asset_cfg.name]
+    value = track_lin_std_mixed(asset.data.root_lin_vel_b[:, :2],
+                                env.command_manager.get_command(command_name)[:, :2], std, types, n_columns,
+                                tuple(std_columns), tuple(std_values), tuple(min_columns))
+    if not getattr(env, "_ex42_track_lin_std_sample_logged", False):
+        on = column_env_mask(types, tuple(std_columns), n_columns)
+        count = int(on.sum().item())
+        if count:
+            mean = float(value[on].mean().item())
+            print(f"EX42_TRACK_LIN_STD_KINDS sample_envs={count} term_mean={mean:.6g}", flush=True)
+            env._ex42_track_lin_std_sample_logged = True
+    return value
+
+
 def calf_ext_limit_band(env, asset_cfg=SceneEntityCfg("robot", joint_names=".*_calf_joint"), margin=core.CALF_BAND_MARGIN):
     """종아리 펴짐 한계 띠 (창 3 처방 후보 1축): 네 calf 의 sum max(0, q - (hard 상한 - margin)). hard 상한은 시뮬레이터(data.joint_pos_limits)에서 읽고 상수로 박지 않는다.
     부호는 가중치가 정한다(음수 가중치 = 벌점). `calf_ext_limit_band_term` 으로 붙이면 기본 가중치 0(꺼짐)이다."""
