@@ -508,11 +508,11 @@ for mode in args.modes.split(","):
     last_err = {"e": None, "rebuild_maxdiff": 0.0}                                                                 # X27m: 이번 policy step 의 복원 오차 다섯 값(map_error.SERIES) 각 (N,)
     orig_adv = runner.perception._advance
 
-    def tapped(h_prop, h_terr, hist, depth2, tick, first, use_gt, gt_map, _orig=orig_adv, _c=counts):
+    def tapped(h_prop, h_terr, hist, depth2, tick, first, use_gt, gt_map, *extra, _orig=orig_adv, _c=counts):   # *extra = map_off (지도 끊김 시험 · 3d1d2a4d9 _advance 9 번째 인자)
         _c["gt"] += int(use_gt.sum())
         _c["total"] += int(use_gt.numel())
 
-        result = _orig(h_prop, h_terr, hist, depth2, tick, first, use_gt, gt_map)
+        result = _orig(h_prop, h_terr, hist, depth2, tick, first, use_gt, gt_map, *extra)
         try:                                                                                 # 센서 원자료(z_hit - z_base): 정답 -1.0 이 «광선 못 맞힘» 인지 «1 m 아래 clip» 인지 가른다
             rel = raw.scene.sensors["gt_map_scan"].data.ray_hits_w[..., 2] - raw.scene["robot"].data.root_pos_w[:, 2:3]
         except Exception as _e:                                                              # noqa: BLE001
