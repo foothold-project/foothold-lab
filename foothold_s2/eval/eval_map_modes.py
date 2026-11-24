@@ -74,10 +74,11 @@ args = parser.parse_args()
 friction_policy = ex42_friction.map_policy(args)
 kind_cell = args.ex42_kind_family is not None or args.ex42_kind_name is not None
 if kind_cell and (not args.ex42_kind_family or not args.ex42_kind_name or not args.mesh_dir
-                  or not args.fixed_terrain or args.fixed_level is None or args.envs not in (32, 64)
+                  or not args.fixed_terrain or args.fixed_level is None
+                  or (args.envs not in (32, 64) and not (args.envs == 8 and os.environ.get("ONNXREC_OUT")))
                   or args.terrain_set != "default" or args.axis_v2 or args.terrain_skill
                   or args.terrain_skill_v2 or args.push_ladder):
-    parser.error("EX-42 kind cell needs family, kind, mesh, fixed level and 32 or 64 env without other suites")
+    parser.error("EX-42 kind cell needs family, kind, mesh, fixed level and 32 or 64 env without other suites (8 only for ONNXREC_OUT)")
 if args.mesh_dir and (args.terrain_set != "default" or args.push_ladder or args.terrain_skill
                       or args.terrain_skill_v2 or not args.fixed_terrain):
     parser.error("--mesh-dir needs fixed default terrain without other terrain suites")
