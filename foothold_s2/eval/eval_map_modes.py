@@ -245,6 +245,7 @@ if parser_sparse:                                                               
     env_cfg.scene.terrain.terrain_generator = build_generator({**continuous_subterrains(), **sparse_terrains.sparse_subterrains()}, columns.FULL_COLS,
                                                               seed=geometry_hash.SPARSE_GEOMETRY_SEED)      # 징검돌 위치 · 빔 폭을 실행마다 같게(seed None 이면 numpy 전역 상태에서 뽑힌다)
 args.ex42_mesh = None
+args.ex42_fall_plane_columns = []
 if args.mesh_dir:
     from foothold_s2.eval.ex42_mesh_eval import attach as _attach_ex42_mesh
     if args.crop_margin is None:
@@ -252,6 +253,10 @@ if args.mesh_dir:
     else:
         args.ex42_mesh = _attach_ex42_mesh(env_cfg, args.mesh_dir, crop_margin=args.crop_margin, crop_level=args.fixed_level,
                                            crop_family=args.ex42_kind_family, crop_kind=args.ex42_kind_name)
+    from foothold_s2.eval.ex42_mesh_eval import configure_fall_plane_eval
+    args.ex42_fall_plane_columns = configure_fall_plane_eval(env_cfg, args.ex42_mesh)
+    if args.ex42_fall_plane_columns:
+        print("EX42_FALL_PLANE_KINDS where=eval plane_columns=" + json.dumps(args.ex42_fall_plane_columns), flush=True)
 if args.push_ladder:
     from foothold_s2.eval.ex41_push_ladder import configure_single_terrain
 
@@ -387,6 +392,8 @@ def _save_env_arrays(mode, cname, vx, fw, al, dn, dt, start_xy, row, map_err=Non
 
 
 res = {"evaluation_friction": friction_receipt, "source_sha256": SOURCE_SHA256, "task": args.task, "checkpoint": args.checkpoint, "checkpoint_sha256": sha, "ex41_checkpoint_preparation": checkpoint_preparation, "envs": args.envs, "steps": S, "command_suite": args.command_suite, "commands": CMDS, "dr_off": dr_off, "curriculum_off": curriculum_off, "fixed_terrain": None, "terrain_set": args.terrain_set, "eval_seed": args.eval_seed, "ex42_mesh": args.ex42_mesh, "terrain_hash": {}, "modes": {}, "run_identity": _run_identity()}
+if args.ex42_fall_plane_columns:
+    res["ex42_fall_plane_columns"] = args.ex42_fall_plane_columns
 if args.crop_margin is not None:                                                                      # CPU 평가 전용 잘라 낸 메시: 영수증에 남긴다 (판정용 GPU 평가와 섞지 않는다)
     from foothold_s2.terrains import ex42_mesh_mount as _mm
     if not _mm.LAST_CROP_RECORD:

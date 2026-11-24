@@ -85,6 +85,19 @@ def preflight(mesh_dir):
             "eval_columns": [row["kind"] for row in table[:EVAL_COLS]]}
 
 
+def configure_fall_plane_eval(env_cfg, mesh_record, environ=None):
+    """Apply the training fall-plane switch to the same mesh columns before gym.make."""
+    from foothold_s2 import ex42_gap_switches as switches
+
+    table = [{"family": family, "kind": kind} for family, kind in zip(
+        mesh_record["column_family"], mesh_record["columns"])]
+    selected = switches.read_switches(table, environ)
+    if selected["edge_kinds"] or selected["min_kinds"]:
+        raise ValueError("this evaluator supports only EX42_FALL_PLANE_KINDS")
+    switches.apply_cfg(env_cfg, selected)
+    return list(selected["plane_columns"])
+
+
 def crop_cells_for(record, *, level, family=None, kind=None):
     """(row, column) cells a fixed evaluation visits: the named kind's columns, or the A calibration columns, at `level`."""
     if level is None:
