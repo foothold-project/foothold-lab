@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import json
+import subprocess
+import sys
 from pathlib import Path
 
 import numpy as np
@@ -117,14 +119,21 @@ def test_reset_after_outage_returns_to_the_episode_baseline():
 def _write_evidence(folder: Path, *, transition: bool, bad_spawn: bool = False):
     folder.mkdir(exist_ok=True)
     status = "on" if transition else "baseline"
-    doc = {"run_identity": {"checkpoint_sha256": "a" * 64, "eval_seed": 42},
+    doc = {"run_identity": {"checkpoint_sha256": "a" * 64, "eval_seed": 42,
+                            "code_head": "b" * 40, "code_dirty_files": 0,
+                            "device": "cuda:1", "gpu_uuid": "GPU-test", "torch": "test", "torch_cuda": "test"},
+           "steps": 5, "envs": 2, "policy_dt_s": .02, "command_suite": "default",
+           "dr_off": True, "curriculum_off": True, "terrain_set": "fixed",
+           "evaluation_friction": {"static": .8, "dynamic": .6},
+           "source_sha256": {"eval_map_modes.py": "c" * 16},
+           "fixed_terrain": {"assignment_sha256": "tile-sha"}, "ex42_mesh": None,
            "terrain_tiles": [{"kind": "flat", "level": 0}] * 2,
            "map_transition_evidence": {"schema": "ex42-map-transition-evidence/1",
                                        "config": {"wait_s": [.04, .04], "off_s": [.1, .1],
                                                   "restore_depth_ticks": [1, 1], "seed": 42} if transition else None},
            "modes": {"eval_pred": {"fwd1.0": {"map_transition": {
-               "state": status, "counts": {"off_starts": 1 if transition else 0,
-                                            "on_restores": 1 if transition else 0,
+               "state": status, "counts": {"off_starts": 2 if transition else 0,
+                                            "on_restores": 2 if transition else 0,
                                             "held_depth_ticks": 1 if transition else 0}}}}}}
     (folder / "map_modes.json").write_text(json.dumps(doc), encoding="utf-8")
     alive = np.ones((5, 2), dtype=bool)
@@ -132,15 +141,22 @@ def _write_evidence(folder: Path, *, transition: bool, bad_spawn: bool = False):
     if transition:
         fall[-1, 0] = True
         alive[-1, 0] = False
-    np.savez(folder / "env_arrays_eval_pred_fwd1.0.npz", alive=alive,
+    off = np.zeros_like(alive)
+    hold = np.zeros_like(alive)
+    if transition:
+        off[1:3] = True
+        hold[3, 0] = True
+    np.savez(folder / "env_arrays_eval_pred_fwd1.0.npz", alive=alive, dones=fall,
              transition_tilt_rad=np.full((5, 2), .2 if transition else .1),
              transition_foot_contact=np.ones((5, 2, 4), dtype=bool),
-             transition_map_off=np.full((5, 2), transition),
-             transition_depth_hold=np.full((5, 2), transition),
+             transition_map_off=off, transition_depth_hold=hold,
              transition_fall=fall, transition_timeout=np.zeros_like(alive),
              terrain_col=np.zeros(2, dtype=int), terrain_level=np.zeros(2, dtype=int),
              start_xy=np.array([[1., 1.], [2., 2. if not bad_spawn else 3.]]),
-             dt=np.array(.02), assignment_sha256=np.array("tile-sha"))
+             dt=np.array(.02), assignment_sha256=np.array("tile-sha"),
+             initial_root_pos_local=np.zeros((2, 3)), initial_root_quat_w=np.tile([1., 0., 0., 0.], (2, 1)),
+             initial_root_lin_vel_w=np.zeros((2, 3)), initial_root_ang_vel_w=np.zeros((2, 3)),
+             initial_joint_pos=np.zeros((2, 12)), initial_joint_vel=np.zeros((2, 12)))
 
 
 def test_pair_comparison_uses_raw_tilt_footing_and_real_fall_reason(tmp_path: Path):
@@ -151,7 +167,8 @@ def test_pair_comparison_uses_raw_tilt_footing_and_real_fall_reason(tmp_path: Pa
     assert result["delta_transition_minus_baseline"]["tilt_mean_rad"] == pytest.approx(.1)
     assert result["delta_transition_minus_baseline"]["fall_envs"] == 1
     assert result["transition"]["timeout_envs"] == 0
-    assert result["transition_counts"]["off_starts"] == 1
+    assert result["transition_counts"]["off_starts"] == 2
+    assert result["windows"]["outage"]["transition"]["valid_env_steps"] == 4
 
 
 def test_pair_comparison_refuses_different_spawn_or_no_outage(tmp_path: Path):
@@ -165,5 +182,113 @@ def test_pair_comparison_refuses_different_spawn_or_no_outage(tmp_path: Path):
     doc = json.loads(path.read_text())
     doc["modes"]["eval_pred"]["fwd1.0"]["map_transition"]["counts"]["off_starts"] = 0
     path.write_text(json.dumps(doc))
-    with pytest.raises(ValueError, match="no completed outage"):
+    with pytest.raises(ValueError, match="receipt counts differ"):
+        compare(baseline, transition)
+
+
+def _rewrite_npz(path: Path, **changed):
+    with np.load(path, allow_pickle=False) as raw:
+        arrays = {key: raw[key].copy() for key in raw.files}
+    arrays.update(changed)
+    np.savez(path, **arrays)
+
+
+def test_pair_rejects_friction_code_and_length_mismatch(tmp_path: Path):
+    baseline, transition = tmp_path / "baseline", tmp_path / "transition"
+    _write_evidence(baseline, transition=False)
+    _write_evidence(transition, transition=True)
+    receipt = transition / "map_modes.json"
+    original = json.loads(receipt.read_text())
+    for key, value, match in (("evaluation_friction", {"static": .1, "dynamic": .05}, "evaluation_friction"),
+                              ("run_identity", {**original["run_identity"], "code_head": "d" * 40}, "code identity")):
+        doc = json.loads(json.dumps(original))
+        doc[key] = value
+        receipt.write_text(json.dumps(doc))
+        with pytest.raises(ValueError, match=match):
+            compare(baseline, transition)
+    receipt.write_text(json.dumps(original))
+    raw = transition / "env_arrays_eval_pred_fwd1.0.npz"
+    with np.load(raw) as z:
+        padded = {key: np.concatenate((z[key], z[key][-1:]), axis=0)
+                  for key in ("alive", "dones", "transition_tilt_rad", "transition_foot_contact",
+                              "transition_map_off", "transition_depth_hold", "transition_fall", "transition_timeout")}
+    _rewrite_npz(raw, **padded)
+    doc = json.loads(receipt.read_text())
+    doc["steps"] = 6
+    receipt.write_text(json.dumps(doc))
+    with pytest.raises(ValueError, match="run length"):
+        compare(baseline, transition)
+
+
+def test_first_timeout_excludes_later_fall(tmp_path: Path):
+    baseline, transition = tmp_path / "baseline", tmp_path / "transition"
+    _write_evidence(baseline, transition=False)
+    _write_evidence(transition, transition=True)
+    raw = transition / "env_arrays_eval_pred_fwd1.0.npz"
+    fall = np.zeros((5, 2), bool)
+    fall[4, 0] = True
+    timeout = np.zeros_like(fall)
+    timeout[2, 0] = True
+    alive = np.ones_like(fall)
+    alive[2:, 0] = False
+    _rewrite_npz(raw, transition_fall=fall, transition_timeout=timeout,
+                 dones=fall | timeout, alive=alive)
+    receipt = transition / "map_modes.json"
+    doc = json.loads(receipt.read_text())
+    doc["modes"]["eval_pred"]["fwd1.0"]["map_transition"]["counts"]["on_restores"] = 1
+    receipt.write_text(json.dumps(doc))
+    result = compare(baseline, transition)
+    assert result["transition"]["fall_envs"] == 0
+    assert result["transition"]["timeout_envs"] == 1
+    assert result["first_episode_counts"] == {"off_starts": 2, "on_restores": 1, "held_depth_ticks": 0}
+
+
+def test_outage_window_exposes_tilt_shift_hidden_by_overall_mean(tmp_path: Path):
+    baseline, transition = tmp_path / "baseline", tmp_path / "transition"
+    _write_evidence(baseline, transition=False)
+    _write_evidence(transition, transition=True)
+    before_tilt = np.full((5, 2), .1)
+    before_tilt[3:5] = .5
+    after_tilt = np.full((5, 2), .1)
+    after_tilt[1:3] = .5
+    _rewrite_npz(baseline / "env_arrays_eval_pred_fwd1.0.npz", transition_tilt_rad=before_tilt)
+    _rewrite_npz(transition / "env_arrays_eval_pred_fwd1.0.npz", transition_tilt_rad=after_tilt,
+                 transition_fall=np.zeros((5, 2), bool), dones=np.zeros((5, 2), bool),
+                 alive=np.ones((5, 2), bool))
+    result = compare(baseline, transition)
+    assert result["delta_transition_minus_baseline"]["tilt_mean_rad"] == pytest.approx(0)
+    assert result["windows"]["outage"]["delta_transition_minus_baseline"]["tilt_mean_rad"] == pytest.approx(.4)
+
+
+def test_receipt_claim_without_raw_outage_is_rejected(tmp_path: Path):
+    baseline, transition = tmp_path / "baseline", tmp_path / "transition"
+    _write_evidence(baseline, transition=False)
+    _write_evidence(transition, transition=True)
+    raw = transition / "env_arrays_eval_pred_fwd1.0.npz"
+    _rewrite_npz(raw, transition_map_off=np.zeros((5, 2), bool),
+                 transition_depth_hold=np.zeros((5, 2), bool))
+    with pytest.raises(ValueError, match="no completed"):
+        compare(baseline, transition)
+    result = subprocess.run([sys.executable, "-m", "foothold_s2.eval.ex42_map_transition_compare",
+                             "--baseline", str(baseline), "--transition", str(transition),
+                             "--out", str(tmp_path / "comparison.json")], capture_output=True, text=True)
+    assert result.returncode != 0 and not (tmp_path / "comparison.json").exists()
+
+
+def test_pair_rejects_initial_pose_and_joint_state_mismatch(tmp_path: Path):
+    baseline, transition = tmp_path / "baseline", tmp_path / "transition"
+    _write_evidence(baseline, transition=False)
+    _write_evidence(transition, transition=True)
+    raw = transition / "env_arrays_eval_pred_fwd1.0.npz"
+    with np.load(raw) as z:
+        pose = z["initial_root_quat_w"].copy()
+        joints = z["initial_joint_pos"].copy()
+    pose[0, 1] = .01
+    _rewrite_npz(raw, initial_root_quat_w=pose)
+    with pytest.raises(ValueError, match="initial condition differs: initial_root_quat_w"):
+        compare(baseline, transition)
+    pose[0, 1] = 0
+    joints[0, 0] = .01
+    _rewrite_npz(raw, initial_root_quat_w=pose, initial_joint_pos=joints)
+    with pytest.raises(ValueError, match="initial condition differs: initial_joint_pos"):
         compare(baseline, transition)

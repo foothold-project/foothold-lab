@@ -651,6 +651,17 @@ for mode in args.modes.split(","):
         GAIT_FOOT_SPEED_XY = torch.zeros(S, env.num_envs, 4, device=dev) if parser_gait else None
 
         START_XY0 = (robot.data.root_pos_w[:, :2] - raw.scene.env_origins[:, :2]).cpu().numpy()          # X27j: 이 명령의 첫 step 직전 시작 자리(칸 원점 기준 xy)
+        transition_initial = None
+        if args.map_transition_evidence:
+            data = robot.data
+            transition_initial = {
+                "initial_root_pos_local": (data.root_pos_w - raw.scene.env_origins).cpu().numpy().copy(),
+                "initial_root_quat_w": data.root_quat_w.cpu().numpy().copy(),
+                "initial_root_lin_vel_w": data.root_lin_vel_w.cpu().numpy().copy(),
+                "initial_root_ang_vel_w": data.root_ang_vel_w.cpu().numpy().copy(),
+                "initial_joint_pos": data.joint_pos.cpu().numpy().copy(),
+                "initial_joint_vel": data.joint_vel.cpu().numpy().copy(),
+            }
 
         for k in range(S):
             term.vel_command_b[:, :3] = torch.tensor(cmd, device=dev)
@@ -788,7 +799,7 @@ for mode in args.modes.split(","):
                          map_err=None if mode == "none" else ERR.cpu().numpy(),
                          kind_foot_arrays=(FOOT_CONTACT.cpu().numpy(), FOOT_POS.cpu().numpy())
                          if kind_cell else None, vy=vy, wz=wz,
-                         transition_arrays={"transition_tilt_rad": tilt,
+                         transition_arrays={**transition_initial, "transition_tilt_rad": tilt,
                                             "transition_foot_contact": TRANS_CONTACT.cpu().numpy(),
                                             "transition_map_off": TRANS_MAP_OFF.cpu().numpy(),
                                             "transition_depth_hold": TRANS_DEPTH_HOLD.cpu().numpy(),
