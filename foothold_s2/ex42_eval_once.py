@@ -739,6 +739,8 @@ def run(checkpoint, expected_sha256, output, device, *, eval_seed=None, mesh_dir
            "ex42_mesh": mesh, "stand_terrain": "plane z=0", "steps": {},
            "evaluation_friction_requested": friction_policy,
            **receipt_device_fields(device, physical_gpu)}
+    if os.environ.get("EX42_FALL_PLANE_KINDS"):
+        row["fall_plane_kinds"] = os.environ["EX42_FALL_PLANE_KINDS"]
     if policy_path is not None:
         row["evaluation_plan"] = {"path": str(policy_path), "sha256": policy.sha256}
     if split_gpu is not None:
@@ -1055,6 +1057,8 @@ def main(argv=None):
                         help="second GPU: map modes are split over --device and this one, then merged")
     parser.add_argument("--eval-seed", type=int, default=None)
     parser.add_argument("--mesh-dir", type=Path, default=None)
+    parser.add_argument("--fall-plane-kinds", default=None,
+                        help="explicit EX42_FALL_PLANE_KINDS for every P1 Kit child")
     parser.add_argument("--expected-mesh-sha256")
     parser.add_argument("--p1-plan", type=Path)
     parser.add_argument("--evaluation-plan", type=Path)
@@ -1103,6 +1107,19 @@ def main(argv=None):
                 parser.error("EX-42 P1 E0 mesh SHA differs")
         except (OSError, ValueError, KeyError) as exc:
             parser.error(str(exc))
+    if args.fall_plane_kinds is not None:
+        if args.mesh_dir is None:
+            parser.error("--fall-plane-kinds requires --mesh-dir")
+        from foothold_s2 import ex42_gap_switches as _gap_switches
+        table = [{"family": family, "kind": kind} for family, kind in zip(mesh["column_family"], mesh["columns"])]
+        try:
+            _gap_switches.parse_kinds(_gap_switches.ENV_PLANE, table,
+                                      {_gap_switches.ENV_PLANE: args.fall_plane_kinds})
+        except ValueError as exc:
+            parser.error(str(exc))
+        os.environ[_gap_switches.ENV_PLANE] = args.fall_plane_kinds
+    else:
+        os.environ.pop("EX42_FALL_PLANE_KINDS", None)
     if args.score_existing:
         mesh_sha = preflight(args.mesh_dir)["mesh_sha256"] if args.mesh_dir else None
         score = measure(args.checkpoint, args.out, expected_seed=args.eval_seed,
@@ -1115,6 +1132,8 @@ def main(argv=None):
     if not args.execute:
         policy_path = args.evaluation_plan or args.p1_plan
         plan = {"state": "plan", "score_config": str(config()[1])}
+        if args.fall_plane_kinds is not None:
+            plan["fall_plane_kinds"] = args.fall_plane_kinds
         if args.p1_plan is not None:
             from foothold_s2.curriculum.ex42_prep import EX42Plan
             policy_path = Path(args.evaluation_plan or args.p1_plan).resolve(strict=True)

@@ -84,6 +84,8 @@ def p1_argv(env, stage, run_dir, mesh_dir, mesh_sha, python, plan, approvals):
         raise LaunchRefused("missing GPU_JOBS_QUEUE (the next-stage queue path)")
     if env.get("EX42_P1_SPLIT_DEVICE"):
         argv += ["--split-device", env["EX42_P1_SPLIT_DEVICE"]]
+    if env.get("EX42_FALL_PLANE_KINDS"):
+        argv += ["--fall-plane-kinds", env["EX42_FALL_PLANE_KINDS"]]
     return argv + ["--next-stage-launcher", str(Path(__file__).with_suffix(".sh")),
                    "--next-stage-queue", queue,
                    "--next-stage-dispatch", str(DISPATCH), "--execute"]
