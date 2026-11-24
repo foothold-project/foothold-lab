@@ -112,6 +112,28 @@ def track_lin_vel_min_on_columns(env, command_name, std, min_columns, asset_cfg=
     return track_lin_mixed(asset.data.root_lin_vel_b[:, :2], env.command_manager.get_command(command_name)[:, :2], std, on)
 
 
+def track_ang_vel_bprime(env, command_name, std, asset_cfg=SceneEntityCfg("robot")):
+    """Keep the ordinary angular tracker outside B-prime's first-flag turn.
+
+    A B-prime turn commands zero angular velocity so the actor must use its
+    bearing input and heading reward.  The ordinary angular tracker would
+    otherwise punish exactly the turn we are asking it to learn.
+    """
+    term = env.command_manager.get_term(command_name)
+    base = mdp.track_ang_vel_z_exp(env, std=std, command_name=command_name, asset_cfg=asset_cfg)
+    if getattr(term.cfg, "bprime_turn_rad", None) is None:
+        raise ValueError("B-prime angular reward needs its command term")
+    return torch.where(term.bprime_turn_mask, torch.zeros_like(base), base)
+
+
+def bprime_heading_alignment(env, command_name):
+    from foothold_s2.commands.ex42_bprime import heading_alignment_reward
+    term = env.command_manager.get_term(command_name)
+    if getattr(term.cfg, "bprime_turn_rad", None) is None:
+        raise ValueError("B-prime heading reward needs its command term")
+    return heading_alignment_reward(term.flag_bearing_obs())
+
+
 def track_lin_vel_std_on_columns(env, command_name, std, std_columns, std_values, min_columns=(),
                                  asset_cfg=SceneEntityCfg("robot")):
     """EX-42 optional fixed per-kind std. Other columns continue reading the live term's std."""

@@ -25,16 +25,19 @@ OBS_GROUPS = {"policy": [ACTOR_KEY], "critic": [CRITIC_KEY]}
 class StartActorCritic(ActorCritic):
     def __init__(self, obs, obs_groups, num_actions, **kwargs) -> None:
         pose_command_dim = kwargs.pop("pose_command_dim", 0)
+        flag_bearing_dim = kwargs.pop("flag_bearing_dim", 0)
         if pose_command_dim not in (0, 2):
             raise ValueError("pose_command_dim must be 0 or 2")
+        if flag_bearing_dim not in (0, 3) or (flag_bearing_dim and pose_command_dim != 2):
+            raise ValueError("flag_bearing_dim must be 0 or 3 and requires pose_command_dim=2")
         kwargs.setdefault("actor_hidden_dims", [512, 256, 128])  # 선행 Table V 353 행 · Isaac Lab Go2 cfg
         kwargs.setdefault("critic_hidden_dims", [512, 256, 128])
         kwargs.setdefault("activation", "elu")
         super().__init__(obs, obs_groups, num_actions, **kwargs)
         a = sum(obs[g].shape[-1] for g in obs_groups["policy"])
         c = sum(obs[g].shape[-1] for g in obs_groups["critic"])
-        if a != ACTOR_IN + pose_command_dim or c != CRITIC_IN + pose_command_dim:
-            raise ValueError(f"actor {a} · critic {c} 이 계약값 {ACTOR_IN + pose_command_dim} · {CRITIC_IN + pose_command_dim} 과 다르다")
+        if a != ACTOR_IN + pose_command_dim + flag_bearing_dim or c != CRITIC_IN + pose_command_dim + flag_bearing_dim:
+            raise ValueError(f"actor {a} · critic {c} 이 계약값 {ACTOR_IN + pose_command_dim + flag_bearing_dim} · {CRITIC_IN + pose_command_dim + flag_bearing_dim} 과 다르다")
 
     # Per-sample multiplier of the action std (None = off). It is part of the policy: the sampled distribution, the stored
     # log-prob and sigma (rollout) and the re-evaluated log-prob and KL (update) all use std * noise_scale, so PPO's ratio

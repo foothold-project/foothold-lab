@@ -33,8 +33,8 @@ def assert_joint_order(joint_names) -> None:
 
 
 def mirror_critic(x: torch.Tensor) -> torch.Tensor:
-    if x.shape[-1] != 666:
-        raise ValueError("EX-41 mirror needs 666 critic entries")
+    if x.shape[-1] not in (666, 669):
+        raise ValueError("EX-41 mirror needs 666 critic entries, or 669 with B-prime bearing")
     y = x.clone()
     # Angular velocity is an axial vector under left-right reflection.
     y[..., 0:3] = x[..., 0:3] * x.new_tensor((-1, 1, -1))
@@ -49,6 +49,10 @@ def mirror_critic(x: torch.Tensor) -> torch.Tensor:
     y[..., 564:664] = x[..., 564:664].reshape(*x.shape[:-1], 4, 5, 5)[..., list(LEG_SWAP), :, :].flip(-1).flatten(-3)
     y[..., 664] = x[..., 664]   # body height delta
     y[..., 665] = -x[..., 665]  # body roll
+    if x.shape[-1] == 669:
+        y[..., 666] = x[..., 666]   # first-flag valid marker
+        y[..., 667] = x[..., 667]   # body-frame target x
+        y[..., 668] = -x[..., 668]  # body-frame target y
     return y
 
 

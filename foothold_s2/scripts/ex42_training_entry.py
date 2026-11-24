@@ -320,7 +320,21 @@ def prepare_e0_env_cfg(env_cfg: Any, plan: EX42Plan, mesh_dir: str | Path, stage
         std_receipt = {"track_lin_std_kinds": {"kinds": std_kinds, "columns": std_columns}}
         print(f"EX42_TRACK_LIN_STD_KINDS where=start kinds={json.dumps(std_kinds, sort_keys=True)} "
               f"columns={len(std_columns)}/{len(table)} std={json.dumps(std_kinds, sort_keys=True)}", flush=True)
-    return {**edge_receipt, **gap_switches.receipt(switches), **std_receipt, "mesh_sha256": sha, "columns": len(table), "families": sorted(set(families)),
+    from foothold_s2.commands.ex42_bprime import read_config as read_bprime_config
+    bprime = read_bprime_config()
+    bprime_receipt = {}
+    if bprime is not None:
+        from isaaclab.managers import RewardTermCfg as RewTerm
+        from foothold_s2.rewards import start_rewards
+        env_cfg.commands.base_velocity.bprime_turn_rad = bprime["turn_rad"]
+        env_cfg.rewards.track_ang_vel.func = start_rewards.track_ang_vel_bprime
+        env_cfg.rewards.bprime_heading = RewTerm(
+            func=start_rewards.bprime_heading_alignment,
+            weight=bprime["heading_weight"], params={"command_name": "base_velocity"})
+        bprime_receipt = {"bprime": {**bprime, "bearing_order": ["valid", "unit_x_body", "unit_y_body"],
+                                     "initial_policy_columns": "zero"}}
+        print("EX42_BPRIME " + json.dumps(bprime_receipt["bprime"], sort_keys=True), flush=True)
+    return {**edge_receipt, **gap_switches.receipt(switches), **std_receipt, **bprime_receipt, "mesh_sha256": sha, "columns": len(table), "families": sorted(set(families)),
             "exposure": exposure, "level_caps": level_caps, "shares": shares, "low_floor": floor, "flag_table": flag_table,
             "continuous_level_cap": continuous_cap,      # None: the stage keeps the stage-zero promotion cap
             "k_ladder": {"boundary_index": boundary_index, "moves": ladder_receipt,
@@ -1889,6 +1903,9 @@ def configure_ex42_stage_zero_train_cfg(train_cfg: dict[str, Any],
     cfg = dict(train_cfg)
     cfg["perception"] = dict(saved_cfg)
     cfg["ex41_pose_commands"] = True
+    from foothold_s2.commands.ex42_bprime import read_config as read_bprime_config
+    if read_bprime_config() is not None:
+        cfg["ex42_bprime"] = True
     cfg["ex41_w86_required"] = True
     cfg["ex41_critic_mirror"] = False
     cfg["ex42_stage_zero_parent"] = {"path": str(Path(parent_path).resolve()),

@@ -225,6 +225,9 @@ class StartRunner(OnPolicyRunner):
         self.ex41_pose_commands = train_cfg.get("ex41_pose_commands", False)
         if not isinstance(self.ex41_pose_commands, bool):
             raise ValueError("ex41_pose_commands must be bool")
+        self.ex42_bprime = train_cfg.get("ex42_bprime", False)
+        if type(self.ex42_bprime) is not bool or (self.ex42_bprime and not self.ex41_pose_commands):
+            raise ValueError("ex42_bprime requires EX-41 pose commands and a bool setting")
         self.ex41_w86_required = train_cfg.get("ex41_w86_required", False)
         if not isinstance(self.ex41_w86_required, bool) or (self.ex41_w86_required and not self.ex41_pose_commands):
             raise ValueError("ex41_w86_required needs EX-41 pose commands and a bool setting")
@@ -403,6 +406,15 @@ class StartRunner(OnPolicyRunner):
             pose = self._pose_command(raw)
             actor = torch.cat([actor, pose], -1)
             critic = torch.cat([critic, pose], -1)
+        if self.ex42_bprime:
+            term = self._command_term()
+            if term is None or getattr(term.cfg, "bprime_turn_rad", None) is None:
+                raise ValueError("B-prime command term is absent or not enabled")
+            bearing = term.flag_bearing_obs()
+            if bearing.shape != (n, 3) or not torch.isfinite(bearing).all():
+                raise ValueError("B-prime first-flag bearing must be finite N x 3")
+            actor = torch.cat([actor, bearing], -1)
+            critic = torch.cat([critic, bearing], -1)
         return TensorDict(
             {
                 ACTOR_KEY: actor,
@@ -415,7 +427,9 @@ class StartRunner(OnPolicyRunner):
     def _construct_algorithm(self, obs: TensorDict) -> PPO:
         self.policy_cfg.pop("class_name", None)
         policy = StartActorCritic(obs, self.cfg["obs_groups"], self.env.num_actions,
-                                  pose_command_dim=2 if self.ex41_pose_commands else 0, **self.policy_cfg).to(self.device)
+                                  pose_command_dim=2 if self.ex41_pose_commands else 0,
+                                  flag_bearing_dim=3 if self.ex42_bprime else 0,
+                                  **self.policy_cfg).to(self.device)
         alg_cfg = dict(self.alg_cfg)
         alg_cfg.pop("class_name", None)
         if self.ex41_pose_commands:
@@ -1826,6 +1840,7 @@ class StartRunner(OnPolicyRunner):
         state = {
             "format": CKPT_FORMAT,
             "ex41_pose_commands": self.ex41_pose_commands,
+            **({"ex42_bprime": True} if self.ex42_bprime else {}),
             "ex41_critic_mirror": self.ex41_critic_mirror,
             "ex41_mirror_approval": self.ex41_mirror_approval,
             "ex41_mirror_hold_reason": self.ex41_mirror_hold_reason,
@@ -2067,6 +2082,8 @@ class StartRunner(OnPolicyRunner):
             raise ValueError(f"START 체크포인트가 아니다: format={sd.get('format')}")
         if bool(sd.get("ex41_pose_commands", False)) != self.ex41_pose_commands or bool(sd.get("ex41_critic_mirror", False)) != self.ex41_critic_mirror:
             raise ValueError("EX-41 pose/mirror settings differ from the checkpoint; use explicit parent transplant for EX-40")
+        if bool(sd.get("ex42_bprime", False)) != self.ex42_bprime:
+            raise ValueError("B-prime observation contract differs from the checkpoint; use explicit parent transplant")
         saved = sd.get("perception_cfg") or {}
         for key, default in MODE_DEFAULTS.items():
             if saved.get(key, default) != self.pcfg[key]:
@@ -2224,13 +2241,22 @@ class StartRunner(OnPolicyRunner):
             raise ValueError("EX-42 stage-zero checkpoint identity differs")
         if checkpoint.get("ex41_pose_commands") is not True or checkpoint.get("ex41_critic_mirror") is not parent_mirror:
             raise ValueError("EX-42 stage-zero parent pose/mirror contract differs")
+        bprime = getattr(self, "ex42_bprime", False)
+        if bprime and checkpoint.get("ex42_bprime", False):
+            raise ValueError("B-prime parent must be the unexpanded 98/666 policy")
         saved = checkpoint.get("perception_cfg") or {}
         for key, default in MODE_DEFAULTS.items():
             if saved.get(key, default) != self.pcfg[key]:
                 raise ValueError(f"EX-42 stage-zero parent perception mode {key} differs")
         if float(checkpoint["map_switch"]["p_map_off"]) != self.p_map_off:
             raise ValueError("EX-42 stage-zero map-switch probability differs from parent")
-        self.alg.policy.load_state_dict(checkpoint["model_state_dict"], strict=True)
+        if bprime:
+            from foothold_s2.runners.ex42_bprime_transfer import policy_state
+            names = [name for name, _ in self.alg.policy.named_parameters()]
+            self.alg.policy.load_state_dict(policy_state(
+                checkpoint["model_state_dict"], self.alg.policy.state_dict()), strict=True)
+        else:
+            self.alg.policy.load_state_dict(checkpoint["model_state_dict"], strict=True)
         parent_perception, perception_source = checkpoint["perception_state_dict"], "online"
         if stage_id is not None and checkpoint.get("perception_ema") is not None:
             # v29-11: a later stage (E1F on) starts from the weights the parent stage was scored with: the evaluation adapter reads perception_ema
@@ -2244,7 +2270,12 @@ class StartRunner(OnPolicyRunner):
         print("EX42_PARENT_PERCEPTION_SOURCE=%s" % perception_source, flush=True)
         self.adasmpl.load_state_dict(checkpoint["adasmpl"])
         self._apply_resume_adasmpl()
-        self.alg.optimizer.load_state_dict(checkpoint["optimizer_state_dict"])
+        if bprime:
+            from foothold_s2.runners.ex42_bprime_transfer import optimizer_state
+            self.alg.optimizer.load_state_dict(optimizer_state(
+                checkpoint["optimizer_state_dict"], self.alg.optimizer.state_dict(), names, names))
+        else:
+            self.alg.optimizer.load_state_dict(checkpoint["optimizer_state_dict"])
         self.alg.learning_rate = float(checkpoint["ppo_learning_rate"])
         self.perception_optimizer.load_state_dict(checkpoint["perception_optimizer_state_dict"])
         self._pin_perception_lr("load_ex42_stage_zero_parent")
@@ -2258,7 +2289,11 @@ class StartRunner(OnPolicyRunner):
                 raise ValueError("EX-42 stage-zero parent last use_gt_frac is invalid")
             self._last_use_gt_frac = float(use_gt_frac)
         self.current_learning_iteration = 0
-        self.ex42_parent_transfer = dict(receipt)
+        self.ex42_parent_transfer = {**receipt, **({"bprime": {
+            "actor_input_dim": 101, "critic_input_dim": 669,
+            "zero_initialized_bearing_columns": 3,
+            "policy_and_adam_moments_transferred": True,
+        }} if bprime else {})}
         self._ex42_parent_loaded = True
         return {**receipt, "state": (f"loaded_for_ex42_stage_{stage_id.lower()}" if stage_id is not None
                                      else "loaded_for_ex42_stage_e1" if stage_e1 else "loaded_for_ex42_stage_e0" if stage_e0

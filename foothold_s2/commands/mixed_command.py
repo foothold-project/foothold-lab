@@ -79,6 +79,10 @@ class MixedVelocityCommand(CommandTerm):
 
         count = cfg.flag_count
         self.flag_state = mc.FlagState.new(torch.zeros(len(self.flag_ids), count, 2, device=dev))
+        self.bprime_turn_mask = torch.zeros(n, dtype=torch.bool, device=dev)
+        if cfg.bprime_turn_rad is not None:
+            from foothold_s2.commands.ex42_bprime import validate_turn_rad
+            cfg.bprime_turn_rad = validate_turn_rad(cfg.bprime_turn_rad)
         self.exposure = mc.ExposureLog()
         self.slot_names = (mc.EX39_SLOTS if self.params.ex39_arm is not None or self.params.curriculum_mode else
                            mc.BASIC_SLOTS if self.params.basic_mode else mc.WT_SLOTS)
@@ -144,6 +148,7 @@ class MixedVelocityCommand(CommandTerm):
         self.cmd_sum_w[env_ids] = 0.0
         self.goals[env_ids] = 0
         self.excluded_steps[env_ids] = 0.0
+        self.bprime_turn_mask[env_ids] = False
         self.ep_steps[env_ids] = 0.0
         if hasattr(self, "stop_elapsed_s"):
             self.stop_elapsed_s[env_ids] = 0.0
@@ -296,6 +301,19 @@ class MixedVelocityCommand(CommandTerm):
         stages = getattr(getattr(runtime, "plan", None), "stages", None)
         value = getattr(stages[0], "flag_turn_first_rad", None) if stages else None
         return float(value) if value else None
+
+    def flag_bearing_obs(self) -> torch.Tensor:
+        """B-prime first-flag input in full env order; nonflag rows are zero."""
+        out = self.vel_command_b.new_zeros((self.num_envs, 3))
+        if self.cfg.bprime_turn_rad is None or len(self.flag_ids) == 0:
+            return out
+        from foothold_s2.commands.ex42_bprime import first_flag_bearing
+        ids = self.flag_ids
+        state = self.flag_state
+        out[ids] = first_flag_bearing(
+            state.flags, state.idx, state.n_flags,
+            self.robot.data.root_pos_w[ids, :2], self._yaw(ids), self.is_flag_env[ids])
+        return out
 
     def _flag_turn_first_scope(self):
         """The plan row's `flag_turn_first_scope` ("first" | "all"); "all" when the cell is missing."""
@@ -452,8 +470,16 @@ class MixedVelocityCommand(CommandTerm):
                 }
 
         if len(self.flag_ids) > 0:
-            self.flag_turn_first_rad = self._flag_turn_first_rad()
+            self.flag_turn_first_rad = (None if self.cfg.bprime_turn_rad is not None
+                                        else self._flag_turn_first_rad())
             cmd = mc.flag_step(self.flag_state, pos[self.flag_ids], yaw[self.flag_ids], dt, self.params, self.flag_turn_first_rad, self._flag_turn_first_scope())
+            if self.cfg.bprime_turn_rad is not None:
+                from foothold_s2.commands.ex42_bprime import command_for_learned_turn, first_flag_bearing
+                state = self.flag_state
+                bearing = first_flag_bearing(state.flags, state.idx, state.n_flags,
+                                             pos[self.flag_ids], yaw[self.flag_ids], self.is_flag_env[self.flag_ids])
+                cmd, mask = command_for_learned_turn(cmd, bearing, self.cfg.bprime_turn_rad)
+                self.bprime_turn_mask[self.flag_ids] = mask
             sel = self.is_flag_env[self.flag_ids]
             self.vel_command_b[self.flag_ids[sel]] = cmd[sel]
             self.goals[self.flag_ids[sel]] = self.flag_state.passed[sel]
@@ -502,6 +528,8 @@ class MixedVelocityCommandCfg(CommandTermCfg):
     fixed_cmd: tuple = None
     """평가용: 모든 자유 속도 env 에 이 (vx, vy, wz) 만 낸다. flag_stride 0 이면 깃발 env 없음."""
     track_x_progress: bool = False
+    bprime_turn_rad: float | None = None
+    """Experimental B-prime: give first-flag bearing to the policy and learn the turn. None preserves the old path."""
     """듬성 종류 올림 규칙 (plan terrain_promotion): 켜면 에피소드마다 진행 축 x 최대 이동 max_x 를 같이 센다. 꺼짐이면 max_x 는 None 이고 아무것도 더 계산하지 않는다."""
     clock_scatter: bool = False
     """EX-35: 새 프로세스의 첫 reset 직후 env 마다 다음 교체 시점을 U(0, resampling 주기) 로 흩는다."""
