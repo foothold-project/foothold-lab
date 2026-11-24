@@ -391,7 +391,8 @@ class StartPerception(nn.Module):
             st.map_off[m] = new_map_off[m]  # 에피소드 시작 때만 새로 뽑는다: 에피소드 안에서는 유지
 
     @torch.no_grad()
-    def ingest(self, st: PerceptionState, obs: torch.Tensor, depth: torch.Tensor) -> dict[str, torch.Tensor]:
+    def ingest(self, st: PerceptionState, obs: torch.Tensor, depth: torch.Tensor,
+               depth_hold: torch.Tensor | None = None) -> dict[str, torch.Tensor]:
         """새 관측을 상태에 넣고 이번 스텝의 입력(이력 · 깊이 2 프레임 · 틱 · 첫 스텝)을 만든다. 재생 버퍼가 이것을 저장한다.
 
         첫 스텝(리셋 직후)에는 이력과 프레임을 현재 값으로 모두 채운다: 가정(rl), Isaac Lab CircularBuffer 와 같은 꼴.
@@ -400,6 +401,10 @@ class StartPerception(nn.Module):
         st.hist = torch.where(first[:, None, None], obs[:, None, :].expand_as(st.hist), torch.roll(st.hist, 1, 1))
         st.hist[:, 0] = obs
         tick = (st.steps_since_reset % self.cfg.depth_tick) == 0
+        if depth_hold is not None:
+            if depth_hold.shape != tick.shape:
+                raise ValueError("depth_hold must have one flag per environment")
+            tick = tick & ~depth_hold.bool()
         rolled = torch.roll(st.frames, 1, 1)
         rolled[:, 0] = depth
         new_frames = torch.where(first[:, None, None, None], depth[:, None].expand_as(st.frames), rolled)
