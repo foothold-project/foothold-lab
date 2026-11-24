@@ -4,6 +4,7 @@ from types import SimpleNamespace
 import torch
 
 from foothold_s2.tasks import mdp_extra
+from foothold_s2.eval.ex42_mesh_eval import configure_fall_plane_eval
 
 
 class Scene(dict):
@@ -46,3 +47,14 @@ def test_diagnostic_disabled_keeps_existing_result(monkeypatch):
     assert mdp_extra.foot_below_ground(env, None, SimpleNamespace(name="scan"),
                                        SimpleNamespace(name="robot", body_ids=[0]), margin=0.25).tolist() == [True]
     assert mdp_extra.LAST_CBOX_TERM_DIAG is None
+
+
+def test_eval_fall_plane_switch_uses_training_column_table():
+    params = {"plane_columns": None}
+    cfg = SimpleNamespace(terminations=SimpleNamespace(foot_below_ground=SimpleNamespace(params=params)))
+    mesh = {"column_family": ["A", "C", "C"], "columns": ["flat", "gap", "box"]}
+    assert configure_fall_plane_eval(cfg, mesh, {"EX42_FALL_PLANE_KINDS": "C/box"}) == [2]
+    assert params["plane_columns"] == [2]
+    fresh = SimpleNamespace(terminations=SimpleNamespace(foot_below_ground=SimpleNamespace(params={})))
+    assert configure_fall_plane_eval(fresh, mesh, {}) == []
+    assert fresh.terminations.foot_below_ground.params == {}
