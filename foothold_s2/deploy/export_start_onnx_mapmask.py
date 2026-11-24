@@ -27,7 +27,7 @@ class MaskedStepNet(nn.Module):
         super().__init__()
         self.p, self.actor, self.vx = perc, actor, vx
 
-    def forward(self, o, hist, depth2, h_prop, h_terr, tick, first, pose, map_mask):
+    def forward(self, o, hist, depth2, h_prop, h_terr, tick, first, pose, map_mask, flag_bearing3=None):
         keep = 1.0 - first
         h_prop2 = self.p.ie.prop_step(hist, h_prop * keep)
         h_terr0 = h_terr * keep
@@ -46,7 +46,8 @@ class MaskedStepNet(nn.Module):
         est = torch.cat((mu, v, zf, zb), -1)
         from foothold_s2.runners.start_runner import correct_est_vx
 
-        action = self.actor(torch.cat((o, correct_est_vx(est, self.vx), pose), -1))
+        columns = (o, correct_est_vx(est, self.vx), pose)
+        action = self.actor(torch.cat(columns + ((flag_bearing3,) if flag_bearing3 is not None else ()), -1))
         return action, h_prop2, h_terr2, refined, est
 
 
@@ -64,15 +65,18 @@ def export(checkpoint, out_dir, opset=17, *, vx_corr_on=None, vx_corr_b=None,
     vx = base.vx_params(spec["vx_correction"]["on"], spec["vx_correction"]["b"],
                         spec["vx_correction"]["band"], spec["vx_correction"]["ramp"])
     net = MaskedStepNet(perc, actor, vx).eval()
-    dyn = {name: {0: "batch"} for name in STEP_INPUTS + base.STEP_OUTPUTS}
-    inputs = base.example_inputs() + (torch.zeros(2, 1),)
+    bprime = bool(spec.get("ex42_bprime", False))
+    step_inputs = STEP_INPUTS + ((base.BPRIME_INPUT,) if bprime else ())
+    dyn = {name: {0: "batch"} for name in step_inputs + base.STEP_OUTPUTS}
+    inputs = base.example_inputs() + (torch.zeros(2, 1),) + ((torch.zeros(2, 3),) if bprime else ())
     with torch.inference_mode():
-        torch.onnx.export(net, inputs, stage / "start_step.onnx", input_names=list(STEP_INPUTS),
+        torch.onnx.export(net, inputs, stage / "start_step.onnx", input_names=list(step_inputs),
                           output_names=list(base.STEP_OUTPUTS), dynamic_axes=dyn,
                           opset_version=opset, dynamo=False)
     spec["format"] = "foothold-start-onnx/2"
-    spec["step_inputs"].append({"name": "map_mask", "shape": ["batch", 1], "dtype": "float32",
-                                "what": "0 = map tokens attend; 1 = mask all 128 map tokens in the I-E attention; constant within an episode"})
+    map_entry = {"name": "map_mask", "shape": ["batch", 1], "dtype": "float32",
+                 "what": "0 = map tokens attend; 1 = mask all 128 map tokens in the I-E attention; constant within an episode"}
+    spec["step_inputs"].insert(-1 if bprime else len(spec["step_inputs"]), map_entry)
     spec["map_mask"] = {"on": 0.0, "off": 1.0,
                         "rule": "masks attention keys, not the reconstructed map; refined_map remains available in either mode"}
     spec["files"]["start_step.onnx"] = hashlib.sha256((stage / "start_step.onnx").read_bytes()).hexdigest()

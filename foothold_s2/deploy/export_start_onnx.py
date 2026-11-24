@@ -34,6 +34,7 @@ POSE_DIM = 2
 ACTION_DIM = 12
 STEP_INPUTS = ("o", "hist", "depth2", "h_prop", "h_terr", "tick", "first", "pose")
 STEP_OUTPUTS = ("action", "h_prop_out", "h_terr_out", "refined_map", "est")
+BPRIME_INPUT = "flag_bearing3"
 
 
 def load(checkpoint) -> tuple[StartPerception, nn.Sequential, dict]:
@@ -45,6 +46,13 @@ def load(checkpoint) -> tuple[StartPerception, nn.Sequential, dict]:
         raise ValueError("export needs a reconstruction-map checkpoint")
     if sd.get("ex41_pose_commands") is not True:
         raise ValueError("export expects the 98-input actor (pose commands)")
+    bprime = sd.get("ex42_bprime", False)
+    if type(bprime) is not bool:
+        raise ValueError("checkpoint ex42_bprime must be bool")
+    turn_rad = None
+    if bprime:
+        from foothold_s2.commands.ex42_bprime import validate_turn_rad
+        turn_rad = validate_turn_rad(sd.get("ex42_bprime_turn_rad", 0.25))
     perc = StartPerception(PerceptionCfg(map_input="reconstruction", force_gt=bool(saved.get("force_gt", False)),
                                          depth_delay_ticks=int(saved.get("depth_delay_ticks", 1))))
     state, why = sd["perception_state_dict"], "online"
@@ -63,11 +71,15 @@ def load(checkpoint) -> tuple[StartPerception, nn.Sequential, dict]:
             layers.append(nn.ELU())
         i += 2
     actor = nn.Sequential(*layers)
-    if actor[0].in_features != ACTOR_IN + POSE_DIM or actor[-1].out_features != ACTION_DIM:
-        raise ValueError(f"actor shape {actor[0].in_features} -> {actor[-1].out_features} is not 98 -> 12")
+    actor_inputs = ACTOR_IN + POSE_DIM + (3 if bprime else 0)
+    if actor[0].in_features != actor_inputs or actor[-1].out_features != ACTION_DIM:
+        raise ValueError(f"actor shape {actor[0].in_features} -> {actor[-1].out_features} is not {actor_inputs} -> 12")
     perc.eval(); actor.eval()
-    return perc, actor, {"perception_source": why, "iter": sd.get("iter"), "depth_delay_ticks": perc.cfg.depth_delay_ticks,
-                         "depth_tick": perc.cfg.depth_tick}
+    info = {"perception_source": why, "iter": sd.get("iter"), "depth_delay_ticks": perc.cfg.depth_delay_ticks,
+            "depth_tick": perc.cfg.depth_tick}
+    if bprime:
+        info.update(ex42_bprime=True, ex42_bprime_turn_rad=turn_rad)
+    return perc, actor, info
 
 
 def vx_params(on, b, band, ramp) -> tuple:
@@ -87,7 +99,7 @@ class StepNet(nn.Module):
         super().__init__()
         self.p, self.actor, self.vx = perc, actor, vx
 
-    def forward(self, o, hist, depth2, h_prop, h_terr, tick, first, pose):
+    def forward(self, o, hist, depth2, h_prop, h_terr, tick, first, pose, flag_bearing3=None):
         keep = 1.0 - first
         h_prop2 = self.p.ie.prop_step(hist, h_prop * keep)
         h_terr0 = h_terr * keep
@@ -97,7 +109,10 @@ class StepNet(nn.Module):
         e = self.p.ie.estimate(h_prop2, refined)
         est = torch.cat([e["mu"], e["v"], e["zf"], e["zb"]], -1)
         from foothold_s2.runners.start_runner import correct_est_vx
-        action = self.actor(torch.cat([o, correct_est_vx(est, self.vx), pose], -1))
+        columns = [o, correct_est_vx(est, self.vx), pose]
+        if flag_bearing3 is not None:
+            columns.append(flag_bearing3)
+        action = self.actor(torch.cat(columns, -1))
         return action, h_prop2, h_terr2, refined, est
 
 
@@ -125,11 +140,13 @@ def export(checkpoint, out_dir, opset: int = 17, *, vx_corr_on=None, vx_corr_b=N
     out = Path(out_dir); out.mkdir(parents=True, exist_ok=True)
     perc, actor, info = load(checkpoint)
     net = StepNet(perc, actor, vx).eval()
-    dyn = {n: {0: "batch"} for n in STEP_INPUTS + STEP_OUTPUTS}
+    step_inputs = STEP_INPUTS + ((BPRIME_INPUT,) if info.get("ex42_bprime") else ())
+    dyn = {n: {0: "batch"} for n in step_inputs + STEP_OUTPUTS}
+    inputs = example_inputs() + ((torch.zeros(2, 3),) if info.get("ex42_bprime") else ())
     with torch.no_grad():
-        torch.onnx.export(net, example_inputs(), out / "start_step.onnx", input_names=list(STEP_INPUTS), output_names=list(STEP_OUTPUTS),
+        torch.onnx.export(net, inputs, out / "start_step.onnx", input_names=list(step_inputs), output_names=list(STEP_OUTPUTS),
                           dynamic_axes=dyn, opset_version=opset, dynamo=False)
-        torch.onnx.export(actor, (torch.zeros(2, ACTOR_IN + POSE_DIM),), out / "start_actor.onnx", input_names=["actor_in"],
+        torch.onnx.export(actor, (torch.zeros(2, actor[0].in_features),), out / "start_actor.onnx", input_names=["actor_in"],
                           output_names=["action"], dynamic_axes={"actor_in": {0: "batch"}, "action": {0: "batch"}}, opset_version=opset, dynamo=False)
     sha = hashlib.sha256(Path(checkpoint).read_bytes()).hexdigest()
     spec = {
@@ -150,7 +167,9 @@ def export(checkpoint, out_dir, opset: int = 17, *, vx_corr_on=None, vx_corr_b=N
             {"name": "h_prop_out", "shape": ["batch", 128]}, {"name": "h_terr_out", "shape": ["batch", 128]},
             {"name": "refined_map", "shape": ["batch", MAP_X, MAP_Y], "what": "reconstructed height map, m relative to the base, x 32 (rear -0.475 .. front 1.075, 0.05) x y 16"},
             {"name": "est", "shape": ["batch", EST_DIM], "what": "z mean 16 · v 3 · zf 16 · zb 16"}],
-        "actor_only": {"input": "actor_in [batch, 98] = o 45 + est_in 51 + pose 2 (est_in = est after the vx correction)", "output": "action [batch, 12]"},
+        "actor_only": {"input": f"actor_in [batch, {actor[0].in_features}] = o 45 + est_in 51 + pose 2"
+                                + (" + flag_bearing3 3" if info.get("ex42_bprime") else "")
+                                + " (est_in = est after the vx correction)", "output": "action [batch, 12]"},
         "vx_correction": {"on": vx[0], "b": vx[1], "band": vx[2], "ramp": float(vx_corr_ramp), "column": 16, "source": vx_source,
                           "rule": "where 0 <= est[16] < band: est_in[16] = est[16] - b * min(est[16] / ramp, 1) * (1 - est[16] / band); other columns unchanged",
                           "note": "part of the policy (training and evaluation apply it to every actor input); the robot uses the same values; start_step.onnx applies it inside, start_actor.onnx expects est_in"},
@@ -163,6 +182,9 @@ def export(checkpoint, out_dir, opset: int = 17, *, vx_corr_on=None, vx_corr_b=N
             "depth_preprocessing": "outside the graph: the camera image cropped / resized to 60 x 60 and normalised to 0..1 exactly as foothold_s2/sensors/depth_aug.py",
         },
     }
+    if info.get("ex42_bprime"):
+        spec["step_inputs"].append({"name": BPRIME_INPUT, "shape": ["batch", 3], "dtype": "float32",
+                                    "what": "first flag bearing [valid, unit_x_body, unit_y_body]; zero when unavailable"})
     (out / "start_onnx.json").write_text(json.dumps(spec, indent=1), encoding="utf-8")
     return spec
 

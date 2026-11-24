@@ -210,3 +210,37 @@ def test_eval_entry_rejects_bprime_width_or_term_mismatch(tmp_path: Path, monkey
                           commands=SimpleNamespace(base_velocity=SimpleNamespace(bprime_turn_rad=None)))
     with pytest.raises(ValueError, match="input widths differ"):
         load_checkpoint_for_eval(cfg, path)
+
+
+def test_mapmask_onnx_export_adds_bearing_after_the_existing_nine_inputs(tmp_path: Path):
+    onnx = pytest.importorskip("onnx")
+    from foothold_s2.deploy import export_start_onnx as base
+    from foothold_s2.deploy import export_start_onnx_mapmask as masked
+    from foothold_s2.models.start_perception import PerceptionCfg, StartPerception
+
+    torch.manual_seed(24)
+    perception = StartPerception(PerceptionCfg(map_input="reconstruction"))
+    actor = torch.nn.Linear(101, 12)
+    state = {"ex41_pose_commands": True, "ex42_bprime": True, "ex42_bprime_turn_rad": 0.25,
+             "perception_cfg": {"map_input": "reconstruction", "depth_delay_ticks": 1},
+             "perception_state_dict": perception.state_dict(),
+             "model_state_dict": {"actor.0.weight": actor.weight.detach().clone(),
+                                  "actor.0.bias": actor.bias.detach().clone()},
+             "vx_corr": {"on": True, "b": 0.009, "band": 0.3, "ramp": 0.05}}
+    checkpoint = tmp_path / "model_1.pt"
+    torch.save(state, checkpoint)
+    out = tmp_path / "export"
+    spec = masked.export(checkpoint, out)
+    assert [entry["name"] for entry in spec["step_inputs"]] == [
+        "o", "hist", "depth2", "h_prop", "h_terr", "tick", "first", "pose", "map_mask", "flag_bearing3"]
+    assert spec["actor_only"]["input"].startswith("actor_in [batch, 101]")
+    assert spec["ex42_bprime_turn_rad"] == 0.25
+    graph = onnx.load(out / "start_step.onnx")
+    onnx.checker.check_model(graph)
+    assert [input_.name for input_ in graph.graph.input] == [entry["name"] for entry in spec["step_inputs"]]
+    perc, loaded_actor, _ = base.load(checkpoint)
+    net = masked.MaskedStepNet(perc, loaded_actor, (True, 0.009, 0.3)).eval()
+    inputs = base.example_inputs() + (torch.zeros(2, 1), torch.zeros(2, 3))
+    with torch.inference_mode():
+        action = net(*inputs)[0]
+    assert action.shape == (2, 12) and torch.isfinite(action).all()
