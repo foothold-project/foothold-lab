@@ -48,6 +48,8 @@ parser.add_argument("--n21-point", choices=("parent_e0", "stage_end"), default=N
 parser.add_argument("--n21-approval", default=str(n21_dr_record.DEFAULT_APPROVAL), help="EX-42 DR approval file, fingerprinted in the receipt")
 eval_dr_mode.add_arguments(parser)
 parser.add_argument("--commands", default="all", help="명령 이름을 쉼표로(fwd0.5,fwd1.0,spin+1.2,spin-1.2). 기본 all = 넷. 짧은 확인 실행용")
+parser.add_argument("--map-transition-evidence", action="store_true", help="Record one map-on or within-episode outage cell with tilt, four-foot contact and falls")
+parser.add_argument("--map-transition-config", type=Path, help="Opt-in within-episode map outage JSON; use with --map-transition-evidence")
 parser.add_argument("--ex39-heading-smoke-guard", action="store_true", help="EX-39 Kit smoke: registry heading off and fixed command after every step")
 parser.add_argument("--axis-v2", action="store_true", help="W57 yaw, goal-stop and four-foot contact suite; separate from W15")
 parser.add_argument("--ex42-maintenance", action="store_true", help="W57 plus EX-42 foot-center XY speed for contact duty and drag recording")
@@ -73,6 +75,19 @@ AppLauncher.add_app_launcher_args(parser)
 args = parser.parse_args()
 friction_policy = ex42_friction.map_policy(args)
 kind_cell = args.ex42_kind_family is not None or args.ex42_kind_name is not None
+if args.map_transition_config and not args.map_transition_evidence:
+    parser.error("--map-transition-config needs --map-transition-evidence")
+if args.map_transition_evidence and (args.modes != "eval_pred" or args.commands != "fwd1.0"
+                                     or not args.fixed_terrain or args.dr_mode != "off"
+                                     or args.axis_v2 or args.terrain_skill or args.terrain_skill_v2 or args.push_ladder):
+    parser.error("map transition evidence needs eval_pred/fwd1.0, fixed terrain, DR off, and no other suite")
+transition_cfg = None
+if args.map_transition_config:
+    from foothold_s2.runners.ex42_map_transition import ENV_KEY, read_config
+    try:
+        transition_cfg = read_config({ENV_KEY: args.map_transition_config.read_text(encoding="utf-8")})
+    except (OSError, ValueError) as exc:
+        parser.error(f"map transition config: {exc}")
 if kind_cell and (not args.ex42_kind_family or not args.ex42_kind_name or not args.mesh_dir
                   or not args.fixed_terrain or args.fixed_level is None or args.envs not in (32, 64)
                   or args.terrain_set != "default" or args.axis_v2 or args.terrain_skill
@@ -316,7 +331,7 @@ def _run_identity():
 
 
 def _save_env_arrays(mode, cname, vx, fw, al, dn, dt, start_xy, row, map_err=None,
-                     kind_foot_arrays=None, vy=None, wz=None):
+                     kind_foot_arrays=None, vy=None, wz=None, transition_arrays=None):
     """X27j: env 별 기록 npz(env_arrays_<mode>_<cmd>.npz). 지형 종류 이름 · 열(terrain_types) · 레벨 행(terrain_levels) · 시작 위치 · 종료 사유 · 전진 거리 · 생존.
     종류 이름은 지형 생성기의 sub_terrain 비율과 열 수로 만든 열 -> 종류 표(columns.column_types)에서 계산한다(계산 근거는 map_modes.json 의 env_array_basis)."""
     terrain = raw.scene.terrain
@@ -377,6 +392,8 @@ def _save_env_arrays(mode, cname, vx, fw, al, dn, dt, start_xy, row, map_err=Non
         extra["vy"] = vy
     if wz is not None:
         extra["wz"] = wz
+    if transition_arrays is not None:
+        extra.update(transition_arrays)
     np.savez(os.path.join(args.out, "env_arrays_%s_%s.npz" % (mode, cname)), env=np.arange(len(col)), terrain_level=lev, terrain_col=col, kind=kind, start_xy=start_xy,
              fwd_end_m=fw[-1], body_vx_integral_m=dist, alive_end=al[-1], alive_steps=al.sum(0), first_done_step=first_done, end_reason=reason,
              vx=vx, alive=al, dones=dn, dt=dt, assignment_sha256=fixed_terrain.assignment_sha256(lev, col),
@@ -428,6 +445,17 @@ if parser_gait:
                                   "contact_thresholds": ["norm(net_forces_w) > 1 N", "net_forces_w[..., z] > 1 N"],
                                   "commands": list(WANT_CMDS)}
 kind_foot_ids = None
+transition_foot_ids = None
+if args.map_transition_evidence:
+    sensor = raw.scene.sensors["contact_forces"]
+    feet = ("FL_foot", "FR_foot", "RL_foot", "RR_foot")
+    if any(sensor.body_names.count(name) != 1 for name in feet):
+        raise RuntimeError("map transition evidence requires four uniquely named contact feet")
+    transition_foot_ids = [sensor.body_names.index(name) for name in feet]
+    res["map_transition_evidence"] = {
+        "schema": "ex42-map-transition-evidence/1", "config": transition_cfg.receipt() if transition_cfg else None,
+        "foot_order": list(feet), "contact_definition": "norm(net_forces_w) > 1 N",
+        "comparison": "same checkpoint, seed, terrain assignment and fixed command in separate runs"}
 if kind_cell:
     feet = ("FL_foot", "FR_foot", "RL_foot", "RR_foot")
     sensor = raw.scene.sensors["contact_forces"]
@@ -585,6 +613,10 @@ for mode in args.modes.split(","):
         map_mode_cells.disable_heading_for_fixed_eval(term)
         counts["gt"] = counts["total"] = 0
         policy = adapters.S2Policy(runner, env.num_envs, z_mode="mean", act_mode="mean", map_mode=None if mode == "none" else mode)
+        if transition_cfg is not None:
+            from foothold_s2.runners.ex42_map_transition import MapTransition
+            policy.map_transition = MapTransition(transition_cfg, env.num_envs, dev, dt, runner.perception.cfg.depth_tick)
+            policy.map_transition.reset(torch.ones(env.num_envs, dtype=torch.bool, device=dev), policy.base_map_off)
         obs = env.get_observations()                                                   # 덮어쓴 뒤 observation_manager.compute() 로 다시 계산한다: 첫 step 도 고정 명령을 받는다(vecenv_wrapper.get_observations)
         if checkpoint_preparation["checkpoint_pose_commands"]:
             ex41_eval_loader.verify_ex41_pose_observation(obs)
@@ -601,6 +633,11 @@ for mode in args.modes.split(","):
         DN = torch.zeros(S, env.num_envs, dtype=torch.bool, device=dev)
         FOOT_CONTACT = torch.zeros(S, env.num_envs, 4, dtype=torch.bool, device=dev) if kind_cell else None
         FOOT_POS = torch.zeros(S, env.num_envs, 4, 3, device=dev) if kind_cell else None
+        TRANS_CONTACT = torch.zeros(S, env.num_envs, 4, dtype=torch.bool, device=dev) if args.map_transition_evidence else None
+        TRANS_MAP_OFF = torch.zeros(S, env.num_envs, dtype=torch.bool, device=dev) if args.map_transition_evidence else None
+        TRANS_DEPTH_HOLD = torch.zeros(S, env.num_envs, dtype=torch.bool, device=dev) if args.map_transition_evidence else None
+        TRANS_FALL = torch.zeros(S, env.num_envs, dtype=torch.bool, device=dev) if args.map_transition_evidence else None
+        TRANS_TIMEOUT = torch.zeros(S, env.num_envs, dtype=torch.bool, device=dev) if args.map_transition_evidence else None
         GAIT_FORCE_XYZ = torch.zeros(S, env.num_envs, 4, 3, device=dev) if parser_gait else None
         GAIT_FOOT_POS_W = torch.zeros(S, env.num_envs, 4, 3, device=dev) if parser_gait else None
         GAIT_FOOT_QUAT_W = torch.zeros(S, env.num_envs, 4, 4, device=dev) if parser_gait else None
@@ -614,6 +651,9 @@ for mode in args.modes.split(","):
             dr_mode.step(raw, k)
             last_err["e"] = None
             a = policy(obs)
+            if args.map_transition_evidence:
+                TRANS_MAP_OFF[k] = policy.pstate.map_off
+                TRANS_DEPTH_HOLD[k] = policy.last_depth_hold
 
             if last_err["e"] is not None:
                 ERR[:, k] = torch.stack(last_err["e"])
@@ -635,6 +675,12 @@ for mode in args.modes.split(","):
             q = robot.data.root_quat_w
             YAW[k] = torch.atan2(2.0 * (q[:, 0] * q[:, 3] + q[:, 1] * q[:, 2]), 1.0 - 2.0 * (q[:, 2] ** 2 + q[:, 3] ** 2))
             DN[k] = dones.bool()
+            if args.map_transition_evidence:
+                TRANS_CONTACT[k] = sensor.data.net_forces_w[:, transition_foot_ids].norm(dim=-1) > 1.0
+                TRANS_FALL[k] = raw.reset_terminated
+                TRANS_TIMEOUT[k] = raw.reset_time_outs
+                if not torch.equal(dones.bool(), TRANS_FALL[k] | TRANS_TIMEOUT[k]):
+                    raise RuntimeError("map transition termination evidence differs from the wrapper dones")
             if parser_gait:
                 GAIT_FORCE_XYZ[k] = sensor.data.net_forces_w[:, gait_contact_foot_ids, :]
                 GAIT_FOOT_POS_W[k] = robot.data.body_pos_w[:, gait_contact_body_ids, :]
@@ -689,6 +735,10 @@ for mode in args.modes.split(","):
                    "body_abs_yaw_rate_radps_lt": map_mode_cells.STOP_YAW_RADPS,
                } if stationary is not None else None,
                "tilt_rad_mean_alive": float((tilt * al).sum() / max(al.sum(), 1)), "alive_envs_at_end": int(al[-1].sum()), "gt_used": counts["gt"], "policy_steps_x_envs": counts["total"]}
+        if args.map_transition_evidence:
+            row["map_transition"] = {"state": "on" if transition_cfg else "baseline",
+                                     "counts": policy.map_transition.take_counts() if transition_cfg else
+                                     {"off_starts": 0, "on_restores": 0, "held_depth_ticks": 0}}
         row.update(map_mode_cells.summarize(cmd, tiles, vx, vy, wz, al,
                                            alive.cpu().numpy(), dt,
                                            root_xy_start.cpu().numpy(), robot.data.root_pos_w[:, :2].cpu().numpy(),
@@ -730,7 +780,14 @@ for mode in args.modes.split(","):
         _save_env_arrays(mode, cname, vx, FW.cpu().numpy(), al, DN.cpu().numpy(), dt, START_XY0, row,
                          map_err=None if mode == "none" else ERR.cpu().numpy(),
                          kind_foot_arrays=(FOOT_CONTACT.cpu().numpy(), FOOT_POS.cpu().numpy())
-                         if kind_cell else None, vy=vy, wz=wz)  # EX-42 kind completion remains unjudged. vy, wz: v29-14c raw for the side-cell window MAE.
+                         if kind_cell else None, vy=vy, wz=wz,
+                         transition_arrays={"transition_tilt_rad": tilt,
+                                            "transition_foot_contact": TRANS_CONTACT.cpu().numpy(),
+                                            "transition_map_off": TRANS_MAP_OFF.cpu().numpy(),
+                                            "transition_depth_hold": TRANS_DEPTH_HOLD.cpu().numpy(),
+                                            "transition_fall": TRANS_FALL.cpu().numpy(),
+                                            "transition_timeout": TRANS_TIMEOUT.cpu().numpy()}
+                         if args.map_transition_evidence else None)  # EX-42 kind completion remains unjudged. vy, wz: v29-14c raw for the side-cell window MAE.
         if parser_sparse:                                                                # 새 키 · 새 파일만 더한다. 기존 키 · 기존 칸은 그대로
             from foothold_s2.eval import kind_stats
 

@@ -304,7 +304,15 @@ class StartRunner(OnPolicyRunner):
             self.env.num_envs, self.num_steps_per_env, device, getattr(torch, pcfg["depth_dtype"])
         ))
         self.map_switch_gen = make_generator(device, pcfg["map_switch_seed"]) if p_off > 0.0 else None
+        from foothold_s2.runners.ex42_map_transition import MapTransition, read_config as read_map_transition
+        transition_cfg = read_map_transition()
+        self.map_transition = (MapTransition(
+            transition_cfg, self.env.num_envs, device,
+            float(getattr(self.env, "unwrapped", self.env).step_dt), self.perception.cfg.depth_tick)
+            if transition_cfg is not None else None)
         self.map_switch = MapSwitchRecorder(self.env.num_envs, device) if p_off > 0.0 else None
+        if transition_cfg is not None:
+            print("EX42_MAP_TRANSITION " + json.dumps(transition_cfg.receipt(), sort_keys=True), flush=True)
 
         self.disable_logs = self.is_distributed and self.gpu_global_rank != 0
         self.log_dir = log_dir
@@ -797,6 +805,9 @@ class StartRunner(OnPolicyRunner):
         self.pstate = self.perception.init_state(n, self.device)
         self.pstate.use_gt = self.adasmpl.sample(n, self.device)
         self.pstate.map_off = self._restrict_map_off(draw_map_off(n, self.p_map_off, self.device, self.map_switch_gen), torch.ones(n, dtype=torch.bool, device=self.device))
+        if self.map_transition is not None:
+            self.map_transition.reset(torch.ones(n, dtype=torch.bool, device=self.device), self.pstate.map_off,
+                                      self._transition_eligible())
         print("EX33_MAP_SWITCH p_off=%s realized=%.4f envs=%d seed=%s" % (self.p_map_off, float(self.pstate.map_off.float().mean()), n, self.pcfg["map_switch_seed"]), flush=True)
         self._report_first_sources()
         ms_levels, ms_track = self._map_switch_probes() if self.map_switch is not None else (None, None)
@@ -924,7 +935,12 @@ class StartRunner(OnPolicyRunner):
             with torch.inference_mode():
                 for step_k in range(self.num_steps_per_env):
                     o, depth, gmap, gfeet, vel, _ = self._split(raw)
-                    inp = self.perception.ingest(self.pstate, o, depth)
+                    if self.map_transition is not None:
+                        self.pstate.map_off, depth_hold = self.map_transition.step(
+                            (self.pstate.steps_since_reset % self.perception.cfg.depth_tick) == 0)
+                        inp = self.perception.ingest(self.pstate, o, depth, depth_hold=depth_hold)
+                    else:
+                        inp = self.perception.ingest(self.pstate, o, depth)
                     if self.perception_ema is not None:                  # v28u: the actor gets est from the averaged perception weights
                         self.pstate_ema.use_gt, self.pstate_ema.map_off = self.pstate.use_gt, self.pstate.map_off
                         est = self.perception_ema.step(self.pstate_ema, inp, gmap)
@@ -1012,13 +1028,17 @@ class StartRunner(OnPolicyRunner):
                     done_ids = (dones > 0).nonzero(as_tuple=False).flatten()
                     if done_ids.numel():
                         self._off_episode_ended(done_ids, prev_xy)
-                        self.adasmpl.add(cur_reward_sum[done_ids][~self.pstate.map_off[done_ids].bool()])   # M-T2: 지도를 끈 에피소드의 보상은 CV(p_gt)에서 뺀다(reset_envs 가 map_off 를 새로 뽑기 전 값으로 분류)
+                        episode_off = (self.map_transition.base_off if self.map_transition is not None
+                                       else self.pstate.map_off)
+                        self.adasmpl.add(cur_reward_sum[done_ids][~episode_off[done_ids].bool()])   # M-T2: 에피소드 기본 끔만 CV에서 뺀다
                         rewbuffer.extend(cur_reward_sum[done_ids].cpu().tolist())
                         lenbuffer.extend(cur_episode_length[done_ids].cpu().tolist())
                         cur_reward_sum[done_ids] = 0
                         cur_episode_length[done_ids] = 0
                     self.perception.reset_envs(self.pstate, dones > 0, self.adasmpl.sample(n, self.device),
-                                               self._restrict_map_off(draw_map_off(n, self.p_map_off, self.device, self.map_switch_gen), dones > 0) if self.p_map_off > 0.0 else None)
+                                               self._next_reset_map_off(n, dones > 0))
+                    if self.map_transition is not None and done_ids.numel():
+                        self.map_transition.reset(dones > 0, self.pstate.map_off, self._transition_eligible())
                     if self.pstate_ema is not None:                       # a new episode starts both GRUs from zero (12 §6.1), the averaged one too
                         _m = dones > 0
                         self.pstate_ema.h_prop[_m] = 0
@@ -1130,6 +1150,8 @@ class StartRunner(OnPolicyRunner):
             loss_dict["adasmpl/gt_fraction"] = float(gt_steps) / self.num_steps_per_env
             if self.map_switch is not None:
                 self._map_switch_log(it, loss_dict)
+            if self.map_transition is not None:
+                print("EX42_MAP_TRANSITION_STEP it=%d %s" % (it, json.dumps(self.map_transition.take_counts(), sort_keys=True)), flush=True)
             learn_time = time.time() - start
             self.current_learning_iteration = it
             if continuous is not None:
@@ -1852,6 +1874,8 @@ class StartRunner(OnPolicyRunner):
             "ex41_w86_reward_weights": copy.deepcopy(effective.get("reward_weights")),
             "rng": self.rng_state(),
             "map_switch": self.map_switch_state(),
+            **({"map_transition": self.map_transition.state_dict()}
+               if getattr(self, "map_transition", None) is not None else {}),
             "infos": infos,
             "continuous_curriculum": (self.continuous_curriculum.state_dict()
                                       if getattr(self, "continuous_curriculum", None) is not None else None),
@@ -2011,6 +2035,31 @@ class StartRunner(OnPolicyRunner):
 
         return off & eligible
 
+    def _transition_eligible(self) -> torch.Tensor:
+        """Keep within-episode outages inside the existing M-T6 map-off terrain scope."""
+        names = self._off_column_names()
+        if names is None:
+            return torch.ones(self.env.num_envs, dtype=torch.bool, device=self.device)
+        terrain = self._off_terrain()
+        return eligible_map_off(terrain.terrain_types.to(self.device),
+                                terrain.terrain_levels.to(self.device), names)
+
+    def _next_reset_map_off(self, n: int, dones: torch.Tensor) -> torch.Tensor | None:
+        if self.p_map_off > 0.0:
+            return self._restrict_map_off(draw_map_off(n, self.p_map_off, self.device, self.map_switch_gen), dones)
+        # A transient outage must not become the permanent choice of the next episode.
+        if self.map_transition is not None:
+            return torch.zeros(n, dtype=torch.bool, device=self.device)
+        return None
+
+    def load_map_transition_state(self, saved: dict | None) -> None:
+        transition = getattr(self, "map_transition", None)
+        if transition is None:
+            if saved is not None:
+                raise ValueError("checkpoint used within-episode map transition but this runner has it off")
+        elif saved is not None:
+            transition.load_state_dict(saved)
+
     def _robot_xy_for_off(self):
         if self.p_map_off <= 0.0 or self._off_column_names() is None:
             return None
@@ -2026,7 +2075,9 @@ class StartRunner(OnPolicyRunner):
         origins = self._off_terrain().terrain_origins[..., :2].to(prev_xy.device)
         cols = nearest_tile_cols(prev_xy[done_ids], origins)
         on_sparse = torch.tensor([is_sparse_name(n) for n in names], dtype=torch.bool, device=cols.device)[cols]
-        self.off_elig.add_ended(self.pstate.map_off[done_ids].to(cols.device), on_sparse)
+        episode_off = (self.map_transition.base_off if self.map_transition is not None
+                       else self.pstate.map_off)
+        self.off_elig.add_ended(episode_off[done_ids].to(cols.device), on_sparse)
 
     def _flush_map_ratio_events(self) -> None:
         """사건 목록을 manifest(다음 저장 경계에 파일로) 와 map_ratio_events.jsonl 에 낸다. 여러 번 불러도 같은 줄을 두 번 쓰지 않는다."""
@@ -2082,6 +2133,7 @@ class StartRunner(OnPolicyRunner):
             self.perception_optimizer.load_state_dict(sd["perception_optimizer_state_dict"])
             self._pin_perception_lr("load")
         self.load_map_switch_state(sd.get("map_switch"), int(sd["iter"]))
+        self.load_map_transition_state(sd.get("map_transition"))
         self._load_env_state(sd["env_state"])
         self.set_rng_state(sd["rng"])
         self.current_learning_iteration = sd["iter"]
@@ -2166,6 +2218,7 @@ class StartRunner(OnPolicyRunner):
         self.perception_optimizer.load_state_dict(sd["perception_optimizer_state_dict"])
         self._pin_perception_lr("load_ex41_parent")
         self.load_map_switch_state(sd.get("map_switch"), int(sd["iter"]))
+        self.load_map_transition_state(sd.get("map_transition"))
         self.set_rng_state(sd["rng"])
         self.current_learning_iteration = int(sd["iter"])
         self.ex41_parent_transfer = {
@@ -2249,6 +2302,7 @@ class StartRunner(OnPolicyRunner):
         self.perception_optimizer.load_state_dict(checkpoint["perception_optimizer_state_dict"])
         self._pin_perception_lr("load_ex42_stage_zero_parent")
         self.load_map_switch_state(checkpoint["map_switch"], local_update)
+        self.load_map_transition_state(checkpoint.get("map_transition"))
         self.set_rng_state(checkpoint["rng"])
         use_gt_frac = checkpoint.get("last_use_gt_frac")
         if use_gt_frac is not None:

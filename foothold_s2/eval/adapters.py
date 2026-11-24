@@ -461,6 +461,9 @@ class S2Policy:
         gt = {"eval_gt": True, "eval_pred": False, "probe_prop_only": False}.get(self.map_mode, runner.perception.cfg.force_gt)
         self.pstate.use_gt = torch.full((n,), gt, dtype=torch.bool, device=runner.device)
         self.no_gt = self.pstate.use_gt.clone()  # reset 플래그. 외부 진단 도구와의 호환 이름.
+        self.map_transition = None
+        self.base_map_off = self.pstate.map_off.clone()
+        self.last_depth_hold = torch.zeros(n, dtype=torch.bool, device=runner.device)
 
     def __call__(self, obs):
         import torch
@@ -470,7 +473,14 @@ class S2Policy:
         with torch.inference_mode():
             raw = obs.to(r.device)
             o, depth, gmap, _gfeet, _vel, _con = r._split(raw)
-            inp = r.perception.ingest(self.pstate, o, depth)
+            if self.map_transition is not None:
+                self.pstate.map_off, depth_hold = self.map_transition.step(
+                    (self.pstate.steps_since_reset % r.perception.cfg.depth_tick) == 0)
+                self.last_depth_hold = depth_hold
+                inp = r.perception.ingest(self.pstate, o, depth, depth_hold=depth_hold)
+            else:
+                self.last_depth_hold.zero_()
+                inp = r.perception.ingest(self.pstate, o, depth)
             est = r.perception.step(self.pstate, inp, gmap, deterministic=(self.z_mode == "mean"))
             ppo_obs = r._ppo_obs(raw, est)                    # est mask(EX-11)는 runner 의 이 함수 안에 있어 학습 · 평가가 같은 자리를 쓴다
             self.last_est = est                               # 명령 반응 시험(diag_cmd_response)이 같은 est 를 다시 쓴다
@@ -484,7 +494,10 @@ class S2Policy:
         import torch
 
         with torch.inference_mode():                       # 상태 텐서가 inference 모드에서 만들어져 밖에서는 제자리 쓰기가 막힌다
-            self.runner.perception.reset_envs(self.pstate, dones > 0, self.no_gt)
+            self.runner.perception.reset_envs(self.pstate, dones > 0, self.no_gt,
+                                               self.base_map_off if self.map_transition is not None else None)
+            if self.map_transition is not None and bool((dones > 0).any()):
+                self.map_transition.reset(dones > 0, self.base_map_off)
 
     def act(self, obs):
         return self(obs)
