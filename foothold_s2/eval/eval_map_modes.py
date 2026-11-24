@@ -75,10 +75,11 @@ friction_policy = ex42_friction.map_policy(args)
 kind_cell = args.ex42_kind_family is not None or args.ex42_kind_name is not None
 if kind_cell and (not args.ex42_kind_family or not args.ex42_kind_name or not args.mesh_dir
                   or not args.fixed_terrain or args.fixed_level is None
-                  or (args.envs not in (32, 64) and not (args.envs == 8 and os.environ.get("ONNXREC_OUT")))
+                  or (args.envs not in (32, 64) and not (args.envs == 8 and os.environ.get("ONNXREC_OUT"))
+                      and not (args.envs == 128 and os.getenv("EX42_CBOX_TERM_DIAG") == "1"))
                   or args.terrain_set != "default" or args.axis_v2 or args.terrain_skill
                   or args.terrain_skill_v2 or args.push_ladder):
-    parser.error("EX-42 kind cell needs family, kind, mesh, fixed level and 32 or 64 env without other suites (8 only for ONNXREC_OUT)")
+    parser.error("EX-42 kind cell needs family, kind, mesh, fixed level and 32 or 64 env without other suites (8 for ONNXREC_OUT; 128 for EX42_CBOX_TERM_DIAG)")
 if args.mesh_dir and (args.terrain_set != "default" or args.push_ladder or args.terrain_skill
                       or args.terrain_skill_v2 or not args.fixed_terrain):
     parser.error("--mesh-dir needs fixed default terrain without other terrain suites")
@@ -317,7 +318,8 @@ def _run_identity():
 
 
 def _save_env_arrays(mode, cname, vx, fw, al, dn, dt, start_xy, row, map_err=None,
-                     kind_foot_arrays=None, vy=None, wz=None, termination_terms=None):
+                     kind_foot_arrays=None, vy=None, wz=None, termination_terms=None,
+                     termination_ground_diag=None):
     """X27j: env 별 기록 npz(env_arrays_<mode>_<cmd>.npz). 지형 종류 이름 · 열(terrain_types) · 레벨 행(terrain_levels) · 시작 위치 · 종료 사유 · 전진 거리 · 생존.
     종류 이름은 지형 생성기의 sub_terrain 비율과 열 수로 만든 열 -> 종류 표(columns.column_types)에서 계산한다(계산 근거는 map_modes.json 의 env_array_basis)."""
     terrain = raw.scene.terrain
@@ -349,6 +351,13 @@ def _save_env_arrays(mode, cname, vx, fw, al, dn, dt, start_xy, row, map_err=Non
         reason = np.asarray(["survived" if step < 0 else "+".join(
             name for name in names if termination_terms[name][step, env]) or "unclassified"
             for env, step in enumerate(first_done)], dtype="U80")
+    if termination_ground_diag is not None:
+        assert set(termination_ground_diag) == {
+            "foot_z_w_m", "nearest_ground_z_w_m", "nearest_hit_xy_distance_m",
+            "inside_scan", "root_z_w_m",
+        }
+        assert termination_ground_diag["foot_z_w_m"].shape == (args.steps, args.envs, 4)
+        extra.update({"termination_" + name: value for name, value in termination_ground_diag.items()})
 
     if map_err is not None:                                                            # X27m: 복원 지도 오차(cm). 지도 없는 체크포인트(G0)는 None 이라 키가 없다
         from foothold_s2.eval import map_error as _me
@@ -610,8 +619,21 @@ for mode in args.modes.split(","):
         POS = torch.zeros(S, env.num_envs, 3, device=dev)                              # 듬성 원자료: 칸 원점 기준 월드 위치 · yaw · 종료 여부
         YAW = torch.zeros(S, env.num_envs, device=dev)
         DN = torch.zeros(S, env.num_envs, dtype=torch.bool, device=dev)
-        TERM_NAMES = ("time_out", "bad_orientation", "foot_below_ground") if os.getenv("ONNX_TERM_REASON") == "1" else ()
+        CBOX_TERM_DIAG = os.getenv("EX42_CBOX_TERM_DIAG") == "1"
+        TERM_NAMES = ("time_out", "bad_orientation", "foot_below_ground") if (os.getenv("ONNX_TERM_REASON") == "1" or CBOX_TERM_DIAG) else ()
         TERM = {name: torch.zeros(S, env.num_envs, dtype=torch.bool, device=dev) for name in TERM_NAMES}
+        if CBOX_TERM_DIAG:
+            from foothold_s2.tasks import mdp_extra as _term_mdp
+
+            TERM_GROUND = {
+                "foot_z_w_m": torch.full((S, env.num_envs, 4), float("nan"), device=dev),
+                "nearest_ground_z_w_m": torch.full((S, env.num_envs, 4), float("nan"), device=dev),
+                "nearest_hit_xy_distance_m": torch.full((S, env.num_envs, 4), float("nan"), device=dev),
+                "inside_scan": torch.zeros(S, env.num_envs, 4, dtype=torch.bool, device=dev),
+                "root_z_w_m": torch.full((S, env.num_envs), float("nan"), device=dev),
+            }
+        else:
+            TERM_GROUND = None
         FOOT_CONTACT = torch.zeros(S, env.num_envs, 4, dtype=torch.bool, device=dev) if kind_cell else None
         FOOT_POS = torch.zeros(S, env.num_envs, 4, 3, device=dev) if kind_cell else None
         GAIT_FORCE_XYZ = torch.zeros(S, env.num_envs, 4, 3, device=dev) if parser_gait else None
@@ -631,9 +653,19 @@ for mode in args.modes.split(","):
             if last_err["e"] is not None:
                 ERR[:, k] = torch.stack(last_err["e"])
 
+            if CBOX_TERM_DIAG:
+                _term_mdp.LAST_CBOX_TERM_DIAG = None
             obs, _r, dones, _x = env.step(a)
             for name in TERM_NAMES:
                 TERM[name][k] = raw.termination_manager.get_term(name).bool()
+            if CBOX_TERM_DIAG:
+                snapshot = _term_mdp.LAST_CBOX_TERM_DIAG
+                if snapshot is None:
+                    raise RuntimeError("foot_below_ground callback did not record the pre-reset ground snapshot")
+                for name, value in TERM_GROUND.items():
+                    if snapshot[name].shape != value[k].shape:
+                        raise RuntimeError("foot ground snapshot shape differs from evaluator")
+                    value[k] = snapshot[name]
             map_mode_cells.assert_heading_off_for_fixed_eval(term)
             if args.ex39_heading_smoke_guard:
                 expected_command = torch.tensor(cmd, device=dev).expand(env.num_envs, 3)
@@ -746,7 +778,8 @@ for mode in args.modes.split(","):
                          map_err=None if mode == "none" else ERR.cpu().numpy(),
                          kind_foot_arrays=(FOOT_CONTACT.cpu().numpy(), FOOT_POS.cpu().numpy())
                          if kind_cell else None, vy=vy, wz=wz,
-                         termination_terms={name: value.cpu().numpy() for name, value in TERM.items()} if TERM else None)  # EX-42 kind completion remains unjudged. vy, wz: v29-14c raw for the side-cell window MAE.
+                         termination_terms={name: value.cpu().numpy() for name, value in TERM.items()} if TERM else None,
+                         termination_ground_diag={name: value.cpu().numpy() for name, value in TERM_GROUND.items()} if TERM_GROUND else None)  # EX-42 kind completion remains unjudged. vy, wz: v29-14c raw for the side-cell window MAE.
         if parser_sparse:                                                                # 새 키 · 새 파일만 더한다. 기존 키 · 기존 칸은 그대로
             from foothold_s2.eval import kind_stats
 

@@ -1,6 +1,13 @@
 """S1 env 가 쓰는 관측 · 종료 함수 (설치 Isaac Lab 에 없는 것). Kit 안에서만 불린다."""
 
+import os
+
 import torch
+
+
+# Diagnostic only. The termination callback runs before Isaac resets done envs;
+# the evaluator copies this snapshot immediately after env.step.
+LAST_CBOX_TERM_DIAG = None
 
 
 def foot_contact(env, sensor_cfg, threshold: float = 1.0):
@@ -28,6 +35,15 @@ def foot_below_ground(env, sensor_cfg, scanner_cfg, asset_cfg, margin: float = 0
     inside = dmin < 0.15
 
     below = ((feet[..., 2] < ground_z - margin) & inside).any(dim=1)
+    if os.getenv("EX42_CBOX_TERM_DIAG") == "1":
+        global LAST_CBOX_TERM_DIAG
+        LAST_CBOX_TERM_DIAG = {
+            "foot_z_w_m": feet[..., 2].detach().clone(),
+            "nearest_ground_z_w_m": ground_z.detach().clone(),
+            "nearest_hit_xy_distance_m": dmin.detach().clone(),
+            "inside_scan": inside.detach().clone(),
+            "root_z_w_m": asset.data.root_pos_w[:, 2].detach().clone(),
+        }
     if plane_columns:
         from foothold_s2.ex42_gap_switches import column_env_mask, feet_below_plane
 
