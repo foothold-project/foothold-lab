@@ -80,7 +80,7 @@ class MixedVelocityCommand(CommandTerm):
         count = cfg.flag_count
         self.flag_state = mc.FlagState.new(torch.zeros(len(self.flag_ids), count, 2, device=dev))
         self.bprime_turn_mask = torch.zeros(n, dtype=torch.bool, device=dev)
-        if cfg.bprime_turn_rad is not None:
+        if getattr(cfg, "bprime_turn_rad", None) is not None:
             from foothold_s2.commands.ex42_bprime import validate_turn_rad
             cfg.bprime_turn_rad = validate_turn_rad(cfg.bprime_turn_rad)
         self.exposure = mc.ExposureLog()
@@ -305,7 +305,7 @@ class MixedVelocityCommand(CommandTerm):
     def flag_bearing_obs(self) -> torch.Tensor:
         """B-prime first-flag input in full env order; nonflag rows are zero."""
         out = self.vel_command_b.new_zeros((self.num_envs, 3))
-        if self.cfg.bprime_turn_rad is None or len(self.flag_ids) == 0:
+        if getattr(self.cfg, "bprime_turn_rad", None) is None or len(self.flag_ids) == 0:
             return out
         from foothold_s2.commands.ex42_bprime import first_flag_bearing
         ids = self.flag_ids
@@ -420,12 +420,29 @@ class MixedVelocityCommand(CommandTerm):
         """Record only: (the running row's flag_turn_first_rad or None, share of flag-env steps since the last call that were on the turn-in-place branch, steps counted)."""
         frac = self._turn_sum / self._turn_cnt if self._turn_cnt else 0.0
         count = self._turn_cnt
-        self.flag_turn_last_detail = (self._flag_turn_first_scope(),
+        bprime = getattr(self.cfg, "bprime_turn_rad", None) is not None
+        self.flag_turn_last_detail = (("first" if bprime else self._flag_turn_first_scope()),
                                       self._turn_first_sum / self._turn_first_cnt if self._turn_first_cnt else 0.0, self._turn_first_cnt,
                                       self._turn_rest_sum / self._turn_rest_cnt if self._turn_rest_cnt else 0.0, self._turn_rest_cnt)
         self._turn_sum = self._turn_cnt = 0.0
         self._turn_first_sum = self._turn_first_cnt = self._turn_rest_sum = self._turn_rest_cnt = 0.0
-        return self._flag_turn_first_rad(), frac, count
+        return (self.cfg.bprime_turn_rad if bprime else self._flag_turn_first_rad()), frac, count
+
+    def _record_flag_turn_exposure(self, selected):
+        """Count the command branch that actually turned, including B-prime learned turns."""
+        from foothold_s2.commands.ex42_bprime import turn_exposure_counts
+        st = self.flag_state
+        if getattr(self.cfg, "bprime_turn_rad", None) is not None:
+            turning = self.bprime_turn_mask[self.flag_ids]
+        else:
+            turning = st.turning
+        counts = turn_exposure_counts(st.idx, turning, selected)
+        self._turn_sum += counts[0]
+        self._turn_cnt += counts[1]
+        self._turn_first_sum += counts[2]
+        self._turn_first_cnt += counts[3]
+        self._turn_rest_sum += counts[4]
+        self._turn_rest_cnt += counts[5]
 
     def slow_hold_summary(self):
         """Record only: (number of envs now holding a slow command, their mean time_left in s)."""
@@ -470,10 +487,10 @@ class MixedVelocityCommand(CommandTerm):
                 }
 
         if len(self.flag_ids) > 0:
-            self.flag_turn_first_rad = (None if self.cfg.bprime_turn_rad is not None
+            self.flag_turn_first_rad = (None if getattr(self.cfg, "bprime_turn_rad", None) is not None
                                         else self._flag_turn_first_rad())
             cmd = mc.flag_step(self.flag_state, pos[self.flag_ids], yaw[self.flag_ids], dt, self.params, self.flag_turn_first_rad, self._flag_turn_first_scope())
-            if self.cfg.bprime_turn_rad is not None:
+            if getattr(self.cfg, "bprime_turn_rad", None) is not None:
                 from foothold_s2.commands.ex42_bprime import command_for_learned_turn, first_flag_bearing
                 state = self.flag_state
                 bearing = first_flag_bearing(state.flags, state.idx, state.n_flags,
@@ -486,13 +503,7 @@ class MixedVelocityCommand(CommandTerm):
             st = self.flag_state
             spin_or_back = (st.v < self.params.flag_spin_threshold) | (st.backoff_left > 0)
             self.excluded_steps[self.flag_ids[sel]] += spin_or_back[sel].float()
-            self._turn_sum += float(st.turning[sel].sum().item())      # record only
-            self._turn_cnt += float(sel.sum().item())
-            first_flag = (st.idx == 0)[sel]                              # record only: the same split on the first flag and the later ones
-            self._turn_first_sum += float(st.turning_first[sel].sum().item())
-            self._turn_first_cnt += float(first_flag.sum().item())
-            self._turn_rest_sum += float((st.turning[sel] & ~first_flag).sum().item())
-            self._turn_rest_cnt += float((~first_flag).sum().item())
+            self._record_flag_turn_exposure(sel)
 
         self.ep_steps += 1.0
 

@@ -505,6 +505,9 @@ def load_s2_runner(env, train_cfg, checkpoint, device, expect=None, *, checkpoin
     pose_commands = sd.get("ex41_pose_commands", False)
     if not isinstance(pose_commands, bool):
         raise ValueError("checkpoint ex41_pose_commands must be bool")
+    bprime = sd.get("ex42_bprime", False)
+    if type(bprime) is not bool or (bprime and not pose_commands):
+        raise ValueError("B-prime evaluation checkpoint marker is invalid")
     saved = sd.get("perception_cfg") or {}
     pc = dict(train_cfg.get("perception", {}) or {})
     pc["map_input"] = saved.get("map_input", "none")
@@ -535,6 +538,15 @@ def load_s2_runner(env, train_cfg, checkpoint, device, expect=None, *, checkpoin
     # before gym.make.  StartRunner must also append those two columns to its
     # actor and critic inputs, matching the 98/666 checkpoint tensors.
     cfg["ex41_pose_commands"] = pose_commands
+    cfg["ex42_bprime"] = bprime
+    if bprime:
+        from foothold_s2.commands.ex42_bprime import validate_turn_rad
+        turn_rad = validate_turn_rad(sd.get("ex42_bprime_turn_rad", 0.25))
+        term_cfg = getattr(env, "unwrapped", env).command_manager.get_term("base_velocity").cfg
+        prepared_rad = getattr(term_cfg, "bprime_turn_rad", None)
+        if prepared_rad is None or float(prepared_rad) != turn_rad:
+            raise ValueError("B-prime evaluation command was not prepared before gym.make")
+        cfg["ex42_bprime_turn_rad"] = turn_rad
     runner = StartRunner(env, cfg, log_dir=None, device=device)
     runner.alg.policy.load_state_dict(sd["model_state_dict"])
     from foothold_s2.runners import perception_ema as pema

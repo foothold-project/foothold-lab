@@ -12,4 +12,6 @@ B′는 기존 EX-41 자세 명령 두 칸 뒤에 `[valid, unit_x_body, unit_y_b
 
 초기 이식은 기존 actor와 critic 첫 Linear의 마지막 세 열과 Adam moment를 0으로 둔다. 기존 열, 지각망, GRU, 나머지 PPO 값은 그대로 복사한다. 비영 관측에 대한 새 열은 학습을 거친 뒤에만 행동을 바꾼다. B′ 체크포인트가 생기기 전에는 부모 체크포인트를 B′ ONNX라고 표기할 수 없다.
 
-기존 `export_ex40_w89.py`의 9입력 그래프는 96차원 actor용이다. B′ 내보내기는 `pose_cmd2`와 `flag_bearing3`을 별도 입력으로 받아 `obs45 + perception51 + pose_cmd2 + flag_bearing3` 순서로 actor에 넣어야 한다. 지도 켬과 끔은 기존 그래프의 `use_gt`·지도 토큰 마스크 계약을 그대로 따른다. B′ 모델 선택 뒤 ONNX 원본 대비 행동과 GRU 상태를 검증할 때까지 이 문서는 입력 계약만 정한다.
+앱 전달 기준은 `/home/jay/data/foothold/onnx/mapmask_m1250e_1123/start_onnx.json`의 **한 파일 `start_step.onnx` + `map_mask` 입력** 계약이다. 기존 아홉 입력의 정확한 이름과 크기는 `o` [B,45], `hist` [B,10,45], `depth2` [B,2,60,60], `h_prop` [B,128], `h_terr` [B,128], `tick` [B,1], `first` [B,1], `pose` [B,2], `map_mask` [B,1]이며 모두 float32다. 마지막에 `flag_bearing3` [B,3] float32를 더한다. `pose` 기본값은 [0,0]이고, 깃발 방위가 없으면 `flag_bearing3`도 [0,0,0]이다. Actor 내부 순서는 `o45 + perception51 + pose2 + flag_bearing3`이다. `map_mask=0`은 지도 켬, `1`은 지도 토큰을 attention에서 가림이다. 카메라가 끊겨도 깊이를 0으로 채우지 않고 기존 깊이 이력을 유지한다. 출력 다섯(`action` [B,12], `h_prop_out` [B,128], `h_terr_out` [B,128], `refined_map` [B,32,16], `est` [B,51])은 그대로다.
+
+기존 EX-40의 `use_gt` 입력 두 파일 exporter는 이 계약이 아니다. B′ 모델 선택 뒤 새 한 파일 ONNX를 내보내고 원본 대비 행동과 GRU 상태를 검증할 때까지 이 문서는 입력 계약만 정한다.

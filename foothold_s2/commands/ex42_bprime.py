@@ -94,3 +94,13 @@ def heading_alignment_reward(bearing: torch.Tensor) -> torch.Tensor:
         raise ValueError("B-prime bearing needs N x 3")
     return torch.where(bearing[:, 0] == 1, (bearing[:, 1] + 1.0) * 0.5,
                        torch.zeros_like(bearing[:, 0]))
+
+
+def turn_exposure_counts(index: torch.Tensor, turning: torch.Tensor,
+                         selected: torch.Tensor) -> tuple[float, float, float, float, float, float]:
+    """Record-only turn counts, split by first versus later flag."""
+    first = (index == 0)[selected]
+    active = turning[selected]
+    return (float(active.sum().item()), float(selected.sum().item()),
+            float((active & first).sum().item()), float(first.sum().item()),
+            float((active & ~first).sum().item()), float((~first).sum().item()))

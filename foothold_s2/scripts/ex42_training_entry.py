@@ -1904,8 +1904,10 @@ def configure_ex42_stage_zero_train_cfg(train_cfg: dict[str, Any],
     cfg["perception"] = dict(saved_cfg)
     cfg["ex41_pose_commands"] = True
     from foothold_s2.commands.ex42_bprime import read_config as read_bprime_config
-    if read_bprime_config() is not None:
+    bprime_cfg = read_bprime_config()
+    if bprime_cfg is not None:
         cfg["ex42_bprime"] = True
+        cfg["ex42_bprime_turn_rad"] = bprime_cfg["turn_rad"]
     cfg["ex41_w86_required"] = True
     cfg["ex41_critic_mirror"] = False
     cfg["ex42_stage_zero_parent"] = {"path": str(Path(parent_path).resolve()),

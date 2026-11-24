@@ -14,6 +14,8 @@ from typing import Any
 POSE_COLUMNS = ("height_delta_m", "body_roll_rad")
 EX41_ACTOR_INPUTS = 98
 EX41_CRITIC_INPUTS = 666
+EX42_BPRIME_ACTOR_INPUTS = 101
+EX42_BPRIME_CRITIC_INPUTS = 669
 
 
 def prepare_ex41_env_cfg(env_cfg: Any) -> dict[str, Any]:
@@ -74,15 +76,29 @@ def load_checkpoint_for_eval(env_cfg: Any, checkpoint: str | Path) -> tuple[dict
     pose_flag = state.get("ex41_pose_commands", False)
     if not isinstance(pose_flag, bool):
         raise ValueError("checkpoint ex41_pose_commands must be bool")
+    bprime_flag = state.get("ex42_bprime", False)
+    if type(bprime_flag) is not bool or (bprime_flag and not pose_flag):
+        raise ValueError("B-prime checkpoint requires bool ex42_bprime and EX-41 pose columns")
     actor_inputs = _input_width(state, "actor.0.weight")
     critic_inputs = _input_width(state, "critic.0.weight")
     if pose_flag:
-        if actor_inputs != EX41_ACTOR_INPUTS or critic_inputs != EX41_CRITIC_INPUTS:
+        want_actor = EX42_BPRIME_ACTOR_INPUTS if bprime_flag else EX41_ACTOR_INPUTS
+        want_critic = EX42_BPRIME_CRITIC_INPUTS if bprime_flag else EX41_CRITIC_INPUTS
+        if actor_inputs != want_actor or critic_inputs != want_critic:
             raise ValueError(
-                "EX-41 pose checkpoint input widths differ: "
+                "EX-41/B-prime checkpoint input widths differ: "
                 f"actor={actor_inputs}, critic={critic_inputs}"
             )
         preparation = prepare_ex41_env_cfg(env_cfg)
+        if bprime_flag:
+            from foothold_s2.commands.ex42_bprime import validate_turn_rad
+            turn_rad = validate_turn_rad(state.get("ex42_bprime_turn_rad", 0.25))
+            command = env_cfg.commands.base_velocity
+            old = getattr(command, "bprime_turn_rad", None)
+            if old is not None and float(old) != turn_rad:
+                raise ValueError("B-prime evaluation command threshold differs from checkpoint")
+            command.bprime_turn_rad = turn_rad
+            preparation["bprime_turn_rad"] = turn_rad
     else:
         if actor_inputs == EX41_ACTOR_INPUTS or critic_inputs == EX41_CRITIC_INPUTS:
             raise ValueError(
@@ -97,6 +113,7 @@ def load_checkpoint_for_eval(env_cfg: Any, checkpoint: str | Path) -> tuple[dict
     preparation.update({
         "checkpoint": str(path.resolve()),
         "checkpoint_pose_commands": pose_flag,
+        "checkpoint_bprime": bprime_flag,
         "actor_input_width": actor_inputs,
         "critic_input_width": critic_inputs,
     })

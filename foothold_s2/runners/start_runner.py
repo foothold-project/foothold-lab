@@ -228,6 +228,8 @@ class StartRunner(OnPolicyRunner):
         self.ex42_bprime = train_cfg.get("ex42_bprime", False)
         if type(self.ex42_bprime) is not bool or (self.ex42_bprime and not self.ex41_pose_commands):
             raise ValueError("ex42_bprime requires EX-41 pose commands and a bool setting")
+        from foothold_s2.commands.ex42_bprime import validate_turn_rad
+        self.ex42_bprime_turn_rad = validate_turn_rad(train_cfg.get("ex42_bprime_turn_rad", 0.25)) if self.ex42_bprime else None
         self.ex41_w86_required = train_cfg.get("ex41_w86_required", False)
         if not isinstance(self.ex41_w86_required, bool) or (self.ex41_w86_required and not self.ex41_pose_commands):
             raise ValueError("ex41_w86_required needs EX-41 pose commands and a bool setting")
@@ -1841,6 +1843,7 @@ class StartRunner(OnPolicyRunner):
             "format": CKPT_FORMAT,
             "ex41_pose_commands": self.ex41_pose_commands,
             **({"ex42_bprime": True} if self.ex42_bprime else {}),
+            **({"ex42_bprime_turn_rad": self.ex42_bprime_turn_rad} if self.ex42_bprime else {}),
             "ex41_critic_mirror": self.ex41_critic_mirror,
             "ex41_mirror_approval": self.ex41_mirror_approval,
             "ex41_mirror_hold_reason": self.ex41_mirror_hold_reason,
@@ -2084,6 +2087,8 @@ class StartRunner(OnPolicyRunner):
             raise ValueError("EX-41 pose/mirror settings differ from the checkpoint; use explicit parent transplant for EX-40")
         if bool(sd.get("ex42_bprime", False)) != self.ex42_bprime:
             raise ValueError("B-prime observation contract differs from the checkpoint; use explicit parent transplant")
+        if self.ex42_bprime and float(sd.get("ex42_bprime_turn_rad", 0.25)) != self.ex42_bprime_turn_rad:
+            raise ValueError("B-prime first-flag turn threshold differs from the checkpoint")
         saved = sd.get("perception_cfg") or {}
         for key, default in MODE_DEFAULTS.items():
             if saved.get(key, default) != self.pcfg[key]:

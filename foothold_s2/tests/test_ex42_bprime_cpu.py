@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 from types import SimpleNamespace
+from pathlib import Path
+import sys
 
 import pytest
 import torch
@@ -12,6 +14,9 @@ from foothold_s2.commands import ex42_bprime as bp
 from foothold_s2.runners.ex42_bprime_transfer import optimizer_state, policy_state
 from foothold_s2.runners.ex41_critic_mirror import mirror_critic
 from foothold_s2.runners.start_runner import StartRunner
+from foothold_s2.eval.adapters import S2Policy, load_s2_runner
+from foothold_s2.eval.ex41_eval_loader import load_checkpoint_for_eval
+from foothold_s2.tests.start_fake_env import FakeStartEnv, train_cfg
 
 
 def test_bearing_first_flag_and_command_turn_without_scripted_wz():
@@ -40,6 +45,33 @@ def test_bprime_default_off_and_explicit_threshold():
         bp.read_config({"EX42_BPRIME_TURN_RAD": "0.25"})
     with pytest.raises(ValueError):
         bp.read_config({"EX42_BPRIME": "1", "EX42_BPRIME_TURN_RAD": "0.025"})
+
+
+def test_bprime_turn_exposure_counts_the_learned_branch_not_the_scripted_branch():
+    index = torch.tensor([0, 0, 1, 0])
+    selected = torch.ones(4, dtype=torch.bool)
+    # The scripted mask is all false, but the learned B-prime branch turned twice.
+    assert bp.turn_exposure_counts(index, torch.tensor([True, False, False, True]), selected) == (
+        2.0, 4.0, 2.0, 3.0, 0.0, 1.0)
+    assert bp.turn_exposure_counts(index, torch.tensor([False, False, True, False]), selected) == (
+        1.0, 4.0, 0.0, 3.0, 1.0, 1.0)
+
+
+def test_real_command_term_reports_bprime_turn_exposure(monkeypatch):
+    from foothold_s2.tests.test_ex42_flag_command_contract_cpu import e1f_term
+
+    term, _, _ = e1f_term(monkeypatch, {}, n=64)
+    term.cfg.bprime_turn_rad = 0.25
+    term.flag_state.idx[:4] = torch.tensor([0, 0, 1, 1])
+    term.flag_state.turning = torch.zeros(64, dtype=torch.bool)
+    term.flag_state.turning_first = torch.zeros(64, dtype=torch.bool)
+    term.bprime_turn_mask.zero_()
+    term.bprime_turn_mask[0] = True
+    selected = torch.zeros(64, dtype=torch.bool)
+    selected[:4] = True
+    term._record_flag_turn_exposure(selected)
+    assert term.flag_turn_summary() == (0.25, 0.25, 4.0)
+    assert term.flag_turn_last_detail == ("first", 0.5, 2.0, 0.0, 2.0)
 
 
 def test_ppo_observation_appends_only_three_bearing_columns():
@@ -116,3 +148,65 @@ def test_mirror_of_new_critic_bearing_is_an_involution():
     y = mirror_critic(x)
     assert torch.equal(y[:, -3:], x[:, -3:] * torch.tensor([1., 1., -1.]))
     assert torch.equal(mirror_critic(y), x)
+
+
+def test_real_eval_entry_loads_one_update_bprime_checkpoint(tmp_path: Path, monkeypatch):
+    """The production evaluation entry must build 101/669 before loading weights."""
+    class Env(FakeStartEnv):
+        def __init__(self):
+            super().__init__(num_envs=4)
+            self._obs["pose_cmd"] = torch.zeros(4, 2)
+            term = SimpleNamespace(cfg=SimpleNamespace(bprime_turn_rad=0.25),
+                                   flag_bearing_obs=lambda: torch.zeros(4, 3))
+            self.command_manager = SimpleNamespace(get_term=lambda _name: term)
+
+    cfg = train_cfg(2, perception={"microbatch_envs": 4, "map_input": "reconstruction"})
+    cfg.update(ex41_pose_commands=True, ex42_bprime=True, ex42_bprime_turn_rad=0.25)
+    original = StartRunner(Env(), cfg, device="cpu")
+    # One CPU optimizer update creates a real saved B-prime learner state.
+    original.alg.optimizer.zero_grad(set_to_none=True)
+    original.alg.policy.actor(torch.randn(4, 101)).square().mean().backward()
+    original.alg.optimizer.step()
+    original.current_learning_iteration = 1
+    saved = original.state_dict()
+    loaded, state = load_s2_runner(Env(), train_cfg(2), str(tmp_path / "model_1.pt"),
+                                   "cpu", checkpoint_state=saved)
+    assert state["ex42_bprime"] is True
+    assert loaded.ex42_bprime and loaded.alg.policy.actor[0].in_features == 101
+    assert loaded.alg.policy.critic[0].in_features == 669
+    assert all(torch.equal(value, loaded.alg.policy.state_dict()[key])
+               for key, value in saved["model_state_dict"].items())
+    eval_action = S2Policy(loaded, 4, z_mode="mean", act_mode="mean", map_mode="eval_pred")(
+        loaded.env.get_observations())
+    assert eval_action.shape == (4, 12) and torch.isfinite(eval_action).all()
+
+    # The before-gym.make loader prepares the actual command term's threshold.
+    def zero_pose_command(_env):
+        return None
+    def apply(cfg):
+        cfg.observations.pose_cmd = SimpleNamespace(
+            pose_cmd=SimpleNamespace(func=zero_pose_command),
+            enable_corruption=False, concatenate_terms=True)
+    monkeypatch.setitem(sys.modules, "foothold_s2.sensors.start_obs", SimpleNamespace(
+        zero_pose_command=zero_pose_command, apply_ex41_pose_observation=apply))
+    env_cfg = SimpleNamespace(observations=SimpleNamespace(),
+                              commands=SimpleNamespace(base_velocity=SimpleNamespace(bprime_turn_rad=None)))
+    path = tmp_path / "model_1.pt"
+    torch.save(saved, path)
+    _, receipt = load_checkpoint_for_eval(env_cfg, path)
+    assert receipt["checkpoint_bprime"] is True
+    assert receipt["actor_input_width"] == 101 and receipt["critic_input_width"] == 669
+    assert env_cfg.commands.base_velocity.bprime_turn_rad == 0.25
+
+
+def test_eval_entry_rejects_bprime_width_or_term_mismatch(tmp_path: Path, monkeypatch):
+    from foothold_s2.eval.ex41_eval_loader import load_checkpoint_for_eval
+    checkpoint = {"ex41_pose_commands": True, "ex42_bprime": True,
+                  "model_state_dict": {"actor.0.weight": torch.zeros(512, 98),
+                                       "critic.0.weight": torch.zeros(512, 666)}}
+    path = tmp_path / "wrong.pt"
+    torch.save(checkpoint, path)
+    cfg = SimpleNamespace(observations=SimpleNamespace(),
+                          commands=SimpleNamespace(base_velocity=SimpleNamespace(bprime_turn_rad=None)))
+    with pytest.raises(ValueError, match="input widths differ"):
+        load_checkpoint_for_eval(cfg, path)
