@@ -538,7 +538,7 @@
  "verification": {
   "ort_web": "see parity.json ort_web",
   "speed_goal_resent_1m_mps": 1.125903606414795,
-  "void_depth_0p7": "see parity.json void_depth_0p7"
+  "void_depth_0p7": "see parity.json void_depth"
  },
  "artifacts": [
   {
