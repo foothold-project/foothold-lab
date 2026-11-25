@@ -1077,6 +1077,8 @@ def main(env_cfg, agent_cfg):
         _ex42_lowspeed_gait.register(env_cfg)    # F1 · F2 base (lead 11/25 21:04): EX42_LOWSPEED_GAIT, off by default
         from foothold_s2.rewards import ex42_classic_target as _ex42_classic_target
         _ex42_classic_target.register(env_cfg)   # lead 11/26 00:26: EX42_CLASSIC_TARGET (Classic hip range · pitch · step rate), off by default
+        from foothold_s2.rewards import ex42_amp_style as _ex42_amp_style
+        _ex42_amp_style.register(env_cfg)        # lead 11/26 02:05 (team lead main branch): EX42_AMP style reward (real Go2 reference), off by default
         from foothold_s2.curriculum import ex42_front_load_dr as _ex42_front_load_dr
         _ex42_front_load_dr.register(env_cfg)    # F1 (lead 11/25 20:23): EX42_FRONT_LOAD_DR, off by default (after the EX-40 DR events)
         if EX42_STAGE_ZERO_PLAN is not None:

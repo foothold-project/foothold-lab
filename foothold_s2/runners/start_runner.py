@@ -212,6 +212,12 @@ def resumed_loop_start(current_learning_iteration: int, resumed: bool, runtime) 
     return current_learning_iteration
 
 
+def _amp_checkpoint_entry() -> dict:
+    from foothold_s2.rewards import ex42_amp_style as _amp
+
+    return _amp.checkpoint_entry()
+
+
 class StartRunner(OnPolicyRunner):
     def __init__(self, env, train_cfg: dict, log_dir: str | None = None, device: str = "cpu") -> None:
         # 설치 __init__ 은 env 관측 묶음으로 obs_groups 를 풀고 정책을 만든다. 우리는 정책이 지각 뒤 입력을 받으므로
@@ -1953,6 +1959,7 @@ class StartRunner(OnPolicyRunner):
             "ppo_learning_rate": self.alg.learning_rate,  # adaptive 학습률은 optimizer 밖 속성에도 있다
             "perception_state_dict": perception_state,
             **({"perception_ema": self.perception_wema.save_state()} if getattr(self, "perception_wema", None) is not None else {}),   # v28u: only when the average is on
+            **_amp_checkpoint_entry(),   # EX42_AMP (lead 11/26 02:05): the discriminator under its own key amp_disc, only when it exists
             "perception_optimizer_state_dict": self.perception_optimizer.state_dict(),
             "perception_cfg": dict(self.pcfg),
             "adasmpl": self.adasmpl.state_dict(),
@@ -2220,6 +2227,8 @@ class StartRunner(OnPolicyRunner):
         self.alg.policy.load_state_dict(sd["model_state_dict"])
         self.perception.load_state_dict(sd["perception_state_dict"])
         self._saved_perception_ema = sd.get("perception_ema")           # v28u: continued by learn() when the average is on, ignored otherwise
+        from foothold_s2.rewards import ex42_amp_style as _amp
+        _amp.load_checkpoint_entry(sd.get("amp_disc"))                   # EX42_AMP resume: the saved discriminator (none in a parent without AMP)
         self.adasmpl.load_state_dict(sd["adasmpl"])
         self._apply_resume_adasmpl()
         if load_optimizer:
