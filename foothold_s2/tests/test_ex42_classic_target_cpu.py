@@ -176,3 +176,71 @@ def test_straight_mask_side_and_turn_rows_not_scored_for_hip():
     v = ct.hip_value(done, rng, 0.06)
     assert v[2] == 0 and v[3] == 0 and v[4] == 0
     assert float(v[0]) == pytest.approx(2 * (0.45 - 0.06) ** 2)
+
+
+def test_gk3_params_default_off_and_validated(monkeypatch):
+    _env(monkeypatch)
+    p = ct.params()
+    assert p["hip_target_wz_slope"] == 0.0 and p["flatlike_only"] == 0.0
+    for bad in ("flatlike_only=2", "hip_target_wz_slope=-0.1", "hip_target_wz_slope=2"):
+        _env(monkeypatch, params=bad)
+        with pytest.raises(ValueError):
+            ct.params()
+
+
+def test_hip_target_grows_with_turn_command():
+    cmd = torch.tensor([[0.3, 0.0, 0.0], [0.3, 0.0, 0.2], [0.3, 0.0, -0.3]])
+    tgt = ct.hip_target_rows(cmd, 0.06, 0.15)
+    assert tgt.tolist() == pytest.approx([0.06, 0.09, 0.105])
+    done = torch.tensor([[True, False, False, False]] * 3)
+    rng = torch.full((3, 4), 0.10)
+    got = ct.hip_value(done, rng, tgt).tolist()
+    assert got == pytest.approx([0.04 ** 2, 0.01 ** 2, 0.0])
+    # scalar target still works (Gk2 path)
+    assert ct.hip_value(done, rng, 0.06).tolist() == pytest.approx([0.04 ** 2] * 3)
+
+
+def test_flatlike_columns_keep_rough_and_slopes_only():
+    table = [{"family": "A", "kind": k} for k in ("pyramid_stairs", "pyramid_stairs_inv", "boxes", "random_rough", "hf_pyramid_slope",
+                                                    "hf_pyramid_slope_inv", "stage_stairs", "balance_beams", "flat")]
+    table.append({"family": "C", "kind": "flat"})
+    assert ct.flatlike_columns(table).tolist() == [False, False, False, True, True, True, False, False, True, False]
+
+
+def test_mask_flatlike_only_and_band(monkeypatch):
+    import sys
+    from types import SimpleNamespace as NS
+    table = [{"family": "A", "kind": "pyramid_stairs"}, {"family": "A", "kind": "random_rough"}, {"family": "A", "kind": "balance_beams"}]
+    cmd = torch.tensor([[0.3, 0.0, 0.0]] * 4)
+    term = NS(stand=torch.zeros(4, dtype=torch.bool))
+    env = NS(command_manager=NS(get_term=lambda n: term, get_command=lambda n: cmd),
+             scene=NS(terrain=NS(terrain_levels=torch.tensor([0, 0, 3, 4]), terrain_types=torch.tensor([0, 1, 1, 2]))),
+             _ex42_column_table=table)
+    fake = NS(sparse_envs=lambda e: torch.tensor([False, False, False, True]))
+    monkeypatch.setitem(sys.modules, "foothold_s2.rewards.ex42_hip_sparse", fake)
+    p = dict(ct.DEFAULTS, band_max_level=3.0)
+    assert ct._mask(env, "base_velocity", p)[0].tolist() == [True, True, True, False]
+    p["flatlike_only"] = 1.0
+    assert ct._mask(env, "base_velocity", p)[0].tolist() == [False, True, True, False]
+
+
+def test_monitor_reports_row_shares_and_in_row_reward(monkeypatch, capsys):
+    _env(monkeypatch, params="w_hip=-200,w_freq=-100,w_pitch=0")
+    ct._SUMS.clear()
+    raw = types.SimpleNamespace()
+    active = torch.tensor([True, True, False, False])
+    straight = torch.tensor([True, False, False, False])
+    done = torch.tensor([[True, False, False, False], [False, True, False, False], [False] * 4, [False] * 4])
+    r = {"active": active, "straight": straight, "done": done, "hip_done": done & straight[:, None],
+         "cycle_s": torch.full((4, 4), 0.5), "hip_range": torch.full((4, 4), 0.16), "hip_target": torch.full((4,), 0.06),
+         "pitch_sq": torch.zeros(4)}
+    ct._monitor(raw, r, ct.params())
+    s = ct.summary()
+    assert s["mask_row_frac"] == 0.5 and s["straight_row_frac"] == 0.25 and s["straight_env_steps"] == 1
+    assert s["hip_value_per_straight_step"] == pytest.approx(0.01)            # (0.16 - 0.06)^2 on one straight row
+    assert s["hip_reward_per_s_in_rows"] == pytest.approx(-2.0)
+    f = (0.5 - 1 / 1.4) ** 2
+    assert s["freq_value_per_mask_step"] == pytest.approx(2 * f / 2, rel=1e-4)
+    assert s["freq_cycles"] == 2 and s["scored_cycles"] == 1
+    assert "mask_row_frac=0.5" in capsys.readouterr().out
+    ct._SUMS.clear()
