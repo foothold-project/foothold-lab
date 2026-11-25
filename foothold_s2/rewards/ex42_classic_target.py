@@ -213,7 +213,8 @@ def _update(env, asset_cfg, sensor_cfg, command_name, p):
     hip_done = done & straight[:, None]
     w = robot.data.root_ang_vel_b[:, 1]
     out = {"active": active, "straight": straight, "done": done, "hip_done": hip_done, "cycle_s": cycle_s, "hip_range": hip_range,
-           "hip_target": hip_target_rows(command, p["hip_target"], p["hip_target_wz_slope"]), "pitch_sq": w.square()}
+           "hip_target": hip_target_rows(command, p["hip_target"], p["hip_target_wz_slope"]), "pitch_sq": w.square(),
+           "cmd_xy": command[:, :2].norm(dim=-1)}
     raw._ex42_ct_cache = (step_id, out)
     _monitor(raw, out, p)
     return out
@@ -234,13 +235,39 @@ def ex42_classic_step_freq(env, command_name, asset_cfg, sensor_cfg, p):
     return freq_value(r["done"], r["cycle_s"], p["step_hz"])
 
 
+SPLIT_XY = 0.3                      # lead 02:07 (planner): |cmd_xy| < 0.3 rows (small-noise rows) apart from 0.3 .. v_max rows
+TRACK_TERMS = ("track_lin_vel", "track_ang_vel")
+
+
+def track_rows(raw) -> torch.Tensor | None:
+    """Per-env track_lin_vel + track_ang_vel reward of the current step (weight x value, per second; RewardManager._step_reward).
+    Terms computed before the Classic terms in the same step give this step's value, later ones the previous step's (monitor only)."""
+    rm = getattr(raw, "reward_manager", None)
+    names = list(getattr(rm, "active_terms", []) or [])
+    step = getattr(rm, "_step_reward", None)
+    if step is None or not all(n in names for n in TRACK_TERMS):
+        return None
+    return step[:, [names.index(n) for n in TRACK_TERMS]].sum(dim=1)
+
+
 def _monitor(raw, r, p):
     active, done = r["active"], r["done"]
+    hv = hip_value(r["hip_done"], r["hip_range"], r["hip_target"])
+    fv = freq_value(done, r["cycle_s"], p["step_hz"])
+    track = track_rows(raw)
+    for tag, rows in (("lo", active & (r["cmd_xy"] < SPLIT_XY)), ("hi", active & (r["cmd_xy"] >= SPLIT_XY))):
+        z = torch.zeros_like(hv)
+        _add(f"steps_{tag}", rows)
+        _add(f"straight_{tag}", rows & r["straight"])
+        _add(f"hip_value_{tag}", torch.where(rows, hv, z))
+        _add(f"freq_value_{tag}", torch.where(rows, fv, z))
+        if track is not None:
+            _add(f"track_{tag}", torch.where(rows.to(track.device), track, torch.zeros_like(track)))
     _add("env_steps", torch.ones_like(active, dtype=torch.float32))
     _add("active_steps", active)
     _add("straight_steps", r["straight"])
-    _add("hip_value_sum", hip_value(r["hip_done"], r["hip_range"], r["hip_target"]))
-    _add("freq_value_sum", freq_value(done, r["cycle_s"], p["step_hz"]))
+    _add("hip_value_sum", hv)
+    _add("freq_value_sum", fv)
     _add("pitch_sq_sum", torch.where(active, r["pitch_sq"], torch.zeros_like(r["pitch_sq"])))
     ok = done & (r["cycle_s"] <= MAX_CYCLE_S)
     _add("cycles", ok.float())
@@ -315,4 +342,30 @@ def summary() -> dict | None:
             out["freq_reward_per_s_in_rows"] = round(p["w_freq"] * out["freq_value_per_mask_step"], 5) if steps else None
         except ValueError:
             pass
+        # lead 00:58 (2) / 02:07: cumulative sums (window = difference of two lines) and the two speed bins inside the mask
+        try:
+            p = params()
+        except ValueError:
+            p = None
+        out["cum_hip_value"] = round(float(s["hip_value_sum"]), 6)
+        out["cum_freq_value"] = round(float(s["freq_value_sum"]), 6)
+        track_known = "track_lo" in s
+        if track_known:
+            t = float(s["track_lo"]) + float(s["track_hi"])
+            out["cum_track_in_mask"] = round(t, 4)
+            out["track_per_s_in_mask"] = round(t / steps, 5) if steps else None
+        else:
+            out["cum_track_in_mask"] = None
+        for tag in ("lo", "hi"):
+            n, st = float(s[f"steps_{tag}"]), float(s[f"straight_{tag}"])
+            out[f"cum_steps_{tag}"], out[f"cum_straight_{tag}"] = int(n), int(st)
+            out[f"cum_hip_value_{tag}"] = round(float(s[f"hip_value_{tag}"]), 6)
+            out[f"cum_freq_value_{tag}"] = round(float(s[f"freq_value_{tag}"]), 6)
+            hip_ps = float(s[f"hip_value_{tag}"]) / st if st else None
+            freq_ps = float(s[f"freq_value_{tag}"]) / n if n else None
+            out[f"hip_reward_per_s_{tag}"] = round(p["w_hip"] * hip_ps, 5) if (p and hip_ps is not None) else None
+            out[f"freq_reward_per_s_{tag}"] = round(p["w_freq"] * freq_ps, 5) if (p and freq_ps is not None) else None
+            if track_known:
+                out[f"cum_track_{tag}"] = round(float(s[f"track_{tag}"]), 4)
+                out[f"track_per_s_{tag}"] = round(float(s[f"track_{tag}"]) / n, 5) if n else None
     return out

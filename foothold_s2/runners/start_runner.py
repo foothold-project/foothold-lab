@@ -477,6 +477,7 @@ class StartRunner(OnPolicyRunner):
 
         cfg = bcp.settings()
         if cfg is None:
+            print(f"{bcp.LOG} where=start off ({bcp.CKPT_ENV} and {bcp.BETA_ENV} unset)", flush=True)   # lead 02:07 Gk4: visible off
             return
         if not isinstance(alg, CriticMirrorPPO):
             raise ValueError("EX-42 BC prior needs the EX-41 critic-mirror update loop (CriticMirrorPPO, pose commands)")
@@ -569,14 +570,14 @@ class StartRunner(OnPolicyRunner):
         if not getattr(self, "_lowspeed_noise", False) or storage is None or storage.noise_scale_steps is None:
             return
         from foothold_s2.runners import ex41_critic_mirror as mirror
-        low = mirror.lowspeed_noise_mask(o[:, 6:8], mirror.SMALL_NOISE_LOWSPEED_CMD)
-        low_sigma = mirror.lowspeed_sigma_scale()
         if not getattr(self, "_low_sigma_started", False):
-            print("EX42_SMALL_NOISE_LOW_SIGMA where=start lowspeed_sigma=%g static_sigma=%g lowspeed_cmd=%g env=%s" % (
-                low_sigma, mirror.SMALL_NOISE_SIGMA_SCALE, mirror.SMALL_NOISE_LOWSPEED_CMD,
-                os.environ.get(mirror.LOWSPEED_SIGMA_ENV, "") or "unset"), flush=True)
+            print("EX42_SMALL_NOISE_LOW_SIGMA where=start lowspeed_sigma=%g stand_sigma=%g static_sigma=%g lowspeed_cmd=%g "
+                  "move_rows=low_speed_nonzero_cmd stand_rows=low_speed_zero_cmd env=%s stand_env=%s" % (
+                      mirror.lowspeed_sigma_scale(), mirror.stand_sigma_scale(), mirror.SMALL_NOISE_SIGMA_SCALE,
+                      mirror.SMALL_NOISE_LOWSPEED_CMD, os.environ.get(mirror.LOWSPEED_SIGMA_ENV, "") or "unset",
+                      os.environ.get(mirror.STAND_SIGMA_ENV, "") or "unset"), flush=True)
             self._low_sigma_started = True
-        scale = torch.where(low[:, None], torch.full_like(self._noise_static, low_sigma), self._noise_static)
+        scale, low, stand = mirror.lowspeed_scale(o[:, 6:9], mirror.SMALL_NOISE_LOWSPEED_CMD, self._noise_static)
         if window_s:
             if not getattr(self, "_stop_noise_started", False):
                 print(f"EX42_STOP_NOISE_WINDOW where=start window_s={window_s:g}", flush=True)
@@ -590,7 +591,7 @@ class StartRunner(OnPolicyRunner):
         storage.noise_scale_env = scale
         self.alg.policy.noise_scale = scale
         noisy = scale.flatten() < 1
-        counts = torch.stack([low.sum(), noisy.sum()]).to(torch.float64)
+        counts = torch.stack([low.sum(), noisy.sum(), stand.sum()]).to(torch.float64)
         self._noise_counts = counts if self._noise_counts is None else self._noise_counts + counts   # no host sync per step
         self._noise_steps += 1
         live = getattr(getattr(self, "continuous_curriculum", None), "live_metrics", None)
@@ -605,12 +606,13 @@ class StartRunner(OnPolicyRunner):
         stop_counts, self._stop_noise_counts = self._stop_noise_counts, None
         if not steps or counts is None:
             return {}
-        low, noisy = counts.tolist()
+        low, noisy, stand = counts.tolist()
         row = {"lowspeed_envs": low / steps, "small_noise_envs": noisy / steps, "num_envs": self.env.num_envs,
-               "lowspeed_cmd": mirror.SMALL_NOISE_LOWSPEED_CMD}
+               "lowspeed_cmd": mirror.SMALL_NOISE_LOWSPEED_CMD, "lowspeed_stand_envs": stand / steps}
         if not self.disable_logs:
-            print("EX42_SMALL_NOISE it=%d lowspeed_envs=%.1f small_noise_envs=%.1f of=%d threshold=%.2f" % (
-                it, row["lowspeed_envs"], row["small_noise_envs"], row["num_envs"], row["lowspeed_cmd"]), flush=True)
+            print("EX42_SMALL_NOISE it=%d lowspeed_envs=%.1f lowspeed_stand_envs=%.1f small_noise_envs=%.1f of=%d threshold=%.2f" % (
+                it, row["lowspeed_envs"], row["lowspeed_stand_envs"], row["small_noise_envs"], row["num_envs"], row["lowspeed_cmd"]),
+                flush=True)
         if stop_counts is not None:
             stop_envs, std_sum = stop_counts.tolist()
             row["stop_window_envs"] = stop_envs / steps

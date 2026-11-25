@@ -117,6 +117,42 @@ def small_noise_static_share() -> float:
     return SMALL_NOISE_REST_SHARE if SMALL_NOISE_LOWSPEED_CMD > 0 else SMALL_NOISE_ENV_SHARE
 
 
+STAND_SIGMA_ENV = "EX42_SMALL_NOISE_STAND_SIGMA"
+# lead 11/26 02:08 (Gk4, planner 02:08): EX42_SMALL_NOISE_LOW_SIGMA applies to the low-speed rows WITH a command (0 < |cmd| , the
+# vx vy wz triple not all zero, kl_probe.command_branch convention); the zero-command rows (stand, stop) of the low-speed mask take
+# EX42_SMALL_NOISE_STAND_SIGMA, unset or empty = SMALL_NOISE_SIGMA_SCALE. Both unset = the old single-scale rule (bit-identical).
+STAND_CMD_EPS = 1e-6
+
+
+def stand_sigma_scale() -> float:
+    raw = os.environ.get(STAND_SIGMA_ENV, "")
+    if raw == "":
+        return SMALL_NOISE_SIGMA_SCALE
+    try:
+        value = float(raw)
+    except ValueError:
+        raise ValueError(f"{STAND_SIGMA_ENV} must be a number in (0, 1) (got {raw!r})") from None
+    if not math.isfinite(value) or not 0.0 < value < 1.0:
+        raise ValueError(f"{STAND_SIGMA_ENV} must be a number in (0, 1) (got {raw!r})")
+    return value
+
+
+def zero_command_mask(cmd: torch.Tensor) -> torch.Tensor:
+    """[num_envs] bool: vx, vy and wz of the command are all zero (stand or stop)."""
+    return (cmd[..., :3].abs() <= STAND_CMD_EPS).all(dim=-1)
+
+
+def lowspeed_scale(cmd: torch.Tensor, threshold: float, static: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+    """Per-env action-std multiplier [num_envs, 1 or A]: low-speed rows with a command -> lowspeed_sigma_scale(), low-speed rows with a
+    zero command -> stand_sigma_scale(), the other rows -> static. Returns (scale, low mask, low-and-zero-command mask)."""
+    low = lowspeed_noise_mask(cmd[..., :2], threshold)
+    stand = low & zero_command_mask(cmd)
+    move_s, stand_s = lowspeed_sigma_scale(), stand_sigma_scale()
+    scale = torch.where(low[:, None], torch.where(stand[:, None], torch.full_like(static, stand_s), torch.full_like(static, move_s)),
+                        static)
+    return scale, low, stand
+
+
 def lowspeed_noise_mask(cmd_xy: torch.Tensor, threshold: float) -> torch.Tensor:
     """[num_envs] bool: the command speed (vx vy norm) is below the threshold (a standing command counts); threshold 0 selects none."""
     return cmd_xy.norm(dim=-1) < threshold

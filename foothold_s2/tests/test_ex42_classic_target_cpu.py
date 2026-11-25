@@ -233,7 +233,7 @@ def test_monitor_reports_row_shares_and_in_row_reward(monkeypatch, capsys):
     done = torch.tensor([[True, False, False, False], [False, True, False, False], [False] * 4, [False] * 4])
     r = {"active": active, "straight": straight, "done": done, "hip_done": done & straight[:, None],
          "cycle_s": torch.full((4, 4), 0.5), "hip_range": torch.full((4, 4), 0.16), "hip_target": torch.full((4,), 0.06),
-         "pitch_sq": torch.zeros(4)}
+         "pitch_sq": torch.zeros(4), "cmd_xy": torch.tensor([0.2, 0.4, 0.0, 0.0])}
     ct._monitor(raw, r, ct.params())
     s = ct.summary()
     assert s["mask_row_frac"] == 0.5 and s["straight_row_frac"] == 0.25 and s["straight_env_steps"] == 1
@@ -243,4 +243,38 @@ def test_monitor_reports_row_shares_and_in_row_reward(monkeypatch, capsys):
     assert s["freq_value_per_mask_step"] == pytest.approx(2 * f / 2, rel=1e-4)
     assert s["freq_cycles"] == 2 and s["scored_cycles"] == 1
     assert "mask_row_frac=0.5" in capsys.readouterr().out
+    ct._SUMS.clear()
+
+
+def test_monitor_splits_speed_bins_with_track_and_cumulative_sums(monkeypatch):
+    """lead 02:07 Gk4: |cmd_xy| < 0.3 rows apart from 0.3..0.5 rows, track_lin + track_ang inside the mask, cumulative sums."""
+    _env(monkeypatch, params="w_hip=-200,w_freq=-100,w_pitch=0")
+    ct._SUMS.clear()
+    rm = types.SimpleNamespace(active_terms=["track_lin_vel", "x", "track_ang_vel"],
+                               _step_reward=torch.tensor([[1.0, 9.0, 0.5], [2.0, 9.0, 0.25], [4.0, 9.0, 4.0], [3.0, 9.0, 3.0]]))
+    raw = types.SimpleNamespace(reward_manager=rm)
+    active = torch.tensor([True, True, False, True])
+    straight = torch.tensor([True, True, False, False])
+    done = torch.tensor([[True, False, False, False], [True, False, False, False], [False] * 4, [False, True, False, False]])
+    r = {"active": active, "straight": straight, "done": done, "hip_done": done & straight[:, None],
+         "cycle_s": torch.full((4, 4), 0.5), "hip_range": torch.tensor([[0.16] * 4, [0.26] * 4, [0.3] * 4, [0.3] * 4]),
+         "hip_target": torch.full((4,), 0.06), "pitch_sq": torch.zeros(4), "cmd_xy": torch.tensor([0.1, 0.45, 0.2, 0.0])}
+    p = ct.params()
+    ct._monitor(raw, r, p)
+    ct._monitor(raw, r, p)                 # two steps: cumulative sums double, per-step values stay
+    s = ct.summary()
+    f = (0.5 - 1 / 1.4) ** 2
+    assert (s["cum_steps_lo"], s["cum_steps_hi"], s["cum_straight_lo"], s["cum_straight_hi"]) == (4, 2, 2, 2)
+    assert s["cum_hip_value_lo"] == pytest.approx(2 * 0.01) and s["cum_hip_value_hi"] == pytest.approx(2 * 0.04)
+    assert s["hip_reward_per_s_lo"] == pytest.approx(-2.0) and s["hip_reward_per_s_hi"] == pytest.approx(-8.0)
+    assert s["cum_freq_value_lo"] == pytest.approx(4 * f, rel=1e-4) and s["cum_freq_value_hi"] == pytest.approx(2 * f, rel=1e-4)
+    assert s["freq_reward_per_s_lo"] == pytest.approx(-100 * f, rel=1e-4)
+    assert s["cum_track_lo"] == pytest.approx(2 * (1.5 + 6.0)) and s["cum_track_hi"] == pytest.approx(2 * 2.25)
+    assert s["track_per_s_lo"] == pytest.approx(3.75) and s["track_per_s_in_mask"] == pytest.approx((15 + 4.5) / 6)
+    assert s["cum_track_in_mask"] == pytest.approx(19.5)
+    assert s["cum_hip_value"] == pytest.approx(0.1) and s["cum_freq_value"] == pytest.approx(6 * f, rel=1e-4)
+    ct._SUMS.clear()
+    raw2 = types.SimpleNamespace()        # no reward manager: track keys say None, nothing else breaks
+    ct._monitor(raw2, r, p)
+    assert ct.summary()["cum_track_in_mask"] is None
     ct._SUMS.clear()
