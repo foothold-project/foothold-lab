@@ -249,6 +249,10 @@ class CommandShares:
         shape = ex42_stop_window_shape.summary()
         if shape is not None:
             doc['stop_window_shape'] = shape
+        from foothold_s2.rewards import ex42_stand_tilt_load
+        tilt_load = ex42_stand_tilt_load.summary()   # F1: stand tilt / load balance counts (only when switched on)
+        if tilt_load is not None:
+            doc['stand_tilt_load'] = tilt_load
         target = Path(folder)/f'command_shares_{iteration}_rank{rank}.json'
         if target.exists():
             # A process that died between this record and its save left the name behind; the run came back to the

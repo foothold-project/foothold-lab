@@ -336,7 +336,7 @@ def _run_identity():
 
 
 def _save_env_arrays(mode, cname, vx, fw, al, dn, dt, start_xy, row, map_err=None,
-                     kind_foot_arrays=None, vy=None, wz=None, transition_arrays=None):
+                     kind_foot_arrays=None, vy=None, wz=None, transition_arrays=None, foot_force_z=None):
     """X27j: env 별 기록 npz(env_arrays_<mode>_<cmd>.npz). 지형 종류 이름 · 열(terrain_types) · 레벨 행(terrain_levels) · 시작 위치 · 종료 사유 · 전진 거리 · 생존.
     종류 이름은 지형 생성기의 sub_terrain 비율과 열 수로 만든 열 -> 종류 표(columns.column_types)에서 계산한다(계산 근거는 map_modes.json 의 env_array_basis)."""
     terrain = raw.scene.terrain
@@ -399,6 +399,8 @@ def _save_env_arrays(mode, cname, vx, fw, al, dn, dt, start_xy, row, map_err=Non
         extra["wz"] = wz
     if transition_arrays is not None:
         extra.update(transition_arrays)
+    if foot_force_z is not None:   # lead 11/25 20:23: per-leg vertical contact force (FL FR RL RR, N) for the leg-difference cell
+        extra["foot_force_z_n"] = foot_force_z
     np.savez(os.path.join(args.out, "env_arrays_%s_%s.npz" % (mode, cname)), env=np.arange(len(col)), terrain_level=lev, terrain_col=col, kind=kind, start_xy=start_xy,
              fwd_end_m=fw[-1], body_vx_integral_m=dist, alive_end=al[-1], alive_steps=al.sum(0), first_done_step=first_done, end_reason=reason,
              vx=vx, alive=al, dones=dn, dt=dt, assignment_sha256=fixed_terrain.assignment_sha256(lev, col),
@@ -470,6 +472,17 @@ if kind_cell:
         raise RuntimeError("EX-42 kind cell requires four uniquely named robot and sensor feet")
     kind_foot_ids = ([robot.body_names.index(name) for name in feet],
                      [sensor.body_names.index(name) for name in feet])
+
+# lead 11/25 20:23: every cell keeps the per-leg vertical contact force (contact_forces net_forces_w z, N) in env_arrays
+fz_sensor = raw.scene.sensors.get("contact_forces") if hasattr(raw.scene.sensors, "get") else None
+fz_foot_ids = None
+if fz_sensor is not None:
+    _fz_feet = ("FL_foot", "FR_foot", "RL_foot", "RR_foot")
+    if all(fz_sensor.body_names.count(name) == 1 for name in _fz_feet):
+        fz_foot_ids = [fz_sensor.body_names.index(name) for name in _fz_feet]
+        res["foot_force_z"] = {"array": "foot_force_z_n [steps, envs, 4] in env_arrays_<mode>_<cmd>.npz",
+                               "foot_order": list(_fz_feet), "source": "contact_forces.data.net_forces_w[..., 2] (N)",
+                               "valid_mask": "use with alive / first_done_step like the other per-step arrays"}
 
 if args.push_ladder:
     from foothold_s2.eval.ex41_push_ladder import run_isaac_cell
@@ -640,6 +653,7 @@ for mode in args.modes.split(","):
         DN = torch.zeros(S, env.num_envs, dtype=torch.bool, device=dev)
         FOOT_CONTACT = torch.zeros(S, env.num_envs, 4, dtype=torch.bool, device=dev) if kind_cell else None
         FOOT_POS = torch.zeros(S, env.num_envs, 4, 3, device=dev) if kind_cell else None
+        FOOT_FZ = torch.zeros(S, env.num_envs, 4, device=dev) if fz_foot_ids is not None else None
         TRANS_CONTACT = torch.zeros(S, env.num_envs, 4, dtype=torch.bool, device=dev) if args.map_transition_evidence else None
         TRANS_MAP_OFF = torch.zeros(S, env.num_envs, dtype=torch.bool, device=dev) if args.map_transition_evidence else None
         TRANS_DEPTH_HOLD = torch.zeros(S, env.num_envs, dtype=torch.bool, device=dev) if args.map_transition_evidence else None
@@ -708,6 +722,8 @@ for mode in args.modes.split(","):
                 body_ids, sensor_ids = kind_foot_ids
                 FOOT_CONTACT[k] = sensor.data.net_forces_w[:, sensor_ids].norm(dim=-1) > 1.0
                 FOOT_POS[k] = robot.data.body_pos_w[:, body_ids] - raw.scene.env_origins[:, None, :]
+            if FOOT_FZ is not None:
+                FOOT_FZ[k] = fz_sensor.data.net_forces_w[:, fz_foot_ids, 2]
             VY[k] = robot.data.root_lin_vel_b[:, 1]
             WZ[k] = robot.data.root_ang_vel_b[:, 2]
             g = robot.data.projected_gravity_b
@@ -799,6 +815,7 @@ for mode in args.modes.split(","):
                          map_err=None if mode == "none" else ERR.cpu().numpy(),
                          kind_foot_arrays=(FOOT_CONTACT.cpu().numpy(), FOOT_POS.cpu().numpy())
                          if kind_cell else None, vy=vy, wz=wz,
+                         foot_force_z=FOOT_FZ.cpu().numpy() if FOOT_FZ is not None else None,
                          transition_arrays={**transition_initial, "transition_tilt_rad": tilt,
                                             "transition_foot_contact": TRANS_CONTACT.cpu().numpy(),
                                             "transition_map_off": TRANS_MAP_OFF.cpu().numpy(),

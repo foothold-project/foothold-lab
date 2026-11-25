@@ -34,6 +34,33 @@ def weight_from_env() -> float:
     return weight
 
 
+AUG_ENV = "EX42_ACTOR_MIRROR_AUG"
+
+
+def aug_from_env() -> bool:
+    """F2 (lead 2026-11-25 20:23): mirrored-sample augmentation of the PPO surrogate (Mittal et al. 2024 data augmentation,
+    rsl_rl symmetry `use_data_augmentation` form), a different path from the EX42_ACTOR_MIRROR_W loss. Off by default."""
+    raw = os.environ.get(AUG_ENV, "")
+    if raw not in ("", "0", "1"):
+        raise ValueError(f"{AUG_ENV} must be 0 or 1 (got {raw!r})")
+    return raw == "1"
+
+
+def mirrored_surrogate_rows(policy, observations, actions: torch.Tensor, old_logp: torch.Tensor,
+                            advantage: torch.Tensor, clip_param: float) -> tuple[torch.Tensor, torch.Tensor]:
+    """Per-row clipped surrogate (and ratio) of the mirrored sample: mirrored actor input, mirrored action, the original old log-prob and
+    advantage (the rsl_rl augmentation repeats both). Rows are the full minibatch so a per-row noise scale keeps its shape;
+    the caller selects the mask rows. Call after the original action_mean / std / entropy were read: this overwrites the
+    policy's distribution."""
+    mirrored = observations.clone()
+    mirrored["actor_in"] = mirror_actor_observation(observations["actor_in"])
+    policy.act(mirrored)
+    logp = policy.get_actions_log_prob(mirror_action(actions))
+    ratio = torch.exp(logp - old_logp.squeeze())
+    adv = advantage.squeeze()
+    return torch.maximum(-adv * ratio, -adv * ratio.clamp(1.0 - clip_param, 1.0 + clip_param)), ratio
+
+
 def flat_map_mask(gt_map: torch.Tensor) -> torch.Tensor:
     """Select rollout rows whose true 32x16 height range is below 2 cm."""
     if gt_map.shape[-2:] != (32, 16):

@@ -1071,6 +1071,10 @@ def main(env_cfg, agent_cfg):
         _ex42_stop_bundle.register(env_cfg)      # only with EX42_STOP_BUNDLE=1 (lead 2026-11-23): stop-slot penalties, four-foot delay
         from foothold_s2.rewards import ex42_stop_window_shape as _ex42_stop_window_shape
         _ex42_stop_window_shape.register(env_cfg, stage_id=EX42_STAGE_ID)  # optional E2 transition window
+        from foothold_s2.rewards import ex42_stand_tilt_load as _ex42_stand_tilt_load
+        _ex42_stand_tilt_load.register(env_cfg)  # F1 (lead 11/25 20:23): EX42_STAND_TILT · EX42_LOAD_BALANCE, off by default
+        from foothold_s2.curriculum import ex42_front_load_dr as _ex42_front_load_dr
+        _ex42_front_load_dr.register(env_cfg)    # F1 (lead 11/25 20:23): EX42_FRONT_LOAD_DR, off by default (after the EX-40 DR events)
         if EX42_STAGE_ZERO_PLAN is not None:
             _stage_row = next((row for row in EX42_STAGE_ZERO_PLAN.document["stages"]
                                if row["id"] == EX42_STAGE_ID), {})

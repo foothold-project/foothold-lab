@@ -151,6 +151,7 @@ class CriticMirrorPPO(PPO):
 
     mirror_enabled = False
     actor_mirror_weight = 0.0
+    actor_mirror_aug = False     # F2 EX42_ACTOR_MIRROR_AUG: mirrored samples join the surrogate (off = the same bytes as before)
     kl_audit = None
     # Per-sample KL cap for the adaptive learning rate only (PPO loss, ratio clip and the audited KL stay raw).
     # None restores the installed uncapped mean.
@@ -297,7 +298,7 @@ class CriticMirrorPPO(PPO):
         if not self.mirror_enabled:
             if self.bc_prior is not None:
                 raise ValueError("EX-42 BC prior needs the critic-mirror update loop (the installed PPO.update path has no place for it)")
-            if self.actor_mirror_weight:
+            if self.actor_mirror_weight or self.actor_mirror_aug:
                 raise ValueError("EX-42 actor mirror needs the critic-mirror update loop")
             safe_norm = self.normalize_advantage_per_mini_batch
             if safe_norm:
@@ -324,13 +325,15 @@ class CriticMirrorPPO(PPO):
         total_actor_mirror = 0.0
         actor_mirror_rows = actor_mirror_all_rows = 0
         mirror_grad_ratio_sum = mirror_grad_ratio_n = 0.0
+        mirror_select = bool(self.actor_mirror_weight or self.actor_mirror_aug)
+        total_aug, aug_rows, aug_all_rows, aug_ratio_dev = 0.0, 0, 0, 0.0
         ratio_sum, ratio_n = 0.0, 0
         measure_ratio = self.bc_prior is not None and self._bc_updates_seen < self.bc_ratio_updates
         self.storage.yield_skipped = self.is_multi_gpu
         batches = self.storage.mini_batch_generator(self.num_mini_batches, self.num_learning_epochs)
         for batch in batches:
             if batch is None:
-                if self.actor_mirror_weight and self.is_multi_gpu:
+                if mirror_select and self.is_multi_gpu:
                     # Match the extra selected-row count collective on every
                     # rank, including a rank whose valid minibatch is empty.
                     selected_global = torch.zeros((), device=self.device)
@@ -338,7 +341,7 @@ class CriticMirrorPPO(PPO):
                 self._exchange_empty_batch()
                 continue
             (obs, actions, old_value, advantage, returns, old_logp, old_mu, old_sigma, hidden, masks) = batch
-            if self.actor_mirror_weight:
+            if mirror_select:
                 selected = self.storage.batch_actor_mirror_mask
                 if selected is None:
                     raise ValueError("EX-42 actor mirror rollout mask was not stored")
@@ -383,6 +386,16 @@ class CriticMirrorPPO(PPO):
             ratio = torch.exp(logp - old_logp.squeeze())
             surrogate = torch.maximum(-advantage.squeeze() * ratio,
                                       -advantage.squeeze() * ratio.clamp(1.0 - self.clip_param, 1.0 + self.clip_param)).mean()
+            if self.actor_mirror_aug:
+                # concat-batch mean of the original rows and the mirrored mask rows (rsl_rl data augmentation form)
+                from foothold_s2.runners.ex42_actor_mirror import mirrored_surrogate_rows
+                aug_rows_value, aug_ratio = mirrored_surrogate_rows(self.policy, obs, actions, old_logp, advantage, self.clip_param)
+                aug_sum = torch.where(selected, aug_rows_value, torch.zeros_like(aug_rows_value)).sum()
+                surrogate = (surrogate * ratio.numel() + aug_sum) / (ratio.numel() + selected_n)
+                aug_rows += selected_n
+                aug_all_rows += selected.numel()
+                total_aug += float(aug_sum.detach())
+                aug_ratio_dev += float((aug_ratio.detach()[selected] - 1.0).abs().sum())
             original_value = value_loss(value, old_value, returns, self.clip_param, self.use_clipped_value_loss)
             mirrored = obs.clone()
             mirrored[CRITIC_KEY] = mirror_critic(obs[CRITIC_KEY])
@@ -469,6 +482,21 @@ class CriticMirrorPPO(PPO):
             if getattr(self, "gpu_global_rank", 0) == 0:
                 print(f"EX42_BC_PRIOR beta={self.bc_beta} loss={total_bc / max(bc_batches, 1):.6g} samples={total_bc_n} "
                       f"batches={bc_batches}{ratio}", flush=True)
+        if self.actor_mirror_aug:
+            if self.is_multi_gpu:
+                totals = torch.tensor((total_aug, aug_rows, aug_all_rows, aug_ratio_dev), dtype=torch.float64, device=self.device)
+                torch.distributed.all_reduce(totals)
+                total_aug, aug_rows, aug_all_rows, aug_ratio_dev = totals.tolist()
+            result["actor_mirror_aug_surrogate"] = total_aug / max(aug_rows, 1)
+            result["actor_mirror_aug_fraction"] = aug_rows / max(aug_all_rows, 1)
+            result["actor_mirror_aug_ratio_abs_dev"] = aug_ratio_dev / max(aug_rows, 1)
+            self._actor_mirror_aug_updates_seen = getattr(self, "_actor_mirror_aug_updates_seen", 0) + 1
+            if getattr(self, "gpu_global_rank", 0) == 0 and self._actor_mirror_aug_updates_seen <= 10:
+                print(f"EX42_ACTOR_MIRROR_AUG on update={self._actor_mirror_aug_updates_seen} rows={int(aug_rows)} "
+                      f"fraction={result['actor_mirror_aug_fraction']:.6g} surrogate_mirror={result['actor_mirror_aug_surrogate']:.6g} "
+                      f"ratio_abs_dev={result['actor_mirror_aug_ratio_abs_dev']:.6g}", flush=True)
+                if result["actor_mirror_aug_fraction"] < 0.05:
+                    print("EX42_ACTOR_MIRROR_AUG warning=mask_fraction_below_0.05", flush=True)
         if self.actor_mirror_weight:
             if self.is_multi_gpu:
                 totals = torch.tensor((total_actor_mirror, actor_mirror_rows, actor_mirror_all_rows,
