@@ -310,6 +310,19 @@
 - app-gen-claude (Opus · MCP) 가 app-gen-lx (Codex) 한도 동안 자산 담당 · 지시는 app-design-lx · 자산은 카테고리별 계획 먼저.
 - 팀원 전달은 팀장이 전체 틀 · 세부를 잡은 뒤.
 
+#### app-lx 답 (11/25 16:00 · Jetson 읽기만 확인 · 기록 탭 이벤트 클립 설계 근거)
+- 부팅 자동 실행 (Jetson 사용자 서비스): foothold-policy-cpp (START C++ 실행기 · 약 19 초 뒤 준비) · foothold-factory-record (순정 · START 관절 기록) · foothold-depth (D435i 상태 · 지금 USB 끊김) · foothold-link-health · foothold-boot-check.timer (부팅 3 분 뒤 점검) · fh-wifi-keepalive.timer. 앱 연결 프로그램 foothold-robot 은 자동 시작 꺼짐. 출처 app dev apps/agent/runner_cpp/systemd/.
+- 저절로 남는 기록: start-*.jsonl (50 Hz · 관절 · 토크 · 온도 · 리모컨 · 명령 · 배터리 · 이벤트 앉기 / 서기 / 넘어짐 · 파일당 50 MB) · factory-auto-*.jsonl (주기 미확인) · depth-health-*.jsonl (1 초) · link-health-*.jsonl (주기 미확인). 4 GB 면 기록 멈춤 · 2 GB 넘으면 ai-lx01 이 10 분마다 백업 후 Jetson archive 로 옮김 · 자동 삭제 없음 (출처 apps/agent/tools/trace_backup.py). **영상은 Jetson 에 저절로 남지 않음.**
+- 기종: Jetson Orin NX 16GB (하드웨어 영상 인코더 있음 · 실제 인코딩 미시험).
+- 실시간 영상: Go2 앞 카메라만 JPEG 로 서버에 감 (640×360 안 · 화질 75~10 · 고정 fps 없이 최신 한 장 · 실제 간격 미측정 · 출처 go2_direct/media.py). D435i RGB 는 서버 경로 없음. H.264 스트림 없음.
+
+**이벤트 클립 설계 제안 (app-design-lx · 팀장 확인 전)**
+1. 영상 클립은 **서버에서** 만든다. 서버가 로봇마다 받은 JPEG 를 최근 30 초 고리 버퍼로 들고 있다가, 이벤트가 오면 앞 10 초 · 뒤 10 초를 잘라 MP4 로 묶는다. Jetson 에 일을 더하지 않는다 (이미 보내는 영상만 씀).
+2. **장면 재현 클립**: 영상이 없거나 끊겨도 start-*.jsonl (50 Hz 관절 · 자세) 로 3D 로봇 모형의 그 순간 동작을 다시 그린다. 카메라 영상과 나란히 보여 주면 「무엇이 보였나 + 몸이 어떻게 움직였나」 를 함께 본다. 우리만 할 수 있는 기록.
+3. 네트워크가 끊긴 사이 이벤트: 영상은 없고 재현 클립만 (jsonl 백업 뒤 만듦). Jetson 쪽 저해상도 고리 버퍼 (Orin NX 인코더) 는 실기 부하를 잰 뒤 다음 단계 후보.
+4. 이벤트 기준 (단계별): 위험 = 넘어짐 · 뒤집힘 (자세 각 기준값 실측 필요) · STOP · 감쇠 (L2 + B) · 통신 끊김 (앱 명령 0.3 초 끊김 · 링크 이상) → 항상 클립. 주의 = 모드 전환 거부 (APP_MODE_IGNORED) · 배터리 · 온도 기준 넘음 · 카메라 끊김 → 클립 선택. 정보 = 모드 전환 · 임무 시작 / 끝 → 기록만. 그리고 사람이 누르는 「지금 표시」 단추.
+5. 시뮬 (예행) 도 같은 이벤트로 같은 클립 (시뮬 화면 녹화 + 재현).
+
 ## D. 아직 정하지 않은 것
 
 | 항목 | 상태 | 근거 |
