@@ -100,6 +100,7 @@ def test_amp_term_mask_ramp_buffer_and_training_in_inference_mode(monkeypatch, t
     assert set(ck) == {"amp_disc"} and "net.0.weight" in ck["amp_disc"]["disc"] and "pol_center" in ck["amp_disc"]
     out = capsys.readouterr().out
     assert "EX42_AMP_MON calls=1 " in out and "dead_frac=" in out and "D_pol_std=" in out and "pol_grav_x_walk=0.1000" in out
+    assert "walk_style_share=" in out and "still_style_share=" in out
     st._STATE.clear()
     st.load_checkpoint_entry(ck["amp_disc"])
     assert "pending" in st._STATE
@@ -126,6 +127,18 @@ def test_reference_classes_straight_and_centring(tmp_path):
     assert x0.shape == (297 + 198, 62) and float(c0.abs().sum()) == 0.0   # old form: all walk, 30 columns, no centring
 
 
+def test_rank_style_mean_is_half_whatever_the_discriminator_state():
+    from foothold_s2.rewards import ex42_amp_style as st
+    for d in (torch.tensor([-1.30, -1.10, -1.05, -1.00, -0.95]), torch.tensor([0.2, 0.5, 0.9, 1.1, 0.3]) * 5):
+        r = st.rank_style(d, 4.0)
+        assert abs(float(r.mean()) - 0.5) < 1e-6 and (r > 0).all() and (r < 1).all()
+        assert torch.equal(torch.argsort(r), torch.argsort(d))           # same order as D
+    r = st.rank_style(torch.tensor([0.0] * 9 + [10.0]), 4.0)          # one outlier (+2.8 sd): clipped at 1, the rest below 0.5
+    assert float(r[9]) == 1.0 and (r[:9] < 0.5).all()
+    assert st.rank_style(torch.tensor([0.3]), 4.0).tolist() == [0.5]
+    assert st.rank_style(torch.tensor([0.3, 0.3]), 4.0).tolist() == [0.5, 0.5]
+
+
 def test_relative_style_keeps_a_ranking_when_the_discriminator_wins():
     from foothold_s2.rewards import ex42_amp_style as st
     d = torch.tensor([-1.30, -1.10, -1.05, -1.00, -0.95])                 # all D <= -0.95: the clipped LSGAN form is ~0 everywhere
@@ -149,7 +162,9 @@ def test_amp_classes_and_off_switch(monkeypatch):
     from foothold_s2.rewards import ex42_amp_style as st
     cmd = torch.tensor([[0.0, 0.0, 0.0], [0.0, 0.0, 0.3], [0.2, 0.0, 0.0], [0.5, 0.3, 0.0], [-0.4, 0.05, 0.08]])
     walk, still = st.classes(cmd, st.params())
-    assert still.tolist() == [True, False, False, False, False] and walk.tolist() == [False, False, True, False, True]
+    assert still.tolist() == [True, False, False, False, False] and walk.tolist() == [False, True, True, False, True]   # wz 0.3 <= straight_wz 0.3
+    walk_tight, _ = st.classes(cmd, dict(st.DEFAULTS, straight_wz=0.1))
+    assert walk_tight.tolist() == [False, False, True, False, True]
     walk_all, _ = st.classes(cmd, dict(st.DEFAULTS, straight_only=0.0))
     assert walk_all.tolist() == [False, True, True, True, True]
     for k in (st.ENV_SWITCH, st.WEIGHT_ENV, st.REF_ENV, st.PARAMS_ENV):

@@ -12,7 +12,9 @@ stand). The reward is only added to the reward sum: observations, actions, actor
                    grav_z is dropped and q, grav_x, grav_y are minus the mean of the same condition on the same side (reference:
                    that class mean; policy: its own moving mean), so the discriminator sees the gait motion, not the posture
                    (lead 03:17 (2): the sim policy walks pitched, grav_x -0.116 vs +0.003, and grav_z normalised 21 x)
-    reward         rel_style=1: clip((D - lo) / (mean D_ref - lo), 0, 1), lo = mean - floor_sigma * sd of D over this step's policy
+    reward         rel_style=2 (default): clip(0.5 + (D - mean) / (rank_sigmas * sd), 0, 1) over this step's policy rows of that
+                   condition (rank_style; planner 03:27, lead 03:27: the batch mean stays 0.5, so W keeps its size);
+                   rel_style=1: clip((D - lo) / (mean D_ref - lo), 0, 1), lo = mean - floor_sigma * sd of D over this step's policy
                    rows of that condition (relative_style; lead 03:17 (1)); rel_style=0: max(0, 1 - 0.25 (D - 1)^2). Mask rows
                    only, x ramp (0 -> 1 over ramp_steps env steps, planner 00:27 (5))
     mask           continuous columns (not the sparse beam kinds), terrain level <= band_max_level, and with flatlike_only=1 family A
@@ -50,12 +52,12 @@ GRAV_Z = 29              # dropped from the input when center=1 (set by grav_x, 
 DEFAULTS = {"lr": 1e-4, "disc_every": 24.0, "disc_steps": 2.0, "batch": 4096.0, "gp": 10.0, "ramp_steps": 1200.0,
             "band_max_level": 1.0, "flatlike_only": 1.0, "buffer": 200000.0, "pol_dq_noise": 0.0,
             # lead 03:17 fixes, each on by default (planner 03:16 msg_e33006228c44)
-            "rel_style": 1.0, "floor_sigma": 2.0,            # (1) style relative to the policy batch, floor mu_pol - floor_sigma * sd_pol
+            "rel_style": 2.0, "floor_sigma": 2.0, "rank_sigmas": 4.0,   # (1) 2 rank (planner 03:27 (가), lead 03:27) · 1 floor · 0 LSGAN
             "center": 1.0, "center_momentum": 0.01,          # (2) drop grav_z, minus the per-condition mean (policy: moving average)
-            "straight_only": 1.0, "straight_vy": 0.1, "straight_wz": 0.1,   # (3) walk = straight command rows vs straight reference only
+            "straight_only": 1.0, "straight_vy": 0.1, "straight_wz": 0.3,   # (3) walk = straight command rows vs straight reference only
             "ref_probe": 1024.0}
 _STATE: dict = {}
-MON_SUMS = ("rows", "style", "dead", "walk", "still", "tot", "d_std", "d_mean", "d_ref", "batches")
+MON_SUMS = ("rows", "style", "dead", "walk", "still", "tot", "d_std", "d_mean", "d_ref", "batches", "style_walk", "style_still")
 
 
 def enabled() -> bool:
@@ -94,7 +96,8 @@ def params() -> dict:
     if (any(not math.isfinite(v) for v in out.values()) or not 0 < out["lr"] < 1e-2 or out["disc_every"] < 1 or out["disc_steps"] < 0
             or out["batch"] < 16 or out["gp"] < 0 or out["ramp_steps"] < 0 or not 0 <= out["band_max_level"] <= 9
             or out["flatlike_only"] not in (0.0, 1.0) or out["buffer"] < out["batch"] or out["pol_dq_noise"] < 0
-            or any(out[k] not in (0.0, 1.0) for k in ("rel_style", "center", "straight_only")) or out["floor_sigma"] < 0
+            or any(out[k] not in (0.0, 1.0) for k in ("center", "straight_only")) or out["rel_style"] not in (0.0, 1.0, 2.0)
+            or out["floor_sigma"] < 0 or out["rank_sigmas"] <= 0
             or not 0 < out["center_momentum"] <= 1 or out["straight_vy"] < 0 or out["straight_wz"] < 0 or out["ref_probe"] < 16):
         raise ValueError(f"{PARAMS_ENV} out of range: {out}")
     return out
@@ -148,6 +151,20 @@ def classes(command: torch.Tensor, p: dict) -> tuple[torch.Tensor, torch.Tensor]
     if p["straight_only"]:
         walk = walk & (c[:, 1].abs() <= p["straight_vy"]) & (c[:, 2].abs() <= p["straight_wz"])
     return walk, still
+
+
+def rank_style(d: torch.Tensor, sigmas: float) -> torch.Tensor:
+    """clip(0.5 + (D - mean D_pol) / (sigmas * sd D_pol), 0, 1) over these policy rows (planner 03:27 (가), lead 03:27).
+
+    The batch mean is always 0.5, so EX42_AMP_W keeps the same size whatever the discriminator state (the floor form fell to about
+    0.05 once the discriminator wins: W 0.4 would be about 0.5 % of the in-row tracking). Rows inside +- sigmas / 2 sd are not
+    clipped; with sigmas 4 that is +- 2 sd."""
+    if d.numel() < 2:
+        return torch.full_like(d, 0.5)
+    sd = d.std()
+    if float(sd) <= 0:
+        return torch.full_like(d, 0.5)
+    return (0.5 + (d - d.mean()) / (sigmas * sd)).clamp(0.0, 1.0)
 
 
 def relative_style(d: torch.Tensor, d_ref_mean: torch.Tensor, floor_sigma: float) -> torch.Tensor:
@@ -325,7 +342,8 @@ def ex42_amp_style(env, command_name: str, asset_cfg, p: dict) -> torch.Tensor:
                     continue
                 pick = idx[torch.randint(len(idx), (int(p["ref_probe"]),), device=idx.device)]
                 d_ref = st["disc"](st["ref"][pick]).mean()
-                style[sel] = relative_style(d[sel], d_ref, p["floor_sigma"])
+                style[sel] = (rank_style(d[sel], p["rank_sigmas"]) if p["rel_style"] == 2
+                              else relative_style(d[sel], d_ref, p["floor_sigma"]))
                 d_ref_sum, n_cls = d_ref_sum + float(d_ref), n_cls + 1
         else:
             style = style_reward(d)
@@ -339,7 +357,8 @@ def ex42_amp_style(env, command_name: str, asset_cfg, p: dict) -> torch.Tensor:
         st["sums"] += torch.stack([rows.sum().double(), style[rows].sum().double(), (style[rows] == 0).sum().double(),
                                    (rows & walk).sum().double(), (rows & still).sum().double(), float(len(rows)) * one,
                                    (dr.std().double() if len(dr) > 1 else 0 * one), dr.double().sum(),
-                                   (d_ref_sum / n_cls if n_cls else 0.0) * one, (one if n_cls else 0 * one)]).detach().clone()
+                                   (d_ref_sum / n_cls if n_cls else 0.0) * one, (one if n_cls else 0 * one),
+                                   style[rows & walk].sum().double(), style[rows & still].sum().double()]).detach().clone()
     st["calls"] += 1
     if st["calls"] % int(p["disc_every"]) == 0:
         train_disc(st)
@@ -358,6 +377,8 @@ def ex42_amp_style(env, command_name: str, asset_cfg, p: dict) -> torch.Tensor:
                   f"D_pol_std={v['d_std'] / k if k else nan:.4f} D_ref_now={v['d_ref'] / nb if nb else nan:.4f} "
                   f"mask_row_frac={n / v['tot'] if v['tot'] else 0:.4f} walk_row_frac={v['walk'] / v['tot'] if v['tot'] else 0:.4f} "
                   f"still_row_frac={v['still'] / v['tot'] if v['tot'] else 0:.4f} "
+                  f"walk_style_share={v['style_walk'] / v['style'] if v['style'] else nan:.4f} "
+                  f"still_style_share={v['style_still'] / v['style'] if v['style'] else nan:.4f} "
                   f"pol_grav_x_walk={float(st['pol_center'][0, 27]):.4f} ramp={ramp(step, p['ramp_steps']):.3f} "
                   f"disc_updates={st['updates']} buffer={st['buf'].n}", flush=True)
     return out
@@ -379,7 +400,7 @@ def register(env_cfg, term_cfg_class=None, entity_cfg_class=None) -> bool:
     print(f"EX42_AMP where=start weight={w:g} ref={ref} sha256={sha[:12]} " + " ".join(f"{k}={v:g}" for k, v in p.items())
           + f" input=s_prev,s,walk,still dims={2 * len(input_cols(p)) + 2}" + (" minus_grav_z centered_per_condition" if p["center"] else "")
           + (" walk=straight_cmd_vs_forward_stick_ref" if p["straight_only"] else " walk=any_cmd_vs_all_walk_ref")
-          + (" style=relative_batch_floor" if p["rel_style"] else " style=lsgan_clipped")
+          + {2.0: " style=rank_batch", 1.0: " style=relative_batch_floor", 0.0: " style=lsgan_clipped"}[p["rel_style"]]
           + " mask=continuous_level_le_band_max_level" + ("_flatlike_kinds" if p["flatlike_only"] else ""),
           flush=True)
     return True
