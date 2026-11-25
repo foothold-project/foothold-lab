@@ -271,7 +271,8 @@ def draft(source_dir: Path, run_dir: Path, iteration: int, mesh_dir: Path, out: 
           promotion: dict | None = None, adjust_from: Path | None = None, keep_mesh: bool = False,
           bake_caps_run: Path | None = None, bake_boundaries: int = 0, kind_caps: dict | None = None,
           kind_shares: dict | None = None, add_kinds: dict | None = None, drop_kinds: list | None = None, shrink_to_continuous: bool = False, exit_judge: str | None = None, ledger_pin: dict | None = None, ledger_repo=None,
-          parent_from_source: bool = False, no_flags: bool = False, relocate_mesh: Path | None = None) -> dict:
+          parent_from_source: bool = False, no_flags: bool = False, relocate_mesh: Path | None = None,
+          slow_band_min: float | None = None) -> dict:
     source_dir, out = Path(source_dir).resolve(strict=True), Path(out).absolute()
     if out.exists():
         raise FileExistsError(f"{out} exists (a draft folder is never reused)")
@@ -306,6 +307,23 @@ def draft(source_dir: Path, run_dir: Path, iteration: int, mesh_dir: Path, out: 
         for r in plan["stages"]:
             if r.get("training_mesh_profile") == OLD_PROFILE:
                 r["training_mesh_profile"] = profile
+    band_report = None
+    if slow_band_min is not None:
+        # lead 11/26 01:37 (H (가), planner 01:36): the slow reward band's lower end follows the forward command end (EX42_FWD_LOW).
+        # The limits file stays [0.1, 0.1]; the row widens its own fence (PLAN_WIDENABLE needs slow_track_speed_min: code f272091e9 or later).
+        v = float(slow_band_min)
+        rewards = row.get("rewards") or {}
+        la = row.get("live_adjustment") or {}
+        extra = la.get("extra_reward_limits") or {}
+        if "slow_track_speed_min" not in rewards or "slow_track_speed_min" not in extra:
+            raise ValueError("--slow-band-min: the E2 row has no rewards.slow_track_speed_min or live_adjustment.extra_reward_limits cell")
+        old_value, old_fence = float(rewards["slow_track_speed_min"]), list(extra["slow_track_speed_min"])
+        if not 0.0 < v < old_value or v >= float(rewards.get("slow_track_speed_max", 0.3)):
+            raise ValueError(f"--slow-band-min {v}: must be above 0 and below the row's slow_track_speed_min {old_value}")
+        rewards["slow_track_speed_min"] = v
+        extra["slow_track_speed_min"] = [v, max(float(old_fence[1]), old_value)]
+        band_report = {"rewards.slow_track_speed_min": [old_value, v],
+                       "live_adjustment.extra_reward_limits.slow_track_speed_min": [old_fence, extra["slow_track_speed_min"]]}
     caps_report = None
     if bake_caps_run is not None or kind_caps:
         row["terrain"], caps_report = set_kind_caps(row["terrain"], bake_caps_run, bake_boundaries, kind_caps)
@@ -345,7 +363,7 @@ def draft(source_dir: Path, run_dir: Path, iteration: int, mesh_dir: Path, out: 
               "new_plan_sha256": hashlib.sha256(plan_bytes).hexdigest(), "approval_sha256": plan["stage_zero"]["approval_sha256"],
               "parent": pin, "run_dir": str(Path(run_dir).resolve()), "mesh_profile": None if keep_mesh else profile, "mesh_stages": moved, "keep_mesh": keep_mesh,
               "terrain_promotion": promotion, "kind_caps": caps_report, "kind_shares": shares_report, "exit_judge": judge_report,
-              "parent_from_source": parent_from_source, "command_shares": flags_report, "relocated_mesh": relocated, "training_started": False}
+              "parent_from_source": parent_from_source, "command_shares": flags_report, "relocated_mesh": relocated, "slow_band": band_report, "training_started": False}
     if adjust_from is not None:
         # the live (per update) adjustment file binds the plan sha256: the same decisions, re-bound to the new plan. Nothing is added or decided here.
         adjust = json.loads(Path(adjust_from).read_text(encoding="utf-8-sig"))
@@ -384,6 +402,7 @@ def main(argv=None):
     p.add_argument("--ledger-repo", type=Path, help="the ledger checkout (default: EX42_LEDGER_REPO)")
     p.add_argument("--parent-from-source", action="store_true", help="keep the source row's parent pin (another stage, E1F m250); --run-dir / --iteration name that file")
     p.add_argument("--no-flags", action="store_true", help="stages[E2].shares.flag -> 0, the free slots scaled to add up to 1")
+    p.add_argument("--slow-band-min", type=float, default=None, help="E2 row: rewards.slow_track_speed_min and its row fence lower end (H (가), with EX42_FWD_LOW)")
     p.add_argument("--relocate-mesh", type=Path, default=None, help="with --keep-mesh: the same mesh bytes in another directory (Runpod)")
     a = p.parse_args(argv)
     caps = {k: int(v) for k, v in (item.split("=", 1) for item in a.kind_cap)}
@@ -395,7 +414,8 @@ def main(argv=None):
                                           bake_caps_run=a.bake_caps_run, bake_boundaries=a.bake_boundaries, kind_caps=caps or None,
                                           kind_shares=shares or None, add_kinds=adds or None, drop_kinds=a.drop_kind or None, shrink_to_continuous=a.shrink_to_continuous, exit_judge=a.exit_judge,
                                           ledger_pin=json.loads(a.ledger_pin.read_text(encoding="utf-8")) if a.ledger_pin else None, ledger_repo=a.ledger_repo,
-                                          parent_from_source=a.parent_from_source, no_flags=a.no_flags, relocate_mesh=a.relocate_mesh), indent=1))
+                                          parent_from_source=a.parent_from_source, no_flags=a.no_flags, relocate_mesh=a.relocate_mesh,
+                                          slow_band_min=a.slow_band_min), indent=1))
 
 
 if __name__ == "__main__":
