@@ -1075,6 +1075,8 @@ def main(env_cfg, agent_cfg):
         _ex42_stand_tilt_load.register(env_cfg)  # F1 (lead 11/25 20:23): EX42_STAND_TILT · EX42_LOAD_BALANCE, off by default
         from foothold_s2.rewards import ex42_lowspeed_gait as _ex42_lowspeed_gait
         _ex42_lowspeed_gait.register(env_cfg)    # F1 · F2 base (lead 11/25 21:04): EX42_LOWSPEED_GAIT, off by default
+        from foothold_s2.rewards import ex42_classic_target as _ex42_classic_target
+        _ex42_classic_target.register(env_cfg)   # lead 11/26 00:26: EX42_CLASSIC_TARGET (Classic hip range · pitch · step rate), off by default
         from foothold_s2.curriculum import ex42_front_load_dr as _ex42_front_load_dr
         _ex42_front_load_dr.register(env_cfg)    # F1 (lead 11/25 20:23): EX42_FRONT_LOAD_DR, off by default (after the EX-40 DR events)
         if EX42_STAGE_ZERO_PLAN is not None:

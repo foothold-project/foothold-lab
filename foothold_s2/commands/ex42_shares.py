@@ -257,6 +257,10 @@ class CommandShares:
         lowspeed = ex42_lowspeed_gait.summary()      # F1 · F2 base: low-speed gait counts and gait monitor (only when switched on)
         if lowspeed is not None:
             doc['lowspeed_gait'] = lowspeed
+        from foothold_s2.rewards import ex42_classic_target
+        classic = ex42_classic_target.summary()      # lead 11/26 00:26: Classic target counts (only when switched on)
+        if classic is not None:
+            doc['classic_target'] = classic
         target = Path(folder)/f'command_shares_{iteration}_rank{rank}.json'
         if target.exists():
             # A process that died between this record and its save left the name behind; the run came back to the
