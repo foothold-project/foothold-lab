@@ -45,7 +45,7 @@ def _run(period_steps, swing_steps, hip_amp, p=None):
 
 def test_classic_cadence_and_narrow_hip_score_about_zero():
     # 1.4 Hz -> 0.714 s = 35.7 steps; 36 steps gives 0.72 s (error 0.006 s), hip range 0.05 = target
-    hv, fv, ncyc = _run(36, 18, 0.05)
+    hv, fv, ncyc = _run(36, 18, 0.06)
     assert ncyc > 30
     assert hv == pytest.approx(0.0, abs=1e-9)
     assert fv / ncyc < 1e-4
@@ -59,7 +59,7 @@ def test_candidate_cadence_and_wide_hip_are_penalised():
     # only the two front feet are scored for the hip; range of a sine sampled at 31 steps is close to 0.13
     assert hv > 0
     front_cycles = ncyc / 2
-    assert hv / front_cycles == pytest.approx((0.13 - 0.05) ** 2, rel=0.15)
+    assert hv / front_cycles == pytest.approx((0.13 - 0.06) ** 2, rel=0.15)
 
 
 def test_rear_hip_is_not_scored():
@@ -145,7 +145,7 @@ def test_register_three_terms_and_off_registers_nothing(monkeypatch, capsys):
     r = cfg.rewards
     assert (r.ex42_classic_hip_range.weight, r.ex42_classic_pitch.weight, r.ex42_classic_step_freq.weight) == (-150.0, -0.9, -60.0)
     assert r.ex42_classic_pitch.params["sensor_cfg"].kw["body_names"] == list(ct.FEET)
-    assert "EX42_CLASSIC_TARGET where=start w_hip=-150 w_pitch=-0.9 w_freq=-60" in capsys.readouterr().out
+    assert "EX42_CLASSIC_TARGET where=start w_hip=-150 w_pitch=-0.9 w_freq=-60 hip_target=0.06 hip_vy_max=0.05 hip_wz_max=0.1" in capsys.readouterr().out
     with pytest.raises(ValueError):
         ct.register(cfg, Term, Entity)
 
@@ -164,3 +164,15 @@ def test_pitch_weight_zero_is_accepted_and_not_registered(monkeypatch):
     assert ct.register(cfg, Term, Entity)
     assert not hasattr(cfg.rewards, "ex42_classic_pitch")
     assert (cfg.rewards.ex42_classic_hip_range.weight, cfg.rewards.ex42_classic_step_freq.weight) == (-230.0, -95.0)
+
+
+def test_straight_mask_side_and_turn_rows_not_scored_for_hip():
+    # forward, backward, side 0.3, turn 1.0, walk-turn 0.5/0.8, tiny vy 0.04 with wz 0.05
+    cmd = torch.tensor([[0.3, 0.0, 0.0], [-0.3, 0.0, 0.0], [0.0, 0.3, 0.0], [0.0, 0.0, 1.0], [0.5, 0.0, 0.8], [0.3, 0.04, 0.05]])
+    straight = ct.straight_mask(cmd, 0.05, 0.1)
+    assert straight.tolist() == [True, True, False, False, False, True]
+    done = torch.ones(6, 4, dtype=torch.bool) & straight[:, None]
+    rng = torch.full((6, 4), 0.45)           # Classic side-step hip range
+    v = ct.hip_value(done, rng, 0.06)
+    assert v[2] == 0 and v[3] == 0 and v[4] == 0
+    assert float(v[0]) == pytest.approx(2 * (0.45 - 0.06) ** 2)

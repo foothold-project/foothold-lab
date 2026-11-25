@@ -11,7 +11,8 @@ front hip side-to-side range 0.13 vs 0.05 rad, pitch rate rms 0.266 vs 0.138 rad
 Mask (all three): moving (not the stand slot), |v_xy cmd| <= v_max, command not zero (|v_xy| or |wz| >= cmd_min),
 continuous column (not ex42_hip_sparse.sparse_envs) at terrain level <= band_max_level: the near-flat low-speed rows.
 
-(1) ex42_classic_hip_range  at a touchdown of a front foot (FL, FR) that ends a swing of >= min_swing_steps steps:
+(1) ex42_classic_hip_range  (rows: the mask and straight walking, |vy cmd| <= hip_vy_max 0.05 and |wz cmd| <= hip_wz_max 0.1;
+        lead 00:36: hip_target 0.06 and side / turn rows out) at a touchdown of a front foot (FL, FR) that ends a swing of >= min_swing_steps steps:
         relu(range - hip_target)^2, range = (max - min) of that leg's hip joint angle over the whole cycle since its
         previous touchdown (same window idea as the judgment table hip range). Only cycles that started after the
         episode reset count.
@@ -39,7 +40,7 @@ import torch
 
 ENV_SWITCH = "EX42_CLASSIC_TARGET"
 PARAMS_ENV = "EX42_CLASSIC_TARGET_PARAMS"
-DEFAULTS = {"w_hip": -150.0, "w_pitch": -0.9, "w_freq": -60.0, "hip_target": 0.05, "step_hz": 1.4, "v_max": 0.5,
+DEFAULTS = {"w_hip": -150.0, "w_pitch": -0.9, "w_freq": -60.0, "hip_target": 0.06, "hip_vy_max": 0.05, "hip_wz_max": 0.1, "step_hz": 1.4, "v_max": 0.5,
             "cmd_min": 0.05, "band_max_level": 1.0, "min_swing_steps": 3.0}
 FEET = ("FL_foot", "FR_foot", "RL_foot", "RR_foot")
 LEGS = ("FL", "FR", "RL", "RR")
@@ -73,9 +74,15 @@ def params() -> dict:
             raise ValueError(f"{PARAMS_ENV} invalid number {item!r}") from None
     if (any(not math.isfinite(v) for v in out.values()) or out["w_hip"] >= 0 or out["w_pitch"] > 0 or out["w_freq"] >= 0
             or not 0 < out["hip_target"] < 0.5 or not 0.3 <= out["step_hz"] <= 5 or out["v_max"] <= 0
-            or out["cmd_min"] < 0 or not 0 <= out["band_max_level"] <= 9 or out["min_swing_steps"] < 1):
+            or out["cmd_min"] < 0 or out["hip_vy_max"] < 0 or out["hip_wz_max"] < 0 or not 0 <= out["band_max_level"] <= 9 or out["min_swing_steps"] < 1):
         raise ValueError(f"{PARAMS_ENV} needs w_hip, w_freq < 0 and w_pitch <= 0 (0 = pitch term not registered), 0 < hip_target < 0.5, 0.3 <= step_hz <= 5, v_max > 0, cmd_min >= 0")
     return out
+
+
+def straight_mask(command: torch.Tensor, vy_max: float, wz_max: float) -> torch.Tensor:
+    """Hip term rows only (lead 00:36, planner M136 TABLE8_hip_cycle): forward / backward walking, |vy| <= vy_max and |wz| <= wz_max.
+    Classic itself swings the hips 0.41~0.46 rad side-stepping and 0.14~0.36 turning, so those rows are not scored."""
+    return (command[:, 1].abs() <= vy_max) & (command[:, 2].abs() <= wz_max)
 
 
 def command_mask(command: torch.Tensor, stand: torch.Tensor, v_max: float, cmd_min: float) -> torch.Tensor:
@@ -150,7 +157,7 @@ def _mask(env, command_name, p):
     cmd = command_mask(command, term.stand.bool(), p["v_max"], p["cmd_min"])
     continuous = ~sparse_envs(env).to(cmd.device)
     low_level = env.scene.terrain.terrain_levels.to(cmd.device) <= p["band_max_level"]
-    return cmd & continuous & low_level
+    return cmd & continuous & low_level, command
 
 
 def _update(env, asset_cfg, sensor_cfg, command_name, p):
@@ -172,10 +179,11 @@ def _update(env, asset_cfg, sensor_cfg, command_name, p):
         tracker = raw._ex42_ct_tracker = CycleTracker(hip.shape[0], hip.device)
     fresh = raw.episode_length_buf.to(hip.device) <= 1
     done, cycle_s, hip_range = tracker.step(hip, contact, fresh, p["min_swing_steps"])
-    active = _mask(env, command_name, p)
+    active, command = _mask(env, command_name, p)
     done = done & active[:, None]
+    hip_done = done & straight_mask(command, p["hip_vy_max"], p["hip_wz_max"])[:, None]
     w = robot.data.root_ang_vel_b[:, 1]
-    out = {"active": active, "done": done, "cycle_s": cycle_s, "hip_range": hip_range, "pitch_sq": w.square()}
+    out = {"active": active, "done": done, "hip_done": hip_done, "cycle_s": cycle_s, "hip_range": hip_range, "pitch_sq": w.square()}
     raw._ex42_ct_cache = (step_id, out)
     _monitor(raw, out, p)
     return out
@@ -183,7 +191,7 @@ def _update(env, asset_cfg, sensor_cfg, command_name, p):
 
 def ex42_classic_hip_range(env, command_name, asset_cfg, sensor_cfg, p):
     r = _update(env, asset_cfg, sensor_cfg, command_name, p)
-    return hip_value(r["done"], r["hip_range"], p["hip_target"])
+    return hip_value(r["hip_done"], r["hip_range"], p["hip_target"])
 
 
 def ex42_classic_pitch(env, command_name, asset_cfg, sensor_cfg, p):
@@ -203,8 +211,9 @@ def _monitor(raw, r, p):
     ok = done & (r["cycle_s"] <= MAX_CYCLE_S)
     _add("cycles", ok.float())
     _add("cycle_s_sum", torch.where(ok, r["cycle_s"], torch.zeros_like(r["cycle_s"])))
-    _add("hip_cycles", done.float())
-    _add("hip_range_sum", torch.where(done, r["hip_range"], torch.zeros_like(r["hip_range"])))
+    hd = r["hip_done"]
+    _add("hip_cycles", hd.float())
+    _add("hip_range_sum", torch.where(hd, r["hip_range"], torch.zeros_like(r["hip_range"])))
     raw._ex42_ct_calls = getattr(raw, "_ex42_ct_calls", 0) + 1
     if raw._ex42_ct_calls in (1, 50) or raw._ex42_ct_calls % MONITOR_EVERY == 0:
         row = summary()
@@ -234,9 +243,9 @@ def register(env_cfg, term_cfg_class=None, entity_cfg_class=None) -> bool:
             func=func, weight=weight,
             params={"command_name": "base_velocity", "asset_cfg": entity_cfg_class("robot"), "p": dict(p),
                     "sensor_cfg": entity_cfg_class("contact_forces", body_names=list(FEET), preserve_order=True)}))
-    print("EX42_CLASSIC_TARGET where=start w_hip=%g w_pitch=%g w_freq=%g hip_target=%g step_hz=%g v_max=%g cmd_min=%g "
-          "band_max_level=%g min_swing_steps=%g mask=moving_lowspeed_nonzero_continuous_level_le_band_max_level"
-          % (p["w_hip"], p["w_pitch"], p["w_freq"], p["hip_target"], p["step_hz"], p["v_max"], p["cmd_min"],
+    print("EX42_CLASSIC_TARGET where=start w_hip=%g w_pitch=%g w_freq=%g hip_target=%g hip_vy_max=%g hip_wz_max=%g step_hz=%g v_max=%g cmd_min=%g "
+          "band_max_level=%g min_swing_steps=%g mask=moving_lowspeed_nonzero_continuous_level_le_band_max_level hip_mask=same_and_straight"
+          % (p["w_hip"], p["w_pitch"], p["w_freq"], p["hip_target"], p["hip_vy_max"], p["hip_wz_max"], p["step_hz"], p["v_max"], p["cmd_min"],
              p["band_max_level"], p["min_swing_steps"]), flush=True)
     return True
 
