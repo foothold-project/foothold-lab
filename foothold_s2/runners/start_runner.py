@@ -570,7 +570,13 @@ class StartRunner(OnPolicyRunner):
             return
         from foothold_s2.runners import ex41_critic_mirror as mirror
         low = mirror.lowspeed_noise_mask(o[:, 6:8], mirror.SMALL_NOISE_LOWSPEED_CMD)
-        scale = torch.where(low[:, None], torch.full_like(self._noise_static, mirror.SMALL_NOISE_SIGMA_SCALE), self._noise_static)
+        low_sigma = mirror.lowspeed_sigma_scale()
+        if not getattr(self, "_low_sigma_started", False):
+            print("EX42_SMALL_NOISE_LOW_SIGMA where=start lowspeed_sigma=%g static_sigma=%g lowspeed_cmd=%g env=%s" % (
+                low_sigma, mirror.SMALL_NOISE_SIGMA_SCALE, mirror.SMALL_NOISE_LOWSPEED_CMD,
+                os.environ.get(mirror.LOWSPEED_SIGMA_ENV, "") or "unset"), flush=True)
+            self._low_sigma_started = True
+        scale = torch.where(low[:, None], torch.full_like(self._noise_static, low_sigma), self._noise_static)
         if window_s:
             if not getattr(self, "_stop_noise_started", False):
                 print(f"EX42_STOP_NOISE_WINDOW where=start window_s={window_s:g}", flush=True)

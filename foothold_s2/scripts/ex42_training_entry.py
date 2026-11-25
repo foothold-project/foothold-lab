@@ -1306,7 +1306,9 @@ class EX42StageZeroRuntime:
         if maximum_updates not in allowed and not (
                 speed_probe and maximum_updates in SPEED_PROBE_UPDATES):
             raise ValueError(f"EX-42 stage-zero runtime must remain bounded to {bound} updates")
-        self.plan = SimpleNamespace(is_ex41=False, stages=stage_zero_plan.stages)
+        from foothold_s2.commands import ex42_fwd_low       # lead 11/26 01:23 (가): E2 forward_vx lower end, env switch
+        stages = ex42_fwd_low.apply_stages(stage_zero_plan.stages, stage_id)
+        self.plan = SimpleNamespace(is_ex41=False, stages=stages)
         self.plan_sha256 = plan_sha256
         self.approval_sha256 = approval_sha256
         self.parent_sha256 = parent_sha256
@@ -1316,7 +1318,7 @@ class EX42StageZeroRuntime:
             raise ValueError("EX-42 stage-zero parent push Vmax is invalid")
         self.push_vmax_mps = float(push_vmax_mps)
         self.stage_id = stage_id
-        self.stage_config = stage_zero_plan.stages[0]
+        self.stage_config = stages[0]
         from foothold_s2.commands.ex42_shares import CommandShares
         contract = getattr(stage_zero_plan, "command_contract", None)
         self.command_allocation = CommandShares(contract, self.stage_config) if contract is not None else None
@@ -1647,7 +1649,7 @@ class EX42StageZeroRuntime:
         if getattr(getattr(alg, "storage", None), "noise_scale_env", None) is None:
             return {}
         return {"noise_envs": mirror.small_noise_mask(int(self.env.num_envs), mirror.small_noise_static_share()),
-                "noise_sigma_scale": mirror.SMALL_NOISE_SIGMA_SCALE}
+                "noise_sigma_scale": mirror.lowspeed_sigma_scale()}   # the slow_forward groups are low-speed envs (01:23 (나))
 
     def _record_dir(self):
         return self.record_dir or getattr(self.runner, "log_dir", None)

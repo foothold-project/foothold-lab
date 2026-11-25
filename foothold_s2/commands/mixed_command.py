@@ -17,7 +17,7 @@ import torch
 from isaaclab.managers import CommandTerm, CommandTermCfg
 from isaaclab.utils import configclass
 
-from foothold_s2.commands import ex42_cmd_wide, ex42_sparse_cmd, mixed_core as mc
+from foothold_s2.commands import ex42_cmd_wide, ex42_fwd_low, ex42_sparse_cmd, mixed_core as mc
 from foothold_s2.curriculum import rules as curriculum_rules
 
 if TYPE_CHECKING:
@@ -273,6 +273,7 @@ class MixedVelocityCommand(CommandTerm):
                 if runtime is not None:
                     runtime.record_command_sample(group, self.vel_command_b[group],
                                                   self.slot_current[group], self.heading[group])
+                    ex42_fwd_low.observe(self.vel_command_b[group], self.slot_current[group])
 
         self._apply_slow_hold(free)
 

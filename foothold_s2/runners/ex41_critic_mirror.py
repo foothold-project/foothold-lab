@@ -7,6 +7,9 @@ legacy and clean52 assemble those groups in this order.  Ground map is
 
 from __future__ import annotations
 
+import math
+import os
+
 import torch
 from torch import nn
 
@@ -85,6 +88,22 @@ SMALL_NOISE_SIGMA_SCALE = 0.2
 # every step from the command it acts on (so on every command resample); the other envs keep a fixed spread share.
 SMALL_NOISE_LOWSPEED_CMD = 0.3   # v29-4 (lead 11/15 15:27): the v28n rule is ON (v28p had 0.0 = OFF); 0.0 turns it off again (then only SMALL_NOISE_ENV_SHARE applies)
 SMALL_NOISE_REST_SHARE = 0.25
+# lead 11/26 01:23 (나): the action-std multiplier of the LOW-SPEED envs only (|cmd_xy| < SMALL_NOISE_LOWSPEED_CMD), from the env
+# EX42_SMALL_NOISE_LOW_SIGMA; unset or empty = SMALL_NOISE_SIGMA_SCALE (bit-identical). The fixed-share envs keep SMALL_NOISE_SIGMA_SCALE.
+LOWSPEED_SIGMA_ENV = "EX42_SMALL_NOISE_LOW_SIGMA"
+
+
+def lowspeed_sigma_scale() -> float:
+    raw = os.environ.get(LOWSPEED_SIGMA_ENV, "")
+    if raw == "":
+        return SMALL_NOISE_SIGMA_SCALE
+    try:
+        value = float(raw)
+    except ValueError:
+        raise ValueError(f"{LOWSPEED_SIGMA_ENV} must be a number in (0, 1) (got {raw!r})") from None
+    if not math.isfinite(value) or not 0.0 < value < 1.0:
+        raise ValueError(f"{LOWSPEED_SIGMA_ENV} must be a number in (0, 1) (got {raw!r})")
+    return value
 # v28p (lead 11/15 09:26, ON by default; set the share to 0 to turn it off: nothing below changes then, bit-identical to v28n/v28f):
 # this share of the envs (spread evenly over the env index, same on every rank) acts with the MEAN action (noise exactly 0).
 # Their rows are marked invalid for PPO (the existing quarantine mask): no surrogate, value, entropy, bounds, scheduler KL
