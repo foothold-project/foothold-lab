@@ -1,6 +1,7 @@
 """F1 / F2 common base (lead 2026-11-25 21:03 / 21:04, planner M136): walking low-speed stability. Off by default.
 
     EX42_LOWSPEED_GAIT=1
+    EX42_LOWSPEED_GAIT_BAND="0.05,0.07"   (lo,hi only; may not be combined with lo/hi cells in _PARAMS)
     EX42_LOWSPEED_GAIT_PARAMS="w_ang=-1.1,w_band=-40,v_max=0.5,side_turn_wz=0.5,lo=0.05,hi=0.07,min_swing_steps=3,band_max_level=1"
 
 (a) ex42_lowspeed_angvel   value = wx^2 + wy^2 (root_ang_vel_b roll, pitch)
@@ -32,6 +33,7 @@ import torch
 
 ENV_SWITCH = "EX42_LOWSPEED_GAIT"
 PARAMS_ENV = "EX42_LOWSPEED_GAIT_PARAMS"
+BAND_ENV = "EX42_LOWSPEED_GAIT_BAND"   # "lo,hi" in m (lead 21:41: the band is set after planner measures the per-swing lift)
 DEFAULTS = {"w_ang": -1.1, "w_band": -40.0, "v_max": 0.5, "side_turn_wz": 0.5, "lo": 0.05, "hi": 0.07,
             "min_swing_steps": 3.0, "band_max_level": 1.0}
 FEET = ("FL_foot", "FR_foot", "RL_foot", "RR_foot")
@@ -46,8 +48,8 @@ def enabled() -> bool:
     value = os.environ.get(ENV_SWITCH, "")
     if value not in ("", "0", "1"):
         raise ValueError(f"{ENV_SWITCH} must be 0 or 1 (got {value!r})")
-    if value != "1" and os.environ.get(PARAMS_ENV, ""):
-        raise ValueError(f"{PARAMS_ENV} is set but {ENV_SWITCH} is not 1")
+    if value != "1" and (os.environ.get(PARAMS_ENV, "") or os.environ.get(BAND_ENV, "")):
+        raise ValueError(f"{PARAMS_ENV} or {BAND_ENV} is set but {ENV_SWITCH} is not 1")
     return value == "1"
 
 
@@ -62,6 +64,15 @@ def params() -> dict:
             out[key] = float(raw)
         except ValueError:
             raise ValueError(f"{PARAMS_ENV} invalid number {item!r}") from None
+    band = os.environ.get(BAND_ENV, "").strip()
+    if band:
+        cells = [c.strip() for c in band.split(",")]
+        if len(cells) != 2 or any(f"{k}=" in os.environ.get(PARAMS_ENV, "") for k in ("lo", "hi")):
+            raise ValueError(f"{BAND_ENV} needs exactly 'lo,hi' and no lo/hi cell in {PARAMS_ENV}")
+        try:
+            out["lo"], out["hi"] = float(cells[0]), float(cells[1])
+        except ValueError:
+            raise ValueError(f"{BAND_ENV} invalid number {band!r}") from None
     if (any(not math.isfinite(v) for v in out.values()) or out["w_ang"] >= 0 or out["w_band"] >= 0
             or out["v_max"] <= 0 or out["side_turn_wz"] <= 0 or not 0 < out["lo"] < out["hi"] < 0.3
             or out["min_swing_steps"] < 1 or not 0 <= out["band_max_level"] <= 9):

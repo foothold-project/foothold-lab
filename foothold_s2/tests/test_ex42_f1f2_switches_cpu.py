@@ -377,3 +377,23 @@ def test_train_start_stage_zero_branch_registers_every_f_switch():
     # the start-runner actor augmentation reads its switch where the algorithm is constructed
     runner = (Path(__file__).resolve().parents[1] / "runners" / "start_runner.py").read_text(encoding="utf-8")
     assert "actor_mirror_aug = aug_from_env()" in runner
+
+
+def test_band_env_sets_lo_hi_and_refuses_mixing(monkeypatch):
+    monkeypatch.setenv(lg.ENV_SWITCH, "1")
+    monkeypatch.delenv(lg.PARAMS_ENV, raising=False)
+    monkeypatch.setenv(lg.BAND_ENV, "0.03, 0.05")
+    p = lg.params()
+    assert (p["lo"], p["hi"]) == (0.03, 0.05)
+    for bad in ("0.05", "0.07,0.05", "a,b", "0.03,0.05,0.07"):
+        monkeypatch.setenv(lg.BAND_ENV, bad)
+        with pytest.raises(ValueError):
+            lg.params()
+    monkeypatch.setenv(lg.BAND_ENV, "0.03,0.05")
+    monkeypatch.setenv(lg.PARAMS_ENV, "lo=0.04")
+    with pytest.raises(ValueError, match=lg.BAND_ENV):
+        lg.params()
+    monkeypatch.delenv(lg.PARAMS_ENV)
+    monkeypatch.setenv(lg.ENV_SWITCH, "0")
+    with pytest.raises(ValueError, match="is not 1"):
+        lg.enabled()
