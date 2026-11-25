@@ -20,7 +20,7 @@
     Weight -40: touchdown steps are sparse. Assumed 2 touchdowns / s per foot and a 0.03 m excess on the two front feet
             (candidate 0.095 / 0.085 m): mean value per 0.02 s step 2 x 2 x 0.03 x 0.02 = 0.0024; 0.106 / 0.0024 = 44 -> 40.
             The touchdown rate is logged (gait_period_s) to check the assumption.
-Monitor line EX42_GAIT_MONITOR (rank 0, first call then every MONITOR_EVERY steps; lead 21:04 item 4): per-swing lift and the
+Monitor line EX42_GAIT_MONITOR (rank 0, calls 1 and 50 then every MONITOR_EVERY steps; lead 21:04 item 4): per-swing lift and the
 judgment-style window (max - min) lift per foot, roll / pitch rms, foot slip (foot xy speed in contact), action rate, joint power,
 gait period, on the (a) mask; the counts also go to each command_shares record (key lowspeed_gait). No Kit import at module level.
 """
@@ -40,7 +40,7 @@ FEET = ("FL_foot", "FR_foot", "RL_foot", "RR_foot")
 LEGS = ("FL", "FR", "RL", "RR")
 LINK = 0.213
 CONTACT_N = 1.0
-MONITOR_EVERY = 2400
+MONITOR_EVERY = 240   # lead 21:43: band counts from the first updates (about every 10 updates at 24 steps per update)
 _SUMS: dict[str, torch.Tensor] = {}
 
 
