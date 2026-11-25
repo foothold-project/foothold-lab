@@ -167,6 +167,15 @@ def test_amp_mirror_twice_is_identity_and_off_keeps_the_batch(monkeypatch):
     assert torch.equal(m[:, -2:], x[:, -2:])                              # condition one-hot unchanged
     n = len(st.input_cols(p))
     assert torch.equal(m[:, 0], -x[:, 1]) and torch.equal(m[:, 4], x[:, 5])   # hip FL = -hip FR · thigh FL = thigh FR
+    cols = st.input_cols(p)
+    j = cols.index
+    assert torch.equal(m[:, j(12)], -x[:, j(13)]) and torch.equal(m[:, j(14)], -x[:, j(15)])   # hip velocity: FL = -FR · RL = -RR
+    assert torch.equal(m[:, j(16)], x[:, j(17)])                          # thigh velocity: swapped, same sign
+    assert torch.equal(m[:, j(24)], -x[:, j(24)])                         # gyro x (roll rate) negated
+    assert torch.equal(m[:, j(25)], x[:, j(25)])                          # gyro y (pitch rate) kept
+    assert torch.equal(m[:, j(26)], -x[:, j(26)])                         # gyro z (yaw rate) negated
+    assert torch.equal(m[:, j(27)], x[:, j(27)]) and torch.equal(m[:, j(28)], -x[:, j(28)])   # grav x kept · grav y negated
+    assert torch.equal(m[:, n + j(26)], -x[:, n + j(26)]) and torch.equal(m[:, n + 1], -x[:, n])   # second state too
     xr, xp = torch.randn(8, x.shape[1]), torch.randn(8, x.shape[1])
     a, b = st.disc_batch(xr, xp, p, False)
     assert a is xr and b is xp                                             # off: the batch as drawn
