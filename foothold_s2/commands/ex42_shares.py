@@ -253,6 +253,10 @@ class CommandShares:
         tilt_load = ex42_stand_tilt_load.summary()   # F1: stand tilt / load balance counts (only when switched on)
         if tilt_load is not None:
             doc['stand_tilt_load'] = tilt_load
+        from foothold_s2.rewards import ex42_lowspeed_gait
+        lowspeed = ex42_lowspeed_gait.summary()      # F1 · F2 base: low-speed gait counts and gait monitor (only when switched on)
+        if lowspeed is not None:
+            doc['lowspeed_gait'] = lowspeed
         target = Path(folder)/f'command_shares_{iteration}_rank{rank}.json'
         if target.exists():
             # A process that died between this record and its save left the name behind; the run came back to the

@@ -272,3 +272,104 @@ def test_mirrored_surrogate_known_answer_on_a_symmetric_sample():
     # mutation: using the unmirrored action gives a different value on a general sample
     assert not torch.allclose(rows, torch.maximum(-adv * torch.exp(
         torch.distributions.Normal(mean_m, 1.0).log_prob(actions).sum(-1) - old), -adv))
+
+
+# -- F1 / F2 base: low-speed gait (lead 21:04) -------------------------------------------------------------------------
+
+from foothold_s2.rewards import ex42_lowspeed_gait as lg
+
+
+def _gait_env(monkeypatch):
+    monkeypatch.setenv(lg.ENV_SWITCH, "1")
+    lg._SUMS.clear()
+    command, raw, data = _env(monkeypatch)
+    _draw(command)
+    raw._ex42_lowspeed_flat_columns = torch.tensor([0])          # column 0 continuous, treated as flat here
+    raw.episode_length_buf = torch.full((N,), 10)
+    names = [f"{leg}_{j}_joint" for leg in ("FL", "FR", "RL", "RR") for j in ("hip", "thigh", "calf")]
+    raw.scene.robot.joint_names = names
+    raw.scene.robot.body_names = list(lg.FEET)
+    data.joint_pos = torch.tensor([0.1, 0.8, -1.5] * 4).repeat(N, 1)
+    data.root_ang_vel_b = torch.tensor([0.3, 0.4, 0.0]).repeat(N, 1)
+    data.body_lin_vel_w = torch.zeros(N, 4, 3)
+    data.joint_vel = torch.zeros(N, 12)
+    return command, raw, data
+
+
+def test_lowspeed_masks_and_angvel_known_answer(monkeypatch):
+    command, raw, data = _gait_env(monkeypatch)
+    p = lg.params()
+    assert p["w_ang"] == -1.1 and p["w_band"] == -40.0
+    cmd = command.command
+    mask = lg.command_mask(cmd, command.stand.bool(), 0.5, 0.5)
+    v = cmd[:, :2].norm(dim=1)
+    expect = ~command.stand.bool() & ((v <= 0.5) | (cmd[:, 1].abs() > cmd[:, 0].abs()) | (cmd[:, 2].abs() >= 0.5))
+    assert torch.equal(mask, expect) and 0 < int(mask.sum()) < N
+    out = lg.ex42_lowspeed_angvel(raw, "base_velocity", NS(name="robot"), p)
+    continuous = raw.scene.terrain.terrain_types == 0
+    active = expect & continuous
+    assert torch.allclose(out[active], torch.full_like(out[active], 0.25)) and bool((out[~active] == 0).all())
+    assert int((expect & ~continuous).sum()) > 0                    # sparse-column envs in the mask get 0
+    assert lg.summary()["roll_rms"] == pytest.approx(0.3, abs=1e-6)
+
+
+def test_lift_band_uses_judgment_fk_and_scores_only_outside_band(monkeypatch):
+    command, raw, data = _gait_env(monkeypatch)
+    p = lg.params()
+    force = raw.scene.sensors["contact_forces"].data.net_forces_w
+    thigh_ids = [1, 4, 7, 10]
+    z0 = float(lg.foot_z(torch.tensor(0.8), torch.tensor(-1.5)))
+    # contact, then 4 air steps with FL raised to 0.04, FR 0.06, RL 0.09 (RR stays down), then touchdown
+    lg.ex42_lowspeed_lift_band(raw, "base_velocity", NS(name="robot"), SENSOR, p)
+    targets = {0: 0.04, 1: 0.06, 2: 0.09}
+    force[:, :3, 2] = 0.0
+    for k in range(4):
+        q = torch.tensor([0.1, 0.8, -1.5] * 4).repeat(N, 1)
+        for foot, h in targets.items():
+            # solve thigh so that zf = z0 + h at the swing apex (k == 2), z0 elsewhere
+            want = z0 + (h if k == 2 else 0.0)
+            th = torch.linspace(0.3, 2.0, 40001)
+            zz = lg.foot_z(th, torch.full_like(th, -1.5))
+            q[:, thigh_ids[foot]] = th[(zz - want).abs().argmin()]
+        data.joint_pos = q
+        assert bool((lg.ex42_lowspeed_lift_band(raw, "base_velocity", NS(name="robot"), SENSOR, p) == 0).all())
+    data.joint_pos = torch.tensor([0.1, 0.8, -1.5] * 4).repeat(N, 1)
+    force[:, :3, 2] = 30.0
+    value = lg.ex42_lowspeed_lift_band(raw, "base_velocity", NS(name="robot"), SENSOR, p)
+    _, flat_active = lg._masks(raw, "base_velocity", p)
+    # FL 0.01 below, FR inside, RL 0.02 above -> 0.03 m (FK grid tolerance 1e-4)
+    assert torch.allclose(value[flat_active], torch.full_like(value[flat_active], 0.03), atol=3e-4)
+    assert bool((value[~flat_active] == 0).all())
+    row = lg.summary()
+    assert row["swing_lift_m"][0] == pytest.approx(0.04, abs=2e-4) and row["swing_lift_m"][2] == pytest.approx(0.09, abs=2e-4)
+    assert row["band_scored_touchdowns"] == 3 * int(flat_active.sum())
+
+
+def test_band_mutation_and_off_gate(monkeypatch):
+    assert torch.allclose(lg.band_value(torch.tensor([0.04, 0.06, 0.09]), 0.05, 0.07), torch.tensor([0.01, 0.0, 0.02]))
+    assert not torch.allclose(lg.band_value(torch.tensor([0.06]), 0.05, 0.07), torch.tensor([0.06]))  # not a height reward
+    assert lg.register(NS(rewards=NS())) is False and lg.summary() is None
+    monkeypatch.setenv(lg.ENV_SWITCH, "1")
+    for bad in ("w_ang=1", "lo=0.08,hi=0.07", "q=1", "w_band=abc"):
+        monkeypatch.setenv(lg.PARAMS_ENV, bad)
+        with pytest.raises(ValueError, match=lg.PARAMS_ENV):
+            lg.params()
+
+
+def test_train_start_stage_zero_branch_registers_every_f_switch():
+    """The real entry: train_start.py registers the F modules in the stage-zero branch next to the stop window (AST)."""
+    import ast
+    from pathlib import Path
+
+    src = (Path(__file__).resolve().parents[1] / "scripts" / "train_start.py").read_text(encoding="utf-8")
+    tree = ast.parse(src)
+    calls = [n for n in ast.walk(tree) if isinstance(n, ast.Call) and isinstance(n.func, ast.Attribute)
+             and n.func.attr == "register" and isinstance(n.func.value, ast.Name)]
+    names = [c.func.value.id for c in calls]
+    for module in ("_ex42_stop_window_shape", "_ex42_stand_tilt_load", "_ex42_lowspeed_gait", "_ex42_front_load_dr"):
+        assert module in names
+    lines = {c.func.value.id: c.lineno for c in calls}
+    assert lines["_ex42_stop_window_shape"] < lines["_ex42_stand_tilt_load"] < lines["_ex42_lowspeed_gait"] < lines["_ex42_front_load_dr"]
+    # the start-runner actor augmentation reads its switch where the algorithm is constructed
+    runner = (Path(__file__).resolve().parents[1] / "runners" / "start_runner.py").read_text(encoding="utf-8")
+    assert "actor_mirror_aug = aug_from_env()" in runner
