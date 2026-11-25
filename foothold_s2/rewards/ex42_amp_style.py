@@ -40,6 +40,7 @@ ENV_SWITCH = "EX42_AMP"
 WEIGHT_ENV = "EX42_AMP_W"
 REF_ENV = "EX42_AMP_REF"
 PARAMS_ENV = "EX42_AMP_PARAMS"
+MIRROR_ENV = "EX42_AMP_MIRROR"   # lead 04:34: 1 = add a left-right mirrored copy of the reference and policy batch to every discriminator step
 TERM = "ex42_amp_style"
 LEGS = ("FL", "FR", "RL", "RR")
 JOINTS = tuple(f"{leg}_{j}_joint" for j in ("hip", "thigh", "calf") for leg in LEGS)
@@ -65,7 +66,7 @@ def enabled() -> bool:
     if raw not in ("", "0", "1"):
         raise ValueError(f"{ENV_SWITCH} must be 1, 0 or unset (got {raw!r})")
     if raw != "1":
-        if os.environ.get(WEIGHT_ENV) or os.environ.get(REF_ENV) or os.environ.get(PARAMS_ENV):
+        if os.environ.get(WEIGHT_ENV) or os.environ.get(REF_ENV) or os.environ.get(PARAMS_ENV) or os.environ.get(MIRROR_ENV, "0") != "0":
             raise ValueError(f"{WEIGHT_ENV} / {REF_ENV} / {PARAMS_ENV} set while {ENV_SWITCH} is off")
         return False
     return True
@@ -108,6 +109,45 @@ def ref_path() -> Path:
     if not p.is_file():
         raise ValueError(f"{REF_ENV} is not a file: {p}")
     return p
+
+
+def mirror_on() -> bool:
+    raw = os.environ.get(MIRROR_ENV, "")
+    if raw not in ("", "0", "1"):
+        raise ValueError(f"{MIRROR_ENV} must be 1, 0 or unset (got {raw!r})")
+    return raw == "1"
+
+
+def mirror_state_map() -> tuple[list[int], list[float]]:
+    """(source index, sign) per column of the 30-wide state for a left-right mirror: legs FL<->FR, RL<->RR in every block of 4
+    (q hip · thigh · calf, dq hip · thigh · calf), hip angle and hip velocity negated (ab/ad), body rates roll and yaw negated, projected
+    gravity y negated. q is minus a left-right symmetric pose (sim default +-0.1 hips), so the offset mirrors with it."""
+    src, sign = list(range(30)), [1.0] * 30
+    for block in range(6):
+        b = 4 * block
+        src[b:b + 4] = [b + 1, b, b + 3, b + 2]
+        if block in (0, 3):
+            sign[b:b + 4] = [-1.0] * 4
+    sign[24], sign[26], sign[28] = -1.0, -1.0, -1.0
+    return src, sign
+
+
+def mirror_transitions(x: torch.Tensor, p: dict) -> torch.Tensor:
+    """Left-right mirror of [N, 2 * len(input_cols) + 2] transitions (s_t, s_t+1, walk, still); the condition one-hot is unchanged."""
+    cols = input_cols(p)
+    src, sign = mirror_state_map()
+    pos = {c: j for j, c in enumerate(cols)}
+    idx = torch.tensor([pos[src[c]] for c in cols], device=x.device)
+    sg = torch.tensor([sign[c] for c in cols], device=x.device, dtype=x.dtype)
+    n = len(cols)
+    return torch.cat([x[:, :n][:, idx] * sg, x[:, n:2 * n][:, idx] * sg, x[:, 2 * n:]], dim=1)
+
+
+def disc_batch(xr: torch.Tensor, xp: torch.Tensor, p: dict, mirror: bool) -> tuple[torch.Tensor, torch.Tensor]:
+    """The discriminator batch: as drawn, or (mirror) with a mirrored copy of each side appended."""
+    if not mirror:
+        return xr, xp
+    return torch.cat([xr, mirror_transitions(xr, p)]), torch.cat([xp, mirror_transitions(xp, p)])
 
 
 def input_cols(p: dict) -> list[int]:
@@ -221,7 +261,7 @@ def build(device, p: dict, npz: dict | None = None) -> dict:
           "ref_idx": [torch.nonzero(ref[:, -1] == c).squeeze(1) for c in (0.0, 1.0)],
           "pol_center": torch.zeros(2, 30, device=device), "pol_center_init": torch.zeros(2, dtype=torch.bool, device=device),
           "buf": Buffer(int(p["buffer"]), ref.shape[1], device), "p": p, "updates": 0,
-          "last": {}, "sums": torch.zeros(len(MON_SUMS), dtype=torch.float64, device=device), "calls": 0}
+          "last": {}, "sums": torch.zeros(len(MON_SUMS), dtype=torch.float64, device=device), "calls": 0, "mirror": mirror_on()}
     pending = _STATE.pop("pending", None)
     if pending is not None:
         disc.load_state_dict(pending["disc"])
@@ -257,6 +297,7 @@ def train_disc(st: dict) -> None:
         for _ in range(int(p["disc_steps"])):
             xp = st["buf"].sample(b).clone()
             xr = st["ref"][ref_like(st, xp)]
+            xr, xp = disc_batch(xr, xp, p, st.get("mirror", False))
             st["last"] = amp.disc_step(st["disc"], st["opt"], xr, xp, p["gp"])
             st["updates"] += 1
 
@@ -401,7 +442,8 @@ def register(env_cfg, term_cfg_class=None, entity_cfg_class=None) -> bool:
           + f" input=s_prev,s,walk,still dims={2 * len(input_cols(p)) + 2}" + (" minus_grav_z centered_per_condition" if p["center"] else "")
           + (" walk=straight_cmd_vs_forward_stick_ref" if p["straight_only"] else " walk=any_cmd_vs_all_walk_ref")
           + {2.0: " style=rank_batch", 1.0: " style=relative_batch_floor", 0.0: " style=lsgan_clipped"}[p["rel_style"]]
-          + " mask=continuous_level_le_band_max_level" + ("_flatlike_kinds" if p["flatlike_only"] else ""),
+          + " mask=continuous_level_le_band_max_level" + ("_flatlike_kinds" if p["flatlike_only"] else "")
+          + f" mirror={int(mirror_on())}",
           flush=True)
     return True
 

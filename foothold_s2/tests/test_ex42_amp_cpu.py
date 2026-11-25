@@ -158,6 +158,33 @@ def test_disc_reference_draw_matches_the_policy_condition_mix():
     assert len(i) == 64 and int((ref[i, -1] == 0).sum()) == 48
 
 
+def test_amp_mirror_twice_is_identity_and_off_keeps_the_batch(monkeypatch):
+    from foothold_s2.rewards import ex42_amp_style as st
+    p = st.params()
+    x = torch.randn(32, 2 * len(st.input_cols(p)) + 2)
+    m = st.mirror_transitions(x, p)
+    assert torch.allclose(st.mirror_transitions(m, p), x) and not torch.allclose(m, x)
+    assert torch.equal(m[:, -2:], x[:, -2:])                              # condition one-hot unchanged
+    n = len(st.input_cols(p))
+    assert torch.equal(m[:, 0], -x[:, 1]) and torch.equal(m[:, 4], x[:, 5])   # hip FL = -hip FR · thigh FL = thigh FR
+    xr, xp = torch.randn(8, x.shape[1]), torch.randn(8, x.shape[1])
+    a, b = st.disc_batch(xr, xp, p, False)
+    assert a is xr and b is xp                                             # off: the batch as drawn
+    a, b = st.disc_batch(xr, xp, p, True)
+    assert a.shape[0] == 16 and torch.equal(a[:8], xr) and torch.allclose(st.mirror_transitions(a[8:], p), xr) and b.shape[0] == 16
+    for k in (st.ENV_SWITCH, st.WEIGHT_ENV, st.REF_ENV, st.PARAMS_ENV, st.MIRROR_ENV):
+        monkeypatch.delenv(k, raising=False)
+    assert st.mirror_on() is False
+    monkeypatch.setenv(st.MIRROR_ENV, "1")
+    assert st.mirror_on() is True
+    import pytest
+    with pytest.raises(ValueError):
+        st.enabled()                                                       # mirror set while EX42_AMP is off
+    monkeypatch.setenv(st.MIRROR_ENV, "2")
+    with pytest.raises(ValueError):
+        st.mirror_on()
+
+
 def test_amp_classes_and_off_switch(monkeypatch):
     from foothold_s2.rewards import ex42_amp_style as st
     cmd = torch.tensor([[0.0, 0.0, 0.0], [0.0, 0.0, 0.3], [0.2, 0.0, 0.0], [0.5, 0.3, 0.0], [-0.4, 0.05, 0.08]])
