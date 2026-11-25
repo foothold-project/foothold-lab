@@ -198,7 +198,9 @@ def stage_low_forward(plan, stage_id, limits=None) -> float | None:
 # Reward cells a stage row may fence wider than the limits file (E1F, E2; 2026-11-16 lead 15:20, planner 15:17). The file keeps its bytes
 # (the source E1 row pins its sha, ex42_stage_materialize reads the template's file against it), so the wider fence is the row's own
 # `live_adjustment.extra_reward_limits.<cell>` (or `reward_fence.<cell>` on a stage without a live adjustment): it widens the file's pair or leaves it (a narrower row pair is ignored here; limits_from_plan refuses it), and only these two cells may differ.
-PLAN_WIDENABLE = ("slow_progress", "slow_track_sigma")
+# 2026-11-26 01:37 (lead, planner 01:36): slow_track_speed_min too, so a row that lowers the forward command end (EX42_FWD_LOW 0.05)
+# can lower the slow band's end with it (the command band and the reward band are one definition); the file keeps [0.1, 0.1].
+PLAN_WIDENABLE = ("slow_progress", "slow_track_sigma", "slow_track_speed_min")
 
 
 def row_reward_fence(row, base_cells, stage_id) -> dict:

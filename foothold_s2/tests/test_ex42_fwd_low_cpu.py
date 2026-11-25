@@ -92,3 +92,16 @@ def test_lowspeed_sigma(monkeypatch):
         monkeypatch.setenv(mirror.LOWSPEED_SIGMA_ENV, bad)
         with pytest.raises(ValueError):
             mirror.lowspeed_sigma_scale()
+
+
+def test_row_may_widen_slow_band_end_but_file_stays():
+    from foothold_s2.commands import ex42_segment_adjust as adj
+    file = adj.reward_limits()
+    assert file["cells"]["slow_track_speed_min"] == (0.1, 0.1) or list(file["cells"]["slow_track_speed_min"]) == [0.1, 0.1]
+    base = {k: tuple(v) for k, v in file["cells"].items()}
+    row = {"live_adjustment": {"extra_reward_limits": {"slow_track_speed_min": [0.05, 0.1]}}}
+    assert adj.row_reward_fence(row, base, "E2") == {"slow_track_speed_min": (0.05, 0.1)}
+    row = {"live_adjustment": {"extra_reward_limits": {"slow_track_speed_min": [0.1, 0.1]}}}
+    assert adj.row_reward_fence(row, base, "E2") == {}
+    row = {"live_adjustment": {"extra_reward_limits": {"slow_track_speed_min": [0.12, 0.2]}}}
+    assert adj.row_reward_fence(row, base, "E2") == {}          # cannot narrow
