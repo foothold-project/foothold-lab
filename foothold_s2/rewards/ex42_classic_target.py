@@ -25,7 +25,8 @@ per second = weight x mean value per 0.02 s step:
     hip:   2 front feet x 1.6 touchdowns/s x 0.02 s x (0.13 - 0.05)^2 = 0.00041 per step -> 0.063 / 0.00041 = 154 -> 150.
     freq:  4 feet x 1.6/s x 0.02 s x (0.625 - 0.714)^2 = 0.00101 per step -> 0.063 / 0.00101 = 62 -> 60.
 planner sets the final weights. Note: EX42_LOWSPEED_GAIT (a) already penalises wx^2 + wy^2; if both are on, pitch is counted
-twice (lead decides). Monitor line EX42_CLASSIC_MON (rank 0, calls 1 and 50 then every MONITOR_EVERY steps) reports the three
+twice; lead 00:32 decided w_pitch=0 for that case (the pitch term is then not registered; the monitor still
+reports pitch_rms on the mask). Monitor line EX42_CLASSIC_MON (rank 0, calls 1 and 50 then every MONITOR_EVERY steps) reports the three
 cells with the judgment definitions on the mask; the counts also go to each command_shares record (key classic_target).
 No Kit import at module level.
 """
@@ -70,10 +71,10 @@ def params() -> dict:
             out[key] = float(raw)
         except ValueError:
             raise ValueError(f"{PARAMS_ENV} invalid number {item!r}") from None
-    if (any(not math.isfinite(v) for v in out.values()) or out["w_hip"] >= 0 or out["w_pitch"] >= 0 or out["w_freq"] >= 0
+    if (any(not math.isfinite(v) for v in out.values()) or out["w_hip"] >= 0 or out["w_pitch"] > 0 or out["w_freq"] >= 0
             or not 0 < out["hip_target"] < 0.5 or not 0.3 <= out["step_hz"] <= 5 or out["v_max"] <= 0
             or out["cmd_min"] < 0 or not 0 <= out["band_max_level"] <= 9 or out["min_swing_steps"] < 1):
-        raise ValueError(f"{PARAMS_ENV} needs weights < 0, 0 < hip_target < 0.5, 0.3 <= step_hz <= 5, v_max > 0, cmd_min >= 0")
+        raise ValueError(f"{PARAMS_ENV} needs w_hip, w_freq < 0 and w_pitch <= 0 (0 = pitch term not registered), 0 < hip_target < 0.5, 0.3 <= step_hz <= 5, v_max > 0, cmd_min >= 0")
     return out
 
 
@@ -224,6 +225,7 @@ def register(env_cfg, term_cfg_class=None, entity_cfg_class=None) -> bool:
     terms = (("ex42_classic_hip_range", ex42_classic_hip_range, p["w_hip"]),
              ("ex42_classic_pitch", ex42_classic_pitch, p["w_pitch"]),
              ("ex42_classic_step_freq", ex42_classic_step_freq, p["w_freq"]))
+    terms = tuple(t for t in terms if t[2] != 0.0)   # lead 00:32: w_pitch=0 when EX42_LOWSPEED_GAIT already penalises wy^2
     for name, _, _ in terms:
         if getattr(rewards, name, None) is not None:
             raise ValueError(f"{ENV_SWITCH} registered twice ({name})")

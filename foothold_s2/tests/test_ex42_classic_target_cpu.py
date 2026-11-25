@@ -148,3 +148,19 @@ def test_register_three_terms_and_off_registers_nothing(monkeypatch, capsys):
     assert "EX42_CLASSIC_TARGET where=start w_hip=-150 w_pitch=-0.9 w_freq=-60" in capsys.readouterr().out
     with pytest.raises(ValueError):
         ct.register(cfg, Term, Entity)
+
+
+def test_pitch_weight_zero_is_accepted_and_not_registered(monkeypatch):
+    class Term:
+        def __init__(self, func, weight, params):
+            self.weight = weight
+
+    class Entity:
+        def __init__(self, name, **kw):
+            pass
+
+    _env(monkeypatch, params="w_pitch=0,w_hip=-230,w_freq=-95")
+    cfg = types.SimpleNamespace(rewards=types.SimpleNamespace())
+    assert ct.register(cfg, Term, Entity)
+    assert not hasattr(cfg.rewards, "ex42_classic_pitch")
+    assert (cfg.rewards.ex42_classic_hip_range.weight, cfg.rewards.ex42_classic_step_freq.weight) == (-230.0, -95.0)
