@@ -284,7 +284,7 @@ def _gait_env(monkeypatch):
     lg._SUMS.clear()
     command, raw, data = _env(monkeypatch)
     _draw(command)
-    raw._ex42_lowspeed_flat_columns = torch.tensor([0])          # column 0 continuous, treated as flat here
+    raw.scene.terrain.terrain_levels = (torch.arange(N) // 2 % 4).long()   # levels 0..3: band only on levels 0 and 1
     raw.episode_length_buf = torch.full((N,), 10)
     names = [f"{leg}_{j}_joint" for leg in ("FL", "FR", "RL", "RR") for j in ("hip", "thigh", "calf")]
     raw.scene.robot.joint_names = names
@@ -337,12 +337,16 @@ def test_lift_band_uses_judgment_fk_and_scores_only_outside_band(monkeypatch):
     force[:, :3, 2] = 30.0
     value = lg.ex42_lowspeed_lift_band(raw, "base_velocity", NS(name="robot"), SENSOR, p)
     _, flat_active = lg._masks(raw, "base_velocity", p)
+    lv = raw.scene.terrain.terrain_levels
+    cont = raw.scene.terrain.terrain_types == 0
+    assert int(flat_active.sum()) > 0 and bool((lv[flat_active] <= 1).all()) and bool(cont[flat_active].all())
+    assert int((lg._masks(raw, "base_velocity", p)[0] & (lv > 1)).sum()) > 0      # angvel mask still covers higher levels
     # FL 0.01 below, FR inside, RL 0.02 above -> 0.03 m (FK grid tolerance 1e-4)
     assert torch.allclose(value[flat_active], torch.full_like(value[flat_active], 0.03), atol=3e-4)
     assert bool((value[~flat_active] == 0).all())
     row = lg.summary()
     assert row["swing_lift_m"][0] == pytest.approx(0.04, abs=2e-4) and row["swing_lift_m"][2] == pytest.approx(0.09, abs=2e-4)
-    assert row["band_scored_touchdowns"] == 3 * int(flat_active.sum())
+    assert row["band_scored_touchdowns"] == 3 * int(flat_active.sum()) and row["band_env_steps"] > 0
 
 
 def test_band_mutation_and_off_gate(monkeypatch):

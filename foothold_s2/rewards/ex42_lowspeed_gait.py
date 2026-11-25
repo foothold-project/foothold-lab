@@ -1,7 +1,7 @@
 """F1 / F2 common base (lead 2026-11-25 21:03 / 21:04, planner M136): walking low-speed stability. Off by default.
 
     EX42_LOWSPEED_GAIT=1
-    EX42_LOWSPEED_GAIT_PARAMS="w_ang=-1.1,w_band=-40,v_max=0.5,side_turn_wz=0.5,lo=0.05,hi=0.07,min_swing_steps=3"
+    EX42_LOWSPEED_GAIT_PARAMS="w_ang=-1.1,w_band=-40,v_max=0.5,side_turn_wz=0.5,lo=0.05,hi=0.07,min_swing_steps=3,band_max_level=1"
 
 (a) ex42_lowspeed_angvel   value = wx^2 + wy^2 (root_ang_vel_b roll, pitch)
     active: moving (not the stand slot) and (|v_xy cmd| <= v_max or side command |vy| > |vx| or turn |wz| >= side_turn_wz)
@@ -13,7 +13,9 @@
             of relu(lo - lift) + relu(lift - hi); 0 inside the band (not a reward for height).
     lift = (max - min) over the swing of zf = -(0.213 cos(thigh) + 0.213 cos(thigh + calf)), the same forward kinematics as the
             judgment table (planner night_table4.py [2], thigh and calf 0.213 m; hip roll ignored as there). Swing = foot contact
-            force z <= 1 N. Flat columns only, same command mask as (a).
+            force z <= 1 N. Same command mask as (a) on continuous columns (not sparse) at terrain level <= band_max_level (1):
+            nearly flat ground. lead 21:39: the F plan opens no flat column (flat exposure 0: A/flat 48 49 and C/flat 63), so the
+            first form (flat columns only) scored 0 touchdowns; levels 0~1 of the continuous columns hold 382 of 3072 envs.
     Weight -40: touchdown steps are sparse. Assumed 2 touchdowns / s per foot and a 0.03 m excess on the two front feet
             (candidate 0.095 / 0.085 m): mean value per 0.02 s step 2 x 2 x 0.03 x 0.02 = 0.0024; 0.106 / 0.0024 = 44 -> 40.
             The touchdown rate is logged (gait_period_s) to check the assumption.
@@ -31,7 +33,7 @@ import torch
 ENV_SWITCH = "EX42_LOWSPEED_GAIT"
 PARAMS_ENV = "EX42_LOWSPEED_GAIT_PARAMS"
 DEFAULTS = {"w_ang": -1.1, "w_band": -40.0, "v_max": 0.5, "side_turn_wz": 0.5, "lo": 0.05, "hi": 0.07,
-            "min_swing_steps": 3.0}
+            "min_swing_steps": 3.0, "band_max_level": 1.0}
 FEET = ("FL_foot", "FR_foot", "RL_foot", "RR_foot")
 LEGS = ("FL", "FR", "RL", "RR")
 LINK = 0.213
@@ -62,7 +64,7 @@ def params() -> dict:
             raise ValueError(f"{PARAMS_ENV} invalid number {item!r}") from None
     if (any(not math.isfinite(v) for v in out.values()) or out["w_ang"] >= 0 or out["w_band"] >= 0
             or out["v_max"] <= 0 or out["side_turn_wz"] <= 0 or not 0 < out["lo"] < out["hi"] < 0.3
-            or out["min_swing_steps"] < 1):
+            or out["min_swing_steps"] < 1 or not 0 <= out["band_max_level"] <= 9):
         raise ValueError(f"{PARAMS_ENV} needs weights < 0, v_max and side_turn_wz > 0, 0 < lo < hi < 0.3, min_swing_steps >= 1")
     return out
 
@@ -133,15 +135,8 @@ def _masks(env, command_name, p):
     command = env.command_manager.get_command(command_name)
     cmd = command_mask(command, term.stand.bool(), p["v_max"], p["side_turn_wz"])
     continuous = ~sparse_envs(env).to(cmd.device)
-    flat_cols = getattr(raw, "_ex42_lowspeed_flat_columns", None)
-    if flat_cols is None:
-        from foothold_s2.terrains.generator_columns import generator_column_names
-
-        names = generator_column_names(env.scene.terrain.cfg.terrain_generator)
-        flat_cols = torch.tensor([i for i, n in enumerate(names) if n == "flat"], dtype=torch.long, device=cmd.device)
-        raw._ex42_lowspeed_flat_columns = flat_cols
-    flat = torch.isin(env.scene.terrain.terrain_types.to(cmd.device), flat_cols)
-    return cmd & continuous, cmd & flat
+    low_level = env.scene.terrain.terrain_levels.to(cmd.device) <= p["band_max_level"]
+    return cmd & continuous, cmd & continuous & low_level
 
 
 def ex42_lowspeed_angvel(env, command_name, asset_cfg, p):
@@ -185,6 +180,7 @@ def _monitor(env, robot, sensor_cfg, contact, touchdown, lift, active, flat_acti
     _add("touchdowns", td.float())
     _add("lift_sum", torch.where(td, lift, torch.zeros_like(lift)))
     _add("band_scored", (touchdown & flat_active[:, None]).float())
+    _add("band_env_steps", flat_active)
     _add("mon_steps", active)
     a = active.float()
     feet = getattr(raw, "_ex42_lowspeed_feet", None)
@@ -230,8 +226,8 @@ def register(env_cfg, term_cfg_class=None, entity_cfg_class=None) -> bool:
         params={"command_name": "base_velocity", "asset_cfg": robot, "p": dict(p),
                 "sensor_cfg": entity_cfg_class("contact_forces", body_names=list(FEET), preserve_order=True)})
     print("EX42_LOWSPEED_GAIT where=start w_ang=%g w_band=%g v_max=%g side_turn_wz=%g band=[%g,%g] min_swing_steps=%g "
-          "ang_mask=moving_lowspeed_or_side_or_turn_and_not_sparse band_mask=same_and_flat lift=fk_thigh_calf_0.213_swing_range"
-          % (p["w_ang"], p["w_band"], p["v_max"], p["side_turn_wz"], p["lo"], p["hi"], p["min_swing_steps"]), flush=True)
+          "ang_mask=moving_lowspeed_or_side_or_turn_and_not_sparse band_mask=same_and_continuous_level_le_%g lift=fk_thigh_calf_0.213_swing_range"
+          % (p["w_ang"], p["w_band"], p["v_max"], p["side_turn_wz"], p["lo"], p["hi"], p["min_swing_steps"], p["band_max_level"]), flush=True)
     return True
 
 
@@ -251,6 +247,7 @@ def summary() -> dict | None:
         out["touchdowns_per_foot_s"] = round(rate, 4)
         out["gait_period_s"] = round(1.0 / rate, 4) if rate else None
         out["band_scored_touchdowns"] = int(float(s["band_scored"].sum()))
+        out["band_env_steps"] = int(float(s.get("band_env_steps", torch.zeros(())).sum()))
         contact = float(s.get("contact_sum", torch.zeros(())))
         out["foot_slip_mps"] = round(float(s["slip_sum"]) / contact, 5) if contact else None
         if "action_rate_sum" in s:
