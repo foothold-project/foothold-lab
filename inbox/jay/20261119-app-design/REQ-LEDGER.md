@@ -427,7 +427,7 @@
 
 #### app-lx 답 (11/25 19:46 · 관절 재현 클립)
 - 결정 (팀장 11/25 17:32 · app-lx 전달): 관절 데이터는 가벼우니 서버 후처리 재현 OK · 영상은 서버 바로 + Jetson 저장 후 올리기 섞음 · Jetson 부담 금지.
-- 입력 (사실): start-*.jsonl · factory-auto-*.jsonl 50 Hz JSON 줄 (t · wall · q[12] · dq · tau · temp · grav[3] · gyro · h_kin · cmd · stick · keys · bat · sport{{mode · gait · err · height · vel · yaw_speed}}) · 이벤트 줄 {{t, wall, event:{{code}}}} · 1 분 약 3 MB.
+- 입력 (사실): start-*.jsonl · factory-auto-*.jsonl 50 Hz JSON 줄 (t · wall · q[12] · dq · tau · temp · grav[3] · gyro · h_kin · cmd · stick · keys · bat · sport{mode · gait · err · height · vel · yaw_speed}) · 이벤트 줄 {t, wall, event:{code}} · 1 분 약 3 MB.
 - app-lx 제안 (미정): 앞 10 초 ~ 뒤 5 초 (넘어짐은 FALL_RECOVERED 까지) · 모형 = 시뮬의 Go2 MuJoCo + three.js (mobile/sim) · 관절 q · 기울기 grav · 높이 h_kin · 방향 gyro 적분 · 위치는 측정 없음 (est_v · vel 적분은 9~32 % 크게 나옴) → 「제자리 재현 / 대략 이동」 표시 · 역할: app-lx = 자르기 · 올리기 계약 + Jetson 내보내기, 서버 · 웹 담당 = 재현 화면.
 - foothold-robot 자동 시작: app-lx 가 위험 따져 팀장 확인 중.
 - **app-design-lx 의견:** 재현은 MP4 로 굽지 말고 웹에서 바로 재생 (데이터 1 MB 미만 · 돌려 보기 · 시간 끌기 · 영상과 시각 맞춰 나란히). MP4 는 내보내기 때만 서버에서. 기본은 「제자리 재현」 + 표시, 「대략 이동」 은 선택 (값이 커 보이는 한계를 글로).
