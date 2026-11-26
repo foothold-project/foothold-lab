@@ -56,9 +56,17 @@ DEFAULTS = {"lr": 1e-4, "disc_every": 24.0, "disc_steps": 2.0, "batch": 4096.0, 
             "rel_style": 2.0, "floor_sigma": 2.0, "rank_sigmas": 4.0,   # (1) 2 rank (planner 03:27 (가), lead 03:27) · 1 floor · 0 LSGAN
             "center": 1.0, "center_momentum": 0.01,          # (2) drop grav_z, minus the per-condition mean (policy: moving average)
             "straight_only": 1.0, "straight_vy": 0.1, "straight_wz": 0.3,   # (3) walk = straight command rows vs straight reference only
-            "ref_probe": 1024.0}
+            "ref_probe": 1024.0,
+            # lead 11/26 10:00 (planner 09:59): with straight_only=1 the side and turn-only command rows get no style. side=1 / turn=1 add
+            # each as its own condition (own one-hot column, own reference rows, own centring): side = |vy| > straight_vy, |vx| <= side_vx,
+            # |wz| <= straight_wz vs the lateral-stick-only reference; turn = |vx| <= side_vx, |vy| <= straight_vy, |wz| > straight_wz vs the
+            # yaw-stick-only reference. Both 0 (default) = the two conditions walk / still exactly as before.
+            "side": 0.0, "turn": 0.0, "side_vx": 0.1}
+EXTRA_KEYS = ("side", "turn", "side_vx")   # printed on the start line only when side or turn is on
+STICK_LATERAL, STICK_YAW = 0, 2
 _STATE: dict = {}
-MON_SUMS = ("rows", "style", "dead", "walk", "still", "tot", "d_std", "d_mean", "d_ref", "batches", "style_walk", "style_still")
+MON_SUMS = ("rows", "style", "dead", "walk", "still", "tot", "d_std", "d_mean", "d_ref", "batches", "style_walk", "style_still",
+            "side", "turn", "style_side", "style_turn")
 
 
 def enabled() -> bool:
@@ -99,9 +107,20 @@ def params() -> dict:
             or out["flatlike_only"] not in (0.0, 1.0) or out["buffer"] < out["batch"] or out["pol_dq_noise"] < 0
             or any(out[k] not in (0.0, 1.0) for k in ("center", "straight_only")) or out["rel_style"] not in (0.0, 1.0, 2.0)
             or out["floor_sigma"] < 0 or out["rank_sigmas"] <= 0
-            or not 0 < out["center_momentum"] <= 1 or out["straight_vy"] < 0 or out["straight_wz"] < 0 or out["ref_probe"] < 16):
+            or not 0 < out["center_momentum"] <= 1 or out["straight_vy"] < 0 or out["straight_wz"] < 0 or out["ref_probe"] < 16
+            or any(out[k] not in (0.0, 1.0) for k in ("side", "turn")) or out["side_vx"] < 0
+            or ((out["side"] or out["turn"]) and not out["straight_only"])):
         raise ValueError(f"{PARAMS_ENV} out of range: {out}")
     return out
+
+
+def extra_conditions(p: dict) -> list[str]:
+    """The conditions after walk (0) and still (1), in column order: [], ["side"], ["turn"] or ["side", "turn"]."""
+    return [k for k in ("side", "turn") if p.get(k)]
+
+
+def n_conditions(p: dict) -> int:
+    return 2 + len(extra_conditions(p))
 
 
 def ref_path() -> Path:
@@ -133,7 +152,8 @@ def mirror_state_map() -> tuple[list[int], list[float]]:
 
 
 def mirror_transitions(x: torch.Tensor, p: dict) -> torch.Tensor:
-    """Left-right mirror of [N, 2 * len(input_cols) + 2] transitions (s_t, s_t+1, walk, still); the condition one-hot is unchanged."""
+    """Left-right mirror of [N, 2 * len(input_cols) + n_conditions] transitions (s_t, s_t+1, condition one-hot); the one-hot is unchanged
+    (side and turn are sign-free conditions: the mirror of a left step is a right step of the same condition)."""
     cols = input_cols(p)
     src, sign = mirror_state_map()
     pos = {c: j for j, c in enumerate(cols)}
@@ -163,21 +183,28 @@ def reference_transitions(npz: dict, p: dict | None = None) -> tuple[torch.Tenso
     p = dict(DEFAULTS) if p is None else p
     s, seg, kind = (np.asarray(npz[k]) for k in ("s", "seg", "kind"))
     walk = kind == 0
+    sels, names = [], ["walk", "still"] + extra_conditions(p)
     if p["straight_only"]:
         stick = np.abs(np.asarray(npz["stick"]))
-        others = [c for c in range(stick.shape[1]) if c != STICK_FORWARD]
-        walk = walk & (stick[:, STICK_FORWARD] > REF_STICK_EPS) & (stick[:, others].max(axis=1) <= REF_STICK_EPS)
+
+        def alone(col):
+            others = [c for c in range(stick.shape[1]) if c != col]
+            return (kind == 0) & (stick[:, col] > REF_STICK_EPS) & (stick[:, others].max(axis=1) <= REF_STICK_EPS)
+
+        walk = alone(STICK_FORWARD)
+        sels = [alone({"side": STICK_LATERAL, "turn": STICK_YAW}[k]) for k in extra_conditions(p)]
     cols = input_cols(p)
-    centers = np.zeros((2, 30), dtype=np.float32)
+    nc = 2 + len(sels)
+    centers = np.zeros((nc, 30), dtype=np.float32)
     parts = []
-    for c, sel in enumerate((walk, kind != 0)):
+    for c, sel in enumerate((walk, kind != 0, *sels)):
         if not sel.any():
-            raise ValueError(f"EX42_AMP reference has no {'walk' if c == 0 else 'still'} rows")
+            raise ValueError(f"EX42_AMP reference has no {names[c]} rows")
         if p["center"]:
             centers[c, list(CENTER_COLS)] = s[sel][:, list(CENTER_COLS)].mean(axis=0)
         i = np.flatnonzero((seg[1:] == seg[:-1]) & sel[:-1] & sel[1:])
         a, b = (s[i] - centers[c])[:, cols], (s[i + 1] - centers[c])[:, cols]
-        hot = np.zeros((len(i), 2), dtype=np.float32)
+        hot = np.zeros((len(i), nc), dtype=np.float32)
         hot[:, c] = 1.0
         parts.append(np.concatenate([a, b, hot], axis=1))
     return torch.as_tensor(np.concatenate(parts), dtype=torch.float32), torch.as_tensor(centers)
@@ -191,6 +218,19 @@ def classes(command: torch.Tensor, p: dict) -> tuple[torch.Tensor, torch.Tensor]
     if p["straight_only"]:
         walk = walk & (c[:, 1].abs() <= p["straight_vy"]) & (c[:, 2].abs() <= p["straight_wz"])
     return walk, still
+
+
+def condition_masks(command: torch.Tensor, p: dict) -> list[torch.Tensor]:
+    """[walk, still, (side), (turn)] bool rows in one-hot column order; the extra two only while side / turn is on (straight_only=1)."""
+    walk, still = classes(command, p)
+    c = command[:, :3]
+    out = [walk, still]
+    for k in extra_conditions(p):
+        if k == "side":
+            out.append(~still & (c[:, 1].abs() > p["straight_vy"]) & (c[:, 0].abs() <= p["side_vx"]) & (c[:, 2].abs() <= p["straight_wz"]))
+        else:
+            out.append(~still & (c[:, 0].abs() <= p["side_vx"]) & (c[:, 1].abs() <= p["straight_vy"]) & (c[:, 2].abs() > p["straight_wz"]))
+    return out
 
 
 def rank_style(d: torch.Tensor, sigmas: float) -> torch.Tensor:
@@ -258,8 +298,10 @@ def build(device, p: dict, npz: dict | None = None) -> dict:
     disc = amp.AmpDiscriminator(ref.shape[1], amp.HIDDEN, ref.mean(0), ref.std(0)).to(device)
     opt = torch.optim.Adam(disc.parameters(), lr=p["lr"])
     st = {"disc": disc, "opt": opt, "ref": ref, "ref_centers": ref_centers.to(device),
-          "ref_idx": [torch.nonzero(ref[:, -1] == c).squeeze(1) for c in (0.0, 1.0)],
-          "pol_center": torch.zeros(2, 30, device=device), "pol_center_init": torch.zeros(2, dtype=torch.bool, device=device),
+          "ref_idx": ([torch.nonzero(ref[:, -1] == c).squeeze(1) for c in (0.0, 1.0)] if n_conditions(p) == 2 else
+                      [torch.nonzero(ref[:, ref.shape[1] - n_conditions(p) + c] == 1.0).squeeze(1) for c in range(n_conditions(p))]),
+          "pol_center": torch.zeros(n_conditions(p), 30, device=device),
+          "pol_center_init": torch.zeros(n_conditions(p), dtype=torch.bool, device=device),
           "buf": Buffer(int(p["buffer"]), ref.shape[1], device), "p": p, "updates": 0,
           "last": {}, "sums": torch.zeros(len(MON_SUMS), dtype=torch.float64, device=device), "calls": 0, "mirror": mirror_on()}
     pending = _STATE.pop("pending", None)
@@ -270,6 +312,10 @@ def build(device, p: dict, npz: dict | None = None) -> dict:
         if "pol_center" in pending:
             st["pol_center"].copy_(pending["pol_center"].to(device))
             st["pol_center_init"].copy_(pending["pol_center_init"].to(device))
+    if extra_conditions(p) and int(os.environ.get("RANK", "0") or 0) == 0:
+        names = ["walk", "still"] + extra_conditions(p)
+        print("EX42_AMP_REF_ROWS " + " ".join(f"{n}={len(i)}" for n, i in zip(names, st["ref_idx"]))
+              + f" dims={ref.shape[1]} side_vx={p['side_vx']:g} straight_vy={p['straight_vy']:g} straight_wz={p['straight_wz']:g}", flush=True)
     _STATE.update(st)
     return _STATE
 
@@ -277,9 +323,16 @@ def build(device, p: dict, npz: dict | None = None) -> dict:
 def ref_like(st: dict, xp: torch.Tensor) -> torch.Tensor:
     """Reference row indices with the same walk / still count as the policy batch xp (the reference is about 1 walk : 3 still,
     the policy mask rows are mostly walk: a uniform draw would train the walk side on a quarter of the batch)."""
-    n_still = int(xp[:, -1].sum())
+    nc = len(st["ref_idx"])
+    if nc == 2:
+        n_still = int(xp[:, -1].sum())
+        counts = ((0, len(xp) - n_still), (1, n_still))
+    else:
+        hot = xp[:, xp.shape[1] - nc:]
+        rest = [int(hot[:, c].sum()) for c in range(1, nc)]
+        counts = ((0, len(xp) - sum(rest)), *((c, k) for c, k in zip(range(1, nc), rest)))
     out = []
-    for c, k in ((0, len(xp) - n_still), (1, n_still)):
+    for c, k in counts:
         idx = st["ref_idx"][c]
         if k > 0 and len(idx) > 0:
             out.append(idx[torch.randint(len(idx), (k,), device=idx.device)])
@@ -344,6 +397,12 @@ def update_center(st: dict, s: torch.Tensor, sel: torch.Tensor, c: int) -> None:
             st["pol_center_init"][c] = True
 
 
+def extra_mask(conds: list[torch.Tensor], p: dict, name: str) -> torch.Tensor:
+    """The rows of extra condition `name` (all False while it is off)."""
+    extra = extra_conditions(p)
+    return conds[2 + extra.index(name)] if name in extra else torch.zeros_like(conds[0])
+
+
 def ex42_amp_style(env, command_name: str, asset_cfg, p: dict) -> torch.Tensor:
     raw = getattr(env, "unwrapped", env)
     robot = env.scene[asset_cfg.name]
@@ -361,14 +420,21 @@ def ex42_amp_style(env, command_name: str, asset_cfg, p: dict) -> torch.Tensor:
         raw._ex42_amp_prev = s.detach().clone()
     if prev is None:
         return torch.zeros(s.shape[0], device=s.device)
-    walk, still = classes(env.command_manager.get_command(command_name).to(s.device), p)
-    rows = mask(env, p).to(s.device) & ~fresh & (walk | still)
+    conds = condition_masks(env.command_manager.get_command(command_name).to(s.device), p)
+    walk, still = conds[0], conds[1]
+    eligible = walk | still
+    for extra in conds[2:]:
+        eligible = eligible | extra
+    rows = mask(env, p).to(s.device) & ~fresh & eligible
     cls = still.long()
-    for c, sel in enumerate((rows & walk, rows & still)):
+    for j, extra in enumerate(conds[2:]):
+        cls = torch.where(extra, torch.full_like(cls, 2 + j), cls)
+    for c, sel in enumerate([rows & m for m in conds]):
         update_center(st, s, sel, c)
     center = st["pol_center"][cls] if p["center"] else torch.zeros_like(s)
     cols = input_cols(p)
-    cond = torch.stack([(~still).float(), still.float()], dim=1)
+    cond = (torch.stack([(~still).float(), still.float()], dim=1) if len(conds) == 2
+            else torch.nn.functional.one_hot(cls, len(conds)).float())
     x = torch.cat([(prev - center)[:, cols], (s - center)[:, cols], cond], dim=1)
     from foothold_s2.runners.ex42_amp_disc import style_reward
 
@@ -377,7 +443,7 @@ def ex42_amp_style(env, command_name: str, asset_cfg, p: dict) -> torch.Tensor:
         d = st["disc"](x)
         if p["rel_style"]:
             style = torch.zeros_like(d)
-            for c, sel in enumerate((rows & walk, rows & still)):
+            for c, sel in enumerate([rows & m for m in conds]):
                 idx = st["ref_idx"][c]
                 if int(sel.sum()) < 2 or len(idx) == 0:
                     continue
@@ -399,7 +465,9 @@ def ex42_amp_style(env, command_name: str, asset_cfg, p: dict) -> torch.Tensor:
                                    (rows & walk).sum().double(), (rows & still).sum().double(), float(len(rows)) * one,
                                    (dr.std().double() if len(dr) > 1 else 0 * one), dr.double().sum(),
                                    (d_ref_sum / n_cls if n_cls else 0.0) * one, (one if n_cls else 0 * one),
-                                   style[rows & walk].sum().double(), style[rows & still].sum().double()]).detach().clone()
+                                   style[rows & walk].sum().double(), style[rows & still].sum().double(),
+                                   *[(rows & extra_mask(conds, p, k)).sum().double() for k in ("side", "turn")],
+                                   *[style[rows & extra_mask(conds, p, k)].sum().double() for k in ("side", "turn")]]).detach().clone()
     st["calls"] += 1
     if st["calls"] % int(p["disc_every"]) == 0:
         train_disc(st)
@@ -421,7 +489,9 @@ def ex42_amp_style(env, command_name: str, asset_cfg, p: dict) -> torch.Tensor:
                   f"walk_style_share={v['style_walk'] / v['style'] if v['style'] else nan:.4f} "
                   f"still_style_share={v['style_still'] / v['style'] if v['style'] else nan:.4f} "
                   f"pol_grav_x_walk={float(st['pol_center'][0, 27]):.4f} ramp={ramp(step, p['ramp_steps']):.3f} "
-                  f"disc_updates={st['updates']} buffer={st['buf'].n}", flush=True)
+                  f"disc_updates={st['updates']} buffer={st['buf'].n}"
+                  + "".join(f" {k}_row_frac={v[k] / v['tot'] if v['tot'] else 0:.4f} {k}_style_mean={v['style_' + k] / v[k] if v[k] else nan:.4f}"
+                            for k in extra_conditions(p)), flush=True)
     return out
 
 
@@ -438,8 +508,11 @@ def register(env_cfg, term_cfg_class=None, entity_cfg_class=None) -> bool:
     setattr(env_cfg.rewards, TERM, term_cfg_class(func=ex42_amp_style, weight=w,
                                                   params={"command_name": "base_velocity", "asset_cfg": entity_cfg_class("robot"), "p": dict(p)}))
     sha = hashlib.sha256(ref.read_bytes()).hexdigest()
-    print(f"EX42_AMP where=start weight={w:g} ref={ref} sha256={sha[:12]} " + " ".join(f"{k}={v:g}" for k, v in p.items())
-          + f" input=s_prev,s,walk,still dims={2 * len(input_cols(p)) + 2}" + (" minus_grav_z centered_per_condition" if p["center"] else "")
+    shown = {k: v for k, v in p.items() if k not in EXTRA_KEYS or extra_conditions(p)}
+    conds = ",".join(["walk", "still"] + extra_conditions(p))
+    print(f"EX42_AMP where=start weight={w:g} ref={ref} sha256={sha[:12]} " + " ".join(f"{k}={v:g}" for k, v in shown.items())
+          + f" input=s_prev,s,{conds} dims={2 * len(input_cols(p)) + n_conditions(p)}"
+          + (" minus_grav_z centered_per_condition" if p["center"] else "")
           + (" walk=straight_cmd_vs_forward_stick_ref" if p["straight_only"] else " walk=any_cmd_vs_all_walk_ref")
           + {2.0: " style=rank_batch", 1.0: " style=relative_batch_floor", 0.0: " style=lsgan_clipped"}[p["rel_style"]]
           + " mask=continuous_level_le_band_max_level" + ("_flatlike_kinds" if p["flatlike_only"] else "")

@@ -213,3 +213,83 @@ def test_signature_gate_accepts_amp_disc_key():
     cand = dict(base, amp_disc={"disc": {"net.0.weight": torch.zeros(2, 2)}})
     rep = gate.compare(base, cand)
     assert rep["same"] and rep["extra_top_level_in_cand"] == ["amp_disc"]
+
+
+def _fake_ref_side_turn(path, rng):
+    """seg 0 forward only · seg 1 lateral only · seg 2 yaw only · seg 3 forward + yaw (no condition) · seg 4 stop · seg 5 stand."""
+    s = rng.standard_normal((600, 30)).astype(np.float32)
+    s[100:200, 27] += 0.7                                              # the side rows have their own posture offset
+    stick = np.zeros((600, 3), dtype=np.float32)
+    stick[:100, 1] = 0.6
+    stick[100:200, 0] = 0.6
+    stick[200:300, 2] = 0.6
+    stick[300:400, 1] = 0.6; stick[300:400, 2] = 0.4
+    np.savez(path, s=s, seg=np.repeat(np.arange(6), 100), kind=np.repeat([0, 0, 0, 0, 1, 2], 100), stick=stick)
+
+
+def test_amp_side_turn_conditions_reference_rows_style_and_buffer(monkeypatch, tmp_path, capsys):
+    """lead 11/26 10:00: side=1 / turn=1 give the side and turn-only command rows their own condition and reference; off they get 0."""
+    import types
+    import pytest
+    from foothold_s2.rewards import ex42_amp_style as st
+    from foothold_s2.rewards import ex42_hip_sparse
+    _fake_ref_side_turn(tmp_path / "ref.npz", np.random.default_rng(2))
+    npz = dict(np.load(tmp_path / "ref.npz"))
+    on = dict(st.DEFAULTS, side=1.0, turn=1.0)
+    x, centers = st.reference_transitions(npz, on)
+    assert x.shape == (99 * 3 + 198, 58 + 4)                              # walk · side · turn 99 each + still 198 · one-hot 4 wide
+    hot = x[:, -4:]
+    assert [int(hot[:, c].sum()) for c in range(4)] == [99, 198, 99, 99] and bool((hot.sum(1) == 1).all())
+    assert abs(float(centers[2, 27]) - float(npz["s"][100:200, 27].mean())) < 1e-5   # side centred on its own mean
+    x_off, _ = st.reference_transitions(npz, st.params())
+    assert x_off.shape == (99 + 198, 60)                                 # off: as before (lateral and yaw rows unused)
+    with pytest.raises(ValueError, match="no turn rows"):
+        st.reference_transitions({**npz, "stick": np.where(np.arange(600)[:, None] < 300, npz["stick"], 0) * [1, 1, 0]}, on)
+
+    monkeypatch.setenv(st.ENV_SWITCH, "1"); monkeypatch.setenv(st.WEIGHT_ENV, "0.5"); monkeypatch.setenv(st.REF_ENV, str(tmp_path / "ref.npz"))
+    monkeypatch.setattr(ex42_hip_sparse, "sparse_envs", lambda env: torch.tensor([False, False, False, True, False, False, False, False]))
+    base = "batch=16,buffer=64,disc_every=2,disc_steps=1,ramp_steps=1200,band_max_level=1,flatlike_only=1,ref_probe=32"
+    cmd = torch.tensor([[0.0, 0, -0.6], [0.0, 0, 0], [0.3, 0, 0], [0.3, 0, 0], [0.0, 0, 0.8], [0.5, 0, 0], [0.0, 0.3, 0.0], [0.0, -0.4, 0.0]])
+    out = {}
+    for name, extra in (("off", ""), ("on", ",side=1,turn=1")):
+        monkeypatch.setenv(st.PARAMS_ENV, base + extra)
+        st._STATE.clear()
+        env, raw = _fake_env()
+        env.command_manager = types.SimpleNamespace(get_command=lambda name: cmd)
+        p = st.params()
+        capsys.readouterr()
+        with torch.inference_mode():
+            for _ in range(13):
+                r = st.ex42_amp_style(env, "base_velocity", types.SimpleNamespace(name="robot"), p)
+        out[name] = (r.clone(), st._STATE["buf"].x.shape[1], st._STATE["buf"].n, capsys.readouterr().out)
+    # rows: 0 turn only · 1 still (alone: rank style needs 2 rows, so 0) · 2 level 2 · 3 sparse · 4 turn only · 5 fresh · 6 side 0.3 · 7 side -0.4
+    r_off, dim_off, n_off, _ = out["off"]
+    r_on, dim_on, n_on, log_on = out["on"]
+    assert (r_off[[0, 4, 6, 7]] == 0).all() and dim_off == 60 and n_off == 12   # off: side and turn rows get no style, not in the buffer
+    assert (r_on[[0, 4, 6, 7]] > 0).all() and (r_on[[2, 3, 5]] == 0).all()       # on: they do; mask and fresh rules unchanged
+    assert dim_on == 62 and n_on == 60                                            # 4 condition columns · rows 0 1 4 6 7 x 12 calls
+    assert "EX42_AMP_REF_ROWS walk=99 still=198 side=99 turn=99 dims=62" in log_on
+    assert "side_row_frac=" in log_on and "side_style_mean=" in log_on and "turn_style_mean=" in log_on
+    st._STATE.clear()
+
+
+def test_amp_side_turn_params_and_condition_masks():
+    import pytest
+    from foothold_s2.rewards import ex42_amp_style as st
+    p = dict(st.DEFAULTS, side=1.0, turn=1.0)
+    cmd = torch.tensor([[0.5, 0, 0], [0, 0, 0], [0, 0.3, 0], [0.05, -0.5, 0.1], [0, 0, 1.0], [0.5, 0, 0.8], [0.4, 0.3, 0], [0, 0.4, 0.6]])
+    walk, still, side, turn = st.condition_masks(cmd, p)
+    assert walk.tolist() == [True, False, False, False, False, False, False, False]
+    assert still.tolist() == [False, True, False, False, False, False, False, False]
+    assert side.tolist() == [False, False, True, True, False, False, False, False]    # walkturn · diagonal · side+turn: no condition
+    assert turn.tolist() == [False, False, False, False, True, False, False, False]
+    assert len(st.condition_masks(cmd, st.DEFAULTS)) == 2 and st.n_conditions(st.DEFAULTS) == 2
+    import os
+    old = os.environ.get(st.PARAMS_ENV)
+    try:
+        for bad in ("side=2", "turn=0.5", "side=1,straight_only=0", "side_vx=-1"):
+            os.environ[st.PARAMS_ENV] = bad
+            with pytest.raises(ValueError):
+                st.params()
+    finally:
+        os.environ.pop(st.PARAMS_ENV, None) if old is None else os.environ.__setitem__(st.PARAMS_ENV, old)
