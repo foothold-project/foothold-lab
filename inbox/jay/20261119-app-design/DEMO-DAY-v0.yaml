@@ -1,0 +1,174 @@
+# 분류: 데모 시나리오 (데모 에이전트 입력)
+# 작성: app-design-lx · 2026-11-26 10:3x
+# 근거: demo-scenario-contract-v0 D · G · H · I 절 (app-lx 합의) · MAP-SITES.md · MAP-ARENA.md · 팀장 05:37 정정 (정시 · 같은 속도 · 충전 교대 · 원인 사건만)
+# 요지: 하루 (00:00 ~ 24:00) 22 대 · 지도 4 개. 어긋남은 crowd · path_conflict · wait_confirm · fault 로만. 지연은 뒤 일정으로 번지고 기록됨
+# 상태: v0 · 값 중 「가정」 은 실측 전 출발값. 배터리 계수는 app-lx 실측으로 바꿀 것
+
+meta:
+  version: 0
+  timezone: Asia/Seoul
+  day_start: "00:00"
+  demo: true            # 등록 정보에 둠 (I 절). 이 파일 값은 등록 경로가 씀
+  seed: 1126            # 같은 시드 = 같은 하루 (사건 확률 재현)
+
+defaults:
+  model: go2x
+  speed_mps: { patrol: 0.8, transit: 1.0 }   # 모든 로봇 같은 속도 (G 절)
+  battery:                 # 가정 · 실측으로 바꿈
+    walk_pct_per_min: 0.9  # 걷는 동안
+    idle_pct_per_min: 0.15 # 서서 기다림
+    charge_pct_per_min: 1.2
+    low_pct: 30            # 이 아래면 계획된 충전 교대로
+  telemetry:
+    joints_source: trace-pull-1125   # 실측 재생 (H 절) · 걷기 = start-*.jsonl, 동작 = MOVES-1125
+    temperature_source: trace-pull-1125
+
+sites:
+  - id: tunnel
+    map: K-공동구-1          # MAP-SITES 1
+    floors: [B1, B2]           # B2 = 입체 교차 아래 굴
+    chargers: [{ id: T-CH1, at: vent-01, slots: 1 }, { id: T-CH2, at: vent-11, slots: 1 }]
+    zones:
+      - { id: hatch-A, kind: material_hatch, crowd: [{ hours: "09:00-11:00", level: 0.5, kinds: [person] }, { hours: "14:00-16:00", level: 0.5, kinds: [person] }] }
+      - { id: hatch-B, kind: material_hatch, crowd: [{ hours: "09:00-11:00", level: 0.4, kinds: [person] }] }
+      - { id: joint-1, kind: cable_joint }
+      - { id: joint-2, kind: cable_joint }
+      - { id: joint-3, kind: cable_joint }
+      - { id: joint-4, kind: cable_joint }
+      - { id: sump, kind: sump, wet_after_rain: true }
+  - id: plant-kr
+    map: 공정-블록-KR          # MAP-SITES 2
+    floors: [G, L1, L2, L3]    # 철골 3 층
+    chargers: [{ id: K-CH1, at: control-room, slots: 2 }, { id: K-CH2, at: unit-3, slots: 2 }]
+    zones:
+      - { id: gate, kind: gate, crowd: [{ hours: "06:30-07:30", level: 0.8, kinds: [person] }, { hours: "14:30-15:30", level: 0.8, kinds: [person] }, { hours: "22:30-23:30", level: 0.6, kinds: [person] }] }
+      - { id: dock, kind: loading, crowd: [{ hours: "10:00-12:00", level: 0.6, kinds: [truck, forklift] }, { hours: "14:00-16:00", level: 0.6, kinds: [truck, forklift] }] }
+      - { id: pump-row, kind: pump }
+      - { id: hx-row, kind: heat_exchanger, keep_out_m: 4.5 }
+      - { id: steel-3f, kind: structure }
+      - { id: gas-points, kind: gas_detector }
+  - id: plant-eu
+    map: 화학-단지-블록-EU      # MAP-SITES 3
+    floors: [G, L1, L2, L3, L4]
+    chargers: [{ id: E-CH1, at: substation, slots: 2 }, { id: E-CH2, at: block-c, slots: 2 }]
+    zones:
+      - { id: truck-dock, kind: loading, crowd: [{ hours: "07:00-17:00", level: 0.7, kinds: [truck, forklift] }] }
+      - { id: rail-xing, kind: rail_crossing, trains_at: ["08:10", "10:40", "13:10", "15:40", "18:10"], block_min: 6 }
+      - { id: ex-zone, kind: ex_zone, floors: [L1, L2, L3, L4] }
+      - { id: cracker, kind: hot_block }
+  - id: arena
+    map: 장애물-경기장           # MAP-ARENA
+    floors: [G]
+    chargers: [{ id: A-CH1, at: pit, slots: 2 }]
+    zones: [{ id: lap, kind: course, sections: 9 }]
+
+robots:   # 22 대. home_charger 는 쉬는 자리
+  # 공동구 4: 둘씩 짝 (양 끝에서 마주 와서 가운데 교대)
+  - { id: T-01, site: tunnel, home_charger: T-CH1 }
+  - { id: T-02, site: tunnel, home_charger: T-CH2 }
+  - { id: T-03, site: tunnel, home_charger: T-CH1 }
+  - { id: T-04, site: tunnel, home_charger: T-CH2 }
+  # 국내 공장 8
+  - { id: K-01, site: plant-kr, home_charger: K-CH1 }
+  - { id: K-02, site: plant-kr, home_charger: K-CH1 }
+  - { id: K-03, site: plant-kr, home_charger: K-CH1 }
+  - { id: K-04, site: plant-kr, home_charger: K-CH1 }
+  - { id: K-05, site: plant-kr, home_charger: K-CH2 }
+  - { id: K-06, site: plant-kr, home_charger: K-CH2 }
+  - { id: K-07, site: plant-kr, home_charger: K-CH2 }
+  - { id: K-08, site: plant-kr, home_charger: K-CH2 }
+  # 해외 플랜트 8
+  - { id: E-01, site: plant-eu, home_charger: E-CH1 }
+  - { id: E-02, site: plant-eu, home_charger: E-CH1 }
+  - { id: E-03, site: plant-eu, home_charger: E-CH1 }
+  - { id: E-04, site: plant-eu, home_charger: E-CH1 }
+  - { id: E-05, site: plant-eu, home_charger: E-CH2 }
+  - { id: E-06, site: plant-eu, home_charger: E-CH2 }
+  - { id: E-07, site: plant-eu, home_charger: E-CH2 }
+  - { id: E-08, site: plant-eu, home_charger: E-CH2 }
+  # 경기장 2
+  - { id: A-01, site: arena, home_charger: A-CH1 }
+  - { id: A-02, site: arena, home_charger: A-CH1 }
+
+missions:   # 길이는 지도 길이 / 같은 속도로 나온 값 (가정). steps 의 goto 대상은 지도 제작 뒤 좌표로 바꿈
+  - id: tunnel-night-sweep      # 2.4 km 를 둘이 나눠 1.2 km 씩 + 가운데 교대
+    site: tunnel
+    est_min: 30
+    steps: [goto: segment-end, action: check_gas, goto: midpoint, wait: { reason: handover, min: 1 }, goto: home]
+  - id: tunnel-joint-check      # 접속공간 4 곳 온도
+    site: tunnel
+    est_min: 25
+    steps: [goto: joint-1, action: check_temp, goto: joint-2, action: check_temp, goto: joint-3, action: check_temp, goto: joint-4, action: check_temp, goto: home]
+  - id: tunnel-sump-check
+    site: tunnel
+    est_min: 15
+    steps: [goto: sump, action: inspect, goto: home]
+  - id: kr-process-round        # SK 선례 1 회 40~50 분
+    site: plant-kr
+    est_min: 45
+    steps: [goto: pump-row, action: check_temp, goto: hx-row, action: read_gauge, goto: gas-points, action: check_gas, goto: home]
+  - id: kr-steel-valves         # 교대 직전 철골 3 층
+    site: plant-kr
+    est_min: 30
+    steps: [goto: steel-3f, action: inspect_valves, wait: { reason: confirm, who: operator }, goto: home]
+  - id: eu-ex-round             # ANYmal 선례 1 미션 20 분 · 점검점 20
+    site: plant-eu
+    est_min: 20
+    steps: [goto: ex-zone, action: check_points, count: 20, goto: home]
+  - id: eu-cracker-round
+    site: plant-eu
+    est_min: 35
+    steps: [goto: rail-xing, goto: cracker, action: check_temp, goto: truck-dock, goto: home]
+  - id: arena-lap
+    site: arena
+    est_min: 12
+    steps: [goto: lap-start, action: run_lap, goto: pit]
+
+schedule:   # 정시 출발. 같은 지도의 로봇은 반씩 나눠 충전 교대 (charge_rotation)
+  tunnel:
+    - { mission: tunnel-night-sweep, robots: [T-01, T-02], at: ["00:00", "02:00", "04:00", "22:00"] }
+    - { mission: tunnel-night-sweep, robots: [T-03, T-04], at: ["01:00", "03:00", "05:00", "23:00"] }
+    - { mission: tunnel-joint-check, robots: [T-01], at: ["08:00", "16:00"] }
+    - { mission: tunnel-joint-check, robots: [T-03], at: ["12:00", "20:00"] }
+    - { mission: tunnel-sump-check, robots: [T-02], at: ["07:00", "19:00"] }
+  plant-kr:   # 하루 다섯 번 순찰 · 넷씩 두 조
+    - { mission: kr-process-round, robots: [K-01, K-02, K-03, K-04], at: ["01:00", "05:00", "09:00", "13:00", "17:00"] }
+    - { mission: kr-process-round, robots: [K-05, K-06, K-07, K-08], at: ["03:00", "07:00", "11:00", "15:00", "19:00"] }
+    - { mission: kr-steel-valves, robots: [K-02, K-06], at: ["06:00", "14:00", "22:00"] }
+  plant-eu:   # 1 미션 20 분 × 여섯
+    - { mission: eu-ex-round, robots: [E-01, E-02, E-03, E-04], at: ["06:00", "09:00", "12:00", "15:00", "18:00", "21:00"] }
+    - { mission: eu-cracker-round, robots: [E-05, E-06, E-07, E-08], at: ["07:30", "10:30", "13:30", "16:30", "19:30", "22:30"] }
+  arena:
+    - { mission: arena-lap, robots: [A-01], at: ["10:00", "14:00", "18:00"] }
+    - { mission: arena-lap, robots: [A-02], at: ["11:00", "15:00"] }
+
+charge_rotation:   # 계획된 충전. 같은 충전기 slots 를 넘지 않게 짰음 → charger_busy 는 고장 · 지연으로만 생김
+  rule: after_mission_if_below_low_pct_else_home_idle
+  plan:
+    tunnel: [{ charger: T-CH1, order: [T-01, T-03] }, { charger: T-CH2, order: [T-02, T-04] }]
+    plant-kr: [{ charger: K-CH1, order: [K-01, K-02, K-03, K-04] }, { charger: K-CH2, order: [K-05, K-06, K-07, K-08] }]
+    plant-eu: [{ charger: E-CH1, order: [E-01, E-02, E-03, E-04] }, { charger: E-CH2, order: [E-05, E-06, E-07, E-08] }]
+    arena: [{ charger: A-CH1, order: [A-01, A-02] }]
+
+events:   # 원인 사건만 (G 절). at = 정해진 시각, p_per_hour = 그 구역 혼잡 시간 안 확률
+  - { kind: crowd, zone: gate, site: plant-kr, from_zone_crowd: true, effect: [slow, pause_s: 20, reroute_if_blocked_s: 60] }
+  - { kind: crowd, zone: dock, site: plant-kr, from_zone_crowd: true, effect: [slow, reroute_if_blocked_s: 60] }
+  - { kind: crowd, zone: truck-dock, site: plant-eu, from_zone_crowd: true, effect: [slow, pause_s: 30] }
+  - { kind: crowd, zone: hatch-A, site: tunnel, from_zone_crowd: true, effect: [pause_s: 30] }
+  - { kind: path_conflict, site: any, auto: true, effect: [lower_priority_waits] }     # 동선 겹침은 저절로
+  - { kind: wait_confirm, site: plant-kr, mission: kr-steel-valves, p_per_run: 0.3, timeout_min: 5 }  # 관제 사람이 확인
+  - { kind: rail_block, site: plant-eu, zone: rail-xing, from_trains_at: true }        # 화차 지나가면 건널목 대기
+  - { kind: gauge_out_of_range, site: plant-kr, zone: hx-row, at: "13:2x", severity: warn, robot: K-03 }
+  - { kind: overheat_suspect, site: tunnel, zone: joint-3, at: "16:1x", severity: warn, robot: T-01 }
+  - { kind: gas_suspect, site: plant-kr, zone: gas-points, at: "19:3x", severity: danger, robot: K-07, effect: [stop, clip, reassign_nearest] }
+  - { kind: fault, site: plant-eu, robot: E-06, at: "14:0x", fault: motor_overtemp, effect: [stop, clip, reassign] }   # 재배정 흐름 시연 (FLOWS 7)
+  - { kind: localization_low, site: tunnel, robot: T-04, at: "03:4x", severity: warn, effect: [pause, relocalize] }  # 반복되는 굴
+
+delay_log:   # 지연은 뒤 일정으로 번지고 남김 (G 절)
+  fields: [robot, mission, planned_at, actual_at, delay_min, delay_cause, affected_next]
+
+open:
+  - 배터리 계수 (walk · idle · charge) 는 가정. 실측 (trace-pull-1125 의 bat) 으로 바꿀 것: app-lx
+  - 시각의 「x」 는 분 단위를 시드로 정함 (같은 시드면 같은 분)
+  - goto 대상 이름은 지도 (Blender) 를 만든 뒤 좌표로 바꿈
+  - 22 대가 동시에 MuJoCo 를 쓰지 않음 (데모는 계산 재생). MuJoCo 는 예행 구간 점검에만
