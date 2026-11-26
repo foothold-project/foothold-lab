@@ -24,10 +24,10 @@
 - 숫자: Inter Tight 400 · tabular-nums. 한글 Noto Sans KR.
 - 동작 단추: 순정은 모두 켬 (인사만 회색 · SDK 번호 없음). 저수준은 동작 8 + 조회 2 만 켬, 나머지 회색 · 터치하면 까닭 한 줄 (PR #501, dev 대상, 안 합침).
 - 저수준에서 켜진 동작은 실행기 받는 쪽이 아직 없어서 지금은 RUNNER_NOT_CONNECTED 로 거절됨. 통로는 app-lx 가 만드는 중.
-- 키보드 · 앱 · 모바일 · 음성 명령은 순정이든 저수준이든 같은 길로 로봇에 간다: 서버 → foothold-robot → 순정 SDK 또는 START 실행기 (팀장 10:49).
-- 음성 호출어는 「Hey, Foothold」 (순정은 Hey, BenBen). 한국어 · 영어 둘 다 (팀장 10:49).
+- 키보드 · 앱 · 모바일 · 음성 명령은 순정이든 저수준이든 같은 길로 로봇에 간다: 서버 → foothold-robot → 순정 SDK 또는 START 실행기 (팀장 10:49 · app-lx 전달).
+- 음성 호출어는 「Hey, Foothold」 (순정은 Hey, BenBen). 한국어 · 영어 둘 다 (팀장 10:49 · app-lx 전달).
 - 시뮬 엔진은 MuJoCo (Gazebo 아님).
-- 데모 로봇은 실기와 같은 길 (AgentState · robot_info · CameraFrame). 로봇에 demo=true 칸 하나만 다르고, STOP · 해제 · 일정 (run) · 기록 · 이력은 실기와 같은 서버 길로 DB 에 쌓인다 (팀장 10:49). 뼈대 PR #500, 실기와 똑같이 만드는 일은 app-lx 진행 중.
+- 데모 로봇은 실기와 같은 길 (AgentState · robot_info · CameraFrame). 로봇에 demo=true 칸 하나만 다르고, STOP · 해제 · 일정 (run) · 기록 · 이력은 실기와 같은 서버 길로 DB 에 쌓인다 (팀장 10:49 · app-lx 전달). 뼈대 PR #500, 실기와 똑같이 만드는 일은 app-lx 진행 중.
 - Go2 X 는 켠 채 충전 안 됨 → 데모 「충전기」 는 배터리 교체 칸.
 
 ## 하지 말 것
