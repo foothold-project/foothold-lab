@@ -4,16 +4,16 @@
 > 작성: app-design-lx · 2026-11-26 10:5x
 > 근거: 팀장 10:59 「너가 잘 정리해야 app-lx랑 다른 에이전트(앱 만드는 에이전트들)이 업무 잘하는거」 · 이 폴더 문서 · foothold-brand DESIGN.md
 > 요지: 앱을 만들거나 검토하는 세션은 이 파일부터 읽는다. 정해진 것 · 어디 있는지 · 하지 말 것
-> 상태: 살아 있는 문서 · 정해질 때마다 고침 (마지막 11:0x · app-lx 고침 반영)
+> 상태: 살아 있는 문서 · 정해질 때마다 고침 (마지막 11:1x · app-lx · app-reviewer-lx 지적 반영)
 
 ## 정본 (값을 새로 만들지 말고 여기서 읽는다)
 | 무엇 | 어디 | 상태 |
 |---|---|---|
-| 화면 색 · 예행 색 · 경고 타일 · 온도 색 · 숫자 글꼴 | [foothold-brand DESIGN.md](https://github.com/foothold-project/foothold-brand/blob/main/DESIGN.md) | 확정 (팀장 10:16 · 10:29) |
+| 화면 색 · 예행 색 · 경고 타일 · 온도 색 · 숫자 글꼴 | [foothold-brand DESIGN.md](https://github.com/foothold-project/foothold-brand/blob/main/DESIGN.md) | 확정 (팀장 10:16 · 10:29 · 근거: DESIGN.md 안 팀장 메모 · 원장 답 15) |
 | 서비스 전체 흐름 13 단계 | [SERVICE-FLOW.md](SERVICE-FLOW.md) | v0.1 |
 | 흐름 그림 8 · 실패 갈래 · 빈칸 점검표 | [FLOWS.md](FLOWS.md) | v0 |
 | 팀장 답 원문 | [REQ-LEDGER.md](REQ-LEDGER.md) | 계속 쌓임 |
-| 일하는 순서 6 단계 · 관문 | [WORK-PROCESS.md](WORK-PROCESS.md) | 승인됨 |
+| 일하는 순서 6 단계 · 관문 | [WORK-PROCESS.md](WORK-PROCESS.md) | 승인됨 (팀장 07:23 「진행 순서 초안 ok 진행해」 · 원장) |
 | 현장 지도 셋 · 장애물 경기장 | [MAP-SITES.md](MAP-SITES.md) · [MAP-ARENA.md](MAP-ARENA.md) | v0 |
 | 데모 하루 시나리오 (에이전트 형식) | [DEMO-DAY-v0.yaml](DEMO-DAY-v0.yaml) · 생성기 [gen_demo_day.py](gen_demo_day.py) | v0.1 · 모의 실행 통과 (app-lx 재현) |
 
@@ -30,14 +30,21 @@
 - 데모 로봇은 실기와 같은 길 (AgentState · robot_info · CameraFrame). 로봇에 demo=true 칸 하나만 다르고, STOP · 해제 · 일정 (run) · 기록 · 이력은 실기와 같은 서버 길로 DB 에 쌓인다 (팀장 10:49 · app-lx 전달). 뼈대 PR #500, 실기와 똑같이 만드는 일은 app-lx 진행 중.
 - Go2 X 는 켠 채 충전 안 됨 → 데모 「충전기」 는 배터리 교체 칸.
 
+## 안전 (먼저 읽기)
+- foothold-robot 은 Jetson 부팅 때 자동 시작이 켜져 있다 (11/25 20:50 · app-lx 전달 · 원장 「자동 시작」 줄. 원장 A12 「자동 시작 금지」 는 뒤집힘). dev 에 사람 없는 현장 승인 (8f08d0d0) 이 들어 있어, 서버 경유 조종 스위치가 켜져 있으면 Jetson 이 켜지기만 해도 현장 승인까지 간다. 남은 관문은 STOP · 조종권 · 잠금 해제. 현장 승인을 사람이 누르게 되돌릴지는 팀장 질문 (아래 표).
+- 음성: 「멈춰 / 정지」 는 늘 바로 실행. 움직임을 일으키는 명령은 화면에 한 번 보여 주고 실행 (또는 2 초 안 취소). 누가 말했는지 기록 (원장 음성 줄). 저수준에서 회색인 동작은 음성으로도 안 됨 (팀장 08:01). 위험 동작 (뒤집기 · 두 발 · 물구나무) 은 음성 금지. 단, 비상 정지 수단은 말이 아니라 화면 · 리모컨 단추다 (말은 보조).
+
 ## 하지 말 것
 - DESIGN.md 에 없는 색 · 글꼴 값을 새로 넣지 않는다. 필요하면 app-design-lx 에 묻는다.
 - 시안 견본 (고르기 페이지 그림) 을 타일 배치로 그대로 옮기지 않는다. 견본은 색 · 상태 규칙만 보인다. 타일 배치는 WORK-PROCESS 5 단계에서 따로 나온다.
 - 아직 안 정한 것 (둥글기 · 간격 · 움직임 · 타일 배치 · 임무 탭 화면) 을 짐작으로 만들지 않는다.
+- 실기 로봇에 명령을 보내는 시험을 직접 하지 않는다. 실기는 app-lx 를 거친다.
+- 공개 저장소에 내부 주소 · 계정 · 키 · 남의 시안 그림을 넣지 않는다.
 
 ## 아직 안 정한 것 · 누가
 | 무엇 | 누가 |
 |---|---|
+| 사람 없는 현장 승인 (dev 8f08d0d0) 을 자동 시작과 함께 그대로 둘지, 사람이 누르게 되돌릴지 | 팀장 |
 | 둥글기 · 간격 · 움직임 값 | app-design-lx → 팀장 고르기 |
 | 관제 타일 배치 · 임무 탭 · 로봇 탭 화면 | app-design-lx (진행 중) |
 | 「운영자 회수」 사건 (retrieve) | app-lx 구현 중 → 시나리오에 넣음 |
