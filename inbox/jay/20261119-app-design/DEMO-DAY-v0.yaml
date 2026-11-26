@@ -1,174 +1,1648 @@
-# 분류: 데모 시나리오 (데모 에이전트 입력)
-# 작성: app-design-lx · 2026-11-26 10:3x
-# 근거: demo-scenario-contract-v0 D · G · H · I 절 (app-lx 합의) · MAP-SITES.md · MAP-ARENA.md · 팀장 05:37 정정 (정시 · 같은 속도 · 충전 교대 · 원인 사건만)
-# 요지: 하루 (00:00 ~ 24:00) 22 대 · 지도 4 개. 어긋남은 crowd · path_conflict · wait_confirm · fault 로만. 지연은 뒤 일정으로 번지고 기록됨
-# 상태: v0 · 값 중 「가정」 은 실측 전 출발값. 배터리 계수는 app-lx 실측으로 바꿀 것
-
-meta:
-  version: 0
-  timezone: Asia/Seoul
-  day_start: "00:00"
-  demo: true            # 등록 정보에 둠 (I 절). 이 파일 값은 등록 경로가 씀
-  seed: 1126            # 같은 시드 = 같은 하루 (사건 확률 재현)
-
-defaults:
-  model: go2x
-  speed_mps: { patrol: 0.8, transit: 1.0 }   # 모든 로봇 같은 속도 (G 절)
-  battery:                 # 가정 · 실측으로 바꿈
-    walk_pct_per_min: 0.9  # 걷는 동안
-    idle_pct_per_min: 0.15 # 서서 기다림
-    charge_pct_per_min: 1.2
-    low_pct: 30            # 이 아래면 계획된 충전 교대로
-  telemetry:
-    joints_source: trace-pull-1125   # 실측 재생 (H 절) · 걷기 = start-*.jsonl, 동작 = MOVES-1125
-    temperature_source: trace-pull-1125
-
-sites:
+# 분류: 데모 시나리오 (데모 에이전트 입력 · 에이전트 형식)
+# 작성: app-design-lx · 2026-11-26 10:5x · 생성기로 만듦 (gen_demo_day.py)
+# 근거: demo-scenario-contract-v0 D · G · H · I · app-lx 검증 (10:40, 틀 차이 250) · MAP-SITES.md · MAP-ARENA.md
+# 요지: 하루 24 h · 22 대 · 지도 4 (floors 4 줄). 정시 · 같은 속도 · 배터리 교체 칸 교대. 어긋남은 crowd · path_conflict · wait_confirm · duration · fault 로만
+# 상태: v0.1 · 좌표는 지도 제작 전 자리표 · floor_id / map_version_id 는 자리표 UUID
+# 배터리: Go2 X 는 켠 채 충전되지 않음 → 「충전기」 는 배터리 교체 칸. charge_pct_per_h 500 (검증기 상한) = 85 % 에 약 10 분 (가정)
+version: 0
+name: demo-day-v0.1
+start: '2026-11-26T00:00:00+09:00'
+duration_h: 24
+seed: 1126
+pose_confidence: 0.95
+site:
+  floors:
   - id: tunnel
-    map: K-공동구-1          # MAP-SITES 1
-    floors: [B1, B2]           # B2 = 입체 교차 아래 굴
-    chargers: [{ id: T-CH1, at: vent-01, slots: 1 }, { id: T-CH2, at: vent-11, slots: 1 }]
-    zones:
-      - { id: hatch-A, kind: material_hatch, crowd: [{ hours: "09:00-11:00", level: 0.5, kinds: [person] }, { hours: "14:00-16:00", level: 0.5, kinds: [person] }] }
-      - { id: hatch-B, kind: material_hatch, crowd: [{ hours: "09:00-11:00", level: 0.4, kinds: [person] }] }
-      - { id: joint-1, kind: cable_joint }
-      - { id: joint-2, kind: cable_joint }
-      - { id: joint-3, kind: cable_joint }
-      - { id: joint-4, kind: cable_joint }
-      - { id: sump, kind: sump, wet_after_rain: true }
-  - id: plant-kr
-    map: 공정-블록-KR          # MAP-SITES 2
-    floors: [G, L1, L2, L3]    # 철골 3 층
-    chargers: [{ id: K-CH1, at: control-room, slots: 2 }, { id: K-CH2, at: unit-3, slots: 2 }]
-    zones:
-      - { id: gate, kind: gate, crowd: [{ hours: "06:30-07:30", level: 0.8, kinds: [person] }, { hours: "14:30-15:30", level: 0.8, kinds: [person] }, { hours: "22:30-23:30", level: 0.6, kinds: [person] }] }
-      - { id: dock, kind: loading, crowd: [{ hours: "10:00-12:00", level: 0.6, kinds: [truck, forklift] }, { hours: "14:00-16:00", level: 0.6, kinds: [truck, forklift] }] }
-      - { id: pump-row, kind: pump }
-      - { id: hx-row, kind: heat_exchanger, keep_out_m: 4.5 }
-      - { id: steel-3f, kind: structure }
-      - { id: gas-points, kind: gas_detector }
-  - id: plant-eu
-    map: 화학-단지-블록-EU      # MAP-SITES 3
-    floors: [G, L1, L2, L3, L4]
-    chargers: [{ id: E-CH1, at: substation, slots: 2 }, { id: E-CH2, at: block-c, slots: 2 }]
-    zones:
-      - { id: truck-dock, kind: loading, crowd: [{ hours: "07:00-17:00", level: 0.7, kinds: [truck, forklift] }] }
-      - { id: rail-xing, kind: rail_crossing, trains_at: ["08:10", "10:40", "13:10", "15:40", "18:10"], block_min: 6 }
-      - { id: ex-zone, kind: ex_zone, floors: [L1, L2, L3, L4] }
-      - { id: cracker, kind: hot_block }
+    floor_id: 00000000-0000-4000-8000-000000000001
+    map_version_id: 00000000-0000-4000-8000-0000000000a1
+  - id: plant_kr
+    floor_id: 00000000-0000-4000-8000-000000000002
+    map_version_id: 00000000-0000-4000-8000-0000000000a2
+  - id: plant_eu
+    floor_id: 00000000-0000-4000-8000-000000000003
+    map_version_id: 00000000-0000-4000-8000-0000000000a3
   - id: arena
-    map: 장애물-경기장           # MAP-ARENA
-    floors: [G]
-    chargers: [{ id: A-CH1, at: pit, slots: 2 }]
-    zones: [{ id: lap, kind: course, sections: 9 }]
-
-robots:   # 22 대. home_charger 는 쉬는 자리
-  # 공동구 4: 둘씩 짝 (양 끝에서 마주 와서 가운데 교대)
-  - { id: T-01, site: tunnel, home_charger: T-CH1 }
-  - { id: T-02, site: tunnel, home_charger: T-CH2 }
-  - { id: T-03, site: tunnel, home_charger: T-CH1 }
-  - { id: T-04, site: tunnel, home_charger: T-CH2 }
-  # 국내 공장 8
-  - { id: K-01, site: plant-kr, home_charger: K-CH1 }
-  - { id: K-02, site: plant-kr, home_charger: K-CH1 }
-  - { id: K-03, site: plant-kr, home_charger: K-CH1 }
-  - { id: K-04, site: plant-kr, home_charger: K-CH1 }
-  - { id: K-05, site: plant-kr, home_charger: K-CH2 }
-  - { id: K-06, site: plant-kr, home_charger: K-CH2 }
-  - { id: K-07, site: plant-kr, home_charger: K-CH2 }
-  - { id: K-08, site: plant-kr, home_charger: K-CH2 }
-  # 해외 플랜트 8
-  - { id: E-01, site: plant-eu, home_charger: E-CH1 }
-  - { id: E-02, site: plant-eu, home_charger: E-CH1 }
-  - { id: E-03, site: plant-eu, home_charger: E-CH1 }
-  - { id: E-04, site: plant-eu, home_charger: E-CH1 }
-  - { id: E-05, site: plant-eu, home_charger: E-CH2 }
-  - { id: E-06, site: plant-eu, home_charger: E-CH2 }
-  - { id: E-07, site: plant-eu, home_charger: E-CH2 }
-  - { id: E-08, site: plant-eu, home_charger: E-CH2 }
-  # 경기장 2
-  - { id: A-01, site: arena, home_charger: A-CH1 }
-  - { id: A-02, site: arena, home_charger: A-CH1 }
-
-missions:   # 길이는 지도 길이 / 같은 속도로 나온 값 (가정). steps 의 goto 대상은 지도 제작 뒤 좌표로 바꿈
-  - id: tunnel-night-sweep      # 2.4 km 를 둘이 나눠 1.2 km 씩 + 가운데 교대
-    site: tunnel
-    est_min: 30
-    steps: [goto: segment-end, action: check_gas, goto: midpoint, wait: { reason: handover, min: 1 }, goto: home]
-  - id: tunnel-joint-check      # 접속공간 4 곳 온도
-    site: tunnel
-    est_min: 25
-    steps: [goto: joint-1, action: check_temp, goto: joint-2, action: check_temp, goto: joint-3, action: check_temp, goto: joint-4, action: check_temp, goto: home]
-  - id: tunnel-sump-check
-    site: tunnel
-    est_min: 15
-    steps: [goto: sump, action: inspect, goto: home]
-  - id: kr-process-round        # SK 선례 1 회 40~50 분
-    site: plant-kr
-    est_min: 45
-    steps: [goto: pump-row, action: check_temp, goto: hx-row, action: read_gauge, goto: gas-points, action: check_gas, goto: home]
-  - id: kr-steel-valves         # 교대 직전 철골 3 층
-    site: plant-kr
-    est_min: 30
-    steps: [goto: steel-3f, action: inspect_valves, wait: { reason: confirm, who: operator }, goto: home]
-  - id: eu-ex-round             # ANYmal 선례 1 미션 20 분 · 점검점 20
-    site: plant-eu
-    est_min: 20
-    steps: [goto: ex-zone, action: check_points, count: 20, goto: home]
-  - id: eu-cracker-round
-    site: plant-eu
-    est_min: 35
-    steps: [goto: rail-xing, goto: cracker, action: check_temp, goto: truck-dock, goto: home]
-  - id: arena-lap
-    site: arena
-    est_min: 12
-    steps: [goto: lap-start, action: run_lap, goto: pit]
-
-schedule:   # 정시 출발. 같은 지도의 로봇은 반씩 나눠 충전 교대 (charge_rotation)
-  tunnel:
-    - { mission: tunnel-night-sweep, robots: [T-01, T-02], at: ["00:00", "02:00", "04:00", "22:00"] }
-    - { mission: tunnel-night-sweep, robots: [T-03, T-04], at: ["01:00", "03:00", "05:00", "23:00"] }
-    - { mission: tunnel-joint-check, robots: [T-01], at: ["08:00", "16:00"] }
-    - { mission: tunnel-joint-check, robots: [T-03], at: ["12:00", "20:00"] }
-    - { mission: tunnel-sump-check, robots: [T-02], at: ["07:00", "19:00"] }
-  plant-kr:   # 하루 다섯 번 순찰 · 넷씩 두 조
-    - { mission: kr-process-round, robots: [K-01, K-02, K-03, K-04], at: ["01:00", "05:00", "09:00", "13:00", "17:00"] }
-    - { mission: kr-process-round, robots: [K-05, K-06, K-07, K-08], at: ["03:00", "07:00", "11:00", "15:00", "19:00"] }
-    - { mission: kr-steel-valves, robots: [K-02, K-06], at: ["06:00", "14:00", "22:00"] }
-  plant-eu:   # 1 미션 20 분 × 여섯
-    - { mission: eu-ex-round, robots: [E-01, E-02, E-03, E-04], at: ["06:00", "09:00", "12:00", "15:00", "18:00", "21:00"] }
-    - { mission: eu-cracker-round, robots: [E-05, E-06, E-07, E-08], at: ["07:30", "10:30", "13:30", "16:30", "19:30", "22:30"] }
-  arena:
-    - { mission: arena-lap, robots: [A-01], at: ["10:00", "14:00", "18:00"] }
-    - { mission: arena-lap, robots: [A-02], at: ["11:00", "15:00"] }
-
-charge_rotation:   # 계획된 충전. 같은 충전기 slots 를 넘지 않게 짰음 → charger_busy 는 고장 · 지연으로만 생김
-  rule: after_mission_if_below_low_pct_else_home_idle
-  plan:
-    tunnel: [{ charger: T-CH1, order: [T-01, T-03] }, { charger: T-CH2, order: [T-02, T-04] }]
-    plant-kr: [{ charger: K-CH1, order: [K-01, K-02, K-03, K-04] }, { charger: K-CH2, order: [K-05, K-06, K-07, K-08] }]
-    plant-eu: [{ charger: E-CH1, order: [E-01, E-02, E-03, E-04] }, { charger: E-CH2, order: [E-05, E-06, E-07, E-08] }]
-    arena: [{ charger: A-CH1, order: [A-01, A-02] }]
-
-events:   # 원인 사건만 (G 절). at = 정해진 시각, p_per_hour = 그 구역 혼잡 시간 안 확률
-  - { kind: crowd, zone: gate, site: plant-kr, from_zone_crowd: true, effect: [slow, pause_s: 20, reroute_if_blocked_s: 60] }
-  - { kind: crowd, zone: dock, site: plant-kr, from_zone_crowd: true, effect: [slow, reroute_if_blocked_s: 60] }
-  - { kind: crowd, zone: truck-dock, site: plant-eu, from_zone_crowd: true, effect: [slow, pause_s: 30] }
-  - { kind: crowd, zone: hatch-A, site: tunnel, from_zone_crowd: true, effect: [pause_s: 30] }
-  - { kind: path_conflict, site: any, auto: true, effect: [lower_priority_waits] }     # 동선 겹침은 저절로
-  - { kind: wait_confirm, site: plant-kr, mission: kr-steel-valves, p_per_run: 0.3, timeout_min: 5 }  # 관제 사람이 확인
-  - { kind: rail_block, site: plant-eu, zone: rail-xing, from_trains_at: true }        # 화차 지나가면 건널목 대기
-  - { kind: gauge_out_of_range, site: plant-kr, zone: hx-row, at: "13:2x", severity: warn, robot: K-03 }
-  - { kind: overheat_suspect, site: tunnel, zone: joint-3, at: "16:1x", severity: warn, robot: T-01 }
-  - { kind: gas_suspect, site: plant-kr, zone: gas-points, at: "19:3x", severity: danger, robot: K-07, effect: [stop, clip, reassign_nearest] }
-  - { kind: fault, site: plant-eu, robot: E-06, at: "14:0x", fault: motor_overtemp, effect: [stop, clip, reassign] }   # 재배정 흐름 시연 (FLOWS 7)
-  - { kind: localization_low, site: tunnel, robot: T-04, at: "03:4x", severity: warn, effect: [pause, relocalize] }  # 반복되는 굴
-
-delay_log:   # 지연은 뒤 일정으로 번지고 남김 (G 절)
-  fields: [robot, mission, planned_at, actual_at, delay_min, delay_cause, affected_next]
-
-open:
-  - 배터리 계수 (walk · idle · charge) 는 가정. 실측 (trace-pull-1125 의 bat) 으로 바꿀 것: app-lx
-  - 시각의 「x」 는 분 단위를 시드로 정함 (같은 시드면 같은 분)
-  - goto 대상 이름은 지도 (Blender) 를 만든 뒤 좌표로 바꿈
-  - 22 대가 동시에 MuJoCo 를 쓰지 않음 (데모는 계산 재생). MuJoCo 는 예행 구간 점검에만
+    floor_id: 00000000-0000-4000-8000-000000000004
+    map_version_id: 00000000-0000-4000-8000-0000000000a4
+  waypoints:
+  - id: t_v01
+    floor: tunnel
+    x: 0
+    y: 0
+  - id: t_v02
+    floor: tunnel
+    x: 240
+    y: 0
+  - id: t_v03
+    floor: tunnel
+    x: 480
+    y: 0
+  - id: t_v04
+    floor: tunnel
+    x: 720
+    y: 0
+  - id: t_v05
+    floor: tunnel
+    x: 960
+    y: 0
+  - id: t_v06
+    floor: tunnel
+    x: 1200
+    y: 0
+  - id: t_v07
+    floor: tunnel
+    x: 1440
+    y: 0
+  - id: t_v08
+    floor: tunnel
+    x: 1680
+    y: 0
+  - id: t_v09
+    floor: tunnel
+    x: 1920
+    y: 0
+  - id: t_v10
+    floor: tunnel
+    x: 2160
+    y: 0
+  - id: t_v11
+    floor: tunnel
+    x: 2400
+    y: 0
+  - id: t_joint1
+    floor: tunnel
+    x: 360
+    y: 3
+  - id: t_joint2
+    floor: tunnel
+    x: 840
+    y: 3
+  - id: t_joint3
+    floor: tunnel
+    x: 1560
+    y: 3
+  - id: t_joint4
+    floor: tunnel
+    x: 2040
+    y: 3
+  - id: t_branch1
+    floor: tunnel
+    x: 720
+    y: 40
+  - id: t_branch2
+    floor: tunnel
+    x: 1680
+    y: -40
+  - id: t_sump
+    floor: tunnel
+    x: 1440
+    y: -4
+  - id: t_swap_w
+    floor: tunnel
+    x: -8
+    y: 0
+  - id: t_swap_e
+    floor: tunnel
+    x: 2408
+    y: 0
+  - id: k_rack0
+    floor: plant_kr
+    x: 20
+    y: 150
+  - id: k_rack1
+    floor: plant_kr
+    x: 110
+    y: 150
+  - id: k_rack2
+    floor: plant_kr
+    x: 200
+    y: 150
+  - id: k_rack3
+    floor: plant_kr
+    x: 290
+    y: 150
+  - id: k_rack4
+    floor: plant_kr
+    x: 380
+    y: 150
+  - id: k_pump
+    floor: plant_kr
+    x: 110
+    y: 100
+  - id: k_hx
+    floor: plant_kr
+    x: 200
+    y: 205
+  - id: k_steel
+    floor: plant_kr
+    x: 290
+    y: 100
+  - id: k_gas
+    floor: plant_kr
+    x: 290
+    y: 210
+  - id: k_ctrl
+    floor: plant_kr
+    x: 20
+    y: 100
+  - id: k_unit3
+    floor: plant_kr
+    x: 380
+    y: 100
+  - id: k_gate
+    floor: plant_kr
+    x: 20
+    y: 280
+  - id: k_dock
+    floor: plant_kr
+    x: 380
+    y: 280
+  - id: e_road0
+    floor: plant_eu
+    x: 20
+    y: 200
+  - id: e_road1
+    floor: plant_eu
+    x: 150
+    y: 200
+  - id: e_road2
+    floor: plant_eu
+    x: 300
+    y: 200
+  - id: e_road3
+    floor: plant_eu
+    x: 450
+    y: 200
+  - id: e_road4
+    floor: plant_eu
+    x: 580
+    y: 200
+  - id: e_sub
+    floor: plant_eu
+    x: 20
+    y: 120
+  - id: e_ex
+    floor: plant_eu
+    x: 150
+    y: 320
+  - id: e_ex_top
+    floor: plant_eu
+    x: 170
+    y: 360
+  - id: e_cracker
+    floor: plant_eu
+    x: 450
+    y: 320
+  - id: e_blockc
+    floor: plant_eu
+    x: 580
+    y: 120
+  - id: e_dock
+    floor: plant_eu
+    x: 450
+    y: 60
+  - id: a_c0
+    floor: arena
+    x: 5
+    y: 5
+  - id: a_c1
+    floor: arena
+    x: 55
+    y: 5
+  - id: a_c2
+    floor: arena
+    x: 55
+    y: 35
+  - id: a_c3
+    floor: arena
+    x: 5
+    y: 35
+  - id: a_pit
+    floor: arena
+    x: 2
+    y: 2
+  paths:
+  - - t_v01
+    - t_v02
+  - - t_v02
+    - t_v03
+  - - t_v03
+    - t_v04
+  - - t_v04
+    - t_v05
+  - - t_v05
+    - t_v06
+  - - t_v06
+    - t_v07
+  - - t_v07
+    - t_v08
+  - - t_v08
+    - t_v09
+  - - t_v09
+    - t_v10
+  - - t_v10
+    - t_v11
+  - - t_v03
+    - t_joint1
+  - - t_v05
+    - t_joint2
+  - - t_v07
+    - t_joint3
+  - - t_v09
+    - t_joint4
+  - - t_v04
+    - t_branch1
+  - - t_v08
+    - t_branch2
+  - - t_v07
+    - t_sump
+  - - t_swap_w
+    - t_v01
+  - - t_swap_e
+    - t_v11
+  - - k_rack0
+    - k_rack1
+  - - k_rack1
+    - k_rack2
+  - - k_rack2
+    - k_rack3
+  - - k_rack3
+    - k_rack4
+  - - k_rack1
+    - k_pump
+  - - k_rack2
+    - k_hx
+  - - k_rack3
+    - k_steel
+  - - k_rack3
+    - k_gas
+  - - k_rack0
+    - k_ctrl
+  - - k_rack4
+    - k_unit3
+  - - k_rack0
+    - k_gate
+  - - k_rack4
+    - k_dock
+  - - e_road0
+    - e_road1
+  - - e_road1
+    - e_road2
+  - - e_road2
+    - e_road3
+  - - e_road3
+    - e_road4
+  - - e_road0
+    - e_sub
+  - - e_road1
+    - e_ex
+  - - e_ex
+    - e_ex_top
+  - - e_road3
+    - e_cracker
+  - - e_road4
+    - e_blockc
+  - - e_road3
+    - e_dock
+  - - a_c0
+    - a_c1
+  - - a_c1
+    - a_c2
+  - - a_c2
+    - a_c3
+  - - a_c3
+    - a_c0
+  - - a_pit
+    - a_c0
+  chargers:
+  - id: T-SW-W
+    waypoint: t_swap_w
+    yaw: 0.0
+    slots: 2
+    charge_pct_per_h: 500
+  - id: T-SW-E
+    waypoint: t_swap_e
+    yaw: 3.14
+    slots: 2
+    charge_pct_per_h: 500
+  - id: K-SW1
+    waypoint: k_ctrl
+    yaw: 0.0
+    slots: 4
+    charge_pct_per_h: 500
+  - id: K-SW2
+    waypoint: k_unit3
+    yaw: 0.0
+    slots: 4
+    charge_pct_per_h: 500
+  - id: E-SW1
+    waypoint: e_sub
+    yaw: 0.0
+    slots: 4
+    charge_pct_per_h: 500
+  - id: E-SW2
+    waypoint: e_blockc
+    yaw: 0.0
+    slots: 4
+    charge_pct_per_h: 500
+  - id: A-SW
+    waypoint: a_pit
+    yaw: 0.0
+    slots: 2
+    charge_pct_per_h: 500
+  zones:
+  - id: t_hatch_a
+    floor: tunnel
+    rect:
+    - 460
+    - -6
+    - 500
+    - 6
+    crowd:
+    - hours: 09:00-11:00
+      level: 0.5
+      kinds:
+      - person
+    - hours: 14:00-16:00
+      level: 0.5
+      kinds:
+      - person
+  - id: t_hatch_b
+    floor: tunnel
+    rect:
+    - 1900
+    - -6
+    - 1940
+    - 6
+    crowd:
+    - hours: 09:00-11:00
+      level: 0.4
+      kinds:
+      - person
+  - id: k_gate_z
+    floor: plant_kr
+    rect:
+    - 0
+    - 160
+    - 40
+    - 300
+    crowd:
+    - hours: 06:30-07:30
+      level: 0.8
+      kinds:
+      - person
+    - hours: 14:30-15:30
+      level: 0.8
+      kinds:
+      - person
+    - hours: 22:30-23:30
+      level: 0.6
+      kinds:
+      - person
+  - id: k_dock_z
+    floor: plant_kr
+    rect:
+    - 360
+    - 160
+    - 400
+    - 300
+    crowd:
+    - hours: 10:00-12:00
+      level: 0.6
+      kinds:
+      - forklift
+    - hours: 14:00-16:00
+      level: 0.6
+      kinds:
+      - forklift
+  - id: e_dock_z
+    floor: plant_eu
+    rect:
+    - 400
+    - 20
+    - 500
+    - 110
+    crowd:
+    - hours: 07:00-17:00
+      level: 0.7
+      kinds:
+      - forklift
+  - id: e_rail_x
+    floor: plant_eu
+    rect:
+    - 290
+    - 180
+    - 310
+    - 220
+  - id: a_lap
+    floor: arena
+    rect:
+    - 0
+    - 0
+    - 60
+    - 40
+robots:
+- id: T-01
+  model: go2
+  start: t_swap_w
+  home_charger: T-SW-W
+  battery:
+    soc: 90
+    reserve: 10
+  speed_mps:
+    patrol: 0.8
+    transit: 1.0
+  schedule:
+  - at: 00:00
+    mission: tunnel_sweep_w
+  - at: 04:00
+    mission: tunnel_sweep_w
+  - at: '20:00'
+    mission: tunnel_sweep_w
+  - at: 08:00
+    mission: tunnel_joint_w
+  - at: '16:00'
+    mission: tunnel_joint_w
+- id: T-02
+  model: go2
+  start: t_swap_e
+  home_charger: T-SW-E
+  battery:
+    soc: 90
+    reserve: 10
+  speed_mps:
+    patrol: 0.8
+    transit: 1.0
+  schedule:
+  - at: 00:00
+    mission: tunnel_sweep_e
+  - at: 04:00
+    mission: tunnel_sweep_e
+  - at: '20:00'
+    mission: tunnel_sweep_e
+  - at: 08:00
+    mission: tunnel_joint_e
+  - at: '16:00'
+    mission: tunnel_joint_e
+- id: T-03
+  model: go2
+  start: t_swap_w
+  home_charger: T-SW-W
+  battery:
+    soc: 90
+    reserve: 10
+  speed_mps:
+    patrol: 0.8
+    transit: 1.0
+  schedule:
+  - at: 02:00
+    mission: tunnel_sweep_w
+  - at: 06:00
+    mission: tunnel_sweep_w
+  - at: '22:00'
+    mission: tunnel_sweep_w
+  - at: '12:00'
+    mission: tunnel_joint_w
+- id: T-04
+  model: go2
+  start: t_swap_e
+  home_charger: T-SW-E
+  battery:
+    soc: 90
+    reserve: 10
+  speed_mps:
+    patrol: 0.8
+    transit: 1.0
+  schedule:
+  - at: 02:00
+    mission: tunnel_sweep_e
+  - at: 06:00
+    mission: tunnel_sweep_e
+  - at: '22:00'
+    mission: tunnel_sweep_e
+  - at: '12:00'
+    mission: tunnel_sump
+  - at: '19:00'
+    mission: tunnel_sump
+- id: K-01
+  model: go2
+  start: k_ctrl
+  home_charger: K-SW1
+  battery:
+    soc: 90
+    reserve: 10
+  speed_mps:
+    patrol: 0.8
+    transit: 1.0
+  schedule:
+  - at: 01:00
+    mission: kr_round
+  - at: 05:00
+    mission: kr_round
+  - at: 09:00
+    mission: kr_round
+  - at: '13:00'
+    mission: kr_round
+  - at: '17:00'
+    mission: kr_round
+- id: K-02
+  model: go2
+  start: k_ctrl
+  home_charger: K-SW1
+  battery:
+    soc: 90
+    reserve: 10
+  speed_mps:
+    patrol: 0.8
+    transit: 1.0
+  schedule:
+  - at: 01:10
+    mission: kr_round
+  - at: 05:10
+    mission: kr_round
+  - at: 09:10
+    mission: kr_round
+  - at: '13:10'
+    mission: kr_round
+  - at: '17:10'
+    mission: kr_round
+  - at: 06:00
+    mission: kr_steel
+  - at: '14:30'
+    mission: kr_steel
+  - at: '22:00'
+    mission: kr_steel
+- id: K-03
+  model: go2
+  start: k_ctrl
+  home_charger: K-SW1
+  battery:
+    soc: 90
+    reserve: 10
+  speed_mps:
+    patrol: 0.8
+    transit: 1.0
+  schedule:
+  - at: 01:20
+    mission: kr_round
+  - at: 05:20
+    mission: kr_round
+  - at: 09:20
+    mission: kr_round
+  - at: '13:20'
+    mission: kr_round
+  - at: '17:20'
+    mission: kr_round
+- id: K-04
+  model: go2
+  start: k_ctrl
+  home_charger: K-SW1
+  battery:
+    soc: 90
+    reserve: 10
+  speed_mps:
+    patrol: 0.8
+    transit: 1.0
+  schedule:
+  - at: 01:30
+    mission: kr_round
+  - at: 05:30
+    mission: kr_round
+  - at: 09:30
+    mission: kr_round
+  - at: '13:30'
+    mission: kr_round
+  - at: '17:30'
+    mission: kr_round
+- id: K-05
+  model: go2
+  start: k_unit3
+  home_charger: K-SW2
+  battery:
+    soc: 90
+    reserve: 10
+  speed_mps:
+    patrol: 0.8
+    transit: 1.0
+  schedule:
+  - at: 03:00
+    mission: kr_round_b
+  - at: 07:00
+    mission: kr_round_b
+  - at: '11:00'
+    mission: kr_round_b
+  - at: '15:00'
+    mission: kr_round_b
+  - at: '19:00'
+    mission: kr_round_b
+- id: K-06
+  model: go2
+  start: k_unit3
+  home_charger: K-SW2
+  battery:
+    soc: 90
+    reserve: 10
+  speed_mps:
+    patrol: 0.8
+    transit: 1.0
+  schedule:
+  - at: 03:10
+    mission: kr_round_b
+  - at: 07:10
+    mission: kr_round_b
+  - at: '11:10'
+    mission: kr_round_b
+  - at: '15:10'
+    mission: kr_round_b
+  - at: '19:10'
+    mission: kr_round_b
+- id: K-07
+  model: go2
+  start: k_unit3
+  home_charger: K-SW2
+  battery:
+    soc: 90
+    reserve: 10
+  speed_mps:
+    patrol: 0.8
+    transit: 1.0
+  schedule:
+  - at: 03:20
+    mission: kr_round_b
+  - at: 07:20
+    mission: kr_round_b
+  - at: '11:20'
+    mission: kr_round_b
+  - at: '15:20'
+    mission: kr_round_b
+  - at: '19:20'
+    mission: kr_round_b
+- id: K-08
+  model: go2
+  start: k_unit3
+  home_charger: K-SW2
+  battery:
+    soc: 90
+    reserve: 10
+  speed_mps:
+    patrol: 0.8
+    transit: 1.0
+  schedule:
+  - at: 03:30
+    mission: kr_round_b
+  - at: 07:30
+    mission: kr_round_b
+  - at: '11:30'
+    mission: kr_round_b
+  - at: '15:30'
+    mission: kr_round_b
+  - at: '19:30'
+    mission: kr_round_b
+- id: E-01
+  model: go2
+  start: e_sub
+  home_charger: E-SW1
+  battery:
+    soc: 90
+    reserve: 10
+  speed_mps:
+    patrol: 0.8
+    transit: 1.0
+  schedule:
+  - at: 06:00
+    mission: eu_ex
+  - at: 09:00
+    mission: eu_ex
+  - at: '12:00'
+    mission: eu_ex
+  - at: '15:00'
+    mission: eu_ex
+  - at: '18:00'
+    mission: eu_ex
+  - at: '21:00'
+    mission: eu_ex
+- id: E-02
+  model: go2
+  start: e_sub
+  home_charger: E-SW1
+  battery:
+    soc: 90
+    reserve: 10
+  speed_mps:
+    patrol: 0.8
+    transit: 1.0
+  schedule:
+  - at: 06:05
+    mission: eu_ex
+  - at: 09:05
+    mission: eu_ex
+  - at: '12:05'
+    mission: eu_ex
+  - at: '15:05'
+    mission: eu_ex
+  - at: '18:05'
+    mission: eu_ex
+  - at: '21:05'
+    mission: eu_ex
+- id: E-03
+  model: go2
+  start: e_sub
+  home_charger: E-SW1
+  battery:
+    soc: 90
+    reserve: 10
+  speed_mps:
+    patrol: 0.8
+    transit: 1.0
+  schedule:
+  - at: 06:10
+    mission: eu_ex
+  - at: 09:10
+    mission: eu_ex
+  - at: '12:10'
+    mission: eu_ex
+  - at: '15:10'
+    mission: eu_ex
+  - at: '18:10'
+    mission: eu_ex
+  - at: '21:10'
+    mission: eu_ex
+- id: E-04
+  model: go2
+  start: e_sub
+  home_charger: E-SW1
+  battery:
+    soc: 90
+    reserve: 10
+  speed_mps:
+    patrol: 0.8
+    transit: 1.0
+  schedule:
+  - at: 06:15
+    mission: eu_ex
+  - at: 09:15
+    mission: eu_ex
+  - at: '12:15'
+    mission: eu_ex
+  - at: '15:15'
+    mission: eu_ex
+  - at: '18:15'
+    mission: eu_ex
+  - at: '21:15'
+    mission: eu_ex
+- id: E-05
+  model: go2
+  start: e_blockc
+  home_charger: E-SW2
+  battery:
+    soc: 90
+    reserve: 10
+  speed_mps:
+    patrol: 0.8
+    transit: 1.0
+  schedule:
+  - at: 07:30
+    mission: eu_cracker
+  - at: '10:30'
+    mission: eu_cracker
+  - at: '13:30'
+    mission: eu_cracker
+  - at: '16:30'
+    mission: eu_cracker
+  - at: '19:30'
+    mission: eu_cracker
+  - at: '22:30'
+    mission: eu_cracker
+- id: E-06
+  model: go2
+  start: e_blockc
+  home_charger: E-SW2
+  battery:
+    soc: 90
+    reserve: 10
+  speed_mps:
+    patrol: 0.8
+    transit: 1.0
+  schedule:
+  - at: 07:35
+    mission: eu_cracker
+  - at: '10:35'
+    mission: eu_cracker
+  - at: '13:35'
+    mission: eu_cracker
+  - at: '16:35'
+    mission: eu_cracker
+  - at: '19:35'
+    mission: eu_cracker
+  - at: '22:35'
+    mission: eu_cracker
+- id: E-07
+  model: go2
+  start: e_blockc
+  home_charger: E-SW2
+  battery:
+    soc: 90
+    reserve: 10
+  speed_mps:
+    patrol: 0.8
+    transit: 1.0
+  schedule:
+  - at: 07:40
+    mission: eu_cracker
+  - at: '10:40'
+    mission: eu_cracker
+  - at: '13:40'
+    mission: eu_cracker
+  - at: '16:40'
+    mission: eu_cracker
+  - at: '19:40'
+    mission: eu_cracker
+  - at: '22:40'
+    mission: eu_cracker
+- id: E-08
+  model: go2
+  start: e_blockc
+  home_charger: E-SW2
+  battery:
+    soc: 90
+    reserve: 10
+  speed_mps:
+    patrol: 0.8
+    transit: 1.0
+  schedule:
+  - at: 07:45
+    mission: eu_cracker
+  - at: '10:45'
+    mission: eu_cracker
+  - at: '13:45'
+    mission: eu_cracker
+  - at: '16:45'
+    mission: eu_cracker
+  - at: '19:45'
+    mission: eu_cracker
+  - at: '22:45'
+    mission: eu_cracker
+- id: A-01
+  model: go2
+  start: a_pit
+  home_charger: A-SW
+  battery:
+    soc: 90
+    reserve: 10
+  speed_mps:
+    patrol: 0.8
+    transit: 1.0
+  schedule:
+  - at: '10:00'
+    mission: arena_lap
+  - at: '14:00'
+    mission: arena_lap
+  - at: '18:00'
+    mission: arena_lap
+- id: A-02
+  model: go2
+  start: a_pit
+  home_charger: A-SW
+  battery:
+    soc: 90
+    reserve: 10
+  speed_mps:
+    patrol: 0.8
+    transit: 1.0
+  schedule:
+  - at: '11:00'
+    mission: arena_lap
+  - at: '15:00'
+    mission: arena_lap
+missions:
+- id: tunnel_sweep_w
+  steps:
+  - goto: t_v04
+  - action: check_gas
+    duration_s: 60
+  - goto: t_v01
+  - goto: t_swap_w
+- id: tunnel_sweep_e
+  steps:
+  - goto: t_v08
+  - action: check_gas
+    duration_s: 60
+  - goto: t_v11
+  - goto: t_swap_e
+- id: tunnel_joint_w
+  steps:
+  - goto: t_joint1
+  - action: check_temp
+    duration_s: 90
+  - goto: t_joint2
+  - action: check_temp
+    duration_s: 90
+  - goto: t_swap_w
+- id: tunnel_joint_e
+  steps:
+  - goto: t_joint4
+  - action: check_temp
+    duration_s: 90
+  - goto: t_joint3
+  - action: check_temp
+    duration_s: 90
+  - goto: t_swap_e
+- id: tunnel_sump
+  steps:
+  - goto: t_sump
+  - action: inspect
+    duration_s: 120
+  - goto: t_swap_e
+- id: kr_round
+  steps:
+  - goto: k_pump
+  - action: check_temp
+    duration_s: 120
+  - goto: k_hx
+  - action: read_gauge
+    duration_s: 120
+  - goto: k_gas
+  - action: check_gas
+    duration_s: 120
+  - goto: k_ctrl
+- id: kr_round_b
+  steps:
+  - goto: k_gas
+  - action: check_gas
+    duration_s: 120
+  - goto: k_hx
+  - action: read_gauge
+    duration_s: 120
+  - goto: k_pump
+  - action: check_temp
+    duration_s: 120
+  - goto: k_unit3
+- id: kr_steel
+  steps:
+  - goto: k_steel
+  - action: inspect_valves
+    duration_s: 300
+  - wait: 60
+  - goto: k_ctrl
+- id: eu_ex
+  steps:
+  - goto: e_ex
+  - action: check_points
+    duration_s: 300
+  - goto: e_ex_top
+  - action: check_points
+    duration_s: 300
+  - goto: e_sub
+- id: eu_cracker
+  steps:
+  - goto: e_road2
+  - goto: e_cracker
+  - action: check_temp
+    duration_s: 180
+  - goto: e_dock
+  - action: inspect
+    duration_s: 120
+  - goto: e_blockc
+- id: arena_lap
+  steps:
+  - goto: a_c0
+  - goto: a_c1
+  - goto: a_c2
+  - goto: a_c3
+  - goto: a_c0
+  - action: lap_record
+    duration_s: 30
+  - goto: a_pit
+charge_rotation:
+- robot: T-01
+  charger: T-SW-W
+  at: 00:34
+  until_soc: 95
+- robot: T-01
+  charger: T-SW-W
+  at: 04:34
+  until_soc: 95
+- robot: T-01
+  charger: T-SW-W
+  at: '20:34'
+  until_soc: 95
+- robot: T-01
+  charger: T-SW-W
+  at: 08:57
+  until_soc: 95
+- robot: T-01
+  charger: T-SW-W
+  at: '16:57'
+  until_soc: 95
+- robot: T-02
+  charger: T-SW-E
+  at: 00:34
+  until_soc: 95
+- robot: T-02
+  charger: T-SW-E
+  at: 04:34
+  until_soc: 95
+- robot: T-02
+  charger: T-SW-E
+  at: '20:34'
+  until_soc: 95
+- robot: T-02
+  charger: T-SW-E
+  at: 08:57
+  until_soc: 95
+- robot: T-02
+  charger: T-SW-E
+  at: '16:57'
+  until_soc: 95
+- robot: T-03
+  charger: T-SW-W
+  at: 00:00
+  until_soc: 95
+- robot: T-03
+  charger: T-SW-W
+  at: 02:34
+  until_soc: 95
+- robot: T-03
+  charger: T-SW-W
+  at: 06:34
+  until_soc: 95
+- robot: T-03
+  charger: T-SW-W
+  at: '22:34'
+  until_soc: 95
+- robot: T-03
+  charger: T-SW-W
+  at: '12:57'
+  until_soc: 95
+- robot: T-04
+  charger: T-SW-E
+  at: 00:00
+  until_soc: 95
+- robot: T-04
+  charger: T-SW-E
+  at: 02:34
+  until_soc: 95
+- robot: T-04
+  charger: T-SW-E
+  at: 06:34
+  until_soc: 95
+- robot: T-04
+  charger: T-SW-E
+  at: '22:34'
+  until_soc: 95
+- robot: T-04
+  charger: T-SW-E
+  at: '12:47'
+  until_soc: 95
+- robot: T-04
+  charger: T-SW-E
+  at: '19:47'
+  until_soc: 95
+- robot: K-01
+  charger: K-SW1
+  at: 00:00
+  until_soc: 95
+- robot: K-01
+  charger: K-SW1
+  at: 01:29
+  until_soc: 95
+- robot: K-01
+  charger: K-SW1
+  at: 05:29
+  until_soc: 95
+- robot: K-01
+  charger: K-SW1
+  at: 09:29
+  until_soc: 95
+- robot: K-01
+  charger: K-SW1
+  at: '13:29'
+  until_soc: 95
+- robot: K-01
+  charger: K-SW1
+  at: '17:29'
+  until_soc: 95
+- robot: K-02
+  charger: K-SW1
+  at: 00:00
+  until_soc: 95
+- robot: K-02
+  charger: K-SW1
+  at: 01:39
+  until_soc: 95
+- robot: K-02
+  charger: K-SW1
+  at: 05:39
+  until_soc: 95
+- robot: K-02
+  charger: K-SW1
+  at: 09:39
+  until_soc: 95
+- robot: K-02
+  charger: K-SW1
+  at: '13:39'
+  until_soc: 95
+- robot: K-02
+  charger: K-SW1
+  at: '17:39'
+  until_soc: 95
+- robot: K-02
+  charger: K-SW1
+  at: 06:28
+  until_soc: 95
+- robot: K-02
+  charger: K-SW1
+  at: '14:58'
+  until_soc: 95
+- robot: K-02
+  charger: K-SW1
+  at: '22:28'
+  until_soc: 95
+- robot: K-03
+  charger: K-SW1
+  at: 00:00
+  until_soc: 95
+- robot: K-03
+  charger: K-SW1
+  at: 01:49
+  until_soc: 95
+- robot: K-03
+  charger: K-SW1
+  at: 05:49
+  until_soc: 95
+- robot: K-03
+  charger: K-SW1
+  at: 09:49
+  until_soc: 95
+- robot: K-03
+  charger: K-SW1
+  at: '13:49'
+  until_soc: 95
+- robot: K-03
+  charger: K-SW1
+  at: '17:49'
+  until_soc: 95
+- robot: K-04
+  charger: K-SW1
+  at: 00:00
+  until_soc: 95
+- robot: K-04
+  charger: K-SW1
+  at: 01:59
+  until_soc: 95
+- robot: K-04
+  charger: K-SW1
+  at: 05:59
+  until_soc: 95
+- robot: K-04
+  charger: K-SW1
+  at: 09:59
+  until_soc: 95
+- robot: K-04
+  charger: K-SW1
+  at: '13:59'
+  until_soc: 95
+- robot: K-04
+  charger: K-SW1
+  at: '17:59'
+  until_soc: 95
+- robot: K-05
+  charger: K-SW2
+  at: 00:00
+  until_soc: 95
+- robot: K-05
+  charger: K-SW2
+  at: 03:33
+  until_soc: 95
+- robot: K-05
+  charger: K-SW2
+  at: 07:33
+  until_soc: 95
+- robot: K-05
+  charger: K-SW2
+  at: '11:33'
+  until_soc: 95
+- robot: K-05
+  charger: K-SW2
+  at: '15:33'
+  until_soc: 95
+- robot: K-05
+  charger: K-SW2
+  at: '19:33'
+  until_soc: 95
+- robot: K-06
+  charger: K-SW2
+  at: 00:00
+  until_soc: 95
+- robot: K-06
+  charger: K-SW2
+  at: 03:43
+  until_soc: 95
+- robot: K-06
+  charger: K-SW2
+  at: 07:43
+  until_soc: 95
+- robot: K-06
+  charger: K-SW2
+  at: '11:43'
+  until_soc: 95
+- robot: K-06
+  charger: K-SW2
+  at: '15:43'
+  until_soc: 95
+- robot: K-06
+  charger: K-SW2
+  at: '19:43'
+  until_soc: 95
+- robot: K-07
+  charger: K-SW2
+  at: 00:00
+  until_soc: 95
+- robot: K-07
+  charger: K-SW2
+  at: 03:53
+  until_soc: 95
+- robot: K-07
+  charger: K-SW2
+  at: 07:53
+  until_soc: 95
+- robot: K-07
+  charger: K-SW2
+  at: '11:53'
+  until_soc: 95
+- robot: K-07
+  charger: K-SW2
+  at: '15:53'
+  until_soc: 95
+- robot: K-07
+  charger: K-SW2
+  at: '19:53'
+  until_soc: 95
+- robot: K-08
+  charger: K-SW2
+  at: 00:00
+  until_soc: 95
+- robot: K-08
+  charger: K-SW2
+  at: 04:03
+  until_soc: 95
+- robot: K-08
+  charger: K-SW2
+  at: 08:03
+  until_soc: 95
+- robot: K-08
+  charger: K-SW2
+  at: '12:03'
+  until_soc: 95
+- robot: K-08
+  charger: K-SW2
+  at: '16:03'
+  until_soc: 95
+- robot: K-08
+  charger: K-SW2
+  at: '20:03'
+  until_soc: 95
+- robot: E-01
+  charger: E-SW1
+  at: 00:00
+  until_soc: 95
+- robot: E-01
+  charger: E-SW1
+  at: 06:35
+  until_soc: 95
+- robot: E-01
+  charger: E-SW1
+  at: 09:35
+  until_soc: 95
+- robot: E-01
+  charger: E-SW1
+  at: '12:35'
+  until_soc: 95
+- robot: E-01
+  charger: E-SW1
+  at: '15:35'
+  until_soc: 95
+- robot: E-01
+  charger: E-SW1
+  at: '18:35'
+  until_soc: 95
+- robot: E-01
+  charger: E-SW1
+  at: '21:35'
+  until_soc: 95
+- robot: E-02
+  charger: E-SW1
+  at: 00:00
+  until_soc: 95
+- robot: E-02
+  charger: E-SW1
+  at: 06:40
+  until_soc: 95
+- robot: E-02
+  charger: E-SW1
+  at: 09:40
+  until_soc: 95
+- robot: E-02
+  charger: E-SW1
+  at: '12:40'
+  until_soc: 95
+- robot: E-02
+  charger: E-SW1
+  at: '15:40'
+  until_soc: 95
+- robot: E-02
+  charger: E-SW1
+  at: '18:40'
+  until_soc: 95
+- robot: E-02
+  charger: E-SW1
+  at: '21:40'
+  until_soc: 95
+- robot: E-03
+  charger: E-SW1
+  at: 00:00
+  until_soc: 95
+- robot: E-03
+  charger: E-SW1
+  at: 06:45
+  until_soc: 95
+- robot: E-03
+  charger: E-SW1
+  at: 09:45
+  until_soc: 95
+- robot: E-03
+  charger: E-SW1
+  at: '12:45'
+  until_soc: 95
+- robot: E-03
+  charger: E-SW1
+  at: '15:45'
+  until_soc: 95
+- robot: E-03
+  charger: E-SW1
+  at: '18:45'
+  until_soc: 95
+- robot: E-03
+  charger: E-SW1
+  at: '21:45'
+  until_soc: 95
+- robot: E-04
+  charger: E-SW1
+  at: 00:00
+  until_soc: 95
+- robot: E-04
+  charger: E-SW1
+  at: 06:50
+  until_soc: 95
+- robot: E-04
+  charger: E-SW1
+  at: 09:50
+  until_soc: 95
+- robot: E-04
+  charger: E-SW1
+  at: '12:50'
+  until_soc: 95
+- robot: E-04
+  charger: E-SW1
+  at: '15:50'
+  until_soc: 95
+- robot: E-04
+  charger: E-SW1
+  at: '18:50'
+  until_soc: 95
+- robot: E-04
+  charger: E-SW1
+  at: '21:50'
+  until_soc: 95
+- robot: E-05
+  charger: E-SW2
+  at: 00:00
+  until_soc: 95
+- robot: E-05
+  charger: E-SW2
+  at: 08:12
+  until_soc: 95
+- robot: E-05
+  charger: E-SW2
+  at: '11:12'
+  until_soc: 95
+- robot: E-05
+  charger: E-SW2
+  at: '14:12'
+  until_soc: 95
+- robot: E-05
+  charger: E-SW2
+  at: '17:12'
+  until_soc: 95
+- robot: E-05
+  charger: E-SW2
+  at: '20:12'
+  until_soc: 95
+- robot: E-05
+  charger: E-SW2
+  at: '23:12'
+  until_soc: 95
+- robot: E-06
+  charger: E-SW2
+  at: 00:00
+  until_soc: 95
+- robot: E-06
+  charger: E-SW2
+  at: 08:17
+  until_soc: 95
+- robot: E-06
+  charger: E-SW2
+  at: '11:17'
+  until_soc: 95
+- robot: E-06
+  charger: E-SW2
+  at: '14:17'
+  until_soc: 95
+- robot: E-06
+  charger: E-SW2
+  at: '17:17'
+  until_soc: 95
+- robot: E-06
+  charger: E-SW2
+  at: '20:17'
+  until_soc: 95
+- robot: E-06
+  charger: E-SW2
+  at: '23:17'
+  until_soc: 95
+- robot: E-07
+  charger: E-SW2
+  at: 00:00
+  until_soc: 95
+- robot: E-07
+  charger: E-SW2
+  at: 08:22
+  until_soc: 95
+- robot: E-07
+  charger: E-SW2
+  at: '11:22'
+  until_soc: 95
+- robot: E-07
+  charger: E-SW2
+  at: '14:22'
+  until_soc: 95
+- robot: E-07
+  charger: E-SW2
+  at: '17:22'
+  until_soc: 95
+- robot: E-07
+  charger: E-SW2
+  at: '20:22'
+  until_soc: 95
+- robot: E-07
+  charger: E-SW2
+  at: '23:22'
+  until_soc: 95
+- robot: E-08
+  charger: E-SW2
+  at: 00:00
+  until_soc: 95
+- robot: E-08
+  charger: E-SW2
+  at: 08:27
+  until_soc: 95
+- robot: E-08
+  charger: E-SW2
+  at: '11:27'
+  until_soc: 95
+- robot: E-08
+  charger: E-SW2
+  at: '14:27'
+  until_soc: 95
+- robot: E-08
+  charger: E-SW2
+  at: '17:27'
+  until_soc: 95
+- robot: E-08
+  charger: E-SW2
+  at: '20:27'
+  until_soc: 95
+- robot: E-08
+  charger: E-SW2
+  at: '23:27'
+  until_soc: 95
+- robot: A-01
+  charger: A-SW
+  at: 00:00
+  until_soc: 95
+- robot: A-01
+  charger: A-SW
+  at: '10:07'
+  until_soc: 95
+- robot: A-01
+  charger: A-SW
+  at: '14:07'
+  until_soc: 95
+- robot: A-01
+  charger: A-SW
+  at: '18:07'
+  until_soc: 95
+- robot: A-02
+  charger: A-SW
+  at: 00:00
+  until_soc: 95
+- robot: A-02
+  charger: A-SW
+  at: '11:07'
+  until_soc: 95
+- robot: A-02
+  charger: A-SW
+  at: '15:07'
+  until_soc: 95
+events:
+- id: rail-0810
+  kind: crowd
+  zone: e_rail_x
+  at: 08:10
+  duration_min: 6
+  level: 1.0
+  kinds: []
+- id: rail-1040
+  kind: crowd
+  zone: e_rail_x
+  at: '10:40'
+  duration_min: 6
+  level: 1.0
+  kinds: []
+- id: rail-1310
+  kind: crowd
+  zone: e_rail_x
+  at: '13:10'
+  duration_min: 6
+  level: 1.0
+  kinds: []
+- id: rail-1540
+  kind: crowd
+  zone: e_rail_x
+  at: '15:40'
+  duration_min: 6
+  level: 1.0
+  kinds: []
+- id: rail-1810
+  kind: crowd
+  zone: e_rail_x
+  at: '18:10'
+  duration_min: 6
+  level: 1.0
+  kinds: []
+- id: kr-gate-shift
+  kind: crowd
+  zone: k_gate_z
+  at: '14:55'
+  duration_min: 8
+  level: 1.0
+  kinds:
+  - person
+- id: kr-conflict
+  kind: path_conflict
+  robot: K-03
+  at: 09:24
+  delay_min: 2
+- id: eu-conflict
+  kind: path_conflict
+  robot: E-07
+  at: '13:42'
+  delay_min: 3
+- id: kr-valve-confirm
+  kind: wait_confirm
+  robot: K-02
+  at: '14:42'
+  delay_min: 4
+- id: kr-gauge
+  kind: wait_confirm
+  robot: K-03
+  at: '13:26'
+  delay_min: 3
+- id: t-joint-hot
+  kind: wait_confirm
+  robot: T-01
+  at: '16:17'
+  delay_min: 5
+- id: eu-ex-slow
+  kind: duration
+  robot: E-02
+  mission: eu_ex
+  at: '12:10'
+  extra_min: 6
+- id: kr-gas
+  kind: fault
+  robot: K-07
+  at: '19:34'
+  recover_min: 40
+  fail_code: OPERATOR_ABORT
+- id: eu-motor
+  kind: fault
+  robot: E-06
+  at: '14:07'
+  fail_code: NAV_UNAVAILABLE
+- id: t-loc
+  kind: fault
+  robot: T-04
+  at: 06:15
+  recover_min: 3
+  fail_code: LOCALIZATION_LOST
