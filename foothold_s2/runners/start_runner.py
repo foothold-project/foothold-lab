@@ -212,6 +212,40 @@ def resumed_loop_start(current_learning_iteration: int, resumed: bool, runtime) 
     return current_learning_iteration
 
 
+PARENT_POLICY_EMA_ENV = "EX42_PARENT_POLICY_EMA"
+# lead 11/26 09:35: with EX42_PARENT_POLICY_EMA=1 a new-stage parent load puts the averaged policy weights that the parent
+# checkpoint itself carries (policy_ema.shadow.policy, the same values model_N_ema.pt holds) into the policy instead of
+# model_state_dict. The parent pin, manifest and receipts stay on the raw model_N.pt. Unset or 0 = model_state_dict (as before).
+
+
+def parent_policy_state(checkpoint: dict, parameter_names) -> tuple[dict, str]:
+    """(policy state dict to load, "ema" | "online"). Refuses a switch value other than 0/1 and an unusable average."""
+    raw = os.environ.get(PARENT_POLICY_EMA_ENV, "")
+    if raw not in ("", "0", "1"):
+        raise ValueError(f"{PARENT_POLICY_EMA_ENV} must be 0 or 1 (got {raw!r})")
+    online = checkpoint["model_state_dict"]
+    if raw != "1":
+        return online, "online"
+    shadow = ((checkpoint.get("policy_ema") or {}).get("shadow") or {}).get("policy")
+    if not isinstance(shadow, dict) or not shadow:
+        raise ValueError(f"{PARENT_POLICY_EMA_ENV}=1 but the parent checkpoint has no policy_ema.shadow.policy")
+    missing = sorted(set(parameter_names) - set(shadow))
+    extra = sorted(set(shadow) - set(online))
+    if missing or extra:
+        raise ValueError(f"{PARENT_POLICY_EMA_ENV}=1: the parent policy average does not match the policy "
+                         f"(missing {missing[:4]} · unknown {extra[:4]})")
+    state = dict(online)
+    for key, value in shadow.items():
+        if not torch.is_tensor(value) or tuple(value.shape) != tuple(online[key].shape):
+            raise ValueError(f"{PARENT_POLICY_EMA_ENV}=1: the parent policy average has another shape for {key}")
+        state[key] = value.detach().to(dtype=online[key].dtype)
+    return state, "ema"
+
+
+def tensor_sha12(value: torch.Tensor) -> str:
+    return hashlib.sha256(value.detach().cpu().contiguous().numpy().tobytes()).hexdigest()[:12]
+
+
 def _amp_checkpoint_entry() -> dict:
     from foothold_s2.rewards import ex42_amp_style as _amp
 
@@ -2387,7 +2421,12 @@ class StartRunner(OnPolicyRunner):
                 raise ValueError(f"EX-42 stage-zero parent perception mode {key} differs")
         if float(checkpoint["map_switch"]["p_map_off"]) != self.p_map_off:
             raise ValueError("EX-42 stage-zero map-switch probability differs from parent")
-        self.alg.policy.load_state_dict(checkpoint["model_state_dict"], strict=True)
+        names = getattr(self.alg.policy, "named_parameters", None)
+        policy_state, policy_source = parent_policy_state(checkpoint, [n for n, _ in names()] if callable(names) else [])
+        self.alg.policy.load_state_dict(policy_state, strict=True)
+        actor0 = policy_state.get("actor.0.weight") if isinstance(policy_state, dict) else None
+        print("EX42_PARENT_POLICY_SOURCE=%s actor0_sha=%s" % (policy_source, tensor_sha12(actor0) if torch.is_tensor(actor0) else "none"),
+              flush=True)
         parent_perception, perception_source = checkpoint["perception_state_dict"], "online"
         if stage_id is not None and checkpoint.get("perception_ema") is not None:
             # v29-11: a later stage (E1F on) starts from the weights the parent stage was scored with: the evaluation adapter reads perception_ema
