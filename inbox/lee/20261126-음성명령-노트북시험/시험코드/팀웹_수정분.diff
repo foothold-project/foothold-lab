@@ -1,0 +1,137 @@
+diff --git a/apps/web/src/rt.ts b/apps/web/src/rt.ts
+index e63594ff..71828b28 100644
+--- a/apps/web/src/rt.ts
++++ b/apps/web/src/rt.ts
+@@ -99,6 +99,7 @@ const setLink = (l: Link) => { link = l; emit(); };
+ const hiddenPage = () => document.visibilityState === 'hidden';
+ 
+ /** 보내기. 닫혀 있으면 false(답 함수에는 NETWORK) */
++export type PostureSend = 'accepted' | 'rejected' | 'unsent' | 'unknown';
+ function send(body: Record<string, unknown>, done?: (r: ScreenReply) => void, requestId?: string) {
+   const id = requestId ?? String(++n);
+   if (sock?.readyState !== 1) { done?.({ t: 'reply', id, ok: false, error: { code: 'NETWORK', message: LINK_LOST, detail: {} } }); return false; }
+@@ -432,10 +433,15 @@ export const rt = {
+   },
+   /** 자세 명령(contracts ScreenPosture: 일어서기 stand_up·엎드리기 stand_down) — 조종권자만. done(null) = 서버 접수, done(글) = 거부 이유.
+    *  로봇이 한 결과는 state.posture_result 로 온다 */
+-  posture(id: string, action: ScreenPosture['action'], done: (why: string | null) => void) {
++  posture(id: string, action: ScreenPosture['action'], done: (why: string | null, requestId?: string, outcome?: PostureSend) => void) {
+     const l = get(id);
+-    if (!l.lease) return done(say());
+-    send({ t: 'posture', robot: id, lease_id: l.lease, action }, (r) => done(r.ok ? null : say(r.error)));
++    if (!l.lease) return done(say(), undefined, 'unsent');
++    // 결과(posture_result.request_id)는 새로 고침 뒤에도 남을 수 있어 action 처럼 페이지마다 1 부터 다시 세지 않는 번호를 쓴다.
++    // outcome: 서버가 답한 거절(rejected) · 보내기 전 실패(unsent) · 보낸 뒤 연결이 끊겨 서버가 받았는지 모름(unknown) 을 나눈다
++    const requestId = crypto.randomUUID();
++    let sent = false;
++    sent = send({ t: 'posture', robot: id, lease_id: l.lease, action }, (r) => done(r.ok ? null : say(r.error), requestId,
++      r.ok ? 'accepted' : r.error?.code === 'NETWORK' ? (sent ? 'unknown' : 'unsent') : 'rejected'), requestId);
+   },
+   action(id: string, action: ScreenAction['action'], params: ScreenAction['params'], confirmed: boolean, done: (why: string | null, id?: string) => void) {
+     const l = get(id);
+diff --git a/apps/web/src/serverdrive.tsx b/apps/web/src/serverdrive.tsx
+index fc9307d0..6ac54750 100644
+--- a/apps/web/src/serverdrive.tsx
++++ b/apps/web/src/serverdrive.tsx
+@@ -4,7 +4,7 @@
+ // 로봇 상세 서랍에는 작게(STOP·정지 단계·잠금 해제·조종 시작/끝내기), «조종 화면 열기» = 전체화면 모달(카메라·라이다 drivemedia.ts·조작부·상태줄, 다시 누르거나 Esc 로 복귀).
+ // 그 안에도 STOP 이 가장 크게. 키 조종은 패널이 열린 동안 그대로
+ import { useEffect, useRef, useState, type ButtonHTMLAttributes, type KeyboardEvent as KeyEv, type PointerEvent, type ReactNode } from 'react';
+-import { CMD_MS, inputGen, metaCut, rt, useLive, type Live } from './rt';
++import { CMD_MS, inputGen, metaCut, rt, useLive, type Live, type PostureSend } from './rt';
+ import { typing, useStopPress } from './App';
+ import { Chip, DriveButton, inApp, type Ctx } from './screens';
+ import { STALLED } from './simdrive';
+@@ -16,6 +16,8 @@ import { DEPTH_HINT, driveFeedHeld, driveFeedText, useDriveFeed, type DriveCh, t
+ import { adminReal, type Robot, type Tone } from './fake';
+ import { api } from './api';
+ import { ActionTrial } from './screens/actiontrial';
++import { VOICE_ACTIONS, VOICE_LOCAL, VOICE_LOG, VOICE_STATE_FRESH_MS, VoiceController } from './voiceLocal';
++import { useVoiceHeard } from './voiceHeard';
+ import { realCaps, simTune, useTuneSettings } from './phone';
+ import type { OrgSettings, UnlockRefused } from '../../contracts/ts';
+ import orgSettingsSchema from '../../contracts/schema/OrgSettings.json';
+@@ -297,7 +299,43 @@ export function useServerDrive(c: Pick<Ctx, 'user'>, r: Robot, esc?: { current:
+     const t = setTimeout(() => { setPose(null); setPoseMsg(`${POSE[pose.k].fail} — ${POSE_LOST}`); }, POSE_WAIT_MS);
+     return () => clearTimeout(t);
+   }, [pose]);
+-  const askPose = (k: PoseKey) => { zero(); setPoseMsg(''); setPose({ k, prev: res?.request_id ?? null, at: rt.now() }); rt.posture(r.id, POSE[k].act, (bad) => { if (bad) { setPose(null); setPoseMsg(`${POSE[k].fail} — ${bad}`); } }); };   // 서버가 해제 요청을 거절(rt.unlock notice) — 대기 아님
++  const askPose = (k: PoseKey, onSent?: (bad: string | null, requestId: string | null, outcome: PostureSend) => void) => { zero(); setPoseMsg(''); setPose({ k, prev: res?.request_id ?? null, at: rt.now() }); rt.posture(r.id, POSE[k].act, (bad, requestId, outcome) => { if (bad) { setPose(null); setPoseMsg(`${POSE[k].fail} — ${bad}`); } onSent?.(bad, requestId ?? null, outcome ?? (bad ? 'rejected' : 'accepted')); }); };
++  // 로컬 음성 → 엎드리기 · 일어서기 연동 시험(voiceLocal.ts · 개발 서버 + VITE_FH_VOICE_LOCAL=1 일 때만 · 기본 꺼짐). 버튼과 같은 askPose('down' | 'up') 를 한 번 부른다
++  const [voiceOn, setVoiceOn] = useState(false), [voiceNote, setVoiceNote] = useState('');
++  const askPoseRef = useRef(askPose); askPoseRef.current = askPose;
++  const voiceGate = useRef(() => ({ mine: false, linkOpen: false, online: false, fresh: false, busy: true, hidden: true }));
++  voiceGate.current = () => ({ mine, linkOpen: link === 'open', online: s?.connection === 'ONLINE', fresh: !!s && rt.now() - l.stateAt < VOICE_STATE_FRESH_MS,
++    busy: !!pose || shifting, hidden: document.visibilityState === 'hidden' });
++  const robotRef = useRef(r.id); robotRef.current = r.id;
++  /** 판정 순간의 이 화면 · 로봇 상태 (렌더를 기다리지 않고 rt 에서 바로 읽는다) */
++  const voiceNow = (robot: string) => { const x = rt.get(robot); return { robot: robotRef.current, lease: x.lease ?? null, stopN: x.stop?.n ?? 0,
++    state: x.state ?? null, fresh: !!x.state && rt.now() - x.stateAt < VOICE_STATE_FRESH_MS }; };
++  // 로봇마다 새 객체(대상은 만들 때 고정). 옛 객체는 자기 정리에서만 끈다
++  const voice = useRef<VoiceController | null>(null);
++  if (VOICE_LOCAL && voice.current?.robot !== r.id) {
++    const robot = r.id;
++    voice.current = new VoiceController({
++      robot, gate: () => voiceGate.current(), now: () => Date.now(), current: () => voiceNow(robot),
++      ask: (action, onSent) => { if (robotRef.current !== robot) { onSent('대상 로봇이 바뀌었습니다', null, 'unsent'); return; } askPoseRef.current(VOICE_ACTIONS[action].pose, onSent); },
++      log: (row, token) => {
++        console.info('[voice-local]', JSON.stringify(row));   // 화면 쪽 관찰 (브리지 파일 저장과 별개)
++        if (!token) return;                                    // 기록 토큰 전(연결 전 · 끊긴 뒤)은 화면 관찰만
++        fetch(VOICE_LOG, { method: 'POST', headers: { 'content-type': 'application/json', 'x-voice-log-token': token }, body: JSON.stringify({ ...row, robot, at_ms: Date.now() }) })
++          .then((x) => { if (!x.ok) console.warn('[voice-local] 브리지 기록 실패', x.status, row.kind); })
++          .catch(() => console.warn('[voice-local] 브리지 기록 실패 (연결)', row.kind));   // 기록 실패 때문에 요청을 다시 보내지 않는다
++      },
++      note: setVoiceNote, setOn: setVoiceOn, open: (url) => new EventSource(url),
++    });
++  }
++  const voiceObj = voice.current;
++  useEffect(() => () => voiceObj?.off('', 'target_or_unmount'), [voiceObj]);
++  // 동의는 이 화면 · 이 로봇 · 지금 조종권 · 열린 연결에만 묶인다. 하나라도 바뀌면 즉시 끈다(다시 연결돼도 자동으로 켜지지 않음)
++  useEffect(() => { if (!mine || link !== 'open') voiceObj?.off('', !mine ? 'not_mine' : 'link'); }, [mine, link, voiceObj]);
++  useEffect(() => { voiceObj?.off('', 'lease_changed'); }, [l.lease]);
++  useEffect(() => { const hide = () => { if (document.visibilityState === 'hidden') voice.current?.off('화면을 숨겨 음성 받기를 껐습니다.', 'hidden'); };
++    document.addEventListener('visibilitychange', hide); return () => document.removeEventListener('visibilitychange', hide); }, []);
++  useEffect(() => { if (l.stop) voiceObj?.userStop(); }, [l.stop?.n]);   // 기록용 (판정은 관리 객체가 STOP 번호를 동기로 비교)
++  useEffect(() => { const x = voiceNow(r.id); voiceObj?.evaluate(x.state, x.fresh); });   // 그릴 때마다(250 ms 틱 포함) 다시 따진다
+ 
+   const stopPress = useStopPress(() => { zero(SD_NOTE.stop); rt.stop(r.id); });   // pointerdown 즉시(RV-456 1)
+   const stop = (big: boolean) => <button type="button" className="fh-stop" aria-label="비상 정지 — 이 로봇" data-sd-stop={big ? 'full' : 'panel'}
+@@ -336,7 +374,8 @@ export function useServerDrive(c: Pick<Ctx, 'user'>, r: Robot, esc?: { current:
+   const connection = rt.link();
+   const freshState = rt.now()-l.stateAt < 3000 ? s : null;
+   const latency = <ResponseLine state={freshState} screenMs={link === 'open' && connection.latencyAt != null && rt.now()-connection.latencyAt < 3000 ? connection.latencyMs ?? null : null} />;
+-  const notes = <><SlowResponse health={freshState?.connection === 'ONLINE' ? freshState.response_health : null} />{posture === 'LYING' && <p className="dv-note" role="status" data-sd-lying>{mine ? LYING_TEXT : '로봇이 엎드려 있습니다. [조종 시작] 뒤 «일어서기»를 누르면 걸을 수 있습니다.'}</p>}
++  const heard = useVoiceHeard(r.id, r.name);   // L 시연 표시만 (기본 꺼짐 · 로봇에 아무것도 보내지 않음)
++  const notes = <>{heard.map((t, i) => <p key={i} className="dv-note" role="status" data-sd-voice-heard>{t}</p>)}<SlowResponse health={freshState?.connection === 'ONLINE' ? freshState.response_health : null} />{posture === 'LYING' && <p className="dv-note" role="status" data-sd-lying>{mine ? LYING_TEXT : '로봇이 엎드려 있습니다. [조종 시작] 뒤 «일어서기»를 누르면 걸을 수 있습니다.'}</p>}
+     {posture === 'UNKNOWN' && mine && <p className="dv-note" role="status" data-sd-pose-unknown>로봇 자세를 아직 알 수 없어 이동 단추를 잠갔습니다. 현장에서 로봇을 확인한 뒤 «일어서기»를 누르세요.</p>}
+     {ready && !(got && isSettings(settings)) && <p className="dv-note" role="status" data-real-wait>{REAL_WAIT}</p>}
+     {why && <p className="dv-note" role="status" data-sd-why>{why}</p>}
+@@ -356,6 +395,11 @@ export function useServerDrive(c: Pick<Ctx, 'user'>, r: Robot, esc?: { current:
+     {(['up', 'down'] as const).map((k) => <button key={k} type="button" className="btn" data-sd-pose={k} disabled={shifting || link !== 'open' || s?.connection !== 'ONLINE'}
+       onClick={() => askPose(k)}>{POSE[k].name}</button>)}
+     <span className="lbl">{POWER_HINT}</span>
++    {VOICE_LOCAL && <span className="fh-row" data-sd-voice style={{ flexBasis: '100%' }}>
++      <span className="lbl">가짜 장치 시험 · 로컬 음성</span>
++      <button type="button" className="btn" aria-pressed={voiceOn} data-sd-voice-toggle onClick={() => { setVoiceNote(''); if (voice.current?.active) voice.current.off('', 'user'); else voice.current?.start(); }}>{voiceOn ? '음성 받기 끄기' : '음성 받기 켜기'}</button>
++      {voiceNote && <span role="status" className="lbl" data-sd-voice-note>{voiceNote}</span>}
++    </span>}
+     {(shifting || poseMsg || lost) && <span role="status" className="lbl" style={{ flexBasis: '100%' }} data-sd-pose-msg>{poseNow ? POSE[poseNow].doing : shifting ? '자세를 바꾸는 중…' : poseMsg || lost}</span>}
+   </div>;
+   const trial = <ActionTrial robot={r} allowed={!!r.serverDrive && !r.sim} beforeSend={zero} />;
+diff --git a/apps/web/vite.config.ts b/apps/web/vite.config.ts
+index 85e932c5..e30f0cfb 100644
+--- a/apps/web/vite.config.ts
++++ b/apps/web/vite.config.ts
+@@ -12,6 +12,12 @@ export default defineConfig(({ mode, command, isPreview }) => {
+   const devTunnel = env.FH_TUNNEL === '1' && command === 'serve' && !isPreview;
+   if (devTunnel) console.warn('FH_TUNNEL requested on Vite dev: tunnel access disabled; run build then preview');
+   const proxy = { '/api': { target: env.FH_API || 'http://127.0.0.1:8810', ws: true }, ...phoneProxy(env) };
++  // 로컬 음성 → 엎드리기 연동 시험(tools/voice_local/bridge.py) — FH_VOICE_BRIDGE=http://127.0.0.1:<포트> 를 줄 때만. 운영 포트 · 외부 주소 쓰지 않음
++  if (env.FH_VOICE_BRIDGE && command === 'serve' && !isPreview && /^http:\/\/127\.0\.0\.1:\d+$/.test(env.FH_VOICE_BRIDGE))
++    Object.assign(proxy, { '/voice-local': { target: env.FH_VOICE_BRIDGE } });
++  // L 시연 「들은 음성 명령」 표시 (tools/voice_local/heard_feed.py) — FH_VOICE_HEARD=http://127.0.0.1:<포트> 를 줄 때만 · 읽기 전용
++  if (env.FH_VOICE_HEARD && command === 'serve' && !isPreview && /^http:\/\/127\.0\.0\.1:\d+$/.test(env.FH_VOICE_HEARD))
++    Object.assign(proxy, { '/voice-heard': { target: env.FH_VOICE_HEARD } });
+   return {
+     plugins: [react(), tunnelGuard(origin, ports)],
+     base: './',
