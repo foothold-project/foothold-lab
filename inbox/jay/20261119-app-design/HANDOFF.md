@@ -35,7 +35,7 @@
 - Go2 X 는 켠 채 충전 안 됨 → 데모 「충전기」 는 배터리 교체 칸.
 - 가스 감지 · 게이지 읽기 · Ex (방폭) 구역은 상위 기체 가정이다 (Go2 X 에 없음). 화면 · 데모 설명에 「가정」 표지를 붙인다 (MAP-SITES 기체 가정).
 - 경기장 「학습함 / 처음」 표지는 정책 판에 묶고, 색은 DESIGN.md 안에서만 (강조색 점 · 흐린 점선).
-- 폰 직결 코드는 Jetson 에 깔린다 (설치판이 apps/agent 를 통째로 복사). 다만 켜는 길은 서버 에이전트와 갈리는 별도 모드다 (go2_direct · 「no server command authority」). 코드 읽기로는 자동 시작은 폰 길을 켜지 않는다: 설치판 launch.py 는 foothold_agent.setup --headless --onboard (install_jetson_bundle.py:39 · :210) 이고, setup 은 phone 의 tickets · observer 도우미만 가져온다. 폰 서버를 띄우는 곳은 go2_direct runtime · config · ros_bridge 뿐 (app-reviewer-lx 11:19 · app-design-lx 가 dev 에서 git grep 으로 다시 봄). Jetson 실제 상태는 미확인 · 실기 미검증 (app-lx 답 · 메시지 표기 11:24, 받은 시각 11:18).
+- 폰 직결 코드는 Jetson 에 깔린다 (설치판이 apps/agent 를 통째로 복사). 다만 켜는 길은 서버 에이전트와 갈리는 별도 모드다 (go2_direct · 「no server command authority」). 코드 읽기로는 자동 시작은 폰 길을 켜지 않는다: 설치판 launch.py 는 foothold_agent.setup --headless --onboard (install_jetson_bundle.py:39 · :210) 이고, setup 은 phone 의 tickets · observer 도우미만 가져온다. 폰 서버를 띄우는 곳은 go2_direct runtime · config · ros_bridge 뿐 (app-reviewer-lx 11:19 · app-design-lx 가 dev 에서 git grep 으로 다시 봄). Jetson 실제 상태: app-lx 가 11/26 11:21 Jetson 프로세스를 읽기 전용으로 봄 · foothold-robot.service 의 setup --headless --onboard · policy.factory_record · policy.depth_health 셋만 떠 있고 go2_direct.runtime (폰 서버) 없음 (app-lx 보고). 폰 직결로 조종하는 것은 실기 미검증.
 - 「가정」 표지 자료: 계약 안 assumed_hardware: [gas_sensor, ex_rated, gauge_reader] 를 구역 · 임무 단계에 두고 사건은 물려받음. 로더는 상태 보고에 실어 보내기만 함. 팀장 결정 (비방폭 현장으로 바꿀지) 뒤 넣음 (app-lx 답 · 메시지 표기 11:24, 받은 시각 11:18).
 
 ## 안전 (먼저 읽기)
