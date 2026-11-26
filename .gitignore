@@ -36,7 +36,7 @@ crawl/
 # *.mp4 / *.m4a 는 Git LFS 로 전환 (2026-08-10) · .gitattributes 참조
 #   이유: 학습 결과 영상은 팀 공유가 잦은 1차 증거물이다.
 #   PNG 컨택트시트만으로는 "걷는지 아닌지"를 대신할 수 없다.
-*.wav
+# *.wav 도 Git LFS 로 올린다 (팀장 2026-11-26 · .gitattributes 참조)
 
 # 회의록 인쇄용 나눔고딕 (render.sh가 시스템에 있으면 복사)
 docs/meetings/print/fonts/
