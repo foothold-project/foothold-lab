@@ -55,6 +55,19 @@
 - 폰 직결 코드는 Jetson 에 깔린다 (설치판이 apps/agent 를 통째로 복사). 다만 켜는 길은 서버 에이전트와 갈리는 별도 모드다 (go2_direct · 「no server command authority」). 코드 읽기로는 자동 시작은 폰 길을 켜지 않는다: 설치판 launch.py 는 foothold_agent.setup --headless --onboard (install_jetson_bundle.py:39 · :210) 이고, setup 은 phone 의 tickets · observer 도우미만 가져온다. 폰 서버를 띄우는 곳은 go2_direct runtime · config · ros_bridge 뿐 (app-reviewer-lx 11:19 · app-design-lx 가 dev 에서 git grep 으로 다시 봄). Jetson 실제 상태: app-lx 가 11/26 11:21 Jetson 프로세스를 읽기 전용으로 봄 · foothold-robot.service 의 setup --headless --onboard · policy.factory_record · policy.depth_health 셋만 떠 있고 go2_direct.runtime (폰 서버) 없음 (app-lx 보고). 폰 직결로 조종하는 것은 실기 미검증.
 - 「가정」 표지 자료: 계약 안 assumed_hardware: [gas_sensor, ex_rated, gauge_reader] 를 구역 · 임무 단계에 두고 사건은 물려받음. 로더는 상태 보고에 실어 보내기만 함. 팀장 결정 (비방폭 현장으로 바꿀지) 뒤 넣음 (app-lx 답 · 메시지 표기 11:24, 받은 시각 11:18).
 
+## app-lx 가 전한 팀장 12:50 답 (요지 · 원문은 app-lx 대화 · app-design-lx 는 원문 미확인, 팀장 직접 확인 전에는 원장 답으로 올리지 않음)
+- 비상 정지 단추: 첫 누름 = 그 자리 멈춤 → 단추 이름 「Damping」 → 다시 누름 = Damping → 「다시 시작」 은 확인 창 OK 뒤 시작. 순정 순서 1003 → 1005 + 1001 → 1006 ok. 이름은 Damping, 실제 동작은 엎드린 뒤 감쇠 (L2+A · 1005 뒤 1001) 로 할지 app-lx 가 팀장께 다시 확인 중.
+- Jetson 실행기 · foothold-robot 새 판 올림 승인 → 12:53 올림 (통로 포트 47210 · 되돌림 파일 Jetson 에 있음 · 화면의 FACTORY/LOWLEVEL 표시는 서버 #501 뒤).
+- 앱에도 순정 넘김 (Classic 전환) 단추. 리모컨 start + 좌/우 와 같은 순서.
+- 실기 시험 둘 「해」: 인사 후보 1016 · 1020 · 1022 · 1023 을 순정에서 눌러 기록기 궤적을 L1+A 와 비교.
+- 「가정 장비」 → 「상위 장비」. 상위 모델 장비도 쓰는 플랫폼 (비방폭으로 바꾸지 않음). 데모 칸 upper_hardware (app-lx 2a61939f) · 값 이름 gas_detector · gauge_reader · ex_rating.
+- 데모는 demo=true 하나만 빼고 실기와 같다.
+- 우리 Go2 X 에 가스 부품 있음 (팀장). 값을 어디서 읽는지는 app-lx 가 찾음 (미확인).
+- 끊긴 동안 Jetson 기록은 이미 올라감 (mai-jetson-sync 10 분마다 · foothold-trace-backup). 빠진 것은 앱 서버 DB 쪽 (끊긴 동안의 사건 · 상태) 뿐. 앞의 「자동 재전송 없음」 은 정정.
+- 음성: Go2 에 직접 말하면 본체 마이크가 듣는다. 그 소리를 Jetson 이 받는 길 (AudioData) 은 확인 전.
+- 멈출 때 발 구르기: 11/24 팀장 지시 「classic 처럼 안정되게 한 번 발 구르면서 정렬」 (새 지시 아님).
+- 결과 표시: 실행기가 동작을 시작했는지, 안 했으면 왜인지를 화면에 보여 준다.
+
 ## 안전 (먼저 읽기)
 - foothold-robot 은 Jetson 부팅 때 자동 시작이 켜져 있다 (11/25 20:50 · app-lx 전달 · 원장 「자동 시작」 줄. 원장 A12 「자동 시작 금지」 는 뒤집힘). dev 에 사람 없는 현장 승인 (8f08d0d0) 이 들어 있어, 서버 경유 조종 스위치가 켜져 있으면 Jetson 이 켜지기만 해도 현장 승인까지 간다. 남은 관문은 STOP · 조종권 · 잠금 해제. 현장 승인을 사람이 누르게 되돌릴지는 팀장 질문 (아래 표).
 - 음성: 「멈춰 / 정지」 는 늘 바로 실행 (팀장 11:30 음성 방향 뒤에도 그대로). 움직임을 일으키는 명령은 화면에 한 번 보여 주고 실행 (또는 2 초 안 취소). 누가 말했는지 기록 (원장 음성 줄). 저수준에서 회색인 동작은 음성으로도 안 됨 (팀장 08:01). 위험 동작 (뒤집기 · 두 발 · 물구나무) 은 음성 금지. 단, 비상 정지 수단은 말이 아니라 화면 · 리모컨 단추다 (말은 보조).
