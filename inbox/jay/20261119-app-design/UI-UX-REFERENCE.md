@@ -1,6 +1,6 @@
 > 분류: 설계 참고
 > 작성: app-design-lx · 2026-11-21 19:0x (팀장 18:3x 「순정 앱에서 UI · UX 참고할 것이 이미 파악됐어야 한다」 지시)
-> 근거: 순정 Unitree Go 앱 2.0.0 기능 목록 (`/home/jay/data/app-design-1119/apk/APK-ANALYSIS.md` 3.4 · 3.8 · 3.10 · 3.11) · 공식 튜토리얼 영상 정지 그림 (`~/mai/projects/tutorial-go2/analysis/frames/` 3D-LiDAR-Mapping_01 · 02 · Perspective-Switching_01 · Programming_01 직접 봄)
+> 근거: 순정 Unitree Go 앱 2.0.0 기능 목록 (`data/app-design-1119/apk/APK-ANALYSIS.md` 3.4 · 3.8 · 3.10 · 3.11) · 공식 튜토리얼 영상 정지 그림 (`~/mai/projects/tutorial-go2/analysis/frames/` 3D-LiDAR-Mapping_01 · 02 · Perspective-Switching_01 · Programming_01 직접 봄)
 > 요지: 순정 앱에서 「따라 만들 것」 이 아니라 「참고할 화면 짜임 · 흐름 · 알림 방식」 18 개를 골라, FOOTHOLD 에 어떻게 다르게 쓸지 한 줄씩 붙였다
 > 상태: 초안 · 팀장 검토 전 · 그림은 공개 저장소에 넣지 않음 (파일 이름만 적음)
 

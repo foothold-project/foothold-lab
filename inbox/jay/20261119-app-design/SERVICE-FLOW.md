@@ -4,7 +4,7 @@
 > 작성: app-design-lx · 2026-11-26 07:1x
 > 근거: REQ-LEDGER 답 1~11 · app-lx 전달 결정 (11/22~11/26) · demo-scenario-contract-v0 · ARENA-TERRAINS-v0
 > 요지: 설치부터 보고까지 열세 단계. 단계마다 사람 · 화면 · 서버 · 로봇 · 남는 기록 · 실패하면
-> 상태: v0.2 · 원장 대조 (130 건 · /home/jay/data/app-design-1119/research/SERVICE-FLOW-CROSSCHECK.md) 의 빠짐 27 · 다름 2 반영 · app-reviewer-lx 반박 F1 ~ F7 반영 (11:2x) · 팀장 검토 전
+> 상태: v0.2 · 원장 대조 (130 건 · data/app-design-1119/research/SERVICE-FLOW-CROSSCHECK.md) 의 빠짐 27 · 다름 2 반영 · app-reviewer-lx 반박 F1 ~ F7 반영 (11:2x) · 팀장 검토 전
 
 쓰는 자리는 둘이다. **현장** (로봇 옆 · 폰 가로) · **관제** (관제실 · FHD 웹). 역할은 둘이다. **총괄** (설정 · 등록 · 권한 · 일정 확정) · **운영자** (지도 · 임무 · 조종 · 사건 처리). 계정은 총괄 1 · 운영자 5 (원장 주제 1). 이 문서의 「관리자」 는 총괄을 뜻한다.
 
@@ -117,7 +117,7 @@
 ## 데모 하루 (데모 에이전트 · app-lx)
 - 24 시간 여러 로봇. 계획은 정시 · 같은 속도 · 충전 교대. 어긋남은 원인 사건 (혼잡 · 동선 겹침 · 확인 대기 · 임무별 소요 · 고장) 에서만, 지연은 뒤 일정으로 번지고 기록.
 - 지도: 국내 지하 공동구 · 국내 큰 공장 · 해외 큰 공장 또는 플랜트 (스케일 크고 복잡하게) + 장애물 경기장 (학습 지형 39 종 · 학습함 / 처음 보는 지형 표지).
-- 틀: /home/jay/data/app-design-1119/research/demo-scenario-contract-v0.md
+- 틀: data/app-design-1119/research/demo-scenario-contract-v0.md
 
 ## 다음 (WORK-PROCESS 2 단계)
 - 흐름마다 그림 한 장 (등록 · 지도 만들기 · 임무 짜기 · 예행 · 실행과 사건 · 고장 재배정 · 데모 하루), 갈림길마다 「실패하면?」.
