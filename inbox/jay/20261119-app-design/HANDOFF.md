@@ -50,7 +50,7 @@
 - 시뮬 엔진은 MuJoCo (Gazebo 아님).
 - 데모 로봇은 실기와 같은 길 (AgentState · robot_info · CameraFrame). 로봇에 demo=true 칸 하나만 다르고, STOP · 해제 · 일정 (run) · 기록 · 이력은 실기와 같은 서버 길로 DB 에 쌓인다 (팀장 10:49 · app-lx 전달). 뼈대 PR #500, 실기와 똑같이 만드는 일은 app-lx 진행 중.
 - Go2 X 는 켠 채 충전 안 됨 → 데모 「충전기」 는 배터리 교체 칸.
-- 게이지 읽기 · Ex (방폭) 구역은 상위 장비로 본다. 비방폭으로 바꾸지 않고 상위 모델 장비도 쓰는 플랫폼으로 간다 (팀장 12:50). 화면 · 데모 설명에 「상위 장비」 표지를 붙인다. 가스는 우리 Go2 X 에 부품이 있다 (팀장 12:50) · 값 읽는 길은 app-lx 가 찾는 중.
+- 게이지 읽기 · Ex (방폭) 구역은 상위 장비로 본다. 비방폭으로 바꾸지 않고 상위 모델 장비도 쓰는 플랫폼으로 간다 (팀장 12:50). 화면 · 데모 설명에 「상위 장비」 표지를 붙인다. 가스는 팀장 기억으로 우리 Go2 X 에 부품이 있다 (12:50) · 값 읽는 길 미확인이라 표지는 유지.
 - 경기장 「학습함 / 처음」 표지는 정책 판에 묶고, 색은 DESIGN.md 안에서만 (강조색 점 · 흐린 점선).
 - 폰 직결 코드는 Jetson 에 깔린다 (설치판이 apps/agent 를 통째로 복사). 다만 켜는 길은 서버 에이전트와 갈리는 별도 모드다 (go2_direct · 「no server command authority」). 코드 읽기로는 자동 시작은 폰 길을 켜지 않는다: 설치판 launch.py 는 foothold_agent.setup --headless --onboard (install_jetson_bundle.py:39 · :210) 이고, setup 은 phone 의 tickets · observer 도우미만 가져온다. 폰 서버를 띄우는 곳은 go2_direct runtime · config · ros_bridge 뿐 (app-reviewer-lx 11:19 · app-design-lx 가 dev 에서 git grep 으로 다시 봄). Jetson 실제 상태: app-lx 가 11/26 11:21 Jetson 프로세스를 읽기 전용으로 봄 · foothold-robot.service 의 setup --headless --onboard · policy.factory_record · policy.depth_health 셋만 떠 있고 go2_direct.runtime (폰 서버) 없음 (app-lx 보고). 폰 직결로 조종하는 것은 실기 미검증.
 - 「상위 장비」 표지 자료: 위 upper_hardware 칸. 로더는 상태 보고에 실어 보내기만 함. (예전 안 assumed_hardware · gas_sensor · ex_rated 는 위 이름으로 바뀜.)
@@ -58,12 +58,12 @@
 ## 팀장 12:50 답 요지 (원문은 원장 답 19 · app-lx 가 옮겨 보낸 것)
 - 비상 정지 단추: 첫 누름 = 그 자리 멈춤 → 단추 이름 「Damping」 → 다시 누름 = Damping → 「다시 시작」 은 확인 창 OK 뒤 시작. 순정 순서 1003 → 1005 + 1001 → 1006 ok. 이름은 Damping, 실제 동작은 엎드린 뒤 감쇠 (L2+A · 1005 뒤 1001) 로 할지 app-lx 가 팀장께 다시 확인 중. 이름이 「Damping」 이 되어도 앱이 보내는 것은 sit (엎드린 뒤 감쇠) 이고 실행기 앱 모드 damp (날 감쇠) 는 보내지 않는다 (app-reviewer-lx T2). 판 v1.1 (「엎드려 힘 빼기」 · 확인 창 없음) 은 이 답 뒤 한 벌로 맞춘다.
 - Jetson 실행기 · foothold-robot 새 판 올림 승인 → 12:53 올림 (통로 포트 47210 · 되돌림 파일 Jetson 에 있음 · 화면의 FACTORY/LOWLEVEL 표시는 서버 #501 뒤).
-- 앱에도 순정 넘김 (Classic 전환) 단추. 리모컨 start + 좌/우 와 같은 순서.
+- 앱에도 순정 넘김 (Classic 전환) 단추. 리모컨 start + 좌/우 와 같은 순서 (앉았다 일어나며 넘어감). 앱은 멀리서 누를 수 있으니 멈춰 서 있을 때만 · 확인 한 번 · 아니면 회색 + 까닭 (F4).
 - 실기 시험 둘 「해」: 인사 후보 1016 · 1020 · 1022 · 1023 을 순정에서 눌러 기록기 궤적을 L1+A 와 비교.
 - 「가정 장비」 → 「상위 장비」. 상위 모델 장비도 쓰는 플랫폼 (비방폭으로 바꾸지 않음). 데모 칸 upper_hardware (app-lx 2a61939f) · 값 이름 gas_detector · gauge_reader · ex_rating.
 - 데모는 demo=true 하나만 빼고 실기와 같다.
-- 우리 Go2 X 에 가스 부품 있음 (팀장). 값을 어디서 읽는지는 app-lx 가 찾음 (미확인).
-- 끊긴 동안 Jetson 기록은 이미 올라감 (mai-jetson-sync 10 분마다 · foothold-trace-backup). 빠진 것은 앱 서버 DB 쪽 (끊긴 동안의 사건 · 상태) 뿐. 앞의 「자동 재전송 없음」 은 정정.
+- 가스: 팀장 「우리 Go2 X 에 가스 부품 있는 걸로 내가 안다」 (팀장 기억). app-lx 12:16 은 SDK · Go2 메시지에 가스 값 없음을 잼. 값 읽는 길은 app-lx 가 찾는 중 (미확인). 값이 기록에 나올 때까지 가스도 「상위 장비」 표지 (gas_detector) 유지.
+- 끊긴 동안 기록: 팀장 「당연히 올려야 하는 거 아니야? 되어 있잖아 안그래?」 (물음). app-lx 12:56: Jetson 디스크 기록은 이 PC 의 mai-jetson-sync (10 분마다 · ai-lx01 · NAS 로 복사) 와 foothold-trace-backup 이 다시 붙으면 가져감 (말 · 다시 재지 않음). 앞선 app-lx 코드 읽기: 앱 서버로 저절로 다시 보내는 것은 run 보고뿐이고 서버가 실기 run 저장을 막음. 둘 다 다시 재기 전까지 미확인. 앱 서버 DB 쪽 (끊긴 동안의 사건 · 상태) 을 올리는 길은 만들 일.
 - 음성: Go2 에 직접 말하면 본체 마이크가 듣는다. 그 소리를 Jetson 이 받는 길 (AudioData) 은 확인 전.
 - 멈출 때 발 구르기: 11/24 팀장 지시 「classic 처럼 안정되게 한 번 발 구르면서 정렬」 (새 지시 아님).
 - 결과 표시: 실행기가 동작을 시작했는지, 안 했으면 왜인지를 화면에 보여 준다.
