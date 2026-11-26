@@ -12,7 +12,7 @@
 - **띄운 법.** 저장소에 있는 개발 도구 `apps/web/tools/dev_stack.py` 로 내 기기 안에서만 띄웠다: 임시 PostgreSQL · 관제 서버 (uvicorn) · 가짜 로봇 (받은 명령을 메모리에만 두는 가짜 agent · 실제 로봇 명령 0) · 웹 개발 서버 (Vite). 계정 셋 (총괄 1 · 운영 관리자 2) · 로봇 1 대 (`Go2-7`) 가 자동으로 만들어진다. 이 도구는 Docker 를 쓰지 않는다.
 - **찍은 법.** 헤드리스 Chrome 으로 PC 폭 1440 x 900 · 폰 세로 390 x 844 · 폰 가로 844 x 390 에서 찍었다. 실기 「조종 시작」 은 누르지 않았다.
 - **못 띄운 것 (아래 그림 없음 · 코드로만 적음).**
-  - 브라우저 MuJoCo 시뮬 (`/sim/`): 정책 · MuJoCo wasm · onnxruntime 묶음이 저장소 밖 비공개 자산 (`deploy/README.md` 「브라우저 MuJoCo 묶음」 · `mobile/README.md` 1.2.0 「커밋 안 하는 것」: 빌드 때 `FH_SIM_SRC=<RS-6 시뮬 폴더>` 에서 복사) 이다. 이 기기에서 `policy_v2.f32` · `node_modules/@mujoco/mujoco` (`/home/jay` 아래 6 단계 깊이) · `mujoco.wasm` (`~/mai` · `~/data` 아래 7 단계 깊이) 를 찾았으나 없었다. 그래서 「시뮬 열기」 는 「시뮬을 열지 못했습니다」 로 끝났다 (`shots/07`).
+  - 브라우저 MuJoCo 시뮬 (`/sim/`): 정책 · MuJoCo wasm · onnxruntime 묶음이 저장소 밖 비공개 자산 (`deploy/README.md` 「브라우저 MuJoCo 묶음」 · `mobile/README.md` 1.2.0 「커밋 안 하는 것」: 빌드 때 `FH_SIM_SRC=<RS-6 시뮬 폴더>` 에서 복사) 이다. 이 기기에서 `policy_v2.f32` · `node_modules/@mujoco/mujoco` (홈 폴더 아래 6 단계 깊이) · `mujoco.wasm` (`~/mai` · `~/data` 아래 7 단계 깊이) 를 찾았으나 없었다. 그래서 「시뮬 열기」 는 「시뮬을 열지 못했습니다」 로 끝났다 (`shots/07`).
   - PC 세 칸 조종 화면 (`pcdrive.tsx` · Go2 3D 포함): 서버 설정 · 기체번호 · 현장 승인 (agent 쪽) 세 조건이 맞아야 열린다 (`apps/server/fh_server/robots.py:111`). 가짜 로봇으로는 현장 승인이 없어 못 열었다.
   - 실기 영상 · 라이다 · 뎁스 · 배터리 · 관절 값: 가짜 로봇이 이 값을 보내지 않아 빈칸으로 찍혔다. 「빈칸일 때 화면이 무엇을 말하는가」 만 사실이다.
 - **이 두 화면을 찍는 길 (팀장 동의 필요 · 아직 안 함):** 운영 서버 웹을 찍기 · 시뮬 자산이 있는 팀원 기기에서 찍기 · RS-6 시뮬 폴더 자리를 받아 이 기기에서 띄우기.
