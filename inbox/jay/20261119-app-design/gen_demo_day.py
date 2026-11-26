@@ -21,6 +21,7 @@ CH += [{'id': 'T-SW-W', 'waypoint': 't_swap_w', 'yaw': 0.0, 'slots': 2, 'charge_
        {'id': 'T-SW-E', 'waypoint': 't_swap_e', 'yaw': 3.14, 'slots': 2, 'charge_pct_per_h': SWAP}]
 Z += [{'id': 't_hatch_a', 'floor': 'tunnel', 'rect': [460, -6, 500, 6], 'crowd': [{'hours': '09:00-11:00', 'level': 0.5, 'kinds': ['person']}, {'hours': '14:00-16:00', 'level': 0.5, 'kinds': ['person']}]},
       {'id': 't_hatch_b', 'floor': 'tunnel', 'rect': [1900, -6, 1940, 6], 'crowd': [{'hours': '09:00-11:00', 'level': 0.4, 'kinds': ['person']}]}]
+# 가정: check_gas · read_gauge · kr-gas · Ex 구역은 가스 센서 · 방폭 · 게이지 읽기를 단 상위 기체 가정 (Go2 X 에는 없음 · MAP-SITES 기체 가정)
 # 2 국내 공장 400 x 300: 등뼈 파이프랙 (y=150), 단위공정 4, 정문 · 하역장
 for k, x in enumerate([20, 110, 200, 290, 380]): wp(f'k_rack{k}', 'plant_kr', x, 150)
 path(*[f'k_rack{k}' for k in range(5)])
@@ -120,5 +121,6 @@ head = """# 분류: 데모 시나리오 (데모 에이전트 입력 · 에이전
 # 요지: 하루 24 h · 22 대 · 지도 4 (floors 4 줄). 정시 · 같은 속도 · 배터리 교체 칸 교대. 어긋남은 crowd · path_conflict · wait_confirm · duration · fault 로만
 # 상태: v0.1 · 좌표는 지도 제작 전 자리표 · floor_id / map_version_id 는 자리표 UUID
 # 배터리: Go2 X 는 켠 채 충전되지 않음 → 「충전기」 는 배터리 교체 칸. charge_pct_per_h 500 (검증기 상한) = 85 % 에 약 10 분 (가정)
+# 기체 가정: check_gas · read_gauge · kr-gas · Ex 구역은 가스 센서 · 방폭 · 게이지 읽기를 단 상위 기체 가정 (Go2 X 에는 없음 · MAP-SITES 기체 가정)
 """
 open(out, 'w').write(head + yaml.safe_dump(doc, allow_unicode=True, sort_keys=False, width=200))

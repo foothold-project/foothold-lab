@@ -4,6 +4,7 @@
 # 요지: 하루 24 h · 22 대 · 지도 4 (floors 4 줄). 정시 · 같은 속도 · 배터리 교체 칸 교대. 어긋남은 crowd · path_conflict · wait_confirm · duration · fault 로만
 # 상태: v0.1 · 좌표는 지도 제작 전 자리표 · floor_id / map_version_id 는 자리표 UUID
 # 배터리: Go2 X 는 켠 채 충전되지 않음 → 「충전기」 는 배터리 교체 칸. charge_pct_per_h 500 (검증기 상한) = 85 % 에 약 10 분 (가정)
+# 기체 가정: check_gas · read_gauge · kr-gas · Ex 구역은 가스 센서 · 방폭 · 게이지 읽기를 단 상위 기체 가정 (Go2 X 에는 없음 · MAP-SITES 기체 가정)
 version: 0
 name: demo-day-v0.1
 start: '2026-11-26T00:00:00+09:00'
