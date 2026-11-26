@@ -87,7 +87,7 @@ robot('A-02', 'a_pit', 'A-SW', [(a, 'arena_lap') for a in ['11:00', '15:00']])
 # 교체 칸은 임무 끝마다 들르는 계획 (until_soc 95). 같은 교체 칸 두 자리를 넘지 않게 시각을 엇갈림
 # 교체 칸: 임무마다 바로 뒤에 들름 (시작 + 1 분으로 걸어 두면 임무가 끝난 뒤 이어짐). 같은 칸 로봇은 출발을 엇갈려 자리 2 를 넘지 않음
 # 교체 칸: 하루 시작에 집 교체 칸에 붙어 대기 (서 있으면 34.6 %/h 닳음). 임무마다 끝나는 시각 (모의 실행으로 잰 길이 + 2 분) 에 교체
-DUR = {'tunnel_sweep_w': 32, 'tunnel_sweep_e': 32, 'tunnel_joint_w': 55, 'tunnel_joint_e': 55, 'tunnel_sump': 45,
+DUR = {'tunnel_sweep_w': 32, 'tunnel_sweep_e': 32, 'tunnel_joint_w': 55, 'tunnel_joint_e': 55, 'tunnel_sump': 62,
        'kr_round': 27, 'kr_round_b': 31, 'kr_steel': 26, 'eu_ex': 33, 'eu_cracker': 40, 'arena_lap': 5}
 CR = []
 def hm(t): return f"{t//60:02d}:{t%60:02d}"
@@ -109,7 +109,7 @@ EV = [
  {'id': 'eu-ex-slow', 'kind': 'duration', 'robot': 'E-02', 'mission': 'eu_ex', 'at': '12:10', 'extra_min': 6},
  {'id': 'kr-gas', 'kind': 'fault', 'robot': 'K-07', 'at': '19:34', 'recover_min': 40, 'fail_code': 'OPERATOR_ABORT'},  # 가스 의심 → 멈춤 · 재배정
  {'id': 'eu-motor', 'kind': 'fault', 'robot': 'E-06', 'at': '14:07', 'fail_code': 'NAV_UNAVAILABLE'},     # 모터 과열 · 오늘 복귀 없음 → 재배정 시연
- {'id': 't-loc', 'kind': 'fault', 'robot': 'T-04', 'at': '06:15', 'recover_min': 3, 'fail_code': 'LOCALIZATION_LOST'},  # 반복 굴 위치 잃음
+ {'id': 't-loc', 'kind': 'fault', 'robot': 'T-03', 'at': '06:15', 'recover_min': 3, 'fail_code': 'LOCALIZATION_LOST'},  # 반복 굴 위치 잃음
 ]
 doc = {'version': 0, 'name': 'demo-day-v0.1', 'start': '2026-11-26T00:00:00+09:00', 'duration_h': 24, 'seed': 1126, 'pose_confidence': 0.95,
        'site': {'floors': floors, 'waypoints': W, 'paths': P, 'chargers': CH, 'zones': Z},

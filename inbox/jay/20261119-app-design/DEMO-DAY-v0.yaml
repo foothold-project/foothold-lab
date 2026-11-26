@@ -1092,11 +1092,11 @@ charge_rotation:
   until_soc: 95
 - robot: T-04
   charger: T-SW-E
-  at: '12:47'
+  at: '13:04'
   until_soc: 95
 - robot: T-04
   charger: T-SW-E
-  at: '19:47'
+  at: '20:04'
   until_soc: 95
 - robot: K-01
   charger: K-SW1
@@ -1642,7 +1642,7 @@ events:
   fail_code: NAV_UNAVAILABLE
 - id: t-loc
   kind: fault
-  robot: T-04
+  robot: T-03
   at: 06:15
   recover_min: 3
   fail_code: LOCALIZATION_LOST
