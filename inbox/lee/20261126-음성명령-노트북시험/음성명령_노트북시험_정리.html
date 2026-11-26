@@ -1,0 +1,673 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>음성 명령 시험 정리</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Host+Grotesk:wght@400;500&family=Atkinson+Hyperlegible+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* critique: 기술 보고서 · 측정값(요청 번호 · 시각 · 모드)만 고정폭 · 호박색 = 사람이 한 것(음성 · 단추) · 파랑 = 장치/측정 */
+:root {
+  --color-paper: oklch(17% 0.008 250); --color-paper-2: oklch(21% 0.009 250); --color-paper-3: oklch(13.5% 0.007 250);
+  --color-ink: oklch(95% 0.005 250); --color-ink-2: oklch(83% 0.008 250); --color-muted: oklch(71% 0.01 250);
+  --color-rule: oklch(31% 0.01 250); --color-rule-2: oklch(42% 0.012 250);
+  --color-accent: oklch(82% 0.15 80); --color-accent-ink: oklch(18% 0.04 75); --color-accent-soft: oklch(29% 0.05 80); --color-focus: oklch(82% 0.15 80);
+  --color-cool: oklch(77% 0.12 245); --color-cool-soft: oklch(29% 0.05 245);
+  --color-ok: oklch(76% 0.15 150); --color-ok-soft: oklch(24.5% 0.03 150); --color-bad: oklch(70% 0.17 25); --color-bad-soft: oklch(24.5% 0.035 25);
+  --font-display: "Host Grotesk", "Noto Sans KR", "Noto Sans CJK KR", ui-sans-serif, system-ui, sans-serif; --font-body: var(--font-display);
+  --font-outlier: "Atkinson Hyperlegible Mono", "Noto Sans Mono CJK KR", ui-monospace, monospace;
+  --radius-card: 10px; --radius-pill: 6px; --radius-chip: 4px; --rule-hair: 1px;
+  --tracking-display: -0.03em; --display-weight: 500;
+  --space-xs: 6px; --space-sm: 10px; --space-md: 16px; --space-lg: 28px; --space-xl: 56px;
+  --measure: 1120px; --dur-short: 160ms; --ease-out: cubic-bezier(.2,.7,.2,1);
+}
+@media (prefers-color-scheme: light) { :root:not([data-theme="dark"]) {
+  --color-paper: oklch(98% 0.006 85); --color-paper-2: oklch(95.5% 0.007 85); --color-paper-3: oklch(92.5% 0.008 85);
+  --color-ink: oklch(22% 0.01 250); --color-ink-2: oklch(33% 0.01 250); --color-muted: oklch(45% 0.012 250);
+  --color-rule: oklch(86% 0.008 85); --color-rule-2: oklch(74% 0.01 85);
+  --color-accent: oklch(55% 0.14 70); --color-accent-ink: oklch(98% 0.01 85); --color-accent-soft: oklch(92% 0.05 80); --color-focus: oklch(55% 0.14 70);
+  --color-cool: oklch(50% 0.13 245); --color-cool-soft: oklch(93% 0.03 245);
+  --color-ok: oklch(48% 0.13 150); --color-ok-soft: oklch(94% 0.03 150); --color-bad: oklch(52% 0.17 25); --color-bad-soft: oklch(94% 0.03 25);
+} }
+* { box-sizing: border-box; }
+html, body { overflow-x: clip; }
+.toc ol { list-style: decimal; }
+figure.crop { margin: 14px 0 0; } figure.crop img { display: block; max-width: 100%; border: 1px solid var(--color-rule); border-radius: 6px; } figure.crop figcaption { font-size: .86rem; color: var(--color-muted); margin-top: 6px; }
+body { margin: 0; background: var(--color-paper); color: var(--color-muted); font-family: var(--font-body); font-size: 16.5px; line-height: 1.55; word-break: keep-all; overflow-wrap: break-word; }
+main { max-width: var(--measure); margin: 0 auto; padding: var(--space-xl) var(--space-md) 96px; }
+h1, h2 { font-family: var(--font-display); font-weight: var(--display-weight); letter-spacing: var(--tracking-display); color: var(--color-ink); overflow-wrap: break-word; min-width: 0; }
+h1 { font-size: clamp(2rem, 4.2vw, 3.1rem); line-height: 1.04; margin: 0 0 var(--space-sm); max-width: 18ch; }
+h2 { font-size: 1.55rem; line-height: 1.1; margin: var(--space-xl) 0 var(--space-md); padding-top: var(--space-lg); border-top: var(--rule-hair) solid var(--color-rule); }
+b, strong { color: var(--color-ink); font-weight: 500; }
+.sub { color: var(--color-muted); font-size: .94rem; }
+main > p.sub:first-of-type { color: var(--color-ink-2); font-size: 1.05rem; max-width: 70ch; }
+code, .mono { font-family: var(--font-outlier); font-size: .9em; font-variant-numeric: tabular-nums slashed-zero; color: var(--color-cool); background: none; border: 0; padding: 0; }
+.card { background: var(--color-paper-2); border: var(--rule-hair) solid var(--color-rule); border-radius: var(--radius-card); padding: var(--space-md) 20px; margin: var(--space-md) 0; }
+.card > b:first-child { display: block; color: var(--color-ink); margin-bottom: 4px; }
+ul { padding-left: 20px; margin: 6px 0; } li { margin: 4px 0; } li::marker { color: var(--color-rule-2); }
+.ok { color: var(--color-ok); font-weight: 500; } .warn { color: var(--color-accent); }
+/* 표: 1px 행 구분 · 머리는 라벨 서체 */
+table { width: 100%; border-collapse: collapse; font-size: .93rem; }
+th, td { border-bottom: var(--rule-hair) solid var(--color-rule); padding: 10px 8px; text-align: left; vertical-align: top; }
+th { color: var(--color-muted); font-weight: 500; font-size: .86rem; }
+td { color: var(--color-ink-2); }
+tr:last-child td { border-bottom: 0; }
+/* 흐름: 한 면을 1px 이음새로 나눈 패널 */
+.pipe { padding: 0; overflow: hidden; }
+.lane { padding: var(--space-md) 18px 18px; }
+.lane + .turn + .lane { border-top: var(--rule-hair) solid var(--color-rule); }
+.lane-h { font-size: .86rem; color: var(--color-muted); font-weight: 500; margin-bottom: var(--space-sm); }
+.lane.back { background: var(--color-paper-3); }
+.lane.back .lane-h { color: var(--color-cool); }
+.row { display: flex; align-items: stretch; }
+.row .node { flex: 1 1 0; min-width: 0; }
+.row .arr { flex: 0 0 22px; display: flex; align-items: center; justify-content: center; color: var(--color-rule-2); font-size: 1.05rem; }
+.node { position: relative; background: var(--color-paper); border: var(--rule-hair) solid var(--color-rule); border-radius: var(--radius-pill); padding: 26px 10px 34px; display: flex; flex-direction: column; gap: 4px; }
+.lane.back .node { background: var(--color-paper-2); }
+.node i { position: absolute; top: 7px; left: 10px; font-style: normal; font-family: var(--font-outlier); font-size: .74rem; color: var(--color-muted); }
+.node b { font-size: .96rem; }
+.node small { color: var(--color-muted); font-size: .8rem; line-height: 1.45; }
+.node u { text-decoration: none; color: var(--color-accent); font-weight: 500; }
+.node .t { position: absolute; left: 10px; bottom: 9px; font-style: normal; font-size: .72rem; font-weight: 500; border-radius: var(--radius-chip); padding: 1px 7px; border: var(--rule-hair) solid var(--color-rule); color: var(--color-ink-2); }
+.t.real { background: var(--color-ok-soft); } .t.fake { background: var(--color-cool-soft); } .t.new { background: var(--color-accent-soft); }
+.node.goal { border-color: var(--color-accent); }
+.turn { display: flex; justify-content: flex-end; padding: 8px 18px; font-size: .82rem; color: var(--color-muted); border-top: var(--rule-hair) solid var(--color-rule); background: var(--color-paper-2); }
+/* 장면 넘김 */
+.stage { background: var(--color-paper-3); border-radius: var(--radius-card); overflow: hidden; border: var(--rule-hair) solid var(--color-rule); }
+.stage img { display: block; width: 100%; height: auto; }
+.cutbar { display: flex; gap: 8px; align-items: center; margin: 12px 0 6px; flex-wrap: wrap; }
+.cutbar button, .dots button { font: 500 .9rem var(--font-body); color: var(--color-ink); background: var(--color-paper-2); border: var(--rule-hair) solid var(--color-rule-2); border-radius: var(--radius-pill); padding: 7px 14px; cursor: pointer; transition: background-color var(--dur-short) var(--ease-out), border-color var(--dur-short) var(--ease-out), color var(--dur-short) var(--ease-out); }
+.cutbar button:hover, .dots button:hover { border-color: var(--color-accent); }
+.cutbar button:active, .dots button:active { background: var(--color-paper-3); }
+.cutbar button:focus-visible, .dots button:focus-visible { outline: 2px solid var(--color-focus); outline-offset: 2px; transition: none; }
+.cutbar button[data-play] { background: var(--color-accent); color: var(--color-accent-ink); border-color: var(--color-accent); }
+.dots { display: flex; gap: 6px; flex-wrap: wrap; }
+.dots button { padding: 5px 11px; font-family: var(--font-outlier); }
+.dots button[aria-current="true"] { background: var(--color-ink); color: var(--color-paper); border-color: var(--color-ink); }
+.cap { font-size: 1.08rem; margin: 8px 0 2px; font-weight: 500; color: var(--color-ink); }
+.why { color: var(--color-muted); font-size: .95rem; margin: 0; max-width: 75ch; }
+video { width: 100%; border-radius: var(--radius-card); border: var(--rule-hair) solid var(--color-rule); background: var(--color-paper-3); display: block; }
+@media (max-width: 860px) {
+  .row { flex-direction: column; }
+  .row .arr { flex-basis: 22px; transform: rotate(90deg); }
+  .turn { justify-content: flex-start; }
+}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+h3 { font-family: var(--font-display); font-weight: 500; color: var(--color-ink); font-size: 1.15rem; margin: var(--space-lg) 0 var(--space-sm); }
+h2.part { font-size: 1.9rem; }
+pre { background: var(--color-paper-3); border: var(--rule-hair) solid var(--color-rule); border-radius: var(--radius-pill); padding: 12px 14px; overflow-x: auto; font-size: .82rem; line-height: 1.5; margin: 10px 0; }
+pre code { color: var(--color-ink-2); white-space: pre; }
+.toc ol { margin: 6px 0 0; padding-left: 22px; } .toc a, main a { color: var(--color-cool); }
+.t { font-style: normal; font-size: .72rem; font-weight: 500; border-radius: var(--radius-chip); padding: 1px 7px; border: var(--rule-hair) solid var(--color-rule); color: var(--color-ink-2); white-space: nowrap; }
+</style>
+</head>
+<body>
+<main>
+  <h1>음성 명령 노트북 시험 정리</h1>
+  <p class="sub">시험 2026-11-24 ~ 25 · 정리 2026-11-26 · 로봇 없이 노트북 한 대에서 <b>팀 서버 · 팀 로봇 프로그램 (foothold_agent) · 팀 앱</b> 에 <b>가짜 Go2</b> 를 꽂아 돌린 시험 · 팀 dev <code>1feb63c5</code> 기준 개인 사본 (팀 저장소에 커밋 · push 하지 않음)</p>
+
+  <div class="card">
+    <b>요약</b>
+    <ul>
+      <li><b>무엇을 했나:</b> 합성 음성 파일을 노트북에서 받아쓰고 (Vosk), 알아들은 명령을 팀 서버 → 팀 로봇 프로그램 → 가짜 Go2 까지 보내 화면에 결과가 뜨는지 봤다. 실제 로봇 · 마이크는 쓰지 않았다.</li>
+      <li><b>엎드리기 · 일어서기</b> (2 · 3 절): 음성 한 마디마다 기존 자세 요청이 한 번 나가고, 가짜 Go2 의 측정 자세로 완료가 확인돼 화면 자세가 서 있음 → 엎드림 → 서 있음으로 바뀌었다.</li>
+      <li><b>그 밖의 말</b> (3 절): 앉기 · 정지 · 부정문 · 평소 말에서는 요청이 나가지 않았다 (이번에 넣은 파일 기준).</li>
+      <li><b>앉기 · 앉은 자세에서 일어서기</b> (4 절): 요청이 가짜 Go2 의 Sit · RiseSit 호출까지 가서 「SDK 접수」 를 받았다. 앉았다는 확인은 아니다.</li>
+      <li><b>PR478 판</b> (5 절): 가짜 Go2 가 앉았다고 가정하면, 앱의 앉은 자세에서 일어서기가 「서 있음과 정지가 확인되어야 합니다」 로 거부되고 호출이 나가지 않았다.</li>
+      <li><b>시험 방법</b> (1 절) 과 <b>시험 코드</b> (<code>시험코드/</code> · 7 절) 를 함께 넣었다. 자동 시험은 11-26 다시 돌려 파이썬 124 · 웹 57 통과.</li>
+      <li><b>아직 모르는 것</b> (6 절): 실기 자세 값 · 본체 마이크 인식 · 실제 앉음 · 리모컨 중 자세 요청 처리 등.</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <b>지금 방향과의 관계 (11-26)</b>
+    <ul>
+      <li>지금 우선 목표는 <b>앱이 로봇에 연결돼 있을 때 음성을 보조 입력으로 받는 것</b> 이다. 이 문서는 그 전에 한 노트북 시험의 기록이다.</li>
+      <li>2 절 (앱 화면이 음성 의도를 받아 기존 자세 요청을 보냄) 이 지금 목표에 가장 가까운 형태다. 3 · 4 절의 「음성 시연 프로그램이 따로 조종권을 받는」 방식은 그 전 방향에서 해 본 시험이며 지금 설계안이 아니다.</li>
+    </ul>
+  </div>
+
+  <nav class="card toc">
+    <b>차례</b>
+    <ol start="0">
+      <li><a href="#s0">한눈에 보기</a></li>
+      <li><a href="#s1">시험을 어떻게 돌렸나</a> (구성 · 진짜와 가짜 · 가짜 Go2 규칙 · 준비 · 실행 명령 · 자동 시험 · 판정 근거)</li>
+      <li><a href="#s2">엎드리기 · 일어서기 (11-24 · (가)(나))</a></li>
+      <li><a href="#s3">음성 명령 6 개 (11-25 오전)</a></li>
+      <li><a href="#s4">앉기 · 앉은 자세에서 일어서기 (11-25 오후)</a></li>
+      <li><a href="#s5">PR478 병합 판 비교 (11-25 오후)</a></li>
+      <li><a href="#s6">아직 모르는 것 · 실기에서 확인할 것</a></li>
+      <li><a href="#s7">함께 넣은 시험 코드</a></li>
+    </ol>
+  </nav>
+
+  <h2 id="s0">0 · 한눈에 보기</h2>
+  <div class="card">
+    <table>
+      <tr><th>절</th><th>시험</th><th>요청을 만든 곳</th><th>결과</th></tr>
+      <tr><td>2</td><td>합성 음성으로 엎드리기 → 일어서기</td><td>팀 앱 화면 (사람이 조종권을 쥔 화면이 음성 의도를 받아 기존 자세 요청)</td><td class="ok">화면 자세 서 있음 → 엎드림 → 서 있음 · 측정 자세로 완료 확인</td></tr>
+      <tr><td>3</td><td>명령 6 개 + 부정문 · 평소 말</td><td>음성 시연 프로그램 (시험 계정으로 조종권을 받아 서버에 요청)</td><td>엎드리기 · 일어서기만 요청 2 건 · 나머지 요청 0</td></tr>
+      <tr><td>4</td><td>앉기 · 앉은 자세에서 일어서기</td><td>음성 시연 프로그램 (동작 시험 모드)</td><td>가짜 Go2 의 Sit · RiseSit 호출까지 감 · <b>「SDK 접수」 까지만</b> (앉음 확인 아님)</td></tr>
+      <tr><td>5</td><td>PR478 판 로봇 프로그램 + 앉음 가정 장치</td><td>사람이 팀 앱 「동작 시험」 단추 (음성 없음)</td><td class="warn">앉은 자세에서 일어서기 거부 · RiseSit 호출 0</td></tr>
+    </table>
+  </div>
+  <div class="card">
+    <b>모든 절에 공통 · 이것은 아닙니다</b>
+    <ul>
+      <li><b>실제 로봇이 움직인 것이 아니다.</b> 가짜 Go2 는 정해 둔 규칙대로 다음 측정값 숫자를 바꿀 뿐이다 (1-3). 물리 시뮬도 아니다.</li>
+      <li><b>마이크로 들은 것이 아니다.</b> 합성 음성 파일 (Kokoro af_heart 목소리) 을 노트북의 Vosk 받아쓰기에 넣었다. 사람 목소리 · Go2 본체 마이크 · 소음 · 인식률은 따로 봐야 한다.</li>
+      <li>영상은 실제 Chrome 화면을 단계마다 찍은 캡처를 이어 붙인 <b>무음 요약</b> 이다. 장면 길이는 실제 걸린 시간이 아니다.</li>
+      <li>음성 정지는 만들지 않았다 (정지는 앱 STOP · 리모컨). 「foothold stop」 은 알아들었다는 표시만 한다.</li>
+    </ul>
+  </div>
+
+  <h2 id="s1">1 · 시험을 어떻게 돌렸나</h2>
+  <p class="sub">모두 노트북 한 대 (127.0.0.1) 안에서 돌렸다. 외부 서버 · 운영 DB · 실기 Go2 · Orin 에는 아무것도 보내지 않았다.</p>
+
+  <h3>1-1 · 구성</h3>
+  <div class="card pipe">
+    <div class="lane">
+      <div class="lane-h">가는 길 · 명령 (1 · 2 는 2 · 3 · 4 절만. 5 절은 사람이 앱 단추를 눌러 3 부터)</div>
+      <div class="row">
+        <div class="node"><i>1</i><b>합성 음성 wav</b><small><code>samples/*.wav</code> 9 개</small><em class="t fake">가짜</em></div>
+        <div class="arr">→</div>
+        <div class="node"><i>2</i><b>받아쓰기 · 판정</b><small>Vosk (작은 영어 모델) + 11-23 판정 규칙 <code>hey_foothold_1123.py</code></small><em class="t new">새로 만듦</em></div>
+        <div class="arr">→</div>
+        <div class="node"><i>3</i><b>요청 만드는 곳</b><small>2 절: 팀 앱 화면 (<code>voiceLocal.ts</code>)<br>3 · 4 절: 음성 시연 프로그램 (<code>voice_client.py</code>)<br>5 절: 사람이 앱 단추</small><em class="t new">새로 만듦 + 팀 앱</em></div>
+        <div class="arr">→</div>
+        <div class="node"><i>4</i><b>팀 서버</b><small>임시 PostgreSQL · 시험 조직 · 계정 · 가짜 로봇 하나</small><em class="t real">팀 코드 그대로</em></div>
+        <div class="arr">→</div>
+        <div class="node"><i>5</i><b>팀 로봇 프로그램</b><small><code>go2_direct.server.run</code> 주행 고리 그대로 · 센서 통로와 SDK 자리만 가짜로</small><em class="t real">팀 코드 그대로</em></div>
+        <div class="arr">→</div>
+        <div class="node robot"><i>6</i><b>가짜 Go2</b><small><code>voice_fake_go2.py</code> · SDK 호출 기록 + 다음 측정값 바꿈</small><em class="t fake">가짜</em></div>
+      </div>
+    </div>
+    <div class="turn" aria-hidden="true"><span>↓ 측정값이 다시 올라감</span></div>
+    <div class="lane back">
+      <div class="lane-h">돌아오는 길 · 상태</div>
+      <div class="row">
+        <div class="node robot"><i>7</i><b>가짜 측정값</b><small>모드 · 몸 높이 · 기울기 (시험값)</small><em class="t fake">가짜</em></div>
+        <div class="arr">→</div>
+        <div class="node"><i>8</i><b>로봇 프로그램 결과</b><small>자세 요청: 측정이 목표 자세면 CONFIRMED<br>동작 요청 (Sit · RiseSit): SDK 접수 (SDK_ACCEPTED) 까지 · 자세는 따로 관측</small><em class="t real">팀 코드 그대로</em></div>
+        <div class="arr">→</div>
+        <div class="node"><i>9</i><b>팀 서버</b><small>화면에 현재 상태</small><em class="t real">팀 코드 그대로</em></div>
+        <div class="arr">→</div>
+        <div class="node goal"><i>10</i><b>팀 앱 화면</b><small>자세 칸 · 결과 줄 · 「들은 명령」 안내 줄 (3 · 4 절)</small><em class="t real">팀 앱 + 표시 추가</em></div>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <b>조종권 · 요청을 누가 쥐었나 (절마다 다름)</b>
+    <table>
+      <tr><th>절</th><th>조종권을 쥔 쪽</th><th>음성 → 요청</th><th>앱 화면이 한 일</th></tr>
+      <tr><td>2</td><td>팀 앱 화면 (사람이 「조종 시작」)</td><td>중계 <code>bridge.py</code> 가 wav 를 받아쓰고 의도 하나를 화면으로 보냄 → 화면이 <b>「일어서기 / 엎드리기」 단추와 같은 함수</b> 로 기존 자세 요청</td><td>「음성 받기 켜기」 를 켠 동안만 의도를 받음</td></tr>
+      <tr><td>3 · 4</td><td>음성 시연 프로그램 (시험 계정으로 직접 조종권 받기 · 끝에 반납)</td><td><code>voice_demo.py</code> 가 받아쓰고 서버에 자세 요청 (3 절) · 동작 요청 Sit / RiseSit (4 절)</td><td><b>로그인해서 보기만</b> (「조종 시작」 안 누름) · 「들은 명령 / 행동」 안내 줄 표시</td></tr>
+      <tr><td>5</td><td>팀 앱 화면 (사람)</td><td>음성 없음 · 팀 앱 기존 「동작 시험」 단추</td><td>팀 앱 그대로</td></tr>
+    </table>
+  </div>
+
+  <div class="card">
+    <b>팀 앱에 새로 붙인 화면 두 가지 (원래 팀 앱에는 없음 · 시험용)</b>
+    <table>
+      <tr><th></th><th>① 「음성 받기 켜기」 단추</th><th>② 「들은 명령 / 행동」 안내 줄</th></tr>
+      <tr><td>어디</td><td>로봇 조종 칸 · 기존 「일어서기 · 엎드리기」 단추 아래</td><td>로봇 화면 위쪽 알림 자리 (초록 줄)</td></tr>
+      <tr><td>하는 일</td><td>켜면 화면이 노트북 음성 중계에 붙어 음성 의도 (엎드리기 · 일어서기) 를 받는다. 받은 의도는 <b>기존 단추와 같은 함수</b> 로 자세 요청이 된다. 누르면 「음성 받기 끄기」 로 바뀌고, 조종권이 바뀌거나 연결이 끊기거나 화면을 숨기면 저절로 꺼진다</td><td>노트북이 합성 음성을 <b>받아쓴 말</b> 과 그 말로 한 일 (요청 · 결과 · 「없음」) 을 보여 준다. <b>표시만</b> 하고 로봇에 아무것도 보내지 않는다. 처음 (3 절) 은 최근 두 건, 4 절부터는 번호 붙은 최신 한 줄만</td></tr>
+      <tr><td>쓴 시험</td><td>2 절</td><td>3 · 4 절</td></tr>
+      <tr><td>켜지는 조건</td><td>개발 서버 + <code>VITE_FH_VOICE_LOCAL=1</code></td><td>개발 서버 + <code>VITE_FH_VOICE_SHOW=1</code></td></tr>
+      <tr><td>코드</td><td><code>voiceLocal.ts</code> · <code>serverdrive.tsx</code> 수정분</td><td><code>voiceHeard.ts</code> · <code>heard_feed.py</code> · <code>serverdrive.tsx</code> 수정분</td></tr>
+    </table>
+    <figure class="crop"><img src="그림/0_새로붙인화면/1_음성받기_단추.png" alt="음성 받기 단추"><figcaption>① 주황 네모 = 새로 붙인 「음성 받기」 단추 (이 장면은 켠 뒤라 「끄기」). 위의 「일어서기 · 엎드리기」 는 팀 앱 기존 단추. 캡처를 잘라 키운 것이라 글자가 흐리다 (원본 장면: 2 절 (가) ③)</figcaption></figure>
+    <figure class="crop"><img src="그림/0_새로붙인화면/2_들은명령_안내줄.png" alt="들은 명령 안내 줄"><figcaption>② 4 절 A 장면의 안내 줄: 「1. 가짜 Go2 (S5) 음성 시연(합성 wav) · 들은 명령어: foothold sit down / 행동: 앉기 · 가짜 Go2 SDK 접수 (앉음 확인 안 됨)」. 「들은」 것은 Go2 가 아니라 노트북 프로그램이다</figcaption></figure>
+  </div>
+
+  <h3>1-2 · 진짜 팀 코드와 새로 만든 것</h3>
+  <div class="card">
+    <table>
+      <tr><th>구분</th><th>파일</th><th>무엇</th></tr>
+      <tr><td><span class="t real">팀 코드 그대로</span></td><td><code>apps/server/</code> · <code>apps/agent/foothold_agent/</code> · <code>apps/contracts/</code></td><td>서버 · 로봇 프로그램 · 서버-로봇 약속. 바꾸지 않음. 5 절만 로봇 프로그램을 PR478 병합 판 <code>84dac3c2</code> 으로 바꿔 끼움</td></tr>
+      <tr><td><span class="t new">팀 앱 조금 고침</span></td><td><code>apps/web/src/rt.ts</code> · <code>serverdrive.tsx</code> · <code>vite.config.ts</code> (<code>팀웹_수정분.diff</code> · 더한 줄 62 · 뺀 줄 6)</td><td>자세 요청에 요청 번호를 돌려주게 · 「음성 받기」 단추 · 「들은 명령」 안내 줄 · 개발 서버 중계 주소. 화면 쪽은 <code>import.meta.env.DEV</code> 이고 <code>VITE_FH_VOICE_LOCAL=1</code> (또는 <code>VITE_FH_VOICE_SHOW=1</code>) 일 때만 켜지고, 중계 주소는 <code>vite</code> 개발 서버에 <code>FH_VOICE_BRIDGE</code> / <code>FH_VOICE_HEARD</code> 를 줄 때만 붙는다. 인증 · 실기 격리 장치는 아니다</td></tr>
+      <tr><td><span class="t new">새 화면 코드</span></td><td><code>apps/web/src/voiceLocal.ts</code> · <code>voiceHeard.ts</code></td><td>음성 의도 받기 조건 · 완료 판정 (2 절) / 안내 줄 표시 (3 · 4 절)</td></tr>
+      <tr><td><span class="t new">실행 도구</span></td><td><code>tools/voice_local/s5_server.py</code></td><td>팀 서버 시험용 임시 PostgreSQL 을 띄우고 시험 조직 · 계정 · 가짜 로봇 하나를 새로 만든 뒤 팀 서버 (uvicorn) 를 127.0.0.1:8810 에 띄움. 비밀번호 · 토큰은 무작위로 만들어 <code>logs/</code> 의 0600 파일에만 씀</td></tr>
+      <tr><td></td><td><code>tools/voice_local/s5_agent.py</code></td><td>팀 로봇 프로그램의 실제 주행 고리 <code>run()</code> 에 가짜 Go2 를 꽂아 띄움. 진짜 Unitree SDK · CycloneDDS · ROS · WebRTC 모듈은 불러오면 바로 실패하게 막음. <code>--trace</code> = SDK 호출 기록 · <code>--sit-model</code> = 앉음 가정 · <code>--agent-repo</code> = 다른 판 로봇 프로그램</td></tr>
+      <tr><td></td><td><code>tools/voice_local/bridge.py</code></td><td>2 절 중계. 알려진 wav 이름만 받아쓰고 「foothold stand down / up」 일 때만 의도 하나 (2 초 기한) 를 연결된 화면 하나에 보냄. 서버 · 로봇에는 보내지 않음</td></tr>
+      <tr><td></td><td><code>tools/voice_local/voice_client.py</code> · <code>voice_demo.py</code></td><td>3 · 4 절 음성 시연 프로그램. 조종권 받기 → 의도 → 요청 → 결과를 요청 번호로 짝짓기 → 반납. <code>--steps</code> 로 순서를 정함</td></tr>
+      <tr><td></td><td><code>tools/voice_local/heard_feed.py</code></td><td>3 · 4 절 「들은 명령」 알림 통로 (읽기 전용 · 화면 표시용)</td></tr>
+      <tr><td><span class="t fake">가짜</span></td><td><code>apps/agent/tests/voice_fake_go2.py</code></td><td>가짜 Go2 (1-3)</td></tr>
+      <tr><td></td><td><code>tools/voice_local/samples/*.wav</code></td><td>합성 음성 9 개 (hey foothold · stand down · stand up · sit down · get up · stop · don't stand up · don't stand down · 평소 말)</td></tr>
+    </table>
+  </div>
+
+  <h3>1-3 · 가짜 Go2 는 무엇을 하나</h3>
+  <div class="card">
+    <ul>
+      <li>시작은 서 있음 (모드 0 · 몸 높이 0.30 m · 멈춤). 정지 · 이동 명령은 자세를 바꾸지 않는다.</li>
+      <li>엎드리기 (StandDown) · 일어서기 (StandUp → BalanceStand) 를 수락하면 <b>바로 다음 측정 한 번</b> 에 자세 숫자를 바꾼다 (실제 걸리는 시간과 무관).</li>
+      <li>엎드림 · 서 있음 값은 팀 판정 기준 안에 드는 <b>시험 가정값</b> 이며 실기 Go2 X 에서 잰 값이 아니다.</li>
+      <li>앉기 (Sit) · 앉은 자세에서 일어서기 (RiseSit) 는 기본으로 <b>기록만</b> 하고 숫자를 바꾸지 않는다 (실기 앉음 값을 몰라 지어내지 않음). 5 절에서만 <code>--sit-model</code> 로 앉음 가정을 켰다.</li>
+      <li>자동 시험에서는 「수락만 하고 자세를 안 바꿈」 · 「정지 명령 거절」 같은 부정 사례도 넣는다.</li>
+    </ul>
+    <pre><code>STANDING      = dict(mode=0,  body_height=.30)
+LYING_ASSUMED = dict(mode=5,  body_height=.10)   # 시험 가정 · 실측 아님
+BALANCED      = dict(mode=1,  body_height=.30)   # 균형 서기 뒤 · 시험 가정
+SIT_ASSUMED   = dict(mode=10, body_height=.24)   # --sit-model 때만 · mode 10 = Unitree 공식 sit · 높이는 PR478 팀 시험 가정값
+SIT_PITCH_RAD = .52                              # 약 30° · 임의 시험값
+
+def StandDown(self):          # 수락(0)하면 다음 측정에서만 엎드림
+    self._record('StandDown')
+    if code == 0: self.device.pending = dict(LYING_ASSUMED)
+def StandUp(self):            # 다음 측정에 모드 0 (다리 고정 서기)
+    self.device.pending = dict(STANDING)
+def BalanceStand(self):       # 모드 0 이었으면 다음 측정에 모드 1
+    if self.device.pose['mode'] == 0: self.device.pending = dict(BALANCED)
+def Sit(self):                # 기본: 기록만 · --sit-model: 다음 측정에 SIT_ASSUMED + 기울기
+    self._record('Sit')
+    if self.device.sit_model: self.device.pending = dict(SIT_ASSUMED)</code></pre>
+    <p class="sub">발췌 · 줄여 씀. 전체는 <code>시험코드/apps/agent/tests/voice_fake_go2.py</code>.</p>
+  </div>
+
+  <h3>1-4 · 준비 (다시 돌려 보려면)</h3>
+  <div class="card">
+    <ol>
+      <li><b>작업 폴더:</b> 쓰고 있는 dev · 배포 폴더가 아니라 <b>따로 받은 사본</b> 에서 한다. 예: <code>git clone … foothold-app-voice-check &amp;&amp; git -C foothold-app-voice-check checkout 1feb63c5</code></li>
+      <li><b>시험 코드 놓기:</b> <code>시험코드/tools</code> · <code>시험코드/apps</code> 를 그 사본 맨 위에 같은 경로로 복사하고, 이 공유 폴더 안의 팀 앱 수정분을 적용한다: <code>git apply &lt;공유 폴더&gt;/시험코드/팀웹_수정분.diff</code> (사본 맨 위에서)</li>
+      <li><b>파이썬:</b> 가상환경 하나에 <code>pip install -r apps/server/requirements-test.txt</code> 와 <code>pip install vosk</code>. 로봇 프로그램 시험의 import 경로는 팀 설정 <code>apps/agent/pyproject.toml</code> 의 pythonpath 로 잡혀 저장소 맨 위에서 그대로 찾는다.</li>
+      <li><b>Vosk 모델:</b> <code>vosk-model-small-en-us-0.15</code> 를 받아 둔다. 코드 기본 위치는 <code>~/foothold-voice/model_dl/vosk-model-small-en-us-0.15</code> (<code>bridge.py</code> 는 <code>--model</code> 로 바꿀 수 있음).</li>
+      <li><b>판정 규칙:</b> <code>시험코드/음성판정규칙_1123/</code> 폴더를 아무 곳에 두고, <code>bridge.py --rules &lt;그 폴더&gt;</code> 로 준다. <code>voice_demo.py</code> · <code>test_bridge_s4.py</code> 는 파일 안 <code>RULES</code> (와 <code>MODEL</code>) 상수가 작성자 노트북 경로로 되어 있어 (실제 돌린 코드 그대로 둠) <b>그 두 줄을 자기 경로로 바꿔야</b> 한다. 경로가 없으면 실제 Vosk 시험 6 개는 실패가 아니라 건너뜀으로 나온다. (<code>hey_foothold_1123.py</code> 자체의 <code>--selftest</code> 는 함께 넣지 않은 옛 보조 파일을 불러서 이 묶음으로는 돌지 않는다. 중계 · 시연에서 쓰는 받아쓰기 판정 부분과는 무관.)</li>
+      <li><b>웹:</b> <code>cd apps/web &amp;&amp; npm ci</code></li>
+      <li><b>5 절 (PR478) 만:</b> 같은 저장소에서 PR478 병합 판 사본을 하나 더 만든다: <code>git worktree add ../foothold-app-pr478 84dac3c2</code>. <code>PR478검산/test_pr478_sitrise_check.py</code> 는 그 사본의 <code>apps/agent/tests/</code> 에 넣어 돌린다.</li>
+    </ol>
+    <p class="sub">작성자 노트북에서 11-26 확인한 판: Python 3.12.3 · vosk 0.3.45 · websockets 15.0.1 · pgserver 0.1.4 · pytest 9.1.1 · Node v24.20.0. 깨끗한 새 사본에서 처음부터 설치해 다시 돌려 보지는 않았다.</p>
+  </div>
+
+  <h3>1-5 · 실행 순서</h3>
+  <div class="card">
+    <p class="sub">터미널마다 <b>시작 폴더</b> 를 앞에 적었다. 한 시연이 끝나 조종권이 반납된 것 (화면 「조종하는 사람 없음」) 을 본 뒤 다음 시연으로 넘어간다.</p>
+    <pre><code># 터미널 1 · 임시 서버 (127.0.0.1:8810)   [시작: 저장소 맨 위]
+cd tools/voice_local
+python s5_server.py
+#   시험 계정 · 토큰 · 로봇 번호가 tools/voice_local/logs/ 에 생김 (화면에 출력하지 않음)
+
+# 터미널 2 · 팀 로봇 프로그램 + 가짜 Go2   [시작: 저장소 맨 위]
+cd tools/voice_local
+python s5_agent.py --url ws://127.0.0.1:8810/api/v1/agent/ws --token-file logs/s5_agent.token --log logs/agent.jsonl
+#   4 절: 끝에 --trace 를 붙임 (SDK 호출 기록)
+#   5 절: 끝에 --agent-repo ../../../foothold-app-pr478 --sit-model --trace 를 붙임
+
+# 터미널 3 · 팀 앱 개발 서버 (127.0.0.1:5180)   [시작: 저장소 맨 위]
+cd apps/web
+#   2 절:
+VITE_FH_VOICE_LOCAL=1 FH_VOICE_BRIDGE=http://127.0.0.1:8821 FH_API=http://127.0.0.1:8810 npx vite --host 127.0.0.1 --port 5180
+#   3 · 4 절:
+VITE_FH_VOICE_SHOW=1 FH_VOICE_HEARD=http://127.0.0.1:8822 FH_API=http://127.0.0.1:8810 npx vite --host 127.0.0.1 --port 5180
+#   5 절:
+FH_API=http://127.0.0.1:8810 npx vite --host 127.0.0.1 --port 5180
+#   Chrome 으로 http://127.0.0.1:5180 → logs/s5_login.txt 의 시험 계정으로 로그인 → 가짜 로봇 열기
+#   2 · 5 절: 「조종 시작」 을 누름     3 · 4 절: 누르지 않고 보기만 (음성 시연 프로그램이 조종권을 받음)
+
+# 터미널 4 · 음성 쪽   [시작: 저장소 맨 위 · cd tools/voice_local]
+## 2 절: 중계를 띄우고, 화면에서 「음성 받기 켜기」 뒤 wav 를 하나씩 넣음
+python bridge.py --robot &lt;logs/s5_ids.json 의 robot&gt; --port 8821 --origin http://127.0.0.1:5180 --rules &lt;음성판정규칙_1123 폴더&gt;
+# (터미널 5 · 같은 폴더)
+curl -X POST http://127.0.0.1:8821/voice-local/say -H "X-Voice-Token: $(cat logs/say.token)" \
+  -H 'Content-Type: application/json' -d '{"sample":"foothold_stand_down"}'
+#   (가) foothold_stand_down → 화면 「일어서기」 단추     (나) foothold_stand_down → foothold_stand_up
+
+## 3 절: 명령 6 개
+python voice_demo.py --heard-port 8822 --session-s 150 --steps "wait 8, say hey_foothold, wait 12, say foothold_stand_down, wait 12, say foothold_sit_down, wait 12, say foothold_get_up, wait 12, say foothold_stop, wait 12, say foothold_dont_stand_up, wait 12, say ordinary_sentence, wait 12, say foothold_stand_up, wait 12, close"
+
+## 4 절: 동작 시험 모드 A · B · C (하나 끝나 반납을 본 뒤 다음)
+python voice_demo.py --action-profile --heard-port 8822 --session-s 120 --steps "wait 5, say foothold_sit_down, wait 9, say foothold_get_up, wait 7, say foothold_stand_down, wait 7, say foothold_stop, wait 7, close"
+python voice_demo.py --action-profile --heard-port 8822 --steps "wait 5, say foothold_get_up, wait 8, close"
+python voice_demo.py --action-profile --heard-port 8822 --steps "wait 5, say foothold_sit_down, wait 5, drop"
+#   C 는 반납 없이 연결만 끊음 → 서버가 조종권을 회수할 때까지 기다린 뒤 다음으로
+
+## 5 절: 음성 없음 · 화면 「동작 시험」 에서 앉기 → 앉은 자세에서 일어서기 → 조종 끝내기
+
+# 끝낼 때: 띄운 터미널마다 Ctrl+C (가짜 Go2 기록 저장 · 임시 DB 정리가 이때 됨)</code></pre>
+    <p class="sub">C 의 순서는 실행 기록 (14:48:05 시작 · 14:48:11 앉기 · 14:48:16 연결 끊김) 으로 맞춘 것이다. <code>--steps</code> 낱말: <code>wait N</code> · <code>say &lt;wav&gt;</code> (실제 받아쓰기) · <code>down</code>/<code>up</code>/<code>sit</code>/<code>rise</code> (받아쓰기 없이 의도 직접 · 시험용) · <code>close</code> (반납) · <code>drop</code> (연결만 끊음).</p>
+  </div>
+
+  <h3>1-6 · 자동 시험 (화면 없이)</h3>
+  <div class="card">
+    <p class="sub">위 시연을 모두 끝내고 (Ctrl+C) 돌린다. <code>test_voice_client_l2.py</code> 등이 같은 포트를 쓰기 때문이다.</p>
+    <table>
+      <tr><th>파일</th><th>무엇을 확인하나</th><th>11-26 결과</th></tr>
+      <tr><td><code>apps/agent/tests/test_voice_standdown_s1.py</code></td><td>팀 로봇 프로그램 + 가짜 Go2: 엎드리기 명령 → 다음 측정 엎드림 → CONFIRMED. 수락만 하고 자세가 안 바뀜 · 정지 거절 · 센서 끊김에서는 완료 아님 · 잠금인 채 일어서기</td><td class="ok">7 통과</td></tr>
+      <tr><td><code>apps/server/tests/test_voice_standdown_s2.py</code></td><td>팀 서버: 엎드리기 요청이 같은 번호로 로봇에 넘어가고 엎드림 상태가 화면까지 감 · 「실행 중」 보고를 엎드림으로 바꾸지 않음</td><td class="ok">2 통과</td></tr>
+      <tr><td><code>tools/voice_local/test_bridge_s4.py</code></td><td>중계 경계 30 개 (가짜 인식기 · 토큰 · 출처 검사 · 기한 · 화면 하나만 · 기록 실패) + <b>실제 Vosk 로 wav 6 개</b> 받아쓰기 (stand down / up 만 의도)</td><td class="ok">36 통과</td></tr>
+      <tr><td><code>tools/voice_local/test_voice_client_l1.py</code></td><td>음성 시연 프로그램 상태 기계 (가짜 서버): 조종권 받기 · 요청 번호 짝짓기 · 반납 · 끊김 · 기한</td><td class="ok">48 통과</td></tr>
+      <tr><td><code>tools/voice_local/test_voice_client_l2.py</code></td><td>실제 팀 서버 + 가짜 Go2 를 띄우고 의도를 <b>직접 넣어</b> (Vosk 아님): 엎드리기 → 일어서기 · 사람이 조종 중이면 음성이 조종권을 못 가져감 · 넘긴 뒤 사람 일어서기 · 음성 프로그램이 <b>반납 없이 연결을 정상 종료하면</b> 조종권 만료</td><td class="ok">6 통과</td></tr>
+      <tr><td><code>tools/voice_local/test_voice_client_action.py</code></td><td>동작 시험 모드: 세션당 동작 한 건 · 접수 판정 (같은 로봇 · 번호 · 이름 + 성공 + SDK 접수 + 오류 0) · 접수 뒤 종료는 「진행 상태 모름」</td><td class="ok">16 통과</td></tr>
+      <tr><td><code>test_s5_trace.py</code> · <code>test_fake_sit_model.py</code></td><td>호출 기록 장치가 실패해도 가짜 Go2 결과를 바꾸지 않음 · 앉음 가정 모형</td><td class="ok">9 통과</td></tr>
+      <tr><td><code>apps/web/src/tests/voiceLocal.test.tsx</code> · <code>voiceHeard.test.ts</code></td><td>화면 음성 받기 조건 · 완료 판정 · 안내 줄 문구</td><td class="ok">57 통과 · 타입 검사 통과</td></tr>
+      <tr><td><code>PR478검산/test_pr478_sitrise_check.py</code></td><td>(PR478 판 사본 안에서만) mode 10 정지 상태 RiseSit → STANDING_REQUIRED · 호출 0 / mode 1 서 있음 → 접수 등 5 개</td><td>11-25 결과: 5 통과 (팀 시험 포함 183) · 11-26 다시 돌리지 않음</td></tr>
+    </table>
+    <pre><code># 파이썬   [시작: 저장소 맨 위]
+python -m pytest -q apps/agent/tests/test_voice_standdown_s1.py apps/server/tests/test_voice_standdown_s2.py
+python -m pytest -q tools/voice_local/test_bridge_s4.py tools/voice_local/test_voice_client_l1.py \
+  tools/voice_local/test_voice_client_l2.py tools/voice_local/test_voice_client_action.py \
+  tools/voice_local/test_s5_trace.py tools/voice_local/test_fake_sit_model.py
+# 웹   [시작: apps/web]
+npx vitest run src/tests/voiceLocal.test.tsx src/tests/voiceHeard.test.ts
+npx tsc --noEmit -p .</code></pre>
+    <p class="sub">웹 전체 시험: 같은 사본의 가장 최근 전체 실행은 1463 통과 · 2 실패 (CSV 내보내기 · 터널 보안). 첫 전체 실행에서는 95 개가 실패했으나 다시 돌렸을 때 같은 규모는 재현되지 않았다. 원본 dev 와 같은 조건 비교는 하지 않아 원인과 이번 변경과의 관련은 가리지 못했다. 관련 웹 시험 57 개와 타입 검사는 통과.</p>
+  </div>
+
+  <h3>1-7 · 「됐다 · 안 됐다」 를 무엇으로 셌나</h3>
+  <div class="card">
+    <ul>
+      <li><b>완료 (자세 요청)</b> = 같은 로봇 · 같은 요청 번호 · 같은 동작의 결과가 성공 (SUCCEEDED / CONFIRMED) 이고, 그 요청을 보낸 뒤 새로 온 가짜 Go2 측정으로 확인된 목표 자세 (엎드림 / 서 있음) 가 받은 시점에 신선함. 결과와 자세는 같은 상태 프레임에서 함께 확인될 수도 있다. 화면 자세가 목표와 같다는 것만으로는 완료로 치지 않는다.</li>
+      <li><b>SDK 접수 (동작 요청 · 4 · 5 절)</b> = 같은 로봇 · 번호 · 이름 + 성공 + SDK 접수 + 오류 번호 0. 가짜 SDK 가 0 을 돌려줬다는 뜻일 뿐 · 앉았다 · 일어났다가 아니다.</li>
+      <li><b>요청 0</b> = 음성 쪽 보낸 요청 수 + 로봇 프로그램 자세 요청 누계 + 그 말에 해당하는 가짜 Go2 자세 · 동작 호출 (StandDown · StandUp · Sit · RiseSit 등) 이 늘지 않음. 조종권 유지용 0 속도 신호나 따로 나가는 정지 출력까지 0 이라는 뜻은 아니다.</li>
+      <li>화면은 캡처로, 숫자는 실행 기록 (<code>logs/*.jsonl</code> · 시험 계정이 섞여 있어 함께 넣지 않음) 으로 맞췄다.</li>
+    </ul>
+  </div>
+
+  <h2 id="s2" class="part">2 · 엎드리기 · 일어서기 (11-24 · (가)(나))</h2>
+  <p class="sub">2026-11-25 02:31~02:33 KST 촬영 · 요청을 만든 곳: 팀 앱 화면 (1-1 표) · 실행: 1-5 의 터미널 1 · 2 · 3 (2 절) · 4 「2 절」</p>
+  <div class="card">
+    <b>한 줄 요약</b><br>
+    합성 음성 「foothold stand down」 을 넣으면 팀 앱이 기존 <b>엎드리기</b> 요청을 보내고 화면 자세가 <b>서 있음 → 엎드림</b> 으로 바뀐다.
+    거기서 (가) 화면의 「일어서기」 단추를 누르거나, (나) 음성 「foothold stand up」 을 넣으면 다시 <b>엎드림 → 서 있음</b> 이 된다.
+    두 경우 모두 화면은 <b>가짜 장치가 만든 측정값을 팀 에이전트가 판정한 자세</b> 로 완료를 확인했다 (요청을 보냈다는 것만으로 완료로 치지 않음).
+  </div>
+
+  <h3>(가) 엎드리기는 음성 · 일어서기는 화면 단추</h3>
+  <div class="cuts" data-cuts="ga"></div>
+  <p class="sub">요약 영상 (약 22 초) · <span class="sub">실제 Chrome 화면을 단계마다 멈춰 찍은 캡처를 이어 붙인 <b>무음 요약 영상</b>이다. 연속 화면 녹화가 아니며, 장면 길이와 영상 길이는 실제 걸린 시간 · 응답 지연을 나타내지 않는다. 오른쪽 아래 창 = 왼쪽 「자세」 칸만 크게.</span></p>
+  <video controls preload="metadata" src="영상/가_음성엎드리기_단추일어서기.mp4"></video>
+
+  <h3>(나) 엎드리기 · 일어서기 둘 다 음성</h3>
+  <div class="cuts" data-cuts="na"></div>
+  <p class="sub">요약 영상 (약 20 초) · <span class="sub">실제 Chrome 화면을 단계마다 멈춰 찍은 캡처를 이어 붙인 <b>무음 요약 영상</b>이다. 연속 화면 녹화가 아니며, 장면 길이와 영상 길이는 실제 걸린 시간 · 응답 지연을 나타내지 않는다. 오른쪽 아래 창 = 왼쪽 「자세」 칸만 크게.</span></p>
+  <video controls preload="metadata" src="영상/나_음성엎드리기_음성일어서기.mp4"></video>
+
+  <h3>기록으로 맞춰 본 것</h3>
+  <div class="card">
+    <table>
+      <tr><th>촬영</th><th>넣은 것</th><th>화면이 보낸 요청 (요청 번호)</th><th>가짜 Go2 가 받은 명령</th><th>화면 완료 기록</th></tr>
+      <tr><td rowspan="2">(가)<br><small>02:31~02:32</small></td><td>음성 「foothold stand down」</td><td>stand_down (<code>7a309a0a…</code>)</td><td>StandDown 1 → 다음 측정 엎드림</td><td class="ok">CONFIRMED · LYING</td></tr>
+      <tr><td>화면 「일어서기」 단추</td><td>stand_up (단추 · 음성 아님)</td><td>StandUp 1 → BalanceStand 1 → 서 있음</td><td>화면 「일어섰습니다」 · 자세 서 있음</td></tr>
+      <tr><td rowspan="2">(나)<br><small>02:33</small></td><td>음성 「foothold stand down」</td><td>stand_down (<code>2fadaca7…</code>)</td><td>StandDown 1 → 엎드림</td><td class="ok">CONFIRMED · LYING</td></tr>
+      <tr><td>음성 「foothold stand up」</td><td>stand_up (<code>6d8ecfad…</code>)</td><td>StandUp 1 → BalanceStand 1 → 서 있음</td><td class="ok">CONFIRMED · STANDING</td></tr>
+    </table>
+    <ul class="sub">
+      <li>두 음성 요청은 번호 · 동작 · 목표 자세가 따로 짝지어졌다 (엎드리기 번호에 서 있음이 붙거나, 일어서기 번호에 엎드림이 붙으면 완료로 치지 않게 만들어 둠).</li>
+      <li>(나) 는 두 음성 요청 각각의 요청 번호 · 동작 · CONFIRMED 를 기록에서 직접 맞춰 봤다.</li>
+      <li>(가) 의 단추 일어서기는 음성 기록에 없고 음성 성공으로 세지 않는다. 가짜 Go2 의 StandUp → BalanceStand 전이와 화면 「일어섰습니다」 · 자세 「서 있음」 으로 확인했다.</li>
+      <li>(가) 는 화면 배율을 맞추느라 세 번 찍었고, 앞의 두 번도 명령 수 · 결과가 같았다 (StandDown 1 · StandUp 1 씩).</li>
+      <li>정지 잠금은 처음 (조종 시작 직후) 걸려 있다가 잠금 해제 → 엎드리면 다시 걸리고, 일어선 뒤에도 걸린 채로 끝났다. 자동으로 풀지 않았다.</li>
+    </ul>
+  </div>
+
+  <h3>새로 알게 된 것 · 잠금인 채로 일어선다</h3>
+  <div class="card">
+    <ul>
+      <li>엎드리면 팀 에이전트가 <b>정지 잠금</b> 을 건다. 엎드린 상태에서 「잠금 해제」 를 보내면 팀 규칙대로 <b>거부</b> 된다 (걸을 수 있는 자세가 아니라서).</li>
+      <li>그래도 「일어서기」 요청은 잠금과 따로 받는다. 그래서 일어서기 전에 잠금 해제를 누를 필요가 없다.</li>
+      <li>이것은 잠금을 우회하는 것이 아니다. 일어서기도 조종권 · 측정 상태 · 다른 동작 진행 여부를 그대로 검사받는다. 일어선다고 잠금이 풀려 걸을 수 있게 되는 것도 아니다.</li>
+      <li>엎드린 상태에서 시작한 이번 일어서기는 두 단계였다: <b>StandUp</b> (다리 고정 서기 · 모드 0) → <b>BalanceStand</b> (균형 서기) → 측정이 모드 1 또는 3 이고 걸을 수 있는 상태여야 완료. (다리 고정 서기 상태에서 시작하면 팀 코드는 BalanceStand 로 바로 가는 갈래도 있다 · 항상 두 번 부른다는 뜻은 아님.)</li>
+    </ul>
+  </div>
+
+  <h3>정리</h3>
+  <div class="card">
+    실제 로컬 Chrome · 임시 서버 · 팀 에이전트 주행 고리와 가짜 Go2 를 연결해, (가) 합성 음성 엎드리기 → 화면 단추 일어서기, (나) 두 개의 합성 음성으로 엎드리기 → 일어서기가 기존 자세 요청 경로를 거쳐 화면 자세에 반영됨을 확인했다. 마지막 잠금은 유지됐다. 영상은 단계별 캡처를 조립한 요약이며, 본체 마이크 · 스피커 대답 · 물리 동작 · 실기 · 현장 「ㄷ」 중계의 검증은 아니다.
+  </div>
+
+  
+  <h2 id="s3" class="part">3 · 음성 명령 6 개 (11-25 오전)</h2>
+  <p class="sub">2026-11-25 11:23~11:25 KST · 요청을 만든 곳: 음성 시연 프로그램 (1-1 표) · 실행: 1-5 의 터미널 1 · 2 · 3 (3 · 4 절) · 4 「3 절」</p>
+
+
+  <div class="card">
+    <b>한 줄 요약</b><br>
+    9 단계 = <b>합성 음성 8 개 + 닫기</b> 를 차례로 했다 (넣은 wav 8 개: 명령 6 · 부정문 1 · 평소 말 1). 노트북이 Vosk 로 받아쓰고 11-23 판정 규칙으로 가른 뒤,
+    <b>엎드리기 · 일어서기 두 개만</b> 기존 자세 요청으로 보냈고, 둘 다 같은 요청 번호의 측정 자세로 완료를 확인했다 (엎드림 · 서 있음).
+    앉기 · 앉은 자세에서 일어서기 · 정지는 <b>알아들었지만 요청을 만들지 않았다</b>. 부정문과 평소 말은 무시했다.
+  </div>
+  <div class="card"><b>읽을 때 주의</b><ul><li>「행동: 없음」 은 <b>이 프로그램이 그 말로 요청을 만들지 않았다</b> 는 뜻이다. 실제 로봇이 절대 움직이지 않는다는 보증이 아니다.</li><li>부정문은 이번에 1 개만 넣었다. 부정문 일반을 막는다는 검증은 아니다.</li></ul></div>
+
+  <h3>컷씬</h3>
+  <div class="cuts" data-cuts="six"></div>
+
+  <h3>요약 영상 (약 34 초)</h3>
+  <p class="sub">오른쪽 아래 창 = 왼쪽 주황 네모 (「자세」 칸) 만 크게. 위 초록 줄이 「들은 명령어 / 행동」 안내 줄 (촬영 당시는 최근 두 건 · 4 절부터는 번호 붙은 최신 한 줄만).</p>
+  <video controls preload="metadata"><source src="영상/음성명령6개_시연.webm" type="video/webm"><source src="영상/음성명령6개_시연.mp4" type="video/mp4">이 화면에서는 영상을 재생할 수 없습니다. <a href="영상/음성명령6개_시연.mp4">mp4 파일 직접 열기</a></video>
+  <p class="sub">영상이 안 나오면 이 파일을 크롬으로 열거나 <code>영상/음성명령6개_시연.mp4</code> 를 직접 여세요.</p>
+
+  <h3>기록으로 맞춰 본 것</h3>
+  <div class="card">
+    <table>
+      <tr><th>#</th><th>넣은 wav</th><th>받아쓴 말 · 분류</th><th>보낸 요청</th><th>화면 「행동」</th><th>가짜 Go2 자세 기록</th></tr>
+      <tr><td>1</td><td><code>hey_foothold</code></td><td>hey foothold · 부르기</td><td>없음</td><td>부르기 인식 · 동작 요청 없음 (대답 소리 미연결)<br><small>촬영 당시 화면 표기는 「없음 (부르기 · 대답만)」 · 이번 시연엔 대답 소리가 없어 고침</small></td><td>서 있음</td></tr>
+      <tr><td>2</td><td><code>foothold_stand_down</code></td><td>foothold stand down · 명령</td><td>엎드리기 1</td><td class="ok">엎드림 (측정 확인)</td><td><code>11:23:51</code> 엎드림 (모드 5)</td></tr>
+      <tr><td>3</td><td><code>foothold_sit_down</code></td><td>foothold sit down · 연결 안 한 명령</td><td>없음</td><td>없음 (앉기는 아직 동작 연결 안 함)</td><td rowspan="5">엎드림 그대로<br><small>(11:23:51 ~ 11:25:06 사이 자세 변화 기록 없음)</small></td></tr>
+      <tr><td>4</td><td><code>foothold_get_up</code></td><td>foothold get up · 연결 안 한 명령</td><td>없음</td><td>없음 (앉은 자세에서 일어서기는 …)</td></tr>
+      <tr><td>5</td><td><code>foothold_stop</code></td><td>foothold stop · 연결 안 한 명령</td><td>없음</td><td>없음 (멈춤은 아직 동작 연결 안 함)<br><small>촬영 당시 화면은 「멈춤는」 (조사 오류 · 고침)</small></td></tr>
+      <tr><td>6</td><td><code>foothold_dont_stand_up</code></td><td>foothold don't stand up · 부정문</td><td>없음</td><td>없음 (부정문이라 무시)</td></tr>
+      <tr><td>7</td><td><code>ordinary_sentence</code></td><td>the weather is nice too · 명령 아님</td><td>없음</td><td>없음 (명령 아님)</td></tr>
+      <tr><td>8</td><td><code>foothold_stand_up</code></td><td>foothold stand up · 명령</td><td>일어서기 1</td><td class="ok">서 있음 (측정 확인)</td><td><code>11:25:06</code> 서 있음</td></tr>
+      <tr><td>9</td><td>(닫기 · wav 아님)</td><td>·</td><td>조종권 반납</td><td>「음성 시연 세션 끝」</td><td>서 있음</td></tr>
+    </table>
+    <ul class="sub">
+      <li>시연 프로그램이 보낸 것: 조종권 받기 1 · 자세 요청 2 · 반납 1 · <b>잠금 해제 0 · 동작 (action) 0</b>. 3~7 번 동안 요청은 하나도 나가지 않았다.</li>
+      <li>엎드리기 · 일어서기 결과는 각자 요청 번호로만 짝지었다 (다른 번호의 결과를 붙이지 않음).</li>
+      <li>엎드린 뒤 정지 잠금이 걸린 채로 일어서기가 접수 · 완료됐다 (잠금 해제 0). 현재 팀 코드 + 가짜 장치에서 본 것.</li>
+    </ul>
+  </div>
+
+  <h3>앉기 · 정지는 왜 이때 연결하지 않았나</h3>
+  <div class="card">
+    <ul>
+      <li>앉기 (Sit · RiseSit) 를 보내는 길은 팀 코드에 있다. 다만 가짜 Go2 는 앉기를 받아도 자세 값을 바꾸지 않아 확인할 수 있는 것이 「요청 접수」 까지라, 이 시험은 <b>측정으로 완료를 확인할 수 있는 두 개</b> 만 연결했다. 앉기 요청 경로는 4 절에서 따로 시험했다.</li>
+      <li>음성 정지는 만들지 않기로 했다 (정지는 앱 STOP · 리모컨).</li>
+    </ul>
+  </div>
+
+
+  
+  <h2 id="s4" class="part">4 · 앉기 · 앉은 자세에서 일어서기 (11-25 오후)</h2>
+  <p class="sub">2026-11-25 14:46~14:48 KST (녹화 판) · 같은 판 14:43 · 14:44 두 번 더 돌려 같은 결과 · 요청을 만든 곳: 음성 시연 프로그램 동작 시험 모드 · 실행: 1-5 의 터미널 1 · 2 (4 절 · <code>--trace</code>) · 3 (3 · 4 절) · 4 「4 절」</p>
+
+
+  <div class="card">
+    <b>한 줄 요약</b><br>
+    음성 「foothold sit down」 이 <b>팀 서버 → 로봇 프로그램 → 가짜 Go2 의 앉기 (Sit) 호출</b> 까지 실제로 갔고, 결과는 <b>「가짜 Go2 SDK 접수」</b> 로 돌아왔다.
+    「foothold get up」 은 새 세션에서 따로 보내 앉은 자세에서 일어서기 (RiseSit) 호출까지 갔다.
+    한 세션에서 동작은 한 건만 받아, 앉기 뒤에 온 일어서기 · 엎드리기는 거부했다. 「foothold stop」 은 표시만 하고, 이 말로 정지 · 동작 · 반납을 추가로 보내지 않았다 (조종권 유지용 0 속도 신호는 원래대로 계속).
+  </div>
+
+  <div class="card">
+    <b>이것은 아닙니다</b>
+    <ul>
+      <li><b>앉았다는 확인이 아니다.</b> 「SDK 접수」 는 앉기 명령을 받았다는 답일 뿐이다. 가짜 Go2 는 앉기를 받으면 기록만 하고 자세 숫자를 바꾸지 않는다 (실기 앉음 값을 잰 적이 없어 지어내지 않음). 그래서 자세 칸은 계속 「서 있음」 이다.</li>
+      <li>팀 앱의 자세 구분에는 <b>「앉음」 이 없다</b> (엎드림 · 서 있음 · 바뀌는 중 · 알 수 없음). 화면에 「앉음」 이 뜨려면 실기에서 앉음 값을 재고 팀 코드에 자세를 더하는 일이 따로 필요하다.</li>
+      <li>B 의 앉은 자세에서 일어서기는 <b>서 있는 가짜 장치에 보낸 요청 경로 시험</b> 이다. 앉은 자세에서 실제로 일어났다는 증명이 아니다.</li>
+      <li>실기 Go2 · Orin · 운영 서버 실행 승인이 아니다. 「동작 시험 모드」 (<code>--action-profile</code>) 를 켰을 때만 앉기 요청을 만든다 · 기본은 엎드리기 · 일어서기만.</li>
+    </ul>
+  </div>
+
+  <h3>컷씬</h3>
+  <div class="cuts" data-cuts="sit"></div>
+
+  <h3>요약 영상 (약 50 초)</h3>
+  <p class="sub">주황 네모 = 화면 알림 줄 · 자세 · 조종하는 사람 칸 (가운데에 확대). 아래 띠 = 알림 줄 확대.</p>
+  <video controls preload="metadata"><source src="영상/앉기_일어서기_시연.webm" type="video/webm"><source src="영상/앉기_일어서기_시연.mp4" type="video/mp4">이 화면에서는 영상을 재생할 수 없습니다. <a href="영상/앉기_일어서기_시연.mp4">mp4 파일 직접 열기</a></video>
+
+  <h3>세 시연 · 기록으로 맞춰 본 것</h3>
+  <div class="card">
+    <table>
+      <tr><th></th><th>한 것</th><th>음성 쪽 기록</th><th>가짜 Go2 호출 기록</th></tr>
+      <tr><td>A</td><td>앉기 → 일어서기 · 엎드리기 · stop → 운영자 닫기</td>
+        <td>앉기: 서버 받음 → <b>가짜 SDK 접수</b> (물리 미확인)<br>일어서기 · 엎드리기: <b>거부 (세션당 동작 한 건)</b><br>stop: 이 말로 정지 · 동작 · 반납 추가 송신 없음<br>닫기: 「앉기 진행 상태 모름」 → 반납<br>보낸 것: 동작 1 · 자세 0 · 잠금 해제 0</td>
+        <td>앉기 직전 일반 통로 정지 1 → Sit 1<br>앉기 뒤 닫기까지 (약 31 초) 정지 출력 0<br>닫을 때 긴급 1~2 · 일반 1 (같은 시연 3 판 모두)</td></tr>
+      <tr><td>B</td><td>새 세션 · 앉은 자세에서 일어서기 → 닫기</td>
+        <td>서버 받음 → <b>가짜 SDK 접수</b> (앉은 시작 자세 미검증)<br>닫기: 「진행 상태 모름」 → 반납</td>
+        <td>정지 긴급 1 · 일반 1 → RiseSit 1<br>닫을 때 긴급 2 · 일반 1</td></tr>
+      <tr><td>C</td><td>앉기 접수 뒤 <b>반납 없이 연결만 종료</b></td>
+        <td>앉기 가짜 SDK 접수 → 5 초 뒤 연결 종료 → 「진행 상태 모름 (연결 끊김)」<br>보낸 것: 반납 0</td>
+        <td>정지 긴급 1 · 일반 1 → Sit 1<br>연결 종료 (14:48:16) 뒤 정지 출력 없다가 <b>14:48:30.9 (약 15 초 뒤 · 관측) 긴급 1 · 일반 1</b><br><small>화면 「조종하는 사람 없음」 이 보인 것과 같은 구간 · 서버 회수 원인 · 내부 처리 시각은 이 기록만으로 확정 안 함</small></td></tr>
+    </table>
+    <ul class="sub">
+      <li>접수 판정: 같은 로봇 · 같은 요청 번호 · 같은 동작 이름 · 「성공 + SDK 접수 + 오류 번호 0」 일 때만. 서버의 「받았다」 · 「실행 중」 만으로는 접수로 쓰지 않는다.</li>
+      <li>로봇 프로그램의 「실행 중」 상태: 약 20 ms 간격 관찰에서 「실행 중 = 앉기」 다음 표본이 「없음」 이었다 (실제 유지 시간을 잰 것은 아님). 가짜 Go2 가 계속 「서 있음 · 멈춤」 값을 내서 일찍 풀린 것으로 보인다. 그래서 이 시연은 「60 초 실행 중 끊김」 이나 「앉은 채로 정지 출력」 을 검증한 것이 아니다. 기록은 순간 상태를 놓칠 수 있다 (잠금 없이 읽음).</li>
+    </ul>
+    <p class="sub">화면 한계: 세션 시작 알림이 화면이 다시 붙기 전 (2 초 주기) 에 지나가면 안내 줄에 안 보인다 (A 첫 장면 · B 시작). 조종하는 사람 칸으로는 보인다.</p>
+  </div>
+
+  
+  <h2 id="s5" class="part">5 · PR478 병합 판 비교 (11-25 오후)</h2>
+  <p class="sub">2026-11-25 16:11~16:14 KST · 팀 앱 동작 시험 단추 (사람 조종 · 음성 아님) · 실행: 1-5 의 터미널 1 · 2 (5 절 · <code>--agent-repo … --sit-model --trace</code>) · 3 (5 절) · 「5 절」 화면 조작</p>
+
+
+  <div class="card">
+    <b>한 줄 요약</b><br>
+    오늘 팀 dev 에 합쳐진 PR478 판의 로봇 프로그램으로 바꿔 끼우고, 가짜 Go2 가 앉기를 받으면 <b>「앉음 (mode 10)」 으로 바뀌는 가정 모형</b> 을 켰다.
+    앉기는 접수됐고 자세 칸은 「모름」 이 됐다. 이어서 <b>앉은 자세에서 일어서기를 누르자 「서 있음과 정지가 확인되어야 합니다」 로 거부</b> 됐고, 가짜 Go2 에는 일어서기 호출이 가지 않았다.
+  </div>
+
+  <div class="card">
+    <b>이것은 아닙니다</b>
+    <ul>
+      <li><b>앉음 값은 가정이다.</b> mode 10 (앉음) 만 Unitree 공식 표의 값이고, 몸 높이 0.24 m (PR478 팀 시험의 가정값) · 앞뒤 기울기 0.52 rad (약 30°) · 다음 순간 바뀜은 임의 시험값이다. 실제 Go2 의 앉은 모양 · 값 · 안정성을 재현한 것이 아니다.</li>
+      <li><b>전체 PR478 배포판 시험이 아니다.</b> 서버 · 계약은 1feb 판 (PR478 판과 코드 같음), 웹은 음성 사본, 로봇 프로그램만 PR478 병합 판 <code>84dac3c2</code>, 가짜 장치는 별도 앉음 모형. 실제 Go2 에 깔린 판도 확인하지 않았다.</li>
+      <li>팀이 일부러 막은 것인지 · 빠뜨린 것인지, 저번 실기 거절의 원인은 이 시연으로 알 수 없다.</li>
+      <li>끝난 뒤 가짜 Go2 를 다시 켜서 서 있음이 된 것은 <b>가짜 장치 초기화</b> 다. 일어서기 성공 · 회복이 아니다.</li>
+    </ul>
+  </div>
+
+  <h3>컷씬</h3>
+  <div class="cuts" data-cuts="cmp"></div>
+
+  <h3>요약 영상 (약 25 초)</h3>
+  <video controls preload="metadata"><source src="영상/PR478_앉음가정_비교.webm" type="video/webm"><source src="영상/PR478_앉음가정_비교.mp4" type="video/mp4">이 화면에서는 영상을 재생할 수 없습니다. <a href="영상/PR478_앉음가정_비교.mp4">mp4 파일 직접 열기</a></video>
+
+  <h3>기록으로 맞춰 본 것</h3>
+  <div class="card">
+    <table>
+      <tr><th>시각</th><th>한 것</th><th>화면</th><th>로봇 프로그램 · 가짜 Go2 기록</th></tr>
+      <tr><td><code>16:11:49</code></td><td>PR478 판으로 가짜 Go2 시작</td><td>서 있음</td><td>불러온 팀 파일 4 개가 모두 PR478 검토 사본 (<code>84dac3c2</code>) 안 · 가짜 장치 파일은 음성 사본 · 기록에 남김</td></tr>
+      <tr><td><code>16:12:09</code></td><td>조종 시작</td><td>조종 중(나) · 서 있음</td><td>정지 · 이동 0 출력 (조종권 받을 때 기존 그대로)</td></tr>
+      <tr><td><code>16:12:30</code></td><td>앉기 Sit</td><td>앉기: 성공 · SDK 접수 (SDK 0) · 자세 「모름」</td><td>정지 (일반 1 · 긴급 1) → Sit 1 → 다음 표본 mode 10 · 높이 0.24 · 「앉음이라 정지 명령 생략」 1 줄</td></tr>
+      <tr><td><code>16:13:36</code></td><td>앉은 자세에서 일어서기 RiseSit</td><td class="warn">거부 · 서 있음과 정지가 확인되어야 합니다</td><td>RiseSit 호출 0 · mode 10 그대로 · 다른 동작 중 (BUSY) 이 아니라 처음 받은 사유가 이것</td></tr>
+      <tr><td><code>16:14:15</code></td><td>조종 끝내기</td><td>조종하는 사람 없음 · 자세 모름</td><td>반납 때 정지 호출 0 (앉음이라 생략) · 16:12:30.024 Sit 호출 뒤부터 16:14:15 조종 종료까지 추가 가짜 SDK 호출 0<br><small>정지 생략은 이 가정 표본이 기존 코드 조건을 만족한 관찰 · 실제 앉음에서 정지 효과 · 안전성 보증 아님</small></td></tr>
+    </table>
+    <ul class="sub">
+      <li>16:12:30 이후 「실행 중」 상태는 관찰 간격 안에서 보이지 않았다 (순간 누락 가능).</li>
+      <li>단추 누르기: 화면 배치가 바뀌는 중에 누른 처음 두 번의 마우스 누름은 요청이 성립했는지 확인하지 못했다 (결과 줄 변화 · 거절 기록 없음 · 송신 계측은 없음). 결과를 식별한 것은 페이지에서 같은 단추를 누른 세 번째다.</li>
+      <li>같은 판의 단위 시험 (노트북 · 5 개 + 팀 시험 178 개 통과) 과 맞는다: 시험한 mode 10 정지 사례에서는 RiseSit 가 STANDING_REQUIRED 로 거절됐고, 별도 mode 1 정지 단위 사례에서는 SDK 접수됐다 (모든 시작 자세를 시험한 것은 아님).</li>
+      <li>앉음 상태 화면 안내는 「현장에서 로봇을 확인한 뒤 «일어서기» 를 누르세요」 였다. 앉음에서 자세 요청 「일어서기」 가 통하는지는 이번에 해 보지 않았다.</li>
+    </ul>
+  </div>
+
+    <div class="card"><b>정리</b><br>PR478 로봇 프로그램과 임의 앉음 표본을 내는 가짜 장치에서, 앉기의 SDK 접수 뒤 동작 RiseSit 가 STANDING_REQUIRED 로 거절되고 RiseSit 호출은 없음을 화면과 호출 기록으로 확인했다. 실제 앉음 · 복귀 · 현장 배포판 · 팀 의도는 검증하지 않았다. 앉음 상태 화면 안내 「일어서기를 누르세요」 는 기존 문구를 본 것뿐이고 그 경로는 시험하지 않았다.</div>
+
+  <h2 id="s6" class="part">6 · 아직 모르는 것 · 실기에서 확인할 것</h2>
+  <div class="card">
+    <ul>
+      <li>실기 Go2 X 의 실제 자세 값 · 걸리는 시간 · 일어서기 실패나 거절 (가짜 장치의 엎드리기 · 일어서기는 수락하면 다음 측정 한 번 만에 바뀜)</li>
+      <li>Go2 본체 마이크 · 사람 목소리 · 모터 소음 속 인식 · 스피커 대답</li>
+      <li>실제로 앉았는지 재는 방법 (앉음 자세 번호 · 몸 높이 · 기울기 실측). 팀 앱 자세 구분에는 「앉음」 이 없다</li>
+      <li>낮은 자세 (엎드림 · 앉음) 에서 정지 출력이 나갈 때의 실제 효과 (11-20 실기에서 엎드린 Go2 가 정지 출력 뒤 일어선 기록 · PR478 은 조건부 생략)</li>
+      <li>앉기 관련 실기 이야기 두 가지 (서로 다른 이야기 · 둘 다 날짜 · 판 · 기록 미확인 · 원인 미확인):
+        <ul>
+          <li>작성자 경험: 앱에서 앉힌 뒤 앉은 자세에서 일어서기를 누르면 정지 상태가 아니라는 안내와 함께 거절됐다.</li>
+          <li>앱과 로봇을 연결한 팀원 말 (작성자가 전해 들음): 앱에서 앉힌 뒤 앉은 자세에서 일어나라고 하면 연결이 끊긴다.</li>
+        </ul></li>
+      <li>PR478 에서 앉음 (mode 10) 의 「앉은 자세에서 일어서기」 까지 막는 것이 의도인지 · 앉은 Go2 를 일으키는 승인된 방법</li>
+      <li>리모컨을 쓰는 중의 자세 요청: dev <code>1feb63c5</code> 로봇 프로그램 + 가짜 장치 재현에서, 동작 시험 요청 (Sit · RiseSit 같은 이동 동작) 은 코드에 리모컨 사용 중 막는 검사가 있지만, <b>엎드리기 · 일어서기 자세 요청은 리모컨 검사 없이 StopMove · StandDown 까지 호출</b> 됐다. PR478 판도 코드를 읽어 보면 같은 구조다 (실행 확인은 안 함). 실기 미확인 · 음성과 별개로 앱 단추에도 해당</li>
+    </ul>
+  </div>
+
+  <h2 id="s7" class="part">7 · 함께 넣은 시험 코드 (<code>시험코드/</code>)</h2>
+  <div class="card">
+    <p class="sub">저장소 안 경로 그대로 넣었다. 놓는 방법은 1-4. 팀 코드 원본은 넣지 않았다 (기준 판 <code>1feb63c5</code> 과 수정분 diff 만). 실행 기록 (<code>logs/</code>) 은 시험 계정 · 토큰이 들어 있어 넣지 않았다.</p>
+    <table>
+      <tr><th>경로</th><th>무엇</th></tr>
+      <tr><td><code>tools/voice_local/</code></td><td>실행 도구 (<code>s5_server.py</code> · <code>s5_agent.py</code> · <code>bridge.py</code> · <code>voice_client.py</code> · <code>voice_demo.py</code> · <code>heard_feed.py</code>) · 시험 6 파일 · <code>samples/</code> 합성 wav 9 개</td></tr>
+      <tr><td><code>apps/agent/tests/</code></td><td><code>voice_fake_go2.py</code> (가짜 Go2) · <code>test_voice_standdown_s1.py</code></td></tr>
+      <tr><td><code>apps/server/tests/</code></td><td><code>test_voice_standdown_s2.py</code></td></tr>
+      <tr><td><code>apps/web/src/</code></td><td><code>voiceLocal.ts</code> · <code>voiceHeard.ts</code> · <code>tests/voiceLocal.test.tsx</code> · <code>tests/voiceHeard.test.ts</code></td></tr>
+      <tr><td><code>팀웹_수정분.diff</code></td><td>팀 앱 기존 파일 3 개 (<code>rt.ts</code> · <code>serverdrive.tsx</code> · <code>vite.config.ts</code>) 수정분 (<code>1feb63c5</code> 기준 · 더한 줄 62 · 뺀 줄 6)</td></tr>
+      <tr><td><code>음성판정규칙_1123/hey_foothold_1123.py</code></td><td>받아쓴 문장을 부르기 · 명령 · 부정문 · 평소 말로 가르는 규칙 (11-23 작성 · 중계와 시연 프로그램이 불러 씀)</td></tr>
+      <tr><td><code>PR478검산/test_pr478_sitrise_check.py</code></td><td>5 절 단위 시험 · PR478 병합 판 사본의 <code>apps/agent/tests/</code> 에 넣어야 돌아감 (팀 시험 도구 사용)</td></tr>
+    </table>
+  </div>
+
+</main>
+
+<script>
+const CUTS = {
+  ga: [
+    { img: '그림/1_엎드리기일어서기/가_1_시작_서있음.png', cap: '① 시작 · 서 있음 · 정지 잠금', why: '조종 시작 직후. 처음 띄우면 늘 정지 잠금이 걸려 있다. 음성 받기는 꺼져 있다.' },
+    { img: '그림/1_엎드리기일어서기/가_2_잠금해제.png', cap: '② 잠금 해제', why: '「② 잠금 해제」 를 누르면 움직일 수 칸이 「움직일 수 있음」 으로 바뀐다. 자세는 그대로 서 있음.' },
+    { img: '그림/1_엎드리기일어서기/가_3_음성받기_켬.png', cap: '③ 음성 받기 켜기', why: '「음성 받기 켜기」 를 누르면 화면이 음성 중계에 연결되고 단추가 「끄기」 로 바뀐다. 자세는 그대로 서 있음.' },
+    { img: '그림/1_엎드리기일어서기/가_4_음성_엎드림.png', cap: '④ 음성 「foothold stand down」 → 엎드림', why: '중계가 알아듣고 의도를 보냄 → 화면이 기존 엎드리기 요청을 한 번 → 가짜 Go2 엎드림 → 화면 자세 「엎드림」 · 「음성 요청 완료 (CONFIRMED · LYING)」. 엎드리면 정지 잠금이 다시 걸린다.' },
+    { img: '그림/1_엎드리기일어서기/가_5_단추_일어섬.png', cap: '⑤ 화면 「일어서기」 단추 → 서 있음', why: '잠금이 걸린 채로 단추를 누름 (팀 규칙). 가짜 Go2 가 StandUp → BalanceStand 를 받고 자세 「서 있음」 · 「일어섰습니다」. 음성 칸의 「…LYING」 문구는 앞 음성 요청의 결과가 남아 있는 것.' },
+  ],
+  na: [
+    { img: '그림/1_엎드리기일어서기/나_1_시작_서있음.png', cap: '① 시작 · 서 있음 · 정지 잠금', why: '(가) 와 같은 처음 상태 (조종을 끝냈다가 다시 시작).' },
+    { img: '그림/1_엎드리기일어서기/나_2_음성받기_켬.png', cap: '② 잠금 해제 · 음성 받기 켜기', why: '음성 중계에 연결. 이번에는 단추를 누르지 않고 음성 두 개만 넣는다.' },
+    { img: '그림/1_엎드리기일어서기/나_3_음성_엎드림.png', cap: '③ 음성 ① 「foothold stand down」 → 엎드림', why: '요청 번호 2fadaca7… · CONFIRMED · LYING. 정지 잠금.' },
+    { img: '그림/1_엎드리기일어서기/나_4_음성_일어섬.png', cap: '④ 음성 ② 「foothold stand up」 → 서 있음', why: '요청 번호 6d8ecfad… (엎드리기와 다른 번호) · 잠금인 채 일어서기 → 「음성 요청 완료 · 측정으로 일어섬 확인 (CONFIRMED · STANDING)」.' },
+  ],
+
+  cmp: [
+    { img: '그림/4_PR478비교/P1_조종시작_서있음.png', cap: '① 조종 시작 · 서 있음', why: '로봇 프로그램만 PR478 병합 판 (84dac3c2) 으로 바꿔 끼운 가짜 Go2. 서버 · 웹은 음성 사본 (서버 · 계약 코드는 같음).' },
+    { img: '그림/4_PR478비교/P2_앉기_SDK접수.png', cap: '② 앉기 Sit → SDK 접수', why: '서 있을 때 앉기는 접수됐다. 가짜 장치 앉음 모형이 다음 순간 mode 10 (공식 앉음 번호) · 높이 0.24 · 기울기 30° (임의값) 로 바뀐다. 결과 줄은 화면 아래쪽에 있어 페이지에서 읽었다.' },
+    { img: '그림/4_PR478비교/P3_자세모름.png', cap: '③ 자세 칸 「모름」', why: '팀 앱에는 앉음 자세가 없어 mode 10 은 「모름」 으로 보이고 이동 단추가 잠긴다. 로봇 프로그램은 「앉음이라 정지 명령 생략」 을 한 줄 남겼다 (PR478 새 기능).' },
+    { img: '그림/4_PR478비교/P4_일어서기_거부.png', cap: '④ 앉은 자세에서 일어서기 → 거부', why: '「서 있음과 정지가 확인되어야 합니다」. 가짜 Go2 에 일어서기 호출은 가지 않았고 앉음 가정 그대로다. 이 가정 mode 10 사례에서 동작 RiseSit 가 막혔다 (자세 요청 「일어서기」 는 시도하지 않음).' },
+    { img: '그림/4_PR478비교/P5_조종끝_자세모름.png', cap: '⑤ 조종 끝내기', why: '조종권 반납 · 자세 모름 그대로. 반납 때 정지 호출도 앉음이라 생략됐다. 끝난 뒤 가짜 장치를 다시 켜 서 있음으로 초기화했다 (일어서기 성공이 아님).' },
+  ],
+  sit: [
+    { img: '그림/3_앉기/A1_세션시작.png', cap: 'A① 세션 시작 · 조종권 받음', why: '동작 시험 모드로 음성 세션을 열어 조종권을 받았다 (조종하는 사람: 다른 창에서 조종 중(나)). 이 판에서는 「조종권 받음」 알림이 화면이 다시 붙기 전에 지나가 알림 줄이 비어 있다.' },
+    { img: '그림/3_앉기/A2_앉기_가짜SDK접수.png', cap: 'A② 「foothold sit down」 → 가짜 Go2 SDK 접수', why: '앉기 요청이 서버를 거쳐 가짜 Go2 의 Sit 호출까지 갔고 「접수」 가 돌아왔다. 앉음은 확인하지 않았다 · 가짜 장치가 자세를 바꾸지 않아 자세 칸은 서 있음 그대로.' },
+    { img: '그림/3_앉기/A3_일어서기_거부.png', cap: 'A③ 「foothold get up」 → 받지 않음', why: '세션당 동작 한 건. 앉기를 이미 보냈으므로 앉은 자세에서 일어서기는 요청을 만들지 않는다 (앉기 접수만으로 일어서기 자격을 만들지 않음).' },
+    { img: '그림/3_앉기/A4_엎드리기_거부.png', cap: 'A④ 「foothold stand down」 → 받지 않음', why: '동작 뒤에는 엎드리기 같은 자세 명령도 받지 않는다. 앉기의 실제 진행을 모르는 채 다른 명령을 겹쳐 보내지 않기 위해서다.' },
+    { img: '그림/3_앉기/A5_정지_표시만.png', cap: 'A⑤ 「foothold stop」 → 표시만', why: '음성 정지는 지원하지 않는다. 알아들었다는 표시만 하고, 이 말로 정지 · 동작 · 반납을 추가로 보내지 않는다 (정지는 앱 STOP · 리모컨).' },
+    { img: '그림/3_앉기/A6_닫기_반납.png', cap: 'A⑥ 운영자 닫기 → 반납', why: '닫을 때 「앉기 진행 상태 모름」 을 기록하고 조종권을 반납했다. 완료나 취소로 적지 않는다. 조종하는 사람 없음.' },
+    { img: '그림/3_앉기/B1_앉은자세일어서기_가짜SDK접수.png', cap: 'B① 새 세션 「foothold get up」 → 가짜 Go2 SDK 접수', why: '앉은 자세에서 일어서기를 따로 보낸 요청 경로 시험. RiseSit 호출까지 갔다. 가짜 장치는 서 있었으므로 앉은 자세에서 일어났다는 증명이 아니다 (앉은 시작 자세 미검증).' },
+    { img: '그림/3_앉기/B2_닫기_반납.png', cap: 'B② 닫기 → 반납', why: '「진행 상태 모름」 기록 뒤 반납. 세션 끝.' },
+    { img: '그림/3_앉기/C1_연결종료_조종권남음.png', cap: 'C① 앉기 접수 뒤 연결만 종료', why: '반납 없이 연결을 정상 종료했다 (프로그램 강제 종료 · 네트워크 단절 재현은 아님). 음성 쪽은 「진행 상태 모름 (연결 끊김)」 으로 닫았지만, 서버에서는 조종권이 아직 음성 쪽에 남아 있다.' },
+    { img: '그림/3_앉기/C2_서버회수.png', cap: 'C② 약 15 초 뒤 서버 회수', why: '연결 종료 뒤 약 15 초 (이번 관측값 · 고정 상한 아님) 에 화면의 조종하는 사람이 「없음」 으로 바뀌었고, 같은 구간에 가짜 Go2 에 정지 출력이 일반 1 · 긴급 1 기록됐다 (서버 회수 원인 · 내부 시각은 확정 안 함). 그 사이에는 정지 출력이 없었다.' },
+  ],
+  six: [
+    { img: '그림/2_명령6개/1_부르기_서있음.png', cap: '① 「hey foothold」 → 부르기', why: '세션이 조종권을 받았다. 부르는 말로 인식했고 동작 요청은 만들지 않았다. 이번 시연에는 대답 소리가 연결돼 있지 않다 (그림 속 「부르기 · 대답만」 은 촬영 당시 표기 · 지금은 「부르기 인식 · 동작 요청 없음 · 대답 소리 미연결」). 자세 서 있음.' },
+    { img: '그림/2_명령6개/2_엎드리기_엎드림.png', cap: '② 「foothold stand down」 → 엎드림', why: '알아듣고 기존 엎드리기 요청 1 건 → 같은 번호의 결과 · 측정 자세 엎드림. 엎드리면 정지 잠금이 걸린다.' },
+    { img: '그림/2_명령6개/3_앉기_요청없음.png', cap: '③ 「foothold sit down」 → 요청 없음', why: '명령 목록에 있는 말로 알아들었지만 이번에는 동작에 연결하지 않아 요청을 만들지 않았다. 엎드림 그대로.' },
+    { img: '그림/2_명령6개/4_앉은자세일어서기_요청없음.png', cap: '④ 「foothold get up」 → 요청 없음', why: '앉은 자세에서 일어서기 (RiseSit) 도 이번에는 연결하지 않음. 엎드림 그대로 · 엎드린 상태에서 일어서기는 「stand up」 이 맡는다.' },
+    { img: '그림/2_명령6개/5_정지_요청없음.png', cap: '⑤ 「foothold stop」 → 요청 없음', why: '촬영 당시에는 미연결 표시였고, 이후 음성 정지는 지원하지 않기로 확정했다. 이 말로 정지 · 동작 · 반납 요청을 보내지 않는다. (그림 속 「멈춤는」 은 촬영 당시 조사 오류 · 지금은 「멈춤은」)' },
+    { img: '그림/2_명령6개/6_부정문_평소말_무시.png', cap: '⑥ 부정문 · 평소 말 → 무시', why: '「foothold don\'t stand up」 은 부정문이라, 「the weather is nice too」 는 명령이 아니라 무시. 들은 말은 「들은 말」 로 그대로 보여 준다.' },
+    { img: '그림/2_명령6개/7_일어서기_서있음.png', cap: '⑦ 「foothold stand up」 → 서 있음', why: '잠금이 걸린 채로 일어서기 요청 1 건 → 측정 자세 서 있음 (요청 번호로 짝지음).' },
+    { img: '그림/2_명령6개/8_세션끝.png', cap: '⑧ 세션 끝 · 반납', why: '시연 세션이 조종권을 반납. 조종하는 사람 없음 · 서 있음.' },
+  ],
+};
+document.querySelectorAll('[data-cuts]').forEach((box) => {
+  const list = CUTS[box.dataset.cuts];
+  let i = 0, timer = null;
+  box.innerHTML = `<div class="stage"><img alt=""></div>
+    <div class="cutbar"><button type="button" data-prev>◀ 이전</button><button type="button" data-next>다음 ▶</button>
+    <button type="button" data-play>▶ 자동 넘김</button><span class="dots"></span></div>
+    <p class="cap"></p><p class="why"></p>`;
+  const img = box.querySelector('img'), cap = box.querySelector('.cap'), why = box.querySelector('.why'), dots = box.querySelector('.dots');
+  list.forEach((_, k) => { const b = document.createElement('button'); b.type = 'button'; b.textContent = k + 1; b.onclick = () => { stop(); show(k); }; dots.appendChild(b); });
+  function show(k) {
+    i = (k + list.length) % list.length;
+    img.src = list[i].img; img.alt = list[i].cap; cap.textContent = list[i].cap; why.textContent = list[i].why;
+    dots.querySelectorAll('button').forEach((b, n) => b.setAttribute('aria-current', n === i ? 'true' : 'false'));
+  }
+  function stop() { if (timer) { clearInterval(timer); timer = null; box.querySelector('[data-play]').textContent = '▶ 자동 넘김'; } }
+  box.querySelector('[data-prev]').onclick = () => { stop(); show(i - 1); };
+  box.querySelector('[data-next]').onclick = () => { stop(); show(i + 1); };
+  box.querySelector('[data-play]').onclick = (e) => {
+    if (timer) return stop();
+    e.target.textContent = '■ 멈춤'; timer = setInterval(() => show(i + 1), 4000);
+  };
+  show(0);
+});
+</script>
+</body>
+</html>
