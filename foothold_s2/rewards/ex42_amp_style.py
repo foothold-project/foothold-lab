@@ -41,6 +41,7 @@ WEIGHT_ENV = "EX42_AMP_W"
 REF_ENV = "EX42_AMP_REF"
 PARAMS_ENV = "EX42_AMP_PARAMS"
 MIRROR_ENV = "EX42_AMP_MIRROR"   # lead 04:34: 1 = add a left-right mirrored copy of the reference and policy batch to every discriminator step
+PARENT_DISC_ENV = "EX42_PARENT_AMP_DISC"   # lead 11/26 12:11: 1 = a new-stage parent load carries the parent's discriminator (load_parent_entry)
 TERM = "ex42_amp_style"
 LEGS = ("FL", "FR", "RL", "RR")
 JOINTS = tuple(f"{leg}_{j}_joint" for j in ("hip", "thigh", "calf") for leg in LEGS)
@@ -128,6 +129,15 @@ def ref_path() -> Path:
     if not p.is_file():
         raise ValueError(f"{REF_ENV} is not a file: {p}")
     return p
+
+
+def parent_disc_on() -> bool:
+    raw = os.environ.get(PARENT_DISC_ENV, "")
+    if raw not in ("", "0", "1"):
+        raise ValueError(f"{PARENT_DISC_ENV} must be 0 or 1 (got {raw!r})")
+    if raw == "1" and not enabled():
+        raise ValueError(f"{PARENT_DISC_ENV}=1 while {ENV_SWITCH} is off")
+    return raw == "1"
 
 
 def mirror_on() -> bool:
@@ -306,12 +316,9 @@ def build(device, p: dict, npz: dict | None = None) -> dict:
           "last": {}, "sums": torch.zeros(len(MON_SUMS), dtype=torch.float64, device=device), "calls": 0, "mirror": mirror_on()}
     pending = _STATE.pop("pending", None)
     if pending is not None:
-        disc.load_state_dict(pending["disc"])
-        opt.load_state_dict(pending["opt"])
-        st["updates"] = int(pending.get("updates", 0))
-        if "pol_center" in pending:
-            st["pol_center"].copy_(pending["pol_center"].to(device))
-            st["pol_center_init"].copy_(pending["pol_center_init"].to(device))
+        _restore(st, pending)
+    elif int(os.environ.get("RANK", "0") or 0) == 0:
+        print(f"EX42_AMP_DISC_SOURCE=fresh dims={ref.shape[1]}", flush=True)
     if extra_conditions(p) and int(os.environ.get("RANK", "0") or 0) == 0:
         names = ["walk", "still"] + extra_conditions(p)
         print("EX42_AMP_REF_ROWS " + " ".join(f"{n}={len(i)}" for n, i in zip(names, st["ref_idx"]))
@@ -530,15 +537,55 @@ def checkpoint_entry() -> dict:
                          "pol_center": _STATE["pol_center"].detach().cpu(), "pol_center_init": _STATE["pol_center_init"].detach().cpu()}}
 
 
+def _restore(st: dict, saved: dict) -> None:
+    """Put a saved discriminator state into st. From a parent (saved["source"] == "parent", lead 11/26 12:11) the input size
+    (normalisation mean/std and the first layer) and the condition count must match this run (side=1 / turn=1 change both:
+    refused, no column remap), the Adam learning rate is this run's lr, and the start line EX42_AMP_DISC_SOURCE=parent is printed."""
+    from_parent = saved.get("source") == "parent"
+    if from_parent:
+        dims = int(st["ref"].shape[1])
+        got = {k: tuple(v.shape) for k, v in saved["disc"].items()}
+        want = {k: tuple(v.shape) for k, v in st["disc"].state_dict().items()}
+        pc = tuple(saved["pol_center"].shape) if torch.is_tensor(saved.get("pol_center")) else None
+        if got != want or pc != tuple(st["pol_center"].shape):
+            raise ValueError(f"{PARENT_DISC_ENV}=1: the parent discriminator does not fit this run (dims {dims} · "
+                             f"parent mean {got.get('mean')} · pol_center {pc} vs {tuple(st['pol_center'].shape)})")
+    st["disc"].load_state_dict(saved["disc"])
+    st["opt"].load_state_dict(saved["opt"])
+    st["updates"] = int(saved.get("updates", 0))
+    if "pol_center" in saved:
+        st["pol_center"].copy_(saved["pol_center"].to(st["pol_center"].device))
+        st["pol_center_init"].copy_(saved["pol_center_init"].to(st["pol_center_init"].device))
+    if from_parent:
+        for group in st["opt"].param_groups:
+            group["lr"] = float(st["p"]["lr"])
+        if int(os.environ.get("RANK", "0") or 0) == 0:
+            w = st["disc"].state_dict()["net.0.weight"]
+            sha = hashlib.sha256(w.detach().cpu().contiguous().numpy().tobytes()).hexdigest()[:12]
+            print(f"EX42_AMP_DISC_SOURCE=parent net0_sha={sha} updates={st['updates']} dims={int(st['ref'].shape[1])} "
+                  f"pol_center_init={int(st['pol_center_init'].sum())}/{len(st['pol_center_init'])} lr={st['p']['lr']:g}", flush=True)
+
+
 def load_checkpoint_entry(saved: dict | None) -> None:
     """Resume: the discriminator is built at the first reward call, so the saved state waits until then."""
     if saved is not None and enabled():
         if "disc" in _STATE:
-            _STATE["disc"].load_state_dict(saved["disc"])
-            _STATE["opt"].load_state_dict(saved["opt"])
-            _STATE["updates"] = int(saved.get("updates", 0))
-            if "pol_center" in saved:
-                _STATE["pol_center"].copy_(saved["pol_center"].to(_STATE["pol_center"].device))
-                _STATE["pol_center_init"].copy_(saved["pol_center_init"].to(_STATE["pol_center_init"].device))
+            _restore(_STATE, saved)
         else:
             _STATE["pending"] = saved
+
+
+def load_parent_entry(saved: dict | None) -> None:
+    """New stage (lead 11/26 12:11): with EX42_PARENT_AMP_DISC=1 the parent checkpoint's amp_disc (discriminator weights with its
+    normalisation mean/std, Adam state, update count, per-condition policy centres) is restored instead of a fresh discriminator.
+    Unset or 0 = nothing (the fresh discriminator of every new stage, as before). The policy sample buffer and the monitor sums are
+    not saved, so they start empty; the style ramp counts env steps, so it starts from 0 again."""
+    if not parent_disc_on():
+        return
+    if not isinstance(saved, dict) or not all(k in saved for k in ("disc", "opt", "pol_center", "pol_center_init")):
+        raise ValueError(f"{PARENT_DISC_ENV}=1 but the parent checkpoint has no amp_disc")
+    saved = {**saved, "source": "parent"}
+    if "disc" in _STATE:
+        _restore(_STATE, saved)
+    else:
+        _STATE["pending"] = saved

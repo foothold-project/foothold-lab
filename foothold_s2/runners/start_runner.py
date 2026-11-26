@@ -2427,6 +2427,8 @@ class StartRunner(OnPolicyRunner):
         actor0 = policy_state.get("actor.0.weight") if isinstance(policy_state, dict) else None
         print("EX42_PARENT_POLICY_SOURCE=%s actor0_sha=%s" % (policy_source, tensor_sha12(actor0) if torch.is_tensor(actor0) else "none"),
               flush=True)
+        from foothold_s2.rewards import ex42_amp_style as _amp
+        _amp.load_parent_entry(checkpoint.get("amp_disc"))   # lead 11/26 12:11: EX42_PARENT_AMP_DISC=1 carries the parent's discriminator (unset: nothing)
         parent_perception, perception_source = checkpoint["perception_state_dict"], "online"
         if stage_id is not None and checkpoint.get("perception_ema") is not None:
             # v29-11: a later stage (E1F on) starts from the weights the parent stage was scored with: the evaluation adapter reads perception_ema
