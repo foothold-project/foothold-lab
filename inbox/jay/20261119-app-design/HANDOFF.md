@@ -38,24 +38,24 @@
 - 리모컨과 앱 명령이 동시에 들어오면 리모컨 먼저 (팀장 11:27 · 원장 답 16). 범위: 저수준 실행기 쪽 코드 (remote_active) 는 dev 에 있음. 순정 Classic · Sport 에서는 미측정 · 실기 시험 안 올림 (순정이 리모컨을 먼저 따른다는 근거 없음. app-lx 안: foothold-robot 이 리모컨 막대 · 키 상태를 보고 순정에서도 앱 명령을 막음 · app-lx 11:33).
 - 악수 (SDK Hello) 는 팀장 실기 시험 통과 → 단추 옆 「시험 중」 표시 없음 (팀장 11:27).
 - 현장 승인 (팀장 12:39 · 권고대로): 지금은 자동 통과 (dev 8f08d0d0) 그대로. 고객 현장에 넣을 때 설정에서 「현장 확인」 을 켜는 선택지로 다시 다룸.
-- 가스 · 게이지 · Ex 구역 데모는 「가정」 표지로 우선 (팀장 12:39). assumed_hardware 칸 넣기 진행 (app-lx).
+- 가스 · 게이지 · Ex 구역 데모는 「상위 장비」 표지 (팀장 12:39 「가정」 → 12:50 이름 「상위 장비」 로 바꿈). 데모 칸 upper_hardware (app-lx 2a61939f).
 - 음성 대답 중 「멈춰」 가 들어오면 멈춰가 이긴다. 대답하던 명령 (예: 앉기) 은 하지 않는다 (팀장 12:39).
 - 정지 단추 (팀장 12:39 물음 「~하지 않나? 안그래?」 에 대한 안 · 팀장 확인 전): 한 번 누름 = 그 자리 멈춤 → 단추가 「엎드려 힘 빼기」 로 바뀜 → 한 번 더 = 엎드린 자세로 2 초 보간한 뒤 감쇠 (sit_down 과 같은 길). 서 있는 채로 바로 감쇠하면 다리가 이상하게 접힘 (11/22 실기 · policy/lowlevel.py:594) 이라 앱 단추는 날 감쇠 (실행기 앱 모드 damp) 를 보내지 않고 sit 을 보낸다. 실행기 코드 (app-reviewer-lx 12:54 · 확인함): 넘어짐 = 감쇠 뒤 순정 RecoveryStand 로 일어섬 · 관절 상태 끊김 = 마지막 자세로 기다리다 LIVENESS_S 넘으면 엎드린 뒤 순정 (팀장 결정 11) · 리모컨 L2+B = 사람이 누르는 비상 감쇠. 서버 · 앱 끊김 때 동작은 따로 (app-lx). 단추가 바뀐 뒤 1 초는 눌러도 안 먹거나 길게 누르기로 (빨리 두 번 닿아 멈춤을 건너뛰지 않게). 계단 · 경사 위에서는 「엎드려 힘 빼기」 회색 (무엇으로 판정할지 미정 · 실행기에 판정 없음). 멈춘 뒤 「다시 시작」 단추. 순정 모드의 Damp 동작은 app-lx 확인 (app-reviewer-lx H13). 모든 로봇을 한 번에 멈추는 단추는 이름을 「모두 정지」 로 따로 두고 웹 머리 띠 (모든 탭) 에 둔다 (app-design-lx 안 · 팀장 확인 전 · 원문은 「모든 로봇이 다 멈추라는 건가?」 물음) (비상 정지는 어느 화면에서도 보인다는 앞 규칙). 로봇 하나의 정지 · 힘 빼기 · 다시 시작은 로봇 탭 · 조종 화면 · 폰. 임무 탭 시안의 「전체 비상 정지」 는 고침.
 - 로봇 탭에 순서 점검 (팀장 12:39): Wi-Fi (Jetson) → 서버 → foothold-robot → 실행기 → Go2 몸통 → 센서 → 배터리 · 관절 순으로 돌고, 막힌 곳과 고칠 곳을 바로 보여 줌 (자동차 앱처럼).
   - 단계별 값 자리 (app-lx 12:43 · 계약 AgentState 읽음): Wi-Fi 는 지금 「Jetson 이 망에 있음」 (ping · state 도착 시각) 만 있고 이름 · 세기 · 어느 망은 foothold-robot 이 새로 보내야 함, 끊기면 「마지막으로 본 시각」. 서버 = 브라우저 연결. foothold-robot = state · ping 간격 · controller_connected. 실행기 = control 만 있고 runner {connected, phase} 칸은 새로 (app-lx 몫). 몸통 = robot_info (error_code · fallen · 자세) · response_health · posture. 센서 = devices_changed (카메라 RGB · 깊이 · LiDAR · 배터리), SLAM 상태는 팀장 쪽 정해지면. 배터리 · 관절 = battery (soc · 전압) · joints · temperature, 관절 온도 주의 / 위험 기준값은 없음 (팀장 결정).
 - 정지 세 단계가 되는지 (app-lx 12:43 · 코드 + 실기 기록 · 앱 → 실행기 길은 미측정): 1 단계 = 앱 속도 0 (지금 비상 정지와 같은 길). 2 단계 = 실행기 L2+A (정책 중일 때 지금 자세 → 엎드림 2 초 보간 → 감쇠 · 실기 11/26 07:33 · 07:43 · 10:11 넘어짐 없음). 3 단계 = 감쇠에서 L2+A 다시 → 일어섬 2 ~ 4 초 → 정책, 25° 넘게 기울면 거절. 2 단계는 정책 중에만 받으므로 순정 동작 재생 · 일어서는 중에는 단추 회색 또는 「끝나면 엎드림」. 리모컨 L2+B 는 사람이 누르는 비상 감쇠 (넘어짐 · 끊김 처리는 위 줄). 순정 (Classic · Sport) 은 StopMove 1003 → StandDown 1005 뒤 Damp 1001 → RecoveryStand 1006 이 안 (SDK 문서 · 앱에서 이어 부른 실기 기록 없음, 실기 시험 때 함께 재기 · 팀장 확인).
 - 「모두 정지」 는 한 단계 (멈춤) 만 두자는 의견 (app-reviewer-lx 12:42 · 늘 보이는 머리 띠라 로봇 하나를 멈추려다 모두 멈출 수 있음). 시안 v1 은 이 안대로 그림 · 팀장 확인 전.
-- 가정 장비 칸 (app-lx 데모 로컬 d5eb6fca · push 전): site.zones[].assumed_hardware · missions[].steps[].assumed_hardware (문자열 목록) → 사건 기록 causes 에 붙음. 이름은 app-design 이 정함 (안: gas_detector · gauge_reader · ex_rating).
+- 상위 장비 칸 (app-lx 데모 로컬 · 처음 d5eb6fca 에서 assumed_hardware → 2a61939f 에서 upper_hardware 로 이름 바꿈 · push 전): site.zones[].upper_hardware · missions[].steps[].upper_hardware (문자열 목록) → 사건 기록 causes 에 붙음. 값 이름 gas_detector · gauge_reader · ex_rating (팀장 12:50 ok).
 - 데모 표시: 켬 = 타일에 작은 「데모」 표지, 끔 = 표지 없음 (발표 때 · 총괄만 끔) (팀장 12:10 확인).
 - 시뮬 엔진은 MuJoCo (Gazebo 아님).
 - 데모 로봇은 실기와 같은 길 (AgentState · robot_info · CameraFrame). 로봇에 demo=true 칸 하나만 다르고, STOP · 해제 · 일정 (run) · 기록 · 이력은 실기와 같은 서버 길로 DB 에 쌓인다 (팀장 10:49 · app-lx 전달). 뼈대 PR #500, 실기와 똑같이 만드는 일은 app-lx 진행 중.
 - Go2 X 는 켠 채 충전 안 됨 → 데모 「충전기」 는 배터리 교체 칸.
-- 가스 감지 · 게이지 읽기 · Ex (방폭) 구역은 상위 기체 가정이다 (Go2 X 에 없음). 화면 · 데모 설명에 「가정」 표지를 붙인다 (MAP-SITES 기체 가정).
+- 게이지 읽기 · Ex (방폭) 구역은 상위 장비로 본다. 비방폭으로 바꾸지 않고 상위 모델 장비도 쓰는 플랫폼으로 간다 (팀장 12:50). 화면 · 데모 설명에 「상위 장비」 표지를 붙인다. 가스는 우리 Go2 X 에 부품이 있다 (팀장 12:50) · 값 읽는 길은 app-lx 가 찾는 중.
 - 경기장 「학습함 / 처음」 표지는 정책 판에 묶고, 색은 DESIGN.md 안에서만 (강조색 점 · 흐린 점선).
 - 폰 직결 코드는 Jetson 에 깔린다 (설치판이 apps/agent 를 통째로 복사). 다만 켜는 길은 서버 에이전트와 갈리는 별도 모드다 (go2_direct · 「no server command authority」). 코드 읽기로는 자동 시작은 폰 길을 켜지 않는다: 설치판 launch.py 는 foothold_agent.setup --headless --onboard (install_jetson_bundle.py:39 · :210) 이고, setup 은 phone 의 tickets · observer 도우미만 가져온다. 폰 서버를 띄우는 곳은 go2_direct runtime · config · ros_bridge 뿐 (app-reviewer-lx 11:19 · app-design-lx 가 dev 에서 git grep 으로 다시 봄). Jetson 실제 상태: app-lx 가 11/26 11:21 Jetson 프로세스를 읽기 전용으로 봄 · foothold-robot.service 의 setup --headless --onboard · policy.factory_record · policy.depth_health 셋만 떠 있고 go2_direct.runtime (폰 서버) 없음 (app-lx 보고). 폰 직결로 조종하는 것은 실기 미검증.
-- 「가정」 표지 자료: 계약 안 assumed_hardware: [gas_sensor, ex_rated, gauge_reader] 를 구역 · 임무 단계에 두고 사건은 물려받음. 로더는 상태 보고에 실어 보내기만 함. 팀장 결정 (비방폭 현장으로 바꿀지) 뒤 넣음 (app-lx 답 · 메시지 표기 11:24, 받은 시각 11:18).
+- 「상위 장비」 표지 자료: 위 upper_hardware 칸. 로더는 상태 보고에 실어 보내기만 함. (예전 안 assumed_hardware · gas_sensor · ex_rated 는 위 이름으로 바뀜.)
 
-## app-lx 가 전한 팀장 12:50 답 (요지 · 원문은 app-lx 대화 · app-design-lx 는 원문 미확인, 팀장 직접 확인 전에는 원장 답으로 올리지 않음)
+## 팀장 12:50 답 요지 (원문은 원장 답 19 · app-lx 가 옮겨 보낸 것)
 - 비상 정지 단추: 첫 누름 = 그 자리 멈춤 → 단추 이름 「Damping」 → 다시 누름 = Damping → 「다시 시작」 은 확인 창 OK 뒤 시작. 순정 순서 1003 → 1005 + 1001 → 1006 ok. 이름은 Damping, 실제 동작은 엎드린 뒤 감쇠 (L2+A · 1005 뒤 1001) 로 할지 app-lx 가 팀장께 다시 확인 중. 이름이 「Damping」 이 되어도 앱이 보내는 것은 sit (엎드린 뒤 감쇠) 이고 실행기 앱 모드 damp (날 감쇠) 는 보내지 않는다 (app-reviewer-lx T2). 판 v1.1 (「엎드려 힘 빼기」 · 확인 창 없음) 은 이 답 뒤 한 벌로 맞춘다.
 - Jetson 실행기 · foothold-robot 새 판 올림 승인 → 12:53 올림 (통로 포트 47210 · 되돌림 파일 Jetson 에 있음 · 화면의 FACTORY/LOWLEVEL 표시는 서버 #501 뒤).
 - 앱에도 순정 넘김 (Classic 전환) 단추. 리모컨 start + 좌/우 와 같은 순서.
@@ -91,11 +91,10 @@
 | 순정에서 리모컨 · 앱 동시 입력 (막대를 잡은 채 앱으로 아주 천천히 앞으로) | app-lx 실기 (팀장 12:10) |
 | 음성 말주머니 · 시뮬 팝업 (무엇을 · 얼마 동안 · 한 부품인지 · 거절 문구) | app-design-lx 진행 |
 | 시뮬 음성 키 Ctrl+E: 브라우저 주소창 키지만 페이지가 막을 수 있는 키로 앎 · PC 브라우저에서 손으로 한 번 잼 · 어느 키를 먼저 떼도 듣기 끝 · 키 반복 무시 (app-lx 12:16) | app-lx 측정 |
-| 가스: 우리 기체에 가스 부품이 달려 있나. SDK · Go2 메시지 정의에는 가스가 없음 (app-lx 잼). 가스 탐지는 「Go2 ENT GAS」 · 「Ent-U6」 이라는 따로 파는 판 · 부품으로 보임 (웹 · RS-485 · Ethernet 으로 따로 읽음 · 짐작). 「가정」 표지는 우리 기체에서 값이 실제로 나올 때 뗌 | 팀장 |
 | 끊긴 동안 자료를 다시 붙을 때 서버로 올리는 길을 새로 만들지 (지금은 Jetson 디스크에 start-*.jsonl · factory-auto-*.jsonl · 실행기 로그가 쌓이고 사람이 가져옴. 저절로 올리는 것은 run 보고 하나뿐이고, 서버가 실기 run 저장을 막고 있어 그것도 아직 안 쓰임 · app-lx 12:16) | 팀장 |
-| START 중 조회 앞의 순정 정지를 건너뛸지 (app-lx 안: 건너뜀) | 팀장 |
+| START 중 조회 앞의 순정 정지를 건너뛸지 · 팀장이 물음 뜻을 못 알아들음 (답 19) → 쉬운 말로 다시 묻기 | app-lx |
 | SLAM 실기 3 단계 (Point-LIO 를 켜서 새 DDS 참가자를 띄울지) · 팀장이 SLAM 을 직접 맡아 결정도 팀장 쪽 | 팀장 |
-| 정지 2 번째 누름 = 「엎드려 힘 빼기」 · 1 초 막음 / 길게 누르기 · 「모두 정지」 를 웹 머리 띠에 | 팀장 확인 |
+| 정지 2 번째 누름: 이름 「Damping」 (답 19 정함) · 실제 동작 sit 인지 날 감쇠인지 · 1 초 막음 · 「모두 정지」 를 웹 머리 띠에 | 팀장 확인 (app-lx 가 묻는 중) |
 | 로봇 탭 순서 점검 화면 | app-design-lx 진행 (값 자리는 위 · app-lx) |
 | 관절 온도 주의 / 위험 기준값 | 팀장 |
 | 「모두 정지」 를 한 단계 (멈춤) 만으로 | 팀장 확인 |
