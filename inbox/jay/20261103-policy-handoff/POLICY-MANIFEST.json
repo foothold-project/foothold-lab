@@ -1,0 +1,55 @@
+{
+ "format": "foothold-policy-manifest/1",
+ "doc": "POLICY-DISTRIBUTION-PROPOSAL-1122.md (팀장 11/22 11:33 권고안 승인: G1 A · G2 A)",
+ "updated": "2026-11-22",
+ "approved_by": "오흥재",
+ "rules": {
+  "public_repo": "목록 (이름 · SHA) 만. 정책 파일은 비공개 자리에서 받아 SHA 대조 (G1 A)",
+  "jetson_switch": "받기 · 확인은 자동, 쓰는 판 전환은 앱 화면에서 팀장 (또는 총괄) 이 누를 때만 (G2 A)"
+ },
+ "modes": {
+  "start": {
+   "name": "start-m15500",
+   "folder": "start-m15500-app",
+   "contract": "start-m15500-onnx/1",
+   "files": {
+    "start-m15500_map_on.onnx": "df91c2d772c7d054e33c74fca479e79550cfd228d7682402f7eef4a0865e279f",
+    "start-m15500_map_off.onnx": "be6c8b103d3b39503447ee71076ec199e5ed0688c3540ccfe449a96d6e2a9a41"
+   },
+   "vectors": [
+    "test_vectors_flat20_reconstruction.json",
+    "test_vectors_flat20_gt.json",
+    "test_vectors_flat20_off.json"
+   ],
+   "real": true,
+   "real_modes": [
+    "reconstruction",
+    "off"
+   ]
+  },
+  "ame2": {
+   "name": "ame2-m27001",
+   "folder": "ame2-m27001-app",
+   "contract": "ame2-m27001-onnx/2",
+   "files": {
+    "ame2-m27001.onnx": "2f7a8b18e8a3cc89ab5975836fff4870165df5c5bb8102ac823b56fe75b472ce"
+   },
+   "vectors": [
+    "test_vectors_flat20.json"
+   ],
+   "real": false,
+   "note": "teacher · 시뮬 전용"
+  },
+  "nvidia": {
+   "name": "nvidia-demo",
+   "folder": null,
+   "contract": "policy_v2",
+   "files": {
+    "policy_v2.onnx": "c9f3c5c00c6b3b3a41daf96b5de46f18673af23718ffbf8ecd84c77969bf27e2",
+    "policy_v2.f32": "da199be22d3bea64601d5237a0438ff447c85a49ce64d35bb6f486b5f0adc68c"
+   },
+   "real": false,
+   "note": "lab 정본 폴더 없음 (원본 foothold-v2.pt 에서 다시 뽑은 같은 바이트 묶음이 ai-lx01 에 있음 · lab 폴더 추가는 팀장 확인 뒤). SHA 출처: foothold-app deploy/prepare_sim.py"
+  }
+ }
+}
