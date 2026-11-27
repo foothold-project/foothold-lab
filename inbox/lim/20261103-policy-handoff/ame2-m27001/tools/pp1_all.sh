@@ -4,7 +4,8 @@
 # 5 benchmark seed 1001 (tool of tpevf24, task N9P12-Eval5): depth 0.7 | depth 0.7 without the virtual plane | reference re-run
 #   setsid nohup bash /root/onnx_pp1/pp1_all.sh > /root/onnx_pp1/all.out 2>&1 < /dev/null &
 D=/root/onnx_pp1; S=$D/all_status.txt; n() { echo "$1 $(date -u +%FT%TZ)" >> $S; }
-[ "$(hostname)" = fb6eecdaf880 ] || { n "ALL_FAILED host $(hostname)"; exit 1; }
+# 공개용: 원래는 팟 1 컨테이너 호스트 이름을 직접 적어 비교함. 다시 쓸 때 POD1_HOST 에 넣는다
+[ "$(hostname)" = "${POD1_HOST:?}" ] || { n "ALL_FAILED host $(hostname)"; exit 1; }
 B=/network-volume/limseokheon/ame2_pp1; RUN=$B/logs/rsl_rl/go2_gaze_teacher/tp424_in_p1_s5_from17000; CK=$RUN/model_16999.pt
 EV=/network-volume/limseokheon/ame2_ev12; TOOL=go2/_runs/evalgz_tpevf24_b1/eval_gaze.py
 REF=$(ls $EV/go2/_runs/evalgz_tpevf24_b1/2*/evg_tpa4p1_16999_s1001.pt | head -1)

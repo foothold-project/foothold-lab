@@ -2,7 +2,8 @@
 # app-condition benchmark, try 3: copy of the tool (eval_gaze.py 4ed5c4a6 + fpc_lib.py) with ONE added line that empties the virtual
 # floor's sparse_terrains (no plane anywhere); hydra cannot add that key (isaaclab dict.py:167). Depth fixed 0.7 via hydra as before.
 D=/root/onnx_pp1; S=$D/all_status.txt; n() { echo "$1 $(date -u +%FT%TZ)" >> $S; }
-[ "$(hostname)" = fb6eecdaf880 ] || exit 1
+# 공개용: 원래는 팟 1 컨테이너 호스트 이름을 직접 적어 비교함. 다시 쓸 때 POD1_HOST 에 넣는다
+[ "$(hostname)" = "${POD1_HOST:?}" ] || exit 1
 T=/network-volume/limseokheon/ame2_ev12/go2/_runs/evalgz_tpevf24_b1
 E=$D/evnp; rm -rf $E; mkdir -p $E; cp $T/eval_gaze.py $T/fpc_lib.py $E/ || exit 1
 python3 - "$E/eval_gaze.py" <<'PY'

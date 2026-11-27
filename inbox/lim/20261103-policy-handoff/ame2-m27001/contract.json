@@ -35,7 +35,7 @@
   "code": "copy folder /network-volume/limseokheon/ame2_pp1 (not a git repository): frozen copy of ame2_p12 at 2026-11-15T15:40:47Z + run/patch_pp.py (train.py, go2_runner.py, new ppo_accum.py); code_id 101da9dd0386; manifest of go2/ame2_go2, go2/scripts, rsl_rl/rsl_rl sha256 1cbd61280e8ec3eeab6039da15cb44349a8ab69efe40c7a7f4ef6676fd9409cb identical at the end of both source runs (out/q_tp_p1_s4, out/q_tp_p2_s4) and on 2026-11-19; updates before 16,500 were made with other copies (not traced)",
   "AME2_models_py_sha256": "d88276b1a9cac8c676828af7991f50c7515726245210f5f6c09ae34c4466d14d",
   "isaaclab": "2.3.2 (isaaclab 0.54.2, isaaclab_rl 0.4.7; editable install without version control, pip freeze of the training start)",
-  "isaacsim": "5.1.0-rc.19 read on fb6eecdaf880, the host of the source run tp424_p1_s4; the host of tp424_p2_s4 (5c99a0a805c7) not read",
+  "isaacsim": "5.1.0-rc.19 read on the pod 1 container, the host of the source run tp424_p1_s4; the host of tp424_p2_s4 (pod 2 container) not read",
   "rsl_rl": "ame2_pp1/rsl_rl/rsl_rl on PYTHONPATH = byte-identical to leggedrobotics/ame2_minimal@8beb9a688d67882828019583f7d5a78e3517f233 rsl_rl/rsl_rl (rsl_rl 5.0.0, 33 .py)",
   "torch_training": "2.7.0+cu128",
   "training_algorithm": "Adam, fp32 (no mixed precision), 4 epochs x 3 mini-batches, gradient accumulation 4 (agent.yaml:40-45, ppo_accum.txt)",
