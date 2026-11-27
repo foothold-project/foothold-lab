@@ -1,0 +1,630 @@
+{
+ "format": "ame2-m30001-onnx/2",
+ "name_rule": "in-training version named by cumulative updates like start-m13000 / start-m15500 (policy-handoff README v0.5): 10,001 of the 10k checkpoint the stones-range run started from (ame2_sr run/queue_sr.sh: 5000 updates -> 15001 counted) + 5,000 of that run (go2_env_state.start_from.source_completed_updates) + 15,000 of this lineage x4b -> x8 -> x9 (completed_updates; x4b started from the stones-range model with a new Adam state, x8 and x9 are full resumes) = 30,001; the file is the average of the last five checkpoints 13000 .. 14999 of x9 (28,001 .. 30,001 counted), named by its last one; format /2 as ame2-m27001 (outputs action, gaze_r, gaze_logits, gaze_offset)",
+ "name": "ame2-m30001",
+ "final_name": "ame2-oh2l2",
+ "checkpoint": {
+  "runpod_path": "/network-volume/limseokheon/derived_ctl424/avg_X9C_13000_14999/model_avg.pt",
+  "bytes": 146555019,
+  "iteration": "X9C: actor weight average of the five checkpoints model_13000, 13500, 14000, 14500, 14999 of the run x9 (x9_cont_x8cont_from10000_adam_fp32_4x3_to15000, a full resume of x8 model_9999 with the same overspeed cost 4.5 above 1.2 m/s, seed 42, Adam, fp32, 3 mini-batches x 4 epochs, gradient accumulation 4); every floating actor tensor averaged in float64 except log_std (from model_14999); critic, optimizer and go2_env_state are those of model_14999 (tool req424/ctl/avgk424.py md5 2fb9374a, record derived_ctl424/avgk424_X9C_manifest.txt); 30k counted along the lineage",
+  "averaged_from": [
+   {
+    "path": "/network-volume/limseokheon/ame2_x8/logs/rsl_rl/go2_gaze_teacher/2026-11-21_13-36-15_x9_cont_x8cont_from10000_adam_fp32_4x3_to15000/model_13000.pt",
+    "sha256": "cf1c336ecbad71efa41b6eb3ae93155f1883b349b03b424e06f012c3b579c1d4"
+   },
+   {
+    "path": "/network-volume/limseokheon/ame2_x8/logs/rsl_rl/go2_gaze_teacher/2026-11-21_13-36-15_x9_cont_x8cont_from10000_adam_fp32_4x3_to15000/model_13500.pt",
+    "sha256": "4afc60eec18f2685b2715e4a7a64b57b08155750eabb140aa3ce9b0fb81aa7de"
+   },
+   {
+    "path": "/network-volume/limseokheon/ame2_x8/logs/rsl_rl/go2_gaze_teacher/2026-11-21_13-36-15_x9_cont_x8cont_from10000_adam_fp32_4x3_to15000/model_14000.pt",
+    "sha256": "ec226e75617b8da992b4bbcb43b95af9761dd6fd248fafc93ece33d1a922fafe"
+   },
+   {
+    "path": "/network-volume/limseokheon/ame2_x8/logs/rsl_rl/go2_gaze_teacher/2026-11-21_13-36-15_x9_cont_x8cont_from10000_adam_fp32_4x3_to15000/model_14500.pt",
+    "sha256": "58b0c24cd6dc420551db0300ee5b2c3d753e37a6afec1ab2d9d70e01dad4974b"
+   },
+   {
+    "path": "/network-volume/limseokheon/ame2_x8/logs/rsl_rl/go2_gaze_teacher/2026-11-21_13-36-15_x9_cont_x8cont_from10000_adam_fp32_4x3_to15000/model_14999.pt",
+    "sha256": "d3aecea03278f90309983e1cfa8008d423002b50c8c8cfb206460ea70b8a283d"
+   }
+  ],
+  "uploaded": false
+ },
+ "checkpoint_sha256": "517900f35f6bfae0021929dac68f85d5243127b3390548e8dc6f85aaca60f4d2",
+ "source": {
+  "env_yaml": {
+   "path": "/network-volume/limseokheon/derived_ctl424/avg_X9C_13000_14999/params/env.yaml",
+   "sha256": "50260b92c10af6abb84e2201b1a05f1709e0b5cae6de1e1685352101f7c3c036",
+   "note": "copied by the averaging tool from the x9 run (R9/params, byte-identical, sha256 checked by the tool and again on 2026-11-25)"
+  },
+  "agent_yaml": {
+   "path": "/network-volume/limseokheon/derived_ctl424/avg_X9C_13000_14999/params/agent.yaml",
+   "sha256": "1a3a137db87a0b6f5f5b56a5bd8dbb8341542ec0445650fd71030284221b7a15"
+  },
+  "task": "Ame2-Go2-Gaze-N9P12 (twelve terrains; run/queue_x9.sh:27-32,201: --move2goal_vmax 1.2 --resume --move2goal_overspeed_cost 4.5 --move2goal_overspeed_thr 1.2, seed 42, gradient accumulation 4, agent.algorithm.optimizer=adam use_mixed_precision=false num_learning_epochs=4 num_mini_batches=3)",
+  "code": "copy folder /network-volume/limseokheon/ame2_x8 (not a git repository): frozen copy of ame2_x4 at 2026-11-20T16:49:52Z + run/patch_x8.py (overspeed cost); code_id 7183afcdc517; manifest of go2/ame2_go2, go2/scripts, rsl_rl/rsl_rl sha256 82a9d2f2adc4b74ba63eaca07d56d9578b3a9c8b1716775ad664dd59f6907244 identical at the end of x9 (out/q_x9_cont/manifest_now.txt) and on 2026-11-25; x8 (20k -> 25k) ran in the same copy, x4b (15k -> 20k) in ame2_x4 (code_id 7034e3b683e7), earlier updates in other copies (not traced)",
+  "AME2_models_py_sha256": "d88276b1a9cac8c676828af7991f50c7515726245210f5f6c09ae34c4466d14d",
+  "isaaclab": "2.3.2 (isaaclab 0.54.2, isaaclab_rl 0.4.7; editable install without version control, pip freeze of the training start)",
+  "isaacsim": "5.1.0-rc.19 read on 2026-11-25 on the pod 2 container (host of x8 and x9) and on the pod 1 container (host of x4b); hosts of the earlier stages not read",
+  "rsl_rl": "ame2_x8/rsl_rl/rsl_rl on PYTHONPATH (out/q_x9_cont/env_record.txt) = byte-identical to leggedrobotics/ame2_minimal@8beb9a688d67882828019583f7d5a78e3517f233 rsl_rl/rsl_rl (rsl_rl 5.0.0, 33 .py)",
+  "torch_training": "2.7.0+cu128",
+  "training_algorithm": "Adam, fp32 (no mixed precision), 4 epochs x 3 mini-batches, gradient accumulation 4 (agent.yaml:40-45, ppo_accum.txt)",
+  "export": {
+   "torch": "2.7.0+cu128",
+   "onnx": "1.21.0",
+   "exporter": "torch.onnx.export dynamo=False (TorchScript tracer)",
+   "producer": "pytorch 2.7.0"
+  }
+ },
+ "inputs": [
+  {
+   "name": "prop",
+   "shape": [
+    1,
+    49
+   ],
+   "dtype": "float32",
+   "meaning": "teacher_prop: base_lin_vel 3 (privileged) | base_ang_vel 3 | projected_gravity 3 | joint_pos - default 12 | joint_vel 12 | last raw action clipped to +-50 12 | goal [x, y, sin, cos] 4; body frame, scale 1, no clip apart from the last action"
+  },
+  {
+   "name": "mapping",
+   "shape": [
+    1,
+    29,
+    13,
+    3
+   ],
+   "dtype": "float32",
+   "meaning": "teacher_mapping: ground-truth height map, cell [i, j] = (x_i, y_j, z_ij) in the yaw-aligned base frame; i = x index (outer, 29, -0.42..1.26 m), j = y index (inner, 13, -0.36..0.36 m); z = hit z - base z + 0.27 clipped to [-1.5, 1.5]"
+  }
+ ],
+ "outputs": [
+  {
+   "name": "action",
+   "shape": [
+    1,
+    12
+   ],
+   "dtype": "float32",
+   "meaning": "a: deterministic mean of the actor (raw, before scale and offset), Isaac joint order"
+  },
+  {
+   "name": "gaze_r",
+   "shape": [
+    1,
+    2
+   ],
+   "dtype": "float32",
+   "meaning": "diagnostic: gaze location r = sigmoid(gaze_logits) in (0,1)^2 (_last_gaze_r of the original get_latent)"
+  },
+  {
+   "name": "gaze_logits",
+   "shape": [
+    1,
+    2
+   ],
+   "dtype": "float32",
+   "meaning": "diagnostic: output of the original gaze_head before the sigmoid (forward hook); equals the mu of the code's as_jit twin forward_with_gaze"
+  },
+  {
+   "name": "gaze_offset",
+   "shape": [
+    1,
+    2
+   ],
+   "dtype": "float32",
+   "meaning": "diagnostic: integer crop corner (ox, oy) returned by the original _crop_window, cast to float32: ox in 0..17 over the 29 x cells, oy in 0..3 over the 13 y cells; the 12 x 10 window is mapping[ox:ox+12, oy:oy+10]"
+  }
+ ],
+ "actor_input_order": [
+  {
+   "term": "base_lin_vel",
+   "slice": [
+    0,
+    3
+   ],
+   "frame": "base (root COM velocity in the base frame)",
+   "privileged": true
+  },
+  {
+   "term": "base_ang_vel",
+   "slice": [
+    3,
+    6
+   ],
+   "frame": "base"
+  },
+  {
+   "term": "projected_gravity",
+   "slice": [
+    6,
+    9
+   ],
+   "frame": "base",
+   "standing_value": [
+    0.0,
+    0.0,
+    -1.0
+   ]
+  },
+  {
+   "term": "joint_pos_rel",
+   "slice": [
+    9,
+    21
+   ],
+   "formula": "q - default_joint_pos"
+  },
+  {
+   "term": "joint_vel_rel",
+   "slice": [
+    21,
+    33
+   ],
+   "formula": "dq - 0"
+  },
+  {
+   "term": "last_action",
+   "slice": [
+    33,
+    45
+   ],
+   "formula": "clip(a_prev, -50, 50), a_prev = previous ONNX action (raw), 0 after a reset"
+  },
+  {
+   "term": "pose_command",
+   "slice": [
+    45,
+    49
+   ],
+   "formula": "[x, y, sin(e), cos(e)], see command"
+  }
+ ],
+ "map_input_order": "second input 'mapping' (agent obs_groups.actor = [teacher_mapping, teacher_prop]; the ONNX takes them by name)",
+ "command_type": "goal_pose_xy_sincos",
+ "command": {
+  "frame": "goal position relative to the base, rotated by the base yaw only (x forward, y left)",
+  "yaw_error": "e = wrap_to_pi(goal heading (world) - base heading (world))",
+  "far_goal_rule": "if |(x, y)| > 2.0 m: (x, y) scaled to norm 2.0 and e replaced by U(-pi, pi), drawn again every control step",
+  "dist_thr_m": 2.0,
+  "resampling_time_s": 16.01,
+  "episode_length_s": 16.0,
+  "goal_heading_range_world_rad": [
+   -1.0471975511965976,
+   1.0471975511965976
+  ],
+  "init_yaw_range_rad": [
+   -3.141592653589793,
+   3.141592653589793
+  ],
+  "goal_cone_deg": 45.0
+ },
+ "state": "stateless",
+ "action": {
+  "formula": "target_q = default_joint_pos + 0.25 * action (Isaac order); target velocity 0; feed-forward torque 0",
+  "outside_onnx": [
+   "target_q = default_joint_pos + 0.25 * action",
+   "keep a_prev = action (raw) for the next prop[33:45] = clip(a_prev, -50, 50)"
+  ],
+  "scale": 0.25,
+  "use_default_offset": true,
+  "offset": 0.0,
+  "clip_env_on_target_rad": [
+   -100.0,
+   100.0
+  ],
+  "clip_runner": null,
+  "last_action_obs": "raw action before scale / offset / delay, clipped to +-50"
+ },
+ "joint_names": [
+  "FL_hip_joint",
+  "FR_hip_joint",
+  "RL_hip_joint",
+  "RR_hip_joint",
+  "FL_thigh_joint",
+  "FR_thigh_joint",
+  "RL_thigh_joint",
+  "RR_thigh_joint",
+  "FL_calf_joint",
+  "FR_calf_joint",
+  "RL_calf_joint",
+  "RR_calf_joint"
+ ],
+ "default_joint_pos": [
+  0.1,
+  -0.1,
+  0.1,
+  -0.1,
+  0.8,
+  0.8,
+  1.0,
+  1.0,
+  -1.5,
+  -1.5,
+  -1.5,
+  -1.5
+ ],
+ "kp": [
+  25.0,
+  25.0,
+  25.0,
+  25.0,
+  25.0,
+  25.0,
+  25.0,
+  25.0,
+  25.0,
+  25.0,
+  25.0,
+  25.0
+ ],
+ "kd": [
+  0.5,
+  0.5,
+  0.5,
+  0.5,
+  0.5,
+  0.5,
+  0.5,
+  0.5,
+  0.5,
+  0.5,
+  0.5,
+  0.5
+ ],
+ "armature": 0.01,
+ "gain_randomization_training": {
+  "stiffness": [
+   0.85,
+   1.15
+  ],
+  "damping": [
+   0.85,
+   1.15
+  ],
+  "armature": [
+   0.85,
+   1.15
+  ],
+  "operation": "scale",
+  "mode": "startup"
+ },
+ "motor_model": {
+  "class": "Go2HVActuator (IdealPD + direction-dependent torque-speed clip)",
+  "pd": "tau = kp * (target_q - q) + kd * (0 - dq), evaluated every physics step (200 Hz)",
+  "clip": "driving (tau * dq > 0): plateau y1, braking: plateau y2; limit = plateau * clamp((x2 - |dq|) / (x2 - x1), 0, 1); tau = clamp(tau, -limit, limit)",
+  "hip_thigh": {
+   "y1_drive_Nm": 20.2,
+   "y2_brake_Nm": 23.4,
+   "x1_rad_s": 13.5,
+   "x2_rad_s": 30.0,
+   "effort_limit": 23.4,
+   "velocity_limit": 30.0
+  },
+  "calf": {
+   "y1_drive_Nm": 38.72738853503185,
+   "y2_brake_Nm": 44.86242038216561,
+   "x1_rad_s": 7.041528239202657,
+   "x2_rad_s": 15.64784053156146,
+   "effort_limit": 44.86242038216561,
+   "velocity_limit": 15.64784053156146
+  }
+ },
+ "control_hz": 50,
+ "sim_dt": 0.005,
+ "decimation": 4,
+ "action_delay": {
+  "unit": "physics_step",
+  "range_inclusive": [
+   0,
+   4
+  ],
+  "physics_dt_s": 0.005,
+  "seconds": [
+   0.0,
+   0.02
+  ],
+  "sampled": "once per episode at reset, per robot",
+  "applied": "FIFO over physics steps (4 per control step)"
+ },
+ "map": {
+  "shape": [
+   29,
+   13,
+   3
+  ],
+  "channels": [
+   "x",
+   "y",
+   "z"
+  ],
+  "outer_axis": "x (29)",
+  "inner_axis": "y (13)",
+  "resolution_m": 0.06,
+  "x_range_m": [
+   -0.42,
+   1.26
+  ],
+  "y_range_m": [
+   -0.36,
+   0.36
+  ],
+  "grid_x_float32": [
+   -0.41999998688697815,
+   -0.35999998450279236,
+   -0.29999998211860657,
+   -0.23999997973442078,
+   -0.17999997735023499,
+   -0.1199999749660492,
+   -0.06000000238418579,
+   0.0,
+   0.06000000238418579,
+   0.12000000476837158,
+   0.18000000715255737,
+   0.23999999463558197,
+   0.30000001192092896,
+   0.35999998450279236,
+   0.41999998688697815,
+   0.47999998927116394,
+   0.5399999618530273,
+   0.6000000238418579,
+   0.6599999666213989,
+   0.7200000286102295,
+   0.7799999713897705,
+   0.8399999737739563,
+   0.8999999761581421,
+   0.9600000381469727,
+   1.0199999809265137,
+   1.0799999237060547,
+   1.1399999856948853,
+   1.1999999284744263,
+   1.2599999904632568
+  ],
+  "grid_y_float32": [
+   -0.36000001430511475,
+   -0.30000001192092896,
+   -0.24000000953674316,
+   -0.18000002205371857,
+   -0.12000001966953278,
+   -0.06000002101063728,
+   -2.2351741790771484e-08,
+   0.0599999763071537,
+   0.1199999749660492,
+   0.17999997735023499,
+   0.23999997973442078,
+   0.29999998211860657,
+   0.35999995470046997
+  ],
+  "alignment": "yaw (rays vertical, grid rotated by base yaw only)",
+  "origin": "base link position (prim Robot/base)",
+  "sensor_offset_m": [
+   0.42,
+   0.0,
+   20.0
+  ],
+  "ray_start": "20 m above the base, cast straight down (max distance 1e6 m)",
+  "z_definition": "z = hit_z_world - base_z_world + 0.27, then clipped to [-1.5, 1.5] (clip after void filling)",
+  "z_offset": 0.27,
+  "z_clip": [
+   -1.5,
+   1.5
+  ],
+  "update_period_s": 0.02,
+  "no_return_rule_training": "virtual floor: on sparse tiles with voids (here: stones, gap, pallets, beam) the cell reads max(terrain, plane at world z = d), d ~ U(-1.0, -0.4) per episode; any other ray without a return reads (lowest valid height of the same scan) - |d| (0.4..1.0 m below), or the plane height if no ray of the scan returns",
+  "training_noise_excluded": {
+   "xy_uniform_m": 0.001,
+   "z_uniform_m": 0.05,
+   "sensor_drift_xyz_m": 0.04
+  }
+ },
+ "network": {
+  "actor_class": "AME2GazeModel (rsl_rl/rsl_rl/models/AME2_models.py:390)",
+  "prop_encoder": "MLP 49-512-512-128 ELU",
+  "global_context": "Conv(3->8,k3) ELU Conv(8->32,k3,dil2) ELU -> spatial max -> Linear 32-64 ELU (whole 29x13 map, x/y channels included)",
+  "gaze": "Linear(192-64) ELU Linear(64-2) -> sigmoid -> integer 12x10 crop (round, clamp)",
+  "crop_encoder": "per cell Linear(3-16) ELU | Conv(z: 1->8,k5,p2) ELU Conv(8->48,k5,p2) ELU | concat 64 -> Linear 96 ELU -> 120 tokens",
+  "attention": "query MLP 192-512-512-96, MultiheadAttention embed 96, 32 heads",
+  "output": "MLP 288-512-512-12 (input = attention 96 | prop 128 | global 64)",
+  "num_heads": 32,
+  "crop": [
+   12,
+   10
+  ],
+  "recurrent": false,
+  "obs_normalization": false,
+  "stochastic_training": "log_std 12 (not used: deterministic mean exported)"
+ },
+ "excluded": [
+  "critic (MoE 16 experts, obs group critic incl. time_left and height_scanner_critic)",
+  "log_std / sampling",
+  "training noise of teacher_prop and teacher_mapping",
+  "sensor drift"
+ ],
+ "app_onnx": {
+  "note": "foothold-app policy-adapters.js onnx 칸 꼴 그대로. 입력 순서 = ONNX session.inputNames 순서(실측). 출력 넷 가운데 앱이 쓰는 것은 action; gaze_r · gaze_logits · gaze_offset 은 진단. 앱 실행기는 계약의 출력 이름이 ONNX 에 있기만 하면 받는다(policy-onnx.js:70-72) 그래서 m14999 처럼 outputs 를 action · gaze_r 둘만 적어도 이 ONNX 로 돈다",
+  "file": "ame2-m30001.onnx",
+  "sha256": "3b4b8344701af8988d200521b600ceff5551a0ba77f9d2732ab6efea72114080",
+  "inputs": [
+   {
+    "name": "prop",
+    "dims": [
+     1,
+     49
+    ],
+    "type": "float32"
+   },
+   {
+    "name": "mapping",
+    "dims": [
+     1,
+     29,
+     13,
+     3
+    ],
+    "type": "float32"
+   }
+  ],
+  "outputs": [
+   {
+    "name": "action",
+    "dims": [
+     1,
+     12
+    ],
+    "type": "float32"
+   },
+   {
+    "name": "gaze_r",
+    "dims": [
+     1,
+     2
+    ],
+    "type": "float32"
+   },
+   {
+    "name": "gaze_logits",
+    "dims": [
+     1,
+     2
+    ],
+    "type": "float32"
+   },
+   {
+    "name": "gaze_offset",
+    "dims": [
+     1,
+     2
+    ],
+    "type": "float32"
+   }
+  ],
+  "action": "action",
+  "state": []
+ },
+ "test_vectors": {
+  "json": "test_vectors_flat20.json",
+  "npz": "test_vectors_flat20.npz",
+  "format": "ame2-m30001-test-vectors/1",
+  "map_mode": "gt",
+  "state_feedback": false,
+  "steps": 20,
+  "tolerance": 0.0001
+ },
+ "onnx": {
+  "opset": 17,
+  "ir_version": 8,
+  "nodes": 242,
+  "batch": 1,
+  "dtype": "float32",
+  "checker": "check_model full_check passed",
+  "max_abs_original_vs_jit_twin_synthetic": 0.0
+ },
+ "parity": {
+  "file": "parity.json",
+  "max_abs_action_onnx_vs_torch": 2.6226043701171875e-06,
+  "threshold": 0.0001,
+  "pass": true,
+  "steps": {
+   "flat": 200,
+   "stairs": 200
+  },
+  "runtime": {
+   "onnxruntime": "1.26.0",
+   "provider": "CPUExecutionProvider",
+   "torch_reference": "2.7.0+cu128"
+  }
+ },
+ "verification": {
+  "ort_web": "see parity.json ort_web",
+  "speed_goal_resent_1m_mps": 1.125903606414795,
+  "void_depth_0p7": "see parity.json void_depth"
+ },
+ "artifacts": [
+  {
+   "path": "ame2-m30001.onnx",
+   "sha256": "3b4b8344701af8988d200521b600ceff5551a0ba77f9d2732ab6efea72114080",
+   "bytes": 5038652
+  },
+  {
+   "path": "parity.json",
+   "sha256": "1cfdef2bb5688444092713d93f222048211a779371bd9fbde37ecb17be07b25d",
+   "bytes": 12766
+  },
+  {
+   "path": "test_vectors_flat20.npz",
+   "sha256": "bed8a1385d4ba4760ced2922d55ea214c349aa236c055d3802759d345bef148d",
+   "bytes": 105926
+  },
+  {
+   "path": "test_vectors_flat20.json",
+   "sha256": "86eba2bdade3000e0f524b4180c6d24d7224c7f43ac3060a854343b4ade621d9",
+   "bytes": 486630
+  },
+  {
+   "path": "app_onnx.json",
+   "sha256": "74abc6f51c2907aabc4a61ba92a63c3b1460f971e8d137c740c6c6ae8d3066af",
+   "bytes": 1196
+  },
+  {
+   "path": "README.md",
+   "sha256": "9d9708f8ad0368f5e6d912d41790838ba691e853a69ba5e67cf1c5423a4c10e8",
+   "bytes": 3374
+  },
+  {
+   "path": "tools/README.md",
+   "sha256": "38bed626156a61e38c5427e648ab24f7e73542d2a8ae5008314cee24fda71aed",
+   "bytes": 3360
+  },
+  {
+   "path": "tools/export_ame2_onnx.py",
+   "sha256": "1b4a43acb87ae4812d8947a1a3db63753a75b826dc057f633bf7737471bf413b",
+   "bytes": 7575
+  },
+  {
+   "path": "tools/rec_onnx_vectors.py",
+   "sha256": "ec17841888ccc314d17af36c0e3d65f0e72615e75088c9108da89f72e3ba4cc8",
+   "bytes": 9422
+  },
+  {
+   "path": "tools/parity_ref.py",
+   "sha256": "4fde00b7256600a2b335b82ebccc736310f4562284b251fa43c115228fd8c771",
+   "bytes": 2801
+  },
+  {
+   "path": "tools/parity_ort.py",
+   "sha256": "1dbd3169de8b8f28fa1d98c5960df83050bdf730e5821eea397ee801d1387c36",
+   "bytes": 5332
+  },
+  {
+   "path": "tools/parity_web.mjs",
+   "sha256": "b289180edf9169f4dac79f3dc5378a9c3a70d6217d4bf8347599578f00c19145",
+   "bytes": 1774
+  },
+  {
+   "path": "tools/speed_goal.py",
+   "sha256": "98b7568425c289765d2747b2b77fe7ce7dfc5ef20487d95046da1db30e1cca3e",
+   "bytes": 4828
+  },
+  {
+   "path": "tools/cmp_depth07.py",
+   "sha256": "a19bf8879018cd4bac54a7e1ef08ae20ba2202f3222a74b8e2412522b6f15ffc",
+   "bytes": 1774
+  },
+  {
+   "path": "tools/step2.sh",
+   "sha256": "7ffe5e7d511eb4f5f5b6bb0ba991f2d35ae5e2dac534872af6d7a911e0b42018",
+   "bytes": 562
+  },
+  {
+   "path": "tools/x9c_gpu.sh",
+   "sha256": "a5d7dd36ff4a23e06230f98747a24a2dfefdb1b1bdeb94020ad4ada1fa04f42e",
+   "bytes": 6662
+  },
+  {
+   "path": "tools/eval_gaze_no_plane.patch",
+   "sha256": "2d831e92eaf331325baf816731430c69467bd12def6a20c030d144b9784cbee4",
+   "bytes": 304
+  }
+ ]
+}
