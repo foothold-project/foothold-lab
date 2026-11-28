@@ -125,6 +125,415 @@
   "max_abs_action_web_vs_torch": 3.0994415283203125e-06,
   "pass": true
  },
+ "void_depth": {
+  "tool": "ame2_ev12 go2/_runs/evalgz_tpevf43_b1/eval_gaze.py (md5 4ed5c4a6, the tool of the X7C reference evaluation tpevf43), task Ame2-Go2-Gaze-N9P12-Eval5, seed 1001, 2400 robots, 5 episodes",
+  "reference_file": "/network-volume/limseokheon/derived_ctl424/avg_X7C_13000_14999/model_avg.pt",
+  "rerun_same_settings": {
+   "meta": {
+    "task": "Ame2-Go2-Gaze-N9P12-Eval5",
+    "seed": 1001,
+    "episodes": 5,
+    "num_envs": 2400,
+    "checkpoint": "/network-volume/limseokheon/derived_ctl424/avg_X7C_13000_14999/model_avg.pt",
+    "completed_updates": 15000,
+    "actor_sha": "7bfe674ac8e3abdde33647fa4be7a5cb9e47401a4021f3eff3270b94f5b68cca",
+    "code": "6397e20bb6dc"
+   },
+   "reference_depth_U0.4_1.0": {
+    "rough": {
+     "episodes": 1000,
+     "success": 0.99
+    },
+    "stair_down": {
+     "episodes": 1000,
+     "success": 0.999
+    },
+    "stair_up": {
+     "episodes": 1000,
+     "success": 0.985
+    },
+    "boxes_j": {
+     "episodes": 1000,
+     "success": 0.951
+    },
+    "discrete_j": {
+     "episodes": 1000,
+     "success": 0.976
+    },
+    "climb_up": {
+     "episodes": 1000,
+     "success": 0.967
+    },
+    "climb_down": {
+     "episodes": 1000,
+     "success": 0.967
+    },
+    "steps_j": {
+     "episodes": 1000,
+     "success": 0.954
+    },
+    "stones": {
+     "episodes": 1000,
+     "success": 0.546
+    },
+    "gap": {
+     "episodes": 1000,
+     "success": 0.853
+    },
+    "pallets": {
+     "episodes": 1000,
+     "success": 0.836
+    },
+    "beam": {
+     "episodes": 1000,
+     "success": 0.786
+    },
+    "_all": {
+     "episodes": 12000,
+     "success": 0.9008333333333334
+    }
+   },
+   "depth_fixed_0.7": {
+    "rough": {
+     "episodes": 1000,
+     "success": 0.99
+    },
+    "stair_down": {
+     "episodes": 1000,
+     "success": 0.993
+    },
+    "stair_up": {
+     "episodes": 1000,
+     "success": 0.984
+    },
+    "boxes_j": {
+     "episodes": 1000,
+     "success": 0.947
+    },
+    "discrete_j": {
+     "episodes": 1000,
+     "success": 0.975
+    },
+    "climb_up": {
+     "episodes": 1000,
+     "success": 0.974
+    },
+    "climb_down": {
+     "episodes": 1000,
+     "success": 0.967
+    },
+    "steps_j": {
+     "episodes": 1000,
+     "success": 0.938
+    },
+    "stones": {
+     "episodes": 1000,
+     "success": 0.555
+    },
+    "gap": {
+     "episodes": 1000,
+     "success": 0.846
+    },
+    "pallets": {
+     "episodes": 1000,
+     "success": 0.841
+    },
+    "beam": {
+     "episodes": 1000,
+     "success": 0.798
+    },
+    "_all": {
+     "episodes": 12000,
+     "success": 0.9006666666666666
+    }
+   },
+   "diff_points": {
+    "rough": 0.0,
+    "stair_down": -0.6,
+    "stair_up": -0.1,
+    "boxes_j": -0.4,
+    "discrete_j": -0.1,
+    "climb_up": 0.7,
+    "climb_down": 0.0,
+    "steps_j": -1.6,
+    "stones": 0.9,
+    "gap": -0.7,
+    "pallets": 0.5,
+    "beam": 1.2,
+    "_all": -0.02
+   }
+  },
+  "depth_fixed_0.7": {
+   "meta": {
+    "task": "Ame2-Go2-Gaze-N9P12-Eval5",
+    "seed": 1001,
+    "episodes": 5,
+    "num_envs": 2400,
+    "checkpoint": "/network-volume/limseokheon/derived_ctl424/avg_X7C_13000_14999/model_avg.pt",
+    "completed_updates": 15000,
+    "actor_sha": "7bfe674ac8e3abdde33647fa4be7a5cb9e47401a4021f3eff3270b94f5b68cca",
+    "code": "6397e20bb6dc"
+   },
+   "reference_depth_U0.4_1.0": {
+    "rough": {
+     "episodes": 1000,
+     "success": 0.99
+    },
+    "stair_down": {
+     "episodes": 1000,
+     "success": 0.999
+    },
+    "stair_up": {
+     "episodes": 1000,
+     "success": 0.985
+    },
+    "boxes_j": {
+     "episodes": 1000,
+     "success": 0.951
+    },
+    "discrete_j": {
+     "episodes": 1000,
+     "success": 0.976
+    },
+    "climb_up": {
+     "episodes": 1000,
+     "success": 0.967
+    },
+    "climb_down": {
+     "episodes": 1000,
+     "success": 0.967
+    },
+    "steps_j": {
+     "episodes": 1000,
+     "success": 0.954
+    },
+    "stones": {
+     "episodes": 1000,
+     "success": 0.546
+    },
+    "gap": {
+     "episodes": 1000,
+     "success": 0.853
+    },
+    "pallets": {
+     "episodes": 1000,
+     "success": 0.836
+    },
+    "beam": {
+     "episodes": 1000,
+     "success": 0.786
+    },
+    "_all": {
+     "episodes": 12000,
+     "success": 0.9008333333333334
+    }
+   },
+   "depth_fixed_0.7": {
+    "rough": {
+     "episodes": 1000,
+     "success": 0.989
+    },
+    "stair_down": {
+     "episodes": 1000,
+     "success": 0.996
+    },
+    "stair_up": {
+     "episodes": 1000,
+     "success": 0.986
+    },
+    "boxes_j": {
+     "episodes": 1000,
+     "success": 0.96
+    },
+    "discrete_j": {
+     "episodes": 1000,
+     "success": 0.967
+    },
+    "climb_up": {
+     "episodes": 1000,
+     "success": 0.959
+    },
+    "climb_down": {
+     "episodes": 1000,
+     "success": 0.973
+    },
+    "steps_j": {
+     "episodes": 1000,
+     "success": 0.953
+    },
+    "stones": {
+     "episodes": 1000,
+     "success": 0.561
+    },
+    "gap": {
+     "episodes": 1000,
+     "success": 0.841
+    },
+    "pallets": {
+     "episodes": 1000,
+     "success": 0.826
+    },
+    "beam": {
+     "episodes": 1000,
+     "success": 0.825
+    },
+    "_all": {
+     "episodes": 12000,
+     "success": 0.903
+    }
+   },
+   "diff_points": {
+    "rough": -0.1,
+    "stair_down": -0.3,
+    "stair_up": 0.1,
+    "boxes_j": 0.9,
+    "discrete_j": -0.9,
+    "climb_up": -0.8,
+    "climb_down": 0.6,
+    "steps_j": -0.1,
+    "stones": 1.5,
+    "gap": -1.2,
+    "pallets": -1.0,
+    "beam": 3.9,
+    "_all": 0.22
+   }
+  },
+  "depth_fixed_0.7_no_virtual_plane": {
+   "meta": {
+    "task": "Ame2-Go2-Gaze-N9P12-Eval5",
+    "seed": 1001,
+    "episodes": 5,
+    "num_envs": 2400,
+    "checkpoint": "/network-volume/limseokheon/derived_ctl424/avg_X7C_13000_14999/model_avg.pt",
+    "completed_updates": 15000,
+    "actor_sha": "7bfe674ac8e3abdde33647fa4be7a5cb9e47401a4021f3eff3270b94f5b68cca",
+    "code": "6397e20bb6dc"
+   },
+   "reference_depth_U0.4_1.0": {
+    "rough": {
+     "episodes": 1000,
+     "success": 0.99
+    },
+    "stair_down": {
+     "episodes": 1000,
+     "success": 0.999
+    },
+    "stair_up": {
+     "episodes": 1000,
+     "success": 0.985
+    },
+    "boxes_j": {
+     "episodes": 1000,
+     "success": 0.951
+    },
+    "discrete_j": {
+     "episodes": 1000,
+     "success": 0.976
+    },
+    "climb_up": {
+     "episodes": 1000,
+     "success": 0.967
+    },
+    "climb_down": {
+     "episodes": 1000,
+     "success": 0.967
+    },
+    "steps_j": {
+     "episodes": 1000,
+     "success": 0.954
+    },
+    "stones": {
+     "episodes": 1000,
+     "success": 0.546
+    },
+    "gap": {
+     "episodes": 1000,
+     "success": 0.853
+    },
+    "pallets": {
+     "episodes": 1000,
+     "success": 0.836
+    },
+    "beam": {
+     "episodes": 1000,
+     "success": 0.786
+    },
+    "_all": {
+     "episodes": 12000,
+     "success": 0.9008333333333334
+    }
+   },
+   "depth_fixed_0.7": {
+    "rough": {
+     "episodes": 1000,
+     "success": 0.993
+    },
+    "stair_down": {
+     "episodes": 1000,
+     "success": 0.998
+    },
+    "stair_up": {
+     "episodes": 1000,
+     "success": 0.981
+    },
+    "boxes_j": {
+     "episodes": 1000,
+     "success": 0.95
+    },
+    "discrete_j": {
+     "episodes": 1000,
+     "success": 0.969
+    },
+    "climb_up": {
+     "episodes": 1000,
+     "success": 0.972
+    },
+    "climb_down": {
+     "episodes": 1000,
+     "success": 0.975
+    },
+    "steps_j": {
+     "episodes": 1000,
+     "success": 0.952
+    },
+    "stones": {
+     "episodes": 1000,
+     "success": 0.528
+    },
+    "gap": {
+     "episodes": 1000,
+     "success": 0.858
+    },
+    "pallets": {
+     "episodes": 1000,
+     "success": 0.843
+    },
+    "beam": {
+     "episodes": 1000,
+     "success": 0.811
+    },
+    "_all": {
+     "episodes": 12000,
+     "success": 0.9025
+    }
+   },
+   "diff_points": {
+    "rough": 0.3,
+    "stair_down": -0.1,
+    "stair_up": -0.4,
+    "boxes_j": -0.1,
+    "discrete_j": -0.7,
+    "climb_up": 0.5,
+    "climb_down": 0.8,
+    "steps_j": -0.2,
+    "stones": -1.8,
+    "gap": 0.5,
+    "pallets": 0.7,
+    "beam": 2.5,
+    "_all": 0.17
+   }
+  }
+ },
  "speed_goal_resent": {
   "step_dt": 0.02,
   "steps": 600,

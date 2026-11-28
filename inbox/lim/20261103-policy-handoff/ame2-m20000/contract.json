@@ -1,0 +1,855 @@
+{
+ "format": "ame2-m20000-onnx/1",
+ "name_rule": "working name, the team lead decides the final one: the name table of the policy-handoff README (v0.5, mode key ame2 only) has no slot for the real-robot student, so as the instruction says the bundle is named ame2-m<cumulative updates>. Count: this student was trained from scratch (go2_env_state.start_from None, agent.yaml:21 resume false) for 20,000 updates (go2_env_state.completed_updates 20000, checkpoint iter 19999, agent.yaml:5 max_iterations 20000) = 20,000 -> ame2-m20000. Real-robot student, TU (the map of the learned mapper). format /1: the inputs and outputs are not those of the teacher bundles (ame2-m27001 / ame2-m30001 are /2 with prop, mapping -> action, gaze_*)",
+ "name": "ame2-m20000",
+ "final_name": null,
+ "final_name_note": "undecided (team lead); proposed working name ame2-m20000",
+ "role": "real-robot student, TU (mapper map)",
+ "bundle_status": {
+  "deliverable": false,
+  "do_not_run_on_the_robot_from_this_bundle": true,
+  "why": "step 3 failed: the policy passes, the mapper is above 1e-4 m on the stairs recording; no test vectors",
+  "waiting_for": "the team lead's four decisions (CONTRACT.md 7a)",
+  "step_0": "done",
+  "step_2": "the two ONNX files, CONTRACT.md and contract.json are written; whether the as_jit export of the policy is accepted is pending (team lead)",
+  "step_3": "FAILED: policy passes, mapper above 1e-4 on the stairs recording; stopped here as the instruction says",
+  "test_vectors": "not generated",
+  "step_4": "no delivery: this folder is kept in the team repository only as the record of the stopped state (decision of 2026-11-28: both bundles in one PR, the limits of this one stated in the PR body)",
+  "draft": "draft, version 0.3 (after reviews 430_55 and 430_55b), 2026-11-28"
+ },
+ "checkpoint": {
+  "runpod_path": "/network-volume/limseokheon/ame2_stu/logs/rsl_rl/go2_gaze_student/2026-11-22_19-41-48_stu_tu_x7c_n4096_s42/model_19999.pt",
+  "bytes": 157032925,
+  "iteration": "model_19999 of the student run stu_tu_x7c_n4096_s42: trained from scratch for 20,000 updates (no resume), seed 42, 4096 robots, task Ame2-Go2-Gaze-Student-N9P12 (the twelve terrains of the teacher X7C); distilled from the teacher X7C (teacher TorchScript sha256 7bfdce35ab94bb353e181a565179e3c674885471204d66d86bca6a1d16e797a9 = go2_env_state.il_setup.teacher_sha256; critic initialised from the teacher checkpoint b6aa0adc371089fd0bb02252169de2c3350626c627f6a284e2a67ea81bb3e625 = checkpoint_sha256 of the bundle ame2-m30001) with the TU mapper in the loop",
+  "mapper_jit": {
+   "runpod_path": "/network-volume/limseokheon/ame2_stu/mapper/mapper_tu_jit.pt",
+   "sha256": "52dd869b9fe5bc0ee1973138e72d56d66bee459626da36fed2e2efa716a0e060",
+   "bytes": 185590,
+   "note": "the TorchScript mapping model of the training loop (go2_env_state.il_setup.mapper_sha256); the mapper ONNX is its export"
+  },
+  "uploaded": false
+ },
+ "checkpoint_sha256": "34eba83771f7564f93c163afdfcbefa8620780c44b920e2edb0a1c9b49d42793",
+ "source": {
+  "env_yaml": {
+   "path": "params/env.yaml in the run folder of checkpoint.runpod_path",
+   "sha256": "a30b1a19ba2a30657d35e978120d7b75ae09cbf5385614267ef65d059431a6dc",
+   "lines": 2871
+  },
+  "agent_yaml": {
+   "path": "params/agent.yaml in the same folder",
+   "sha256": "696820297cfa5e1bd064f270e20201698702bb8b964912d30eb0438c41038f05",
+   "lines": 69
+  },
+  "task": "Ame2-Go2-Gaze-Student-N9P12 (training); the step 3 recording used the evaluation task Ame2-Go2-Gaze-Student-N9P12-Eval5",
+  "code": "copy folder ame2_stu (not a git repository) = ame2_x4 (the code of the teacher X7C, see the bundle ame2-m30001) + patch_stu.py; the step 3 recording ran in the evaluation copy ame2_stev (benchmark code + the same patch_stu.py + the evaluation terrain patch), code id of that recording 033b0cf3fa2a; the code id / manifest of ame2_stu itself was not read for this bundle (CONTRACT.md 7a)",
+  "AME2_models_py_sha256": "d88276b1a9cac8c676828af7991f50c7515726245210f5f6c09ae34c4466d14d",
+  "isaaclab": "not read for this bundle (CONTRACT.md 7a); the teacher bundle ame2-m30001 records Isaac Lab 2.3.2 for the same code lineage",
+  "isaacsim": "not read for this bundle (CONTRACT.md 7a)",
+  "torch_recording": "2.7.0+cu128",
+  "training_algorithm": "Go2PPOIL: teacher distillation + PPO; switch to RL at update 4001, learning rate 1e-3 -> 1e-5, imitation 0.02, representation 0.2, Adam, fp32 (no mixed precision), 5 epochs x 8 mini-batches, 24 steps per update (agent.yaml:4,41-69)",
+  "export": {
+   "torch": "2.12.0+cpu",
+   "exporter": "torch.onnx.export dynamo=False (TorchScript tracer), opset 17",
+   "producer": "pytorch 2.12.0",
+   "onnx_package": "not recorded in the export record (CONTRACT.md 7a)",
+   "policy": "tools/export_ame2_onnx.py: the original AME2GazeLSIOModel built from the agent.yaml actor block, strict load of actor_state_dict, then its as_jit() twin _TorchAME2GazeLSIOModel (deep copies of the same layers, hard integer crop) exported; the original forward vs the twin differ by 0.0 and vs the ONNX by at most the parity value; the agreement was checked on the 400 recorded steps and on 2,000 synthetic inputs, and whether this meets the instruction's 'wrap the original forward' is the team lead's call",
+   "mapper": "tools/export_mapper_onnx.py: the TorchScript mapper of the training loop traced as it is, float32",
+   "record": {
+    "policy_checked_inputs": 2000,
+    "mapper_checked_grids": 300,
+    "onnxruntime": "1.18.1"
+   }
+  }
+ },
+ "inputs": [
+  {
+   "name": "neural_map",
+   "shape": [
+    1,
+    29,
+    13,
+    4
+   ],
+   "dtype": "float32",
+   "meaning": "student map: cell [i, j] = (x_i, y_j, z_ij, u_ij) in the yaw-aligned base frame; i = x index (outer, 29, -0.42..1.26 m), j = y index (inner, 13, -0.36..0.36 m); z = fused height - base z + 0.27 clipped to [-1.5, 1.5]; u = 0.5 * ln(clip(variance, 0.01, 2)) + 0.5"
+  },
+  {
+   "name": "prop_hist",
+   "shape": [
+    1,
+    20,
+    42
+   ],
+   "dtype": "float32",
+   "meaning": "20 rows, oldest first, one row per policy step: base_ang_vel 3 | projected_gravity 3 | joint_pos - default 12 | joint_vel 12 | last raw action clipped to +-50 12; body frame, scale 1; after a reset the first row fills all 20 rows; no privileged term (no base_lin_vel)"
+  },
+  {
+   "name": "cmds",
+   "shape": [
+    1,
+    4
+   ],
+   "dtype": "float32",
+   "meaning": "goal [x, y, sin(e), cos(e)], see command"
+  }
+ ],
+ "outputs": [
+  {
+   "name": "actions",
+   "shape": [
+    1,
+    12
+   ],
+   "dtype": "float32",
+   "meaning": "a: deterministic mean of the actor (raw, before scale and offset), Isaac joint order"
+  },
+  {
+   "name": "attn_out",
+   "shape": [
+    1,
+    96
+   ],
+   "dtype": "float32",
+   "meaning": "diagnostic: attention output (the latent matched to the teacher in training)"
+  },
+  {
+   "name": "global_feat",
+   "shape": [
+    1,
+    64
+   ],
+   "dtype": "float32",
+   "meaning": "diagnostic: global context of the map"
+  }
+ ],
+ "actor_input_order": {
+  "note": "an object, not the array of the teacher bundles: do not reuse a reader written for the teacher contract; go by the correspondence below",
+  "onnx_input_to_training_group": {
+   "neural_map": "neural_map",
+   "prop_hist": "student_prop_hist",
+   "cmds": "student_cmds"
+  },
+  "groups": [
+   "neural_map",
+   "student_prop_hist",
+   "student_cmds"
+  ],
+  "prop_hist_row": [
+   {
+    "term": "base_ang_vel",
+    "slice": [
+     0,
+     3
+    ],
+    "frame": "base",
+    "history_length": 20
+   },
+   {
+    "term": "projected_gravity",
+    "slice": [
+     3,
+     6
+    ],
+    "frame": "base",
+    "standing_value": [
+     0.0,
+     0.0,
+     -1.0
+    ],
+    "history_length": 20
+   },
+   {
+    "term": "joint_pos",
+    "slice": [
+     6,
+     18
+    ],
+    "formula": "q - default_joint_pos",
+    "history_length": 20
+   },
+   {
+    "term": "joint_vel",
+    "slice": [
+     18,
+     30
+    ],
+    "formula": "dq - 0",
+    "history_length": 20
+   },
+   {
+    "term": "actions",
+    "slice": [
+     30,
+     42
+    ],
+    "formula": "clip(a_prev, -50, 50), a_prev = the raw action actually ADOPTED before this step (a late output that was discarded is not stored, the previously adopted one is kept), 0 after a reset",
+    "history_length": 20
+   }
+  ],
+  "history": "rows oldest first; one append per policy step; the first append after a reset fills all 20 rows",
+  "cmds": {
+   "term": "pose_commands",
+   "slice": [
+    0,
+    4
+   ],
+   "formula": "[x, y, sin(e), cos(e)]",
+   "history_length": 0
+  },
+  "privileged_terms": [],
+  "scale": null,
+  "clip": "only the last action (+-50)",
+  "obs_normalization": false
+ },
+ "map_input_order": "first input 'neural_map' (agent obs_groups.actor = [neural_map, student_prop_hist, student_cmds], agent.yaml:7-11; the ONNX takes them by name)",
+ "command_type": "goal_pose_xy_sincos",
+ "command": {
+  "frame": "goal position relative to the base, rotated by the base yaw only (x forward, y left)",
+  "yaw_error": "e = wrap_to_pi(goal heading (world) - base heading (world))",
+  "far_goal_rule": "if |(x, y)| > 2.0 m (strictly above): (x, y) scaled to norm 2.0 and e replaced by ONE uniform draw in [-pi, pi) of this policy step, whose sin and cos are fed; at exactly 2.0 m nothing is scaled and the real e is kept. Beyond 2 m the bearing of the goal POSITION stays valid (3 m ahead becomes 2 m ahead); only the yaw-error sin / cos is replaced",
+  "dist_thr_m": 2.0,
+  "resampling_time_s": 16.01,
+  "episode_length_s": 16.0,
+  "goal_heading_range_world_rad": [
+   -1.0471975511965976,
+   1.0471975511965976
+  ],
+  "init_yaw_limit_rad": 3.141592653589793,
+  "goal_cone_deg": 45.0,
+  "move2goal_v_max_mps": 1.2,
+  "remote_control_mapping": "none: no formula from the remote control axes to this command exists (CONTRACT.md 3.5, 7a)",
+  "real_robot_needs": "base position and yaw in a world frame (localisation); training used the simulator's true pose"
+ },
+ "state": "stateless",
+ "state_note": "no recurrent state in either ONNX (state_feedback false). The caller keeps: the 20-row history, the previous raw action, the fused map",
+ "action": {
+  "formula": "target_q = default_joint_pos + 0.25 * actions (Isaac order); target velocity 0; feed-forward torque 0",
+  "outside_onnx": [
+   "target_q = default_joint_pos + 0.25 * actions",
+   "keep a_prev = actions (raw) ONLY when this output was adopted as the joint target; if it was discarded as late, a_prev stays the previously adopted one; next row[30:42] = clip(a_prev, -50, 50)"
+  ],
+  "scale": 0.25,
+  "use_default_offset": true,
+  "offset": 0.0,
+  "clip_env_on_target_rad": [
+   -100.0,
+   100.0
+  ],
+  "clip_runner": null,
+  "last_action_obs": "raw action before scale / offset / delay, clipped to +-50",
+  "team_runner_note": "the team's low-level runner clips the target to default +- 1.6 rad, which training did not have (CONTRACT.md 7b)"
+ },
+ "joint_names": [
+  "FL_hip_joint",
+  "FR_hip_joint",
+  "RL_hip_joint",
+  "RR_hip_joint",
+  "FL_thigh_joint",
+  "FR_thigh_joint",
+  "RL_thigh_joint",
+  "RR_thigh_joint",
+  "FL_calf_joint",
+  "FR_calf_joint",
+  "RL_calf_joint",
+  "RR_calf_joint"
+ ],
+ "default_joint_pos": [
+  0.1,
+  -0.1,
+  0.1,
+  -0.1,
+  0.8,
+  0.8,
+  1.0,
+  1.0,
+  -1.5,
+  -1.5,
+  -1.5,
+  -1.5
+ ],
+ "kp": [
+  25.0,
+  25.0,
+  25.0,
+  25.0,
+  25.0,
+  25.0,
+  25.0,
+  25.0,
+  25.0,
+  25.0,
+  25.0,
+  25.0
+ ],
+ "kd": [
+  0.5,
+  0.5,
+  0.5,
+  0.5,
+  0.5,
+  0.5,
+  0.5,
+  0.5,
+  0.5,
+  0.5,
+  0.5,
+  0.5
+ ],
+ "armature": 0.01,
+ "gain_randomization_training": {
+  "stiffness": [
+   0.85,
+   1.15
+  ],
+  "damping": [
+   0.85,
+   1.15
+  ],
+  "armature": [
+   0.85,
+   1.15
+  ],
+  "operation": "scale",
+  "mode": "startup"
+ },
+ "motor_model": {
+  "class": "Go2HVActuator (the simulation motor model of training, as in the bundle ame2-m30001)",
+  "pd": "tau = kp * (target_q - q) + kd * (0 - dq), evaluated every physics step (200 Hz)",
+  "hip_thigh": {
+   "y1_drive_Nm": 20.2,
+   "y2_brake_Nm": 23.4,
+   "x1_rad_s": 13.5,
+   "x2_rad_s": 30.0,
+   "effort_limit": 23.4,
+   "velocity_limit": 30.0
+  },
+  "calf": {
+   "y1_drive_Nm": 38.72738853503185,
+   "y2_brake_Nm": 44.86242038216561,
+   "x1_rad_s": 7.041528239202657,
+   "x2_rad_s": 15.64784053156146,
+   "effort_limit": 44.86242038216561,
+   "velocity_limit": 15.64784053156146
+  },
+  "real_motor_limits": "not confirmed (CONTRACT.md 7a)"
+ },
+ "control_hz": 50,
+ "sim_dt": 0.005,
+ "decimation": 4,
+ "control_period_s": 0.02,
+ "control_note": "0.005 s x 4 = 0.020 s per policy step, its reciprocal 50 Hz",
+ "action_delay": {
+  "unit": "physics_step",
+  "range_inclusive": [
+   0,
+   4
+  ],
+  "physics_dt_s": 0.005,
+  "seconds": [
+   0.0,
+   0.02
+  ],
+  "sampled": "once per episode at reset, per robot",
+  "applied": "FIFO over physics steps (4 per control step)",
+  "note": "the delay range put into training; not a record of passing at every delay"
+ },
+ "map": {
+  "shape": [
+   29,
+   13,
+   4
+  ],
+  "channels": [
+   "x",
+   "y",
+   "z",
+   "u"
+  ],
+  "outer_axis": "x (29)",
+  "inner_axis": "y (13)",
+  "resolution_m": 0.06,
+  "x_range_m": [
+   -0.42,
+   1.26
+  ],
+  "y_range_m": [
+   -0.36,
+   0.36
+  ],
+  "grid_x_float32": [
+   -0.41999998688697815,
+   -0.35999998450279236,
+   -0.29999998211860657,
+   -0.23999999463558197,
+   -0.17999999225139618,
+   -0.12000000476837158,
+   -0.06000000238418579,
+   0.0,
+   0.06000000238418579,
+   0.1199999749660492,
+   0.17999997735023499,
+   0.23999997973442078,
+   0.29999998211860657,
+   0.35999998450279236,
+   0.41999998688697815,
+   0.47999998927116394,
+   0.5399999618530273,
+   0.6000000238418579,
+   0.6599999666213989,
+   0.7200000286102295,
+   0.7799999713897705,
+   0.8400000333786011,
+   0.8999999761581421,
+   0.9600000381469727,
+   1.0199999809265137,
+   1.0800000429153442,
+   1.1399999856948853,
+   1.2000000476837158,
+   1.2599999904632568
+  ],
+  "grid_y_float32": [
+   -0.36000001430511475,
+   -0.30000001192092896,
+   -0.24000000953674316,
+   -0.18000002205371857,
+   -0.12000001966953278,
+   -0.06000003218650818,
+   -2.9802322387695312e-08,
+   0.0599999725818634,
+   0.1199999749660492,
+   0.1799999475479126,
+   0.2399999499320984,
+   0.2999999523162842,
+   0.35999995470046997
+  ],
+  "alignment": "yaw (grid rotated by the base yaw only)",
+  "origin": "base position (x, y, z) of the same policy step",
+  "source": "the fused map of the mapper pipeline (see mapper), NOT a ground-truth scan",
+  "z_definition": "z = fused height (world) - base z (world) + 0.27, clipped to [-1.5, 1.5]",
+  "z_offset": 0.27,
+  "z_clip": [
+   -1.5,
+   1.5
+  ],
+  "u_definition": "u = 0.5 * ln(clip(variance, 0.01, 2.0)) + 0.5; cells never written carry the prior (variance 10 -> u = 0.8466)",
+  "query": "nearest fused cell of every policy cell centre at the pose of the policy step; outside the fused map: the prior and variance 10",
+  "update_period_s": 0.02,
+  "training_noise": null
+ },
+ "mapper": {
+  "onnx": "ame2-m20000_mapper.onnx",
+  "sha256": "8d726de016460f5c4911204116ff4828105c84e80e2bb4d8d71f58f0bb3274d8",
+  "bytes": 168237,
+  "inputs": [
+   {
+    "name": "grid",
+    "shape": [
+     1,
+     1,
+     66,
+     48
+    ],
+    "dtype": "float32",
+    "meaning": "local grid in the base-yaw frame: max z (relative to the base, clamped to [-1.5, 1.0]) of the points of both sensors per 4 cm cell, empty cell = -3.0; [i (x, 66)][j (y, 48)]"
+   }
+  ],
+  "outputs": [
+   {
+    "name": "elevation",
+    "shape": [
+     1,
+     1,
+     66,
+     48
+    ],
+    "dtype": "float32",
+    "meaning": "height estimate per cell, relative to the base"
+   },
+   {
+    "name": "logvar",
+    "shape": [
+     1,
+     1,
+     66,
+     48
+    ],
+    "dtype": "float32",
+    "meaning": "log variance per cell, clipped to [-9.2, 3.0] inside the graph"
+   }
+  ],
+  "state": "stateless",
+  "local_grid": {
+   "nx": 66,
+   "ny": 48,
+   "resolution_m": 0.04,
+   "x0_m": -0.7,
+   "y0_m": -0.94,
+   "x_range_m": [
+    -0.7,
+    1.9
+   ],
+   "y_range_m": [
+    -0.94,
+    0.94
+   ],
+   "frame": "base position, base yaw only; z = point z (world) - base z (world)",
+   "cell_value": "max z",
+   "z_clamp": [
+    -1.5,
+    1.0
+   ],
+   "empty_value": -3.0,
+   "sensors_merged_by": "cell-wise maximum of the grids of the two sensors",
+   "cell_index": "i = round((x - x0) / 0.04), j = round((y - y0) / 0.04) on the cell CENTRES, round half to even; then the range check 0 <= i < 66, 0 <= j < 48 (points outside are dropped)"
+  },
+  "update": {
+   "sensor_period_s": 0.1,
+   "policy_steps_per_update": 5,
+   "rule": "the code makes a frame when EITHER sensor's time stamp changed and fuses the LATEST points of BOTH sensors; in the simulation both sensors refresh at the same policy step (one frame per 5 steps). With sensors that refresh separately a scan can be fused again: the pairing by sensor time and the handling of a stale pair are open (CONTRACT.md 7a); the policy map is read at every policy step"
+  },
+  "sensors": {
+   "lidar": {
+    "model": "Unitree L2 (synthetic scan pattern)",
+    "mount_pos_m": [
+     0.28945,
+     0.0,
+     -0.046825
+    ],
+    "mount_rpy_rad": [
+     0.0,
+     2.8782,
+     0.0
+    ],
+    "mount_grade": "assumption: the URDF radar link pose, not measured on the robot",
+    "rays_per_update": 6400,
+    "range_m": [
+     0.05,
+     6.0
+    ],
+    "range_noise_sigma_m": 0.006666666666666667
+   },
+   "depth": {
+    "model": "RealSense D435i",
+    "mount_pos_m": [
+     0.35,
+     0.0,
+     0.07
+    ],
+    "mount_rpy_rad": [
+     0.0,
+     0.6108652381980153,
+     0.0
+    ],
+    "pitch_down_deg": 35.0,
+    "mount_grade": "setting + code comment: the value of env.yaml, written in a comment of patch_stu.py as the team's measurement on the real Go2; the measurement document itself was not read",
+    "rays": [
+     80,
+     60
+    ],
+    "hfov_deg": 79.15479953315167,
+    "vfov_deg": 63.59416876815041,
+    "depth_range_m": [
+     0.2,
+     3.0
+    ],
+    "depth_noise": "sigma_Z = 0.004133038809887962 * Z^2"
+   },
+   "training_only": {
+    "mount_pos_jitter_m": 0.01,
+    "mount_rot_jitter_rad": 0.02,
+    "dropout": 0.15,
+    "artifact": 0.02,
+    "virtual_floor_depth_m": [
+     -1.0,
+     -0.4
+    ]
+   },
+   "invalid_points": "no return, out of range, blocked by the robot's own body boxes or dropped: invalid, never filled; an update is discarded as a whole when terrain lies above the sensor origin (within 2 m)"
+  },
+  "fusion": {
+   "class": "GlobalMapV2 (fusion.py GlobalMap + fusion_v2.py)",
+   "map": "world-aligned square per robot, 4.8 m, 120 x 120 cells of 0.04 m, world heights",
+   "prior": "flat ground at base z - 0.27 at the reset (or at the last recentring for new cells), variance 10",
+   "recenter_dist_m": 0.12,
+   "rule": "per world cell: its centre is moved into the base-yaw frame and the local cell index is rounded (half to even); with R = exp(logvar) of that local cell and P the stored variance, R_eff = max(R, 0.5 * P). Written only when ALL hold: (1) the index is inside the local grid, (2) the measured height (elevation + base z) is finite, (3) logvar < float32(ln 15) (at or above, or NaN: rejected), (4) R_eff < 1.5 * P or R_eff < 0.04; then with probability P / (P + R_eff): height <- elevation + base z, variance <- R_eff",
+   "reject_logvar": 2.70805020110221,
+   "reject_logvar_float32": 2.70805025100708,
+   "reject_note": "ln 15; the test lv < reject_logvar is made on float32 values, a NaN is rejected",
+   "tau_min": 0.5,
+   "sure_var": 0.04,
+   "init_var": 10.0,
+   "random": "the take test draws a uniform number per cell",
+   "reset": "a new map at every episode reset (reset event go2_reset_neural_map)"
+  },
+  "to_policy": "elevation / logvar are fused into the world map; the policy input neural_map (channels z, u) is read from that map; the mapper output is never fed to the policy directly",
+  "gaze": "no gaze input: the policy computes the gaze position and its 12 x 10 window inside its ONNX",
+  "network": "observed = grid > -2.95; encoder input = two channels (the height with unseen cells set to 0, the observed mask) -> 2 x Conv3x3 (32) ELU -> MaxPool 3 -> nearest upsampling -> concat skip -> 2 x Conv3x3 (32) ELU -> three 1x1 heads (raw height, gate, logvar); elevation = gate * raw + (1 - gate) * input with the ORIGINAL input (unseen cells -3.0); logvar clamped to [-9.2, 3.0]; 37,667 weights (read from the TorchScript forward code and the ONNX graph)",
+  "frames_per_call": "the bundle, step 3 and the robot run one frame per call; training ran up to 512 frames per call on the GPU (a memory setting). The number of frames per call is not neutral for the output: CPU measurement in judgement_summary.json mapper_batch_size_effect; nothing measured on the training GPU",
+  "jit_sha256": "52dd869b9fe5bc0ee1973138e72d56d66bee459626da36fed2e2efa716a0e060",
+  "onnx_graph": {
+   "opset": 17,
+   "ir_version": 8,
+   "nodes": 37,
+   "batch": 1,
+   "dtype": "float32",
+   "checker": "check_model full_check passed"
+  },
+  "parity": {
+   "max_abs_elevation_onnx_vs_jit": 0.00017976760864257812,
+   "threshold": 0.0001,
+   "pass": false,
+   "note": "above the threshold on the stairs recording (parity.json tags.stairs); see CONTRACT.md 7"
+  },
+  "artifacts": [
+   {
+    "path": "ame2-m20000_mapper.onnx",
+    "sha256": "8d726de016460f5c4911204116ff4828105c84e80e2bb4d8d71f58f0bb3274d8",
+    "bytes": 168237
+   }
+  ]
+ },
+ "network": {
+  "actor_class": "AME2GazeLSIOModel (rsl_rl/rsl_rl/models/AME2_models.py:641)",
+  "history_encoder": "Conv1d(42->16, k5) ELU Flatten Linear(256->64) ELU over the 20 rows",
+  "recent_encoder": "Linear(126->60) ELU over the last 3 rows",
+  "prop_encoder": "MLP 128-512-512-128 ELU (input = history 64 | recent 60 | command 4)",
+  "global_context": "Conv(4->8,k3) ELU Conv(8->32,k3,dil2) ELU -> spatial max -> Linear 32-64 ELU (whole 29x13 map, all four channels)",
+  "gaze": "Linear(192-64) ELU Linear(64-2) -> sigmoid -> integer 12x10 crop (round, clamp)",
+  "crop_encoder": "per cell Linear(4-16) ELU | Conv(z,u: 2->8,k5,p2) ELU Conv(8->48,k5,p2) ELU | concat 64 -> Linear 96 ELU -> 120 tokens",
+  "attention": "query MLP 192-512-512-96, MultiheadAttention embed 96, 32 heads",
+  "output": "MLP 288-512-512-12 (input = attention 96 | prop 128 | global 64)",
+  "num_heads": 32,
+  "crop": [
+   12,
+   10
+  ],
+  "roi_margin": 0.45,
+  "recurrent": false,
+  "obs_normalization": false,
+  "stochastic_training": "log_std 12 (not used: deterministic mean exported)",
+  "actor_state_dict_tensors": 47
+ },
+ "excluded": [
+  "critic (MoE 16 experts, obs group critic)",
+  "log_std / sampling",
+  "training noise of student_prop_hist",
+  "sensor noise, dropout, artifacts, mount jitter",
+  "points -> local grid, fusion and the policy-map query (done by the caller, see mapper)"
+ ],
+ "app_onnx": {
+  "note": "same form as the app_onnx cell of the simulation bundles, for the real-robot runner; no separate app_onnx.json (that file belongs to the simulation bundle). Input order = ONNX session input order (measured). Of the three outputs the runner uses actions; attn_out and global_feat are diagnostic",
+  "file": "ame2-m20000.onnx",
+  "sha256": "9349fd6c7af1afbf430f9a0a89678432b5dd6497ac2d5178868d3eb2b904fdb0",
+  "inputs": [
+   {
+    "name": "neural_map",
+    "dims": [
+     1,
+     29,
+     13,
+     4
+    ],
+    "type": "float32"
+   },
+   {
+    "name": "prop_hist",
+    "dims": [
+     1,
+     20,
+     42
+    ],
+    "type": "float32"
+   },
+   {
+    "name": "cmds",
+    "dims": [
+     1,
+     4
+    ],
+    "type": "float32"
+   }
+  ],
+  "outputs": [
+   {
+    "name": "actions",
+    "dims": [
+     1,
+     12
+    ],
+    "type": "float32"
+   },
+   {
+    "name": "attn_out",
+    "dims": [
+     1,
+     96
+    ],
+    "type": "float32"
+   },
+   {
+    "name": "global_feat",
+    "dims": [
+     1,
+     64
+    ],
+    "type": "float32"
+   }
+  ],
+  "action": "actions",
+  "state": []
+ },
+ "test_vectors": {
+  "generated": false,
+  "reason": "step 3 failed (mapper above 1e-4 on the stairs recording): the judge (tools/parity_stu2.py, and the fixed tools/parity_stu3.py) writes the vectors only after a pass and exits with code 3",
+  "planned": {
+   "json": "test_vectors_flat20.json",
+   "npz": "test_vectors_flat20.npz",
+   "format": "ame2-m20000-test-vectors/1",
+   "map_mode": "reconstruction",
+   "state_feedback": false,
+   "steps": 20,
+   "tolerance": 0.0001,
+   "mapper_json": "test_vectors_flat20_mapper.json",
+   "mapper_npz": "test_vectors_flat20_mapper.npz"
+  }
+ },
+ "onnx": {
+  "opset": 17,
+  "ir_version": 8,
+  "nodes": 208,
+  "batch": 1,
+  "dtype": "float32",
+  "checker": "check_model full_check passed",
+  "max_abs_original_vs_jit_twin_recorded": 0.0
+ },
+ "parity": {
+  "file": "parity.json",
+  "max_abs_action_onnx_vs_torch": 2.1457672119140625e-06,
+  "max_abs_policy_outputs": 2.1457672119140625e-06,
+  "max_abs_mapper_onnx_vs_jit": 0.00017976760864257812,
+  "mapper_rejection_flips": 0,
+  "threshold": 0.0001,
+  "pass_policy": true,
+  "pass_mapper": false,
+  "pass": false,
+  "steps": {
+   "flat": 200,
+   "stairs": 200
+  },
+  "mapper_frames": {
+   "flat": 40,
+   "stairs": 40
+  },
+  "state_feedback": false,
+  "runtime": {
+   "onnxruntime": "1.26.0",
+   "provider": "CPUExecutionProvider",
+   "torch_reference": "2.12.0+cpu",
+   "intra_op_threads": 2
+  },
+  "produced_by": "tools/parity_stu2.py (2026-11-27). The fixed judge tools/parity_stu3.py (completeness and finiteness checks added) judged the same recording again on onnxruntime 1.18.1 with the same result: parity.json auxiliary_results.fixed_judge_run_ort_1_18_1",
+  "auxiliary_keys": "parity.json auxiliary_results (the fixed judge's run, the re-run on onnxruntime 1.18.1, the reviewer's recomputation, the substitute segment, the whole recordings); they do not change the verdict",
+  "judgement_summary": {
+   "file": "judgement_summary.json",
+   "sha256": "d137a4a53137ec0be78789140e1c3024a9ce58e53cfe59737500beb7eee9ece2"
+  }
+ },
+ "artifacts": [
+  {
+   "path": "ame2-m20000.onnx",
+   "sha256": "9349fd6c7af1afbf430f9a0a89678432b5dd6497ac2d5178868d3eb2b904fdb0",
+   "bytes": 5304604
+  },
+  {
+   "path": "ame2-m20000_mapper.onnx",
+   "sha256": "8d726de016460f5c4911204116ff4828105c84e80e2bb4d8d71f58f0bb3274d8",
+   "bytes": 168237
+  },
+  {
+   "path": "parity.json",
+   "sha256": "988b9ec9b35e91b55332a1095a9fac5f5ca69555a4870b6b442c6a5a85bca583",
+   "bytes": 32285
+  },
+  {
+   "path": "judgement_summary.json",
+   "sha256": "d137a4a53137ec0be78789140e1c3024a9ce58e53cfe59737500beb7eee9ece2",
+   "bytes": 86770
+  },
+  {
+   "path": "README.md",
+   "sha256": "aa4b8b7b9b37fae21e6d2e16235b6d028c31452143e891b46696adfd9da81c08",
+   "bytes": 5631
+  },
+  {
+   "path": "tools/batch_check.py",
+   "sha256": "fc88108fe4543d761e9efda4cd931165557f431cda46ab828c0a2fc5a176d159",
+   "bytes": 2128
+  },
+  {
+   "path": "tools/bundle_publish.py",
+   "sha256": "3132f91bd4bd76e148123488b925c35e17c5ca61c4d9cbd86774185876ebf0df",
+   "bytes": 2635
+  },
+  {
+   "path": "tools/export_ame2_onnx.py",
+   "sha256": "63c56a80e2fc3680ce063d2d9485905c0cd8293bc7e447394d997e76cb925b22",
+   "bytes": 9797
+  },
+  {
+   "path": "tools/export_mapper_onnx.py",
+   "sha256": "e2b823d6a057d225fef6515ea547ccb9b56656f5aac832ac3153fa8fb5a5bcc6",
+   "bytes": 5183
+  },
+  {
+   "path": "tools/extract_stu.py",
+   "sha256": "b6a347899920ffa4e035888a30c72cfdeb0fa725874e6efbb20e527baaa27465",
+   "bytes": 4267
+  },
+  {
+   "path": "tools/fpc_lib.py",
+   "sha256": "5c29a986d1b700f82116a437caca13a5b016b53fe381357a08072d101ca9b887",
+   "bytes": 3420
+  },
+  {
+   "path": "tools/parity_stu2.py",
+   "sha256": "02b21c38242d15a5d1a8a6fdde4da8df750602a392ecda2edb7dc92a13425eb3",
+   "bytes": 14119
+  },
+  {
+   "path": "tools/parity_stu3.py",
+   "sha256": "4f992f8b9bed3931bcae69cb0b1edca3c4b5a0fa1e5dfda6d7bb2625d8f4f5e9",
+   "bytes": 26250
+  },
+  {
+   "path": "tools/rec_hooks.py",
+   "sha256": "d932b5aa1728a0e60ff6507116f520ae3745a47b215c112cabd7ee96c7fd1b0f",
+   "bytes": 16197
+  },
+  {
+   "path": "tools/rec_student.py",
+   "sha256": "9e9588887658069b16042900b7f482ff19c705e7bb7c4b7fcd17795c261bb226",
+   "bytes": 48584
+  },
+  {
+   "path": "tools/rerun_ort1181.py",
+   "sha256": "03e5d7a6b021a60ad52f69a5f4496f34f1499b3e96d0fb17cb6e1a031a19e144",
+   "bytes": 9251
+  },
+  {
+   "path": "tools/stu_rec.sh",
+   "sha256": "c9553d0c6b8dc135959da120eaf2607850d6aef71945cbcb7e463f327b51058d",
+   "bytes": 3781
+  },
+  {
+   "path": "tools/test_parity_stu3.py",
+   "sha256": "62b8a61606535c21f51a64bb16dd7bdd2e11b490442d46615c3908c156db31bc",
+   "bytes": 11311
+  },
+  {
+   "path": "tools/README.md",
+   "sha256": "585606d06afc3818affa057bb2c03268422d9b755e6fe4e111753f510b044981",
+   "bytes": 10724
+  }
+ ]
+}
