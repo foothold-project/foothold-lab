@@ -1,0 +1,4 @@
+--- ame2_ev12/go2/_runs/evalgz_tpevf43_b1/eval_gaze.py (md5 4ed5c4a63776d6ed74b678165996f881)
++++ /root/onnx_x7c/evnp/eval_gaze.py (md5 690030b6162821e279b4b2de0b0801b2)
+@@ -126,0 +127 @@
++    env_cfg.events.virtual_floor.params["sparse_terrains"] = ()  # onnx_x7c 11-27: app condition, no virtual plane

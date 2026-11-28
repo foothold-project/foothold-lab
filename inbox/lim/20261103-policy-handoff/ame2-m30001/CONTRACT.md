@@ -1,0 +1,225 @@
+> 분류: 가이드
+> 작성: 임석헌 · 2026-11-27
+> 근거: 평균 폴더 `params/env.yaml`(sha256 `36a934a4…`) · `params/agent.yaml`(sha256 `8d0ab37c…`) · 저장본 `model_avg.pt`(x7 학습 마지막 다섯 저장본의 actor 가중치 평균, `avgk424_X7C_manifest.txt`) · 코드 사본 `ame2_x4`(code id 7034e3b683e7, x7 학습 끝 · 11-27 의 코드 manifest 가 같음) · Isaac Lab 2.3.2 원본(팟 `/workspace/isaaclab`, 0.54.2)
+> 요지: 앱이 ame2-m30001 를 원본과 같게 돌리는 데 필요한 값을 모았다. ONNX 는 원본 `AME2GazeModel.forward` 를 그대로 감싸 내보냈고(층 재구성 없음), 학습 env 에서 기록한 실제 입력 400 스텝에서 PyTorch 와의 action 최대 차이는 **3.6e-06**(기준 1e-4, 통과)
+> 상태: v0.1 (AME-2 에이전트 세션) · 시뮬 최종본(X7C, 실기 학생들이 증류할 때 쓴 선생) · 같은 이름의 X9C 판(PR #949) 을 대신함 · 묶음 만듦 · CPU · WASM(Node) 같은 출력 확인 끝(parity.json) · 앱 적용 · 브라우저 ORT · 실기는 미확인(§7a) · 지시문 [HANDOFF-AME2-WORKER.md](https://github.com/foothold-project/foothold-lab/blob/main/inbox/jay/20261103-policy-handoff/HANDOFF-AME2-WORKER.md) §1
+
+# AME-2 teacher X7C(12지형 30k, 마지막 다섯 저장본 평균) 를 앱에 넘길 때 맞출 조건표 (ame2-m30001, 저장본 model_avg.pt)
+
+등급: **설정**(env.yaml · agent.yaml 줄) · **코드**(학습 코드 사본 · Isaac Lab 원본 줄, `코드확인`) · **실측**(이번에 잰 해시 · 기록, `실측`) · **가정**. §7 에 추가 확인 결과, §7a 에 미확인 항목(미확인: 무엇 · 정해질 때까지 지금 동작) 을 적었다. 같은 출력 확인은 `확인됨`(§2). 코드 경로 약칭: `AME2_models.py` = `rsl_rl/rsl_rl/models/AME2_models.py`, `observations.py` = `go2/ame2_go2/tasks/mdp/observations.py`, `actions.py` · `commands.py` · `curriculums.py` · `events.py` = `go2/ame2_go2/tasks/mdp/` 아래, `go2_actuator.py` · `go2_curve.py` = `go2/ame2_go2/assets/` 아래, `virtual_floor.py` = `go2/ame2_go2/sensors/` 아래, `isaaclab/…` = 팟 `/workspace/isaaclab/source/isaaclab/isaaclab/…`.
+
+## 0a. 앱 개발자가 맨 먼저 볼 값
+
+| 값 | 숫자 | 뜻 한 줄 | 출처 | 등급 |
+|---|---|---|---|---|
+| **Kp** | **25.0** N·m/rad · 관절 12 모두 | 목표각 - 현재각 에 곱함 | `env.yaml:176` · `:194` | 설정 |
+| **Kd** | **0.5** N·m·s/rad · 관절 12 모두 | 관절 속도에 곱함(목표 속도 0) | `env.yaml:177` · `:195` · `isaaclab/actuators/actuator_pd.py:190~193` | 설정 · 코드 |
+| **토크 한계** | Go2HV 곡선: hip · thigh 구동 **20.2** / 제동 **23.4** N·m, 13.5 rad/s 까지 평탄 → 30.0 rad/s 에서 0. calf 구동 **38.73** / 제동 **44.86** N·m, 7.04 → 15.65 rad/s | 구동(토크와 속도 부호 같음) 과 제동의 상한이 다르고 빠를수록 줄어듦 | `env.yaml:166~203` · `go2_curve.py:6~16` · `go2_actuator.py:29~48` | 설정 · 코드 |
+| **제어 주기** | **50 Hz** = 물리 dt 0.005 s × decimation 4 | ONNX 한 번 = 관절 목표 한 번 | `env.yaml:21` · `:84` · 기록 step_dt 0.02 | 설정 · 실측 |
+| **행동 식** | 목표각 = **기본 관절각 + 0.25 × a** (a 는 ONNX `action` 그대로, runner 자르기 없음) | env 의 목표각 자르기 ±100 rad 는 실제로 걸리지 않음 | `env.yaml:1696~1705` · `agent.yaml:13` · `isaaclab/envs/mdp/actions/joint_actions.py:169~178 · 194~195` | 설정 · 코드 |
+| **기본 관절각** | `[0.1, -0.1, 0.1, -0.1, 0.8, 0.8, 1.0, 1.0, -1.5, -1.5, -1.5, -1.5]` (관절 순서 §0b) | 위 식의 기준, 관측 `joint_pos_rel` 도 여기서 뺌 | `env.yaml:154~159` · 기록 env 의 `default_joint_pos` | 설정 · 실측 |
+| **행동 지연** | **물리 스텝 0~4**(0~20 ms), 에피소드마다 로봇별로 뽑음 | 학습은 이 범위의 지연에 견디게 됨. 앱이 넣지 않아도 됨(지연 0 도 학습 범위 안) | `env.yaml:1706~1708` · `actions.py:45~50 · 62~72` · `isaaclab/envs/manager_based_rl_env.py:182~185` | 설정 · 코드 |
+| **입력 · 출력** | 입력 `prop` [1,49] · `mapping` [1,29,13,3], 출력 `action` [1,12] 과 진단 `gaze_r` · `gaze_logits` · `gaze_offset` 각 [1,2]. 모두 float32 · batch 1 · 상태 없음 | 매 스텝 독립, 되먹일 상태는 직전 action 하나(prop 안) | ONNX · `AME2_models.py:24 · 581~634` | 실측 · 코드 |
+| **명령** | 목표 위치 `[x, y, sin e, cos e]` · 몸 yaw 틀 · **2 m 넘으면 2 m 로 줄이고 e 를 무작위로 바꿈** | 속도 명령이 아님 | `env.yaml:1508~1518` · `observations.py:296~340` | 설정 · 코드 |
+| **지도** | 29 × 13 × 3(x, y, z) · 6 cm · x -0.42~1.26 · y ±0.36 · **x 가 바깥 축** · z = 바닥 - 몸 + 0.27, ±1.5 자름 | 정답 지도(시뮬 광선). START 의 32 × 16 높이 1 채널과 뜻이 다름 | `env.yaml:692~726 · 1391~1421` · `observations.py:160~224` | 설정 · 코드 |
+| **이름** | format `ame2-m30001-onnx/2`(이름 + `-onnx/N`; m14999 앱 계약 `ame2-demo-app/app_onnx.json` 에 진단 출력 `gaze_logits` · `gaze_offset` 이 늘어 `/2`; 입력과 `action` · `gaze_r` 는 같음) · 이름 `ame2-m30001` · 파일 `ame2-m30001.onnx` · 최종 `ame2-oh2l2`. m14999 묶음(`ame2-demo/`, PR #574) · m27001 묶음(`ame2-m27001/`, PR #878)과 따로 둔다. 입출력은 m27001 과 같아 format 끝 숫자도 같은 `/2`. 같은 이름의 X9C 판(PR #949) 과 누적 수가 같아(30,001) 이름이 겹치고, 사용자 결정(11-27)으로 X7C 가 이 이름을 이어받는다 | 학습 도중 판은 누적 update 수로 이름(선례 `start-m13000` · `start-m15500`). 누적 = 돌 범위 학습이 출발한 10k 저장본 10,001 회 + 그 학습 5,000 회(`go2_env_state.start_from.source_completed_updates`, `ame2_sr/run/queue_sr.sh:14` 「-> 15001 counted」) + 이 계보 x4b → x6 → x7 의 15,000 회(model_14999 의 `completed_updates` 15000) = 30,001. 파일은 x7 의 마지막 다섯 저장본(28,001 ~ 30,001 회) 평균이고 마지막 것으로 이름 | policy-handoff `README.md` v0.5 저장소 배치 · 공통 규칙 · 저장본 | 설정(팀 이름 규칙 문서) · 실측 |
+| **ONNX** | `ame2-m30001.onnx` 5,038,652 B · sha256 `affdba3b071a1beb4d1cc02259693cb1626288d5f9dc457d756bed922242efb6` | 앱은 이 sha 가 contract.json · SHA256SUMS 와 같을 때만 씀 | `sha256sum` | 실측 |
+
+## 0b. ⚠ 경고 칸: 관절 순서
+
+**정책 벡터 12(관측 joint_pos · joint_vel · last_action, 출력 action)는 「관절 종류 단위」 다: hip 4 → thigh 4 → calf 4, 다리 FL FR RL RR.** 저장본 `go2_env_state.critic_contract.joint_names` 를 그대로 꺼낸 값이고, 기록 env 의 `robot.joint_names` 와 행동 항의 관절 순서도 같았다(실측).
+
+| 순서 이름 | 벡터 index 0 → 11 | 기본 관절각 |
+|---|---|---|
+| **Isaac = 정책 입출력** | FL_hip FR_hip RL_hip RR_hip · FL_thigh FR_thigh RL_thigh RR_thigh · FL_calf FR_calf RL_calf RR_calf | `[0.1, -0.1, 0.1, -0.1, 0.8, 0.8, 1.0, 1.0, -1.5, -1.5, -1.5, -1.5]` |
+| Unitree SDK 모터 0~11 (참고, m6000 조건표 §0b) | FR(hip thigh calf) · FL · RR · RL | 이 순서로 바꿔 넣어야 함 |
+
+- **확인 시험(기록 env 에서 실측):** 관절을 기본 자세에 정확히 두면 `joint_pos_rel` 최대 |값| = 0.0e+00, 관측 prop[9:21] 최대 |값| = 0.0e+00 (기준 < 0.05, 통과). action 0 을 넣었을 때 목표각 - 기본 관절각 최대 |값| = 0.0e+00.
+
+## 1. 저장본
+
+| 항목 | 값 | 출처 | 등급 |
+|---|---|---|---|
+| 파일 | RunPod `/network-volume/limseokheon/derived_ctl424/avg_X7C_13000_14999/model_avg.pt` · 146,554,827 B (lab 에 올리지 않음) | 평균 폴더 | 실측 |
+| sha256 | `b6aa0adc371089fd0bb02252169de2c3350626c627f6a284e2a67ea81bb3e625` (평균 도구 기록 `avgk424_X7C_manifest.txt` 와 같음. 두 학생 저장본의 `go2_env_state.il_critic_init` 도 이 값) | `sha256sum`(11/27) | 실측 |
+| 자리 | 학습 x7(25k → 30k, x6 끝 저장본을 그대로 이어 학습, 과속 벌점 없음, seed 42) 의 저장본 model_13000 · 13500 · 14000 · 14500 · 14999 의 actor 가중치 평균(X7C). 소수 텐서마다 float64 로 평균, log_std 는 model_14999 것, critic · optimizer · go2_env_state 는 model_14999 것. 원본 sha256 `d70f0542…` · `ac130e11…` · `df6157be…` · `11de0082…` · `a27433b3…`. task `Ame2-Go2-Gaze-N9P12`(12지형), v_max 1.2, Adam · fp32 · 에폭 4 × 미니배치 3 · 기울기 4조각 누적 | `avgk424_X7C_manifest.txt` · 평균 도구 `req424/ctl/avgk424.py` · `ame2_x4/run/queue_x7.sh:24~31 · 42 · 201` · `agent.yaml:40~45` · `ppo_accum.txt` | 실측 · 설정 |
+| 설정 sha256 | env.yaml `36a934a4ab57…` · agent.yaml `8d0ab37cb064…` = x7 학습 폴더의 params 와 바이트 단위로 같음(11-27 에 `cmp` 로 확인). X9C(PR #949) 의 env.yaml 과는 log_dir 한 줄과 과속 벌점 두 줄(그 파일의 1991~1992 행) 만 다르고, agent.yaml 은 run_name · load_run 두 줄만 다르다 | `sha256sum` · `cmp` · `diff` | 실측 |
+| 학습 코드 | 사본 폴더 `ame2_x4`(git 저장소 아님) = ame2_s18 고정 사본(2026-11-18T11:48:22Z) + `run/patch_x4.py`, code id 7034e3b683e7. x7 학습 끝의 manifest(`out/q_x7_cont/manifest_now.txt`, 130 행, sha256 `5c9ce5ef…`) 가 11-27 의 사본과 같음. x4b · x6 · x7 모두 이 사본, 그 앞은 다른 사본(§7a). X9C 사본 `ame2_x8` 과 다른 파일은 rewards.py · train.py 둘(과속 벌점)이고, 조건표가 인용하는 코드 파일은 그 안에 없다(인용 줄은 PR #949 와 같음) | `out/q_x7_cont/manifest_now.txt` · 11-27 재계산 · 두 사본 md5 대조 | 실측 |
+| 판 | Isaac Lab 2.3.2(isaaclab 0.54.2 · isaaclab_rl 0.4.7, 버전 관리 없는 설치) · torch 2.7.0+cu128 · rsl_rl = `ame2_x4/rsl_rl/rsl_rl`(33 개 파일이 X9C 사본과 같고, X9C 묶음에서 `leggedrobotics/ame2_minimal@8beb9a68` 의 rsl_rl 5.0.0 과 바이트 단위로 같음을 확인, §7) · Isaac Sim 5.1.0-rc.19(이 묶음을 만든 팟 1 컨테이너에서 11-27 에 읽음. x4b · x6 · x7 을 학습한 컨테이너는 지금 없음, §7a) | 팟 `VERSION` · `out/q_x7_cont/env_record.txt` | 실측 |
+| 저장본 안의 것 | `actor_state_dict`(41 텐서, log_std 포함) · `critic_state_dict` · optimizer · `go2_env_state`(critic_contract · 지형 단계 등) | 저장본을 열어 확인 | 실측 |
+
+## 2. ONNX 에 든 것
+
+| 조각 | 안에 있는 것 | 상태 | 포함 |
+|---|---|---|---|
+| actor 전체 | prop 인코더 · 전역 CNN · gaze head · 정수 crop · crop 인코더 · MHA · 출력 MLP (§3.7) | 없음 | **포함** |
+| 결정적 출력 | 평균 action(`stochastic_output=False`) | | 포함 · log_std 와 표집은 제외 |
+| critic | MoE 16 전문가, critic 관측(time_left · height_scanner_critic 등) | | **제외** |
+| 학습 잡음 · 지도 드리프트 | prop 균등 잡음 · 지도 xy ±0.001 / z ±0.05 · 센서 드리프트 ±0.04 m | | **제외**(배포 입력에 넣지 않음) |
+
+- 내보내기: 원본 `AME2GazeModel` 을 학습과 같은 방식(`algorithms/ppo.py:629~645`)으로 agent.yaml actor 설정에서 만들고 `actor_state_dict` 를 strict 로 불러(모든 키 일치) `forward` 를 그대로 감쌌다. 진단 출력은 다시 계산하지 않고 원본 계산에서 꺼냈다: `gaze_r` = 원본 get_latent 가 저장하는 `_last_gaze_r`(`AME2_models.py:602~603`), `gaze_logits` = 원본 `gaze_head` 의 출력(forward hook, `AME2_models.py:602`), `gaze_offset` = 원본 `_crop_window` 가 `_ste_crop` 안에서 돌려준 (ox, oy)(`AME2_models.py:530~536 · 555`) 를 float32 로. 붙잡은 logits 는 원본 as_jit 쌍둥이 `forward_with_gaze` 의 logits(`AME2_models.py:1285~1338`) 와 같고(기록 400 스텝 차이 0.0e+00), sigmoid(logits) 는 gaze_r 와 같다(합성 입력 차이 0.0e+00). torch 2.7.0+cu128 · onnx 1.21.0 · `torch.onnx.export(dynamo=False)` · opset 17 · IR 8 · 노드 242 · `onnx.checker` full_check 통과.
+- 학습 forward 의 STE crop 은 `hard + (soft - soft.detach())` 라 앞방향 값이 hard crop 과 같다(`AME2_models.py:577~579`). ONNX 안에 GridSample 경로가 남지만 결과에 더해지는 값은 0 이다. 원본 `as_jit` 쌍둥이(`AME2_models.py:1255~1338`) 와의 차이는 합성 입력 0.0, 기록 입력 0.0e+00.
+- 원본에는 `as_onnx` 가 없다(`AME2_models.py:225~227` NotImplementedError). 지도 크기 29 · 13 은 그래프 안에서 상수다(`AME2_models.py:605~606`).
+
+| 방향 | 이름 | 모양 · 형 | 뜻 |
+|---|---|---|---|
+| 입력 | `prop` | [1, 49] float32 | §3.4 순서의 몸감각 |
+| 입력 | `mapping` | [1, 29, 13, 3] float32 | §3.6 지도 |
+| 출력 | `action` | [1, 12] float32 | a (Isaac 순서, 배율 · 기본각 더하기 전) |
+| 출력(진단) | `gaze_r` | [1, 2] float32 | 시선 위치 r = sigmoid(gaze_logits) ∈ (0,1)² |
+| 출력(진단) | `gaze_logits` | [1, 2] float32 | 시선 head 출력(sigmoid 전) |
+| 출력(진단) | `gaze_offset` | [1, 2] float32 | crop 모서리 (ox, oy), 정수값. ox = clamp(round(17 r0), 0, 17), oy = clamp(round(3 r1), 0, 3), 12 × 10 창 = mapping[ox:ox+12, oy:oy+10](`AME2_models.py:530~536 · 605~606`) |
+
+**같은 출력 확인(3단계, parity.json).** 학습 env(task `Ame2-Go2-Gaze-N9P12`, env.yaml 설정 그대로에서 관측 잡음만 끔 · 로봇 2 대) 에서 평지 칸 1 · 계단(stair_up 단계 5) 칸 1 을 각 200 스텝 기록했다. 같은 입력을 원본 PyTorch(CPU float32, 한 스텝씩) 와 ONNX(onnxruntime 1.26.0 CPU) 에 넣은 action 최대 차이: 평지 2.1e-06 · 계단 3.6e-06 (기준 1e-4, **통과**). 참고로 env 안 GPU 출력과 CPU PyTorch 의 차이는 평지 3.1e-04 · 계단 2.9e-04 (GPU 커널 차이, 기준 대상 아님). 평지 칸은 학습 지형 rough 의 기울기 · 거칠기를 0 으로 둔 칸이다(기록용 변경, `env_record.yaml` 에 기록).
+
+## 3. 조건표
+
+### 3.1 제어 주기 · 관절 · 자세
+
+| 항목 | 값 | 출처 | 등급 |
+|---|---|---|---|
+| 물리 dt · decimation | 0.005 s · 4 → 제어 0.02 s(50 Hz) | `env.yaml:21` · `:84` · 기록 physics_dt 0.005 · step_dt 0.02 | 설정 · 실측 |
+| 관절 순서 | §0b | 저장본 critic_contract · 기록 env | 실측 |
+| 기본 관절각 | L hip +0.1 · R hip -0.1 · 앞 thigh 0.8 · 뒤 thigh 1.0 · calf -1.5 | `env.yaml:154~159` | 설정 |
+| 시작 높이 | 0.4 m | `env.yaml:137~140` | 설정 |
+| 에피소드 | 16 s | `env.yaml:1945` | 설정 |
+
+### 3.2 PD · 모터
+
+| 항목 | 값 | 출처 | 등급 |
+|---|---|---|---|
+| 토크 식 | τ = Kp (q목표 - q) + Kd (0 - dq), 물리 스텝마다(200 Hz) | `isaaclab/actuators/actuator_pd.py:186~200` | 코드 |
+| 모터 자르기 | 구동(τ·dq > 0) 평탄 y1, 제동 y2; limit = 평탄 × clamp((x2 - |dq|)/(x2 - x1), 0, 1); τ = clamp(τ, ±limit) | `go2_curve.py:6~16` | 코드 |
+| hip · thigh | y1 20.2 · y2 23.4 N·m · x1 13.5 · x2 30.0 rad/s · armature 0.01 | `env.yaml:167~185` | 설정 |
+| calf | y1 38.727 · y2 44.862 N·m · x1 7.0415 · x2 15.6478 rad/s · armature 0.01 | `env.yaml:186~203` | 설정 |
+| 학습 무작위화 | Kp · Kd · armature × U(0.85, 1.15) (시작 때) · 마찰 0.3~1.0 · 몸 질량 -1~+3 kg · 질량 중심 ±2 cm | `env.yaml:1710~1864` | 설정 |
+
+### 3.3 행동
+
+| 항목 | 값 | 출처 | 등급 |
+|---|---|---|---|
+| scale · offset | 0.25 · use_default_offset true(offset = 기본 관절각) | `env.yaml:1702~1705` · `isaaclab/envs/mdp/actions/joint_actions.py:173 · 194~195` | 설정 · 코드 |
+| 자르기(env) | 목표각에 ±100 rad (배율 · 기본각 더한 뒤) → 사실상 없음 | `env.yaml:1696~1699` · `joint_actions.py:175~178` | 설정 · 코드 |
+| 자르기(runner) | 없음(clip_actions null) | `agent.yaml:13` | 설정 |
+| 직전 행동 관측 | **자르기 · 배율 전 raw a** 를 ±50 으로 자른 값. 리셋 직후 0 | `observations.py:276~283` · `isaaclab/managers/action_manager.py:384~386` | 코드 |
+| 기록 대조 | prop[33:45] - clip(직전 a, ±50) 최대 0.0e+00 · 목표각 - (기본 + 0.25 a) 최대 0.0e+00 | 3단계 기록 | 실측 |
+| 지연 | 물리 스텝 0~4, 에피소드마다 | `env.yaml:1706~1708` · `actions.py:45~50 · 62~72` | 설정 · 코드 |
+
+### 3.4 관측 prop 49 (순서 · 배율 1 · 자르기는 직전 행동만)
+
+| index | 항 | 뜻 · 틀 | 학습 잡음(배포 제외) | 출처 | 비고 |
+|---|---|---|---|---|---|
+| 0:3 | base_lin_vel | 몸 COM 선속도, 몸 틀 m/s | U(±0.1) | `env.yaml:1434~1446` · `observations.py:40~43` · `isaaclab/assets/articulation/articulation_data.py:1041~1043` | **특권**(실기 직접 측정 불가, 시뮬 트윈은 시뮬 값) |
+| 3:6 | base_ang_vel | 몸 각속도, 몸 틀 rad/s | U(±0.2) | `env.yaml:1447~1459` · `observations.py:46~49` | |
+| 6:9 | projected_gravity | 몸 틀 중력 방향(서 있으면 (0, 0, -1)) | U(±0.05) | `env.yaml:1460~1472` · `observations.py:52~55` | |
+| 9:21 | joint_pos_rel | q - 기본 관절각 | U(±0.01) | `env.yaml:1473~1485` · `observations.py:69~72` | |
+| 21:33 | joint_vel_rel | dq | U(±1.5) | `env.yaml:1486~1498` · `observations.py:78~81` | |
+| 33:45 | last_action | clip(직전 raw a, ±50) | 없음 | `env.yaml:1499~1507` · `observations.py:276~283` | |
+| 45:49 | pose_command | [x, y, sin e, cos e] (§3.5) | 없음 | `env.yaml:1508~1518` · `observations.py:296~340` | |
+
+- 순서는 env.yaml 항 순서이고, 기록 env 에서 몸 상태와 대조했다(잡음 끔): lin_vel 0.0e+00 · ang_vel 0.0e+00 · gravity 0.0e+00 · joint_pos_rel 0.0e+00 (실측). 잡음은 그룹 `enable_corruption` 이 참일 때만 붙는다(`env.yaml:1431` · `isaaclab/managers/observation_manager.py:400~407 · 546~548`). 이력 없음(history_length 0) · 관측 정규화 없음(`agent.yaml:6`).
+- actor 입력 그룹 순서는 agent.yaml `obs_groups.actor = [teacher_mapping, teacher_prop]`(`agent.yaml:7~10`) 이고 ONNX 는 이름으로 받는다.
+
+### 3.5 명령 (목표 위치)
+
+| 항목 | 값 | 출처 | 등급 |
+|---|---|---|---|
+| 종류 | `goal_pose_xy_sincos`: [x, y, sin e, cos e] | `observations.py:296~340` | 코드 |
+| x, y | 목표 위치 - 몸 위치를 몸 yaw 로만 돌린 틀(x 앞 · y 왼쪽) | `isaaclab/envs/mdp/commands/pose_2d_command.py:119~122` | 코드 |
+| e | wrap(목표 heading(세계) - 몸 heading(세계)) | `pose_2d_command.py:122` | 코드 |
+| 2 m 규칙 | ‖(x, y)‖ > 2.0 이면 (x, y) 를 길이 2.0 으로 줄이고 e 를 U(-π, π) 로 바꿈(매 제어 스텝 새로 뽑음) | `env.yaml:1512` · `observations.py:310~328` | 설정 · 코드 |
+| 재표집 | 16.01 s(에피소드 16 s 보다 길어 사실상 에피소드마다 한 번) | `env.yaml:2568~2570` · `:1945` | 설정 |
+| 목표 heading | 세계 틀 U(±π/3). 시작 yaw 는 ±π(커리큘럼) 라 e 는 모든 각도 | `env.yaml:2575~2577 · 2540~2547` · `commands.py:77~80` | 설정 · 코드 |
+| 목표 위치 | 지형 평평한 칸 중 앞쪽 45° 원뿔 안(커리큘럼 10° → 45°) | `env.yaml:2548~2556 · 2615` · `commands.py:43~55` | 설정 · 코드 |
+| 속도 | 목표 이동 보상 상한 v_max 1.2 m/s. 과속 벌점은 없음(X9C 와 다른 점) | `env.yaml:1990` · `ame2_x4/run/queue_x7.sh:26 · 201` | 설정 |
+
+### 3.6 지도 (정답 지도)
+
+| 항목 | 값 | 출처 | 등급 |
+|---|---|---|---|
+| 모양 · 축 | [29, 13, 3] · 칸 [i, j] = (x_i, y_j, z_ij) · **i = x(바깥, 29)** · j = y(안, 13) | `env.yaml:712~722`(ordering yx) · `isaaclab/sensors/ray_caster/patterns/patterns.py:43~53` · `observations.py:195~222` | 설정 · 코드 |
+| 간격 · 범위 | 0.06 m · x -0.42~1.26 · y -0.36~0.36 (격자 ±0.84 · ±0.36 에 센서 offset x 0.42) | `env.yaml:700~704 · 714~717` | 설정 |
+| x, y 채널 | 상수 격자(학습 잡음 ±0.001 제외). float32 값은 contract.json `map.grid_x_float32` · `grid_y_float32`(기록 env 값) | `observations.py:184~206` · 기록 | 코드 · 실측 |
+| 정렬 · 원점 | yaw 정렬(광선 수직, 격자만 몸 yaw 로 회전) · 원점 = 몸(base 링크) 위치 | `env.yaml:694 · 711` · `isaaclab/sensors/ray_caster/ray_caster.py:241~248 · 274~279` | 설정 · 코드 |
+| 광선 | 몸 위 **20 m** 에서 아래로(최대 거리 1e6 m), 매 제어 스텝(0.02 s) | `env.yaml:695 · 704 · 723` · `ray_caster.py:218~224` | 설정 · 코드 |
+| z | z = 맞은 점 z(세계) - 몸 z(세계) + **0.27**, 빈 칸 채운 뒤 **[-1.5, 1.5]** 로 자름 | `env.yaml:1421` · `observations.py:174~182`(clip_z 기본값 `observations.py:163`) | 설정 · 코드 |
+| 미검출(학습 규칙) | 가상 바닥: 빈 공간이 있는 sparse 칸(이 학습에서는 stones · gap · pallets · beam) 은 max(지형, 세계 z = d 평면), d ~ U(-1.0, -0.4) 에피소드마다. 그 밖에 맞은 것이 없는 광선은 (같은 스캔의 가장 낮은 유효 높이) - |d| (0.4~1.0 m 아래), 스캔 전체가 비면 평면 높이 | `env.yaml:1901~1910` · `events.py:800~855` · `virtual_floor.py:60~83` · `observations.py:109~140` | 설정 · 코드 |
+| 학습 잡음(제외) | x, y U(±0.001) · z U(±0.05) 칸마다 · 센서 드리프트 xyz U(±0.04) 에피소드마다 | `env.yaml:1417~1420 · 724~726 · 2557~2564` · `observations.py:208~216` · `ray_caster.py:129~131 · 246` | 설정 · 코드 |
+
+### 3.7 신경망
+
+| 항목 | 값 | 출처 | 등급 |
+|---|---|---|---|
+| 클래스 | AME2GazeModel · num_heads 32 · crop 12 × 10 · roi_margin 0.45 · stochastic(log_std) | `agent.yaml:24~33` · `AME2_models.py:390~519` | 설정 · 코드 |
+| prop 인코더 | 49 → 512 → 512 → 128 ELU | `AME2_models.py:462` · `rsl_rl/rsl_rl/modules/ame2_modules.py:20~33` | 코드 |
+| 전역 문맥 | 지도 전체(x, y 포함 3 채널) Conv 3→8 k3 · Conv 8→32 k3 dilation 2 · 공간 최댓값 → Linear 32→64 ELU | `AME2_models.py:470~480 · 597~599` | 코드 |
+| 시선 | [64 + 128] → 64 ELU → 2 → sigmoid → 정수 12 × 10 창(round · clamp) | `AME2_models.py:488~492 · 602~608 · 530~548` | 코드 |
+| crop 인코더 | 칸마다 Linear 3→16 · z 채널 Conv 1→8 k5 · 8→48 k5 · 합쳐 Linear 64→96 → 토큰 120 | `AME2_models.py:444~457 · 610~615` | 코드 |
+| attention | query MLP 192 → 512 → 512 → 96 · MHA embed 96, 32 heads | `AME2_models.py:497~498 · 617~619` | 코드 |
+| 출력 | [96 + 128 + 64] → 512 → 512 → 12 | `AME2_models.py:503` · `:122~123` | 코드 |
+| 순환 상태 · 관측 정규화 | 없음 · 없음 | `AME2_models.py:24` · `agent.yaml:6` | 코드 · 설정 |
+
+## 5a. ONNX 받아 쓰는 법
+
+**0) 받을 것.** `ame2-m30001.onnx` · `contract.json`(앱 실행기 꼴은 `app_onnx` 칸, 같은 내용이 `app_onnx.json`) · 이 문서 · `test_vectors_flat20.json`(앱 · Node · 브라우저용) · `test_vectors_flat20.npz`(파이썬용) · `parity.json`. 받자마자 ONNX sha256 이 contract.json · SHA256SUMS 와 같은지 본다.
+
+**1) 매 20 ms 한 번, 이 순서로.**
+1. 상태 읽기(Isaac 관절 순서, §0b): 몸 COM 선속도 · 각속도(몸 틀) · 중력 방향(몸 틀) · 관절각 · 관절 속도. 관절각에서 기본 관절각을 뺀다.
+2. 명령: 목표 위치를 몸 yaw 틀로 바꿔 (x, y), e = wrap(목표 heading - 몸 heading). ‖(x, y)‖ > 2 m 면 2 m 로 줄인다(학습은 이때 e 를 무작위로 줬으므로 2 m 밖 목표의 방향은 뜻이 없다). 앱의 조이스틱 → 1 m 안쪽 목표 변환은 이 범위 안이다.
+3. `prop` = [lin_vel 3, ang_vel 3, gravity 3, q - q0 12, dq 12, clip(직전 a, ±50) 12, x, y, sin e, cos e].
+4. `mapping`: §3.6 대로 29 × 13 칸에 (x_i, y_j, z_ij). z = 바닥 높이 - 몸 높이 + 0.27 → [-1.5, 1.5]. 광선은 몸 위 20 m 에서 수직으로. 맞은 것이 없는 칸은 (같은 스캔의 가장 낮은 유효 높이) - 0.4~1.0 m(앱의 0.7 m 고정값은 이 범위의 가운데).
+5. ONNX 실행 → `action`(시선 표시가 필요하면 `gaze_offset` 의 12 × 10 창, 또는 `gaze_r` · `gaze_logits`).
+6. 목표각 = 기본 관절각 + 0.25 × action, 목표 속도 0, 앞먹임 토크 0, Kp 25 · Kd 0.5. 시뮬은 물리 스텝마다 §3.2 의 Go2HV 곡선으로 토크를 자른다.
+7. 다음 스텝의 직전 a 로 action(자르기 전 raw) 을 저장한다. 리셋 직후 직전 a 는 0.
+
+**2) 코드 뼈대.** 브라우저: `const out = await s.run({prop: new ort.Tensor('float32', p, [1,49]), mapping: new ort.Tensor('float32', m, [1,29,13,3])})`. 파이썬: `sess.run(["action"], {"prop": p[None].astype(np.float32), "mapping": m[None].astype(np.float32)})`. mapping 의 메모리 순서는 [i(x)][j(y)][채널 x, y, z].
+
+**3) 맞는지 확인.**
+- `test_vectors_flat20.json`(format `ame2-m30001-test-vectors/1`, map_mode gt, state_feedback false, 꼴은 HANDOFF-APP-DEVELOPER.md §2-4): `inputs[k]` 의 `prop` · `mapping` 을 한 스텝씩 넣어 `expected[k].action` 과 최대 차이 1e-4 이하. 같은 값이 `test_vectors_flat20.npz` 에 있다(json 값과 비트 단위로 같음). 앱 방식(Node · onnxruntime-web WASM · json 그대로) 으로 돌린 최대 차이 1.7e-06.
+- 앱 실행기는 입력 이름 순서가 `app_onnx.inputs` 와 같아야 하고, 출력은 계약에 적힌 이름이 ONNX 에 있기만 하면 된다(앱 `mobile/sim/policy-onnx.js:70~72` @e4c23351). 그래서 m14999 처럼 출력을 `action` · `gaze_r` 둘만 적어도 이 ONNX 로 돈다.
+- 기본 자세 시험(§0b): 기본 자세에서 joint_pos_rel 전부 |값| < 0.05, action 0 이면 목표각 = 기본 관절각.
+- 평지 정지 상태의 mapping z 는 0 근처(몸 높이 약 0.27 m), x, y 채널은 contract.json 격자와 같아야 한다.
+
+**4) 하지 말 것.** START(m6000) 의 지도 함수(32 × 16 · 높이 1 채널) 를 쓰지 않는다. 속도 명령을 그대로 넣지 않는다. 학습 잡음을 배포 입력에 넣지 않는다.
+
+## 7. 추가 확인 (11-27)
+
+m14999 · m27001 묶음 때 지시문 HANDOFF §4 와 v0.1 의 빈칸으로 잰 것을 이 모델로 다시 재거나 기록으로 확인했다.
+
+| 물음 | 답 | 근거 | 등급 |
+|---|---|---|---|
+| ORT Web 에서 같은 출력인가 | onnxruntime-web 1.31.1 WASM 1 thread(Node v24.15.0) 로 기록 400 스텝: action 최대 차이 **3.1e-06**(평지 2.1e-06 · 계단 3.1e-06, 기준 1e-4 통과). 브라우저가 아니라 Node 에서 같은 WASM 실행기를 돌린 것이다 | `parity.json` `ort_web` | `실측` |
+| 시선 창 반올림이 실행기마다 뒤집히나 | 기록 400 스텝에서 반올림 경계(.5)까지 가장 가까운 거리: x 0.0010 칸(r0 로 6.0e-05) · y 0.00263 칸(r1 로 8.8e-04). ONNX CPU 와 PyTorch 의 gaze_r 차이는 최대 2.1e-07 라 여유가 약 288 배. 이 400 스텝에서는 뒤집힘 없음. 다른 입력에서 경계에 더 가까우면 생길 수 있음 | 기록 `gaze_r` | `실측` |
+| 1 m 목표에서 실제 속도 | 앱 조이스틱처럼 매 스텝 몸 틀 (1.0, 0) m · e = 0 목표를 다시 넣으면 평지에서 4~12 s 평균 전진 **1.11 m/s**(로봇 4 대 1.12, 1.12, 1.11, 1.11, 95 백분위 1.17). 같은 방식 2 m 목표는 1.07 m/s. 리셋 0 회 | `speed_goal.py`(학습 task N9P12, 관측 잡음 끔, 8 대) | `실측` |
+| 앱의 빈 칸 0.7 m 고정값 | 앱 규칙(빈 칸 = 같은 스캔의 가장 낮은 유효 높이 - 0.7 m, 가상 평면 없음; 앱 `mobile/sim/ame2-adapter.js:94~125` @20f3d066) 은 학습 규칙(같은 식에 U(0.4, 1.0) m, sparse 칸은 가상 평면) 의 가운데 값이다. 이 모델을 평가한 도구 그대로(`ame2_ev12` 의 `evalgz_tpevf43_b1/eval_gaze.py`, task N9P12-Eval5, 평가 seed 1001, 로봇 2,400 대, 5 에피소드, 지형마다 1,000 에피소드) 전체 성공률: 기준(11-20 평가 tpevf43) **90.08 %** · 같은 조건 다시 돌림 90.07 %(지형별 최대 차이 -1.60 %p, steps_j) · 깊이만 0.7 고정 90.30 %(지형별 최대 +3.90 %p, beam) · **앱 조건(0.7 고정 + 가상 평면 끔) 90.25 %**(지형별 최대 +2.50 %p, beam). 가상 평면은 hydra 인자로 끌 수 없어(Isaac Lab `utils/dict.py:167` 이 새 키를 거부) 평가 도구 사본에 `env_cfg.events.virtual_floor.params["sparse_terrains"] = ()` 한 줄만 더해 돌렸다(그 밖은 원본 도구 md5 4ed5c4a6 와 같음). 같은 설정 다시 돌림도 지형별로 최대 -1.60 %p 달라서, 위 차이 가운데 그 폭 안의 것은 실행마다 흔들리는 폭과 가를 수 없다(지형별 차이의 원인은 따로 가르지 않음). 지형별 표는 `parity.json` `void_depth` | `cmp_depth07.py` | `실측` |
+| 실기 학생이 증류할 때 쓴 선생과 같은가 | 같다. 두 학생(REQ428 TU · 규칙 지도, model_19999) 저장본의 `go2_env_state.il_setup.teacher_sha256` = `7bfdce35ab94…` = 팟의 `ame2_stu/teacher/x7c_teacher.jit` sha256 이고, 그 jit 은 이 파일 `avg_X7C_13000_14999/model_avg.pt` 를 내보낸 것이다(`ame2_stu/out/export.log` 「avg_X7C_13000_14999/model_avg.pt -> … x7c_teacher.jit」). 학생 가치망 초기값 `il_critic_init` 도 이 파일 sha256 `b6aa0adc…` 와 같다 | 학생 저장본 · `export.log` · `sha256sum` | `실측` |
+| 12지형 성공률(참고) | 학생 최종 평가 묶음(F428, task Student-N9P12-Eval5, seed 42 · 1001 · 2002 · 3003, 지형마다 4,000 에피소드)의 X7C 정답 지도 줄 `x7c_wire` 12지형 평균 **89.96 %**(같은 줄을 다시 돌린 `x7c_wirerep` 89.91 %). 이 평가는 선생 지도에 잡음 0.05 를 넣은 학생 평가기 조건이라 PR #949 의 X9C 90.12 %(tpevf46 도구) 와 같은 표에 놓지 않는다 | `req428/final/results_final_F428_20261123T0922/read_out.txt` | `실측` |
+| 학습 코드 출처 · 커밋 | rsl_rl = `ame2_x4/rsl_rl/rsl_rl` .py 33 개. X9C 사본(`ame2_x8`) 과 파일마다 md5 가 같고(11-27), X9C 묶음이 그 사본을 `leggedrobotics/ame2_minimal` 커밋 `8beb9a688d67882828019583f7d5a78e3517f233`(rsl_rl 5.0.0) 과 바이트 단위로 같다고 확인했다. go2 코드는 저장소 밖 우리 코드라 커밋이 없고 code id 7034e3b683e7 · manifest sha256 `5c9ce5ef…` 로 식별 | 두 사본 md5 대조 · PR #949 | `실측` |
+| 기록한 호스트의 Isaac Sim 판 | 이 묶음의 기록 · 내보내기를 한 팟 1 컨테이너에서 `5.1.0-rc.19` 를 직접 읽음. x7 을 학습한 컨테이너는 지금 없어 읽지 못함(§7a) | `/isaac-sim/VERSION` | `실측` |
+| 이 모델이 걷는 영상 | 있음. 12지형 각 1 개(16 대 · 32 s · 성공 1 s 뒤 다음 목표 · 평가와 같은 무작위화), 난이도는 성공률 50 % 이상인 가장 높은 단계(돌 0.5 · 팔레트 · 빔 0.8 · 나머지 아홉 지형 0.9). 석헌 PC 의 AME-2 작업 폴더 `docs/media/traj/Terrains12P-AdamFp32-AvgLast5_25-30k__yaw180_32s_succ1s_rand_trainver_d0.{5,8,9}/`(기록의 저장본 sha256 `b6aa0adc…`) | 기록 `inputs_start.txt` | `실측` |
+
+## 7a. 미확인 (한 형식: 미확인: 무엇 · 정해질 때까지 지금 동작)
+
+- 미확인: 15k(돌 범위 학습 끝) 까지의 학습에 쓴 코드 사본과 호스트, 그리고 x4b · x6 · x7 을 학습한 컨테이너의 Isaac Sim 판 · 정해질 때까지 코드 판은 마지막 15,000 회(x4b · x6 · x7)를 학습한 사본 `ame2_x4`(code id 7034e3b683e7)로, Isaac Sim 판은 이 묶음을 기록한 팟의 5.1.0-rc.19 로 적는다.
+- 미확인: 브라우저(Chrome 등) 의 onnxruntime-web 에서의 최대 차이와 추론 시간 · 정해질 때까지 Node 의 같은 WASM 실행기 값(action 3.1e-06)을 쓴다.
+- 미확인: 옆 · 뒤 목표와 계단 위에서의 속도, 앱 MuJoCo 에서의 같은 값 · 정해질 때까지 앱 상한 표시는 1.2 m/s(학습 v_max, 과속 벌점은 없음).
+- 미확인: 실기 학생(REQ428 TU 학생과 매퍼)의 실기 구동 승인 · 같은 PR 의 `ame2-m20000` 은 실기 학생 TU 의 실패 기록을 검토용으로 올린 묶음이다. 필수 계단 시험의 매퍼 높이 최대 차이는 저장된 판정 0.179768 mm, onnxruntime 1.18.1 재판정 0.166893 mm 로 기준 0.1 mm 를 넘었다. 정해질 때까지 TU 의 실기 구동 승인은 보류하고, 이 teacher 는 시뮬 전용으로 쓴다(lin_vel 이 특권 입력, 팀장 11/03 16:0x).
+
+## 7b. 정해진 한계
+
+- 기록 조건: 관측 잡음 · 지도 잡음 · 센서 드리프트를 끄고, 평지 칸은 rough 칸의 기울기 · 거칠기를 0 으로 바꾼 칸이다(학습 지형 그대로가 아님). 나머지(도메인 무작위화 · 지연 · 가상 바닥) 는 env.yaml 그대로. 기록 설정(`env_record.yaml`) 과 env.yaml 을 비교하면 그 밖에 두 가지가 다르다: 보상 매개변수 `ame2_move2goal` 의 v_max 1.2(학습은 train.py 인자로 넣음, 보상에만 쓰여 관측 · 행동과 무관) 와 시작 yaw · 목표 원뿔 커리큘럼의 `max_steps`(학습 기록 24, 기록 env 는 task 기본값 48000 이라 기록 중 시작 yaw 와 목표 원뿔이 좁았다; 리셋 분포만 바뀜). seed 는 둘 다 42. 지형 칸 크기 · prim 경로 · env_spacing 차이는 학습이 env 를 만든 뒤 덤프해서 생긴 표기 차이다(`go2/scripts/rsl_rl/train.py:303`).
+- 실기(SDK 순서 · IMU · 안전 제어) 는 이 문서 범위 밖이다(팀장 11/03 16:0x: 실기는 student, teacher 는 시뮬).
+
+## 8. 근거 경로
+
+- 평균 폴더: `/network-volume/limseokheon/derived_ctl424/avg_X7C_13000_14999/`(params/env.yaml 2,615 행 · params/agent.yaml 65 행 · model_avg.pt), 기록 `/network-volume/limseokheon/derived_ctl424/avgk424_X7C_manifest.txt`
+- 원본 학습 x7: `/network-volume/limseokheon/ame2_x4/logs/rsl_rl/go2_gaze_teacher/2026-11-20_05-16-58_x7_cont_x6cont_from10000_adam_fp32_4x3_to15000/`(model_10000 ~ model_14999, ppo_accum.txt)
+- 코드 사본: `/network-volume/limseokheon/ame2_x4/`(rsl_rl/rsl_rl · go2/ame2_go2 · go2/scripts) · Isaac Lab 원본 `/workspace/isaaclab/source/isaaclab/isaaclab/`
+- 내보내기 · 기록 · 비교 도구: 이 폴더 `tools/`(실행한 파일 그대로, 설명과 사용 허가는 `tools/README.md`). 실행 위치는 석헌 PC, 팟 1 `/root/onnx_x7c/`(내보내기 · 기록 · 측정)
+
+## 9. 기계 블록 (contract.json 의 요약)
+
+```json
+{"format": "ame2-m30001-onnx/2", "checkpoint_sha256": "b6aa0adc371089fd0bb02252169de2c3350626c627f6a284e2a67ea81bb3e625", "command_type": "goal_pose_xy_sincos", "state": "stateless", "joint_names": ["FL_hip_joint", "FR_hip_joint", "RL_hip_joint", "RR_hip_joint", "FL_thigh_joint", "FR_thigh_joint", "RL_thigh_joint", "RR_thigh_joint", "FL_calf_joint", "FR_calf_joint", "RL_calf_joint", "RR_calf_joint"], "default_joint_pos": [0.1, -0.1, 0.1, -0.1, 0.8, 0.8, 1.0, 1.0, -1.5, -1.5, -1.5, -1.5], "kp": [25.0, 25.0, 25.0, 25.0, 25.0, 25.0, 25.0, 25.0, 25.0, 25.0, 25.0, 25.0], "kd": [0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5], "control_hz": 50, "sim_dt": 0.005, "decimation": 4, "action_delay": {"unit": "physics_step", "range_inclusive": [0, 4], "physics_dt_s": 0.005, "seconds": [0.0, 0.02], "sampled": "once per episode at reset, per robot", "applied": "FIFO over physics steps (4 per control step)"}}
+{"inputs": [["prop", [1, 49]], ["mapping", [1, 29, 13, 3]]], "outputs": [["action", [1, 12]], ["gaze_r", [1, 2]], ["gaze_logits", [1, 2]], ["gaze_offset", [1, 2]]], "action": "target_q = default_joint_pos + 0.25 * action (Isaac order); target velocity 0; feed-forward torque 0", "map": {"shape": [29, 13, 3], "resolution_m": 0.06, "x_range_m": [-0.42, 1.26], "y_range_m": [-0.36, 0.36], "z_offset": 0.27, "z_clip": [-1.5, 1.5], "sensor_offset_m": [0.42, 0.0, 20.0]}, "onnx_sha256": "affdba3b071a1beb4d1cc02259693cb1626288d5f9dc457d756bed922242efb6", "parity_max_abs": 3.5762786865234375e-06}
+```

@@ -1,0 +1,1023 @@
+{
+ "tags": {
+  "flat": {
+   "cell": [
+    "rough",
+    0
+   ],
+   "steps": 200,
+   "resets_in_recording": 0,
+   "max_abs_action_onnx_vs_torch": 1.9073486328125e-06,
+   "mean_abs_action_onnx_vs_torch": 3.376896117401884e-07,
+   "step_of_max": 160,
+   "max_abs_attn_out_onnx_vs_torch": 1.1920928955078125e-06,
+   "max_abs_global_feat_onnx_vs_torch": 1.2516975402832031e-06,
+   "max_abs_action_torch_vs_jit_twin": 0.0,
+   "max_abs_action_onnx_vs_env_gpu": 2.3543834686279297e-06,
+   "max_abs_action_torch_cpu_vs_env_gpu": 1.1920928955078125e-06,
+   "max_abs_action": 3.554966926574707,
+   "mapper_frames": 40,
+   "mapper_max_abs_elevation_onnx_vs_jit": 9.47713851928711e-06,
+   "mapper_max_abs_logvar_onnx_vs_jit": 1.621246337890625e-05,
+   "mapper_rejection_flips_ln15": 0,
+   "mapper_max_abs_elevation_jit_cpu_vs_env_gpu": 1.7702579498291016e-05,
+   "mapper_max_abs_logvar_jit_cpu_vs_env_gpu": 1.33514404296875e-05
+  },
+  "stairs": {
+   "cell": [
+    "stair_up",
+    4
+   ],
+   "steps": 200,
+   "resets_in_recording": 0,
+   "max_abs_action_onnx_vs_torch": 2.1457672119140625e-06,
+   "mean_abs_action_onnx_vs_torch": 4.07985450152637e-07,
+   "step_of_max": 124,
+   "max_abs_attn_out_onnx_vs_torch": 1.6093254089355469e-06,
+   "max_abs_global_feat_onnx_vs_torch": 1.6391277313232422e-06,
+   "max_abs_action_torch_vs_jit_twin": 0.0,
+   "max_abs_action_onnx_vs_env_gpu": 2.86102294921875e-06,
+   "max_abs_action_torch_cpu_vs_env_gpu": 1.5497207641601562e-06,
+   "max_abs_action": 4.416126728057861,
+   "mapper_frames": 40,
+   "mapper_max_abs_elevation_onnx_vs_jit": 0.00017976760864257812,
+   "mapper_max_abs_logvar_onnx_vs_jit": 3.0517578125e-05,
+   "mapper_rejection_flips_ln15": 0,
+   "mapper_max_abs_elevation_jit_cpu_vs_env_gpu": 8.463859558105469e-05,
+   "mapper_max_abs_logvar_jit_cpu_vs_env_gpu": 2.0623207092285156e-05
+  }
+ },
+ "recording_checks": {
+  "flat": {
+   "prop_ang_vel_vs_state": 0.0,
+   "prop_gravity_vs_state": 2.997396197912394e-08,
+   "prop_joint_pos_rel_vs_q_minus_q0": 0.0,
+   "q0_vs_default_joint_pos": 0.0,
+   "prop_joint_vel_vs_dq": 0.0,
+   "prop_last_action_vs_clip50": 0.0,
+   "last_action_vs_previous_raw": 0.0,
+   "history_shift_max_abs": 0.0,
+   "first_row_history_rows_equal": 0.0,
+   "first_row_last_action_max_abs": 0.0,
+   "cmd_xy_norm_max": 2.000000238418579,
+   "nmap_x_vs_grid": 0.0,
+   "nmap_y_vs_grid": 0.0,
+   "nmap_z_range": [
+    -0.7438533306121826,
+    0.39382240176200867
+   ],
+   "nmap_unc_range": [
+    -1.8025851249694824,
+    0.8465735912322998
+   ],
+   "processed_vs_default_plus_0p25_raw": 0.0,
+   "recorded_act_vs_action_raw": 0.0,
+   "frame_steps": [
+    0,
+    5,
+    10,
+    15,
+    20,
+    25,
+    30,
+    35
+   ]
+  },
+  "stairs": {
+   "prop_ang_vel_vs_state": 0.0,
+   "prop_gravity_vs_state": 5.5953220945426096e-08,
+   "prop_joint_pos_rel_vs_q_minus_q0": 0.0,
+   "q0_vs_default_joint_pos": 0.0,
+   "prop_joint_vel_vs_dq": 0.0,
+   "prop_last_action_vs_clip50": 0.0,
+   "last_action_vs_previous_raw": 0.0,
+   "history_shift_max_abs": 0.0,
+   "first_row_history_rows_equal": 0.0,
+   "first_row_last_action_max_abs": 0.0,
+   "cmd_xy_norm_max": 2.000000238418579,
+   "nmap_x_vs_grid": 0.0,
+   "nmap_y_vs_grid": 0.0,
+   "nmap_z_range": [
+    -1.5,
+    1.069088101387024
+   ],
+   "nmap_unc_range": [
+    -1.5114328861236572,
+    0.8465735912322998
+   ],
+   "processed_vs_default_plus_0p25_raw": 0.0,
+   "recorded_act_vs_action_raw": 0.0,
+   "frame_steps": [
+    0,
+    5,
+    10,
+    15,
+    20,
+    25,
+    30,
+    35
+   ]
+  }
+ },
+ "max_abs_action_onnx_vs_torch": 2.1457672119140625e-06,
+ "max_abs_policy_outputs": 2.1457672119140625e-06,
+ "max_abs_mapper_onnx_vs_jit": 0.00017976760864257812,
+ "mapper_rejection_flips": 0,
+ "threshold": 0.0001,
+ "pass_policy": true,
+ "pass_mapper": false,
+ "pass": false,
+ "state_feedback": false,
+ "state_note": "no recurrent state in either ONNX; the caller builds prop_hist (20 rows, oldest first) and the map",
+ "onnx": {
+  "file": "ame2-m20000.onnx",
+  "source_file": "ame2_tu.onnx",
+  "sha256": "9349fd6c7af1afbf430f9a0a89678432b5dd6497ac2d5178868d3eb2b904fdb0",
+  "bytes": 5304604
+ },
+ "mapper_onnx": {
+  "file": "ame2-m20000_mapper.onnx",
+  "source_file": "mapper_tu.onnx",
+  "sha256": "8d726de016460f5c4911204116ff4828105c84e80e2bb4d8d71f58f0bb3274d8",
+  "bytes": 168237
+ },
+ "runtime": {
+  "onnxruntime": "1.26.0",
+  "provider": "CPUExecutionProvider",
+  "torch_reference": "2.12.0+cpu",
+  "intra_op_threads": 2
+ },
+ "checkpoint_sha256": "34eba83771f7564f93c163afdfcbefa8620780c44b920e2edb0a1c9b49d42793",
+ "mapper_jit_sha256": "52dd869b9fe5bc0ee1973138e72d56d66bee459626da36fed2e2efa716a0e060",
+ "load_state_dict": {
+  "strict": true,
+  "missing": [],
+  "unexpected": []
+ },
+ "recording": {
+  "args": {
+   "task": "Ame2-Go2-Gaze-Student-N9P12-Eval5",
+   "num_envs": 600,
+   "seed": 42,
+   "checkpoint": "model_19999.pt",
+   "mapper_jit": "mapper_tu_jit.pt",
+   "teacher_jit": "x7c_teacher.jit",
+   "rec_levels": "0,4",
+   "rec_levels_stones": "0,2",
+   "rec_episodes": 1
+  },
+  "rec_cells": [
+   [
+    "rough",
+    0
+   ],
+   [
+    "rough",
+    4
+   ],
+   [
+    "stair_down",
+    0
+   ],
+   [
+    "stair_down",
+    4
+   ],
+   [
+    "stair_up",
+    0
+   ],
+   [
+    "stair_up",
+    4
+   ],
+   [
+    "boxes_j",
+    0
+   ],
+   [
+    "boxes_j",
+    4
+   ],
+   [
+    "discrete_j",
+    0
+   ],
+   [
+    "discrete_j",
+    4
+   ],
+   [
+    "climb_up",
+    0
+   ],
+   [
+    "climb_up",
+    4
+   ],
+   [
+    "climb_down",
+    0
+   ],
+   [
+    "climb_down",
+    4
+   ],
+   [
+    "steps_j",
+    0
+   ],
+   [
+    "steps_j",
+    4
+   ],
+   [
+    "stones",
+    0
+   ],
+   [
+    "stones",
+    2
+   ],
+   [
+    "gap",
+    0
+   ],
+   [
+    "gap",
+    4
+   ],
+   [
+    "pallets",
+    0
+   ],
+   [
+    "pallets",
+    4
+   ],
+   [
+    "beam",
+    0
+   ],
+   [
+    "beam",
+    4
+   ]
+  ],
+  "step_dt": 0.02,
+  "physics_dt": 0.005,
+  "decimation": 4,
+  "noise_none": {
+   "student_prop_hist": true,
+   "student_cmds": true,
+   "neural_map": true
+  },
+  "code": "033b0cf3fa2a",
+  "torch": "2.7.0+cu128",
+  "tool_md5": {
+   "rec_student.py": "5265875d2a881860e4173c8b4a690887",
+   "rec_hooks.py": "8d88f8041896d0cf14fee53caab4a28d",
+   "fpc_lib.py": "7ddf212fac81131318474015bcbd3bd8"
+  },
+  "end_complete": true,
+  "tags": {
+   "flat": {
+    "cell": [
+     "rough",
+     0
+    ],
+    "recorded_index": 0,
+    "env_id": 0,
+    "policy_rows": 200,
+    "frames": 40,
+    "episodes_in_rows": [
+     0
+    ]
+   },
+   "stairs": {
+    "cell": [
+     "stair_up",
+     4
+    ],
+    "recorded_index": 5,
+    "env_id": 104,
+    "policy_rows": 200,
+    "frames": 40,
+    "episodes_in_rows": [
+     0
+    ]
+   }
+  }
+ },
+ "paths_cut_to_file_names": {
+  "keys": [
+   "recording.args.checkpoint",
+   "recording.args.mapper_jit",
+   "recording.args.teacher_jit"
+  ],
+  "note": "the three values were absolute pod paths; only the file name is kept here, the checkpoint path is in contract.json checkpoint; every other key and value above is the stored result of tools/parity_stu2.py unchanged"
+ },
+ "auxiliary_results": {
+  "note": "added for the bundle; none of these changes or replaces the verdict above (pass_policy true, pass_mapper false, pass false), which tools/parity_stu2.py produced on 2026-11-27. The only verdict keys below are those of the fixed judge's own run, and they say the same.",
+  "required_test_rule": {
+   "applies_to": "tags.flat, tags.stairs, pass_policy, pass_mapper, pass",
+   "rule": "a value passes when it is <= threshold and fails only above it (>); the mapper also needs 0 flipped rejection decisions",
+   "source": "tools/parity_stu2.py:147-153"
+  },
+  "fixed_judge_run_ort_1_18_1": {
+   "what": "the same recorded 200 + 200 policy steps and 40 + 40 mapper frames judged again by tools/parity_stu3.py (parity_stu2.py + fixed-recording, completeness and finiteness checks) on the deployment onnxruntime; a separate run, the stored values above are not overwritten",
+   "rule": "as required_test_rule, after the recording was found to be the fixed one and complete and every compared array finite",
+   "judge": "tools/parity_stu3.py",
+   "judge_sha256": "4f992f8b9bed3931bcae69cb0b1edca3c4b5a0fa1e5dfda6d7bb2625d8f4f5e9",
+   "judge_exit_code": 3,
+   "exit_codes": "1 a file fingerprint differs or the output folder exists | 4 refused: content of the recording or a non-finite value | 3 a valid recording above the threshold | 0 pass",
+   "reference_code_pinned": {
+    "rsl_rl/models/AME2_models.py": "d88276b1a9cac8c676828af7991f50c7515726245210f5f6c09ae34c4466d14d"
+   },
+   "runtime": {
+    "onnxruntime": "1.18.1",
+    "provider": "CPUExecutionProvider",
+    "torch_reference": "2.12.0+cpu",
+    "intra_op_threads": 2,
+    "torch_threads": 4
+   },
+   "recording_npz_sha256": "24bc73a38426606b26a9fba6b1bc485a0eeef2ef3c7ccb774ba66133d6441cdf",
+   "record_checks_done": 49,
+   "finite_checks": {
+    "arrays_checked": 8259,
+    "non_finite_found": 0
+   },
+   "pass_policy": true,
+   "pass_mapper": false,
+   "pass": false,
+   "max_abs_policy_outputs": 1.9073486328125e-06,
+   "max_abs_mapper_onnx_vs_jit": 0.00016689300537109375,
+   "mapper_rejection_flips": 0,
+   "flat": {
+    "cell": [
+     "rough",
+     0
+    ],
+    "steps": 200,
+    "mapper_frames": 40,
+    "max_abs_action_onnx_vs_torch": 1.6689300537109375e-06,
+    "mapper_max_abs_elevation_onnx_vs_jit": 1.0073184967041016e-05,
+    "mapper_max_abs_logvar_onnx_vs_jit": 1.621246337890625e-05,
+    "mapper_frames_elevation_above_threshold": 0,
+    "mapper_policy_steps_elevation_above_threshold": [],
+    "mapper_worst_elevation": {
+     "policy_step": 90,
+     "frame_index": 18,
+     "cell_x_index": 64,
+     "cell_y_index": 5,
+     "elevation_diff_m": 1.0073184967041016e-05
+    },
+    "mapper_rejection_flips_ln15": 0
+   },
+   "stairs": {
+    "cell": [
+     "stair_up",
+     4
+    ],
+    "steps": 200,
+    "mapper_frames": 40,
+    "max_abs_action_onnx_vs_torch": 1.9073486328125e-06,
+    "mapper_max_abs_elevation_onnx_vs_jit": 0.00016689300537109375,
+    "mapper_max_abs_logvar_onnx_vs_jit": 2.7179718017578125e-05,
+    "mapper_frames_elevation_above_threshold": 3,
+    "mapper_policy_steps_elevation_above_threshold": [
+     130,
+     155,
+     170
+    ],
+    "mapper_worst_elevation": {
+     "policy_step": 130,
+     "frame_index": 26,
+     "cell_x_index": 62,
+     "cell_y_index": 28,
+     "elevation_diff_m": 0.00016689300537109375
+    },
+    "mapper_rejection_flips_ln15": 0
+   },
+   "tests_of_the_judge": {
+    "tool": "tools/test_parity_stu3.py",
+    "cases": 18,
+    "all_as_expected": true,
+    "codex_counterexample_refused": "non_finite",
+    "old_aggregation_on_the_counterexample": {
+     "max_abs_elevation": 7.4729323387146e-05,
+     "max_abs_logvar": 2.7179718017578125e-05,
+     "rejection_flips": 0,
+     "mapper_would_pass": true
+    }
+   },
+   "evidence": {
+    "file": "judgement_summary.json",
+    "sha256": "d137a4a53137ec0be78789140e1c3024a9ce58e53cfe59737500beb7eee9ece2",
+    "key": "fixed_judge"
+   }
+  },
+  "required_test_rerun_ort_1_18_1": {
+   "what": "the same recording replayed by tools/rerun_ort1181.py (torch threads 1 and 4); that tool has no finiteness check, the 4-thread numbers equal the fixed judge's",
+   "rule": "as required_test_rule; mapper_frames_elevation_above_threshold counts frames with elevation difference > 1e-4",
+   "runtime": {
+    "onnxruntime": "1.18.1",
+    "provider": "CPUExecutionProvider",
+    "ort_graph_optimization": "default (ORT_ENABLE_ALL)",
+    "ort_intra_op_threads": 2,
+    "ort_inter_op_threads": 1,
+    "torch_reference": "2.12.0+cpu",
+    "numpy": "1.26.4",
+    "python": "3.11.9",
+    "machine": "AMD64",
+    "processor": "Intel64 Family 6 Model 165 Stepping 2, GenuineIntel"
+   },
+   "torch_threads_1": {
+    "flat": {
+     "cell": [
+      "rough",
+      0
+     ],
+     "steps": 200,
+     "mapper_frames": 40,
+     "max_abs_action_onnx_vs_torch": 1.6689300537109375e-06,
+     "mapper_max_abs_elevation_onnx_vs_jit": 9.894371032714844e-06,
+     "mapper_max_abs_logvar_onnx_vs_jit": 1.6450881958007812e-05,
+     "mapper_frames_elevation_above_threshold": 0,
+     "mapper_policy_steps_elevation_above_threshold": [],
+     "mapper_worst_elevation": {
+      "policy_step": 90,
+      "frame_index": 18,
+      "cell_x_index": 64,
+      "cell_y_index": 5,
+      "elevation_diff_m": 9.894371032714844e-06
+     },
+     "mapper_rejection_flips_ln15": 0
+    },
+    "stairs": {
+     "cell": [
+      "stair_up",
+      4
+     ],
+     "steps": 200,
+     "mapper_frames": 40,
+     "max_abs_action_onnx_vs_torch": 1.9073486328125e-06,
+     "mapper_max_abs_elevation_onnx_vs_jit": 0.00016689300537109375,
+     "mapper_max_abs_logvar_onnx_vs_jit": 2.7298927307128906e-05,
+     "mapper_frames_elevation_above_threshold": 3,
+     "mapper_policy_steps_elevation_above_threshold": [
+      130,
+      155,
+      170
+     ],
+     "mapper_worst_elevation": {
+      "policy_step": 130,
+      "frame_index": 26,
+      "cell_x_index": 62,
+      "cell_y_index": 28,
+      "elevation_diff_m": 0.00016689300537109375
+     },
+     "mapper_rejection_flips_ln15": 0
+    }
+   },
+   "torch_threads_4": {
+    "flat": {
+     "cell": [
+      "rough",
+      0
+     ],
+     "steps": 200,
+     "mapper_frames": 40,
+     "max_abs_action_onnx_vs_torch": 1.6689300537109375e-06,
+     "mapper_max_abs_elevation_onnx_vs_jit": 1.0073184967041016e-05,
+     "mapper_max_abs_logvar_onnx_vs_jit": 1.621246337890625e-05,
+     "mapper_frames_elevation_above_threshold": 0,
+     "mapper_policy_steps_elevation_above_threshold": [],
+     "mapper_worst_elevation": {
+      "policy_step": 90,
+      "frame_index": 18,
+      "cell_x_index": 64,
+      "cell_y_index": 5,
+      "elevation_diff_m": 1.0073184967041016e-05
+     },
+     "mapper_rejection_flips_ln15": 0
+    },
+    "stairs": {
+     "cell": [
+      "stair_up",
+      4
+     ],
+     "steps": 200,
+     "mapper_frames": 40,
+     "max_abs_action_onnx_vs_torch": 1.9073486328125e-06,
+     "mapper_max_abs_elevation_onnx_vs_jit": 0.00016689300537109375,
+     "mapper_max_abs_logvar_onnx_vs_jit": 2.7179718017578125e-05,
+     "mapper_frames_elevation_above_threshold": 3,
+     "mapper_policy_steps_elevation_above_threshold": [
+      130,
+      155,
+      170
+     ],
+     "mapper_worst_elevation": {
+      "policy_step": 130,
+      "frame_index": 26,
+      "cell_x_index": 62,
+      "cell_y_index": 28,
+      "elevation_diff_m": 0.00016689300537109375
+     },
+     "mapper_rejection_flips_ln15": 0
+    }
+   },
+   "tool": "tools/rerun_ort1181.py",
+   "evidence": {
+    "file": "judgement_summary.json",
+    "sha256": "d137a4a53137ec0be78789140e1c3024a9ce58e53cfe59737500beb7eee9ece2",
+    "key": "required_test_rerun_ort_1_18_1"
+   }
+  },
+  "required_test_recomputed_in_review": {
+   "what": "the reviewer's own replay of the same npz (PyTorch 2.7 CPU 1 thread, onnxruntime 1.18.1); quoted, no result file",
+   "rule": "as required_test_rule",
+   "flat": {
+    "policy_steps": 200,
+    "mapper_frames": 40,
+    "max_abs_action": 1.669e-06,
+    "max_abs_elevation_m": 8.345e-06,
+    "max_abs_logvar": 1.4782e-05,
+    "frames_elevation_above_threshold": 0,
+    "rejection_flip_cells": 0
+   },
+   "stairs": {
+    "policy_steps": 200,
+    "mapper_frames": 40,
+    "max_abs_action": 2.384e-06,
+    "max_abs_elevation_m": 0.00016737,
+    "max_abs_logvar": 2.8491e-05,
+    "frames_elevation_above_threshold": 3,
+    "policy_steps_above_threshold": [
+     130,
+     155,
+     170
+    ],
+    "worst": {
+     "policy_step": 155,
+     "cell": [
+      51,
+      28
+     ]
+    },
+    "rejection_flip_cells": 0
+   },
+   "evidence": {
+    "file": "judgement_summary.json",
+    "sha256": "d137a4a53137ec0be78789140e1c3024a9ce58e53cfe59737500beb7eee9ece2",
+    "key": "required_test_recomputed_in_review"
+   }
+  },
+  "substitute_segment": {
+   "what": "another segment fixed by a rule before measuring (rough level 4 robot 4, stair_down level 4 robot 54, episode 0, steps 0..199, 80 mapper frames); it does not replace the required test",
+   "rule": "a frame is counted when max(elevation difference, logvar difference) >= 1e-4 (at or above)",
+   "entries": [
+    {
+     "machine": "pod 1 (AMD, AVX-512)",
+     "torch_reference": "2.7.0+cu128",
+     "recording_seed": 42,
+     "episode": 0,
+     "robots_of_the_segment": [
+      4,
+      54
+     ],
+     "policy_steps_per_robot": 200,
+     "mapper_frames_per_robot": 40,
+     "mapper_frames": 80,
+     "max_abs_elevation_m": 1.609325408935547e-05,
+     "max_abs_logvar": 7.62939453125e-06,
+     "frames_at_or_above_1e-4": 0,
+     "rejection_flip_cells": 0,
+     "robots_with_elevation_at_or_above_1e-4_on_their_own_200_steps": 0,
+     "robots_in_the_recording": 24,
+     "action": {
+      "policy_direct_original_vs_onnx": "not measured for this row",
+      "mapper_swap_effect_same_onnx_policy": {
+       "rows": 400,
+       "max_abs_raw_action": 2.6226043701171875e-06,
+       "max_abs_joint_target_rad": 5.960464477539062e-07,
+       "rows_raw_action_above_1e-4": 0,
+       "environment": "pod 1 (AMD): mapper TorchScript on torch 2.7.0+cu128 (oneDNN on) vs mapper ONNX on onnxruntime 1.18.1 (graph optimisation ALL); the SAME policy ONNX on both sides",
+       "coverage": {
+        "episode": 0,
+        "rows_measured": 400,
+        "robots": 2,
+        "policy_steps_per_robot": 200
+       },
+       "source": {
+        "name": "eff_rows200_short.json",
+        "sha256": "e900c47b65f39a38e68030d31413e6092f957bc42aec232e5f9b7dc697cd6287"
+       }
+      },
+      "summary_key": "substitute_segment.entries[0].action"
+     },
+     "source": {
+      "name": "pod_cmp_short.json",
+      "sha256": "485d53896d32d415c567f3c3e33929b1f5ebb1d74b9bcbd4434cac03ab6dd0e6"
+     }
+    },
+    {
+     "machine": "pod 1 (AMD, AVX-512)",
+     "torch_reference": "2.7.0+cu128",
+     "recording_seed": 1001,
+     "episode": 0,
+     "robots_of_the_segment": [
+      4,
+      54
+     ],
+     "policy_steps_per_robot": 200,
+     "mapper_frames_per_robot": 40,
+     "mapper_frames": 80,
+     "max_abs_elevation_m": 1.1205673217773438e-05,
+     "max_abs_logvar": 6.67572021484375e-06,
+     "frames_at_or_above_1e-4": 0,
+     "rejection_flip_cells": 0,
+     "robots_with_elevation_at_or_above_1e-4_on_their_own_200_steps": 0,
+     "robots_in_the_recording": 24,
+     "action": {
+      "policy_direct_original_vs_onnx": "not measured for this row",
+      "mapper_swap_effect_same_onnx_policy": {
+       "rows": 400,
+       "max_abs_raw_action": 3.635883331298828e-06,
+       "max_abs_joint_target_rad": 8.344650268554688e-07,
+       "rows_raw_action_above_1e-4": 0,
+       "environment": "pod 1 (AMD): mapper TorchScript on torch 2.7.0+cu128 (oneDNN on) vs mapper ONNX on onnxruntime 1.18.1 (graph optimisation ALL); the SAME policy ONNX on both sides",
+       "coverage": {
+        "episode": 0,
+        "rows_measured": 400,
+        "robots": 2,
+        "policy_steps_per_robot": 200
+       },
+       "source": {
+        "name": "eff_rows200_seed1001.json",
+        "sha256": "696fe1ba6937c9641ddeefb6627a261fa12a185f8d1235a33e0673469387d4ac"
+       }
+      },
+      "summary_key": "substitute_segment.entries[1].action"
+     },
+     "source": {
+      "name": "pod_cmp_seed1001_stream.json",
+      "sha256": "b4f0575719c7e91dff14cafa0fdadc512281aac0d433d727b534059ed610143e"
+     }
+    },
+    {
+     "machine": "PC (Intel, AVX2)",
+     "torch_reference": "2.12.0+cpu",
+     "recording_seed": 42,
+     "episode": 0,
+     "robots_of_the_segment": [
+      4,
+      54
+     ],
+     "policy_steps_per_robot": 200,
+     "mapper_frames_per_robot": 40,
+     "mapper_frames": 80,
+     "max_abs_elevation_m": 5.257129669189453e-05,
+     "max_abs_logvar": 1.5735626220703125e-05,
+     "frames_at_or_above_1e-4": 0,
+     "rejection_flip_cells": 0,
+     "robots_with_elevation_at_or_above_1e-4_on_their_own_200_steps": 5,
+     "robots_in_the_recording": 24,
+     "action": {
+      "policy_direct_original_vs_onnx": {
+       "robot_4": 2.146e-06,
+       "robot_54": 1.788e-06,
+       "max": 2.146e-06,
+       "environment": "PC: the original policy on PyTorch 2.7 (CPU) vs the deployed policy ONNX on onnxruntime 1.18.1 CPU, intra-op 2 (the reviewer's run, 200 rows per robot). The mapper numbers of the same row use torch 2.12.0+cpu as the reference: a different environment",
+       "coverage": {
+        "episode": 0,
+        "rows_measured": 400,
+        "robots": 2,
+        "policy_steps_per_robot": 200
+       },
+       "source": {
+        "name": "STAGE1_REVIEW430_52_codex.md",
+        "sha256": "e91eb0860953dbf88f287dc20c7c2152fe452c6198c61afd0e3c933d73d81f67"
+       }
+      },
+      "mapper_swap_effect_same_onnx_policy": "not measured for this row",
+      "summary_key": "substitute_segment.entries[2].action"
+     },
+     "source": {
+      "name": "pc_cmp_short.json",
+      "sha256": "0d319fb8b4dea536f59bd3573d3f57a791cb594fe31ef8dad2816d743292a96c"
+     }
+    },
+    {
+     "machine": "PC (Intel, AVX2)",
+     "torch_reference": "2.12.0+cpu",
+     "recording_seed": 1001,
+     "episode": 0,
+     "robots_of_the_segment": [
+      4,
+      54
+     ],
+     "policy_steps_per_robot": 200,
+     "mapper_frames_per_robot": 40,
+     "mapper_frames": 80,
+     "max_abs_elevation_m": 9.40561294555664e-05,
+     "max_abs_logvar": 1.6689300537109375e-05,
+     "frames_at_or_above_1e-4": 0,
+     "rejection_flip_cells": 0,
+     "robots_with_elevation_at_or_above_1e-4_on_their_own_200_steps": 4,
+     "robots_in_the_recording": 24,
+     "action": {
+      "policy_direct_original_vs_onnx": {
+       "robot_4": 2.027e-06,
+       "robot_54": 1.669e-06,
+       "max": 2.027e-06,
+       "environment": "PC: the original policy on PyTorch 2.7 (CPU) vs the deployed policy ONNX on onnxruntime 1.18.1 CPU, intra-op 2 (the reviewer's run, 200 rows per robot). The mapper numbers of the same row use torch 2.12.0+cpu as the reference: a different environment",
+       "coverage": {
+        "episode": 0,
+        "rows_measured": 400,
+        "robots": 2,
+        "policy_steps_per_robot": 200
+       },
+       "source": {
+        "name": "STAGE1_REVIEW430_52_codex.md",
+        "sha256": "e91eb0860953dbf88f287dc20c7c2152fe452c6198c61afd0e3c933d73d81f67"
+       }
+      },
+      "mapper_swap_effect_same_onnx_policy": "not measured for this row",
+      "summary_key": "substitute_segment.entries[3].action"
+     },
+     "source": {
+      "name": "pc_cmp_seed1001.json",
+      "sha256": "4530b41f09836974b6b99d4c4c4068d9532a4aae0d47db397f6644843728818a"
+     }
+    }
+   ],
+   "evidence": {
+    "file": "judgement_summary.json",
+    "sha256": "d137a4a53137ec0be78789140e1c3024a9ce58e53cfe59737500beb7eee9ece2",
+    "key": "substitute_segment"
+   }
+  },
+  "whole_record": {
+   "what": "every mapper frame of the three recordings (24 robots each). The action blocks have their own coverage: the mapper-swap effect of the large recording was measured on episodes 1 and 2 only (36,350 of 51,894 policy rows)",
+   "rule": "a frame is counted when max(elevation difference, logvar difference) >= 1e-4 (at or above); a flip is a cell whose rejection decision (logvar >= ln 15, float32) differs",
+   "entries": [
+    {
+     "machine": "pod 1 (AMD, AVX-512)",
+     "torch_reference": "2.7.0+cu128",
+     "recording": "short",
+     "recording_seed": 42,
+     "episodes_per_robot": 1,
+     "robots": 24,
+     "policy_robot_steps": 15544,
+     "mapper_frames": 3111,
+     "max_abs_elevation_m": 6.999075412750244e-05,
+     "max_abs_logvar": 2.0503997802734375e-05,
+     "frames_at_or_above_1e-4": 0,
+     "rejection_flip_cells": 1,
+     "action": {
+      "policy_onnx_vs_recorded_env_action": "not measured for this row",
+      "mapper_swap_effect_same_onnx_policy": {
+       "episodes": [
+        0
+       ],
+       "rows": 15544,
+       "max_abs_raw_action": 0.0001935809850692749,
+       "max_abs_joint_target_rad": 4.839897155761719e-05,
+       "rows_raw_action_above_1e-4_largest_of_the_six": 8,
+       "environment": "pod 1 (AMD): mapper TorchScript on torch 2.7.0+cu128 (oneDNN on) vs mapper ONNX on onnxruntime 1.18.1 (graph optimisation ALL); the SAME policy ONNX on both sides",
+       "coverage": {
+        "episodes_measured": [
+         0
+        ],
+        "rows_measured": 15544,
+        "policy_rows_of_the_recording": 15544,
+        "covers_the_whole_recording": true,
+        "note": "the maximum is over the measured episodes only; where they are not the whole recording it is not known to be the maximum of the recording"
+       },
+       "source": {
+        "name": "eff_judge_short.json",
+        "sha256": "6b2065a8cdbabdde85f8e52334ab75d1d5e2230065c3a9e9222f327337c533e5"
+       }
+      },
+      "summary_key": "whole_record.entries[0].action"
+     },
+     "source": {
+      "name": "pod_cmp_short.json",
+      "sha256": "485d53896d32d415c567f3c3e33929b1f5ebb1d74b9bcbd4434cac03ab6dd0e6"
+     }
+    },
+    {
+     "machine": "pod 1 (AMD, AVX-512)",
+     "torch_reference": "2.7.0+cu128",
+     "recording": "large",
+     "recording_seed": 42,
+     "episodes_per_robot": 3,
+     "robots": 24,
+     "policy_robot_steps": 51894,
+     "mapper_frames": 10382,
+     "max_abs_elevation_m": 0.00015270709991455078,
+     "max_abs_logvar": 3.230571746826172e-05,
+     "frames_at_or_above_1e-4": 2,
+     "rejection_flip_cells": 3,
+     "action": {
+      "policy_onnx_vs_recorded_env_action": "not measured for this row",
+      "mapper_swap_effect_same_onnx_policy": {
+       "episodes": [
+        1,
+        2
+       ],
+       "rows": 36350,
+       "max_abs_raw_action": 0.009665131568908691,
+       "max_abs_joint_target_rad": 0.002416282892227173,
+       "rows_raw_action_above_1e-4_largest_of_the_six": 35,
+       "environment": "pod 1 (AMD): mapper TorchScript on torch 2.7.0+cu128 (oneDNN on) vs mapper ONNX on onnxruntime 1.18.1 (graph optimisation ALL); the SAME policy ONNX on both sides",
+       "coverage": {
+        "episodes_measured": [
+         1,
+         2
+        ],
+        "rows_measured": 36350,
+        "policy_rows_of_the_recording": 51894,
+        "covers_the_whole_recording": false,
+        "note": "the maximum is over the measured episodes only; where they are not the whole recording it is not known to be the maximum of the recording"
+       },
+       "source": {
+        "name": "eff_judge_full.json",
+        "sha256": "1c21673595ddaab4e8319cc548e28d8a86a99fa52dd39ec7aeabbbcf7d18df95"
+       }
+      },
+      "summary_key": "whole_record.entries[1].action"
+     },
+     "source": {
+      "name": "pod_cmp_full_stream.json",
+      "sha256": "82c3b8f0cd75235938c04695ed33ce5c411dd2e32cfff2b80f490d381c283c1f"
+     }
+    },
+    {
+     "machine": "pod 1 (AMD, AVX-512)",
+     "torch_reference": "2.7.0+cu128",
+     "recording": "seed 1001",
+     "recording_seed": 1001,
+     "episodes_per_robot": 3,
+     "robots": 24,
+     "policy_robot_steps": 51956,
+     "mapper_frames": 10395,
+     "max_abs_elevation_m": 9.751319885253906e-05,
+     "max_abs_logvar": 2.956390380859375e-05,
+     "frames_at_or_above_1e-4": 0,
+     "rejection_flip_cells": 1,
+     "action": {
+      "policy_onnx_vs_recorded_env_action": "not measured for this row",
+      "mapper_swap_effect_same_onnx_policy": {
+       "episodes": [
+        0,
+        1,
+        2
+       ],
+       "rows": 51956,
+       "max_abs_raw_action": 0.0005445480346679688,
+       "max_abs_joint_target_rad": 0.0001361370086669922,
+       "rows_raw_action_above_1e-4_largest_of_the_six": 25,
+       "environment": "pod 1 (AMD): mapper TorchScript on torch 2.7.0+cu128 (oneDNN on) vs mapper ONNX on onnxruntime 1.18.1 (graph optimisation ALL); the SAME policy ONNX on both sides",
+       "coverage": {
+        "episodes_measured": [
+         0,
+         1,
+         2
+        ],
+        "rows_measured": 51956,
+        "policy_rows_of_the_recording": 51956,
+        "covers_the_whole_recording": true,
+        "note": "the maximum is over the measured episodes only; where they are not the whole recording it is not known to be the maximum of the recording"
+       },
+       "source": {
+        "name": "eff_judge_seed1001.json",
+        "sha256": "977d9cf299911278fc2fd3176a687fdab612a65e290ebaa1547d2875ff6bd7a6"
+       }
+      },
+      "summary_key": "whole_record.entries[2].action"
+     },
+     "source": {
+      "name": "pod_cmp_seed1001_stream.json",
+      "sha256": "b4f0575719c7e91dff14cafa0fdadc512281aac0d433d727b534059ed610143e"
+     }
+    },
+    {
+     "machine": "PC (Intel, AVX2)",
+     "torch_reference": "2.12.0+cpu",
+     "recording": "short",
+     "recording_seed": 42,
+     "episodes_per_robot": 1,
+     "robots": 24,
+     "policy_robot_steps": 15544,
+     "mapper_frames": 3111,
+     "max_abs_elevation_m": 0.00023943185806274414,
+     "max_abs_logvar": 6.288290023803711e-05,
+     "frames_at_or_above_1e-4": 31,
+     "rejection_flip_cells": 0,
+     "action": {
+      "policy_onnx_vs_recorded_env_action": {
+       "max_abs_raw_action": 5.25e-06,
+       "robot_steps": 15544,
+       "environment": "PC (Intel): the policy ONNX vs the action the env recorded (pod GPU, torch 2.7.0+cu128); the onnxruntime version is not recorded in the replay output",
+       "coverage": {
+        "rows_measured": 15544,
+        "policy_rows_of_the_recording": 15544,
+        "covers_the_whole_recording": true
+       },
+       "source": {
+        "name": "replay_v11_out.txt",
+        "sha256": "97142450a8f6c1db94c7974a9bb388fa2b36dd946c68877b04b44f47704fbc38"
+       }
+      },
+      "mapper_swap_effect_same_onnx_policy": "not measured for this row",
+      "summary_key": "whole_record.entries[3].action"
+     },
+     "source": {
+      "name": "pc_cmp_short.json",
+      "sha256": "0d319fb8b4dea536f59bd3573d3f57a791cb594fe31ef8dad2816d743292a96c"
+     }
+    },
+    {
+     "machine": "PC (Intel, AVX2)",
+     "torch_reference": "2.12.0+cpu",
+     "recording": "large",
+     "recording_seed": 42,
+     "episodes_per_robot": 3,
+     "robots": 24,
+     "policy_robot_steps": 51894,
+     "mapper_frames": 10382,
+     "max_abs_elevation_m": 0.000873565673828125,
+     "max_abs_logvar": 7.492303848266602e-05,
+     "frames_at_or_above_1e-4": 66,
+     "rejection_flip_cells": 0,
+     "action": {
+      "policy_onnx_vs_recorded_env_action": {
+       "max_abs_raw_action": 5.25e-06,
+       "robot_steps": 51894,
+       "environment": "PC (Intel): the policy ONNX vs the action the env recorded (pod GPU, torch 2.7.0+cu128); the onnxruntime version is not recorded in the replay output",
+       "coverage": {
+        "rows_measured": 51894,
+        "policy_rows_of_the_recording": 51894,
+        "covers_the_whole_recording": true
+       },
+       "source": {
+        "name": "replay_v11_tu_out.txt",
+        "sha256": "ae17f1e5cdf934cc3043cf710c33a03781482f3210f5ad4709946fb2b714738c"
+       }
+      },
+      "mapper_swap_effect_same_onnx_policy": "not measured for this row",
+      "summary_key": "whole_record.entries[4].action"
+     },
+     "source": {
+      "name": "pc_cmp_full.json",
+      "sha256": "95724739aefd7b4bd1d94ab6ad16ba8a686497912faa62c73db85f80ec46fb18"
+     }
+    },
+    {
+     "machine": "PC (Intel, AVX2)",
+     "torch_reference": "2.12.0+cpu",
+     "recording": "seed 1001",
+     "recording_seed": 1001,
+     "episodes_per_robot": 3,
+     "robots": 24,
+     "policy_robot_steps": 51956,
+     "mapper_frames": 10395,
+     "max_abs_elevation_m": 0.0004912614822387695,
+     "max_abs_logvar": 9.441375732421875e-05,
+     "frames_at_or_above_1e-4": 71,
+     "rejection_flip_cells": 2,
+     "action": {
+      "policy_onnx_vs_recorded_env_action": {
+       "max_abs_raw_action": 6.68e-06,
+       "robot_steps": 51956,
+       "environment": "PC (Intel): the policy ONNX vs the action the env recorded (pod GPU, torch 2.7.0+cu128); the onnxruntime version is not recorded in the replay output",
+       "coverage": {
+        "rows_measured": 51956,
+        "policy_rows_of_the_recording": 51956,
+        "covers_the_whole_recording": true
+       },
+       "source": {
+        "name": "replay_v11_tu_out.txt",
+        "sha256": "53020bebf267e44b8583eb28c4da6f2b59db3721854c1e45f73184d7be5af21a"
+       }
+      },
+      "mapper_swap_effect_same_onnx_policy": "not measured for this row",
+      "summary_key": "whole_record.entries[5].action"
+     },
+     "source": {
+      "name": "pc_cmp_seed1001.json",
+      "sha256": "4530b41f09836974b6b99d4c4c4068d9532a4aae0d47db397f6644843728818a"
+     }
+    }
+   ],
+   "evidence": {
+    "file": "judgement_summary.json",
+    "sha256": "d137a4a53137ec0be78789140e1c3024a9ce58e53cfe59737500beb7eee9ece2",
+    "key": "whole_record"
+   }
+  }
+ }
+}
