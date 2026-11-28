@@ -1,0 +1,1435 @@
+{
+  "schema": "foothold-apk-static-analysis/1",
+  "apk": {
+    "path": "/home/jay/mai/projects/tutorial-go2/UnitreeGo_1.12.10.apk",
+    "sha256": "71c9a34b1ec972f944007d4d8474e1bc3391dca1192fa2b46bc7b19be02a9e27",
+    "bytes": 185490971,
+    "package": "com.unitree.doggo2",
+    "version_name": "1.12.10",
+    "version_code": "144",
+    "min_sdk": "29",
+    "target_sdk": "35",
+    "zip_entries": 2557,
+    "web_version_text": [
+      "v1.2.44.12",
+      "2026-06-09 14:41:58"
+    ]
+  },
+  "known_input_checks": {
+    "rea_ipc_bridge": true,
+    "craft_zip_count_hash": true,
+    "cross_parser_manifest_identity": true,
+    "apk_crc": true
+  },
+  "components": {
+    "activity": 111,
+    "service": 9,
+    "provider": 9
+  },
+  "application": {
+    "name": "com.sagittarius.v6.StubApplication",
+    "uses_cleartext_traffic": true,
+    "network_security_config": "@0x7f160005"
+  },
+  "permissions": [
+    "android.permission.FOREGROUND_SERVICE_CONNECTED_DEVICE",
+    "android.permission.ACCESS_LOCATION_EXTRA_COMMANDS",
+    "android.permission.INTERNET",
+    "android.permission.ACCESS_NETWORK_STATE",
+    "android.permission.CHANGE_NETWORK_STATE",
+    "android.permission.ACCESS_WIFI_STATE",
+    "android.permission.CHANGE_WIFI_STATE",
+    "android.permission.CALL_PHONE",
+    "android.permission.KILL_BACKGROUND_PROCESSES",
+    "android.permission.CHANGE_WIFI_MULTICAST_STATE",
+    "android.permission.EXPAND_STATUS_BAR",
+    "android.permission.STATUS_BAR",
+    "android.permission.WRITE_EXTERNAL_STORAGE",
+    "android.permission.READ_EXTERNAL_STORAGE",
+    "android.permission.CAMERA",
+    "android.permission.RECORD_AUDIO",
+    "android.permission.VIBRATE",
+    "android.permission.MODIFY_AUDIO_SETTINGS",
+    "android.permission.WAKE_LOCK",
+    "android.permission.SYSTEM_ALERT_WINDOW",
+    "com.google.android.providers.gsf.permission.READ_GSERVICES",
+    "android.permission.GET_PACKAGE_SIZE",
+    "android.permission.READ_MEDIA_IMAGES",
+    "android.permission.READ_MEDIA_AUDIO",
+    "android.permission.WRITE_SETTINGS",
+    "android.permission.MOUNT_UNMOUNT_FILESYSTEMS",
+    "android.permission.BLUETOOTH",
+    "android.permission.BLUETOOTH_ADMIN",
+    "android.permission.BLUETOOTH_CONNECT",
+    "android.permission.BLUETOOTH_ADVERTISE",
+    "android.permission.BLUETOOTH_SCAN",
+    "android.permission.ACCESS_FINE_LOCATION",
+    "android.permission.ACCESS_COARSE_LOCATION",
+    "android.permission.NEARBY_WIFI_DEVICES",
+    "android.permission.FOREGROUND_SERVICE",
+    "com.unitree.doggo2.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION",
+    "android.permission.REORDER_TASKS",
+    "android.permission.INSTALL_PACKAGES",
+    "android.permission.REQUEST_INSTALL_PACKAGES",
+    "android.permission.READ_PHONE_STATE",
+    "android.permission.GET_TASKS",
+    "android.permission.RECEIVE_BOOT_COMPLETED"
+  ],
+  "native_libraries": {
+    "arm64-v8a": [
+      {
+        "bytes": 8755696,
+        "compression": "deflate",
+        "name": "libavcodec.so"
+      },
+      {
+        "bytes": 52920,
+        "compression": "deflate",
+        "name": "libavdevice.so"
+      },
+      {
+        "bytes": 3735200,
+        "compression": "deflate",
+        "name": "libavfilter.so"
+      },
+      {
+        "bytes": 2839616,
+        "compression": "deflate",
+        "name": "libavformat.so"
+      },
+      {
+        "bytes": 487640,
+        "compression": "deflate",
+        "name": "libavutil.so"
+      },
+      {
+        "bytes": 759056,
+        "compression": "deflate",
+        "name": "libcrash-analysis-common.so"
+      },
+      {
+        "bytes": 185976,
+        "compression": "deflate",
+        "name": "libcrash-analysis-handler.so"
+      },
+      {
+        "bytes": 9856,
+        "compression": "deflate",
+        "name": "libcrash-analysis-trampoline.so"
+      },
+      {
+        "bytes": 195584,
+        "compression": "deflate",
+        "name": "libcrash-analysis.so"
+      },
+      {
+        "bytes": 863128,
+        "compression": "deflate",
+        "name": "libcrashlytics-anr.so"
+      },
+      {
+        "bytes": 386776,
+        "compression": "deflate",
+        "name": "libemas-hprof-dump.so"
+      },
+      {
+        "bytes": 465096,
+        "compression": "deflate",
+        "name": "libffmpegkit.so"
+      },
+      {
+        "bytes": 30192,
+        "compression": "deflate",
+        "name": "libffmpegkit_abidetect.so"
+      },
+      {
+        "bytes": 717336,
+        "compression": "deflate",
+        "name": "libmmkv.so"
+      },
+      {
+        "bytes": 2374416,
+        "compression": "deflate",
+        "name": "libmsc.so"
+      },
+      {
+        "bytes": 75560,
+        "compression": "deflate",
+        "name": "libswresample.so"
+      },
+      {
+        "bytes": 303048,
+        "compression": "deflate",
+        "name": "libswscale.so"
+      },
+      {
+        "bytes": 297136,
+        "compression": "deflate",
+        "name": "libtbmarsxlog.so"
+      },
+      {
+        "bytes": 45288,
+        "compression": "deflate",
+        "name": "libxhook-emas.so"
+      },
+      {
+        "bytes": 477896,
+        "compression": "deflate",
+        "name": "libbaiduprotect.so"
+      }
+    ]
+  },
+  "dex": [
+    {
+      "path": "classes.dex",
+      "bytes": 7478056,
+      "sha256": "0aa6bc328d1af097f6ba154ee098f9e66be0f417c881e81e2391a649bc4de1ea",
+      "class_definitions": 7256
+    },
+    {
+      "path": "classes2.dex",
+      "bytes": 7525188,
+      "sha256": "1fb2a7382643a11fe7ac0a693d2cb59f41823be912c3e4260d422e71122df026",
+      "class_definitions": 6889
+    },
+    {
+      "path": "classes3.dex",
+      "bytes": 6262428,
+      "sha256": "856831c22a29d5efeddde0ddeed9e53e28f40ba5e4cb09a4035aef4b137e0c80",
+      "class_definitions": 5168
+    },
+    {
+      "path": "classes4.dex",
+      "bytes": 2152940,
+      "sha256": "b9a5bd0e9b0232ed0e7f4ee92cde95c15b27eb98aa46ee939d88cb2b6e3d4d40",
+      "class_definitions": 1738
+    }
+  ],
+  "java_class_counts": {
+    "raw_definitions": 21051,
+    "jadx_package_count": 9611
+  },
+  "unitree_class_search": {
+    "raw_matches": 0,
+    "jadx_matches": [
+      "com.unitree.doggo2.R"
+    ],
+    "scope": "Visible DEX only; protected payload not decoded"
+  },
+  "javascript": [
+    {
+      "path": "assets/dist/assets/ammo-CP2eG2rD.js",
+      "bytes": 1881248,
+      "sha256": "18f8716330828a8fb325f065a5c970769620ca6a0702922364f032af7b16e0b8",
+      "strict_utf8": false
+    },
+    {
+      "path": "assets/dist/assets/main-DHV3WsSh.js",
+      "bytes": 11718176,
+      "sha256": "40863691167a1b056392a42d12029b2c4a93c1feb78f98851c9abf8a290e52e3",
+      "strict_utf8": false
+    },
+    {
+      "path": "assets/dist/assets/main-legacy-C1L2ak5e.js",
+      "bytes": 11579248,
+      "sha256": "9a4d1d0fa03ca7d2409bba9b4138eb42ffe3e52b695b24e42da364e1f7741286",
+      "strict_utf8": false
+    },
+    {
+      "path": "assets/dist/assets/polyfills-legacy-CIX-2_z7.js",
+      "bytes": 130800,
+      "sha256": "6c01f42b0b636969616f901a55568231e47ba9c8d392b5070289f9e7d80863af",
+      "strict_utf8": false
+    },
+    {
+      "path": "assets/dist/assets/simulator-CDi0_MU0.js",
+      "bytes": 140512,
+      "sha256": "81b4d79eeac348e07963dd48130f14bca21c02e2f2481e9ad65c316175595f8f",
+      "strict_utf8": false
+    },
+    {
+      "path": "assets/dist/assets/simulator-legacy-BaF5WPhB.js",
+      "bytes": 107840,
+      "sha256": "a0ea832722ad865b0dc8a7a8144425b7bcdeb98cc3edc43f6cc8692366d3da7e",
+      "strict_utf8": false
+    },
+    {
+      "path": "assets/dist/assets/slam.worker-D5smPkil.js",
+      "bytes": 4256,
+      "sha256": "6febb74acb5fe489a68e219d21a166b441cf107db1b72ab42e96b774305a6eed",
+      "strict_utf8": false
+    },
+    {
+      "path": "assets/dist/assets/three.worker-CFhX0lms.js",
+      "bytes": 6384,
+      "sha256": "867d4e1ac4cb76d7d578aa895382e4194d6ecbc69d43c90c28a2e104dde9c6e9",
+      "strict_utf8": false
+    },
+    {
+      "path": "assets/dist/assets/three.worker-VAdOurOh.js",
+      "bytes": 6096,
+      "sha256": "aa622b5e36442d6e5ab3e59a605df5fbb0f6e1ad41873bfdee4d713af3a245e5",
+      "strict_utf8": false
+    },
+    {
+      "path": "assets/dist/assets/videoTransform.worker-CSjEX_qj.js",
+      "bytes": 4400,
+      "sha256": "7b4dd24688012b80ae47b2e66258ce1907429b9a530d8ddbde48590c512079f5",
+      "strict_utf8": false
+    },
+    {
+      "path": "assets/dist/js/PCDLoader-legacy/PCDLoader.DzlhSA87.js",
+      "bytes": 1063616,
+      "sha256": "38050880526cbe92c3b67475c24f49f5662ef8d71b74cf3f05398bbf175340f8",
+      "strict_utf8": false
+    },
+    {
+      "path": "assets/dist/js/PCDLoader/PCDLoader.CLSIH0M0.js",
+      "bytes": 1225520,
+      "sha256": "0a06ba436f12c254e6736106b4c363dff1cc73c1748c4a1f9144aa697860f3f7",
+      "strict_utf8": false
+    },
+    {
+      "path": "assets/dist/js/ProgrammingSuperstar/Programming-legacy.C1fXNw48.js",
+      "bytes": 124816,
+      "sha256": "6b9c6c6c5d28e9788f7f8e38d0e4a2deea114737d0b46f9c99f24001243bab5e",
+      "strict_utf8": false
+    },
+    {
+      "path": "assets/dist/js/ProgrammingSuperstar/Programming.Cfia8YYT.js",
+      "bytes": 128736,
+      "sha256": "87cd8f7eefb97f82c22b47a2485fdf390d14e832796db3106e279ab047660485",
+      "strict_utf8": false
+    },
+    {
+      "path": "assets/dist/js/Programming/Programming-legacy.C1PK9yMr.js",
+      "bytes": 127632,
+      "sha256": "0c5a00bb8a0312a488e244ed1a22512f32d82b333ccba01fb15fb8eb8e016971",
+      "strict_utf8": false
+    },
+    {
+      "path": "assets/dist/js/Programming/Programming.CM1rEfVu.js",
+      "bytes": 131712,
+      "sha256": "412f170a05403d75739e6a4f60c7bb326789aea7886ed0476e665ae00d68e04c",
+      "strict_utf8": false
+    },
+    {
+      "path": "assets/dist/js/js-interpreter-legacy/js-interpreter.zDxBfB9F.js",
+      "bytes": 271344,
+      "sha256": "14595b13bf294615945b7061bfd0ea0d4d1013f3afdf4a75d6ef24bd637cc50a",
+      "strict_utf8": false
+    },
+    {
+      "path": "assets/dist/js/js-interpreter/js-interpreter.DmnAyiQz.js",
+      "bytes": 353536,
+      "sha256": "018f02b2131d0d824a41c74756e91b926c6d673f3a60153f106484e141843e96",
+      "strict_utf8": false
+    },
+    {
+      "path": "assets/dist/js/pages/Bluetooth-legacy.9VaX5M98.js",
+      "bytes": 1312,
+      "sha256": "bd707aa471078ab17c4deb4161bc0f49fd786535a55d9fdece4d029bb1cc792d",
+      "strict_utf8": false
+    },
+    {
+      "path": "assets/dist/js/pages/Bluetooth.D0ToMgpC.js",
+      "bytes": 1040,
+      "sha256": "3e56414cd206a1d4f1fe88873533c86b78593834937e0daa228d2f1e6727cdc8",
+      "strict_utf8": false
+    },
+    {
+      "path": "assets/dist/js/slam/Slam-legacy.DkjJ-KbW.js",
+      "bytes": 206864,
+      "sha256": "fdda13bf3ac272c05493dec9c05c05ddb51539beddd7b3c3de049f413a952faf",
+      "strict_utf8": false
+    },
+    {
+      "path": "assets/dist/js/slam/Slam.Esfy1tDw.js",
+      "bytes": 250448,
+      "sha256": "d0d1d6f806b436ad852f2a17356f4b384dbca21721e04afe487b4e976eb6e264",
+      "strict_utf8": false
+    },
+    {
+      "path": "assets/dist/js/store-legacy/store.D-EPpLcN.js",
+      "bytes": 1023264,
+      "sha256": "ab801a3c943c484370a3374b0b7f375653dd2bb20e0a9f72567c9d43be15dd20",
+      "strict_utf8": false
+    },
+    {
+      "path": "assets/dist/js/store/store.Ds7dR772.js",
+      "bytes": 1376000,
+      "sha256": "56a4fee5c0576211612559091f0faa66876834b3a0be44549e97d95cd5aa7f11",
+      "strict_utf8": false
+    },
+    {
+      "path": "assets/dist/js/vconsole.min-legacy/vconsole.min.DYJz475b.js",
+      "bytes": 283984,
+      "sha256": "65212b22fb16a2ad4d0c4bff254b092b216413e37cd464f6c3dbc13072adee79",
+      "strict_utf8": false
+    },
+    {
+      "path": "assets/dist/js/vconsole.min/vconsole.min.B4Vsmghx.js",
+      "bytes": 431504,
+      "sha256": "f9bbea14fa3c7ff974ce5b9902ad358c2dc685653d50be6076bca10d5dcde2a4",
+      "strict_utf8": false
+    }
+  ],
+  "models": [
+    {
+      "path": "assets/dist/models/Go2.glb",
+      "bytes": 6242676,
+      "sha256": "d468ec46a7665aa3f0f8c3e76a9579c75c22544d1ba4c3cb242922f109d81839",
+      "nodes": 51,
+      "skins": 0,
+      "meshes": 8,
+      "generator": "Khronos glTF Blender I/O v1.7.33",
+      "animations": [
+        {
+          "name": "Playing",
+          "start_s": 0.041666666666666664,
+          "end_s": 2.5,
+          "duration_s": 2.4583333333333335,
+          "channels": 60,
+          "paths": [
+            "rotation",
+            "translation"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "assets/dist/models/Go2JX.glb",
+      "bytes": 8626648,
+      "sha256": "3c8c3e7650a43e036e04496ebd5fdc9bc6df7b54ca0a93d56d803f7528fde9b5",
+      "nodes": 48,
+      "skins": 1,
+      "meshes": 5,
+      "generator": "Khronos glTF Blender I/O v5.1.20",
+      "animations": [
+        {
+          "name": "CrossWalk",
+          "start_s": 0,
+          "end_s": 1.9583333333333333,
+          "duration_s": 1.9583333333333333,
+          "channels": 90,
+          "paths": [
+            "rotation",
+            "scale",
+            "translation"
+          ]
+        },
+        {
+          "name": "Damp",
+          "start_s": 0,
+          "end_s": 0.6666666666666666,
+          "duration_s": 0.6666666666666666,
+          "channels": 90,
+          "paths": [
+            "rotation",
+            "scale",
+            "translation"
+          ]
+        },
+        {
+          "name": "Dance1",
+          "start_s": 0,
+          "end_s": 10.5,
+          "duration_s": 10.5,
+          "channels": 90,
+          "paths": [
+            "rotation",
+            "scale",
+            "translation"
+          ]
+        },
+        {
+          "name": "FingerHeart",
+          "start_s": 0,
+          "end_s": 4.041666666666667,
+          "duration_s": 4.041666666666667,
+          "channels": 90,
+          "paths": [
+            "rotation",
+            "scale",
+            "translation"
+          ]
+        },
+        {
+          "name": "FrontJump",
+          "start_s": 0,
+          "end_s": 1.3333333333333333,
+          "duration_s": 1.3333333333333333,
+          "channels": 90,
+          "paths": [
+            "rotation",
+            "scale",
+            "translation"
+          ]
+        },
+        {
+          "name": "FrontPounce",
+          "start_s": 0,
+          "end_s": 2,
+          "duration_s": 2,
+          "channels": 90,
+          "paths": [
+            "rotation",
+            "scale",
+            "translation"
+          ]
+        },
+        {
+          "name": "HandStand",
+          "start_s": 0,
+          "end_s": 3.3333333333333335,
+          "duration_s": 3.3333333333333335,
+          "channels": 90,
+          "paths": [
+            "rotation",
+            "scale",
+            "translation"
+          ]
+        },
+        {
+          "name": "Hello",
+          "start_s": 0,
+          "end_s": 2.9166666666666665,
+          "duration_s": 2.9166666666666665,
+          "channels": 90,
+          "paths": [
+            "rotation",
+            "scale",
+            "translation"
+          ]
+        },
+        {
+          "name": "MoonWalk",
+          "start_s": 0,
+          "end_s": 1.3333333333333333,
+          "duration_s": 1.3333333333333333,
+          "channels": 90,
+          "paths": [
+            "rotation",
+            "scale",
+            "translation"
+          ]
+        },
+        {
+          "name": "Playing",
+          "start_s": 0.041666666666666664,
+          "end_s": 2.5,
+          "duration_s": 2.4583333333333335,
+          "channels": 90,
+          "paths": [
+            "rotation",
+            "scale",
+            "translation"
+          ]
+        },
+        {
+          "name": "Scrape",
+          "start_s": 0,
+          "end_s": 3.875,
+          "duration_s": 3.875,
+          "channels": 90,
+          "paths": [
+            "rotation",
+            "scale",
+            "translation"
+          ]
+        },
+        {
+          "name": "SideWalk",
+          "start_s": 0,
+          "end_s": 1.9583333333333333,
+          "duration_s": 1.9583333333333333,
+          "channels": 90,
+          "paths": [
+            "rotation",
+            "scale",
+            "translation"
+          ]
+        },
+        {
+          "name": "Sit",
+          "start_s": 0,
+          "end_s": 1.0833333333333333,
+          "duration_s": 1.0833333333333333,
+          "channels": 90,
+          "paths": [
+            "rotation",
+            "scale",
+            "translation"
+          ]
+        },
+        {
+          "name": "StandDown",
+          "start_s": 0,
+          "end_s": 0.4166666666666667,
+          "duration_s": 0.4166666666666667,
+          "channels": 90,
+          "paths": [
+            "rotation",
+            "scale",
+            "translation"
+          ]
+        },
+        {
+          "name": "StandUp",
+          "start_s": 0,
+          "end_s": 0,
+          "duration_s": 0,
+          "channels": 90,
+          "paths": [
+            "rotation",
+            "scale",
+            "translation"
+          ]
+        },
+        {
+          "name": "Stretch",
+          "start_s": 0,
+          "end_s": 2.9583333333333335,
+          "duration_s": 2.9583333333333335,
+          "channels": 90,
+          "paths": [
+            "rotation",
+            "scale",
+            "translation"
+          ]
+        },
+        {
+          "name": "Wallow",
+          "start_s": 0,
+          "end_s": 2.7083333333333335,
+          "duration_s": 2.7083333333333335,
+          "channels": 90,
+          "paths": [
+            "rotation",
+            "scale",
+            "translation"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "assets/dist/models/Go2JXRoot.glb",
+      "bytes": 9863824,
+      "sha256": "89a13ca83b204259fe9d926b7c713f6e7b8c10ab9c16557423940e3933e13458",
+      "nodes": 48,
+      "skins": 1,
+      "meshes": 8,
+      "generator": "Khronos glTF Blender I/O v5.1.20",
+      "animations": [
+        {
+          "name": "CrossWalk",
+          "start_s": 0,
+          "end_s": 1.9583333333333333,
+          "duration_s": 1.9583333333333333,
+          "channels": 162,
+          "paths": [
+            "rotation",
+            "scale",
+            "translation"
+          ]
+        },
+        {
+          "name": "Damp",
+          "start_s": 0,
+          "end_s": 0.6666666666666666,
+          "duration_s": 0.6666666666666666,
+          "channels": 81,
+          "paths": [
+            "rotation",
+            "scale",
+            "translation"
+          ]
+        },
+        {
+          "name": "Dance1",
+          "start_s": 0,
+          "end_s": 10.5,
+          "duration_s": 10.5,
+          "channels": 81,
+          "paths": [
+            "rotation",
+            "scale",
+            "translation"
+          ]
+        },
+        {
+          "name": "FingerHeart",
+          "start_s": 0,
+          "end_s": 4.041666666666667,
+          "duration_s": 4.041666666666667,
+          "channels": 81,
+          "paths": [
+            "rotation",
+            "scale",
+            "translation"
+          ]
+        },
+        {
+          "name": "FrontJump",
+          "start_s": 0,
+          "end_s": 1.3333333333333333,
+          "duration_s": 1.3333333333333333,
+          "channels": 81,
+          "paths": [
+            "rotation",
+            "scale",
+            "translation"
+          ]
+        },
+        {
+          "name": "FrontPounce",
+          "start_s": 0,
+          "end_s": 2,
+          "duration_s": 2,
+          "channels": 81,
+          "paths": [
+            "rotation",
+            "scale",
+            "translation"
+          ]
+        },
+        {
+          "name": "HandStand",
+          "start_s": 0,
+          "end_s": 3.3333333333333335,
+          "duration_s": 3.3333333333333335,
+          "channels": 81,
+          "paths": [
+            "rotation",
+            "scale",
+            "translation"
+          ]
+        },
+        {
+          "name": "Hello",
+          "start_s": 0,
+          "end_s": 2.9166666666666665,
+          "duration_s": 2.9166666666666665,
+          "channels": 81,
+          "paths": [
+            "rotation",
+            "scale",
+            "translation"
+          ]
+        },
+        {
+          "name": "MoonWalk",
+          "start_s": 0,
+          "end_s": 1.3333333333333333,
+          "duration_s": 1.3333333333333333,
+          "channels": 81,
+          "paths": [
+            "rotation",
+            "scale",
+            "translation"
+          ]
+        },
+        {
+          "name": "Scrape",
+          "start_s": 0,
+          "end_s": 3.875,
+          "duration_s": 3.875,
+          "channels": 81,
+          "paths": [
+            "rotation",
+            "scale",
+            "translation"
+          ]
+        },
+        {
+          "name": "SideWalk",
+          "start_s": 0,
+          "end_s": 1.9583333333333333,
+          "duration_s": 1.9583333333333333,
+          "channels": 81,
+          "paths": [
+            "rotation",
+            "scale",
+            "translation"
+          ]
+        },
+        {
+          "name": "Sit",
+          "start_s": 0,
+          "end_s": 1.0833333333333333,
+          "duration_s": 1.0833333333333333,
+          "channels": 81,
+          "paths": [
+            "rotation",
+            "scale",
+            "translation"
+          ]
+        },
+        {
+          "name": "StandDown",
+          "start_s": 0,
+          "end_s": 0.4166666666666667,
+          "duration_s": 0.4166666666666667,
+          "channels": 81,
+          "paths": [
+            "rotation",
+            "scale",
+            "translation"
+          ]
+        },
+        {
+          "name": "StandUp",
+          "start_s": 0,
+          "end_s": 0,
+          "duration_s": 0,
+          "channels": 81,
+          "paths": [
+            "rotation",
+            "scale",
+            "translation"
+          ]
+        },
+        {
+          "name": "Stretch",
+          "start_s": 0,
+          "end_s": 2.9583333333333335,
+          "duration_s": 2.9583333333333335,
+          "channels": 81,
+          "paths": [
+            "rotation",
+            "scale",
+            "translation"
+          ]
+        },
+        {
+          "name": "Wallow",
+          "start_s": 0,
+          "end_s": 2.7083333333333335,
+          "duration_s": 2.7083333333333335,
+          "channels": 81,
+          "paths": [
+            "rotation",
+            "scale",
+            "translation"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "assets/dist/models/Go2Root.glb",
+      "bytes": 6957088,
+      "sha256": "3f8e473984147189decb75cd61445c317f60d608ad8e1f23d372bbfba1130527",
+      "nodes": 49,
+      "skins": 1,
+      "meshes": 9,
+      "generator": "Khronos glTF Blender I/O v4.0.44",
+      "animations": [
+        {
+          "name": "CrossWalk",
+          "start_s": 0,
+          "end_s": 1.9583333333333333,
+          "duration_s": 1.9583333333333333,
+          "channels": 81,
+          "paths": [
+            "rotation",
+            "scale",
+            "translation"
+          ]
+        },
+        {
+          "name": "Damp",
+          "start_s": 0,
+          "end_s": 0.6666666666666666,
+          "duration_s": 0.6666666666666666,
+          "channels": 81,
+          "paths": [
+            "rotation",
+            "scale",
+            "translation"
+          ]
+        },
+        {
+          "name": "Dance1",
+          "start_s": 0,
+          "end_s": 10.5,
+          "duration_s": 10.5,
+          "channels": 81,
+          "paths": [
+            "rotation",
+            "scale",
+            "translation"
+          ]
+        },
+        {
+          "name": "FingerHeart",
+          "start_s": 0,
+          "end_s": 4.041666666666667,
+          "duration_s": 4.041666666666667,
+          "channels": 81,
+          "paths": [
+            "rotation",
+            "scale",
+            "translation"
+          ]
+        },
+        {
+          "name": "FrontJump",
+          "start_s": 0,
+          "end_s": 1.3333333333333333,
+          "duration_s": 1.3333333333333333,
+          "channels": 81,
+          "paths": [
+            "rotation",
+            "scale",
+            "translation"
+          ]
+        },
+        {
+          "name": "FrontPounce",
+          "start_s": 0,
+          "end_s": 2,
+          "duration_s": 2,
+          "channels": 81,
+          "paths": [
+            "rotation",
+            "scale",
+            "translation"
+          ]
+        },
+        {
+          "name": "HandStand",
+          "start_s": 0,
+          "end_s": 3.3333333333333335,
+          "duration_s": 3.3333333333333335,
+          "channels": 81,
+          "paths": [
+            "rotation",
+            "scale",
+            "translation"
+          ]
+        },
+        {
+          "name": "Hello",
+          "start_s": 0,
+          "end_s": 2.9166666666666665,
+          "duration_s": 2.9166666666666665,
+          "channels": 81,
+          "paths": [
+            "rotation",
+            "scale",
+            "translation"
+          ]
+        },
+        {
+          "name": "MoonWalk",
+          "start_s": 0,
+          "end_s": 1.3333333333333333,
+          "duration_s": 1.3333333333333333,
+          "channels": 81,
+          "paths": [
+            "rotation",
+            "scale",
+            "translation"
+          ]
+        },
+        {
+          "name": "Scrape",
+          "start_s": 0,
+          "end_s": 3.875,
+          "duration_s": 3.875,
+          "channels": 81,
+          "paths": [
+            "rotation",
+            "scale",
+            "translation"
+          ]
+        },
+        {
+          "name": "SideWalk",
+          "start_s": 0,
+          "end_s": 1.9583333333333333,
+          "duration_s": 1.9583333333333333,
+          "channels": 81,
+          "paths": [
+            "rotation",
+            "scale",
+            "translation"
+          ]
+        },
+        {
+          "name": "Sit",
+          "start_s": 0,
+          "end_s": 1.0833333333333333,
+          "duration_s": 1.0833333333333333,
+          "channels": 81,
+          "paths": [
+            "rotation",
+            "scale",
+            "translation"
+          ]
+        },
+        {
+          "name": "StandDown",
+          "start_s": 0,
+          "end_s": 0.4166666666666667,
+          "duration_s": 0.4166666666666667,
+          "channels": 81,
+          "paths": [
+            "rotation",
+            "scale",
+            "translation"
+          ]
+        },
+        {
+          "name": "StandUp",
+          "start_s": 0,
+          "end_s": 0,
+          "duration_s": 0,
+          "channels": 81,
+          "paths": [
+            "rotation",
+            "scale",
+            "translation"
+          ]
+        },
+        {
+          "name": "Stretch",
+          "start_s": 0,
+          "end_s": 2.9583333333333335,
+          "duration_s": 2.9583333333333335,
+          "channels": 81,
+          "paths": [
+            "rotation",
+            "scale",
+            "translation"
+          ]
+        },
+        {
+          "name": "Wallow",
+          "start_s": 0,
+          "end_s": 2.7083333333333335,
+          "duration_s": 2.7083333333333335,
+          "channels": 81,
+          "paths": [
+            "rotation",
+            "scale",
+            "translation"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "assets/dist/models/charge.glb",
+      "bytes": 27776,
+      "sha256": "c4055c770f1a3eaed341e0d1205bdf1a3dad086d31024592925452bd71a0ac4a",
+      "nodes": 1,
+      "skins": 0,
+      "meshes": 1,
+      "generator": "Khronos glTF Blender I/O v4.0.44",
+      "animations": []
+    },
+    {
+      "path": "assets/dist/models/environment.glb",
+      "bytes": 1949000,
+      "sha256": "1b2a06fed9151164842b380dbe12a3c62bcce83050b5e7668904d1e332726c1d",
+      "nodes": 5,
+      "skins": 0,
+      "meshes": 5,
+      "generator": "Khronos glTF Blender I/O v4.0.44",
+      "animations": []
+    }
+  ],
+  "wasm_tests": [
+    {
+      "mode": "points",
+      "tests": 15,
+      "sha256": "df28d833bc3045e58e110926dd87c312538a2e5b60a964a4fc5e99ff06d39b9c",
+      "memory_bytes": 100663296,
+      "assertions_passed": true
+    },
+    {
+      "mode": "mesh",
+      "tests": 13,
+      "sha256": "1ba27f065199954dc562b233aa38ea775ac687118cce77b5c71bc14e17e05542",
+      "memory_bytes": 65536000,
+      "assertions_passed": true
+    }
+  ],
+  "locale_tables": [
+    {
+      "locale": "default",
+      "status": "present",
+      "count": 1401
+    },
+    {
+      "locale": "en",
+      "status": "missing",
+      "count": 0
+    },
+    {
+      "locale": "ko",
+      "status": "present",
+      "count": 145
+    },
+    {
+      "locale": "zh",
+      "status": "present",
+      "count": 1066
+    }
+  ],
+  "dependencies": [
+    {
+      "query": "org.webrtc",
+      "matches": 0,
+      "examples": []
+    },
+    {
+      "query": "org.eclipse.paho",
+      "matches": 0,
+      "examples": []
+    },
+    {
+      "query": "com.hivemq",
+      "matches": 0,
+      "examples": []
+    },
+    {
+      "query": "org.nanohttpd",
+      "matches": 0,
+      "examples": []
+    },
+    {
+      "query": "fi.iki.elonen",
+      "matches": 0,
+      "examples": []
+    },
+    {
+      "query": "okhttp3",
+      "matches": 333,
+      "examples": [
+        {
+          "access": [
+            "public"
+          ],
+          "descriptor": "Lcom/alibaba/sdk/android/networkmonitor/interceptor/OkHttp3Interceptor;",
+          "dex": "classes.dex",
+          "fields": 2,
+          "methods": 60,
+          "name": "com.alibaba.sdk.android.networkmonitor.interceptor.OkHttp3Interceptor",
+          "superclass": "java.lang.Object"
+        },
+        {
+          "access": [],
+          "descriptor": "Lcom/alibaba/sdk/android/networkmonitor/interceptor/OkHttp3Interceptor$a;",
+          "dex": "classes.dex",
+          "fields": 0,
+          "methods": 2,
+          "name": "com.alibaba.sdk.android.networkmonitor.interceptor.OkHttp3Interceptor$a",
+          "superclass": "com.alibaba.sdk.android.networkmonitor.interceptor.c"
+        },
+        {
+          "access": [],
+          "descriptor": "Lcom/alibaba/sdk/android/networkmonitor/interceptor/OkHttp3Interceptor$b;",
+          "dex": "classes.dex",
+          "fields": 1,
+          "methods": 2,
+          "name": "com.alibaba.sdk.android.networkmonitor.interceptor.OkHttp3Interceptor$b",
+          "superclass": "java.lang.Object"
+        }
+      ]
+    },
+    {
+      "query": "com.tencent.mmkv",
+      "matches": 16,
+      "examples": [
+        {
+          "access": [
+            "public",
+            "final"
+          ],
+          "descriptor": "Lcom/tencent/mmkv/BuildConfig;",
+          "dex": "classes.dex",
+          "fields": 4,
+          "methods": 1,
+          "name": "com.tencent.mmkv.BuildConfig",
+          "superclass": "java.lang.Object"
+        },
+        {
+          "access": [
+            "public"
+          ],
+          "descriptor": "Lcom/tencent/mmkv/MMKV;",
+          "dex": "classes.dex",
+          "fields": 24,
+          "methods": 218,
+          "name": "com.tencent.mmkv.MMKV",
+          "superclass": "java.lang.Object"
+        },
+        {
+          "access": [
+            "synthetic"
+          ],
+          "descriptor": "Lcom/tencent/mmkv/MMKV$1;",
+          "dex": "classes.dex",
+          "fields": 1,
+          "methods": 1,
+          "name": "com.tencent.mmkv.MMKV$1",
+          "superclass": "java.lang.Object"
+        }
+      ]
+    },
+    {
+      "query": "com.iflytek",
+      "matches": 330,
+      "examples": [
+        {
+          "access": [
+            "public"
+          ],
+          "descriptor": "Lcom/iflytek/cloud/DataDownloader;",
+          "dex": "classes2.dex",
+          "fields": 0,
+          "methods": 3,
+          "name": "com.iflytek.cloud.DataDownloader",
+          "superclass": "com.iflytek.cloud.a.f.e"
+        },
+        {
+          "access": [
+            "public"
+          ],
+          "descriptor": "Lcom/iflytek/cloud/DataUploader;",
+          "dex": "classes2.dex",
+          "fields": 0,
+          "methods": 3,
+          "name": "com.iflytek.cloud.DataUploader",
+          "superclass": "com.iflytek.cloud.a.f.e"
+        },
+        {
+          "access": [
+            "public"
+          ],
+          "descriptor": "Lcom/iflytek/cloud/ErrorCode;",
+          "dex": "classes2.dex",
+          "fields": 418,
+          "methods": 1,
+          "name": "com.iflytek.cloud.ErrorCode",
+          "superclass": "java.lang.Object"
+        }
+      ]
+    },
+    {
+      "query": "com.just.agentweb",
+      "matches": 0,
+      "examples": []
+    },
+    {
+      "query": "com.github.luben",
+      "matches": 0,
+      "examples": []
+    },
+    {
+      "query": "com.sagittarius",
+      "matches": 32,
+      "examples": [
+        {
+          "access": [
+            "public"
+          ],
+          "descriptor": "Lcom/sagittarius/m1/A;",
+          "dex": "classes.dex",
+          "fields": 0,
+          "methods": 12,
+          "name": "com.sagittarius.m1.A",
+          "superclass": "java.lang.Object"
+        },
+        {
+          "access": [
+            "public",
+            "final"
+          ],
+          "descriptor": "Lcom/sagittarius/m1/a;",
+          "dex": "classes.dex",
+          "fields": 2,
+          "methods": 13,
+          "name": "com.sagittarius.m1.a",
+          "superclass": "java.lang.Object"
+        },
+        {
+          "access": [
+            "final"
+          ],
+          "descriptor": "Lcom/sagittarius/m1/b;",
+          "dex": "classes.dex",
+          "fields": 0,
+          "methods": 2,
+          "name": "com.sagittarius.m1.b",
+          "superclass": "java.lang.Object"
+        }
+      ]
+    }
+  ],
+  "signature_craft": {
+    "schemes": [
+      "v2"
+    ],
+    "signing_block": {
+      "entries": [
+        {
+          "id": "0x7109871a",
+          "name": "signature scheme v2",
+          "size": 1395
+        },
+        {
+          "id": "0x42726577",
+          "name": "verity padding",
+          "size": 2645
+        }
+      ],
+      "offset": 185307136,
+      "signers": [
+        {
+          "certificates": [
+            {
+              "bytes": 749,
+              "issuer": "L=hangzhou, OU=unitree",
+              "not_after": "480313072102Z",
+              "not_before": "230320072102Z",
+              "notes": [],
+              "public_key_algorithm": "rsaEncryption",
+              "serial": "467c470f",
+              "sha256": "881f31ba2993103ede4b98122ca28dd69150c5be6aab94edd4b0ecc86c7a6a37",
+              "signature_algorithm": "sha256WithRSAEncryption",
+              "subject": "L=hangzhou, OU=unitree",
+              "version": 3
+            }
+          ],
+          "digests": [
+            {
+              "algorithm": "0x0103",
+              "algorithm_name": "RSASSA-PKCS1-v1_5 with SHA2-256",
+              "digest": "ef8ab0fd2bd023cadddeb2742cae9f5aec2bf339c2b89a85c6cf51a87a2a29d5"
+            }
+          ],
+          "max_sdk": null,
+          "min_sdk": null,
+          "public_key_bytes": 294,
+          "scheme": "v2",
+          "signature_algorithms": [
+            "RSASSA-PKCS1-v1_5 with SHA2-256 (0x0103)"
+          ],
+          "verification": {
+            "algorithm": "RSASSA-PKCS1-v1_5 with SHA2-256",
+            "certificate_sha256": "881f31ba2993103ede4b98122ca28dd69150c5be6aab94edd4b0ecc86c7a6a37",
+            "digest_matches": true,
+            "max_sdk": null,
+            "min_sdk": null,
+            "notes": [
+              "the APK signer has incomplete required fields"
+            ],
+            "public_key_matches_certificate": true,
+            "scheme": "v2",
+            "signature_valid": {
+              "status": "valid"
+            },
+            "verified": false
+          }
+        }
+      ],
+      "size": 4088
+    },
+    "v1": []
+  },
+  "signature_rea": {
+    "artifact": {
+      "path": "/home/jay/mai/projects/tutorial-go2/UnitreeGo_1.12.10.apk",
+      "sha256": "71c9a34b1ec972f944007d4d8474e1bc3391dca1192fa2b46bc7b19be02a9e27",
+      "bytes": 185490971
+    },
+    "schemes": {
+      "v1": {
+        "present": false,
+        "has_manifest": false,
+        "signature_files": [],
+        "block_files": [],
+        "signers": []
+      },
+      "v2": {
+        "present": true,
+        "signers": [
+          {
+            "uninterpreted_signed_data_bytes": 4,
+            "uninterpreted_signer_bytes": 0,
+            "certificate": {
+              "sha256_fingerprint": "881f31ba2993103ede4b98122ca28dd69150c5be6aab94edd4b0ecc86c7a6a37",
+              "subject": "L=hangzhou\nOU=unitree",
+              "issuer": "L=hangzhou\nOU=unitree",
+              "serial_number": "467C470F",
+              "not_before": "2023-03-20T07:21:02.000Z",
+              "not_after": "2048-03-13T07:21:02.000Z",
+              "public_key_algorithm": "rsa"
+            },
+            "digests": [
+              {
+                "uninterpreted_bytes": 0,
+                "signature_algorithm_id": 259,
+                "algorithm": "sha256",
+                "declared_digest_hex": "ef8ab0fd2bd023cadddeb2742cae9f5aec2bf339c2b89a85c6cf51a87a2a29d5",
+                "matches_apk": true
+              }
+            ],
+            "signatures": [
+              {
+                "signature_algorithm_id": 259,
+                "algorithm": "sha256",
+                "signature_bytes": 256,
+                "uninterpreted_bytes": 0
+              }
+            ],
+            "public_key_bytes": 294,
+            "min_sdk": null,
+            "max_sdk": null
+          }
+        ],
+        "uninterpreted_bytes": 0
+      },
+      "v3": {
+        "present": false,
+        "signers": [],
+        "uninterpreted_bytes": 0
+      },
+      "v3.1": {
+        "present": false,
+        "signers": [],
+        "uninterpreted_bytes": 0
+      }
+    },
+    "source_stamp": {
+      "present": false,
+      "certificate": null,
+      "decode_error": null
+    },
+    "posture": {
+      "v1_only": false,
+      "schemes_agree_on_signer": true,
+      "signer_change_declared_by_rotation": false,
+      "v1_signers_match_block_signers": null,
+      "rotation_present": false,
+      "source_stamp_present": false,
+      "strongest_scheme": "v2",
+      "self_consistent": true
+    },
+    "runtime_execution": "not-performed"
+  },
+  "tool_evidence": {
+    "rea_package": "ev_599bb706c68965f203535e9d65913a023f154319182445266d586b24e97f4e61",
+    "rea_resources": "ev_ca7fd8b436d44c75c453b3e9c0c6ad0ca598c8a460c699f5b83150bd9180d66c",
+    "craft_package": "ev_7b992904e1babe75fe3a209399a9b2da65b94b16a27bf5a4bac55db10da41e52"
+  },
+  "limits": [
+    "No protected payload decryption",
+    "No app runtime or robot session",
+    "No 1.12.10 JS call-path verification",
+    "No latency or actual Go2 X capability measurement",
+    "Resource names and manifest entries do not prove feature activation"
+  ]
+}

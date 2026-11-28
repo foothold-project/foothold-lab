@@ -1,0 +1,13 @@
+{
+  "weight_filename_suffixes_checked": [
+    ".h5",
+    ".onnx",
+    ".pkl",
+    ".pt",
+    ".pth",
+    ".safetensors",
+    ".tflite"
+  ],
+  "weight_filename_matches": [],
+  "limit": "Filenames only; protected payload and runtime download not inspected"
+}

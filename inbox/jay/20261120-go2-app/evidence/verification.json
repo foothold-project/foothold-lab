@@ -1,0 +1,42 @@
+{
+  "known_inputs": {
+    "rea_ipc_bridge": "PASS",
+    "craft_zip_bytes_count_hash": "PASS",
+    "craft_error_json_rejected": "PASS"
+  },
+  "manifest_identity_two_parsers": "PASS",
+  "raw_dex_definition_counts": "PASS",
+  "wasm_tests": {
+    "points": 15,
+    "mesh": 13,
+    "result": "PASS"
+  },
+  "same_source_recompute_bytes_equal": [
+    "evidence-summary.json",
+    "ASSET-HASHES.tsv",
+    "COMPONENTS.tsv",
+    "UI-EVIDENCE.tsv"
+  ],
+  "document_checks": {
+    "metadata_and_links": [
+      {
+        "file": "inbox/jay/20261120-go2-app/REPORT-UNITREE-1.12.10.md",
+        "ok": true
+      },
+      {
+        "file": "inbox/jay/20261120-go2-app/README.md",
+        "ok": true
+      }
+    ],
+    "markdown_table_cell_counts": "PASS",
+    "U+2014_count": 0,
+    "checker_style_false_positive": "review_inbox.py:88 counts U+00B7 middot but labels it em dash; source unchanged"
+  },
+  "resource_credentials": "allowlist only; secret/key/token/password resource names excluded",
+  "raw_source_hashes": "PASS",
+  "limitations": [
+    "No original application runtime or network connection",
+    "Signature tool aggregate not fully verified",
+    "Protected JavaScript and protected app code not decrypted"
+  ]
+}
